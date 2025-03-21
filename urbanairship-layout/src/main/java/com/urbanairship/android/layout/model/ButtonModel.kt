@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.event.ReportingEvent.ButtonTap
 import com.urbanairship.android.layout.info.Button
@@ -16,6 +17,7 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasCancel
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
 import com.urbanairship.android.layout.property.hasFormSubmit
+import com.urbanairship.android.layout.property.hasFormValidate
 import com.urbanairship.android.layout.property.hasPagerNext
 import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
@@ -26,7 +28,7 @@ import kotlinx.coroutines.launch
 
 internal abstract class ButtonModel<T, I: Button>(
     viewInfo: I,
-    private val formState: SharedState<State.Form>?,
+    private val formState: ThomasForm?,
     private val pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
     properties: ModelProperties
@@ -51,6 +53,11 @@ internal abstract class ButtonModel<T, I: Button>(
     override fun onViewAttached(view: T) {
         viewScope.launch {
             view.taps().collect {
+
+                if (viewInfo.clickBehaviors.hasFormValidate) {
+                    handleFormValidation()
+                }
+
                 val reportingContext = layoutState.reportingContext(buttonId = viewInfo.identifier)
 
                 // Report button tap event.
@@ -110,6 +117,15 @@ internal abstract class ButtonModel<T, I: Button>(
         }
         modelScope.launch {
             environment.eventHandler.broadcast(submitEvent)
+        }
+    }
+
+    private fun handleFormValidation() {
+        // Dismiss the keyboard, if it's open.
+        listener?.dismissSoftKeyboard()
+
+        modelScope.launch {
+            //TODO: il form validate
         }
     }
 

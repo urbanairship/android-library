@@ -2,8 +2,8 @@
 package com.urbanairship.android.layout.reporting
 
 import com.urbanairship.android.layout.property.FormInputType
-import com.urbanairship.android.layout.reporting.FormData.Score
-import com.urbanairship.android.layout.reporting.FormData.TextInput
+import com.urbanairship.android.layout.reporting.ThomasFormField.Score
+import com.urbanairship.android.layout.reporting.ThomasFormField.TextInput
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import org.intellij.lang.annotations.Language
@@ -14,7 +14,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-public class FormDataTest {
+public class ThomasFormFieldTest {
 
     @Test
     @Throws(JsonException::class)
@@ -29,8 +29,8 @@ public class FormDataTest {
         val textInputDataCopy = textInputData.copy()
         val toggleDataCopy = toggleData.copy()
         val scoreDataCopy = scoreData.copy()
-        val npsFormDataCopy = npsFormData.copy()
-        val formDataCopy = formData.copy()
+        val npsFormDataCopy = npsThomasFormField.copy()
+        val formDataCopy = thomasFormField.copy()
         val formCopy = form.copy()
 
         assertNotSame(radioInputControllerData, radioInputControllerDataCopy)
@@ -53,13 +53,13 @@ public class FormDataTest {
         assertEquals(scoreData, scoreDataCopy)
         assertEquals(scoreData.hashCode(), scoreDataCopy.hashCode())
 
-        assertNotSame(npsFormData, npsFormDataCopy)
-        assertEquals(npsFormData, npsFormDataCopy)
-        assertEquals(npsFormData.hashCode(), npsFormDataCopy.hashCode())
+        assertNotSame(npsThomasFormField, npsFormDataCopy)
+        assertEquals(npsThomasFormField, npsFormDataCopy)
+        assertEquals(npsThomasFormField.hashCode(), npsFormDataCopy.hashCode())
 
-        assertNotSame(formData, formDataCopy)
-        assertEquals(formData, formDataCopy)
-        assertEquals(formData.hashCode(), formDataCopy.hashCode())
+        assertNotSame(thomasFormField, formDataCopy)
+        assertEquals(thomasFormField, formDataCopy)
+        assertEquals(thomasFormField.hashCode(), formDataCopy.hashCode())
 
         assertNotSame(form, formCopy)
         assertEquals(form, formCopy)
@@ -67,66 +67,113 @@ public class FormDataTest {
     }
 
     public companion object {
-        private val radioInputControllerData: FormData.RadioInputController =
-            FormData.RadioInputController(
+        private val radioInputControllerData: ThomasFormField.RadioInputController =
+            ThomasFormField.RadioInputController(
                 identifier = "single choice",
-                value = JsonValue.wrap("single choice value"),
-                isValid = true
+                originalValue = JsonValue.wrap("single choice value"),
+                filedType = ThomasFormField.FiledType.just(
+                    value = JsonValue.wrap("single choice value"),
+                    validator = { true }
+                )
+
             )
 
-        private val checkboxControllerData: FormData.CheckboxController =
-            FormData.CheckboxController(
+        private val checkboxControllerData: ThomasFormField.CheckboxController =
+            ThomasFormField.CheckboxController(
                 identifier = "multiple choice",
-                value = setOf(JsonValue.wrap("multiple choice value")),
-                isValid = true
+                originalValue = setOf(JsonValue.wrap("multiple choice value")),
+                filedType = ThomasFormField.FiledType.just(
+                    value = setOf(JsonValue.wrap("multiple choice value")),
+                    validator = { true }
+                )
             )
 
         private val textInputData: TextInput =
-            TextInput(textInput = FormInputType.TEXT, identifier = "text input", value = "text input value", isValid = true)
+            TextInput(
+                textInput = FormInputType.TEXT,
+                identifier = "text input",
+                originalValue = "text input value",
+                filedType = ThomasFormField.FiledType.just("text input value")
+            )
 
         private val emailInputData: TextInput =
-            TextInput(textInput = FormInputType.EMAIL, identifier = "email input", value = "text@value", isValid = true)
+            TextInput(
+                textInput = FormInputType.EMAIL,
+                identifier = "email input",
+                originalValue = "text@value",
+                filedType = ThomasFormField.FiledType.just("text@value")
+            )
 
-        private val toggleData: FormData.Toggle =
-            FormData.Toggle(identifier = "toggle input", value = true, isValid = true)
+        private val toggleData: ThomasFormField.Toggle =
+            ThomasFormField.Toggle(
+                identifier = "toggle input",
+                originalValue = true,
+                filedType = ThomasFormField.FiledType.just(true)
+            )
 
         private val scoreData: Score =
-            Score(identifier = "score", value = 5, isValid = true)
-
-        private val npsFormData: FormData.Nps =
-            FormData.Nps(
-                identifier = "child nps",
-                responseType = "child nps response type",
-                scoreId = "child score",
-                children = setOf(
-                    Score(identifier = "child score", value = 7, isValid = true)
-                )
+            Score(
+                identifier = "score",
+                originalValue = 5,
+                filedType = ThomasFormField.FiledType.just(5)
             )
 
-        private val formData: FormData.Form =
-            FormData.Form(
-                identifier = "child form",
-                responseType = "child form response type",
-                children = setOf(
-                    TextInput(textInput = FormInputType.TEXT, identifier = "child text", value = "child text input", isValid = true)
+        private val npsThomasFormField: ThomasFormField.Nps
+            get() {
+                val children = setOf(
+                    Score(
+                        identifier = "child score",
+                        originalValue = 7,
+                        filedType = ThomasFormField.FiledType.just(7)
+                    )
                 )
-            )
 
-        private val children: Set<FormData<*>> = setOf(
+                return ThomasFormField.Nps(
+                    identifier = "child nps",
+                    responseType = "child nps response type",
+                    scoreId = "child score",
+                    children = children,
+                    filedType = ThomasFormField.FiledType.just(children)
+                )
+            }
+
+
+        private val thomasFormField: ThomasFormField.Form
+            get() {
+                val children = setOf(
+                    TextInput(
+                        textInput = FormInputType.TEXT,
+                        identifier = "child text",
+                        originalValue = "child text input",
+                        filedType = ThomasFormField.FiledType.just("child text input")
+                    )
+                )
+
+                return ThomasFormField.Form(
+                    identifier = "child form",
+                    responseType = "child form response type",
+                    children = children,
+                    filedType = ThomasFormField.FiledType.just(children)
+                )
+            }
+
+
+        private val children: Set<ThomasFormField<*>> = setOf(
             radioInputControllerData,
             checkboxControllerData,
             textInputData,
             toggleData,
             scoreData,
-            npsFormData,
-            formData,
+            npsThomasFormField,
+            thomasFormField,
             emailInputData
         )
 
-        private val form: FormData.Form = FormData.Form(
+        private val form: ThomasFormField.Form = ThomasFormField.Form(
             identifier = "parent form",
             responseType = "parent form response type",
-            children = children
+            children = children,
+            filedType = ThomasFormField.FiledType.just(children)
         )
 
         @Language("json")

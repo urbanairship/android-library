@@ -3,17 +3,15 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
-import com.urbanairship.android.layout.environment.SharedState
-import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.environment.inputData
 import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.hasTapHandler
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.util.onEditing
 import com.urbanairship.android.layout.util.textChanges
 import com.urbanairship.android.layout.view.TextInputView
@@ -21,13 +19,14 @@ import com.urbanairship.util.airshipIsValidEmail
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal class TextInputModel(
     viewInfo: TextInputInfo,
-    private val formState: SharedState<State.Form>,
+    private val formState: ThomasForm,
     environment: ModelEnvironment,
     properties: ModelProperties
 ) : BaseModel<TextInputView, TextInputInfo, TextInputModel.Listener>(
@@ -40,21 +39,25 @@ internal class TextInputModel(
     }
 
     init {
-        formState.update { state ->
-            state.copyWithFormInput(
-                FormData.TextInput(
-                    textInput = viewInfo.inputType,
-                    identifier = viewInfo.identifier,
-                    value = null,
-                    isValid = !viewInfo.isRequired,
-                    attributeName = viewInfo.attributeName,
-                    attributeValue = null
+        formState.updateFormInput(
+            value = ThomasFormField.TextInput(
+                textInput = viewInfo.inputType,
+                identifier = viewInfo.identifier,
+                originalValue = null,
+                filedType = ThomasFormField.FiledType.just(
+                    value = "",
+                    validator = { !viewInfo.isRequired },
+                    attributes = ThomasFormField.makeAttributes(
+                        name = viewInfo.attributeName,
+                        value = null
+                    )
                 )
-            )
-        }
+            ),
+            pageId = properties.pagerPageId
+        )
 
         modelScope.launch {
-            formState.changes.collect { state ->
+            formState.formUpdates.collect { state ->
                 listener?.setEnabled(state.isEnabled)
             }
         }
@@ -66,8 +69,8 @@ internal class TextInputModel(
         id = viewId
 
         // Restore value, if available
-        formState.inputData<FormData.TextInput>(viewInfo.identifier)?.let { input ->
-            input.value?.let { listener?.restoreValue(it) }
+        formState.inputData<ThomasFormField.TextInput>(viewInfo.identifier)?.let { input ->
+            input.originalValue?.let { listener?.restoreValue(it) }
         }
     }
 
@@ -75,25 +78,58 @@ internal class TextInputModel(
         super.onViewCreated(view)
 
         onFormInputDisplayed { isDisplayed ->
-            formState.update { state ->
-                state.copyWithDisplayState(viewInfo.identifier, isDisplayed)
-            }
+            formState.updateWithDisplayState(viewInfo.identifier, isDisplayed)
         }
     }
 
-    // Leaving this as suspend for now for SMS validation in the future
-    fun validate(text: String?): Boolean {
+    private fun makeResolveMethod(text: String?): ThomasFormField.FiledType<String> {
+
+        val attributes = ThomasFormField.makeAttributes(
+            name = viewInfo.attributeName,
+            value = if (text?.isNotEmpty() == true) AttributeValue.wrap(text) else null
+        )
+
+        val channelRegistration = channelRegistration(text)?.let { listOf(it) }
+
         if (text.isNullOrEmpty()) {
-            return !viewInfo.isRequired
+            return ThomasFormField.FiledType.just(
+                value = text ?: "",
+                validator = { !viewInfo.isRequired },
+                attributes = attributes,
+                channels = channelRegistration
+            )
         }
 
         return when (viewInfo.inputType) {
             FormInputType.EMAIL -> {
-                return text.airshipIsValidEmail()
+                return ThomasFormField.FiledType.just(
+                    value = text,
+                    validator = { it?.airshipIsValidEmail() == true },
+                    attributes = attributes,
+                    channels = channelRegistration
+                )
             }
-            FormInputType.NUMBER -> true
-            FormInputType.TEXT -> true
-            FormInputType.TEXT_MULTILINE -> true
+            FormInputType.NUMBER -> {
+                return ThomasFormField.FiledType.Async(
+                    fetcher = ThomasFormField.AsyncValueFetcher(
+                        //TODO: il replace with an actual implementation
+                        fetchBlock = { ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
+                            ThomasFormField.Result(
+                                value = "--validated--"
+                        )) }
+                    )
+                )
+            }
+            FormInputType.TEXT -> ThomasFormField.FiledType.just(
+                value = text,
+                attributes = attributes,
+                channels = channelRegistration
+            )
+            FormInputType.TEXT_MULTILINE -> ThomasFormField.FiledType.just(
+                value = text,
+                attributes = attributes,
+                channels = channelRegistration
+            )
         }
     }
 
@@ -128,35 +164,11 @@ internal class TextInputModel(
 
         viewScope.launch {
             view.textChanges().collect { value ->
-                val updateValidationState = value.isNotEmpty() || validationState.value != null
-                if (updateValidationState) {
-                    validationState.update { ValidationState.VALIDATING }
-                }
 
-                val trimmed = value.trim()
-                val isValid = validate(trimmed)
-
-                if (updateValidationState) {
-                    validationState.update { if (isValid) ValidationState.VALID else ValidationState.INVALID  }
-                }
-
-                formState.update { state ->
-                    state.copyWithFormInput(
-                        FormData.TextInput(
-                            textInput = viewInfo.inputType,
-                            identifier = viewInfo.identifier,
-                            value = value,
-                            isValid = isValid,
-                            attributeName = viewInfo.attributeName,
-                            attributeValue = if (trimmed.isNotEmpty()) {
-                                AttributeValue.wrap(trimmed)
-                            } else {
-                                null
-                            },
-                            channelRegistration = channelRegistration(trimmed)
-                        )
-                    )
-                }
+                formState.updateFormInput(
+                    value = makeFormField(value, validationState),
+                    pageId = properties.pagerPageId
+                )
             }
         }
 
@@ -195,5 +207,49 @@ internal class TextInputModel(
                 view.taps().collect { handleViewEvent(EventHandler.Type.TAP) }
             }
         }
+    }
+
+    private fun makeFormField(
+        input: String,
+        validationStatus: MutableStateFlow<ValidationState?>
+    ): ThomasFormField.TextInput {
+
+        val updateValidationState = input.isNotEmpty() || validationStatus.value != null
+        if (updateValidationState) {
+            validationStatus.update { ValidationState.VALIDATING }
+        }
+
+        val trimmed = input.trim()
+        val method = makeResolveMethod(trimmed)
+        when(method) {
+            is ThomasFormField.FiledType.Async -> {
+                modelScope.launch {
+                    when(method.fetcher.results.first { it != null }) {
+                        is ThomasFormField.AsyncValueFetcher.PendingResult.Error -> {
+                            //TODO: il retry?
+                        }
+                        is ThomasFormField.AsyncValueFetcher.PendingResult.Invalid -> {
+                            validationStatus.update { ValidationState.INVALID }
+                        }
+                        is ThomasFormField.AsyncValueFetcher.PendingResult.Valid -> {
+                            validationStatus.update { ValidationState.VALID }
+                        }
+                        null -> { }
+                    }
+                }
+            }
+            is ThomasFormField.FiledType.Instant -> {
+                validationStatus.update {
+                    if (method.result != null) ValidationState.VALID else ValidationState.INVALID
+                }
+            }
+        }
+
+        return ThomasFormField.TextInput(
+            textInput = viewInfo.inputType,
+            identifier = viewInfo.identifier,
+            originalValue = input,
+            filedType = method
+        )
     }
 }

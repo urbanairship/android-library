@@ -5,6 +5,7 @@ import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LabelButtonInfo
 import com.urbanairship.android.layout.view.LabelButtonView
@@ -12,7 +13,7 @@ import com.urbanairship.android.layout.view.LabelButtonView
 internal class LabelButtonModel(
     viewInfo: LabelButtonInfo,
     val label: LabelModel,
-    formState: SharedState<State.Form>?,
+    formState: ThomasForm?,
     pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
     properties: ModelProperties,

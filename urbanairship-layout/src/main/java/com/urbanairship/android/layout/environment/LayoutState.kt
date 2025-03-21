@@ -8,23 +8,23 @@ import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.reporting.AttributeName
-import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
+import com.urbanairship.android.layout.reporting.ThomasFormField
+import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.json.JsonValue
-import kotlin.collections.set
 import kotlin.math.max
 import kotlinx.coroutines.flow.StateFlow
 
 internal class LayoutState(
     val pager: SharedState<State.Pager>?,
-    val form: SharedState<State.Form>?,
-    val parentForm: SharedState<State.Form>?,
     val checkbox: SharedState<State.Checkbox>?,
     val radio: SharedState<State.Radio>?,
     val layout: SharedState<State.Layout>,
-    val thomasState: StateFlow<ThomasState>
+    val thomasState: StateFlow<ThomasState>,
+    val thomasForm: ThomasForm?,
+    val parentForm: ThomasForm?
 ) {
     fun reportingContext(
         formContext: FormInfo? = null,
@@ -32,16 +32,18 @@ internal class LayoutState(
         buttonId: String? = null
     ): LayoutData =
         LayoutData(
-            formContext ?: form?.changes?.value?.reportingContext(),
+            formContext ?: thomasForm?.formUpdates?.value?.reportingContext(),
             pagerContext ?: pager?.changes?.value?.reportingContext(),
             buttonId
         )
 
     companion object {
         @JvmField
-        val EMPTY = LayoutState(null, null, null, null, null,
+        val EMPTY = LayoutState(null, null, null,
             layout = SharedState(State.Layout.DEFAULT),
-            thomasState = makeThomasState(null, null)
+            thomasState = makeThomasState(null, null),
+            thomasForm = null,
+            parentForm = null
         )
     }
 
@@ -180,37 +182,51 @@ internal sealed class State {
         val identifier: String,
         val formType: FormType,
         val formResponseType: String?,
-        val data: Map<String, FormData<*>> = emptyMap(),
-        val inputValidity: Map<String, Boolean> = emptyMap(),
+        val status: ThomasFormStatus = ThomasFormStatus.PENDING_VALIDATION,
         /**
          * Input identifiers that are displayed in the current pager page.
          * If the form is not in a pager, this will contain all input identifiers.
          */
         val displayedInputs: Set<String> = emptySet(),
         val isVisible: Boolean = false,
-        val isSubmitted: Boolean = false,
         val isEnabled: Boolean = true,
-        val isDisplayReported: Boolean = false
-    ) : State() {
-        val isValid: Boolean
-            get() = inputValidity.isNotEmpty() && inputValidity.values.all { it }
+        val isDisplayReported: Boolean = false,
+        private val children: Map<String, Child> = emptyMap(),
+        private val childResults: Map<String, ThomasFormFieldStatus<*>> = emptyMap()
 
-        fun copyWithFormInput(value: FormData<*>): Form {
+    ) : State() {
+
+        val filteredFields: Map<String, ThomasFormField<*>>
+            get() = children
+                .filterValues { it.predicate?.invoke() ?: true }
+                .mapValues { it.value.field }
+
+        val isSubmitted: Boolean = status.isSubmitted
+
+        fun copyWithFormInput(
+            value: ThomasFormField<*>,
+            predicate: FormFieldFilterPredicate? = null
+        ): Form {
+
+            children[value.identifier]?.field?.filedType?.cancel()
+
+            val updatedChildren = children + (value.identifier to Child(value, predicate))
+            val updatedResults = childResults + (value.identifier to value.status)
+
             return copy(
-                data = data + (value.identifier to value),
-                inputValidity = inputValidity + (value.identifier to value.isValid),
+                children = updatedChildren,
+                childResults = updatedResults,
+                status = evaluateFormStatus(updatedChildren, updatedResults)
             )
         }
 
-        fun copyWithDisplayState(identifier: String, isDisplayed: Boolean?): Form {
+        fun copyWithDisplayState(identifier: String, isDisplayed: Boolean): Form {
             return copy(
-                displayedInputs = isDisplayed?.let {
-                    if (isDisplayed) {
-                        displayedInputs + identifier
-                    } else {
-                        displayedInputs - identifier
-                    }
-                } ?: displayedInputs
+                displayedInputs = if (isDisplayed) {
+                    displayedInputs + identifier
+                } else {
+                    displayedInputs - identifier
+                }
             )
         }
 
@@ -218,46 +234,96 @@ internal sealed class State {
             ReportingEvent.FormResult(formData(), reportingContext(), attributes(), channels())
 
         fun reportingContext(): FormInfo =
-            FormInfo(identifier, formType.value, formResponseType, isSubmitted)
+            FormInfo(identifier, formType.value, formResponseType, status.isSubmitted)
 
-        private fun formData(): FormData.BaseForm =
-            when (formType) {
-                is FormType.Form ->
-                    FormData.Form(identifier, formResponseType, data.values.toSet())
-                is FormType.Nps ->
-                    FormData.Nps(identifier, formType.scoreId, formResponseType, data.values.toSet())
+        @Suppress("UNCHECKED_CAST")
+        internal fun <T : ThomasFormField<*>> inputData(identifier: String): T? {
+            return children[identifier]?.field as? T
+        }
+
+        internal fun childStatus(identifier: String): ThomasFormFieldStatus<*>? {
+            return children[identifier]?.field?.status
+        }
+
+        private fun evaluateFormStatus(
+            children: Map<String, Child>,
+            results: Map<String, ThomasFormFieldStatus<*>>
+        ): ThomasFormStatus {
+            val filtered = children
+                .filterValues { it.predicate?.invoke() ?: true }
+                .keys
+
+            val filteredResults = results
+                .filter { filtered.contains(it.key) }
+
+            return if (filteredResults.values.any { it.isInvalid }) {
+                ThomasFormStatus.INVALID
+            } else if (filteredResults.values.any { it.isError }) {
+                ThomasFormStatus.ERROR
+            } else {
+                ThomasFormStatus.VALID
             }
+        }
+
+        private fun formData(): ThomasFormField.BaseForm {
+            val children = filteredFields.values.toSet()
+
+            return when (formType) {
+                is FormType.Form ->
+                    ThomasFormField.Form(
+                        identifier = identifier,
+                        responseType = formResponseType,
+                        children = children,
+                        filedType = ThomasFormField.FiledType.just(children))
+                is FormType.Nps ->
+                    ThomasFormField.Nps(
+                        identifier = identifier,
+                        scoreId = formType.scoreId,
+                        responseType = formResponseType,
+                        children = children,
+                        filedType = ThomasFormField.FiledType.just(children))
+            }
+        }
+
 
         private fun attributes(): Map<AttributeName, AttributeValue> {
             val map = mutableMapOf<AttributeName, AttributeValue>()
-            for (d in data) {
-                val attributeName = d.value.attributeName
-                val attributeValue = d.value.attributeValue
-                val isValid = d.value.isValid
-                if (attributeName != null && attributeValue != null && isValid) {
-                    map[attributeName] = attributeValue
+
+            filteredFields
+                .values
+                .mapNotNull { value ->
+                    when(val method = value.filedType) {
+                        is ThomasFormField.FiledType.Async -> method.fetcher.results.value?.value
+                        is ThomasFormField.FiledType.Instant -> method.result
+                    }?.attributes
                 }
-            }
-            return map
+                .forEach { map.putAll(it) }
+
+            return map.toMap()
         }
 
         private fun channels(): List<ThomasChannelRegistration> {
-            val list = mutableListOf<ThomasChannelRegistration>()
-            for (d in data) {
-                val registration = d.value.channelRegistration
-                val isValid = d.value.isValid
-                if (registration != null && isValid) {
-                    list.add(registration)
+            return filteredFields.values
+                .mapNotNull { value ->
+                    when(val method = value.filedType) {
+                        is ThomasFormField.FiledType.Async -> method.fetcher.results.value?.value
+                        is ThomasFormField.FiledType.Instant -> method.result
+                    }?.channels
                 }
-            }
-            return list
+                .flatten()
         }
+
+        internal data class Child(
+            val field: ThomasFormField<*>,
+            val predicate: FormFieldFilterPredicate? = null
+        )
 
         companion object {
             val DEFAULT = Form(
                 identifier = "",
                 formType = FormType.Form,
-                formResponseType = ""
+                formResponseType = "",
+                status = ThomasFormStatus.PENDING_VALIDATION
             )
         }
     }
@@ -286,11 +352,8 @@ internal sealed class State {
     }
 }
 
-@Suppress("UNCHECKED_CAST")
-internal fun <T : FormData<*>> State.Form.inputData(identifier: String): T? {
-    return data[identifier] as? T
-}
+internal typealias FormFieldFilterPredicate = () -> Boolean
 
-internal fun <T : FormData<*>> SharedState<State.Form>.inputData(identifier: String): T? {
-    return changes.value.inputData(identifier)
-}
+//internal fun <T : ThomasFormField<*>> SharedState<State.Form>.inputData(identifier: String): T? {
+//    return changes.value.inputData(identifier)
+//}

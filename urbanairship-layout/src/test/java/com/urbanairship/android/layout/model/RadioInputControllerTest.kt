@@ -6,10 +6,11 @@ import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
-import com.urbanairship.android.layout.environment.inputData
+import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.info.RadioInputControllerInfo
 import com.urbanairship.android.layout.reporting.AttributeName
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonValue
 import app.cash.turbine.test
 import io.mockk.every
@@ -67,15 +68,15 @@ public class RadioInputControllerTest {
     public fun testInit(): TestResult = runTest {
         formState.changes.test {
             // Sanity check initial form state.
-            assertTrue(awaitItem().data.isEmpty())
+            assertTrue(awaitItem().filteredFields.isEmpty())
 
             initRadioInputController()
 
             val item = awaitItem()
             // Verify that our checkbox controller updated the form state.
-            assertTrue(item.data.containsKey(IDENTIFIER))
+            assertTrue(item.filteredFields.containsKey(IDENTIFIER))
             // Verify that the response is valid, since the checkbox controller is not required.
-            assertTrue(item.inputValidity[IDENTIFIER]!!)
+            assertTrue(item.childStatus(IDENTIFIER)?.isValid == true)
 
             ensureAllEventsConsumed()
         }
@@ -85,26 +86,26 @@ public class RadioInputControllerTest {
     public fun testRequired(): TestResult = runTest {
         formState.changes.test {
             // Sanity check initial form state.
-            assertTrue(awaitItem().data.isEmpty())
+            assertTrue(awaitItem().filteredFields.isEmpty())
 
             initRadioInputController(isRequired = true)
 
             awaitItem().let {
                 // Verify that our checkbox controller updated the form state.
-                assertTrue(it.data.containsKey(IDENTIFIER))
+                assertTrue(it.filteredFields.containsKey(IDENTIFIER))
                 // Not valid yet, since nothing is selected.
-                assertFalse(it.inputValidity[IDENTIFIER]!!)
+                assertTrue(it.childStatus(IDENTIFIER)?.isValid == false)
             }
             radioState.update { it.copy(selectedItem = SELECTED_VALUE) }
             testScheduler.runCurrent()
 
             awaitItem().let {
                 // Valid now that we've selected a value
-                assertTrue(it.inputValidity[IDENTIFIER]!!)
+                assertTrue(it.childStatus(IDENTIFIER)?.isValid == true)
                 // Make sure the controller updated form state with the selected value
                 assertEquals(
                     SELECTED_VALUE,
-                    it.inputData<FormData.RadioInputController>(IDENTIFIER)?.value
+                    it.inputData<ThomasFormField.RadioInputController>(IDENTIFIER)?.originalValue
                 )
             }
 
@@ -143,7 +144,7 @@ public class RadioInputControllerTest {
                 every { this@mockk.attributeName } returns attributeName
 
             },
-            formState = formState,
+            formState = ThomasForm(formState),
             radioState = radioState,
             environment = mockEnv,
             properties = ModelProperties(pagerPageId = null)

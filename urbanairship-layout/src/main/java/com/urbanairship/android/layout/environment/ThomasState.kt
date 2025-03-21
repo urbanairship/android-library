@@ -3,7 +3,7 @@
 package com.urbanairship.android.layout.environment
 
 import com.urbanairship.android.layout.info.ViewPropertyOverride
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -22,10 +22,11 @@ internal data class ThomasState(
         val layout = layout ?: return JsonValue.NULL
         val form = form ?: return layout.state.toJsonMap().toJsonValue()
 
-        val formState = FormData.Form(
+        val formState = ThomasFormField.Form(
             identifier = CURRENT,
             responseType = null,
-            children = form.data.values.toSet()
+            children = form.filteredFields.values.toSet(),
+            filedType = ThomasFormField.FiledType.just(emptySet())
         )
 
         return layout.state
@@ -33,7 +34,7 @@ internal data class ThomasState(
             .apply {
                 put(FORMS, jsonMapOf(
                     CURRENT to jsonMapOf(
-                        DATA to formState.toJsonValue()
+                        DATA to formState.formData
                     )
                 ).toJsonValue())
             }

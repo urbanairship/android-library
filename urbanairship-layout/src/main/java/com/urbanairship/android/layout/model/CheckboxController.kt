@@ -6,11 +6,12 @@ import android.view.View
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonValue
 import kotlinx.coroutines.launch
 
@@ -22,7 +23,7 @@ import kotlinx.coroutines.launch
 internal class CheckboxController(
     viewInfo: CheckboxControllerInfo,
     val view: AnyModel,
-    private val formState: SharedState<State.Form>,
+    private val formState: ThomasForm,
     private val checkboxState: SharedState<State.Checkbox>,
     environment: ModelEnvironment,
     properties: ModelProperties
@@ -35,15 +36,17 @@ internal class CheckboxController(
     init {
         modelScope.launch {
             checkboxState.changes.collect { checkbox ->
-                formState.update { form ->
-                    form.copyWithFormInput(
-                        FormData.CheckboxController(
-                            identifier = checkbox.identifier,
+                formState.updateFormInput(
+                    value = ThomasFormField.CheckboxController(
+                        identifier = checkbox.identifier,
+                        originalValue = checkbox.selectedItems,
+                        filedType = ThomasFormField.FiledType.just(
                             value = checkbox.selectedItems,
-                            isValid = isValid(checkbox.selectedItems)
+                            validator = { isValid(it) }
                         )
-                    )
-                }
+                    ),
+                    pageId = properties.pagerPageId
+                )
 
                 if (viewInfo.eventHandlers.hasFormInputHandler()) {
                     handleViewEvent(EventHandler.Type.FORM_INPUT, checkbox.selectedItems.toList())
@@ -52,7 +55,7 @@ internal class CheckboxController(
         }
 
         modelScope.launch {
-            formState.changes.collect { form ->
+            formState.formUpdates.collect { form ->
                 checkboxState.update { state ->
                     state.copy(isEnabled = form.isEnabled)
                 }

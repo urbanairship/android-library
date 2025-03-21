@@ -5,6 +5,7 @@ import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.makeThomasState
 import com.urbanairship.android.layout.info.ButtonLayoutInfo
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
@@ -282,13 +283,17 @@ internal class ThomasModelFactory : ModelFactory {
             val parentForm = form.getOrNull(1)
 
             val formFlow = childForm?.let { states[it] as? SharedState<State.Form> }
+            val parentFormFlow = parentForm?.let { states[it] as? SharedState<State.Form> }
+
             val layoutFlow = layout?.let { states[it] as? SharedState<State.Layout> }
                 ?: LayoutState.EMPTY.layout
 
+            val pagerFlow = pager?.let { states[it] as? SharedState<State.Pager> }
+
             return LayoutState(
-                form = formFlow,
-                parentForm = parentForm?.let { states[it] as? SharedState<State.Form> },
-                pager = pager?.let { states[it] as? SharedState<State.Pager> },
+                thomasForm = formFlow?.let { ThomasForm(it, pagerFlow) },
+                parentForm = parentFormFlow?.let { ThomasForm(it, pagerFlow) },
+                pager = pagerFlow,
                 checkbox = checkbox?.let { states[it] as? SharedState<State.Checkbox> },
                 radio = radio?.let { states[it] as? SharedState<State.Radio> },
                 layout = layoutFlow,
@@ -383,7 +388,7 @@ internal class ThomasModelFactory : ModelFactory {
             is ButtonLayoutInfo -> ButtonLayoutModel(
                 viewInfo = info,
                 view = children.first().first,
-                formState = environment.layoutState.form,
+                formState = environment.layoutState.thomasForm,
                 pagerState = environment.layoutState.pager,
                 environment = environment,
                 properties = properties
@@ -391,9 +396,9 @@ internal class ThomasModelFactory : ModelFactory {
             is FormControllerInfo -> FormController(
                 viewInfo = info,
                 view = children.first().first,
-                formState = environment.layoutState.form
+                formState = environment.layoutState.thomasForm
                     ?: throw ModelFactoryException("Required form state was null for FormController!"),
-                parentFormState = environment.layoutState.parentForm,
+                parentState = environment.layoutState.parentForm,
                 // pagerState can be null, depending on the layout.
                 pagerState = environment.layoutState.pager,
                 environment = environment,
@@ -402,9 +407,9 @@ internal class ThomasModelFactory : ModelFactory {
             is NpsFormControllerInfo -> NpsFormController(
                 viewInfo = info,
                 view = children.first().first,
-                formState = environment.layoutState.form
+                formState = environment.layoutState.thomasForm
                     ?: throw ModelFactoryException("Required form state was null for NpsFormController!"),
-                parentFormState = environment.layoutState.parentForm,
+                parentForm = environment.layoutState.parentForm,
                 // pagerState can be null, depending on the layout.
                 pagerState = environment.layoutState.pager,
                 environment = environment,
@@ -422,7 +427,7 @@ internal class ThomasModelFactory : ModelFactory {
             is CheckboxControllerInfo -> CheckboxController(
                 viewInfo = info,
                 view = children.first().first,
-                formState = environment.layoutState.form
+                formState = environment.layoutState.thomasForm
                     ?: throw ModelFactoryException("Required form state was null for CheckboxController!"),
                 checkboxState = environment.layoutState.checkbox
                     ?: throw ModelFactoryException("Required checkbox state was null for CheckboxController!"),
@@ -432,7 +437,7 @@ internal class ThomasModelFactory : ModelFactory {
             is RadioInputControllerInfo -> RadioInputController(
                 viewInfo = info,
                 view = children.first().first,
-                formState = environment.layoutState.form
+                formState = environment.layoutState.thomasForm
                     ?: throw ModelFactoryException("Required form state was null for RadioInputController!"),
                 radioState = environment.layoutState.radio
                     ?: throw ModelFactoryException("Required radio state was null for RadioInputController!"),
@@ -472,14 +477,14 @@ internal class ThomasModelFactory : ModelFactory {
         is LabelButtonInfo -> LabelButtonModel(
             viewInfo = info,
             label = LabelModel(info.label, environment, properties),
-            formState = environment.layoutState.form,
+            formState = environment.layoutState.thomasForm,
             pagerState = environment.layoutState.pager,
             environment = environment,
             properties = properties
         )
         is ImageButtonInfo -> ImageButtonModel(
             viewInfo = info,
-            formState = environment.layoutState.form,
+            formState = environment.layoutState.thomasForm,
             pagerState = environment.layoutState.pager,
             environment = environment,
             properties = properties
@@ -498,14 +503,14 @@ internal class ThomasModelFactory : ModelFactory {
             viewInfo = info,
             checkboxState = environment.layoutState.checkbox
                 ?: throw ModelFactoryException("Required checkbox state was null for CheckboxModel!"),
-            formState = environment.layoutState.form
+            formState = environment.layoutState.thomasForm
                 ?: throw ModelFactoryException("Required form state was null for CheckboxModel!"),
             environment = environment,
             properties = properties
         )
         is ToggleInfo -> ToggleModel(
             viewInfo = info,
-            formState = environment.layoutState.form
+            formState = environment.layoutState.thomasForm
                 ?: throw ModelFactoryException("Required form state was null for ToggleModel!"),
             environment = environment,
             properties = properties
@@ -514,21 +519,21 @@ internal class ThomasModelFactory : ModelFactory {
             viewInfo = info,
             radioState = environment.layoutState.radio
                 ?: throw ModelFactoryException("Required radio state was null for RadioInputModel!"),
-            formState = environment.layoutState.form
+            formState = environment.layoutState.thomasForm
                 ?: throw ModelFactoryException("Required form state was null for RadioInputModel!"),
             environment = environment,
             properties = properties
         )
         is TextInputInfo -> TextInputModel(
             viewInfo = info,
-            formState = environment.layoutState.form
+            formState = environment.layoutState.thomasForm
                 ?: throw ModelFactoryException("Required form state was null for TextInputModel!"),
             environment = environment,
             properties = properties
         )
         is ScoreInfo -> ScoreModel(
             viewInfo = info,
-            formState = environment.layoutState.form
+            formState = environment.layoutState.thomasForm
                 ?: throw ModelFactoryException("Required form state was null for ScoreModel!"),
             environment = environment,
             properties = properties

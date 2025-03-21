@@ -2,7 +2,7 @@
 package com.urbanairship.android.layout
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.android.layout.reporting.FormData.BaseForm
+import com.urbanairship.android.layout.reporting.ThomasFormField.BaseForm
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData

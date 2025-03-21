@@ -3,15 +3,14 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
-import com.urbanairship.android.layout.environment.SharedState
-import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ToggleInfo
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.EventHandler.Type
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.property.hasTapHandler
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.util.checkedChanges
 import com.urbanairship.android.layout.view.ToggleView
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,7 +23,7 @@ import kotlinx.coroutines.launch
  */
 internal class ToggleModel(
     viewInfo: ToggleInfo,
-    private val formState: SharedState<State.Form>,
+    private val formState: ThomasForm,
     environment: ModelEnvironment,
     properties: ModelProperties
 ) : CheckableModel<ToggleView, ToggleInfo>(
@@ -45,9 +44,7 @@ internal class ToggleModel(
         super.onViewCreated(view)
 
         onFormInputDisplayed { isDisplayed ->
-            formState.update { state ->
-                state.copyWithDisplayState(viewInfo.identifier, isDisplayed)
-            }
+            formState.updateWithDisplayState(viewInfo.identifier, isDisplayed)
         }
     }
 
@@ -60,17 +57,21 @@ internal class ToggleModel(
         // Update form state on every checked change.
         viewScope.launch {
             checkedChanges.collect { isChecked ->
-                formState.update { state ->
-                    state.copyWithFormInput(
-                        FormData.Toggle(
-                            identifier = viewInfo.identifier,
+                formState.updateFormInput(
+                    value = ThomasFormField.Toggle(
+                        identifier = viewInfo.identifier,
+                        originalValue = isChecked,
+                        filedType = ThomasFormField.FiledType.just(
                             value = isChecked,
-                            isValid = isChecked || !viewInfo.isRequired,
-                            attributeName = viewInfo.attributeName,
-                            attributeValue = viewInfo.attributeValue
+                            validator = { it || !viewInfo.isRequired },
+                            attributes = ThomasFormField.makeAttributes(
+                                name = viewInfo.attributeName,
+                                value = viewInfo.attributeValue
+                            )
                         )
-                    )
-                }
+                    ),
+                    pageId = properties.pagerPageId
+                )
 
                 if (viewInfo.eventHandlers.hasFormInputHandler()) {
                     handleViewEvent(EventHandler.Type.FORM_INPUT, isChecked)
@@ -87,7 +88,7 @@ internal class ToggleModel(
         }
 
         viewScope.launch {
-            formState.changes.collect { state -> setEnabled(state.isEnabled) }
+            formState.formUpdates.collect { state -> setEnabled(state.isEnabled) }
         }
     }
 }

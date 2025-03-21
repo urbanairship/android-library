@@ -5,6 +5,7 @@ import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.RadioInputInfo
 import com.urbanairship.android.layout.property.EventHandler.Type
@@ -21,7 +22,7 @@ import kotlinx.coroutines.launch
 internal class RadioInputModel(
     viewInfo: RadioInputInfo,
     private val radioState: SharedState<State.Radio>,
-    private val formState: SharedState<State.Form>,
+    private val formState: ThomasForm,
     environment: ModelEnvironment,
     properties: ModelProperties
 ) : CheckableModel<RadioInputView, RadioInputInfo>(
@@ -42,10 +43,10 @@ internal class RadioInputModel(
         super.onViewCreated(view)
 
         onFormInputDisplayed { isDisplayed ->
-            formState.update { state ->
-                @OptIn(DelicateLayoutApi::class) val identifier = radioState.value.identifier
-                state.copyWithDisplayState(identifier, isDisplayed)
-            }
+            formState.updateWithDisplayState(
+                identifier = @OptIn(DelicateLayoutApi::class) radioState.value.identifier,
+                isDisplayed = isDisplayed
+            )
         }
     }
 

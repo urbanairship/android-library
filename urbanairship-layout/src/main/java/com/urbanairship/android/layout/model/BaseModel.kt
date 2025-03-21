@@ -9,6 +9,7 @@ import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
@@ -30,7 +31,6 @@ import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.toJsonMap
 import com.urbanairship.util.PlatformUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -54,7 +54,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
     internal interface Listener {
 
-        fun onStateUpdated(state: ThomasState) {}
+        fun onStateUpdated(state: ThomasState) { }
         fun setBackground(old: Background?, new: Background)
         fun setVisibility(visible: Boolean)
         fun setEnabled(enabled: Boolean)
@@ -101,9 +101,9 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
             }
 
             if (viewInfo.enableBehaviors.hasFormBehaviors) {
-                checkNotNull(layoutState.form) { "Form state is required for form behaviors" }
+                checkNotNull(layoutState.thomasForm) { "Form state is required for form behaviors" }
                 modelScope.launch {
-                    layoutState.form.changes.collect { handleFormBehaviors(it) }
+                    layoutState.thomasForm.formUpdates.collect { handleFormBehaviors(it) }
                 }
             }
         }
@@ -254,11 +254,11 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         val behaviors = viewInfo.enableBehaviors ?: return
         val hasFormValidationBehavior = behaviors.contains(EnableBehaviorType.FORM_VALIDATION)
         val hasFormSubmitBehavior = behaviors.contains(EnableBehaviorType.FORM_SUBMISSION)
-        val isValid = !hasFormValidationBehavior || state.isValid
+        val isValid = !hasFormValidationBehavior || state.status == ThomasFormStatus.VALID
 
         val isEnabled = when {
-            hasFormSubmitBehavior && hasFormValidationBehavior -> !state.isSubmitted && isValid
-            hasFormSubmitBehavior -> !state.isSubmitted
+            hasFormSubmitBehavior && hasFormValidationBehavior -> !state.status.isSubmitted && isValid
+            hasFormSubmitBehavior -> !state.status.isSubmitted
             hasFormValidationBehavior -> isValid
             else -> true
         }

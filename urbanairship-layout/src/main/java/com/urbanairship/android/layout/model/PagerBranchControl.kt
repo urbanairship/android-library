@@ -4,26 +4,16 @@ package com.urbanairship.android.layout.model
 
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
-import com.urbanairship.android.layout.environment.SharedState
-import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.StateAction
-import com.urbanairship.android.layout.reporting.FormData
-import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.json.JsonSerializable
-import com.urbanairship.json.JsonValue
-import com.urbanairship.json.jsonMapOf
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 

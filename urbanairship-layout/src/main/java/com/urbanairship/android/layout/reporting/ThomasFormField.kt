@@ -1,0 +1,347 @@
+package com.urbanairship.android.layout.reporting
+
+import androidx.annotation.RestrictTo
+import com.urbanairship.android.layout.info.ThomasChannelRegistration
+import com.urbanairship.android.layout.property.AttributeValue
+import com.urbanairship.android.layout.property.FormInputType
+import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonSerializable
+import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.util.Clock
+import com.urbanairship.util.TaskSleeper
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.yield
+
+public sealed class ThomasFormField<T>(
+    internal val type: Type,
+) {
+
+    public abstract val identifier: String
+    public abstract val originalValue: T?
+    internal abstract val filedType: FiledType<T>
+
+    internal data class Result<T>(
+        val value: T,
+        val channels: List<ThomasChannelRegistration>? = null,
+        val attributes: Map<AttributeName, AttributeValue>? = null
+    )
+
+    internal val status: ThomasFormFieldStatus<T>
+        get() {
+            return when(val type = filedType) {
+                is FiledType.Async -> type.fetcher.results.value?.status ?: ThomasFormFieldStatus.Pending()
+                is FiledType.Instant -> type.result?.let { ThomasFormFieldStatus.Valid(it) } ?: ThomasFormFieldStatus.Invalid()
+            }
+        }
+
+    public enum class Type(private val value: String) : JsonSerializable {
+        FORM("form"),
+        NPS_FORM("nps"),
+        TOGGLE("toggle"),
+        MULTIPLE_CHOICE("multiple_choice"),
+        SINGLE_CHOICE("single_choice"),
+        TEXT("text_input"),
+        EMAIL("email_input"),
+        SCORE("score");
+
+        override fun toJsonValue(): JsonValue = JsonValue.wrap(value)
+    }
+
+    internal open val formData: JsonMap
+        get() = jsonMapOf(
+            KEY_TYPE to type,
+            KEY_VALUE to JsonValue.wrapOpt(originalValue)
+        )
+
+    public fun jsonValue(): JsonValue? =
+        JsonValue.wrapOpt(originalValue).let {
+            if (it != JsonValue.NULL) it else null
+        }
+
+    public data class Toggle(
+        override val identifier: String,
+        override val originalValue: Boolean?,
+        override val filedType: FiledType<Boolean>
+    ) : ThomasFormField<Boolean>(Type.TOGGLE)
+
+    public data class CheckboxController(
+        override val identifier: String,
+        override val originalValue: Set<JsonValue>?,
+        override val filedType: FiledType<Set<JsonValue>>
+    ) : ThomasFormField<Set<JsonValue>>(Type.MULTIPLE_CHOICE)
+
+    public data class RadioInputController(
+        override val identifier: String,
+        override val originalValue: JsonValue?,
+        override val filedType: FiledType<JsonValue>
+    ) : ThomasFormField<JsonValue>(
+        Type.SINGLE_CHOICE,
+    )
+
+    public data class TextInput(
+        val textInput: FormInputType,
+        override val identifier: String,
+        override val originalValue: String?,
+        override val filedType: FiledType<String>
+    ) : ThomasFormField<String>(if (textInput == FormInputType.EMAIL) Type.EMAIL else Type.TEXT)
+
+    public data class Score(
+        override val identifier: String,
+        override val originalValue: Int?,
+        override val filedType: FiledType<Int>
+    ) : ThomasFormField<Int>(Type.SCORE)
+
+    public sealed class BaseForm(
+        type: Type,
+        override val identifier: String,
+        override val originalValue: Set<ThomasFormField<*>>,
+        override val filedType: FiledType<Set<ThomasFormField<*>>>
+    ) : ThomasFormField<Set<ThomasFormField<*>>>(type), JsonSerializable {
+        protected abstract val responseType: String?
+
+        protected val childrenJson: JsonSerializable
+            get() {
+                val builder: JsonMap.Builder = JsonMap.newBuilder()
+                for (child in originalValue) {
+                    builder.putOpt(child.identifier, child.formData)
+                }
+                return builder.build()
+            }
+
+        override fun toJsonValue(): JsonValue =
+            jsonMapOf(identifier to formData).toJsonValue()
+    }
+
+    public data class Form(
+        override val identifier: String,
+        override val responseType: String?,
+        val children: Set<ThomasFormField<*>>,
+        override val filedType: FiledType<Set<ThomasFormField<*>>>
+    ) : BaseForm(Type.FORM, identifier, children, filedType = filedType) {
+
+        override val formData: JsonMap
+            get() = jsonMapOf(
+                KEY_TYPE to type,
+                KEY_CHILDREN to childrenJson,
+                KEY_RESPONSE_TYPE to responseType
+            )
+    }
+
+    public data class Nps(
+        override val identifier: String,
+        private val scoreId: String,
+        override val responseType: String?,
+        val children: Set<ThomasFormField<*>>,
+        override val filedType: FiledType<Set<ThomasFormField<*>>>
+    ) : BaseForm(Type.NPS_FORM, identifier, children, filedType = filedType) {
+        override val formData: JsonMap
+            get() = jsonMapOf(
+                KEY_TYPE to type,
+                KEY_CHILDREN to childrenJson,
+                KEY_SCORE_ID to scoreId,
+                KEY_RESPONSE_TYPE to responseType
+            )
+    }
+
+    internal companion object {
+        private const val KEY_TYPE: String = "type"
+        private const val KEY_VALUE: String = "value"
+        private const val KEY_SCORE_ID: String = "score_id"
+        private const val KEY_CHILDREN: String = "children"
+        private const val KEY_RESPONSE_TYPE: String = "response_type"
+
+        fun makeAttributes(
+            name: AttributeName?,
+            value: AttributeValue?
+        ): Map<AttributeName, AttributeValue>? {
+            if (name == null || value == null) {
+                return null
+            }
+
+            return mapOf(name to value)
+        }
+    }
+
+    override fun toString(): String {
+        return "${formData.toJsonValue()}"
+    }
+
+    public sealed class FiledType<T> {
+        internal data class Instant<T>(val result: Result<T>?): FiledType<T>()
+        internal data class Async<T>(val fetcher: AsyncValueFetcher<T>): FiledType<T>()
+
+        /** @hide */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public companion object {
+            public fun <T> just(
+                value: T,
+                validator: ((T) -> Boolean)? = null,
+                channels: List<ThomasChannelRegistration>? = null,
+                attributes: Map<AttributeName, AttributeValue>? = null
+            ): FiledType<T> {
+                return if (validator == null || validator(value)) {
+                    Instant(Result(
+                        value = value,
+                        attributes = attributes,
+                        channels = channels))
+                } else {
+                    Instant(null)
+                }
+            }
+        }
+
+        internal fun cancel() {
+            when(this) {
+                is Async -> fetcher.cancel()
+                is Instant -> {}
+            }
+        }
+    }
+
+    internal class AsyncValueFetcher<T>(
+        private val fetchBlock: suspend () -> PendingResult<T>,
+//        private val earlyProcessDelay: Duration,
+        private val clock: Clock = Clock.DEFAULT_CLOCK,
+        private val taskSleeper: TaskSleeper = TaskSleeper.default
+    ) {
+
+        private var lastAttemptTimestamp: Long? = null
+        private var fetchJob: Deferred<PendingResult<T>>? = null
+        private var scheduleJob: Job? = null
+        private var nextBackOff: Duration? = null
+
+        private val _resultsFlow = MutableStateFlow<PendingResult<T>?>(null)
+        val results = _resultsFlow.asStateFlow()
+
+        companion object {
+            val INITIAL_BACK_OFF = 3.seconds
+            val MAX_BACK_OFF = 15.seconds
+        }
+
+        suspend fun fetch(scope: CoroutineScope, retryErrors: Boolean): PendingResult<T> {
+            val lastResult = results.value
+            if (lastResult != null && (!lastResult.isError || !retryErrors)) {
+                return lastResult
+            }
+
+            fetchJob?.let { job ->
+                if (!job.isCancelled) {
+                    return job.await()
+                }
+            }
+
+            scheduleJob?.cancel()
+            fetchJob?.cancel()
+
+            return initiateFetching(scope).await()
+        }
+
+        fun cancel() {
+            scheduleJob?.cancel()
+            fetchJob?.cancel()
+        }
+
+        private fun initiateFetching(scope: CoroutineScope): Deferred<PendingResult<T>> {
+            fetchJob?.let {
+                if (!it.isCancelled) {
+                    return it
+                }
+            }
+
+            _resultsFlow.update { null }
+
+            val job = scope.async {
+                try {
+                    processBackOff()
+                    yield()
+                    val result = fetchBlock.invoke()
+                    yield()
+                    processResult(result)
+                    return@async result
+                } catch (ex: Exception) {
+                    if (ex is CancellationException) {
+                        processResult(PendingResult.Error<T>())
+                    }
+                    return@async PendingResult.Error<T>()
+                }
+            }
+
+            fetchJob = job
+            return job
+        }
+
+        private suspend fun processBackOff() {
+            val nextBackOff = nextBackOff ?: return
+            val lastAttemptTimestamp = lastAttemptTimestamp ?: return
+
+            val remaining = nextBackOff - (clock.currentTimeMillis() - lastAttemptTimestamp).milliseconds
+            if (remaining.isPositive()) {
+                taskSleeper.sleep(remaining)
+            }
+        }
+
+        private fun processResult(result: PendingResult<T>) {
+            _resultsFlow.update { result }
+            lastAttemptTimestamp = clock.currentTimeMillis()
+
+            if (result.isError) {
+                nextBackOff = nextBackOff?.let { minOf(it * 2, MAX_BACK_OFF) } ?: INITIAL_BACK_OFF
+            } else {
+                nextBackOff = null
+            }
+        }
+
+        sealed class PendingResult<T>() {
+            data class Valid<T>(val result: Result<T>): PendingResult<T>()
+            class Invalid<T>: PendingResult<T>()
+            class Error<T>: PendingResult<T>()
+
+            val isError: Boolean
+                get() = this is Error
+
+            val status: ThomasFormFieldStatus<T>
+                get() {
+                   return when(this) {
+                        is Error -> ThomasFormFieldStatus.Error()
+                        is Invalid -> ThomasFormFieldStatus.Invalid()
+                        is Valid -> ThomasFormFieldStatus.Valid(result)
+                    }
+                }
+
+            val value: Result<T>?
+                get() {
+                    return when(this) {
+                        is Valid -> result
+                        else -> null
+                    }
+                }
+        }
+    }
+}
+
+internal sealed class ThomasFormFieldStatus<T> {
+    data class Valid<T>(val result: ThomasFormField.Result<T>): ThomasFormFieldStatus<T>()
+    class Invalid<T>(): ThomasFormFieldStatus<T>()
+    class Pending<T>(): ThomasFormFieldStatus<T>()
+    class Error<T>(): ThomasFormFieldStatus<T>()
+
+    val isValid: Boolean
+        get() = this is Valid
+
+    val isError: Boolean
+        get() = this is Error
+
+    val isInvalid: Boolean
+        get() = this is Invalid
+}

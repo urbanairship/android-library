@@ -3,16 +3,14 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
-import com.urbanairship.android.layout.environment.SharedState
-import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.environment.inputData
 import com.urbanairship.android.layout.info.ScoreInfo
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.property.hasTapHandler
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.scoreChanges
 import com.urbanairship.android.layout.view.ScoreView
@@ -29,7 +27,7 @@ import kotlinx.coroutines.launch
  */
 internal class ScoreModel(
     viewInfo: ScoreInfo,
-    private val formState: SharedState<State.Form>,
+    private val formState: ThomasForm,
     environment: ModelEnvironment,
     properties: ModelProperties
 ) : BaseModel<ScoreView, ScoreInfo, ScoreModel.Listener>(
@@ -45,17 +43,21 @@ internal class ScoreModel(
 
     init {
         // Set the initial empty score value
-        formState.update { state ->
-            state.copyWithFormInput(
-                FormData.Score(
-                    identifier = viewInfo.identifier,
-                    value = null,
-                    isValid = !viewInfo.isRequired,
-                    attributeName = viewInfo.attributeName,
-                    attributeValue = AttributeValue.NULL
+        formState.updateFormInput(
+            value = ThomasFormField.Score(
+                identifier = viewInfo.identifier,
+                originalValue = null,
+                filedType = ThomasFormField.FiledType.just(
+                    value = -1,
+                    validator = { it > 0 || !viewInfo.isRequired },
+                    attributes = ThomasFormField.makeAttributes(
+                        name = viewInfo.attributeName,
+                        value = AttributeValue.NULL
+                    )
                 )
-            )
-        }
+            ),
+            pageId = properties.pagerPageId
+        )
     }
 
     override fun onCreateView(
@@ -66,7 +68,7 @@ internal class ScoreModel(
         id = viewId
 
         // Restore state, if available
-        formState.inputData<FormData.Score>(viewInfo.identifier)?.value?.let {
+        formState.inputData<ThomasFormField.Score>(viewInfo.identifier)?.originalValue?.let {
             setSelectedScore(it)
         }
     }
@@ -75,26 +77,28 @@ internal class ScoreModel(
         super.onViewCreated(view)
 
         onFormInputDisplayed { isDisplayed ->
-            formState.update { state ->
-                state.copyWithDisplayState(viewInfo.identifier, isDisplayed)
-            }
+            formState.updateWithDisplayState(viewInfo.identifier, isDisplayed)
         }
     }
 
     override fun onViewAttached(view: ScoreView) {
         viewScope.launch {
             view.scoreChanges().collect { score ->
-                formState.update { state ->
-                    state.copyWithFormInput(
-                        FormData.Score(
-                            identifier = viewInfo.identifier,
+                formState.updateFormInput(
+                    value = ThomasFormField.Score(
+                        identifier = viewInfo.identifier,
+                        originalValue = score,
+                        filedType = ThomasFormField.FiledType.just(
                             value = score,
-                            isValid = score > -1 || !viewInfo.isRequired,
-                            attributeName = viewInfo.attributeName,
-                            attributeValue = AttributeValue.wrap(score)
+                            validator = { (it > -1) || !viewInfo.isRequired },
+                            attributes = ThomasFormField.makeAttributes(
+                                name = viewInfo.attributeName,
+                                value = AttributeValue.wrap(score)
+                            )
                         )
-                    )
-                }
+                    ),
+                    pageId = properties.pagerPageId
+                )
 
                 if (viewInfo.eventHandlers.hasFormInputHandler()) {
                     handleViewEvent(EventHandler.Type.FORM_INPUT, score)
@@ -113,7 +117,7 @@ internal class ScoreModel(
         }
 
         viewScope.launch {
-            formState.changes.collect { state ->
+            formState.formUpdates.collect { state ->
                 listener?.setEnabled(state.isEnabled)
             }
         }

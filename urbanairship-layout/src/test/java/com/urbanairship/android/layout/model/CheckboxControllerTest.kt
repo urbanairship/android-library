@@ -6,12 +6,15 @@ import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.json.JsonValue
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
@@ -65,30 +68,31 @@ public class CheckboxControllerTest {
     public fun testInit(): TestResult = runTest {
         formState.changes.test {
             // Sanity check initial form state.
-            assertTrue(awaitItem().data.isEmpty())
+            assertTrue(awaitItem().filteredFields.isEmpty())
 
             initCheckboxController()
 
             val item = awaitItem()
             // Verify that our checkbox controller updated the form state.
-            assertTrue(item.data.containsKey(IDENTIFIER))
+            assertTrue(item.filteredFields.containsKey(IDENTIFIER))
             // Verify that the response is valid, since the checkbox controller is not required.
-            assertTrue(item.inputValidity[IDENTIFIER]!!)
+            assertEquals(item.status, ThomasFormStatus.VALID)
 
             ensureAllEventsConsumed()
         }
     }
 
+
     @Test
     public fun testRequiredWithMinSelection(): TestResult = runTest {
         formState.changes.test {
             // Sanity check initial form state.
-            assertTrue(awaitItem().data.isEmpty())
+            assertTrue(awaitItem().filteredFields.isEmpty())
 
             initCheckboxController(isRequired = true, minSelection = MIN_SELECTION)
 
             // Not valid yet, because nothing is selected.
-            assertFalse(awaitItem().inputValidity[IDENTIFIER]!!)
+            assertTrue(awaitItem().childStatus(IDENTIFIER)?.isValid == false)
 
             checkboxState.update {
                 it.copy(selectedItems = it.selectedItems + SELECTED_VALUE)
@@ -96,7 +100,7 @@ public class CheckboxControllerTest {
             testScheduler.runCurrent()
 
             // Verify that the response is valid now that it has 1 selection
-            assertTrue(awaitItem().inputValidity[IDENTIFIER]!!)
+            assertEquals(awaitItem().status, ThomasFormStatus.VALID)
 
             ensureAllEventsConsumed()
         }
@@ -145,7 +149,7 @@ public class CheckboxControllerTest {
                 every { this@mockk.maxSelection } returns maxSelection
             },
             view = mockView,
-            formState = formState,
+            formState = ThomasForm(formState),
             checkboxState = checkboxState,
             environment = mockEnv,
             properties = ModelProperties(pagerPageId = null)

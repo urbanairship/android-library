@@ -3,7 +3,7 @@ package com.urbanairship.iam.adapter
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.android.layout.event.ReportingEvent.FormResult
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
@@ -20,13 +20,10 @@ import com.urbanairship.iam.analytics.events.InAppPageActionEvent
 import com.urbanairship.iam.analytics.events.InAppPageSwipeEvent
 import com.urbanairship.iam.analytics.events.InAppPageViewEvent
 import com.urbanairship.iam.analytics.events.InAppPagerSummaryEvent
-import com.urbanairship.iam.analytics.events.InAppPermissionResultEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.analytics.events.PageViewSummary
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.permission.Permission
-import com.urbanairship.permission.PermissionStatus
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
@@ -60,10 +57,11 @@ public class LayoutAdapterListenerTest {
         timer.start()
         assertTrue(timer.isStarted)
 
-        val form = FormResult(FormData.Form(
+        val form = FormResult(ThomasFormField.Form(
             identifier = "form id",
             responseType = null,
-            children = emptySet()
+            children = emptySet(),
+            filedType = ThomasFormField.FiledType.just(emptySet())
             ), FormInfo("form id", "", null, true),
             mapOf(),
             emptyList()

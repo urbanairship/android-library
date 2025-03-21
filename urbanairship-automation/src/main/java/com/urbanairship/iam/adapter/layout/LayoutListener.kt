@@ -5,7 +5,7 @@ package com.urbanairship.iam.adapter.layout
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ThomasListenerInterface
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
@@ -134,9 +134,9 @@ internal class LayoutListener (
         }
     }
 
-    override fun onFormResult(formData: FormData.BaseForm, state: LayoutData) {
+    override fun onFormResult(thomasFormField: ThomasFormField.BaseForm, state: LayoutData) {
         analytics.recordEvent(
-            event = InAppFormResultEvent(formData.toJsonValue()),
+            event = InAppFormResultEvent(thomasFormField.toJsonValue()),
             layoutContext = state
         )
     }
