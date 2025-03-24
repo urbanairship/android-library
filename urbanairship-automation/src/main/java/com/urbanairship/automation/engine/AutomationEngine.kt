@@ -395,8 +395,10 @@ internal class AutomationEngine(
     }
 
     private suspend fun processTriggeredSchedule(scheduleId: String) {
+        // Check if we are paused
         if (isExecutionPaused.value) {
-            isExecutionPaused.first { it }
+            // Wait for it to be resumed
+            isExecutionPaused.first { !it }
         }
 
         val data = store.getSchedule(scheduleId)
