@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 19.4.0 March 24, 2025
+Minor release that adds support for Custom View in Scenes and fixes Privacy Manager issues when disabling all features.
+
+### Changes
+- Added Custom View support to enable showing App managed views within a Scene.
+- Fixed an issue where the Privacy Manager sent multiple opt-out requests after features were disabled following being enabled.
+
+
 ## Version 19.3.0 March 6, 2025
 Minor release that fixes an issue with modal Scenes and adds support for hoisting `AirshipEmbeddedViewGroup` composable state.
 Apps that make use of Scenes should update to this version or greater.
