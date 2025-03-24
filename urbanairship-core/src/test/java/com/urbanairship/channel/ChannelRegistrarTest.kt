@@ -161,23 +161,15 @@ public class ChannelRegistrarTest {
     @Test
     public fun testRegistrationPayloadOutOfDate(): TestResult = runTest {
         // Make the payload unique every time
-        val payload = ChannelRegistrationPayload.Builder()
-            .setContactId(UUID.randomUUID().toString())
-            .build()
-
-        val secondPayload = ChannelRegistrationPayload.Builder()
-            .setContactId(UUID.randomUUID().toString())
-            .build()
-
-        registrar.payloadBuilder = { payload }
+        registrar.payloadBuilder =
+            { ChannelRegistrationPayload.Builder().setContactId(UUID.randomUUID().toString())
+                .build() }
 
         // Create
         coEvery {
             mockClient.createChannel(any())
         } returns RequestResult(200, Channel("some id", "some://location"), null, null)
-        //assertEquals(RegistrationResult.NEEDS_UPDATE, registrar.updateRegistration())
-
-        registrar.payloadBuilder = { secondPayload }
+        assertEquals(RegistrationResult.NEEDS_UPDATE, registrar.updateRegistration())
 
         // update
         coEvery {
