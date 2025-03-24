@@ -153,7 +153,7 @@ internal class MediaView(
     }
 
     private fun configureImageView(model: MediaModel) {
-        val cached = viewEnvironment.imageCache().get(model.viewInfo.url)
+        val cached = viewEnvironment.imageCache()?.get(model.viewInfo.url)
         val url = cached?.path ?: model.viewInfo.url
 
         if (url.endsWith(".svg")) {

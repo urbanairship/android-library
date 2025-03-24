@@ -33,6 +33,7 @@ public enum ViewType {
     TEXT_INPUT("text_input"),
     SCORE("score"),
     STATE_CONTROLLER("state_controller"),
+    CUSTOM_VIEW("custom_view"),
     UNKNOWN("");
 
     /** View types that provide values for forms (possibly via an intermediate controller). */

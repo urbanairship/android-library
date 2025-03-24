@@ -47,7 +47,7 @@ internal class ImageButtonView(
 
         when (val image = model.viewInfo.image) {
             is Image.Url -> {
-                val cached = viewEnvironment.imageCache().get(image.url)
+                val cached = viewEnvironment.imageCache()?.get(image.url)
                 val url = cached?.path ?: image.url
 
                 doOnAttach {

@@ -717,7 +717,7 @@ public class UAirship {
         DeferredPlatformProvider platformProvider = new DeferredPlatformProvider(application, preferenceDataStore, privacyManager, pushProviders);
         DefaultRequestSession requestSession = new DefaultRequestSession(airshipConfigOptions, platformProvider);
         runtimeConfig = new AirshipRuntimeConfig(() -> airshipConfigOptions, requestSession, remoteConfigObserver, platformProvider);
-        ChannelRegistrar channelRegistrar = new ChannelRegistrar(getApplicationContext(), preferenceDataStore, runtimeConfig);
+        ChannelRegistrar channelRegistrar = new ChannelRegistrar(getApplicationContext(), preferenceDataStore, runtimeConfig, privacyManager);
         channel = new AirshipChannel(application, preferenceDataStore, runtimeConfig, privacyManager, permissionsManager, localeManager, audienceOverridesProvider, channelRegistrar);
         requestSession.setChannelAuthTokenProvider(this.channel.getAuthTokenProvider());
 

@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.android.layout.info.CheckboxInfo
 import com.urbanairship.android.layout.info.ContainerLayoutInfo
 import com.urbanairship.android.layout.info.ContainerLayoutItemInfo
+import com.urbanairship.android.layout.info.CustomViewInfo
 import com.urbanairship.android.layout.info.EmptyInfo
 import com.urbanairship.android.layout.info.FormControllerInfo
 import com.urbanairship.android.layout.info.ImageButtonInfo
@@ -43,6 +44,7 @@ import com.urbanairship.android.layout.model.ButtonLayoutModel
 import com.urbanairship.android.layout.model.CheckboxController
 import com.urbanairship.android.layout.model.CheckboxModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel
+import com.urbanairship.android.layout.model.CustomViewModel
 import com.urbanairship.android.layout.model.EmptyModel
 import com.urbanairship.android.layout.model.FormController
 import com.urbanairship.android.layout.model.ImageButtonModel
@@ -65,6 +67,7 @@ import com.urbanairship.android.layout.model.TextInputModel
 import com.urbanairship.android.layout.model.ToggleModel
 import com.urbanairship.android.layout.model.WebViewModel
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.view.CustomView
 
 internal class ModelFactoryException(message: String) : Exception(message)
 
@@ -535,6 +538,11 @@ internal class ThomasModelFactory : ModelFactory {
             viewInfo = info,
             formState = environment.layoutState.thomasForm
                 ?: throw ModelFactoryException("Required form state was null for ScoreModel!"),
+            environment = environment,
+            properties = properties
+        )
+        is CustomViewInfo -> CustomViewModel(
+            viewInfo = info,
             environment = environment,
             properties = properties
         )

@@ -235,9 +235,7 @@ public class Contact internal constructor(
 
         airshipChannel.addChannelRegistrationPayloadExtender(channelExtender)
 
-        privacyManager.addListener(object : PrivacyManager.Listener {
-            override fun onEnabledFeaturesChanged() = checkPrivacyManager()
-        })
+        privacyManager.addListener { checkPrivacyManager() }
 
         checkPrivacyManager()
         contactManager.isEnabled = true
@@ -247,7 +245,7 @@ public class Contact internal constructor(
         if (privacyManager.isContactsEnabled) {
             contactManager.generateDefaultContactIdIfNotSet()
         } else {
-            contactManager.addOperation(ContactOperation.Reset)
+            contactManager.resetIfNeeded()
         }
     }
 
