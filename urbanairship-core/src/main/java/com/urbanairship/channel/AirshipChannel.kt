@@ -515,7 +515,8 @@ public class AirshipChannel internal constructor(
         jobDispatcher.dispatch(jobInfo)
     }
 
-    private suspend fun buildCraPayload(): ChannelRegistrationPayload {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public suspend fun buildCraPayload(): ChannelRegistrationPayload {
         var builder = ChannelRegistrationPayload.Builder()
 
         when (runtimeConfig.platform) {
