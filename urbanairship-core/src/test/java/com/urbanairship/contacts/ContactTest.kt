@@ -410,10 +410,10 @@ public class ContactTest {
 
         // Privacy manager change will trigger a reset
         privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
-        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Reset) }
+        verify(exactly = 1) { mockContactManager.resetIfNeeded() }
 
         contact.reset()
-        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Reset) }
+        verify(exactly = 1) { mockContactManager.resetIfNeeded() }
     }
 
     @Test
