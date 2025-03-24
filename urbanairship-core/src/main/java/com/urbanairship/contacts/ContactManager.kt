@@ -226,6 +226,12 @@ internal class ContactManager(
                 }
     }
 
+    internal fun resetIfNeeded() {
+        if (anonData?.isEmpty == false || lastContactIdentity?.isAnonymous == false || operations.isNotEmpty()) {
+            addOperation(ContactOperation.Reset)
+        }
+    }
+
     internal fun addOperation(operation: ContactOperation) {
         operationLock.withLock {
             val operations = this.operations.toMutableList()

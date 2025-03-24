@@ -4,6 +4,7 @@ package com.urbanairship.channel
 
 import android.content.Context
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
@@ -63,17 +64,22 @@ internal class ChannelRegistrar(
     private val activityMonitor: ActivityMonitor,
     private val channelCreateOption: AirshipChannelCreateOption? = null,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
+    private val privacyManager: PrivacyManager
 ) {
     constructor(
         context: Context,
         dataStore: PreferenceDataStore,
         runtimeConfig: AirshipRuntimeConfig,
+        privacyManager: PrivacyManager
     ) : this(
         dataStore = dataStore,
         channelApiClient = ChannelApiClient(runtimeConfig),
         activityMonitor = GlobalActivityMonitor.shared(context),
-        channelCreateOption = runtimeConfig.configOptions.channelCreateOption
+        channelCreateOption = runtimeConfig.configOptions.channelCreateOption,
+        privacyManager = privacyManager
     )
+
+    var payloadBuilder: (suspend () -> ChannelRegistrationPayload)? = null
 
     private val _channelIdFlow: MutableStateFlow<String?> = MutableStateFlow(this.channelId)
     val channelIdFlow: StateFlow<String?> = _channelIdFlow.asStateFlow()
@@ -82,29 +88,13 @@ internal class ChannelRegistrar(
         get() = dataStore.getString(CHANNEL_ID_KEY, null)
         private set(value) = dataStore.put(CHANNEL_ID_KEY, value)
 
-    private val channelRegistrationPayloadExtenders: MutableList<AirshipChannel.Extender> = CopyOnWriteArrayList()
-
-    internal fun addChannelRegistrationPayloadExtender(extender: AirshipChannel.Extender) {
-        channelRegistrationPayloadExtenders.add(extender)
-    }
-
-    internal fun removeChannelRegistrationPayloadExtender(extender: AirshipChannel.Extender) {
-        channelRegistrationPayloadExtenders.remove(extender)
-    }
 
     internal suspend fun updateRegistration(): RegistrationResult {
         return channelId?.let { updateChannel(it) } ?: createChannel()
     }
 
-    private suspend fun buildCraPayload(): ChannelRegistrationPayload {
-        var builder = ChannelRegistrationPayload.Builder()
-        for (extender in channelRegistrationPayloadExtenders) {
-            builder = when (extender) {
-                is Suspending -> extender.extend(builder)
-                is Blocking -> extender.extend(builder)
-            }
-        }
-        return builder.build()
+    private suspend fun buildCraPayload(): ChannelRegistrationPayload? {
+        return payloadBuilder?.invoke()
     }
 
     private fun shouldUpdate(
@@ -116,13 +106,16 @@ internal class ChannelRegistrar(
             return true
         }
 
-        val timeSinceLastRegistration = clock.currentTimeMillis() - lastRegistrationInfo.dateMillis
-        if (timeSinceLastRegistration < 0) {
-            return true
-        }
+        if (privacyManager.isAnyFeatureEnabled) {
+            val timeSinceLastRegistration =
+                clock.currentTimeMillis() - lastRegistrationInfo.dateMillis
+            if (timeSinceLastRegistration < 0) {
+                return true
+            }
 
-        if (activityMonitor.isAppForegrounded && timeSinceLastRegistration > CHANNEL_REREGISTRATION_INTERVAL_MS) {
-            return true
+            if (activityMonitor.isAppForegrounded && timeSinceLastRegistration > CHANNEL_REREGISTRATION_INTERVAL_MS) {
+                return true
+            }
         }
 
         return !payload.equals(lastRegistrationInfo.payload, false)
@@ -156,10 +149,11 @@ internal class ChannelRegistrar(
         return if (channelId == null) {
             false
         } else {
+            val payload = buildCraPayload() ?: return true
             !shouldUpdate(
-                    buildCraPayload(),
-                    lastChannelRegistrationInfo,
-                    channelApiClient.createLocation(channelId).toString()
+                payload,
+                lastChannelRegistrationInfo,
+                channelApiClient.createLocation(channelId).toString()
             )
         }
     }
@@ -171,7 +165,7 @@ internal class ChannelRegistrar(
         set(value) = dataStore.put(LAST_CHANNEL_REGISTRATION_INFO, value)
 
     private suspend fun createChannel(): RegistrationResult {
-        val payload = buildCraPayload()
+        val payload = buildCraPayload() ?: return RegistrationResult.FAILED
 
         val method = channelCreateOption?.get() ?: ChannelGenerationMethod.Automatic
 
@@ -253,7 +247,7 @@ internal class ChannelRegistrar(
     }
 
     private suspend fun updateChannel(channelId: String): RegistrationResult {
-        val payload = buildCraPayload()
+        val payload = buildCraPayload() ?: return RegistrationResult.FAILED
         val updatePayload = minimizeUpdatePayload(channelId, payload)
         if (updatePayload == null) {
             UALog.v { "Channel already up to date." }

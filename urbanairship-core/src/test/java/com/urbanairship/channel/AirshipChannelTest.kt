@@ -72,10 +72,9 @@ public class AirshipChannelTest {
         every { this@mockk.addListener(capture(localeChangeListeners)) } just runs
     }
 
-    private val mockRegistrar = mockk<ChannelRegistrar>() {
+    private val mockRegistrar = mockk<ChannelRegistrar>(relaxed = true) {
         every { this@mockk.channelIdFlow } returns this@AirshipChannelTest.channelIdFlow
         every { this@mockk.channelId } returns null
-        every { this@mockk.addChannelRegistrationPayloadExtender(capture(channelPayloadExtenders)) } just runs
     }
 
     private val mockBatchUpdateManager = mockk<ChannelBatchUpdateManager>(relaxed = true)
@@ -114,7 +113,6 @@ public class AirshipChannelTest {
         mockLocaleManager,
         mockBatchUpdateManager,
         mockRegistrar,
-        mockk(relaxed = true),
         mockSubscriptionsProvider,
         testActivityMonitor,
         mockJobDispatcher,
@@ -133,6 +131,10 @@ public class AirshipChannelTest {
         coEvery { mockPermissionsManager.checkPermissionStatus(any()) } answers {
             val status = configuredPermissions[firstArg()] ?: PermissionStatus.NOT_DETERMINED
             PendingResult<PermissionStatus?>().also { it.result = status }
+        }
+
+        coEvery { mockRegistrar.payloadBuilder } coAnswers {
+            { channel.buildCraPayload() }
         }
     }
 
@@ -380,7 +382,7 @@ public class AirshipChannelTest {
             ))
             .build()
 
-        val payload = buildCraPayload()
+        val payload = channel.buildCraPayload()
         assertEquals(expectedPayload, payload)
     }
 
@@ -409,7 +411,7 @@ public class AirshipChannelTest {
             .setIsActive(false)
             .build()
 
-        val payload = buildCraPayload()
+        val payload = channel.buildCraPayload()
         assertEquals(expectedPayload, payload)
     }
 
@@ -433,7 +435,7 @@ public class AirshipChannelTest {
             .setIsActive(false)
             .build()
 
-        val payload = buildCraPayload()
+        val payload = channel.buildCraPayload()
         assertEquals(expectedPayload, payload)
     }
 
@@ -451,7 +453,7 @@ public class AirshipChannelTest {
             .setIsActive(false)
             .build()
 
-        val payload = buildCraPayload()
+        val payload = channel.buildCraPayload()
         assertEquals(expectedPayload, payload)
     }
 
@@ -484,7 +486,7 @@ public class AirshipChannelTest {
             .setIsActive(false)
             .build()
 
-        val payload = buildCraPayload()
+        val payload = channel.buildCraPayload()
         assertEquals(expectedPayload, payload)
     }
 
@@ -513,7 +515,7 @@ public class AirshipChannelTest {
             .setSdkVersion(UAirship.getVersion())
             .build()
 
-        val payload = buildCraPayload()
+        val payload = channel.buildCraPayload()
         assertEquals(expectedPayload, payload)
     }
 
@@ -549,7 +551,7 @@ public class AirshipChannelTest {
             ))
             .build()
 
-        val payload = buildCraPayload()
+        val payload = channel.buildCraPayload()
         assertEquals(expectedPayload, payload)
 
         configuredPermissions = mapOf(
@@ -557,7 +559,7 @@ public class AirshipChannelTest {
             Permission.LOCATION to PermissionStatus.GRANTED
         )
 
-        val minimized = buildCraPayload().minimizedPayload(payload)
+        val minimized = channel.buildCraPayload().minimizedPayload(payload)
         val expectedMinimized = ChannelRegistrationPayload.Builder()
             .setDeviceType("android")
             .setPermissions(mapOf(
@@ -641,17 +643,5 @@ public class AirshipChannelTest {
 
         coVerify { mockBatchUpdateManager.uploadPending("some channel id") }
         coVerify { mockRegistrar.updateRegistration() }
-    }
-
-    private suspend fun buildCraPayload(): ChannelRegistrationPayload {
-        var builder = ChannelRegistrationPayload.Builder()
-        channelPayloadExtenders.forEach {
-            builder = when (it) {
-                is AirshipChannel.Extender.Suspending -> it.extend(builder)
-                is AirshipChannel.Extender.Blocking -> it.extend(builder)
-                else -> { builder }
-            }
-        }
-        return builder.build()
     }
 }
