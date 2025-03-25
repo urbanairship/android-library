@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
+import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -13,10 +14,13 @@ import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.SmsLocale
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField
+import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.android.layout.util.onEditing
 import com.urbanairship.android.layout.util.textChanges
 import com.urbanairship.android.layout.view.TextInputView
+import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.util.airshipIsValidEmail
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -40,6 +44,15 @@ internal class TextInputModel(
 
         fun restoreValue(value: String)
     }
+
+    private val inputValidator: AirshipInputValidation.Validator?
+        get() {
+            if (!UAirship.isFlying()) {
+                return null
+            }
+
+            return UAirship.shared().inputValidator
+        }
 
     init {
         formState.updateFormInput(
@@ -105,22 +118,40 @@ internal class TextInputModel(
 
         return when (viewInfo.inputType) {
             FormInputType.EMAIL -> {
-                return ThomasFormField.FiledType.just(
-                    value = text,
-                    validator = { it?.airshipIsValidEmail() == true },
-                    attributes = attributes,
-                    channels = channelRegistration
+                val request = AirshipInputValidation.Request.ValidateEmail(
+                    AirshipInputValidation.Request.Email(text)
+                )
+
+                return ThomasFormField.FiledType.Async(
+                    fetcher = ThomasFormField.AsyncValueFetcher(
+                        processDelay = (1.5).seconds,
+                        fetchBlock = {
+                            val validator = inputValidator
+                                ?: return@AsyncValueFetcher ThomasFormField.AsyncValueFetcher.PendingResult.Invalid()
+
+                            when(val result = validator.validate(request)) {
+                                AirshipInputValidation.Result.Invalid -> {
+                                    ThomasFormField.AsyncValueFetcher.PendingResult.Invalid()
+                                }
+                                is AirshipInputValidation.Result.Valid -> {
+                                    ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
+                                        result = ThomasFormField.Result(
+                                            value = result.address,
+                                            channels = channelRegistration,
+                                            attributes = attributes
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    )
                 )
             }
             FormInputType.NUMBER -> {
-                return ThomasFormField.FiledType.Async(
-                    fetcher = ThomasFormField.AsyncValueFetcher(
-                        //TODO: il replace with an actual implementation
-                        fetchBlock = { ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
-                            ThomasFormField.Result(
-                                value = "--validated--"
-                        )) }
-                    )
+                return ThomasFormField.FiledType.just(
+                    value = text,
+                    attributes = attributes,
+                    channels = channelRegistration
                 )
             }
             FormInputType.SMS -> {

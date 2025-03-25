@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.util.Log;
 
 import com.urbanairship.channel.AirshipChannelCreateOption;
+import com.urbanairship.inputvalidation.AirshipValidationOverride;
 import com.urbanairship.json.JsonValue;
 import com.urbanairship.push.PushMessage;
 import com.urbanairship.push.PushProvider;
@@ -336,6 +337,10 @@ public class AirshipConfigOptions {
     @Nullable
     public final AirshipChannelCreateOption channelCreateOption;
 
+    /** Overrides the input validation used by Preference Center and Scenes. */
+    @Nullable
+    public final AirshipValidationOverride validationOverride;
+
     /**
      * Flag indicating if the data collection opt-in is enabled.
      * <p>
@@ -499,6 +504,7 @@ public class AirshipConfigOptions {
         this.isPromptForPermissionOnUserNotificationsEnabled = builder.isPromptForPermissionOnUserNotificationsEnabled;
         this.autoPauseInAppAutomationOnLaunch = builder.autoPauseInAppAutomationOnLaunch;
         this.channelCreateOption = builder.channelCreateOption;
+        this.validationOverride = builder.validationOverride;
     }
 
     private static <T> List<T> copyOrEmpty(@Nullable List<T> list) {
@@ -704,6 +710,7 @@ public class AirshipConfigOptions {
         private boolean extendedBroadcastsEnabled;
         private @Site
         String site = SITE_US;
+        private AirshipValidationOverride validationOverride;
 
         public PrivacyManager.Feature enabledFeatures = PrivacyManager.Feature.ALL;
         public boolean resetEnabledFeatures = false;
@@ -1677,6 +1684,18 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setAutoPauseInAppAutomationOnLaunch(boolean autoPauseInAppAutomationOnLaunch) {
             this.autoPauseInAppAutomationOnLaunch = autoPauseInAppAutomationOnLaunch;
+            return this;
+        }
+
+        /**
+         * Overrides the input validation used by Preference Center and Scenes.
+         *
+         * @param overrides provides overrides pending result .
+         * @return The config options builder.
+         */
+        @NonNull
+        public Builder setInputValidationOverrides(AirshipValidationOverride overrides) {
+            this.validationOverride = overrides;
             return this;
         }
 

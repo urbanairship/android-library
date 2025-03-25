@@ -12,6 +12,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
+import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.PreferenceCenterPayload
@@ -29,6 +30,7 @@ public class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) intern
     dataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,
     private val remoteData: RemoteData,
+    private val inputValidator: AirshipInputValidation.Validator
 ) : AirshipComponent(context, dataStore) {
 
     private val pendingResultScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())

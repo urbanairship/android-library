@@ -211,7 +211,7 @@ public sealed class ThomasFormField<T>(
 
     internal class AsyncValueFetcher<T>(
         private val fetchBlock: suspend () -> PendingResult<T>,
-//        private val earlyProcessDelay: Duration,
+        private val processDelay: Duration,
         private val clock: Clock = Clock.DEFAULT_CLOCK,
         private val taskSleeper: TaskSleeper = TaskSleeper.default
     ) {
