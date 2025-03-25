@@ -65,6 +65,7 @@ import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalList
 import com.urbanairship.json.optionalMap
@@ -591,7 +592,7 @@ internal class CustomViewInfo(
     json: JsonMap
 ): ViewInfo(), View by view(json) {
     val name: String = json.requireField("name")
-    val data: JsonMap? = json.optionalField("keys")
+    val properties: JsonMap = json.optionalField("properties") ?: jsonMapOf()
 }
 
 internal enum class AutomatedAccessibilityActionType {
