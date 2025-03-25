@@ -10,6 +10,7 @@ import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormInputType
+import com.urbanairship.android.layout.property.SmsLocale
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.util.onEditing
@@ -32,6 +33,8 @@ internal class TextInputModel(
 ) : BaseModel<TextInputView, TextInputInfo, TextInputModel.Listener>(
     viewInfo = viewInfo, environment = environment, properties = properties
 ) {
+
+    internal var smsLocale: SmsLocale? = null
 
     interface Listener : BaseModel.Listener {
 
@@ -120,6 +123,16 @@ internal class TextInputModel(
                     )
                 )
             }
+            FormInputType.SMS -> {
+                return ThomasFormField.FiledType.Async(
+                    fetcher = ThomasFormField.AsyncValueFetcher(
+                        //TODO: il replace with an actual implementation
+                        fetchBlock = { ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
+                            ThomasFormField.Result("--sms--")
+                        ) }
+                    )
+                )
+            }
             FormInputType.TEXT -> ThomasFormField.FiledType.just(
                 value = text,
                 attributes = attributes,
@@ -145,6 +158,11 @@ internal class TextInputModel(
                 }
             }
             FormInputType.NUMBER -> null
+            FormInputType.SMS -> {
+                smsLocale?.registration?.let {
+                    ThomasChannelRegistration.Sms(address, it)
+                }
+            }
             FormInputType.TEXT -> null
             FormInputType.TEXT_MULTILINE -> null
         }

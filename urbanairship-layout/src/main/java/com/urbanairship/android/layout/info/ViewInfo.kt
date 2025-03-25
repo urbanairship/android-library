@@ -24,6 +24,7 @@ import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.ScoreStyle
 import com.urbanairship.android.layout.property.Size
+import com.urbanairship.android.layout.property.SmsLocale
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
@@ -528,6 +529,8 @@ internal class TextInputInfo(
             null
         }
     }
+
+    val smsLocales: List<SmsLocale>? = json.optionalList("locales")?.map(SmsLocale::fromJson)
 
     internal class ViewOverrides(json: JsonMap) {
         val iconEnd = json.optionalList("icon_end")?.map { iconEnd ->

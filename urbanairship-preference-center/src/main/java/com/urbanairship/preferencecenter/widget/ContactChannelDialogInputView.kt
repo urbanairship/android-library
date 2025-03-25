@@ -19,9 +19,9 @@ import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.PromptDisplay
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.RegistrationOptions
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.SmsSenderInfo
-import com.urbanairship.preferencecenter.util.emojiFlag
 import com.urbanairship.preferencecenter.util.markdownToHtml
 import com.urbanairship.preferencecenter.util.setHtml
+import com.urbanairship.util.airshipEmojiFlag
 import com.google.android.material.textfield.TextInputLayout
 
 internal class ContactChannelDialogInputView@JvmOverloads constructor(
@@ -209,7 +209,7 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
         private fun formatCountryPickerItem(
             countryCode: String,
             dialingCode: String
-        ): String = countryCode.emojiFlag?.let { flag ->
+        ): String = countryCode.airshipEmojiFlag?.let { flag ->
             "$flag $dialingCode"
         } ?: dialingCode
     }

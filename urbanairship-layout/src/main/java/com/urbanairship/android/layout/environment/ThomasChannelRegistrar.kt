@@ -20,6 +20,10 @@ internal class ThomasChannelRegistrar(
                 is ThomasChannelRegistration.Email -> {
                     registerEmail(channelRegistration)
                 }
+
+                is ThomasChannelRegistration.Sms -> {
+                    //TODO: add implementation
+                }
             }
         }
     }
