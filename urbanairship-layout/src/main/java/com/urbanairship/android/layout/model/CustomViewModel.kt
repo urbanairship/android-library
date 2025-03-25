@@ -10,7 +10,6 @@ import com.urbanairship.android.layout.AirshipCustomViewArguments.SizeInfo
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.CustomViewInfo
-import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.view.CustomView
 import com.urbanairship.json.jsonMapOf
 
@@ -33,7 +32,7 @@ internal class CustomViewModel(
     fun tryInflateView(context: Context): View? {
         val args = AirshipCustomViewArguments(
             name = viewInfo.name,
-            properties = viewInfo.data ?: jsonMapOf(),
+            properties = viewInfo.properties,
             sizeInfo = SizeInfo(
                 isAutoWidth = itemProperties?.size?.width?.isAuto ?: false,
                 isAutoHeight = itemProperties?.size?.height?.isAuto ?: false,
