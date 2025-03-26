@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 
 /** A closure type used for overriding validation logic. */
 public interface AirshipValidationOverride {
-    public fun getOverrides(): PendingResult<AirshipInputValidation.Override>
+    public fun getOverrides(request: AirshipInputValidation.Request): PendingResult<AirshipInputValidation.Override>
 }
 
 /** A class that encapsulates input validation logic for different request types such as email and SMS. */

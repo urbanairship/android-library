@@ -48,7 +48,7 @@ internal class DefaultInputValidator(
         UALog.d { "Validating input request $request" }
         overrides?.let {
             UALog.d { "Attempting to use overrides for request $request" }
-            when(val value = it.getSuspending()) {
+            when(val value = it.getSuspending(request)) {
                 is AirshipInputValidation.Override.Replace -> {
                     UALog.d { "Overrides result ${value.result} for request $request" }
                     return value.result
@@ -188,9 +188,11 @@ internal class DefaultInputValidator(
     }
 }
 
-private suspend fun AirshipValidationOverride.getSuspending(): AirshipInputValidation.Override? =
+private suspend fun AirshipValidationOverride.getSuspending(
+    request: AirshipInputValidation.Request
+): AirshipInputValidation.Override? =
     suspendCoroutine { cont ->
-        val result = getOverrides().get()
+        val result = getOverrides(request).get()
         cont.resume(result)
     }
 
@@ -203,6 +205,7 @@ private fun AirshipInputValidation.Request.Sms.ValidationHints.matches(input: St
 
 private fun String.trimSpaceAndNewLine(): String {
     return this
-        .trimIndent()
         .replace("\n", "")
+        .trim()
+
 }
