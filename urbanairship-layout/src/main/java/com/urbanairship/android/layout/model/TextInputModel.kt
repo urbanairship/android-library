@@ -38,7 +38,10 @@ internal class TextInputModel(
     viewInfo = viewInfo, environment = environment, properties = properties
 ) {
 
-    internal var smsLocale: SmsLocale? = null
+    internal fun onNewLocale(smsLocale: SmsLocale) {
+        _smsLocale.update { smsLocale }
+    }
+    private val _smsLocale = MutableStateFlow<SmsLocale?>(null)
 
     interface Listener : BaseModel.Listener {
 
@@ -98,7 +101,7 @@ internal class TextInputModel(
         }
     }
 
-    private fun makeResolveMethod(text: String?): ThomasFormField.FiledType<String> {
+    private fun makeResolveMethod(text: String?, smsLocale: SmsLocale?): ThomasFormField.FiledType<String> {
 
         val attributes = ThomasFormField.makeAttributes(
             name = viewInfo.attributeName,
@@ -155,12 +158,45 @@ internal class TextInputModel(
                 )
             }
             FormInputType.SMS -> {
+                val selectedLocale = smsLocale ?: return ThomasFormField.FiledType.just(
+                    value = text,
+                    validator = { false }
+                )
+
+                val request = AirshipInputValidation.Request.ValidateSms(
+                    sms = AirshipInputValidation.Request.Sms(
+                        rawInput = text,
+                        validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Prefix(
+                            selectedLocale.prefix
+                        ),
+                        validationHints = AirshipInputValidation.Request.Sms.ValidationHints(
+                            minDigits = selectedLocale.validationHints?.minDigits,
+                            maxDigits = selectedLocale.validationHints?.maxDigits
+                        )
+                    )
+                )
+
                 return ThomasFormField.FiledType.Async(
                     fetcher = ThomasFormField.AsyncValueFetcher(
-                        //TODO: il replace with an actual implementation
-                        fetchBlock = { ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
-                            ThomasFormField.Result("--sms--")
-                        ) }
+                        fetchBlock = {
+                            val validator = inputValidator
+                                ?: return@AsyncValueFetcher ThomasFormField.AsyncValueFetcher.PendingResult.Invalid()
+
+                            when(val result = validator.validate(request)) {
+                                AirshipInputValidation.Result.Invalid -> {
+                                    ThomasFormField.AsyncValueFetcher.PendingResult.Invalid()
+                                }
+                                is AirshipInputValidation.Result.Valid -> {
+                                    ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
+                                        result = ThomasFormField.Result(
+                                            value = result.address,
+                                            channels = channelRegistration,
+                                            attributes = attributes
+                                        )
+                                    )
+                                }
+                            }
+                        }
                     )
                 )
             }
@@ -190,9 +226,7 @@ internal class TextInputModel(
             }
             FormInputType.NUMBER -> null
             FormInputType.SMS -> {
-                smsLocale?.registration?.let {
-                    ThomasChannelRegistration.Sms(address, it)
-                }
+                _smsLocale.value?.registration?.let { ThomasChannelRegistration.Sms(address, it) }
             }
             FormInputType.TEXT -> null
             FormInputType.TEXT_MULTILINE -> null
@@ -212,14 +246,15 @@ internal class TextInputModel(
         val validationState = MutableStateFlow<ValidationState?>(null)
 
         viewScope.launch {
-            view.textChanges().collect { value ->
-
-                formState.updateFormInput(
-                    value = makeFormField(value, validationState),
-                    pageId = properties.pagerPageId
-                )
-            }
+            combine(view.textChanges(), _smsLocale) { text, locale -> Pair(text, locale) }
+                .collect { (text, locale) ->
+                    formState.updateFormInput(
+                        value = makeFormField(text, locale, validationState),
+                        pageId = properties.pagerPageId
+                    )
+                }
         }
+
 
         viewScope.launch {
             combine(view.onEditing(), validationState) { isEditing, validationState ->
@@ -260,6 +295,7 @@ internal class TextInputModel(
 
     private fun makeFormField(
         input: String,
+        smsLocale: SmsLocale?,
         validationStatus: MutableStateFlow<ValidationState?>
     ): ThomasFormField.TextInput {
 
@@ -269,7 +305,7 @@ internal class TextInputModel(
         }
 
         val trimmed = input.trim()
-        val method = makeResolveMethod(trimmed)
+        val method = makeResolveMethod(trimmed, smsLocale)
         when(method) {
             is ThomasFormField.FiledType.Async -> {
                 modelScope.launch {

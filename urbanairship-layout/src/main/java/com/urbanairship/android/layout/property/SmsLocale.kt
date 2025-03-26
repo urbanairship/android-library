@@ -3,9 +3,11 @@
 package com.urbanairship.android.layout.property
 
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import kotlin.jvm.Throws
 
@@ -18,17 +20,37 @@ public class SmsLocale(
     public val prefix: String,
 
     /** Registration info */
-    public val registration: Registration?
+    internal val registration: Registration?,
+
+    /** Validation hints */
+    internal val validationHints: ValidationHints?
 ): JsonSerializable {
 
     /** Phone number sender info */
-    public class Registration(
-        /** Registration type */
-        public val type: RegistrationType,
+    public sealed class Registration(public val type: RegistrationType): JsonSerializable {
 
-        /** Sender ID */
-        public val senderId: String
-    ): JsonSerializable {
+        internal data class OptIn(val data: OptInData): Registration(RegistrationType.OPT_IN)
+
+        internal data class OptInData(
+            val senderId: String
+        ): JsonSerializable {
+
+            companion object {
+                private const val SENDER_ID_KEY = "sender_id"
+
+                @Throws(JsonException::class)
+                fun fromJson(value: JsonValue): OptInData {
+                    val content = value.requireMap()
+                    return OptInData(
+                        senderId = content.requireField(SENDER_ID_KEY)
+                    )
+                }
+            }
+
+            override fun toJsonValue(): JsonValue = jsonMapOf(
+                SENDER_ID_KEY to senderId
+            ).toJsonValue()
+        }
 
         public enum class RegistrationType(private val json: String): JsonSerializable {
             OPT_IN("opt_in");
@@ -44,24 +66,30 @@ public class SmsLocale(
             }
         }
 
-        override fun toJsonValue(): JsonValue = jsonMapOf(
-            TYPE to type,
-            SENDER_ID to senderId
-        ).toJsonValue()
+        override fun toJsonValue(): JsonValue {
+            val result = JsonMap.newBuilder()
+            result.put(TYPE, type)
+
+            when(this) {
+                is OptIn -> result.putAll(data.toJsonValue().optMap())
+            }
+
+            return result.build().toJsonValue()
+        }
 
         internal companion object {
             private const val TYPE = "type"
-            private const val SENDER_ID = "sender_id"
 
             @Throws(JsonException::class)
             fun fromJson(value: JsonValue): Registration {
                 val content = value.requireMap()
 
-                return try {
-                    Registration(
-                        type = RegistrationType.fromJson(content.require(TYPE)),
-                        senderId = content.requireField(SENDER_ID)
-                    )
+                try {
+                    return when(RegistrationType.fromJson(content.require(TYPE))) {
+                        RegistrationType.OPT_IN -> OptIn(
+                            data = OptInData.fromJson(value)
+                        )
+                    }
                 } catch (ex: NoSuchElementException) {
                     throw JsonException("Invalid value of the registration type", ex)
                 }
@@ -69,16 +97,44 @@ public class SmsLocale(
         }
     }
 
+    public class ValidationHints(
+        public val minDigits: Int?,
+        public val maxDigits: Int?
+    ): JsonSerializable {
+
+        internal companion object {
+            private const val MIN_DIGITS = "min_digits"
+            private const val MAX_DIGITS = "max_digits"
+
+            @Throws(JsonException::class)
+            fun fromJson(value: JsonValue): ValidationHints {
+                val content = value.requireMap()
+
+                return ValidationHints(
+                    minDigits = content.optionalField(MIN_DIGITS),
+                    maxDigits = content.optionalField(MAX_DIGITS)
+                )
+            }
+         }
+
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            MIN_DIGITS to minDigits,
+            MAX_DIGITS to maxDigits
+        ).toJsonValue()
+    }
+
     override fun toJsonValue(): JsonValue = jsonMapOf(
         COUNTRY_CODE to countryCode,
         PREFIX to prefix,
-        REGISTRATION to registration
+        REGISTRATION to registration,
+        VALIDATION_HINTS to validationHints
     ).toJsonValue()
 
     internal companion object {
         private const val COUNTRY_CODE = "country_code"
         private const val PREFIX = "prefix"
         private const val REGISTRATION = "registration"
+        private const val VALIDATION_HINTS = "validation_hints"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): SmsLocale {
@@ -87,7 +143,8 @@ public class SmsLocale(
             return SmsLocale(
                 countryCode = content.requireField(COUNTRY_CODE),
                 prefix = content.requireField(PREFIX),
-                registration = content.get(REGISTRATION)?.let(Registration::fromJson)
+                registration = content.get(REGISTRATION)?.let(Registration::fromJson),
+                validationHints = content.get(VALIDATION_HINTS)?.let(ValidationHints::fromJson)
             )
         }
     }

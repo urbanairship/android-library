@@ -13,7 +13,6 @@ import com.urbanairship.util.TaskSleeper
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
@@ -211,7 +210,7 @@ public sealed class ThomasFormField<T>(
 
     internal class AsyncValueFetcher<T>(
         private val fetchBlock: suspend () -> PendingResult<T>,
-        private val processDelay: Duration,
+        private val processDelay: Duration = 1.seconds,
         private val clock: Clock = Clock.DEFAULT_CLOCK,
         private val taskSleeper: TaskSleeper = TaskSleeper.default
     ) {
@@ -259,21 +258,22 @@ public sealed class ThomasFormField<T>(
                 }
             }
 
+            val isInitialCall = _resultsFlow.value == null
             _resultsFlow.update { null }
 
             val job = scope.async {
                 try {
+                    if (isInitialCall) {
+                        taskSleeper.sleep(processDelay)
+                        yield()
+                    }
                     processBackOff()
                     yield()
                     val result = fetchBlock.invoke()
                     yield()
                     processResult(result)
-                    return@async result
                 } catch (ex: Exception) {
-                    if (ex is CancellationException) {
-                        processResult(PendingResult.Error<T>())
-                    }
-                    return@async PendingResult.Error<T>()
+                    processResult(PendingResult.Error())
                 }
             }
 
@@ -291,15 +291,17 @@ public sealed class ThomasFormField<T>(
             }
         }
 
-        private fun processResult(result: PendingResult<T>) {
+        private fun processResult(result: PendingResult<T>): PendingResult<T> {
             _resultsFlow.update { result }
             lastAttemptTimestamp = clock.currentTimeMillis()
 
-            if (result.isError) {
-                nextBackOff = nextBackOff?.let { minOf(it * 2, MAX_BACK_OFF) } ?: INITIAL_BACK_OFF
+            nextBackOff = if (result.isError) {
+                nextBackOff?.let { minOf(it * 2, MAX_BACK_OFF) } ?: INITIAL_BACK_OFF
             } else {
-                nextBackOff = null
+                null
             }
+
+            return result
         }
 
         sealed class PendingResult<T>() {
@@ -332,9 +334,9 @@ public sealed class ThomasFormField<T>(
 
 internal sealed class ThomasFormFieldStatus<T> {
     data class Valid<T>(val result: ThomasFormField.Result<T>): ThomasFormFieldStatus<T>()
-    class Invalid<T>(): ThomasFormFieldStatus<T>()
-    class Pending<T>(): ThomasFormFieldStatus<T>()
-    class Error<T>(): ThomasFormFieldStatus<T>()
+    class Invalid<T> : ThomasFormFieldStatus<T>()
+    class Pending<T> : ThomasFormFieldStatus<T>()
+    class Error<T> : ThomasFormFieldStatus<T>()
 
     val isValid: Boolean
         get() = this is Valid

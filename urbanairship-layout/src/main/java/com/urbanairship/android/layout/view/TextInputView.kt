@@ -34,6 +34,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 
 internal class TextInputView(
     context: Context,
@@ -151,7 +152,7 @@ internal class TextInputView(
                 override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
                     val locale = adapter.getItem(p2)
                     input.hint = locale.prefix
-                    model.smsLocale = locale
+                    model.onNewLocale(locale)
                 }
 
                 override fun onNothingSelected(p0: AdapterView<*>?) { }

@@ -792,7 +792,7 @@ public class UAirship {
         processModule(adIdModule);
 
         // Preference Center
-        Module preferenceCenter = Modules.preferenceCenter(application, preferenceDataStore, privacyManager, remoteData);
+        Module preferenceCenter = Modules.preferenceCenter(application, preferenceDataStore, privacyManager, remoteData, inputValidator);
         processModule(preferenceCenter);
 
         // Live Updates

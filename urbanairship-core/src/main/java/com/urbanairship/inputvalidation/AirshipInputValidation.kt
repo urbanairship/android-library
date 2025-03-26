@@ -24,6 +24,14 @@ public class AirshipInputValidation private constructor(){
 
         /** Indicates an invalid input. */
         public data object Invalid: Result()
+
+        override fun toString(): String {
+            val data = when(this) {
+                Invalid -> "Invalid()"
+                is Valid -> "Valid(address = $address)"
+            }
+            return "Result($data)"
+        }
     }
 
     /** Class representing the override options for input validation. */
@@ -71,6 +79,14 @@ public class AirshipInputValidation private constructor(){
                 ): ValidationOptions()
 
                 public class Prefix(public val prefix: String): ValidationOptions()
+
+                override fun toString(): String {
+                    val data = when(this) {
+                        is Prefix -> "prefix = $prefix"
+                        is Sender -> "sender = ${senderId}, prefix = $prefix"
+                    }
+                    return "ValidationOptions($data)"
+                }
             }
 
             /** A class for defining validation hints like min/max digit requirements. */
@@ -83,6 +99,14 @@ public class AirshipInputValidation private constructor(){
                     maxDigits = maxDigits ?: Int.MAX_VALUE
                 )
             }
+        }
+
+        override fun toString(): String {
+            val data = when(this) {
+                is ValidateEmail -> "email = ${email.rawInput}"
+                is ValidateSms -> "sms = ${sms.rawInput}, validationOptions = ${sms.validationOptions}"
+            }
+            return "Request($data)"
         }
     }
 

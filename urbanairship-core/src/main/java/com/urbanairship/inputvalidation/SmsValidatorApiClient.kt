@@ -82,7 +82,7 @@ internal class SmsValidatorApiClient(
 
     @Throws(InvalidParameterException::class)
     private fun requestUri(): Uri {
-        return config.deviceUrl.appendEncodedPath("/api/channels/sms/format").build()
+        return config.deviceUrl.appendEncodedPath("api/channels/sms/format").build()
             ?: throw InvalidParameterException("Initial config not resolved.")
     }
 
@@ -116,7 +116,7 @@ internal class SmsValidatorApiClient(
             fun fromJson(value: JsonValue): Result {
                 val content = value.optMap()
 
-                return if (content.containsKey(VALID)) {
+                return if (content.requireField<Boolean>(VALID)) {
                     Valid(content.requireField(MSISDN))
                 } else {
                     Invalid
