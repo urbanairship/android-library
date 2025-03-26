@@ -126,7 +126,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     @Volatile
     public var foregroundNotificationDisplayPredicate: Predicate<PushMessage>? = null
 
-    public val statusObserver: PushNotificationStatusObserver
+    internal val statusObserver: PushNotificationStatusObserver
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
@@ -838,7 +838,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     /**
      * Adds notification action button groups from an xml file.
      * Example entry:
-     * <pre>`<UrbanAirshipActionButtonGroup id="custom_group">
+     * ```<UrbanAirshipActionButtonGroup id="custom_group">
      * <UrbanAirshipActionButton
      * foreground="true"
      * id="yes"
@@ -849,7 +849,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      * id="no"
      * android:icon="@drawable/ua_ic_notification_button_decline"
      * android:label="@string/ua_notification_button_no"/>
-     * </UrbanAirshipActionButtonGroup> `</pre>
+     * </UrbanAirshipActionButtonGroup>```
      *
      * @param context The application context.
      * @param resId The xml resource ID.
