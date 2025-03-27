@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.never
 
 @RunWith(AndroidJUnit4::class)
 public class AirshipInputValidatorTest {
@@ -139,7 +140,7 @@ public class AirshipInputValidatorTest {
             }
         )
 
-        checkValidAddress(originalRequest, overrideValue, validator)
+        assertEquals(AirshipInputValidation.Result.Valid(overrideValue), validator.validate(originalRequest))
     }
 
     @Test
@@ -160,19 +161,12 @@ public class AirshipInputValidatorTest {
             }
         )
 
-        checkValidAddress(originalRequest, "some-valid@email.com", validator)
+        assertEquals(AirshipInputValidation.Result.Valid("some-valid@email.com"), validator.validate(originalRequest))
     }
 
     @Test
     public fun testSMSValidationWithSenderID(): TestResult = runTest {
-        val request = AirshipInputValidation.Request.ValidateSms(
-            sms = AirshipInputValidation.Request.Sms(
-                rawInput = "555555555",
-                validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(
-                    senderId = "some sender"
-                )
-            )
-        )
+        val request = defaultSmsRequest
 
         coEvery { mockApiClient.validateSmsWithSender(any(), any()) } answers {
             assertEquals("555555555", firstArg())
@@ -186,7 +180,7 @@ public class AirshipInputValidatorTest {
             )
         }
 
-        checkValidAddress(request, "+1555555555")
+        assertEquals(AirshipInputValidation.Result.Valid("+1555555555"), defaultValidator.validate(request))
 
         coVerify(exactly = 1) { mockApiClient.validateSmsWithSender(any(), any()) }
     }
@@ -212,397 +206,323 @@ public class AirshipInputValidatorTest {
             )
         }
 
-        checkValidAddress(request, "+1555555555")
+        assertEquals(AirshipInputValidation.Result.Valid("+1555555555"), defaultValidator.validate(request))
         coVerify(exactly = 1) { mockApiClient.validateSmsWithPrefix(any(), any()) }
     }
 
-    /*
-    @Test("Test sms validation 4xx response should return invalid")
-    func testSMSValidationWith400Response() async throws {
-        let request = AirshipInputValidation.Request.sms(
-            .init(
-                rawInput: "555555555",
-                validationOptions: .sender(senderID: "some sender", prefix: nil)
+    @Test
+    public fun testSMSValidationWith400Response(): TestResult = runTest {
+        val request = defaultSmsRequest
+
+        coEvery { mockApiClient.validateSmsWithSender(any(), any()) } answers {
+            RequestResult(
+                status = (400..499).random(),
+                value = null,
+                headers = emptyMap(),
+                body = null
             )
-        )
-
-        let validator = AirshipInputValidation.DefaultValidator(
-            smsValidatorAPIClient: smsValidatorAPIClient
-        )
-
-        try await confirmation { confirmation in
-            await smsValidatorAPIClient.setOnValidate { apiRequest in
-                #expect(apiRequest.msisdn == "555555555")
-                #expect(apiRequest.sender == "some sender")
-                confirmation.confirm()
-                return AirshipHTTPResponse(
-                    result: nil,
-                    statusCode: Int.random(in: 400...499),
-                    headers: [:]
-                )
-            }
-
-            let result = try await validator.validateRequest(request)
-            #expect(result == .invalid)
         }
+
+        assertEquals(AirshipInputValidation.Result.Invalid, defaultValidator.validate(request))
+        coVerify { mockApiClient.validateSmsWithSender(any(), any()) }
     }
 
-    @Test("Test sms validation 5xx should throw")
-    func testSMSValidationWith500Response() async throws {
-        let request = AirshipInputValidation.Request.sms(
-            .init(
-                rawInput: "555555555",
-                validationOptions: .sender(senderID: "some sender", prefix: nil)
+    @Test
+    public fun testSMSValidationWith500Response(): TestResult = runTest {
+        val request = defaultSmsRequest
+
+        coEvery { mockApiClient.validateSmsWithSender(any(), any()) } answers {
+            RequestResult(
+                status = (500..599).random(),
+                value = null,
+                headers = emptyMap(),
+                body = null
             )
-        )
-
-        let validator = AirshipInputValidation.DefaultValidator(
-            smsValidatorAPIClient: smsValidatorAPIClient
-        )
-
-        await confirmation { confirmation in
-            await smsValidatorAPIClient.setOnValidate { apiRequest in
-                #expect(apiRequest.msisdn == "555555555")
-                #expect(apiRequest.sender == "some sender")
-                confirmation.confirm()
-                return AirshipHTTPResponse(
-                    result: nil,
-                    statusCode: Int.random(in: 500...599),
-                    headers: [:]
-                )
-            }
-
-            await #expect(throws: NSError.self) {
-                _ = try await validator.validateRequest(request)
-            }
         }
+
+        try {
+            defaultValidator.validate(request)
+            fail()
+        } catch (_: IllegalArgumentException) { }
     }
 
-    @Test("Test sms validation 2xx without a result should throw")
-    func testSMSValidationWith200ResponseNoResult() async throws {
-        let request = AirshipInputValidation.Request.sms(
-            .init(
-                rawInput: "555555555",
-                validationOptions: .sender(senderID: "some sender", prefix: nil)
+    @Test
+    public fun testSMSValidationWith200ResponseNoResult(): TestResult = runTest {
+        val request = defaultSmsRequest
+
+        coEvery { mockApiClient.validateSmsWithSender(any(), any()) } answers {
+            RequestResult(
+                status = 200,
+                value = null,
+                headers = emptyMap(),
+                body = null
             )
-        )
-
-        let validator = AirshipInputValidation.DefaultValidator(
-            smsValidatorAPIClient: smsValidatorAPIClient
-        )
-
-        await confirmation { confirmation in
-            await smsValidatorAPIClient.setOnValidate { apiRequest in
-                #expect(apiRequest.msisdn == "555555555")
-                #expect(apiRequest.sender == "some sender")
-                confirmation.confirm()
-                return AirshipHTTPResponse(
-                    result: nil,
-                    statusCode: Int.random(in: 200...299),
-                    headers: [:]
-                )
-            }
-
-            await #expect(throws: NSError.self) {
-                _ = try await validator.validateRequest(request)
-            }
         }
+
+        try {
+            defaultValidator.validate(request)
+            fail()
+        } catch (_: IllegalArgumentException) { }
     }
 
-    @Test("Test validation hints are checked before API client")
-    func testValidationHints() async throws {
-        // Setup a valid response
-        await smsValidatorAPIClient.setOnValidate { apiRequest in
-            return AirshipHTTPResponse(
-                result: .valid("+1555555555"),
-                statusCode: 200,
-                headers: [:]
+    @Test
+    public fun testValidationHints(): TestResult = runTest {
+        coEvery { mockApiClient.validateSmsWithSender(any(), any()) } answers {
+            RequestResult(
+                status = 200,
+                value = SmsValidatorApiClient.Result.Valid("+1555555555"),
+                headers = emptyMap(),
+                body = null
             )
         }
 
-        let validator = AirshipInputValidation.DefaultValidator(
-            smsValidatorAPIClient: smsValidatorAPIClient
-        )
-
-        // Test 0-3 digits
-        for i in 0...3 {
-            let request = AirshipInputValidation.Request.sms(
-                .init(
-                    rawInput: generateRandomNumberString(length: i),
-                    validationOptions: .sender(senderID: "some sender", prefix: nil),
-                    validationHints: .init(minDigits: 4, maxDigits: 6)
+        val compareResult: suspend (input: String, result: AirshipInputValidation.Result) -> Unit = { input, result ->
+            val request = AirshipInputValidation.Request.ValidateSms(
+                sms = AirshipInputValidation.Request.Sms(
+                    rawInput = input,
+                    validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(
+                        senderId = "some sender"
+                    ),
+                    validationHints = AirshipInputValidation.Request.Sms.ValidationHints(
+                        minDigits = 4,
+                        maxDigits = 6
+                    )
                 )
             )
-            try await #expect(validator.validateRequest(request) == .invalid)
+
+            assertEquals(result, defaultValidator.validate(request))
         }
 
-        // Test 4-6 digits
-        for i in 4...6 {
-            let request = AirshipInputValidation.Request.sms(
-                .init(
-                    rawInput: generateRandomNumberString(length: i),
-                    validationOptions: .sender(senderID: "some sender", prefix: nil),
-                    validationHints: .init(minDigits: 4, maxDigits: 6)
-                )
-            )
-            try await #expect(validator.validateRequest(request) == .valid(address: "+1555555555"))
-        }
-
-        // Test over 6 digits
-        for i in 7...10 {
-            let request = AirshipInputValidation.Request.sms(
-                .init(
-                    rawInput: generateRandomNumberString(length: i),
-                    validationOptions: .sender(senderID: "some sender", prefix: nil),
-                    validationHints: .init(minDigits: 4, maxDigits: 6)
-                )
-            )
-            try await #expect(validator.validateRequest(request) == .invalid)
-        }
-
-        // Test digits with other characters
-        let request = AirshipInputValidation.Request.sms(
-            .init(
-                rawInput: "a1b2c3d4b5e6",
-                validationOptions: .sender(senderID: "some sender", prefix: nil),
-                validationHints: .init(minDigits: 4, maxDigits: 6)
-            )
-        )
-        try await #expect(validator.validateRequest(request) == .valid(address: "+1555555555"))
-    }
-
-    @Test("Test SMS override.")
-    func testSMSOverride() async throws {
-        let request = AirshipInputValidation.Request.sms(
-            .init(
-                rawInput: "555555555",
-                validationOptions: .sender(senderID: "some sender", prefix: nil)
-            )
-        )
-
-        try await confirmation { confirmation in
-            let validator = AirshipInputValidation.DefaultValidator(
-                smsValidatorAPIClient: smsValidatorAPIClient
-            ) { arg in
-                #expect(arg == request)
-                confirmation.confirm()
-                return .override(.valid(address: "some other result"))
+        (0..3)
+            .map(::randomNumber)
+            .forEach { number ->
+                compareResult(number, AirshipInputValidation.Result.Invalid)
             }
 
-            let result = try await validator.validateRequest(request)
-            #expect(result == .valid(address: "some other result"))
-        }
-    }
+        (4..6)
+            .map(::randomNumber)
+            .forEach { number ->
+                compareResult(number, AirshipInputValidation.Result.Valid("+1555555555"))
+            }
 
-    @Test("Test SMS override default fallback.")
-    func testSMSOverrideFallback() async throws {
-        let request = AirshipInputValidation.Request.sms(
-            .init(
-                rawInput: "555555555",
-                validationOptions: .sender(senderID: "some sender", prefix: nil)
+        (7..10)
+            .map(::randomNumber)
+            .forEach { number ->
+                compareResult(number, AirshipInputValidation.Result.Invalid)
+            }
+
+        val request = AirshipInputValidation.Request.ValidateSms(
+            sms = AirshipInputValidation.Request.Sms(
+                rawInput = "a1b2c3d4b5e6",
+                validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(
+                    senderId = "some sender"
+                ),
+                validationHints = AirshipInputValidation.Request.Sms.ValidationHints(
+                    minDigits = 4,
+                    maxDigits = 6
+                )
             )
         )
-
-        try await confirmation(expectedCount: 2) { confirmation in
-            await smsValidatorAPIClient.setOnValidate { apiRequest in
-                #expect(apiRequest.msisdn == "555555555")
-                #expect(apiRequest.sender == "some sender")
-                confirmation.confirm()
-                return AirshipHTTPResponse(
-                    result: .valid("API result"),
-                    statusCode: Int.random(in: 200...299),
-                    headers: [:]
-                )
-            }
-
-            let validator = AirshipInputValidation.DefaultValidator(
-                smsValidatorAPIClient: smsValidatorAPIClient
-            ) { arg in
-                #expect(arg == request)
-                confirmation.confirm()
-                return .useDefault
-            }
-
-            let result = try await validator.validateRequest(request)
-            #expect(result == .valid(address: "API result"))
-        }
+        assertEquals(
+            AirshipInputValidation.Result.Valid("+1555555555"),
+            defaultValidator.validate(request)
+        )
     }
 
-    @Test(
-        "Test SMS legacy delegate receives formatted input",
-        arguments: [
+    @Test
+    public fun testSMSOverride(): TestResult = runTest {
+        val request = defaultSmsRequest
+
+        val validator = DefaultInputValidator(
+            apiClient = mockApiClient,
+            overrides = object : AirshipValidationOverride {
+                override fun getOverrides(request: AirshipInputValidation.Request): PendingResult<AirshipInputValidation.Override> {
+                    return PendingResult<AirshipInputValidation.Override>().apply {
+                        result = AirshipInputValidation.Override.Replace(
+                            AirshipInputValidation.Result.Valid("some other result")
+                        )
+                    }
+                }
+
+            }
+        )
+
+        assertEquals(
+            AirshipInputValidation.Result.Valid("some other result"),
+            validator.validate(request)
+        )
+    }
+
+    @Test
+    public fun testSMSOverrideFallback(): TestResult = runTest {
+        val request = defaultSmsRequest
+
+        val validator = DefaultInputValidator(
+            apiClient = mockApiClient,
+            overrides = object : AirshipValidationOverride {
+                override fun getOverrides(request: AirshipInputValidation.Request): PendingResult<AirshipInputValidation.Override> {
+                    return PendingResult<AirshipInputValidation.Override>().apply {
+                        result = AirshipInputValidation.Override.UseDefault
+                    }
+                }
+            }
+        )
+
+        coEvery { mockApiClient.validateSmsWithSender(any(), any()) } answers {
+            RequestResult(
+                status = 200,
+                value = SmsValidatorApiClient.Result.Valid("api result"),
+                headers = emptyMap(),
+                body = null
+            )
+        }
+
+        assertEquals(
+            AirshipInputValidation.Result.Valid("api result"),
+            validator.validate(request)
+        )
+
+        coVerify(exactly = 1) { mockApiClient.validateSmsWithSender(any(), any()) }
+    }
+
+    @Test
+    public fun testSMSLegacyDelegate(): TestResult = runTest {
+        val mockLegacyDelegate: SmsValidatorDelegate = mockk()
+        defaultValidator.setLegacySmsDelegate(mockLegacyDelegate)
+
+        coEvery { mockLegacyDelegate.validateSms(any(), any()) } answers {
+            assertEquals("15558675309", firstArg())
+            assertEquals("some sender", secondArg())
+
+            true
+        }
+
+        listOf(
             "1 555 867 5309",
             "1.555.867.5309",
             "1-555-867-5309",
-            "5 5 5 8 6  7 5309",
-        ]
-    )
-    func testSMSLegacyDelegate(arg: String) async throws {
-        let request = AirshipInputValidation.Request.sms(
-            .init(
-                rawInput: arg,
-                validationOptions: .sender(senderID: "some sender", prefix: "+1")
-            )
+            "5 5 5 8 6  7 5309"
         )
-
-        let validator = AirshipInputValidation.DefaultValidator(
-            smsValidatorAPIClient: smsValidatorAPIClient
-        )
-
-        try await confirmation { confirmation in
-            let delegate = TestLegacySMSDelegate { msisdn, sender in
-                #expect(msisdn == "15558675309")
-                #expect(sender == "some sender")
-                confirmation.confirm()
-                return true
-            }
-
-            await Task { @MainActor in
-                validator.legacySMSDelegate = delegate
-            }.value
-
-            let result = try await validator.validateRequest(request)
-            #expect(result == .valid(address: "15558675309"))
-        }
-    }
-
-    @Test("Test SMS legacy delegate invalid")
-    func testLegacySMSDelegateInvalidates() async throws {
-        let request = AirshipInputValidation.Request.sms(
-            .init(
-                rawInput: "123456",
-                validationOptions: .sender(senderID: "some sender", prefix: "+1")
-            )
-        )
-
-        let validator = AirshipInputValidation.DefaultValidator(
-            smsValidatorAPIClient: smsValidatorAPIClient
-        )
-
-        try await confirmation { confirmation in
-            let delegate = TestLegacySMSDelegate { msisdn, sender in
-                #expect(msisdn == "123456")
-                #expect(sender == "some sender")
-                confirmation.confirm()
-                return false
-            }
-
-            await Task { @MainActor in
-                validator.legacySMSDelegate = delegate
-            }.value
-
-            let result = try await validator.validateRequest(request)
-            #expect(result == .invalid)
-        }
-    }
-
-    @Test("Test SMS legacy delegate invalid")
-    func testLegacySMSDelegateNoPrefix() async throws {
-        let request = AirshipInputValidation.Request.sms(
-            .init(
-                rawInput: "123456",
-                validationOptions: .sender(senderID: "some sender", prefix: nil)
-            )
-        )
-
-        let validator = AirshipInputValidation.DefaultValidator(
-            smsValidatorAPIClient: smsValidatorAPIClient
-        )
-
-        try await confirmation { confirmation in
-            let delegate = TestLegacySMSDelegate { msisdn, sender in
-                #expect(msisdn == "123456")
-                #expect(sender == "some sender")
-                confirmation.confirm()
-                return false
-            }
-
-            await Task { @MainActor in
-                validator.legacySMSDelegate = delegate
-            }.value
-
-            let result = try await validator.validateRequest(request)
-            #expect(result == .invalid)
-        }
-    }
-
-    @Test("Test SMS legacy delegate ignored when only prefix")
-    func testLegacySMSDelegatePrefix() async throws {
-        let request = AirshipInputValidation.Request.sms(
-            .init(
-                rawInput: "123456",
-                validationOptions: .prefix(prefix: "+1")
-            )
-        )
-
-        let validator = AirshipInputValidation.DefaultValidator(
-            smsValidatorAPIClient: smsValidatorAPIClient
-        )
-
-        try await confirmation { confirmation in
-            let delegate = TestLegacySMSDelegate { msisdn, sender in
-                return false
-            }
-
-            await smsValidatorAPIClient.setOnValidate { apiRequest in
-                #expect(apiRequest.msisdn == "123456")
-                #expect(apiRequest.prefix == "+1")
-                confirmation.confirm()
-                return AirshipHTTPResponse(
-                    result: .valid("API result"),
-                    statusCode: Int.random(in: 200...299),
-                    headers: [:]
+            .map { number ->
+                AirshipInputValidation.Request.ValidateSms(
+                    sms = AirshipInputValidation.Request.Sms(
+                        rawInput = number,
+                        validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(
+                            senderId = "some sender",
+                            prefix = "+1"
+                        )
+                    )
                 )
             }
-
-            await Task { @MainActor in
-                validator.legacySMSDelegate = delegate
-            }.value
-
-            let result = try await validator.validateRequest(request)
-            #expect(result == .valid(address: "API result"))
-        }
-    }
-}
-
-fileprivate actor TestLegacySMSDelegate: SMSValidatorDelegate {
-
-    var onValidate: (@Sendable (String, String) async throws -> Bool)
-
-    init(onValidate: @Sendable @escaping (String, String) -> Bool) {
-        self.onValidate = onValidate
-    }
-
-    func validateSMS(msisdn: String, sender: String) async throws -> Bool {
-        return try await onValidate(msisdn, sender)
-    }
-}
-
-// Helpers
-fileprivate extension AirshipInputValidationTest {
-    func generateRandomNumberString(length: Int) -> String {
-        let digits = "0123456789"
-        var result = ""
-
-        for _ in 0..<length {
-            if let randomCharacter = digits.randomElement() {
-                result.append(randomCharacter)
+            .map { defaultValidator.validate(it) }
+            .forEach { result ->
+                assertEquals(AirshipInputValidation.Result.Valid("15558675309"), result)
             }
+
+        coVerify(exactly = 4) { mockLegacyDelegate.validateSms(any(), any()) }
+    }
+
+    @Test
+    public fun testLegacySMSDelegateInvalidates(): TestResult = runTest {
+        val request = AirshipInputValidation.Request.ValidateSms(
+            sms = AirshipInputValidation.Request.Sms(
+                rawInput = "123456",
+                validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(
+                    senderId = "some sender",
+                    prefix = "+1"
+                )
+            )
+        )
+
+        val legacyDelegate: SmsValidatorDelegate = mockk()
+        defaultValidator.setLegacySmsDelegate(legacyDelegate)
+
+        coEvery { legacyDelegate.validateSms(any(), any()) } answers {
+            assertEquals("123456", firstArg())
+            assertEquals("some sender", secondArg())
+
+            false
         }
+
+        assertEquals(AirshipInputValidation.Result.Invalid, defaultValidator.validate(request))
+        coVerify(exactly = 1) { legacyDelegate.validateSms(any(), any()) }
+    }
+
+    @Test
+    public fun testLegacySMSDelegateNoPrefix(): TestResult = runTest {
+        val request = AirshipInputValidation.Request.ValidateSms(
+            sms = AirshipInputValidation.Request.Sms(
+                rawInput = "123456",
+                validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(
+                    senderId = "some sender"
+                )
+            )
+        )
+
+        val legacyDelegate: SmsValidatorDelegate = mockk()
+        defaultValidator.setLegacySmsDelegate(legacyDelegate)
+
+        coEvery { legacyDelegate.validateSms(any(), any()) } answers {
+            assertEquals("123456", firstArg())
+            assertEquals("some sender", secondArg())
+
+            false
+        }
+
+        assertEquals(AirshipInputValidation.Result.Invalid, defaultValidator.validate(request))
+        coVerify(exactly = 1) { legacyDelegate.validateSms(any(), any()) }
+    }
+
+    @Test
+    public fun testLegacySMSDelegatePrefix(): TestResult = runTest {
+        val request = AirshipInputValidation.Request.ValidateSms(
+            sms = AirshipInputValidation.Request.Sms(
+                rawInput = "123456",
+                validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Prefix(
+                    prefix = "+1"
+                )
+            )
+        )
+
+        val legacyDelegate: SmsValidatorDelegate = mockk()
+        defaultValidator.setLegacySmsDelegate(legacyDelegate)
+
+        coEvery { legacyDelegate.validateSms(any(), any()) } returns false
+
+        coEvery { mockApiClient.validateSmsWithPrefix(any(), any()) } answers {
+            assertEquals("123456", firstArg())
+            assertEquals("+1", secondArg())
+
+            RequestResult(
+                status = 200,
+                value = SmsValidatorApiClient.Result.Valid("api result"),
+                headers = emptyMap(),
+                body = null
+            )
+        }
+
+        assertEquals(
+            AirshipInputValidation.Result.Valid("api result"),
+            defaultValidator.validate(request)
+        )
+
+        coVerify(exactly = 0) { legacyDelegate.validateSms(any(), any()) }
+    }
+
+    private val defaultSmsRequest: AirshipInputValidation.Request = AirshipInputValidation.Request.ValidateSms(
+        sms = AirshipInputValidation.Request.Sms(
+            rawInput = "555555555",
+            validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(
+                senderId = "some sender"
+            )
+        )
+    )
+
+    private fun randomNumber(length: Int): String {
+        val digits = "0123456789"
+        var result = ""
+        (0..<length).forEach { _ -> result += digits.random() }
 
         return result
-    }
-}
-     */
-
-    private suspend fun checkValidAddress(
-        request: AirshipInputValidation.Request,
-        expected: String,
-        validation: AirshipInputValidation.Validator = defaultValidator
-    ) {
-        when(val result = validation.validate(request)) {
-            AirshipInputValidation.Result.Invalid -> fail()
-            is AirshipInputValidation.Result.Valid -> assertEquals(result.address, expected)
-        }
     }
 }

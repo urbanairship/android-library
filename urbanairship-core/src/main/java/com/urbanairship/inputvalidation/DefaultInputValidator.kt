@@ -9,6 +9,7 @@ import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.yield
 
 /**
@@ -32,6 +33,10 @@ internal class DefaultInputValidator(
 
     override val legacySmsDelegate: StateFlow<SmsValidatorDelegate?>
         get() = _smsDelegate.asStateFlow()
+
+    override fun setLegacySmsDelegate(delegate: SmsValidatorDelegate?) {
+        _smsDelegate.update { delegate }
+    }
 
     /**
      *

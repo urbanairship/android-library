@@ -32,6 +32,23 @@ public class AirshipInputValidation private constructor(){
             }
             return "Result($data)"
         }
+
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
+
+            return when(this) {
+                Invalid -> true
+                is Valid -> address == (other as? Valid)?.address
+            }
+        }
+
+        override fun hashCode(): Int {
+            return when(this) {
+                Invalid -> javaClass.hashCode()
+                is Valid -> address.hashCode()
+            }
+        }
     }
 
     /** Class representing the override options for input validation. */
@@ -117,7 +134,9 @@ public class AirshipInputValidation private constructor(){
      * */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public interface Validator {
+
         public val legacySmsDelegate: StateFlow<SmsValidatorDelegate?>
+        public fun setLegacySmsDelegate(delegate: SmsValidatorDelegate?)
 
         /**
          * Validates the provided request and returns a result.
@@ -131,8 +150,8 @@ public class AirshipInputValidation private constructor(){
 
 /**
  * Delegate for overriding the default SMS validation.
- * Deprecated, app should use `AirshipConfig.inputValidationOverrides` instead.
  */
+@Deprecated("App should use `AirshipConfigOptions.validationOverrides` instead.")
 public interface SmsValidatorDelegate {
 
     /**
