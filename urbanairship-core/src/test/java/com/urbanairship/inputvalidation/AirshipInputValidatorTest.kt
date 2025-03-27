@@ -16,7 +16,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.never
 
 @RunWith(AndroidJUnit4::class)
 public class AirshipInputValidatorTest {
