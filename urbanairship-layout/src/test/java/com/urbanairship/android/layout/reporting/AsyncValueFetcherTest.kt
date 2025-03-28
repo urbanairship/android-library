@@ -5,6 +5,7 @@ package com.urbanairship.android.layout.reporting
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.TestTaskSleeper
+import com.urbanairship.UALog
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
@@ -139,7 +140,10 @@ public class AsyncValueFetcherTest {
         )
 
         val fetcher = makeFetcher(
-            block = { states.removeFirst() },
+            block = {
+                UALog.e("removing item from list $states")
+                states.removeFirst()
+            },
             delay = 1.seconds
         )
 
