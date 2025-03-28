@@ -150,13 +150,13 @@ public class AsyncValueFetcherTest {
         val scope = this
 
         fetcher.results.test {
-            skipItems(1)
-//
-//            fetcher.fetch(scope, retryErrors = true)
-//            assertTrue(awaitItem()?.isError == true)
-//
-//            fetcher.fetch(scope, retryErrors = true)
-//            assertTrue(awaitItem()?.isError == true)
+            skipItems(1) // initial null value
+
+            fetcher.fetch(scope, retryErrors = true)
+            assertTrue(awaitItem()?.isError == true)
+
+            fetcher.fetch(scope, retryErrors = true)
+            assertTrue(awaitItem()?.isError == true)
 //
 //            fetcher.fetch(scope, retryErrors = true)
 //            assertTrue(awaitItem()?.isInvalid == true)
