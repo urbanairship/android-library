@@ -733,6 +733,8 @@ public class UAirship {
         this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, permissionsManager, eventFeed);
         components.add(this.analytics);
 
+        this.inputValidator = new DefaultInputValidator(runtimeConfig);
+
         //noinspection deprecation
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, privacyManager);
         components.add(this.applicationMetrics);
@@ -743,7 +745,8 @@ public class UAirship {
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.channelCapture);
 
-        this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, audienceOverridesProvider, pushManager);
+        this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager,
+                channel, localeManager, audienceOverridesProvider, pushManager, inputValidator);
         components.add(this.contact);
         requestSession.setContactAuthTokenProvider(this.contact.getAuthTokenProvider());
 
@@ -757,8 +760,6 @@ public class UAirship {
 
         this.remoteConfigManager = new RemoteConfigManager(application, preferenceDataStore, runtimeConfig, privacyManager, remoteData);
         components.add(this.remoteConfigManager);
-
-        this.inputValidator = new DefaultInputValidator(runtimeConfig);
 
         AirshipCache cache = new AirshipCache(application, runtimeConfig);
         AudienceEvaluator audienceEvaluator = new AudienceEvaluator(cache);

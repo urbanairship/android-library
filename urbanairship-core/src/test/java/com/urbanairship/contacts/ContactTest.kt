@@ -14,9 +14,9 @@ import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.ChannelRegistrationPayload
-import com.urbanairship.channel.SmsValidator
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.http.RequestResult
+import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.json.JsonValue
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
@@ -87,7 +87,7 @@ public class ContactTest {
         every { this@mockk.currentNamedUserIdUpdates } returns this@ContactTest.currentNamedUserIdUpdates
     }
 
-    private val mockSmsValidator = mockk<SmsValidator>(relaxUnitFun = true)
+    private val mockSmsValidator: AirshipInputValidation.Validator = mockk(relaxUnitFun = true)
 
     private val testActivityMonitor = TestActivityMonitor()
     private val testClock = TestClock()
@@ -1087,7 +1087,9 @@ public class ContactTest {
 
     @Test
     public fun testValidateSms(): TestResult = runTest {
-        coEvery { mockSmsValidator.validateSms(any(), any()) } returns true andThen false
+        coEvery { mockSmsValidator.validate(any()) } answers {
+            AirshipInputValidation.Result.Valid("value")
+        } andThen AirshipInputValidation.Result.Invalid
 
         val address = "some address"
         val sender = "some sender"
@@ -1095,6 +1097,6 @@ public class ContactTest {
         assertTrue(contact.validateSms(address, sender))
         assertFalse(contact.validateSms(address, sender))
 
-        coVerify(exactly = 2) { mockSmsValidator.validateSms(address, sender) }
+        coVerify(exactly = 2) { mockSmsValidator.validate(any()) }
     }
 }
