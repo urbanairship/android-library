@@ -138,18 +138,18 @@ public class AsyncValueFetcherTest {
             ThomasFormField.AsyncValueFetcher.PendingResult.Error<String>(),
             ThomasFormField.AsyncValueFetcher.PendingResult.Invalid<String>()
         )
-//
-//        val fetcher = makeFetcher(
-//            block = {
-//                UALog.e("removing item from list $states")
-//                states.removeFirst()
-//            },
-//            delay = 1.seconds
-//        )
-//
-//        val scope = this
 
-//        fetcher.results.test {
+        val fetcher = makeFetcher(
+            block = {
+                UALog.e("removing item from list $states")
+                states.removeFirst()
+            },
+            delay = 1.seconds
+        )
+
+        val scope = this
+
+        fetcher.results.test {
 ////            skipItems(1)
 //
 //            fetcher.fetch(scope, retryErrors = true)
@@ -160,7 +160,7 @@ public class AsyncValueFetcherTest {
 //
 //            fetcher.fetch(scope, retryErrors = true)
 //            assertTrue(awaitItem()?.isInvalid == true)
-//        }
+        }
     }
 
     private fun defaultFetchBlock(result: String?): ThomasFormField.AsyncValueFetcher.PendingResult<String> {
