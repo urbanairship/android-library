@@ -235,7 +235,7 @@ public sealed class ThomasFormField<T>(
             }
 
             fetchJob?.let { job ->
-                if (!job.isCancelled) {
+                if (job.isActive) {
                     return job.await()
                 }
             }
@@ -253,13 +253,12 @@ public sealed class ThomasFormField<T>(
 
         private fun initiateFetching(scope: CoroutineScope): Deferred<PendingResult<T>> {
             fetchJob?.let {
-                if (!it.isCancelled) {
+                if (it.isActive) {
                     return it
                 }
             }
 
             val isInitialCall = _resultsFlow.value == null
-            _resultsFlow.update { null }
 
             val job = scope.async {
                 try {
@@ -311,6 +310,9 @@ public sealed class ThomasFormField<T>(
 
             val isError: Boolean
                 get() = this is Error
+
+            val isInvalid: Boolean
+                get() = this is Invalid
 
             val status: ThomasFormFieldStatus<T>
                 get() {
