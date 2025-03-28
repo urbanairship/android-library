@@ -150,7 +150,7 @@ public class AsyncValueFetcherTest {
         val scope = this
 
         fetcher.results.test {
-////            skipItems(1)
+            skipItems(1)
 //
 //            fetcher.fetch(scope, retryErrors = true)
 //            assertTrue(awaitItem()?.isError == true)
