@@ -140,10 +140,7 @@ public class AsyncValueFetcherTest {
         )
 
         val fetcher = makeFetcher(
-            block = {
-                UALog.e("removing item from list $states")
-                states.removeFirst()
-            },
+            block = { states.removeAt(0) },
             delay = 1.seconds
         )
 
@@ -157,9 +154,9 @@ public class AsyncValueFetcherTest {
 
             fetcher.fetch(scope, retryErrors = true)
             assertTrue(awaitItem()?.isError == true)
-//
-//            fetcher.fetch(scope, retryErrors = true)
-//            assertTrue(awaitItem()?.isInvalid == true)
+
+            fetcher.fetch(scope, retryErrors = true)
+            assertTrue(awaitItem()?.isInvalid == true)
         }
     }
 
