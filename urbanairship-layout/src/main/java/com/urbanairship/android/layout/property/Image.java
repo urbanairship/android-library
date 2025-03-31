@@ -178,7 +178,10 @@ public abstract class Image {
             CHECKMARK("checkmark", R.drawable.ua_layout_ic_check),
             ARROW_FORWARD("forward_arrow", R.drawable.ua_layout_ic_arrow_forward),
             ARROW_BACK("back_arrow", R.drawable.ua_layout_ic_arrow_back),
-            ERROR_CIRCLE("exclamationmark_circle_fill", R.drawable.ua_layout_ic_error_circle_filled);
+            ERROR_CIRCLE("exclamationmark_circle_fill", R.drawable.ua_layout_ic_error_circle_filled),
+            ASTERISK("asterisk", R.drawable.ua_layout_ic_asterisk),
+            ASTERISK_CIRCLE("asterisk_circle_fill", R.drawable.ua_layout_ic_asterisk),
+            PROGRESS_SPINNER("progress_spinner", R.drawable.ua_layout_animated_progress_spinner2);
 
             @NonNull
             private final String value;
