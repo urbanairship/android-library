@@ -9,6 +9,7 @@ import com.urbanairship.json.JsonValue
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -64,6 +65,25 @@ public class ThomasFormFieldTest {
         assertNotSame(form, formCopy)
         assertEquals(form, formCopy)
         assertEquals(form.hashCode(), formCopy.hashCode())
+    }
+
+    @Test
+    public fun justFileTypeTest() {
+        val value = "test value"
+
+        assertEquals(ThomasFormField.FiledType.just(
+            value = value,
+            validator = { false }
+        ), ThomasFormField.FiledType.Instant<String>(null))
+
+        assertEquals(ThomasFormField.FiledType.just(
+            value = value,
+            validator = { true }
+        ), ThomasFormField.FiledType.Instant(ThomasFormField.Result(value)))
+
+        assertEquals(ThomasFormField.FiledType.just(
+            value = value
+        ), ThomasFormField.FiledType.Instant(ThomasFormField.Result(value)))
     }
 
     public companion object {
