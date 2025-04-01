@@ -54,10 +54,6 @@ internal abstract class ButtonModel<T, I: Button>(
         viewScope.launch {
             view.taps().collect {
 
-                if (viewInfo.clickBehaviors.hasFormValidate) {
-                    handleFormValidation()
-                }
-
                 val reportingContext = layoutState.reportingContext(buttonId = viewInfo.identifier)
 
                 // Report button tap event.
@@ -71,14 +67,17 @@ internal abstract class ButtonModel<T, I: Button>(
                     handleViewEvent(EventHandler.Type.TAP)
                 }
 
-                delay(1L)
                 evaluateClickBehaviors(view.context ?: UAirship.getApplicationContext())
             }
         }
     }
 
     private suspend fun evaluateClickBehaviors(context: Context) {
-        if (viewInfo.clickBehaviors.hasFormSubmit) {
+        if (viewInfo.clickBehaviors.hasFormValidate) {
+            // If we have a FORM_VALIDATE behavior, handle it first and then
+            // handle the rest of the behaviors after validating.
+            handleFormValidation(context)
+        } else if (viewInfo.clickBehaviors.hasFormSubmit) {
             // If we have a FORM_SUBMIT behavior, handle it first and then
             // handle the rest of the behaviors after submitting.
             handleSubmit(context)
@@ -116,16 +115,32 @@ internal abstract class ButtonModel<T, I: Button>(
             }
         }
         modelScope.launch {
-            environment.eventHandler.broadcast(submitEvent)
+            broadcast(submitEvent)
         }
     }
 
-    private fun handleFormValidation() {
+    private fun handleFormValidation(context: Context) {
         // Dismiss the keyboard, if it's open.
         listener?.dismissSoftKeyboard()
 
+        val validateEvent = LayoutEvent.ValidateForm(buttonIdentifier = viewInfo.identifier) {
+            // After validating, handle the rest of the behaviors.
+            if (viewInfo.clickBehaviors.hasFormSubmit) {
+                handleSubmit(context)
+            }
+            if (viewInfo.clickBehaviors.hasCancelOrDismiss) {
+                handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
+            }
+            if (viewInfo.clickBehaviors.hasPagerNext) {
+                handlePagerNext(context, fallback = viewInfo.clickBehaviors.pagerNextFallback)
+            }
+            if (viewInfo.clickBehaviors.hasPagerPrevious) {
+                handlePagerPrevious()
+            }
+        }
+
         modelScope.launch {
-            //TODO: il form validate
+            broadcast(validateEvent)
         }
     }
 
