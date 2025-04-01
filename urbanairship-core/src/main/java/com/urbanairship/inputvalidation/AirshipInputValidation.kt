@@ -4,6 +4,7 @@ package com.urbanairship.inputvalidation
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.PendingResult
+import com.urbanairship.channel.SmsValidationHandler
 import kotlinx.coroutines.flow.StateFlow
 
 /** A closure type used for overriding validation logic. */
@@ -135,8 +136,8 @@ public class AirshipInputValidation private constructor(){
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public interface Validator {
 
-        public val legacySmsDelegate: StateFlow<SmsValidatorDelegate?>
-        public fun setLegacySmsDelegate(delegate: SmsValidatorDelegate?)
+        public val legacySmsDelegate: StateFlow<SmsValidationHandler?>
+        public fun setLegacySmsDelegate(delegate: SmsValidationHandler?)
 
         /**
          * Validates the provided request and returns a result.
@@ -146,20 +147,4 @@ public class AirshipInputValidation private constructor(){
          */
         public suspend fun validate(request: Request): Result
     }
-}
-
-/**
- * Delegate for overriding the default SMS validation.
- */
-@Deprecated("App should use `AirshipConfigOptions.validationOverrides` instead.")
-public interface SmsValidatorDelegate {
-
-    /**
-     * Validates a given MSISDN.
-     *
-     * @param msisdn: The msisdn to validate.
-     * @param sender: The identifier given to the sender of the SMS message.
-     * @return `true` if the phone number is valid, otherwise `false`.
-     */
-    public suspend fun validateSms(msisdn: String, sender: String): Boolean
 }

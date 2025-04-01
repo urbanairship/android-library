@@ -3,6 +3,7 @@
 package com.urbanairship.inputvalidation
 
 import com.urbanairship.UALog
+import com.urbanairship.channel.SmsValidationHandler
 import com.urbanairship.config.AirshipRuntimeConfig
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -29,12 +30,12 @@ internal class DefaultInputValidator(
         overrides = config.configOptions.validationOverride
     )
 
-    private val _smsDelegate = MutableStateFlow<SmsValidatorDelegate?>(null)
+    private val _smsDelegate = MutableStateFlow<SmsValidationHandler?>(null)
 
-    override val legacySmsDelegate: StateFlow<SmsValidatorDelegate?>
+    override val legacySmsDelegate: StateFlow<SmsValidationHandler?>
         get() = _smsDelegate.asStateFlow()
 
-    override fun setLegacySmsDelegate(delegate: SmsValidatorDelegate?) {
+    override fun setLegacySmsDelegate(delegate: SmsValidationHandler?) {
         _smsDelegate.update { delegate }
     }
 
@@ -168,7 +169,7 @@ internal class DefaultInputValidator(
         address: String,
         senderId: String,
         prefix: String?,
-        delegate: SmsValidatorDelegate
+        delegate: SmsValidationHandler
     ): AirshipInputValidation.Result {
         val trimmed = address.trimSpaceAndNewLine()
         var cleanedNumber = trimmed.replace("[^0-9]".toRegex(), "")

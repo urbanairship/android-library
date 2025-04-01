@@ -23,13 +23,13 @@ import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.channel.AttributeMutation
+import com.urbanairship.channel.SmsValidationHandler
 import com.urbanairship.channel.TagGroupsEditor
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.AuthTokenProvider
 import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.inputvalidation.DefaultInputValidator
-import com.urbanairship.inputvalidation.SmsValidatorDelegate
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
@@ -465,7 +465,7 @@ public class Contact internal constructor(
      *
      * @param handler An implementation of [SmsValidationHandler], or `null` to remove the existing handler.
      */
-    public fun setSmsValidationHandler(handler: SmsValidatorDelegate?) {
+    public fun setSmsValidationHandler(handler: SmsValidationHandler?) {
         smsValidator.setLegacySmsDelegate(handler)
     }
 

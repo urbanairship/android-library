@@ -4,6 +4,7 @@ package com.urbanairship.inputvalidation
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PendingResult
+import com.urbanairship.channel.SmsValidationHandler
 import com.urbanairship.http.RequestResult
 import java.util.UUID
 import io.mockk.coEvery
@@ -386,7 +387,7 @@ public class AirshipInputValidatorTest {
 
     @Test
     public fun testSMSLegacyDelegate(): TestResult = runTest {
-        val mockLegacyDelegate: SmsValidatorDelegate = mockk()
+        val mockLegacyDelegate: SmsValidationHandler = mockk()
         defaultValidator.setLegacySmsDelegate(mockLegacyDelegate)
 
         coEvery { mockLegacyDelegate.validateSms(any(), any()) } answers {
@@ -433,7 +434,7 @@ public class AirshipInputValidatorTest {
             )
         )
 
-        val legacyDelegate: SmsValidatorDelegate = mockk()
+        val legacyDelegate: SmsValidationHandler = mockk()
         defaultValidator.setLegacySmsDelegate(legacyDelegate)
 
         coEvery { legacyDelegate.validateSms(any(), any()) } answers {
@@ -458,7 +459,7 @@ public class AirshipInputValidatorTest {
             )
         )
 
-        val legacyDelegate: SmsValidatorDelegate = mockk()
+        val legacyDelegate: SmsValidationHandler = mockk()
         defaultValidator.setLegacySmsDelegate(legacyDelegate)
 
         coEvery { legacyDelegate.validateSms(any(), any()) } answers {
@@ -483,7 +484,7 @@ public class AirshipInputValidatorTest {
             )
         )
 
-        val legacyDelegate: SmsValidatorDelegate = mockk()
+        val legacyDelegate: SmsValidationHandler = mockk()
         defaultValidator.setLegacySmsDelegate(legacyDelegate)
 
         coEvery { legacyDelegate.validateSms(any(), any()) } returns false
