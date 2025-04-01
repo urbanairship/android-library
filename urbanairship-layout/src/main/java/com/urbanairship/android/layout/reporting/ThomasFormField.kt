@@ -28,7 +28,7 @@ public sealed class ThomasFormField<T>(
 
     public abstract val identifier: String
     public abstract val originalValue: T?
-    internal abstract val filedType: FiledType<T>
+    internal abstract val fieldType: FieldType<T>
 
     internal data class Result<T>(
         val value: T,
@@ -38,9 +38,9 @@ public sealed class ThomasFormField<T>(
 
     internal val status: ThomasFormFieldStatus<T>
         get() {
-            return when(val type = filedType) {
-                is FiledType.Async -> type.fetcher.results.value?.status ?: ThomasFormFieldStatus.Pending()
-                is FiledType.Instant -> type.result?.let { ThomasFormFieldStatus.Valid(it) } ?: ThomasFormFieldStatus.Invalid()
+            return when(val type = fieldType) {
+                is FieldType.Async -> type.fetcher.results.value?.status ?: ThomasFormFieldStatus.Pending()
+                is FieldType.Instant -> type.result?.let { ThomasFormFieldStatus.Valid(it) } ?: ThomasFormFieldStatus.Invalid()
             }
         }
 
@@ -71,19 +71,19 @@ public sealed class ThomasFormField<T>(
     public data class Toggle(
         override val identifier: String,
         override val originalValue: Boolean?,
-        override val filedType: FiledType<Boolean>
+        override val fieldType: FieldType<Boolean>
     ) : ThomasFormField<Boolean>(Type.TOGGLE)
 
     public data class CheckboxController(
         override val identifier: String,
         override val originalValue: Set<JsonValue>?,
-        override val filedType: FiledType<Set<JsonValue>>
+        override val fieldType: FieldType<Set<JsonValue>>
     ) : ThomasFormField<Set<JsonValue>>(Type.MULTIPLE_CHOICE)
 
     public data class RadioInputController(
         override val identifier: String,
         override val originalValue: JsonValue?,
-        override val filedType: FiledType<JsonValue>
+        override val fieldType: FieldType<JsonValue>
     ) : ThomasFormField<JsonValue>(
         Type.SINGLE_CHOICE,
     )
@@ -92,20 +92,20 @@ public sealed class ThomasFormField<T>(
         val textInput: FormInputType,
         override val identifier: String,
         override val originalValue: String?,
-        override val filedType: FiledType<String>
+        override val fieldType: FieldType<String>
     ) : ThomasFormField<String>(if (textInput == FormInputType.EMAIL) Type.EMAIL else Type.TEXT)
 
     public data class Score(
         override val identifier: String,
         override val originalValue: Int?,
-        override val filedType: FiledType<Int>
+        override val fieldType: FieldType<Int>
     ) : ThomasFormField<Int>(Type.SCORE)
 
     public sealed class BaseForm(
         type: Type,
         override val identifier: String,
         override val originalValue: Set<ThomasFormField<*>>,
-        override val filedType: FiledType<Set<ThomasFormField<*>>>
+        override val fieldType: FieldType<Set<ThomasFormField<*>>>
     ) : ThomasFormField<Set<ThomasFormField<*>>>(type), JsonSerializable {
         protected abstract val responseType: String?
 
@@ -126,8 +126,8 @@ public sealed class ThomasFormField<T>(
         override val identifier: String,
         override val responseType: String?,
         val children: Set<ThomasFormField<*>>,
-        override val filedType: FiledType<Set<ThomasFormField<*>>>
-    ) : BaseForm(Type.FORM, identifier, children, filedType = filedType) {
+        override val fieldType: FieldType<Set<ThomasFormField<*>>>
+    ) : BaseForm(Type.FORM, identifier, children, fieldType = fieldType) {
 
         override val formData: JsonMap
             get() = jsonMapOf(
@@ -142,8 +142,8 @@ public sealed class ThomasFormField<T>(
         private val scoreId: String,
         override val responseType: String?,
         val children: Set<ThomasFormField<*>>,
-        override val filedType: FiledType<Set<ThomasFormField<*>>>
-    ) : BaseForm(Type.NPS_FORM, identifier, children, filedType = filedType) {
+        override val fieldType: FieldType<Set<ThomasFormField<*>>>
+    ) : BaseForm(Type.NPS_FORM, identifier, children, fieldType = fieldType) {
         override val formData: JsonMap
             get() = jsonMapOf(
                 KEY_TYPE to type,
@@ -176,9 +176,9 @@ public sealed class ThomasFormField<T>(
         return "${formData.toJsonValue()}"
     }
 
-    public sealed class FiledType<T> {
-        internal data class Instant<T>(val result: Result<T>?): FiledType<T>()
-        internal data class Async<T>(val fetcher: AsyncValueFetcher<T>): FiledType<T>()
+    public sealed class FieldType<T> {
+        internal data class Instant<T>(val result: Result<T>?): FieldType<T>()
+        internal data class Async<T>(val fetcher: AsyncValueFetcher<T>): FieldType<T>()
 
         /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -188,7 +188,7 @@ public sealed class ThomasFormField<T>(
                 validator: ((T) -> Boolean)? = null,
                 channels: List<ThomasChannelRegistration>? = null,
                 attributes: Map<AttributeName, AttributeValue>? = null
-            ): FiledType<T> {
+            ): FieldType<T> {
                 return if (validator == null || validator(value)) {
                     Instant(Result(
                         value = value,

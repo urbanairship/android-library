@@ -208,7 +208,7 @@ internal sealed class State {
             predicate: FormFieldFilterPredicate? = null
         ): Form {
 
-            children[value.identifier]?.field?.filedType?.cancel()
+            children[value.identifier]?.field?.fieldType?.cancel()
 
             val updatedChildren = children + (value.identifier to Child(value, predicate))
             val updatedResults = childResults + (value.identifier to value.status)
@@ -274,14 +274,14 @@ internal sealed class State {
                         identifier = identifier,
                         responseType = formResponseType,
                         children = children,
-                        filedType = ThomasFormField.FiledType.just(children))
+                        fieldType = ThomasFormField.FieldType.just(children))
                 is FormType.Nps ->
                     ThomasFormField.Nps(
                         identifier = identifier,
                         scoreId = formType.scoreId,
                         responseType = formResponseType,
                         children = children,
-                        filedType = ThomasFormField.FiledType.just(children))
+                        fieldType = ThomasFormField.FieldType.just(children))
             }
         }
 
@@ -292,9 +292,9 @@ internal sealed class State {
             filteredFields
                 .values
                 .mapNotNull { value ->
-                    when(val method = value.filedType) {
-                        is ThomasFormField.FiledType.Async -> method.fetcher.results.value?.value
-                        is ThomasFormField.FiledType.Instant -> method.result
+                    when(val method = value.fieldType) {
+                        is ThomasFormField.FieldType.Async -> method.fetcher.results.value?.value
+                        is ThomasFormField.FieldType.Instant -> method.result
                     }?.attributes
                 }
                 .forEach { map.putAll(it) }
@@ -305,9 +305,9 @@ internal sealed class State {
         private fun channels(): List<ThomasChannelRegistration> {
             return filteredFields.values
                 .mapNotNull { value ->
-                    when(val method = value.filedType) {
-                        is ThomasFormField.FiledType.Async -> method.fetcher.results.value?.value
-                        is ThomasFormField.FiledType.Instant -> method.result
+                    when(val method = value.fieldType) {
+                        is ThomasFormField.FieldType.Async -> method.fetcher.results.value?.value
+                        is ThomasFormField.FieldType.Instant -> method.result
                     }?.channels
                 }
                 .flatten()

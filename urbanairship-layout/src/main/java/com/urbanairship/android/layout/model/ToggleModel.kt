@@ -61,7 +61,7 @@ internal class ToggleModel(
                     value = ThomasFormField.Toggle(
                         identifier = viewInfo.identifier,
                         originalValue = isChecked,
-                        filedType = ThomasFormField.FiledType.just(
+                        fieldType = ThomasFormField.FieldType.just(
                             value = isChecked,
                             validator = { it || !viewInfo.isRequired },
                             attributes = ThomasFormField.makeAttributes(

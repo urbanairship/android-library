@@ -40,7 +40,7 @@ internal class CheckboxController(
                     value = ThomasFormField.CheckboxController(
                         identifier = checkbox.identifier,
                         originalValue = checkbox.selectedItems,
-                        filedType = ThomasFormField.FiledType.just(
+                        fieldType = ThomasFormField.FieldType.just(
                             value = checkbox.selectedItems,
                             validator = { isValid(it) }
                         )

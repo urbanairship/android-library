@@ -173,7 +173,7 @@ public class FormControllerTest {
                         textInput = FormInputType.TEXT,
                         identifier = TEXT_INPUT_ID,
                         originalValue = TEXT_INPUT_VALUE,
-                        filedType = ThomasFormField.FiledType.just(
+                        fieldType = ThomasFormField.FieldType.just(
                             value = TEXT_INPUT_VALUE,
                             attributes = ThomasFormField.makeAttributes(
                                 name = ATTR_NAME,
@@ -250,7 +250,7 @@ public class FormControllerTest {
                     textInput = FormInputType.TEXT,
                     identifier = TEXT_INPUT_ID,
                     originalValue = TEXT_INPUT_VALUE,
-                    filedType = ThomasFormField.FiledType.just(TEXT_INPUT_VALUE),
+                    fieldType = ThomasFormField.FieldType.just(TEXT_INPUT_VALUE),
                 )
             )
         }

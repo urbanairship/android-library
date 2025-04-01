@@ -26,7 +26,7 @@ internal data class ThomasState(
             identifier = CURRENT,
             responseType = null,
             children = form.filteredFields.values.toSet(),
-            filedType = ThomasFormField.FiledType.just(emptySet())
+            fieldType = ThomasFormField.FieldType.just(emptySet())
         )
 
         return layout.state

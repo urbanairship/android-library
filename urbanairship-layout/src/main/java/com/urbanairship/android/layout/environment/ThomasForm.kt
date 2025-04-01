@@ -80,15 +80,15 @@ internal class ThomasForm(
         value: ThomasFormField<*>,
         predicate: FormFieldFilterPredicate? = null
     ) {
-        when(val method = value.filedType) {
-            is ThomasFormField.FiledType.Async -> scope.launch {
+        when(val method = value.fieldType) {
+            is ThomasFormField.FieldType.Async -> scope.launch {
                 val fetchResult = method.fetcher.fetch(this, true)
                 yield()
                 if (!fetchResult.isError) {
                     feed.update { it.copyWithFormInput(value, predicate) }
                 }
             }
-            is ThomasFormField.FiledType.Instant -> {}
+            is ThomasFormField.FieldType.Instant -> {}
         }
 
         feed.update { it.copyWithFormInput(value, predicate) }

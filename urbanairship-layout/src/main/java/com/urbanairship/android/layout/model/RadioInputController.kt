@@ -37,7 +37,7 @@ internal class RadioInputController(
                     value = ThomasFormField.RadioInputController(
                         identifier = radio.identifier,
                         originalValue = radio.selectedItem,
-                        filedType = ThomasFormField.FiledType.just(
+                        fieldType = ThomasFormField.FieldType.just(
                             value = radio.selectedItem ?: JsonValue.NULL,
                             validator = { !it.isNull || !viewInfo.isRequired },
                             attributes = ThomasFormField.makeAttributes(

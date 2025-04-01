@@ -47,7 +47,7 @@ internal class ScoreModel(
             value = ThomasFormField.Score(
                 identifier = viewInfo.identifier,
                 originalValue = null,
-                filedType = ThomasFormField.FiledType.just(
+                fieldType = ThomasFormField.FieldType.just(
                     value = -1,
                     validator = { it > 0 || !viewInfo.isRequired },
                     attributes = ThomasFormField.makeAttributes(
@@ -88,7 +88,7 @@ internal class ScoreModel(
                     value = ThomasFormField.Score(
                         identifier = viewInfo.identifier,
                         originalValue = score,
-                        filedType = ThomasFormField.FiledType.just(
+                        fieldType = ThomasFormField.FieldType.just(
                             value = score,
                             validator = { (it > -1) || !viewInfo.isRequired },
                             attributes = ThomasFormField.makeAttributes(
