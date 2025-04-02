@@ -6,6 +6,10 @@ import com.urbanairship.android.layout.reporting.ThomasFormField.Score
 import com.urbanairship.android.layout.reporting.ThomasFormField.TextInput
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
+import io.mockk.every
+import io.mockk.mockk
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flowOf
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
@@ -21,6 +25,100 @@ public class ThomasFormFieldTest {
     @Throws(JsonException::class)
     public fun testSerialization() {
         assertEquals(JsonValue.parseString(expectedFormJson), form.toJsonValue())
+    }
+
+    @Test
+    public fun testSerializationAsyncFields() {
+        val children: Set<ThomasFormField<*>> = setOf(
+            Score(
+                identifier = "field-invalid",
+                originalValue = 2,
+                filedType = ThomasFormField.FiledType.just(0, { false })
+            ),
+            Score(
+                identifier = "field-error",
+                originalValue = 3,
+                filedType = ThomasFormField.FiledType.Async(
+                    makeFetcher(ThomasFormField.AsyncValueFetcher.PendingResult.Error())
+                )
+            ),
+            Score(
+                identifier = "field-pending",
+                originalValue = 4,
+                filedType = ThomasFormField.FiledType.Async(
+                    makeFetcher(null)
+                )
+            ),
+            Score(
+                identifier = "field-valid",
+                originalValue = 5,
+                filedType = ThomasFormField.FiledType.Async(
+                    makeFetcher(ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
+                        result = ThomasFormField.Result(6)
+                    ))
+                )
+            )
+        )
+
+        val form = ThomasFormField.Form(
+            identifier = "parent form",
+            responseType = "parent form response type",
+            children = children,
+            filedType = ThomasFormField.FiledType.just(children)
+        )
+
+        val expectedJson = """
+            {
+              "parent form": {
+                "children": {
+                  "field-invalid": {
+                    "status": {
+                      "type": "invalid"
+                    },
+                    "type": "score",
+                    "value": 2
+                  },
+                  "field-error": {
+                    "status": {
+                      "type": "error"
+                    },
+                    "type": "score",
+                    "value": 3
+                  },
+                  "field-pending": {
+                    "status": {
+                      "type": "pending"
+                    },
+                    "type": "score",
+                    "value": 4
+                  },
+                  "field-valid": {
+                    "status": {
+                      "type": "valid",
+                      "result":{
+                          "value":6,
+                          "type":"score"
+                       }
+                    },
+                    "type": "score",
+                    "value": 5
+                  }
+                },
+                "response_type": "parent form response type",
+                "type": "form"
+              }
+            }
+        """.trimIndent()
+
+        assertEquals(JsonValue.parseString(expectedJson), form.toJsonValue())
+    }
+
+    private fun <T> makeFetcher(
+        result: ThomasFormField.AsyncValueFetcher.PendingResult<T>?
+    ): ThomasFormField.AsyncValueFetcher<T> {
+        return mockk {
+            every { results } returns MutableStateFlow(result)
+        }
     }
 
     @Test
@@ -204,7 +302,14 @@ public class ThomasFormFieldTest {
               "children":{
                  "score":{
                     "type":"score",
-                    "value":5
+                    "value":5,
+                    "status": {
+                      "result": {
+                        "type":"score",
+                        "value":5
+                      },
+                      "type":"valid"
+                    }
                  },
                  "child nps":{
                     "response_type":"child nps response type",
@@ -212,32 +317,74 @@ public class ThomasFormFieldTest {
                     "children":{
                        "child score":{
                           "type":"score",
-                          "value":7
+                          "value":7,
+                          "status": {
+                              "result": {
+                                "type":"score",
+                                "value":7
+                              },
+                              "type":"valid"
+                          }
                        }
                     },
                     "score_id":"child score"
                  },
                  "toggle input":{
                     "type":"toggle",
-                    "value":true
+                    "value":true,
+                    "status": {
+                      "result": {
+                        "type":"toggle",
+                        "value":true
+                      },
+                      "type":"valid"
+                    }
                  },
                  "multiple choice":{
                     "type":"multiple_choice",
                     "value":[
                        "multiple choice value"
-                    ]
+                    ],
+                    "status": {
+                      "result": {
+                        "type":"multiple_choice",
+                        "value":["multiple choice value"]
+                      },
+                      "type":"valid"
+                    }
                  },
                  "text input":{
                     "type":"text_input",
-                    "value":"text input value"
+                    "value":"text input value",
+                    "status": {
+                      "result": {
+                        "type":"text_input",
+                        "value":"text input value"
+                      },
+                      "type":"valid"
+                    }
                  },
                  "email input":{
                     "type":"email_input",
-                    "value":"text@value"
+                    "value":"text@value",
+                    "status": {
+                      "result": {
+                        "type":"email_input",
+                        "value":"text@value"
+                      },
+                      "type":"valid"
+                    }
                  },
                  "single choice":{
                     "type":"single_choice",
-                    "value":"single choice value"
+                    "value":"single choice value",
+                    "status": {
+                      "result": {
+                        "type":"single_choice",
+                        "value":"single choice value"
+                      },
+                      "type":"valid"
+                    }
                  },
                  "child form":{
                     "response_type":"child form response type",
@@ -245,7 +392,14 @@ public class ThomasFormFieldTest {
                     "children":{
                        "child text":{
                           "type":"text_input",
-                          "value":"child text input"
+                          "value":"child text input",
+                          "status": {
+                              "result": {
+                                "type":"text_input",
+                                "value":"child text input"
+                              },
+                              "type":"valid"
+                          }
                        }
                     }
                  }

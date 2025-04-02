@@ -4,6 +4,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.FormInputType
+import com.urbanairship.android.layout.reporting.ThomasFormField.Type
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -60,7 +61,8 @@ public sealed class ThomasFormField<T>(
     internal open val formData: JsonMap
         get() = jsonMapOf(
             KEY_TYPE to type,
-            KEY_VALUE to JsonValue.wrapOpt(originalValue)
+            KEY_VALUE to JsonValue.wrapOpt(originalValue),
+            KEY_STATUS to status.toJson(type)
         )
 
     public fun jsonValue(): JsonValue? =
@@ -156,6 +158,7 @@ public sealed class ThomasFormField<T>(
     internal companion object {
         private const val KEY_TYPE: String = "type"
         private const val KEY_VALUE: String = "value"
+        private const val KEY_STATUS: String = "status"
         private const val KEY_SCORE_ID: String = "score_id"
         private const val KEY_CHILDREN: String = "children"
         private const val KEY_RESPONSE_TYPE: String = "response_type"
@@ -348,4 +351,32 @@ internal sealed class ThomasFormFieldStatus<T> {
 
     val isInvalid: Boolean
         get() = this is Invalid
+
+    fun toJson(type: Type): JsonValue {
+        val builder = JsonMap.newBuilder()
+        when(this) {
+            is Error -> builder.put(KEY_TYPE, STATUS_ERROR)
+            is Invalid -> builder.put(KEY_TYPE, STATUS_INVALID)
+            is Pending -> builder.put(KEY_TYPE, STATUS_PENDING)
+            is Valid -> {
+                builder.put(KEY_TYPE, STATUS_VALID)
+                builder.put(KEY_RESULT, jsonMapOf(
+                    KEY_TYPE to type,
+                    KEY_VALUE to JsonValue.wrap(result.value)
+                ))
+            }
+        }
+
+        return builder.build().toJsonValue()
+    }
+
+    private companion object {
+        private const val STATUS_ERROR = "error"
+        private const val STATUS_INVALID = "invalid"
+        private const val STATUS_PENDING = "pending"
+        private const val STATUS_VALID = "valid"
+        private const val KEY_TYPE = "type"
+        private const val KEY_RESULT = "result"
+        private const val KEY_VALUE = "value"
+    }
 }

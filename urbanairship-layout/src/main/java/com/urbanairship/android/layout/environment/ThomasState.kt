@@ -34,7 +34,8 @@ internal data class ThomasState(
             .apply {
                 put(FORMS, jsonMapOf(
                     CURRENT to jsonMapOf(
-                        DATA to formState.formData
+                        DATA to formState.formData,
+                        STATUS to jsonMapOf(TYPE to form.status)
                     )
                 ).toJsonValue())
             }
@@ -66,6 +67,8 @@ internal data class ThomasState(
         const val FORMS = "\$forms"
         const val CURRENT = "current"
         const val DATA = "data"
+        const val STATUS = "status"
+        const val TYPE = "type"
     }
 }
 
