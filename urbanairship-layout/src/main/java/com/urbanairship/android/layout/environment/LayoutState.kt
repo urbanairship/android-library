@@ -1,5 +1,6 @@
 package com.urbanairship.android.layout.environment
 
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
@@ -15,7 +16,11 @@ import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.json.JsonValue
 import kotlin.math.max
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 internal class LayoutState(
     val pager: SharedState<State.Pager>?,
@@ -61,9 +66,23 @@ internal class LayoutState(
                 }
 
                 is StateAction.SetState -> layout.let { state ->
-                    UALog.v("StateAction: SetState ${action.key} = ${action.value}")
-                    state.update {
-                        it.copy(state = it.state + (action.key to action.value))
+                    val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
+
+                    UALog.v("StateAction: SetState ${action.key} = ${action.value}, ttl = ${action.ttl}")
+                    if (action.ttl != null) {
+                        scope.launch {
+                            state.update {
+                                it.copy(state = it.state + (action.key to action.value))
+                            }
+                            delay(action.ttl*1000)
+                            state.update {
+                                it.copy(state = it.state + (action.key to null))
+                            }
+                        }
+                    } else {
+                        state.update {
+                            it.copy(state = it.state + (action.key to action.value))
+                        }
                     }
                 }
 

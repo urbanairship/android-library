@@ -11,7 +11,8 @@ internal sealed class StateAction(val type: Type) {
 
     data class SetState(
         val key: String,
-        val value: JsonValue?
+        val value: JsonValue?,
+        val ttl: Long? = null
     ) : StateAction(Type.SET_STATE) {
         init {
             if (value?.isJsonList == true || value?.isJsonMap == true) {
@@ -47,7 +48,8 @@ internal sealed class StateAction(val type: Type) {
                 Type.CLEAR_STATE -> ClearState
                 Type.SET_STATE -> SetState(
                     key = json.requireField("key"),
-                    value = json.get("value")
+                    value = json.get("value"),
+                    ttl = json.get("ttl_seconds")?.getLong(0)
                 )
                 Type.SET_FORM_VALUE_STATE -> SetFormValue(
                     key = json.requireField("key")
