@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.environment
 
 import com.urbanairship.android.layout.property.StateAction
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.optionalList
@@ -15,6 +16,7 @@ internal data class ThomasStateTrigger(
 
     companion object {
 
+        @Throws(JsonException::class)
         fun fromJson(json: JsonMap): ThomasStateTrigger {
             return ThomasStateTrigger(
                 id = json.requireField("identifier"),

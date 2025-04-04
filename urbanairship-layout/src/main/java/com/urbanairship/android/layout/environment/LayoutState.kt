@@ -15,6 +15,7 @@ import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.json.JsonValue
+import java.util.UUID
 import kotlin.math.max
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -31,6 +32,10 @@ internal class LayoutState(
     val thomasForm: ThomasForm?,
     val parentForm: ThomasForm?
 ) {
+    val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
+    private var appliedState = HashMap<String, JsonValue?>()
+    private var tempMutations = HashMap<String, TempMutation?>()
+
     fun reportingContext(
         formContext: FormInfo? = null,
         pagerContext: PagerData? = null,
@@ -66,34 +71,62 @@ internal class LayoutState(
                 }
 
                 is StateAction.SetState -> layout.let { state ->
-                    val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
-
                     UALog.v("StateAction: SetState ${action.key} = ${action.value}, ttl = ${action.ttl}")
+                    state.update {
+                        it.copy(state = it.state + (action.key to action.value))
+                    }
                     if (action.ttl != null) {
+                        val mutation = TempMutation(UUID.randomUUID().toString(), action.key, action.value)
+                        tempMutations[action.key] = mutation
+                        appliedState[action.key] = null
+                        updateState()
                         scope.launch {
-                            state.update {
-                                it.copy(state = it.state + (action.key to action.value))
-                            }
                             delay(action.ttl*1000)
-                            state.update {
-                                it.copy(state = it.state + (action.key to null))
-                            }
+                            removeTempMutation(mutation)
                         }
                     } else {
-                        state.update {
-                            it.copy(state = it.state + (action.key to action.value))
-                        }
+                        tempMutations[action.key] = null
+                        appliedState[action.key] = action.value
+                        updateState()
                     }
                 }
 
                 StateAction.ClearState -> layout.let { state ->
                     UALog.v("StateAction: ClearState")
-                    state.update {
-                        it.copy(state = emptyMap())
-                    }
+                    clearState()
                 }
             }
         }
+    }
+
+    internal data class TempMutation(
+        val id: String,
+        val key: String,
+        val value: JsonValue?
+    )
+
+    internal fun removeTempMutation(tempMutation: TempMutation) {
+        if (tempMutations[tempMutation.key]?.equals(tempMutation) == true) {
+            tempMutations[tempMutation.key] = null
+            this.updateState()
+        } else {
+            return
+        }
+    }
+
+    private fun updateState() {
+        tempMutations.forEach { (key, tempMutation) ->
+            appliedState[key] = tempMutation?.value
+        }
+        layout.update {
+            it.copy(state = appliedState)
+        }
+    }
+
+    private fun clearState() {
+        tempMutations.clear()
+        appliedState.clear()
+        updateState()
     }
 }
 

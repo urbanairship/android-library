@@ -160,20 +160,20 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
     private fun setupStateListeners() {
         val triggered = HashSet<String>()
-        if (viewInfo.stateTriggers?.isNotEmpty() == true) {
-            viewScope.launch {
-                layoutState.thomasState.collect { state ->
-                    viewInfo.stateTriggers?.forEach { trigger ->
-                        if (triggered.contains(trigger.id) &&
-                                    trigger.resetWhenStateMatches?.apply(state) == true) {
-                            triggered.remove(trigger.id)
-                        }
+        val triggers = viewInfo.stateTriggers ?: return
+        if (triggers.isEmpty()) { return }
+        modelScope.launch {
+            layoutState.thomasState.collect { state ->
+                triggers.forEach { trigger ->
+                    if (triggered.contains(trigger.id) &&
+                                trigger.resetWhenStateMatches?.apply(state) == true) {
+                        triggered.remove(trigger.id)
+                    }
 
-                        if (!triggered.contains(trigger.id) &&
-                            trigger.triggerWhenStateMatches.apply(state)) {
-                            triggered.add(trigger.id)
-                            runStateActions(trigger.onTrigger.stateActions)
-                        }
+                    if (!triggered.contains(trigger.id) &&
+                        trigger.triggerWhenStateMatches.apply(state)) {
+                        triggered.add(trigger.id)
+                        runStateActions(trigger.onTrigger.stateActions)
                     }
                 }
             }
