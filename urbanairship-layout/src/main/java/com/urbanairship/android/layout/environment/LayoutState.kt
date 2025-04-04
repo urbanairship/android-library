@@ -78,7 +78,6 @@ internal class LayoutState(
                     if (action.ttl != null) {
                         val mutation = TempMutation(UUID.randomUUID().toString(), action.key, action.value)
                         tempMutations[action.key] = mutation
-                        appliedState[action.key] = null
                         updateState()
                         scope.launch {
                             delay(action.ttl*1000)
@@ -109,8 +108,6 @@ internal class LayoutState(
         if (tempMutations[tempMutation.key]?.equals(tempMutation) == true) {
             tempMutations[tempMutation.key] = null
             this.updateState()
-        } else {
-            return
         }
     }
 
