@@ -17,6 +17,7 @@ import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
+import com.urbanairship.android.layout.property.DisableSwipeSelector
 import com.urbanairship.android.layout.property.GestureLocation
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerGesture
@@ -144,6 +145,8 @@ internal class PagerModel(
                 }
             }
         }
+
+        modelScope.launch { wireSwipeSelector() }
     }
 
     private fun onPagesDataUpdated(updated: List<Item>) {
@@ -164,22 +167,39 @@ internal class PagerModel(
 
     private fun wireBranchControlFlows(control: PagerBranchControl) {
         modelScope.launch {
-            control.canGoBack.collect { value -> pagerState.update { it.copy(canGoBack = value) }}
-        }
-
-        modelScope.launch {
             control.isComplete.collect { complete ->
                 pagerState.update { it.copy(completed = complete) }
             }
         }
     }
 
+    private suspend fun wireSwipeSelector() {
+        val selectors = viewInfo.disableSwipeWhen ?: return
+
+        environment.layoutState.thomasState.collect { state ->
+            val matched = selectors.firstOrNull { it.predicate?.apply(state) ?: true }
+            when(matched?.direction) {
+                DisableSwipeSelector.Direction.HORIZONTAL -> pagerState.update { it.copy(isScrollDisabled = true) }
+                null -> {
+                    if (pagerState.changes.value.isScrollDisabled) {
+                        pagerState.update { it.copy(isScrollDisabled = false) }
+                    }
+                }
+            }
+        }
+    }
+
     private fun resolve(request: PageRequest): Boolean {
-        if (branchControl?.resolve(request) == false) {
-            return false
+        pagerState.update {
+            val copy = it.copyWithPageRequest(request)
+
+            if (copy.pageIndex != it.pageIndex) {
+                branchControl?.onPageRequest(request)
+            }
+
+            copy
         }
 
-        pagerState.update { it.copyWithPageRequest(request) }
         return true
     }
 
@@ -270,8 +290,7 @@ internal class PagerModel(
     fun getPageViewId(position: Int): Int = pageViewIds.getOrPut(position) { View.generateViewId() }
 
     private fun makePageRequest(toPosition: Int): PageRequest? {
-        @OptIn(DelicateLayoutApi::class)
-        val current = pagerState.value.pageIndex
+        val current = pagerState.changes.value.pageIndex
 
         return if (toPosition > current) {
             PageRequest.NEXT
