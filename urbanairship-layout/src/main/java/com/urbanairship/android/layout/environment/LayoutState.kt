@@ -18,6 +18,7 @@ import com.urbanairship.json.JsonValue
 import java.util.UUID
 import kotlin.math.max
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
@@ -35,6 +36,7 @@ internal class LayoutState(
     val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
     private var appliedState = HashMap<String, JsonValue?>()
     private var tempMutations = HashMap<String, TempMutation?>()
+    private var runningJobs = HashMap<String, Job>()
 
     fun reportingContext(
         formContext: FormInfo? = null,
@@ -79,10 +81,12 @@ internal class LayoutState(
                         val mutation = TempMutation(UUID.randomUUID().toString(), action.key, action.value)
                         tempMutations[action.key] = mutation
                         updateState()
-                        scope.launch {
+                        val job = scope.launch {
                             delay(action.ttl*1000)
                             removeTempMutation(mutation)
+                            runningJobs.remove(action.key)
                         }
+                        addRunningJob(action.key, job)
                     } else {
                         tempMutations[action.key] = null
                         appliedState[action.key] = action.value
@@ -109,6 +113,13 @@ internal class LayoutState(
             tempMutations[tempMutation.key] = null
             this.updateState()
         }
+    }
+
+    private fun addRunningJob(key: String, job: Job) {
+        if (runningJobs[key] != null) {
+            runningJobs[key]?.cancel()
+        }
+        runningJobs[key] = job
     }
 
     private fun updateState() {
