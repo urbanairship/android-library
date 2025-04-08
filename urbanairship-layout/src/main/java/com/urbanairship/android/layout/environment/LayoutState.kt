@@ -84,9 +84,9 @@ internal class LayoutState(
                         val job = scope.launch {
                             delay(action.ttl*1000)
                             removeTempMutation(mutation)
-                            runningJobs.remove(action.key)
                         }
-                        addRunningJob(action.key, job)
+                        runningJobs[action.key]?.cancel()
+                        runningJobs[action.key] = job
                     } else {
                         tempMutations[action.key] = null
                         appliedState[action.key] = action.value
@@ -113,13 +113,6 @@ internal class LayoutState(
             tempMutations[tempMutation.key] = null
             this.updateState()
         }
-    }
-
-    private fun addRunningJob(key: String, job: Job) {
-        if (runningJobs[key] != null) {
-            runningJobs[key]?.cancel()
-        }
-        runningJobs[key] = job
     }
 
     private fun updateState() {
