@@ -102,4 +102,7 @@
     <string name="ua_icon_button_checkmark">تحقق</string>
     <string name="ua_icon_button_forward_arrow">التالي</string>
     <string name="ua_icon_button_backward_arrow">السابق</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">خطأ في معالجة النموذج. يرجى المحاولة مرة أخرى</string>
 </resources>

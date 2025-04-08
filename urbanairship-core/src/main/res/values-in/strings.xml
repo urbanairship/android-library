@@ -97,4 +97,7 @@
     <string name="ua_icon_button_checkmark">Validasi</string>
     <string name="ua_icon_button_forward_arrow">Berikutnya</string>
     <string name="ua_icon_button_backward_arrow">Sebelumnya</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Kesalahan memproses formulir. Silakan coba lagi</string>
 </resources>

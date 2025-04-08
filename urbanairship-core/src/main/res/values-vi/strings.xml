@@ -97,4 +97,7 @@
     <string name="ua_icon_button_checkmark">Xác nhận</string>
     <string name="ua_icon_button_forward_arrow">Tiếp theo</string>
     <string name="ua_icon_button_backward_arrow">Trước</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Lỗi khi xử lý biểu mẫu. Vui lòng thử lại</string>
 </resources>
