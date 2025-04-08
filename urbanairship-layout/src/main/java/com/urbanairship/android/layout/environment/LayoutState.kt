@@ -2,6 +2,7 @@ package com.urbanairship.android.layout.environment
 
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.model.PageRequest
 import com.urbanairship.android.layout.property.AttributeValue
@@ -185,7 +186,9 @@ internal sealed class State {
         val identifier: String,
         val formType: FormType,
         val formResponseType: String?,
+        val validationMode: FormValidationMode,
         val status: ThomasFormStatus = ThomasFormStatus.PENDING_VALIDATION,
+
         /**
          * Input identifiers that are displayed in the current pager page.
          * If the form is not in a pager, this will contain all input identifiers.
@@ -320,15 +323,6 @@ internal sealed class State {
             val field: ThomasFormField<*>,
             val predicate: FormFieldFilterPredicate? = null
         )
-
-        companion object {
-            val DEFAULT = Form(
-                identifier = "",
-                formType = FormType.Form,
-                formResponseType = "",
-                status = ThomasFormStatus.PENDING_VALIDATION
-            )
-        }
     }
 
     internal data class Checkbox(

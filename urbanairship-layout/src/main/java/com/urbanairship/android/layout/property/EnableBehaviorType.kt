@@ -18,7 +18,7 @@ internal enum class EnableBehaviorType(private val value: String) {
     companion object {
         @Throws(JsonException::class)
         fun from(value: String): EnableBehaviorType {
-            for (type in values()) {
+            for (type in entries) {
                 if (type.value == value.lowercase()) {
                     return type
                 }

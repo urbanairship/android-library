@@ -14,14 +14,13 @@ import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.Accessible
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.info.View
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.StateAction
-import com.urbanairship.android.layout.property.hasFormBehaviors
-import com.urbanairship.android.layout.property.hasPagerBehaviors
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.LayoutData
@@ -36,6 +35,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import android.view.View as AndroidView
 
@@ -92,18 +94,15 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
             }
         })
 
-        if (viewInfo.enableBehaviors != null) {
-            if (viewInfo.enableBehaviors.hasPagerBehaviors) {
-                checkNotNull(layoutState.pager) { "Pager state is required for pager behaviors" }
-                modelScope.launch {
-                    layoutState.pager.changes.collect { handlePagerBehaviors(it) }
-                }
-            }
-
-            if (viewInfo.enableBehaviors.hasFormBehaviors) {
-                checkNotNull(layoutState.thomasForm) { "Form state is required for form behaviors" }
-                modelScope.launch {
-                    layoutState.thomasForm.formUpdates.collect { handleFormBehaviors(it) }
+        if (viewInfo.enableBehaviors?.isNotEmpty() == true) {
+            modelScope.launch {
+                combine(
+                    layoutState.pager?.changes ?: flowOf(null),
+                    layoutState.thomasForm?.formUpdates ?: flowOf(null),
+                ) { pager, form ->
+                    mapEnableBehavior(pager = pager, form = form)
+                }.collect {
+                    listener?.setEnabled(it)
                 }
             }
         }
@@ -250,35 +249,61 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         listener?.setVisibility(isVisible)
     }
 
-    private fun handleFormBehaviors(state: State.Form) {
-        val behaviors = viewInfo.enableBehaviors ?: return
-        val hasFormValidationBehavior = behaviors.contains(EnableBehaviorType.FORM_VALIDATION)
-        val hasFormSubmitBehavior = behaviors.contains(EnableBehaviorType.FORM_SUBMISSION)
-        val isValid = !hasFormValidationBehavior || state.status == ThomasFormStatus.VALID
-
-        val isEnabled = when {
-            hasFormSubmitBehavior && hasFormValidationBehavior -> !state.status.isSubmitted && isValid
-            hasFormSubmitBehavior -> !state.status.isSubmitted
-            hasFormValidationBehavior -> isValid
-            else -> true
-        }
-
-        listener?.setEnabled(isEnabled)
-    }
-
-    private fun handlePagerBehaviors(state: State.Pager) {
-        if (state.isScrollDisabled) {
-            listener?.setEnabled(false)
-            return
-        }
-        val behaviors = viewInfo.enableBehaviors ?: return
-        val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
-        val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
-
-        val isEnabled =
-            (hasPagerNextBehavior && state.hasNext) || (hasPagerPrevBehavior && state.hasPrevious)
-
-        listener?.setEnabled(isEnabled)
+    private fun mapEnableBehavior(form: State.Form?, pager: State.Pager?): Boolean {
+        val behaviors = viewInfo.enableBehaviors ?: return true
+        return behaviors.map {
+            when(it) {
+                EnableBehaviorType.FORM_VALIDATION -> {
+                    if (form == null) {
+                        false
+                    } else {
+                        when(form.validationMode) {
+                            FormValidationMode.ON_DEMAND -> {
+                                when(form.status) {
+                                    ThomasFormStatus.ERROR,
+                                    ThomasFormStatus.VALID,
+                                    ThomasFormStatus.PENDING_VALIDATION -> true
+                                    ThomasFormStatus.VALIDATING,
+                                    ThomasFormStatus.INVALID,
+                                    ThomasFormStatus.SUBMITTED -> false
+                                }
+                            }
+                            FormValidationMode.IMMEDIATE -> {
+                                when(form.status) {
+                                    ThomasFormStatus.ERROR,
+                                    ThomasFormStatus.VALID -> true
+                                    ThomasFormStatus.PENDING_VALIDATION,
+                                    ThomasFormStatus.VALIDATING,
+                                    ThomasFormStatus.INVALID,
+                                    ThomasFormStatus.SUBMITTED -> false
+                                }
+                            }
+                        }
+                    }
+                }
+                EnableBehaviorType.FORM_SUBMISSION -> {
+                    if (form == null) {
+                        false
+                    } else {
+                        !form.status.isSubmitted
+                    }
+                }
+                EnableBehaviorType.PAGER_NEXT -> {
+                    if (pager?.isScrollDisabled == true) {
+                        false
+                    } else {
+                        pager?.hasNext ?: false
+                    }
+                }
+                EnableBehaviorType.PAGER_PREVIOUS -> {
+                    if (pager?.isScrollDisabled == true) {
+                        false
+                    } else {
+                        pager?.hasPrevious ?: false
+                    }
+                }
+            }
+        }.all { it }
     }
 
     fun handleViewEvent(type: EventHandler.Type, value: Any? = null) {
