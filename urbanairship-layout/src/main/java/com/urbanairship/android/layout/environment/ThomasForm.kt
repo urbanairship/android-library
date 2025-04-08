@@ -40,6 +40,23 @@ internal class ThomasForm(
     val isEnabled: Boolean
         get() = feed.value.isEnabled
 
+
+    init {
+        if (validationMode == FormValidationMode.IMMEDIATE) {
+            scope.launch {
+                status.collect { status ->
+                    when(status) {
+                        ThomasFormStatus.ERROR,
+                        ThomasFormStatus.PENDING_VALIDATION -> {
+                            validate()
+                        }
+                        else -> {}
+                    }
+                }
+            }
+        }
+    }
+
     suspend fun validate(): Boolean {
         val state = feed.changes.value
         if (state.isSubmitted) {
@@ -63,7 +80,6 @@ internal class ThomasForm(
         return feed.changes.value.status == ThomasFormStatus.VALID
     }
 
-    @OptIn(DelicateLayoutApi::class)
     suspend fun prepareSubmit(): Pair<ReportingEvent.FormResult, FormInfo>? {
         if (!validate()) {
             return null
@@ -89,7 +105,6 @@ internal class ThomasForm(
         value: ThomasFormField<*>,
         pageId: String? = null
     ) {
-
         val predicate = predicate@ {
             val associatedPageId = pageId ?: return@predicate true
             val currentState = @OptIn(DelicateLayoutApi::class) pagerState?.value ?: return@predicate true

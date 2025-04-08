@@ -23,7 +23,10 @@ import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.widget.TappableView
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal abstract class ButtonModel<T, I: Button>(
@@ -115,9 +118,13 @@ internal abstract class ButtonModel<T, I: Button>(
             }
         }
         modelScope.launch {
+            isProcessing.update { true }
             broadcast(submitEvent)
+            isProcessing.update { false }
         }
     }
+
+    private var isProcessing = MutableStateFlow<Boolean>(false)
 
     private fun handleFormValidation(context: Context) {
         // Dismiss the keyboard, if it's open.
@@ -140,7 +147,9 @@ internal abstract class ButtonModel<T, I: Button>(
         }
 
         modelScope.launch {
+            isProcessing.update { true }
             broadcast(validateEvent)
+            isProcessing.update { false }
         }
     }
 

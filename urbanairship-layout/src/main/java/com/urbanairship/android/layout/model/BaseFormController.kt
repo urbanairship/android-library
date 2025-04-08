@@ -73,6 +73,8 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                 }
             }
         }
+
+        // TODO: wire up form validation
     }
 
     private fun initChildForm() {
@@ -95,6 +97,9 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
             }
         }
 
+        // TODO: child submission should update the parent form with its value
+
+
         // Update the parent form with the child form's display state, whenever it changes.
         onFormInputDisplayed { isDisplayed ->
             parentFormState.updateWithDisplayState(viewInfo.identifier, isDisplayed)
@@ -110,7 +115,6 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                 .map {
                     it to formState.prepareSubmit()
                 }.distinctUntilChanged().collect { (event, formResult) ->
-                    // TODO, if its null do we continue?
                     formResult?.let {
                         val (result, context) = formResult
                         report(

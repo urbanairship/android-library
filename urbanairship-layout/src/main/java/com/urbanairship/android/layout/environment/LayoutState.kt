@@ -201,12 +201,6 @@ internal sealed class State {
         private val children: Map<String, Child> = emptyMap(),
     ) : State() {
 
-        val filteredChildren: List<Child>
-            get() = children
-                .filterValues { it.predicate?.invoke() ?: true }
-                .values
-                .toList()
-
         val filteredFields: Map<String, ThomasFormField<*>>
             get() = children
                 .filterValues { it.predicate?.invoke() ?: true }
@@ -221,7 +215,7 @@ internal sealed class State {
             results.forEach { (key, value) ->
                 val existing = updatedChildren[key]
                 if (existing != null) {
-                    updatedChildren[key] = existing.copy(status = value.status)
+                    updatedChildren[key] = existing.copy(lastProcessStatus = value.status)
                 }
             }
 
@@ -238,8 +232,8 @@ internal sealed class State {
             children[value.identifier]?.field?.fieldType?.cancel()
 
             var updatedChildren = children
-            if (updatedChildren[value.identifier]?.status?.isInvalid != true || !value.status.isInvalid) {
-                updatedChildren = updatedChildren + (value.identifier to Child(value, predicate, status = value.status.makePending()))
+            if (updatedChildren[value.identifier]?.lastProcessStatus?.isInvalid != true || !value.status.isInvalid) {
+                updatedChildren = updatedChildren + (value.identifier to Child(value, predicate, lastProcessStatus = value.status.makePending()))
             }
 
             return copy(
@@ -279,7 +273,7 @@ internal sealed class State {
         ): ThomasFormStatus {
             val filtered = children
                 .filterValues { it.predicate?.invoke() ?: true }
-                .map { it.value.status }
+                .map { it.value.lastProcessStatus }
 
             return if (filtered.any { it.isInvalid }) {
                 ThomasFormStatus.INVALID
@@ -343,7 +337,7 @@ internal sealed class State {
         internal data class Child(
             val field: ThomasFormField<*>,
             val predicate: FormFieldFilterPredicate? = null,
-            val status: ThomasFormFieldStatus<*>
+            val lastProcessStatus: ThomasFormFieldStatus<*>
         )
     }
 
