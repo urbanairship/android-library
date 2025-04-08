@@ -439,11 +439,47 @@ internal class LabelInfo(
     json: JsonMap
 ) : ViewInfo(), View by view(json), Accessible by accessible(json) {
     val text: String = json.requireField("text")
+    val iconStart: IconStart? = json.optionalMap("icon_start")?.let { IconStart.fromJson(it) }
     val textAppearance: TextAppearance =
         TextAppearance.fromJson(json.requireField("text_appearance"))
     val markdownOptions: MarkdownOptions? = json.optionalMap("markdown")?.let { MarkdownOptions(it) }
     var accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole.fromJson(it) }
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
+
+    internal sealed class IconStart(
+        val type: Type
+    ) {
+        abstract val space: Int
+
+        data class Floating(val icon: Image.Icon, override val space: Int): IconStart(Type.FLOATING)
+
+        internal enum class Type(val value: String) {
+            FLOATING("floating");
+
+            internal companion object {
+
+                @Throws(JsonException::class)
+                fun fromJson(value: String): Type = entries.firstOrNull {
+                    it.value.equals(value, ignoreCase = true)
+                }?: throw JsonException("Invalid IconStart type: $value")
+            }
+        }
+
+        internal companion object {
+            @Throws(JsonException::class)
+            fun fromJson(json: JsonMap): IconStart {
+                val type = json.requireField<String>("type").let { Type.fromJson(it) }
+                val space = json.requireField<Int>("space")
+
+                return when (type) {
+                    Type.FLOATING -> {
+                        val icon = Image.Icon.fromJson(json.requireField("icon"))
+                        Floating(icon, space)
+                    }
+                }
+            }
+        }
+    }
 
     internal enum class AccessibilityRoleType {
         HEADING;
@@ -481,6 +517,9 @@ internal class LabelInfo(
     internal class ViewOverrides(json: JsonMap) {
         val text = json.optionalList("text")?.map {
             ViewPropertyOverride(it, valueParser = { value -> value.optString() })
+        }
+        val iconStart = json.optionalList("icon_start")?.map {
+            ViewPropertyOverride(it) { value -> IconStart.fromJson(value.optMap()) }
         }
     }
 }
