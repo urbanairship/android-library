@@ -5,7 +5,9 @@ import android.content.Context
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
@@ -43,6 +45,8 @@ internal class TextInputModel(
 
         fun restoreValue(value: String)
     }
+
+    private val didEdit = MutableStateFlow<Boolean>(false)
 
     private val inputValidator: AirshipInputValidation.Validator?
         get() {
@@ -244,6 +248,9 @@ internal class TextInputModel(
         viewScope.launch {
             combine(view.textChanges(), _smsLocale) { text, locale -> Pair(text, locale) }
                 .collect { (text, locale) ->
+                    if (text.isNotEmpty()) {
+                        didEdit.update { true }
+                    }
                     formState.updateFormInput(
                         value = makeFormField(text, locale, validationState),
                         pageId = properties.pagerPageId
@@ -253,19 +260,33 @@ internal class TextInputModel(
 
 
         viewScope.launch {
-            combine(view.onEditing(), validationState) { isEditing, validationState ->
-                if (validationState == null) {
-                    return@combine null
-                }
-
+            combine(view.onEditing(), formState.status) { isEditing, formStatus ->
                 if (isEditing) {
                     return@combine ValidationAction.EDIT
                 }
+                return@combine when (formStatus) {
+                    ThomasFormStatus.VALID -> {
+                        ValidationAction.VALID
+                    }
 
-                return@combine when (validationState) {
-                    ValidationState.VALIDATING -> null
-                    ValidationState.VALID ->  ValidationAction.VALID
-                    ValidationState.INVALID -> ValidationAction.ERROR
+                    ThomasFormStatus.INVALID, ThomasFormStatus.ERROR -> {
+                        when(validationState.value) {
+                            ValidationState.VALID -> ValidationAction.VALID
+                            ValidationState.INVALID -> {
+                                when(formState.validationMode) {
+                                    FormValidationMode.ON_DEMAND -> ValidationAction.ERROR
+                                    FormValidationMode.IMMEDIATE -> if (didEdit.value) {
+                                        ValidationAction.ERROR
+                                    } else {
+                                        null
+                                    }
+                                }
+                            }
+                            else  -> null
+                        }
+                    }
+
+                    else -> null
                 }
             }
                 .distinctUntilChanged()

@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.environment
 
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.util.DelicateLayoutApi
@@ -12,6 +13,10 @@ import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 
@@ -23,15 +28,44 @@ internal class ThomasForm(
 
     val scope = CoroutineScope(validationDispatcher + SupervisorJob())
 
+    val validationMode: FormValidationMode
+        get() = feed.changes.value.validationMode
+
+    val status: Flow<ThomasFormStatus>
+        get() = feed.changes.map { it.status }.distinctUntilChanged()
+
     val formUpdates = feed.changes
 
     @OptIn(DelicateLayoutApi::class)
     val isEnabled: Boolean
         get() = feed.value.isEnabled
 
+    suspend fun validate(): Boolean {
+        val state = feed.changes.value
+        if (state.isSubmitted) {
+            return false
+        }
+
+        val processResult = state.filteredFields.mapValues { (_, field) ->
+            when(val fieldType = field.fieldType) {
+                is ThomasFormField.FieldType.Async<*> -> {
+                    fieldType.fetcher.fetch(scope, true)
+                    field
+                }
+                is ThomasFormField.FieldType.Instant<*> -> {
+                    field
+                }
+            }
+        }
+
+        feed.update { state.copyWithProcessResult(processResult) }
+
+        return feed.changes.value.status == ThomasFormStatus.VALID
+    }
+
     @OptIn(DelicateLayoutApi::class)
     suspend fun prepareSubmit(): Pair<ReportingEvent.FormResult, FormInfo>? {
-        if (feed.value.isSubmitted) {
+        if (!validate()) {
             return null
         }
 
@@ -50,7 +84,6 @@ internal class ThomasForm(
     internal fun <T : ThomasFormField<*>> inputData(identifier: String): T? {
         return feed.value.inputData(identifier)
     }
-
 
     fun updateFormInput(
         value: ThomasFormField<*>,
@@ -80,6 +113,10 @@ internal class ThomasForm(
         value: ThomasFormField<*>,
         predicate: FormFieldFilterPredicate? = null
     ) {
+        if (feed.changes.value.isSubmitted) {
+            return
+        }
+
         when(val method = value.fieldType) {
             is ThomasFormField.FieldType.Async -> scope.launch {
                 val fetchResult = method.fetcher.fetch(this, true)
@@ -92,6 +129,12 @@ internal class ThomasForm(
         }
 
         feed.update { it.copyWithFormInput(value, predicate) }
+
+        if (validationMode == FormValidationMode.IMMEDIATE) {
+            scope.launch {
+                validate()
+            }
+        }
     }
 
     fun updateWithDisplayState(identifier: String, isDisplayed: Boolean) {

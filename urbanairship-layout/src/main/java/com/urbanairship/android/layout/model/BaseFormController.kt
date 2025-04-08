@@ -110,6 +110,7 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                 .map {
                     it to formState.prepareSubmit()
                 }.distinctUntilChanged().collect { (event, formResult) ->
+                    // TODO, if its null do we continue?
                     formResult?.let {
                         val (result, context) = formResult
                         report(
@@ -122,9 +123,8 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
 
                         updateAttributes(result.attributes)
                         registerChannels(result.channels)
+                        event.onSubmitted.invoke()
                     }
-
-                    event.onSubmitted.invoke()
                 }
         }
 

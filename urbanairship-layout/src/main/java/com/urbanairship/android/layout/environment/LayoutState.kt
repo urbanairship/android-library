@@ -14,6 +14,7 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
+import com.urbanairship.contacts.Scope
 import com.urbanairship.json.JsonValue
 import kotlin.math.max
 import kotlinx.coroutines.flow.StateFlow
@@ -198,9 +199,13 @@ internal sealed class State {
         val isEnabled: Boolean = true,
         val isDisplayReported: Boolean = false,
         private val children: Map<String, Child> = emptyMap(),
-        private val childResults: Map<String, ThomasFormFieldStatus<*>> = emptyMap()
-
     ) : State() {
+
+        val filteredChildren: List<Child>
+            get() = children
+                .filterValues { it.predicate?.invoke() ?: true }
+                .values
+                .toList()
 
         val filteredFields: Map<String, ThomasFormField<*>>
             get() = children
@@ -209,20 +214,37 @@ internal sealed class State {
 
         val isSubmitted: Boolean = status.isSubmitted
 
-        fun copyWithFormInput(
-            value: ThomasFormField<*>,
-            predicate: FormFieldFilterPredicate? = null
+        fun copyWithProcessResult(
+            results: Map<String, ThomasFormField<*>>
         ): Form {
-
-            children[value.identifier]?.field?.fieldType?.cancel()
-
-            val updatedChildren = children + (value.identifier to Child(value, predicate))
-            val updatedResults = childResults + (value.identifier to value.status)
+            val updatedChildren = children.toMutableMap()
+            results.forEach { (key, value) ->
+                val existing = updatedChildren[key]
+                if (existing != null) {
+                    updatedChildren[key] = existing.copy(status = value.status)
+                }
+            }
 
             return copy(
                 children = updatedChildren,
-                childResults = updatedResults,
-                status = evaluateFormStatus(updatedChildren, updatedResults)
+                status = evaluateFormStatus(updatedChildren)
+            )
+        }
+
+        fun copyWithFormInput(
+            value: ThomasFormField<*>,
+            predicate: FormFieldFilterPredicate? = null,
+        ): Form {
+            children[value.identifier]?.field?.fieldType?.cancel()
+
+            var updatedChildren = children
+            if (updatedChildren[value.identifier]?.status?.isInvalid != true || !value.status.isInvalid) {
+                updatedChildren = updatedChildren + (value.identifier to Child(value, predicate, status = value.status.makePending()))
+            }
+
+            return copy(
+                children = updatedChildren,
+                status = evaluateFormStatus(updatedChildren)
             )
         }
 
@@ -232,7 +254,8 @@ internal sealed class State {
                     displayedInputs + identifier
                 } else {
                     displayedInputs - identifier
-                }
+                },
+                status = evaluateFormStatus(children)
             )
         }
 
@@ -252,20 +275,18 @@ internal sealed class State {
         }
 
         private fun evaluateFormStatus(
-            children: Map<String, Child>,
-            results: Map<String, ThomasFormFieldStatus<*>>
+            children: Map<String, Child>
         ): ThomasFormStatus {
             val filtered = children
                 .filterValues { it.predicate?.invoke() ?: true }
-                .keys
+                .map { it.value.status }
 
-            val filteredResults = results
-                .filter { filtered.contains(it.key) }
-
-            return if (filteredResults.values.any { it.isInvalid }) {
+            return if (filtered.any { it.isInvalid }) {
                 ThomasFormStatus.INVALID
-            } else if (filteredResults.values.any { it.isError }) {
+            } else if (filtered.any { it.isError }) {
                 ThomasFormStatus.ERROR
+            } else if (filtered.any { it.isPending }) {
+                ThomasFormStatus.PENDING_VALIDATION
             } else {
                 ThomasFormStatus.VALID
             }
@@ -321,7 +342,8 @@ internal sealed class State {
 
         internal data class Child(
             val field: ThomasFormField<*>,
-            val predicate: FormFieldFilterPredicate? = null
+            val predicate: FormFieldFilterPredicate? = null,
+            val status: ThomasFormFieldStatus<*>
         )
     }
 

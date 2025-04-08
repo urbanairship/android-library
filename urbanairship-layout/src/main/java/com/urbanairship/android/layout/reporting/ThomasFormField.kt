@@ -343,6 +343,9 @@ internal sealed class ThomasFormFieldStatus<T> {
     class Pending<T> : ThomasFormFieldStatus<T>()
     class Error<T> : ThomasFormFieldStatus<T>()
 
+    val isPending: Boolean
+        get() = this is Pending
+
     val isValid: Boolean
         get() = this is Valid
 
@@ -351,6 +354,10 @@ internal sealed class ThomasFormFieldStatus<T> {
 
     val isInvalid: Boolean
         get() = this is Invalid
+
+    fun makePending(): Pending<T> {
+        return Pending()
+    }
 
     fun toJson(type: Type): JsonValue {
         val builder = JsonMap.newBuilder()
