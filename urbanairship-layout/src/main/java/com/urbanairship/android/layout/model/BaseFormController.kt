@@ -166,8 +166,9 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                         return@collect
                     }
 
-                    formState.validate()
-                    it.onValidated()
+                    if (formState.validate()) {
+                        it.onValidated()
+                    }
                 }
         }
     }

@@ -46,8 +46,7 @@ internal class LayoutState(
     init {
         if (thomasForm != null) {
            GlobalScope.launch {
-               thomasState.
-               collect { state ->
+               thomasState.collect { state ->
                    UALog.e("State: ${state.toJsonValue()}")
 
                }

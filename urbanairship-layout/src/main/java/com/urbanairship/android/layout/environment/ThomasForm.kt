@@ -2,7 +2,6 @@
 
 package com.urbanairship.android.layout.environment
 
-import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormValidationMode
@@ -11,7 +10,6 @@ import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.util.Clock
-import com.urbanairship.util.SerialQueue
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.time.Duration.Companion.milliseconds
@@ -24,9 +22,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
 
 internal class ThomasForm(
     private val feed: SharedState<State.Form>,
@@ -162,8 +158,14 @@ internal class ThomasForm(
         when(val method = value.fieldType) {
             is ThomasFormField.FieldType.Async -> scope.launch {
                 method.fetcher.fetch(this, true)
+
+                // Since ThomasFormField is a class, we just need to have the formState
+                // reevaluate its value by calling copy.
+                // TODO: separate out FormField and FormFieldResult so we can make
+                // them data classes for more predictable results
                 feed.update { it.copy() }
             }
+
             is ThomasFormField.FieldType.Instant -> {}
         }
 
