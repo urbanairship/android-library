@@ -158,10 +158,6 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
     }
 
     private fun wireFormValidation() {
-        if (formState.validationMode != FormValidationMode.ON_DEMAND) {
-            return
-        }
-
         modelScope.launch {
             environment.layoutEvents
                 .filterIsInstance<LayoutEvent.ValidateForm>()
@@ -171,6 +167,7 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                     }
 
                     formState.validate()
+                    it.onValidated()
                 }
         }
     }

@@ -72,7 +72,7 @@ internal sealed class LayoutEvent {
 
     data class ValidateForm(
         val buttonIdentifier: String,
-        val onValidated: (suspend (isValid: Boolean) -> Unit) = {}
+        val onValidated: (suspend () -> Unit) = {}
     ) : LayoutEvent()
 
     data class Report(
