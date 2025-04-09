@@ -104,11 +104,14 @@ internal sealed class State {
         val isStoryPaused: Boolean = false,
         val isTouchExplorationEnabled: Boolean = false,
         val branching: PagerControllerBranching? = null,
-        val canGoBack: Boolean = pageIndex > 0
+        val isScrollDisabled: Boolean = false
     ) : State() {
 
         val hasNext
             get() = pageIndex < pageIds.size - 1
+
+        val hasPrevious: Boolean
+            get() = pageIndex > 0
 
         internal fun copyWithPageIndex(index: Int) =
             if (index == pageIndex) {
@@ -123,19 +126,19 @@ internal sealed class State {
                         completed
                     },
                     progress = 0,
-                    canGoBack = index > 0
+                    isScrollDisabled = false
                 )
             }
 
         fun copyWithPageRequest(request: PageRequest): Pager {
+            if (isScrollDisabled) {
+                return copy(progress = 0)
+            }
+
             val nextIndex = when(request)
             {
                 PageRequest.NEXT -> pageIndex + 1
-                PageRequest.BACK -> if (canGoBack) {
-                    max(pageIndex - 1, 0)
-                } else {
-                    -1
-                }
+                PageRequest.BACK -> max(pageIndex - 1, 0)
                 PageRequest.FIRST -> 0
             }
 

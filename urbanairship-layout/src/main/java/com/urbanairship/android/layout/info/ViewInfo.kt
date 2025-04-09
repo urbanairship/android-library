@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Direction
+import com.urbanairship.android.layout.property.DisableSwipeSelector
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
@@ -628,6 +629,8 @@ internal class PagerInfo(json: JsonMap) : ViewGroupInfo<PagerItemInfo>(), View b
     val items = json.requireField<JsonList>("items").map { PagerItemInfo(it.requireMap()) }
     val isSwipeDisabled = json.optionalField("disable_swipe") ?: false
     val gestures = json.optionalList("gestures")?.let { PagerGesture.fromList(it) }
+
+    val disableSwipeWhen = json.optionalList("disable_swipe_when")?.map(DisableSwipeSelector::fromJson)
 
     override val children: List<PagerItemInfo> = items
 }

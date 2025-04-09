@@ -91,17 +91,10 @@ internal data class PageBranching(
      * predicates are matched, or if this directive is not present, proceeding to
      * the next page is blocked.
      */
-    val nextPageSelectors: List<PageSelector>?,
-    /**
-     * Controls if moving to the previous page is allowed; only evaluated when the
-     * [com.urbanairship.android.layout.model.PagerController] is configured for branching logic. If this directive is
-     * not present, moving to the previous page is allowed.
-     */
-    val previousPageControl: PreviousPageControl?
+    val nextPageSelectors: List<PageSelector>?
 ): JsonSerializable {
     companion object {
         private const val NEXT_PAGE = "next_page"
-        private const val PREVIOUS_PAGE_DISABLED = "previous_page_disabled"
         private const val SELECTORS = "selectors"
 
         @Throws(JsonException::class)
@@ -111,15 +104,13 @@ internal data class PageBranching(
             return PageBranching(
                 nextPageSelectors = content.optionalMap(NEXT_PAGE)
                     ?.requireList(SELECTORS)
-                    ?.map(PageSelector::from),
-                previousPageControl = content.get(PREVIOUS_PAGE_DISABLED)?.let(PreviousPageControl::from)
+                    ?.map(PageSelector::from)
             )
         }
     }
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
         NEXT_PAGE to jsonMapOf(SELECTORS to nextPageSelectors),
-        PREVIOUS_PAGE_DISABLED to previousPageControl
     ).toJsonValue()
 
     internal data class PageSelector(
@@ -151,39 +142,6 @@ internal data class PageBranching(
         override fun toJsonValue(): JsonValue = jsonMapOf(
             WHEN_STATE_MATCHES to predicate,
             PAGE_ID to pageId
-        ).toJsonValue()
-    }
-
-    internal data class PreviousPageControl(
-        /**
-         * When provided, moving to the previous page is disabled when the predicate
-         * matches.
-         */
-        val predicate: JsonPredicate?,
-        /**
-         * When set `true`, moving to the previous page is always disabled.
-         */
-        val alwaysDisabled: Boolean?
-    ) : JsonSerializable {
-
-        companion object {
-            private const val WHEN_STATE_MATCHES = "when_state_matches"
-            private const val ALWAYS = "always"
-
-            @Throws(JsonException::class)
-            fun from(json: JsonValue): PreviousPageControl {
-                val content = json.requireMap()
-
-                return PreviousPageControl(
-                    predicate = content.get(WHEN_STATE_MATCHES)?.let(JsonPredicate::parse),
-                    alwaysDisabled = content.optionalField(ALWAYS)
-                )
-            }
-        }
-
-        override fun toJsonValue(): JsonValue = jsonMapOf(
-            WHEN_STATE_MATCHES to predicate,
-            ALWAYS to alwaysDisabled
         ).toJsonValue()
     }
 }

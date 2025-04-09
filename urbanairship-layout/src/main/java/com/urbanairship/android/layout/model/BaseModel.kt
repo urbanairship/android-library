@@ -267,12 +267,16 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     }
 
     private fun handlePagerBehaviors(state: State.Pager) {
+        if (state.isScrollDisabled) {
+            listener?.setEnabled(false)
+            return
+        }
         val behaviors = viewInfo.enableBehaviors ?: return
         val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
         val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
 
         val isEnabled =
-            (hasPagerNextBehavior && state.hasNext) || (hasPagerPrevBehavior && state.canGoBack)
+            (hasPagerNextBehavior && state.hasNext) || (hasPagerPrevBehavior && state.hasPrevious)
 
         listener?.setEnabled(isEnabled)
     }

@@ -21,12 +21,11 @@ import com.urbanairship.analytics.Analytics;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.audience.AudienceEvaluator;
 import com.urbanairship.audience.AudienceOverridesProvider;
-import com.urbanairship.audience.DeviceInfoProvider;
-import com.urbanairship.audience.DeviceInfoProviderImpl;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.cache.AirshipCache;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrar;
+import com.urbanairship.inputvalidation.AirshipInputValidation;
 import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.config.RemoteConfigObserver;
 import com.urbanairship.contacts.Contact;
@@ -35,6 +34,7 @@ import com.urbanairship.experiment.ExperimentManager;
 import com.urbanairship.http.DefaultRequestSession;
 import com.urbanairship.images.AirshipGlideImageLoader;
 import com.urbanairship.images.ImageLoader;
+import com.urbanairship.inputvalidation.DefaultInputValidator;
 import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
 import com.urbanairship.modules.Module;
@@ -47,7 +47,6 @@ import com.urbanairship.remoteconfig.RemoteConfigManager;
 import com.urbanairship.remotedata.RemoteData;
 import com.urbanairship.util.AppStoreUtils;
 import com.urbanairship.util.Clock;
-import com.urbanairship.util.PlatformUtils;
 import com.urbanairship.util.ProcessUtils;
 
 import java.lang.annotation.Retention;
@@ -151,6 +150,7 @@ public class UAirship {
     UrlAllowList urlAllowList;
     RemoteData remoteData;
     RemoteConfigManager remoteConfigManager;
+    AirshipInputValidation.Validator inputValidator;
 
     AirshipMeteredUsage meteredUsageManager;
     ChannelCapture channelCapture;
@@ -733,6 +733,8 @@ public class UAirship {
         this.analytics = new Analytics(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, permissionsManager, eventFeed);
         components.add(this.analytics);
 
+        this.inputValidator = new DefaultInputValidator(runtimeConfig);
+
         //noinspection deprecation
         this.applicationMetrics = new ApplicationMetrics(application, preferenceDataStore, privacyManager);
         components.add(this.applicationMetrics);
@@ -743,7 +745,8 @@ public class UAirship {
         this.channelCapture = new ChannelCapture(application, airshipConfigOptions, channel, preferenceDataStore, GlobalActivityMonitor.shared(application));
         components.add(this.channelCapture);
 
-        this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager, channel, localeManager, audienceOverridesProvider, pushManager);
+        this.contact = new Contact(application, preferenceDataStore, runtimeConfig, privacyManager,
+                channel, localeManager, audienceOverridesProvider, pushManager, inputValidator);
         components.add(this.contact);
         requestSession.setContactAuthTokenProvider(this.contact.getAuthTokenProvider());
 
@@ -790,7 +793,7 @@ public class UAirship {
         processModule(adIdModule);
 
         // Preference Center
-        Module preferenceCenter = Modules.preferenceCenter(application, preferenceDataStore, privacyManager, remoteData);
+        Module preferenceCenter = Modules.preferenceCenter(application, preferenceDataStore, privacyManager, remoteData, inputValidator);
         processModule(preferenceCenter);
 
         // Live Updates
@@ -919,6 +922,16 @@ public class UAirship {
     @NonNull
     public UrlAllowList getUrlAllowList() {
         return urlAllowList;
+    }
+
+    /**
+     * The input validation used by Preference Center and Scenes.
+     *
+     * @return the inputValidator
+     */
+    @NonNull
+    public AirshipInputValidation.Validator getInputValidator() {
+        return inputValidator;
     }
 
     /**

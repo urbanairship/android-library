@@ -28,9 +28,6 @@ internal class PagerBranchControl(
 
     private val history = mutableListOf<PagerModel.Item>()
 
-    private val _canGoBackState = MutableStateFlow(true)
-    val canGoBack = _canGoBackState.asStateFlow()
-
     private val _isComplete = MutableStateFlow(false)
     val isComplete = _isComplete.asStateFlow()
 
@@ -45,7 +42,6 @@ internal class PagerBranchControl(
 
         reEvaluatePath(payload)
         evaluateCompletion(payload)
-        updateCanGoBack(payload)
     }
 
     fun addToHistory(id: String) {
@@ -57,17 +53,13 @@ internal class PagerBranchControl(
             }
 
             history.add(page)
-            updateCanGoBack()
         }
     }
 
     fun removeFromHistory(id: String) {
         scope.launch {
             val page = availablePages.firstOrNull { it.identifier == id } ?: return@launch
-
-            if (history.remove(page)) {
-                updateCanGoBack()
-            }
+            history.remove(page)
         }
     }
 
@@ -78,35 +70,17 @@ internal class PagerBranchControl(
         }
 
         history.subList(index, history.size).clear()
-        updateCanGoBack()
     }
 
-    fun resolve(request: PageRequest): Boolean {
-        updateState()
-
+    fun onPageRequest(request: PageRequest) {
         when (request) {
-            PageRequest.NEXT -> return true
+            PageRequest.NEXT -> {}
             PageRequest.FIRST -> {
                 history.clear()
-                return true
             }
             PageRequest.BACK -> {
-                if (canGoBack.value) {
-                    history.removeLastOrNull()
-                    return true
-                } else {
-                    return false
-                }
+                history.removeLastOrNull()
             }
-        }
-    }
-
-    private fun updateCanGoBack(payload: JsonSerializable? = null) {
-        val payload = payload ?: thomasState.value
-
-        _canGoBackState.update {
-            val result = history.lastOrNull() ?: return@update false
-            history.size > 1 && result.branching?.canGoBack(payload) != false
         }
     }
 
@@ -170,13 +144,4 @@ private fun PageBranching.nextPageId(payload: JsonSerializable): String? {
     return nextPageSelectors
         ?.firstOrNull { it.predicate?.apply(payload) != false }
         ?.pageId
-}
-
-private fun PageBranching.canGoBack(payload: JsonSerializable): Boolean {
-    val control = previousPageControl ?: return true
-    if (control.alwaysDisabled == true) {
-        return false
-    }
-
-    return control.predicate?.apply(payload) != true
 }

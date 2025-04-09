@@ -181,7 +181,7 @@ public abstract class Image {
             ERROR_CIRCLE("exclamationmark_circle_fill", R.drawable.ua_layout_ic_error_circle_filled),
             ASTERISK("asterisk", R.drawable.ua_layout_ic_asterisk),
             ASTERISK_CIRCLE("asterisk_circle_fill", R.drawable.ua_layout_ic_asterisk),
-            PROGRESS_SPINNER("progress_spinner", R.drawable.ua_layout_animated_progress_spinner2);
+            PROGRESS_SPINNER("progress_spinner", R.drawable.ua_layout_ic_progress_spinner);
 
             @NonNull
             private final String value;

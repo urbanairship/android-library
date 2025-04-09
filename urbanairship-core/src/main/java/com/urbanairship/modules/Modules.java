@@ -19,6 +19,7 @@ import com.urbanairship.config.AirshipRuntimeConfig;
 import com.urbanairship.contacts.Contact;
 import com.urbanairship.deferred.DeferredResolver;
 import com.urbanairship.experiment.ExperimentManager;
+import com.urbanairship.inputvalidation.AirshipInputValidation;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
 import com.urbanairship.modules.aaid.AdIdModuleFactory;
 import com.urbanairship.modules.automation.AutomationModuleFactory;
@@ -161,12 +162,13 @@ public class Modules {
     public static Module preferenceCenter(@NonNull Context context,
                                           @NonNull PreferenceDataStore dataStore,
                                           @NonNull PrivacyManager privacyManager,
-                                          @NonNull RemoteData remoteData) {
+                                          @NonNull RemoteData remoteData,
+                                          @NonNull AirshipInputValidation.Validator validator) {
         try {
             PreferenceCenterModuleFactory moduleFactory =
                     createFactory(PREFERENCE_CENTER_FACTORY, PreferenceCenterModuleFactory.class);
             if (moduleFactory != null) {
-                return moduleFactory.build(context, dataStore, privacyManager, remoteData);
+                return moduleFactory.build(context, dataStore, privacyManager, remoteData, validator);
             }
         } catch (Exception e) {
             UALog.e(e, "Failed to build Preference Center module");

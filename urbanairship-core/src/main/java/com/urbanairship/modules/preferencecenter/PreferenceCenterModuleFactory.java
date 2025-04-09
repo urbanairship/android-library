@@ -5,6 +5,7 @@ import android.content.Context;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
+import com.urbanairship.inputvalidation.AirshipInputValidation;
 import com.urbanairship.modules.Module;
 import com.urbanairship.remotedata.RemoteData;
 
@@ -24,6 +25,7 @@ public interface PreferenceCenterModuleFactory extends AirshipVersionInfo {
             @NonNull Context Context,
             @NonNull PreferenceDataStore dataStore,
             @NonNull PrivacyManager privacyManager,
-            @NonNull RemoteData remoteData
+            @NonNull RemoteData remoteData,
+            @NonNull AirshipInputValidation.Validator inputValidator
     );
 }

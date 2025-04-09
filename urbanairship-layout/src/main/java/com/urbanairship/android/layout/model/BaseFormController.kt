@@ -170,6 +170,7 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
     }
 
     private fun handlePagerScroll(state: State.Pager) {
+        if (state.isScrollDisabled) { return  }
         val behaviors = viewInfo.formEnabled ?: return
 
         val isParentEnabled = parentFormState?.isEnabled ?: true
@@ -177,7 +178,10 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
         val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
 
         val isEnabled =
-            isParentEnabled && (hasPagerNextBehavior && hasPagerPrevBehavior && (state.hasNext || state.canGoBack)) || (hasPagerNextBehavior && state.hasNext) || (hasPagerPrevBehavior && state.canGoBack)
+            isParentEnabled &&
+                    (hasPagerNextBehavior && hasPagerPrevBehavior && (state.hasNext || state.hasPrevious)) ||
+                    (hasPagerNextBehavior && state.hasNext) ||
+                    (hasPagerPrevBehavior && state.hasPrevious)
 
         formState.updateStatus(isEnabled = isEnabled)
     }

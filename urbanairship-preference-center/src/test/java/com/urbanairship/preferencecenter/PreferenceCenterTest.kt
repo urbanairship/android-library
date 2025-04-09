@@ -65,7 +65,7 @@ public class PreferenceCenterTest {
     private val onOpenListener: PreferenceCenter.OnOpenListener = mockk(relaxed = true)
 
     private val prefCenter: PreferenceCenter = PreferenceCenter(
-        context, dataStore, privacyManager, remoteData
+        context, dataStore, privacyManager, remoteData, mockk()
     )
 
     @Test
