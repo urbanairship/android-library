@@ -243,11 +243,11 @@ internal sealed class State {
                 status = evaluateFormStatus(updatedChildren)
             )
         }
-
         fun copyWithFormInput(
             value: ThomasFormField<*>,
             predicate: FormFieldFilterPredicate? = null,
         ): Form {
+            UALog.e("Updating: $value")
             children[value.identifier]?.field?.fieldType?.cancel()
 
             var updatedChildren = children
@@ -290,15 +290,18 @@ internal sealed class State {
         ): ThomasFormStatus {
             val filtered = children
                 .filterValues { it.predicate?.invoke() ?: true }
-                .map { it.value.lastProcessStatus }
 
-            return if (filtered.any { it.isInvalid }) {
+            return if (filtered.any { it.value.lastProcessStatus.isInvalid }) {
+                UALog.e("Updating status to invalid: ${filtered.filter { it.value.lastProcessStatus.isInvalid }}")
                 ThomasFormStatus.INVALID
-            } else if (filtered.any { it.isError }) {
+            } else if (filtered.any { it.value.lastProcessStatus.isError }) {
+                UALog.e("Updating status to error: ${filtered.filter { it.value.lastProcessStatus.isError }}")
                 ThomasFormStatus.ERROR
-            } else if (filtered.any { it.isPending }) {
+            } else if (filtered.any { it.value.lastProcessStatus.isPending }) {
+                UALog.e("Updating status to pending_validation: ${filtered.filter { it.value.lastProcessStatus.isPending }}")
                 ThomasFormStatus.PENDING_VALIDATION
             } else {
+                UALog.e("Updating status to valid")
                 ThomasFormStatus.VALID
             }
         }

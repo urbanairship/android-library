@@ -3,6 +3,7 @@
 package com.urbanairship.android.layout.environment
 
 import com.urbanairship.AirshipDispatchers
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.reporting.FormInfo
@@ -10,27 +11,31 @@ import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.util.Clock
+import com.urbanairship.util.SerialQueue
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 
 internal class ThomasForm(
     private val feed: SharedState<State.Form>,
     private val pagerState: SharedState<State.Pager>? = null,
-    validationDispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
+    validationDispatcher: CoroutineDispatcher = Dispatchers.Main
 ) {
 
     val scope = CoroutineScope(validationDispatcher + SupervisorJob())
+
 
     val validationMode: FormValidationMode
         get() = feed.changes.value.validationMode
@@ -66,12 +71,11 @@ internal class ThomasForm(
             return false
         }
 
-        val state = feed.changes.value.copy(status = ThomasFormStatus.VALIDATING)
-        feed.update { state }
+        val fields = feed.changes.value.copy(status = ThomasFormStatus.VALIDATING).filteredFields
 
-        val containsPending = state.filteredFields.any { it.value.status.isPending }
+        val containsPending = fields.any { it.value.status.isPending }
         val start = Clock.DEFAULT_CLOCK.currentTimeMillis().milliseconds
-        val processResult = state.filteredFields.mapValues { (_, field) ->
+        val processResult = fields.mapValues { (_, field) ->
             when(val fieldType = field.fieldType) {
                 is ThomasFormField.FieldType.Async<*> -> {
                     fieldType.fetcher.fetch(scope, true)
@@ -83,7 +87,7 @@ internal class ThomasForm(
             }
         }
 
-        feed.update { state.copyWithProcessResult(processResult) }
+        feed.update { it.copyWithProcessResult(processResult) }
 
         val end = Clock.DEFAULT_CLOCK.currentTimeMillis().milliseconds
         if (containsPending && validationMode == FormValidationMode.ON_DEMAND) {
@@ -152,18 +156,16 @@ internal class ThomasForm(
             return
         }
 
+        UALog.e("Updating field $value")
+        feed.update { it.copyWithFormInput(value, predicate) }
+
         when(val method = value.fieldType) {
             is ThomasFormField.FieldType.Async -> scope.launch {
-                val fetchResult = method.fetcher.fetch(this, true)
-                yield()
-                if (!fetchResult.isError) {
-                    feed.update { it.copyWithFormInput(value, predicate) }
-                }
+                method.fetcher.fetch(this, true)
+                feed.update { it.copy() }
             }
             is ThomasFormField.FieldType.Instant -> {}
         }
-
-        feed.update { it.copyWithFormInput(value, predicate) }
 
         if (validationMode == FormValidationMode.IMMEDIATE) {
             scope.launch {
