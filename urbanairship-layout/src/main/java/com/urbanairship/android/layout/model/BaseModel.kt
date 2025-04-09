@@ -360,12 +360,12 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                                 }
                             }
                             is ThomasFormFieldStatus.Valid<*> -> ValidationAction.VALID
+                            is ThomasFormFieldStatus.Pending -> ValidationAction.EDIT
                             else -> null
                         }
                     }
-
                     else -> if (didEdit) {
-                        ValidationAction.VALID
+                        ValidationAction.EDIT
                     } else {
                         null
                     }
