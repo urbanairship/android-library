@@ -14,10 +14,14 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
-import com.urbanairship.contacts.Scope
 import com.urbanairship.json.JsonValue
 import kotlin.math.max
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 internal class LayoutState(
     val pager: SharedState<State.Pager>?,
@@ -39,6 +43,17 @@ internal class LayoutState(
             buttonId
         )
 
+    init {
+        if (thomasForm != null) {
+           GlobalScope.launch {
+               thomasState.
+               collect { state ->
+                   UALog.e("State: ${state.toJsonValue()}")
+
+               }
+           }
+        }
+    }
     companion object {
         @JvmField
         val EMPTY = LayoutState(null, null, null,
