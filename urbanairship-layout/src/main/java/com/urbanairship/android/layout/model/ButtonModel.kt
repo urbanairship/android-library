@@ -51,6 +51,7 @@ internal abstract class ButtonModel<T, I: Button>(
     }
 
     override var listener: Listener? = null
+    private var isProcessing = MutableStateFlow(false)
 
     @CallSuper
     override fun onViewAttached(view: T) {
@@ -71,6 +72,13 @@ internal abstract class ButtonModel<T, I: Button>(
                 }
 
                 evaluateClickBehaviors(view.context ?: UAirship.getApplicationContext())
+            }
+        }
+
+        // If we're processing, disable the button, via the enabled listener.
+        viewScope.launch {
+            isProcessing.collect {
+                listener?.setEnabled(enabled = !it)
             }
         }
     }
@@ -123,8 +131,6 @@ internal abstract class ButtonModel<T, I: Button>(
             isProcessing.update { false }
         }
     }
-
-    private var isProcessing = MutableStateFlow<Boolean>(false)
 
     private fun handleFormValidation(context: Context) {
         // Dismiss the keyboard, if it's open.
