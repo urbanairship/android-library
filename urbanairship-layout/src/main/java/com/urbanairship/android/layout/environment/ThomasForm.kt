@@ -9,11 +9,15 @@ import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.android.layout.util.DelicateLayoutApi
+import com.urbanairship.util.Clock
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -58,11 +62,15 @@ internal class ThomasForm(
     }
 
     suspend fun validate(): Boolean {
-        val state = feed.changes.value
-        if (state.isSubmitted) {
+        if (feed.changes.value.isSubmitted) {
             return false
         }
 
+        val state = feed.changes.value.copy(status = ThomasFormStatus.VALIDATING)
+        feed.update { state }
+
+        val containsPending = state.filteredFields.any { it.value.status.isPending }
+        val start = Clock.DEFAULT_CLOCK.currentTimeMillis().milliseconds
         val processResult = state.filteredFields.mapValues { (_, field) ->
             when(val fieldType = field.fieldType) {
                 is ThomasFormField.FieldType.Async<*> -> {
@@ -76,6 +84,14 @@ internal class ThomasForm(
         }
 
         feed.update { state.copyWithProcessResult(processResult) }
+
+        val end = Clock.DEFAULT_CLOCK.currentTimeMillis().milliseconds
+        if (containsPending && validationMode == FormValidationMode.ON_DEMAND) {
+            val remaining = 1.seconds - (end - start)
+            if (remaining.isPositive()) {
+                delay(remaining)
+            }
+        }
 
         return feed.changes.value.status == ThomasFormStatus.VALID
     }

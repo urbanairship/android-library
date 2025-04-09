@@ -77,7 +77,7 @@ internal class RadioInputController(
 
     private fun isValid(selectedItem: JsonValue?): Boolean {
         return if (selectedItem == null || selectedItem.isNull) {
-            viewInfo.isRequired
+            !viewInfo.isRequired
         } else {
             true
         }

@@ -2,6 +2,8 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
+import android.text.Spannable
+import android.text.SpannableString
 import android.view.View
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.ViewCompat
@@ -11,6 +13,7 @@ import com.urbanairship.android.layout.info.LabelInfo
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.LabelModel
+import com.urbanairship.android.layout.property.Image.CenteredImageSpan
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.ifNotEmpty
@@ -65,15 +68,20 @@ internal class LabelView(
 
                 drawableStart?.let {
                     val size = spToPx(context, model.viewInfo.textAppearance.fontSize).toInt()
-                    it.setBounds(0, 0, size, size)
-                }
+                    val space = resolvedIconStart?.let { icon -> spToPx(context, icon.space).toInt() } ?: 0
+                    it.setBounds(
+                        if (isLayoutRtl) size + space else 0,
+                        0,
+                        if (!isLayoutRtl) size + space else 0,
+                        size
+                    )
 
-                resolvedIconStart?.let { compoundDrawablePadding = it.space }
+                    val imageSpan = CenteredImageSpan(it)
+                    val spannableString = SpannableString(" $resolvedText").apply {
+                        setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    }
 
-                if (isLayoutRtl) {
-                    setCompoundDrawables(null, null, drawableStart, null)
-                } else {
-                    setCompoundDrawables(drawableStart, null, null, null)
+                    text = spannableString
                 }
             }
 
