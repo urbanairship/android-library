@@ -96,6 +96,10 @@ internal class ThomasForm(
         return feed.changes.value.status == ThomasFormStatus.VALID
     }
 
+    fun lastProcessedStatus(identifier: String): ThomasFormFieldStatus<*>? {
+        return feed.changes.value.lastProcessedStatus(identifier)
+    }
+
     suspend fun prepareSubmit(): Pair<ReportingEvent.FormResult, FormInfo>? {
         if (!validate()) {
             return null

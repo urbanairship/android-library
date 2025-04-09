@@ -27,6 +27,7 @@ import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.widget.CheckableView
@@ -329,44 +330,49 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     ) = layoutState.processStateActions(actions, formValue)
 
     protected fun<T> wireValidationActions(
+        identifier: String,
         thomasForm: ThomasForm,
-        valueUpdates: StateFlow<T>,
+        initialValue: T?,
+        valueUpdates: Flow<T>,
         actions: Map<ValidationAction, com.urbanairship.android.layout.info.ValidationAction?>,
-        isValid: (T) -> Boolean,
     ) {
-        if (thomasForm.validationMode != FormValidationMode.ON_DEMAND) {
-            return
-        }
+        val isInitialValue = MutableStateFlow(true)
+        val lastSelected = MutableStateFlow(initialValue)
 
-        val lastSelected = MutableStateFlow<T>(valueUpdates.value)
-
-        viewScope.launch {
+        modelScope.launch {
             combine(thomasForm.status, valueUpdates) { formState, newValue ->
                 val didEdit = if (lastSelected.value != newValue) {
                     lastSelected.update { newValue }
+                    isInitialValue.update { false }
                     true
                 } else {
                     false
                 }
 
-                when(formState) {
-                    ThomasFormStatus.VALID,
-                    ThomasFormStatus.INVALID,
-                    ThomasFormStatus.ERROR -> {
-                        if (isValid.invoke(newValue)) {
-                            ValidationAction.VALID
-                        } else {
-                            ValidationAction.ERROR
+                when (formState) {
+                    ThomasFormStatus.VALID, ThomasFormStatus.INVALID, ThomasFormStatus.ERROR -> {
+                        when (thomasForm.lastProcessedStatus(identifier)) {
+                            is ThomasFormFieldStatus.Invalid<*> -> {
+                                if (thomasForm.validationMode == FormValidationMode.ON_DEMAND || !isInitialValue.value) {
+                                    ValidationAction.ERROR
+                                } else {
+                                    null
+                                }
+                            }
+                            is ThomasFormFieldStatus.Valid<*> -> ValidationAction.VALID
+                            else -> null
                         }
                     }
-                    else -> if (didEdit) { ValidationAction.VALID } else { null }
+
+                    else -> if (didEdit) {
+                        ValidationAction.VALID
+                    } else {
+                        null
+                    }
                 }
+            }.distinctUntilChanged().mapNotNull { actions[it] }.collect {
+                runStateActions(it.actions, lastSelected.value)
             }
-                .distinctUntilChanged()
-                .mapNotNull { actions[it] }
-                .collect {
-                    runStateActions(it.actions, lastSelected.value)
-                }
         }
     }
 

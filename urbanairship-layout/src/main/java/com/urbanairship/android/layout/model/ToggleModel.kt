@@ -103,16 +103,18 @@ internal class ToggleModel(
             formState.formUpdates.collect { state -> setEnabled(state.isEnabled) }
         }
 
-        wireValidationActions(
-            thomasForm = formState,
-            valueUpdates = valueChanged,
-            actions = mapOf(
-                ValidationAction.VALID to viewInfo.onValid,
-                ValidationAction.EDIT to viewInfo.onEdit,
-                ValidationAction.ERROR to viewInfo.onError
-            ),
-            isValid = { it == true  || !viewInfo.isRequired}
-        )
-
+        if (formState.validationMode == FormValidationMode.ON_DEMAND) {
+            wireValidationActions(
+                identifier = viewInfo.identifier,
+                thomasForm = formState,
+                initialValue = valueChanged.value,
+                valueUpdates = valueChanged,
+                actions = mapOf(
+                    ValidationAction.VALID to viewInfo.onValid,
+                    ValidationAction.EDIT to viewInfo.onEdit,
+                    ValidationAction.ERROR to viewInfo.onError
+                )
+            )
+        }
     }
 }

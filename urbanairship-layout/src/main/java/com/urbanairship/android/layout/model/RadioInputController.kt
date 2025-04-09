@@ -18,6 +18,7 @@ import com.urbanairship.json.JsonValue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -67,6 +68,20 @@ internal class RadioInputController(
                 radioState.update { it.copy(isEnabled = form.isEnabled) }
             }
         }
+
+        if (formState.validationMode == FormValidationMode.ON_DEMAND) {
+            wireValidationActions(
+                identifier = viewInfo.identifier,
+                thomasForm = formState,
+                initialValue = radioState.changes.value.selectedItem,
+                valueUpdates = radioState.changes.map { it.selectedItem },
+                actions = mapOf(
+                    ValidationAction.VALID to viewInfo.onValid,
+                    ValidationAction.EDIT to viewInfo.onEdit,
+                    ValidationAction.ERROR to viewInfo.onError
+                )
+            )
+        }
     }
 
     override fun onCreateView(
@@ -80,53 +95,6 @@ internal class RadioInputController(
             !viewInfo.isRequired
         } else {
             true
-        }
-    }
-
-    override fun onViewAttached(view: View) {
-        super.onViewAttached(view)
-
-        if (formState.validationMode != FormValidationMode.ON_DEMAND) {
-            return
-        }
-
-        val lastSelected = MutableStateFlow<JsonValue?>(null)
-        viewScope.launch {
-            combine(formState.status, radioState.changes) { formStatus, radioInputState ->
-                val didEdit = if (lastSelected.value != radioInputState.selectedItem) {
-                    lastSelected.update { radioInputState.selectedItem }
-                    true
-                } else {
-                    false
-                }
-
-                return@combine when (formStatus) {
-                    ThomasFormStatus.VALID, ThomasFormStatus.INVALID, ThomasFormStatus.ERROR -> {
-                        if (isValid(radioInputState.selectedItem)) {
-                            ValidationAction.VALID
-                        } else {
-                            ValidationAction.ERROR
-                        }
-                    }
-
-                    else -> {
-                        if (didEdit) {
-                            ValidationAction.EDIT
-                        } else {
-                            null
-                        }
-                    }
-                }
-            }.distinctUntilChanged().mapNotNull {
-                when (it) {
-                    ValidationAction.EDIT -> viewInfo.onEdit
-                    ValidationAction.VALID -> viewInfo.onValid
-                    ValidationAction.ERROR -> viewInfo.onError
-                    null -> null
-                }
-            }.collect {
-                runStateActions(it.actions, radioState.changes.value.selectedItem)
-            }
         }
     }
 }

@@ -5,6 +5,7 @@ import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ScoreInfo
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EventHandler
@@ -16,6 +17,7 @@ import com.urbanairship.android.layout.util.scoreChanges
 import com.urbanairship.android.layout.view.ScoreView
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -130,15 +132,18 @@ internal class ScoreModel(
             }
         }
 
-        wireValidationActions(
-            thomasForm = formState,
-            valueUpdates = valuesUpdate.asStateFlow(),
-            actions = mapOf(
-                ValidationAction.EDIT to viewInfo.onEdit,
-                ValidationAction.VALID to viewInfo.onValid,
-                ValidationAction.ERROR to viewInfo.onError
-            ),
-            isValid = { !viewInfo.isRequired || it > -1 }
-        )
+        if (formState.validationMode == FormValidationMode.ON_DEMAND) {
+            wireValidationActions(
+                identifier = viewInfo.identifier,
+                thomasForm = formState,
+                initialValue = valuesUpdate.value,
+                valueUpdates = valuesUpdate,
+                actions = mapOf(
+                    ValidationAction.VALID to viewInfo.onValid,
+                    ValidationAction.EDIT to viewInfo.onEdit,
+                    ValidationAction.ERROR to viewInfo.onError
+                )
+            )
+        }
     }
 }

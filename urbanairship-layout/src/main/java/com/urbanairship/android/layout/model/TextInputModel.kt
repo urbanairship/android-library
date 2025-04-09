@@ -23,6 +23,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -46,7 +47,7 @@ internal class TextInputModel(
         fun restoreValue(value: String)
     }
 
-    private val didEdit = MutableStateFlow<Boolean>(false)
+    private val currentInput = MutableStateFlow<String>("")
 
     private val inputValidator: AirshipInputValidation.Validator?
         get() {
@@ -80,6 +81,18 @@ internal class TextInputModel(
                 listener?.setEnabled(state.isEnabled)
             }
         }
+
+        wireValidationActions(
+            identifier = viewInfo.identifier,
+            thomasForm = formState,
+            initialValue = currentInput.value,
+            valueUpdates = currentInput,
+            actions = mapOf(
+                ValidationAction.VALID to viewInfo.onValid,
+                ValidationAction.EDIT to viewInfo.onEdit,
+                ValidationAction.ERROR to viewInfo.onError
+            )
+        )
     }
 
     override fun onCreateView(
@@ -89,7 +102,10 @@ internal class TextInputModel(
 
         // Restore value, if available
         formState.inputData<ThomasFormField.TextInput>(viewInfo.identifier)?.let { input ->
-            input.originalValue?.let { listener?.restoreValue(it) }
+            input.originalValue?.let { text ->
+                currentInput.update { text }
+                listener?.restoreValue(text)
+            }
         }
     }
 
@@ -244,58 +260,11 @@ internal class TextInputModel(
         viewScope.launch {
             combine(view.textChanges(), _smsLocale) { text, locale -> Pair(text, locale) }
                 .collect { (text, locale) ->
-                    if (text.isNotEmpty()) {
-                        didEdit.update { true }
-                    }
+                    currentInput.update { text }
                     formState.updateFormInput(
                         value = makeFormField(text, locale, validationState),
                         pageId = properties.pagerPageId
                     )
-                }
-        }
-
-
-        viewScope.launch {
-            combine(view.onEditing(), formState.status) { isEditing, formStatus ->
-                if (isEditing) {
-                    return@combine ValidationAction.EDIT
-                }
-                return@combine when (formStatus) {
-                    ThomasFormStatus.VALID -> {
-                        ValidationAction.VALID
-                    }
-
-                    ThomasFormStatus.INVALID, ThomasFormStatus.ERROR -> {
-                        when(validationState.value) {
-                            ValidationState.VALID -> ValidationAction.VALID
-                            ValidationState.INVALID -> {
-                                when(formState.validationMode) {
-                                    FormValidationMode.ON_DEMAND -> ValidationAction.ERROR
-                                    FormValidationMode.IMMEDIATE -> if (didEdit.value) {
-                                        ValidationAction.ERROR
-                                    } else {
-                                        null
-                                    }
-                                }
-                            }
-                            else  -> null
-                        }
-                    }
-
-                    else -> null
-                }
-            }
-                .distinctUntilChanged()
-                .mapNotNull {
-                    when(it) {
-                        ValidationAction.EDIT -> viewInfo.onEdit
-                        ValidationAction.VALID -> viewInfo.onValid
-                        ValidationAction.ERROR -> viewInfo.onError
-                        null -> null
-                    }
-                }
-                .collect {
-                    runStateActions(it.actions, view.text)
                 }
         }
 
