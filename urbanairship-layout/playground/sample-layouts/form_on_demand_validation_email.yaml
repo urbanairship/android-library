@@ -65,7 +65,7 @@ view:
                                 type: floating
                                 icon:
                                   type: icon
-                                  icon: progress_spinner
+                                  icon: asterisk
                                   color:
                                       default:
                                           hex: "#ff0000"
@@ -116,7 +116,7 @@ view:
                             type: floating
                             icon:
                               type: icon
-                              icon: exclamationmark_circle_fill
+                              icon: asterisk_circle_fill
                               color:
                                   default:
                                       hex: "#ff0000"
@@ -338,34 +338,34 @@ view:
                     identifier: e49c1d9a-1118-4a7b-8ae8-2e1ce42b0f1a
                     label:
                       view_overrides:
-                          icon_start:
-                            - value:
-                                type: "floating"
-                                space: 8
-                                icon:
-                                  type: icon
-                                  icon: checkmark
-                                  color:
-                                      default:
-                                          hex: "#FFFFFF"
-                                          alpha: 1.0
-                                  scale: 1
-                              when_state_matches:
-                                scope:
-                                    - $forms
-                                    - current
-                                    - status
-                                value:
-                                  equals: "validating"
-                          text:
-                            - value: "Processing ..."
-                              when_state_matches:
-                                scope:
-                                    - $forms
-                                    - current
-                                    - status
-                                value:
-                                  equals: "validating"
+                        icon_start:
+                          - value:
+                              type: floating
+                              space: 8
+                              icon:
+                                type: icon
+                                icon: checkmark
+                                color:
+                                    default:
+                                        hex: "#FFFFFF"
+                                        alpha: 1.0
+                                scale: 1
+                            when_state_matches:
+                              scope:
+                                  - $forms
+                                  - current
+                                  - status
+                              value:
+                                equals: "validating"
+                        text:
+                          - value: "Processing ..."
+                            when_state_matches:
+                              scope:
+                                  - $forms
+                                  - current
+                                  - status
+                              value:
+                                equals: "validating"
                       text: Submit
                       text_appearance:
                         alignment: center
