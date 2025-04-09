@@ -4,9 +4,7 @@ package com.urbanairship.android.layout.model
 import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasForm
-import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ScoreInfo
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EventHandler
@@ -16,11 +14,8 @@ import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.scoreChanges
 import com.urbanairship.android.layout.view.ScoreView
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -48,6 +43,9 @@ internal class ScoreModel(
 
         fun onSetSelectedScore(value: Int?)
     }
+
+    // used for on demand validation actions
+    private val valuesUpdate = MutableStateFlow(-1)
 
     init {
         // Set the initial empty score value
@@ -90,7 +88,6 @@ internal class ScoreModel(
     }
 
     override fun onViewAttached(view: ScoreView) {
-        val valuesUpdate = MutableStateFlow(-1)
         viewScope.launch {
             view.scoreChanges().collect { score ->
                 formState.updateFormInput(
@@ -133,49 +130,15 @@ internal class ScoreModel(
             }
         }
 
-        wireValidationActions(valuesUpdate)
-    }
-
-    private fun wireValidationActions(valueUpdates: Flow<Int>) {
-        if (formState.validationMode != FormValidationMode.ON_DEMAND) {
-            return
-        }
-
-        val lastSelected = MutableStateFlow<Int?>(null)
-
-        viewScope.launch {
-            combine(formState.status, valueUpdates) { formState, score ->
-                val didEdit = if (lastSelected.value != score) {
-                    lastSelected.update { score }
-                    true
-                } else {
-                    false
-                }
-
-                when(formState) {
-                    ThomasFormStatus.VALID,
-                    ThomasFormStatus.INVALID,
-                    ThomasFormStatus.ERROR -> {
-                        if (viewInfo.isRequired && score < 0) {
-                            ValidationAction.ERROR
-                        } else {
-                            ValidationAction.VALID
-                        }
-                    }
-                    else -> if (didEdit) { ValidationAction.VALID } else { null }
-                }
-            }
-                .distinctUntilChanged()
-                .mapNotNull {
-                    when(it) {
-                        ValidationAction.EDIT -> viewInfo.onEdit
-                        ValidationAction.VALID -> viewInfo.onValid
-                        ValidationAction.ERROR -> viewInfo.onError
-                        null -> null
-                    }
-                }.collect {
-                    runStateActions(it.actions, lastSelected.value)
-                }
-        }
+        wireValidationActions(
+            thomasForm = formState,
+            valueUpdates = valuesUpdate.asStateFlow(),
+            actions = mapOf(
+                ValidationAction.EDIT to viewInfo.onEdit,
+                ValidationAction.VALID to viewInfo.onValid,
+                ValidationAction.ERROR to viewInfo.onError
+            ),
+            isValid = { !viewInfo.isRequired || it > -1 }
+        )
     }
 }

@@ -1431,6 +1431,30 @@ view:
                                                         alpha: 1
                                         identifier: b395410d-af24-4d9a-801e-c99e5833abf3
                                         required: true
+                                    - size:
+                                        width: auto
+                                        height: auto
+                                      margin:
+                                        top: 0
+                                        bottom: 8
+                                      view:
+                                        type: toggle
+                                        identifier: toggle-switch
+                                        required: true
+                                        attribute_name:
+                                          contact: "toggle-attribute-name-contact"
+                                        attribute_value: "attribute-value-toggle-switch"
+                                        style:
+                                          type: switch
+                                          toggle_colors:
+                                            on:
+                                              default:
+                                                hex: "#00FF00"
+                                                alpha: 1
+                                            off:
+                                              default:
+                                                hex: "#FF0000"
+                                                alpha: 1
                                 - size:
                                     width: 100%
                                     height: 100%

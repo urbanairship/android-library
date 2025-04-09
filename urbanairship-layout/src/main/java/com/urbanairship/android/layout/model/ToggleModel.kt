@@ -4,7 +4,9 @@ package com.urbanairship.android.layout.model
 import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ToggleInfo
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.EventHandler.Type
@@ -13,9 +15,15 @@ import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.util.checkedChanges
 import com.urbanairship.android.layout.view.ToggleView
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -31,6 +39,8 @@ internal class ToggleModel(
     environment = environment,
     properties = properties
 ) {
+
+    private val valueChanged = MutableStateFlow<Boolean?>(null)
 
     override fun onCreateView(
         context: Context,
@@ -76,6 +86,8 @@ internal class ToggleModel(
                 if (viewInfo.eventHandlers.hasFormInputHandler()) {
                     handleViewEvent(EventHandler.Type.FORM_INPUT, isChecked)
                 }
+
+                valueChanged.update { it }
             }
         }
 
@@ -90,5 +102,17 @@ internal class ToggleModel(
         viewScope.launch {
             formState.formUpdates.collect { state -> setEnabled(state.isEnabled) }
         }
+
+        wireValidationActions(
+            thomasForm = formState,
+            valueUpdates = valueChanged,
+            actions = mapOf(
+                ValidationAction.VALID to viewInfo.onValid,
+                ValidationAction.EDIT to viewInfo.onEdit,
+                ValidationAction.ERROR to viewInfo.onError
+            ),
+            isValid = { it == true  || !viewInfo.isRequired}
+        )
+
     }
 }

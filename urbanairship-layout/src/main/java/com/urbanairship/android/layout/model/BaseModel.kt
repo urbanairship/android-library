@@ -9,6 +9,7 @@ import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -16,7 +17,9 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.Accessible
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
+import com.urbanairship.android.layout.info.ValidationAction
 import com.urbanairship.android.layout.info.View
+import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
@@ -35,9 +38,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import android.view.View as AndroidView
 
@@ -318,6 +327,48 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         actions: List<StateAction>?,
         formValue: Any? = null
     ) = layoutState.processStateActions(actions, formValue)
+
+    protected fun<T> wireValidationActions(
+        thomasForm: ThomasForm,
+        valueUpdates: StateFlow<T>,
+        actions: Map<ValidationAction, com.urbanairship.android.layout.info.ValidationAction?>,
+        isValid: (T) -> Boolean,
+    ) {
+        if (thomasForm.validationMode != FormValidationMode.ON_DEMAND) {
+            return
+        }
+
+        val lastSelected = MutableStateFlow<T>(valueUpdates.value)
+
+        viewScope.launch {
+            combine(thomasForm.status, valueUpdates) { formState, newValue ->
+                val didEdit = if (lastSelected.value != newValue) {
+                    lastSelected.update { newValue }
+                    true
+                } else {
+                    false
+                }
+
+                when(formState) {
+                    ThomasFormStatus.VALID,
+                    ThomasFormStatus.INVALID,
+                    ThomasFormStatus.ERROR -> {
+                        if (isValid.invoke(newValue)) {
+                            ValidationAction.VALID
+                        } else {
+                            ValidationAction.ERROR
+                        }
+                    }
+                    else -> if (didEdit) { ValidationAction.VALID } else { null }
+                }
+            }
+                .distinctUntilChanged()
+                .mapNotNull { actions[it] }
+                .collect {
+                    runStateActions(it.actions, lastSelected.value)
+                }
+        }
+    }
 
     private companion object {
         private const val KEY_PLATFORM_OVERRIDE = "platform_action_overrides"
