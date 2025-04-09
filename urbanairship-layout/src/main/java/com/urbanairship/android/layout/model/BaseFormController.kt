@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormInfo
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.hasFormBehaviors
 import com.urbanairship.android.layout.property.hasPagerBehaviors
@@ -74,7 +75,7 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
             }
         }
 
-        // TODO: wire up form validation
+        wireFormValidation()
     }
 
     private fun initChildForm() {
@@ -152,6 +153,24 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                     UALog.v("Skipped form display reporting! No inputs are currently displayed.")
                 }
             }
+        }
+    }
+
+    private fun wireFormValidation() {
+        if (formState.validationMode != FormValidationMode.ON_DEMAND) {
+            return
+        }
+
+        modelScope.launch {
+            environment.layoutEvents
+                .filterIsInstance<LayoutEvent.ValidateForm>()
+                .collect {
+                    if (formState.formUpdates.value.isSubmitted) {
+                        return@collect
+                    }
+
+                    formState.validate()
+                }
         }
     }
 
