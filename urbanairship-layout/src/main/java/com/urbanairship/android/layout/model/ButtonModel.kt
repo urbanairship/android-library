@@ -67,7 +67,7 @@ internal abstract class ButtonModel<T, I: Button>(
                 runActions(viewInfo.actions, reportingContext)
 
                 // Run any handlers for tap events.
-                if (viewInfo.eventHandlers.hasTapHandler()) {
+                if (viewInfo.eventHandlers.hasTapHandler() && !viewInfo.clickBehaviors.hasFormSubmit) {
                     handleViewEvent(EventHandler.Type.TAP)
                 }
 
@@ -114,6 +114,11 @@ internal abstract class ButtonModel<T, I: Button>(
         listener?.dismissSoftKeyboard()
 
         val submitEvent = LayoutEvent.SubmitForm(buttonIdentifier = viewInfo.identifier) {
+            // Run any handlers for tap events.
+            if (viewInfo.eventHandlers.hasTapHandler()) {
+                handleViewEvent(EventHandler.Type.TAP)
+            }
+
             // After submitting, handle the rest of the behaviors.
             if (viewInfo.clickBehaviors.hasCancelOrDismiss) {
                 handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
