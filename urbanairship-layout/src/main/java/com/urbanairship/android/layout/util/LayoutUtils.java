@@ -275,7 +275,12 @@ public final class LayoutUtils {
         editText.setPadding(padding, padding, padding, padding);
         editText.setInputType(textInput.getViewInfo().getInputType().getTypeMask());
         editText.setSingleLine(textInput.getViewInfo().getInputType() != FormInputType.TEXT_MULTILINE);
-        editText.setGravity(editText.getGravity() | Gravity.TOP);
+        editText.setGravity(editText.getGravity() |
+                // Vertically center single line text inputs, or top align multiline text inputs
+                (textInput.getViewInfo().getInputType() != FormInputType.TEXT_MULTILINE
+                        ? Gravity.CENTER_VERTICAL
+                        : Gravity.TOP)
+        );
 
         if (!UAStringUtil.isEmpty(textInput.getViewInfo().getHintText())) {
             editText.setHint(textInput.getViewInfo().getHintText());
