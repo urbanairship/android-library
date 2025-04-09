@@ -80,7 +80,11 @@ internal class LayoutState(
                 is StateAction.SetState -> layout.let { state ->
                     UALog.v("StateAction: SetState ${action.key} = ${action.value}")
                     state.update {
-                        it.copy(state = it.state + (action.key to action.value))
+                        if (action.value?.isNull == false) {
+                            it.copy(state = it.state + (action.key to action.value))
+                        } else {
+                            it.copy(state = it.state - action.key)
+                        }
                     }
                 }
 
