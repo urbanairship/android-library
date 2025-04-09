@@ -322,4 +322,8 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     private companion object {
         private const val KEY_PLATFORM_OVERRIDE = "platform_action_overrides"
     }
+
+    enum class ValidationAction {
+        EDIT, VALID, ERROR
+    }
 }

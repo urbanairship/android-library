@@ -11,7 +11,6 @@ import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.RadioInputControllerInfo
-import com.urbanairship.android.layout.model.TextInputModel.ValidationAction
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField

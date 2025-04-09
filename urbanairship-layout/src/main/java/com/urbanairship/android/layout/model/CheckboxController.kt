@@ -11,15 +11,11 @@ import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.android.layout.info.FormValidationMode
-import com.urbanairship.android.layout.model.TextInputModel.ValidationAction
-import com.urbanairship.android.layout.model.TextInputModel.ValidationState
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField
-import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.json.JsonValue
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapNotNull
@@ -89,6 +85,7 @@ internal class CheckboxController(
 
     override fun onViewAttached(view: View) {
         super.onViewAttached(view)
+
 
         if (formState.validationMode != FormValidationMode.ON_DEMAND) {
             return

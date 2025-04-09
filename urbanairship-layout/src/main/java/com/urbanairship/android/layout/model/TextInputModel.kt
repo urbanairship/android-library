@@ -237,10 +237,6 @@ internal class TextInputModel(
         VALIDATING, VALID, INVALID
     }
 
-    enum class ValidationAction {
-        EDIT, VALID, ERROR
-    }
-
     override fun onViewAttached(view: TextInputView) {
         // Listen to text changes
         val validationState = MutableStateFlow<ValidationState?>(null)
