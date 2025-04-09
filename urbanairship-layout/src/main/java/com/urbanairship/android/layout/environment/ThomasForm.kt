@@ -7,6 +7,7 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.ThomasFormField
+import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.android.layout.util.DelicateLayoutApi
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine

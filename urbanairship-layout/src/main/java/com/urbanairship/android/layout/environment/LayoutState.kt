@@ -248,8 +248,7 @@ internal sealed class State {
                     displayedInputs + identifier
                 } else {
                     displayedInputs - identifier
-                },
-                status = evaluateFormStatus(children)
+                }
             )
         }
 
@@ -262,10 +261,6 @@ internal sealed class State {
         @Suppress("UNCHECKED_CAST")
         internal fun <T : ThomasFormField<*>> inputData(identifier: String): T? {
             return children[identifier]?.field as? T
-        }
-
-        internal fun childStatus(identifier: String): ThomasFormFieldStatus<*>? {
-            return children[identifier]?.field?.status
         }
 
         private fun evaluateFormStatus(
