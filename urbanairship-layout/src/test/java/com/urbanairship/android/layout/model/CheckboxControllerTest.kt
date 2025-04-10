@@ -9,6 +9,8 @@ import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
+import com.urbanairship.android.layout.info.FormValidationMode
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonValue
 import app.cash.turbine.test
 import io.mockk.every
@@ -47,7 +49,12 @@ public class CheckboxControllerTest {
     private val mockView: AnyModel = mockk(relaxed = true)
 
     private val formState = spyk(SharedState(
-        State.Form(identifier = "form-id", formType = FormType.Form, formResponseType = "form")
+        State.Form(
+            identifier = "form-id",
+            formType = FormType.Form,
+            formResponseType = "form",
+            validationMode = FormValidationMode.IMMEDIATE
+        )
     ))
 
     private lateinit var checkboxState: SharedState<State.Checkbox>
@@ -92,7 +99,7 @@ public class CheckboxControllerTest {
             initCheckboxController(isRequired = true, minSelection = MIN_SELECTION)
 
             // Not valid yet, because nothing is selected.
-            assertTrue(awaitItem().childStatus(IDENTIFIER)?.isValid == false)
+            assertTrue(awaitItem().lastProcessedStatus(IDENTIFIER)?.isValid == false)
 
             checkboxState.update {
                 it.copy(selectedItems = it.selectedItems + SELECTED_VALUE)

@@ -32,26 +32,26 @@ public class ThomasFormFieldTest {
             Score(
                 identifier = "field-invalid",
                 originalValue = 2,
-                filedType = ThomasFormField.FiledType.just(0, { false })
+                fieldType = ThomasFormField.FieldType.just(0, { false })
             ),
             Score(
                 identifier = "field-error",
                 originalValue = 3,
-                filedType = ThomasFormField.FiledType.Async(
+                fieldType = ThomasFormField.FieldType.Async(
                     makeFetcher(ThomasFormField.AsyncValueFetcher.PendingResult.Error())
                 )
             ),
             Score(
                 identifier = "field-pending",
                 originalValue = 4,
-                filedType = ThomasFormField.FiledType.Async(
+                fieldType = ThomasFormField.FieldType.Async(
                     makeFetcher(null)
                 )
             ),
             Score(
                 identifier = "field-valid",
                 originalValue = 5,
-                filedType = ThomasFormField.FiledType.Async(
+                fieldType = ThomasFormField.FieldType.Async(
                     makeFetcher(ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
                         result = ThomasFormField.Result(6)
                     ))
@@ -63,7 +63,7 @@ public class ThomasFormFieldTest {
             identifier = "parent form",
             responseType = "parent form response type",
             children = children,
-            filedType = ThomasFormField.FiledType.just(children)
+            fieldType = ThomasFormField.FieldType.just(children)
         )
 
         val expectedJson = """
