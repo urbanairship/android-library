@@ -38,31 +38,6 @@ internal class RadioInputController(
 ) {
 
     init {
-        // Listen to radio input state updates and push them into form state.
-        modelScope.launch {
-            radioState.changes.collect { radio ->
-                formState.updateFormInput(
-                    value = ThomasFormField.RadioInputController(
-                        identifier = radio.identifier,
-                        originalValue = radio.selectedItem,
-                        fieldType = ThomasFormField.FieldType.just(
-                            value = radio.selectedItem ?: JsonValue.NULL,
-                            validator = { isValid(it) },
-                            attributes = ThomasFormField.makeAttributes(
-                                name = viewInfo.attributeName,
-                                value = radio.attributeValue
-                            ),
-                        )
-                    ),
-                    pageId = properties.pagerPageId
-                )
-
-                if (viewInfo.eventHandlers.hasFormInputHandler()) {
-                    handleViewEvent(EventHandler.Type.FORM_INPUT, radio.selectedItem)
-                }
-            }
-        }
-
         modelScope.launch {
             formState.formUpdates.collect { form ->
                 radioState.update { it.copy(isEnabled = form.isEnabled) }
@@ -95,6 +70,35 @@ internal class RadioInputController(
             !viewInfo.isRequired
         } else {
             true
+        }
+    }
+
+    override fun onViewAttached(view: View) {
+        super.onViewAttached(view)
+
+        // Listen to radio input state updates and push them into form state.
+        viewScope.launch {
+            radioState.changes.collect { radio ->
+                formState.updateFormInput(
+                    value = ThomasFormField.RadioInputController(
+                        identifier = radio.identifier,
+                        originalValue = radio.selectedItem,
+                        fieldType = ThomasFormField.FieldType.just(
+                            value = radio.selectedItem ?: JsonValue.NULL,
+                            validator = { isValid(it) },
+                            attributes = ThomasFormField.makeAttributes(
+                                name = viewInfo.attributeName,
+                                value = radio.attributeValue
+                            ),
+                        )
+                    ),
+                    pageId = properties.pagerPageId
+                )
+
+                if (viewInfo.eventHandlers.hasFormInputHandler()) {
+                    handleViewEvent(EventHandler.Type.FORM_INPUT, radio.selectedItem)
+                }
+            }
         }
     }
 }

@@ -43,25 +43,6 @@ internal class CheckboxController(
 ) {
 
     init {
-        modelScope.launch {
-            checkboxState.changes.collect { checkbox ->
-                formState.updateFormInput(
-                    value = ThomasFormField.CheckboxController(
-                        identifier = checkbox.identifier,
-                        originalValue = checkbox.selectedItems,
-                        fieldType = ThomasFormField.FieldType.just(
-                            value = checkbox.selectedItems,
-                            validator = { isValid(it) }
-                        )
-                    ),
-                    pageId = properties.pagerPageId
-                )
-
-                if (viewInfo.eventHandlers.hasFormInputHandler()) {
-                    handleViewEvent(EventHandler.Type.FORM_INPUT, checkbox.selectedItems.toList())
-                }
-            }
-        }
 
         modelScope.launch {
             formState.formUpdates.collect { form ->
@@ -97,5 +78,30 @@ internal class CheckboxController(
         val isFilled = count in viewInfo.minSelection..viewInfo.maxSelection
         val isOptional = count == 0 && !viewInfo.isRequired
         return isFilled || isOptional
+    }
+
+    override fun onViewAttached(view: View) {
+        super.onViewAttached(view)
+
+        viewScope.launch {
+            checkboxState.changes.collect { checkbox ->
+                formState.updateFormInput(
+                    value = ThomasFormField.CheckboxController(
+                        identifier = checkbox.identifier,
+                        originalValue = checkbox.selectedItems,
+                        fieldType = ThomasFormField.FieldType.just(
+                            value = checkbox.selectedItems,
+                            validator = { isValid(it) }
+                        )
+                    ),
+                    pageId = properties.pagerPageId
+                )
+
+                if (viewInfo.eventHandlers.hasFormInputHandler()) {
+                    handleViewEvent(EventHandler.Type.FORM_INPUT, checkbox.selectedItems.toList())
+                }
+            }
+        }
+
     }
 }

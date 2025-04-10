@@ -273,6 +273,7 @@ internal sealed class State {
         fun lastProcessedStatus(identifier: String): ThomasFormFieldStatus<*>? {
             return children[identifier]?.lastProcessStatus
         }
+
         fun formResult(): ReportingEvent.FormResult =
             ReportingEvent.FormResult(formData(), reportingContext(), attributes(), channels())
 

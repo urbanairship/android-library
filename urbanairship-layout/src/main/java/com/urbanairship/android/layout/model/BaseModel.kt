@@ -371,6 +371,9 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                     }
                 }
             }.distinctUntilChanged().mapNotNull { actions[it] }.collect {
+                if (identifier == "4e3f3d9e-a4a2-4a01-a7e4-09925d5aa30f") {
+                    print("neat")
+                }
                 runStateActions(it.actions, lastSelected.value)
             }
         }
