@@ -83,14 +83,15 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
 
         // Update the parent form with the child form's data whenever it changes.
         modelScope.launch {
-            environment.layoutEvents
-                .filterIsInstance<LayoutEvent.SubmitForm>()
-                .map { formState.formUpdates.value }
-                .collect {
-                    if (parentFormState.validate()) {
-                        parentFormState.updateFormInput(buildFormData(it), pageId = properties.pagerPageId)
+            environment.layoutEvents.filterIsInstance<LayoutEvent.SubmitForm>()
+                .map {
+                    it to formState.prepareSubmit()
+                }
+                .distinctUntilChanged().collect { (event, formResult) ->
+                    formResult?.let {
+                        // TODO send the data into the parent as a formField
+                        event.onSubmitted()
                     }
-                    formState.validate()
                 }
         }
 
