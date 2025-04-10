@@ -7,7 +7,6 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
-import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.RadioInputControllerInfo
 import com.urbanairship.android.layout.reporting.AttributeName
@@ -26,6 +25,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -73,6 +73,9 @@ public class RadioInputControllerTest {
 
             initRadioInputController()
 
+            // Skip to the final VALID item
+            skipItems(2)
+
             val item = awaitItem()
             // Verify that our checkbox controller updated the form state.
             assertTrue(item.filteredFields.containsKey(IDENTIFIER))
@@ -91,6 +94,9 @@ public class RadioInputControllerTest {
 
             initRadioInputController(isRequired = true)
 
+            // Skip to the final VALID item
+            skipItems(2)
+
             awaitItem().let {
                 // Verify that our checkbox controller updated the form state.
                 assertTrue(it.filteredFields.containsKey(IDENTIFIER))
@@ -99,6 +105,9 @@ public class RadioInputControllerTest {
             }
             radioState.update { it.copy(selectedItem = SELECTED_VALUE) }
             testScheduler.runCurrent()
+
+            // Skip to the final VALID item
+            skipItems(2)
 
             awaitItem().let {
                 // Valid now that we've selected a value
@@ -149,7 +158,11 @@ public class RadioInputControllerTest {
             radioState = radioState,
             environment = mockEnv,
             properties = ModelProperties(pagerPageId = null)
-        )
+        ).apply {
+            onViewAttached(mockk())
+        }
+
+        testScope.runCurrent()
     }
 
     private companion object {

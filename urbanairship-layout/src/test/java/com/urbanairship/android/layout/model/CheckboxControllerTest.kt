@@ -79,6 +79,9 @@ public class CheckboxControllerTest {
 
             initCheckboxController()
 
+            // Skip to the final VALID item
+            skipItems(2)
+
             val item = awaitItem()
             // Verify that our checkbox controller updated the form state.
             assertTrue(item.filteredFields.containsKey(IDENTIFIER))
@@ -98,6 +101,9 @@ public class CheckboxControllerTest {
 
             initCheckboxController(isRequired = true, minSelection = MIN_SELECTION)
 
+            // Skip to the final VALID item
+            skipItems(2)
+
             // Not valid yet, because nothing is selected.
             assertTrue(awaitItem().lastProcessedStatus(IDENTIFIER)?.isValid == false)
 
@@ -105,6 +111,9 @@ public class CheckboxControllerTest {
                 it.copy(selectedItems = it.selectedItems + SELECTED_VALUE)
             }
             testScheduler.runCurrent()
+
+            // Skip to the final VALID item
+            skipItems(2)
 
             // Verify that the response is valid now that it has 1 selection
             assertEquals(awaitItem().status, ThomasFormStatus.VALID)
@@ -160,7 +169,9 @@ public class CheckboxControllerTest {
             checkboxState = checkboxState,
             environment = mockEnv,
             properties = ModelProperties(pagerPageId = null)
-        )
+        ).apply {
+            onViewAttached(mockk())
+        }
 
         testScope.runCurrent()
     }
