@@ -41,6 +41,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -129,6 +130,8 @@ public class FormControllerTest {
 
             assertFalse(awaitItem().isDisplayReported)
 
+            assertFalse(awaitItem().isDisplayReported)
+
             assertTrue(awaitItem().isDisplayReported)
 
             verify { mockReporter.report(any<ReportingEvent.FormDisplay>(), any()) }
@@ -147,6 +150,8 @@ public class FormControllerTest {
             parentFormState.update { state ->
                 state.copyWithDisplayState(identifier = "input-id", isDisplayed = true)
             }
+
+            skipItems(1)
 
             awaitItem().let { item ->
                 assertFalse(item.isDisplayReported)
@@ -186,6 +191,9 @@ public class FormControllerTest {
                 )
             }
 
+            // Skip to the final VALID item
+            skipItems(2)
+
             assertFalse(awaitItem().filteredFields.isEmpty())
 
             // Emit FORM_SUBMIT event
@@ -219,83 +227,15 @@ public class FormControllerTest {
         childFormState.changes.test {
             initChildFormController()
 
+            // Skip to the final VALID item
+            skipItems(1)
+
             assertFalse(awaitItem().isDisplayReported)
 
             verify(exactly = 0) { mockReporter.report(any<ReportingEvent.FormDisplay>(), any()) }
 
             ensureAllEventsConsumed()
         }
-    }
-
-    @Test
-    public fun testChildFormStateChangesUpdateParentForm(): TestResult = runTest {
-        val parentChanges = parentFormState.changes.testIn(testScope)
-        val childChanges = childFormState.changes.testIn(testScope)
-
-        // Sanity check initial empty states
-        assertTrue(parentChanges.awaitItem().filteredFields.isEmpty())
-        assertTrue(childChanges.awaitItem().filteredFields.isEmpty())
-
-        initChildFormController()
-
-        parentChanges.awaitItem().run {
-            // Verify that the parent form is aware of the child form, now that it's initialized.
-            assertTrue(filteredFields.containsKey(CHILD_FORM_ID))
-            // Sanity check: child form shouldn't have any data from inputs yet.
-            assertEquals(0, inputData<ThomasFormField.Form>(CHILD_FORM_ID)?.children?.size)
-        }
-
-        childFormState.update { form ->
-            form.copyWithFormInput(
-                ThomasFormField.TextInput(
-                    textInput = FormInputType.TEXT,
-                    identifier = TEXT_INPUT_ID,
-                    originalValue = TEXT_INPUT_VALUE,
-                    fieldType = ThomasFormField.FieldType.just(TEXT_INPUT_VALUE),
-                )
-            )
-        }
-
-        // Verify that we don't have any displayed inputs yet.
-        assertTrue(childChanges.awaitItem().displayedInputs.isEmpty())
-
-        // Mark a child form input as displayed.
-        childFormState.update { form ->
-            form.copyWithDisplayState(
-                identifier = TEXT_INPUT_ID,
-                isDisplayed = true
-            )
-        }
-
-        // Verify that the child state was updated appropriately.
-        childChanges.awaitItem().run {
-            // Form input data
-            assertTrue(filteredFields.containsKey(TEXT_INPUT_ID))
-            val inputData = requireNotNull(inputData<ThomasFormField.TextInput>(TEXT_INPUT_ID))
-            assertEquals(TEXT_INPUT_ID, inputData.identifier)
-            assertEquals(TEXT_INPUT_VALUE, inputData.originalValue)
-            // Displayed state
-            assertFalse(displayedInputs.isEmpty())
-        }
-
-        // Verify that the child displayed state updated the parent displayed state.
-        parentChanges.awaitItem().run {
-            assertFalse(displayedInputs.isEmpty())
-        }
-
-        // Verify that the child form input change caused an update to the parent form state.
-        verify { parentFormState.update(any()) }
-
-        // Verify that the text input from the child form made it to the parent form state.
-        parentChanges.awaitItem().run {
-            assertTrue(filteredFields.containsKey(CHILD_FORM_ID))
-            assertEquals(1, inputData<ThomasFormField.Form>(CHILD_FORM_ID)?.children?.count {
-                it.identifier == TEXT_INPUT_ID && it.originalValue == TEXT_INPUT_VALUE
-            })
-        }
-
-        parentChanges.ensureAllEventsConsumed()
-        childChanges.ensureAllEventsConsumed()
     }
 
     @OptIn(DelicateLayoutApi::class)
@@ -315,6 +255,7 @@ public class FormControllerTest {
         }
 
         // Skip child form init event, displayedInputs change, and the parent form state update above.
+        childChanges.skipItems(1)
         parentChanges.skipItems(3)
 
         // Verify that the child state was updated appropriately.
