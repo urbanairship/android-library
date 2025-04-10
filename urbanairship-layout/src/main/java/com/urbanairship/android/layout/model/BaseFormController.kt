@@ -87,7 +87,9 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                 .filterIsInstance<LayoutEvent.SubmitForm>()
                 .map { formState.formUpdates.value }
                 .collect {
-                    parentFormState.updateFormInput(buildFormData(it), pageId = properties.pagerPageId)
+                    if (parentFormState.validate()) {
+                        parentFormState.updateFormInput(buildFormData(it), pageId = properties.pagerPageId)
+                    }
                     formState.validate()
                 }
         }
