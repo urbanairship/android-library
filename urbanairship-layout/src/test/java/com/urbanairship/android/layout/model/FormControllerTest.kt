@@ -15,6 +15,7 @@ import com.urbanairship.android.layout.environment.ThomasChannelRegistrar
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormControllerInfo
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.info.ThomasEmailRegistrationOptions
 import com.urbanairship.android.layout.property.FormBehaviorType
@@ -84,11 +85,11 @@ public class FormControllerTest {
     private val mockView: AnyModel = mockk(relaxed = true)
 
     private val parentFormState = spyk(SharedState(State.Form(
-        identifier = PARENT_FORM_ID, formType = FormType.Form, formResponseType = "form")
+        identifier = PARENT_FORM_ID, formType = FormType.Form, formResponseType = "form", validationMode = FormValidationMode.IMMEDIATE)
     ))
 
     private val childFormState = spyk(SharedState(State.Form(
-        identifier = CHILD_FORM_ID, formType = FormType.Form, formResponseType = "form")
+        identifier = CHILD_FORM_ID, formType = FormType.Form, formResponseType = "form", validationMode = FormValidationMode.IMMEDIATE)
     ))
 
     private val pagerState = spyk(SharedState(State.Pager(
