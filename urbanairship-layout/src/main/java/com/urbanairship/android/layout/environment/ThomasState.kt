@@ -22,12 +22,21 @@ internal data class ThomasState(
         val layout = layout ?: return JsonValue.NULL
         val form = form ?: return layout.state.toJsonMap().toJsonValue()
 
-        val formState = ThomasFormField.Form(
-            identifier = CURRENT,
-            responseType = null,
-            children = form.filteredFields.values.toSet(),
-            fieldType = ThomasFormField.FieldType.just(emptySet())
-        )
+        val formState = when(form.formType) {
+            FormType.Form -> ThomasFormField.Form(
+                identifier = CURRENT,
+                responseType = null,
+                children = form.filteredFields.values.toSet(),
+                fieldType = ThomasFormField.FieldType.just(emptySet())
+            )
+            is FormType.Nps -> ThomasFormField.Nps(
+                identifier = CURRENT,
+                responseType = null,
+                children = form.filteredFields.values.toSet(),
+                fieldType = ThomasFormField.FieldType.just(emptySet()),
+                scoreId = form.formType.scoreId
+            )
+        }
 
         return layout.state
             .toMutableMap()

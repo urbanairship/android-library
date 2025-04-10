@@ -386,7 +386,3 @@ internal sealed class State {
 }
 
 internal typealias FormFieldFilterPredicate = () -> Boolean
-
-//internal fun <T : ThomasFormField<*>> SharedState<State.Form>.inputData(identifier: String): T? {
-//    return changes.value.inputData(identifier)
-//}
