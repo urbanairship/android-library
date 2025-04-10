@@ -19,6 +19,7 @@ import kotlin.math.max
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
@@ -43,16 +44,6 @@ internal class LayoutState(
             buttonId
         )
 
-    init {
-        if (thomasForm != null) {
-           GlobalScope.launch {
-               thomasState.collect { state ->
-                   UALog.e("State: ${state.toJsonValue()}")
-
-               }
-           }
-        }
-    }
     companion object {
         @JvmField
         val EMPTY = LayoutState(null, null, null,
@@ -246,7 +237,6 @@ internal sealed class State {
             value: ThomasFormField<*>,
             predicate: FormFieldFilterPredicate? = null,
         ): Form {
-            UALog.e("Updating: $value")
             children[value.identifier]?.field?.fieldType?.cancel()
 
             var updatedChildren = children
@@ -292,16 +282,16 @@ internal sealed class State {
                 .filterValues { it.predicate?.invoke() ?: true }
 
             return if (filtered.any { it.value.lastProcessStatus.isInvalid }) {
-                UALog.e("Updating status to invalid: ${filtered.filter { it.value.lastProcessStatus.isInvalid }}")
+                UALog.v("Updating status to invalid: ${filtered.filter { it.value.lastProcessStatus.isInvalid }}")
                 ThomasFormStatus.INVALID
             } else if (filtered.any { it.value.lastProcessStatus.isError }) {
-                UALog.e("Updating status to error: ${filtered.filter { it.value.lastProcessStatus.isError }}")
+                UALog.v("Updating status to error: ${filtered.filter { it.value.lastProcessStatus.isError }}")
                 ThomasFormStatus.ERROR
             } else if (filtered.any { it.value.lastProcessStatus.isPending }) {
-                UALog.e("Updating status to pending_validation: ${filtered.filter { it.value.lastProcessStatus.isPending }}")
+                UALog.v("Updating status to pending_validation: ${filtered.filter { it.value.lastProcessStatus.isPending }}")
                 ThomasFormStatus.PENDING_VALIDATION
             } else {
-                UALog.e("Updating status to valid")
+                UALog.v("Updating status to valid")
                 ThomasFormStatus.VALID
             }
         }
