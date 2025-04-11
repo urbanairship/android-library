@@ -162,6 +162,11 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
             }
         }
 
+        if (map.containsKey(ArrayLengthMatcher.ARRAY_LENGTH_KEY)) {
+            JsonPredicate predicate = JsonPredicate.parse(map.get(ArrayLengthMatcher.ARRAY_LENGTH_KEY));
+            return newArrayLengthMatcher(predicate);
+        }
+
         if (map.containsKey(ArrayContainsMatcher.ARRAY_CONTAINS_KEY)) {
             JsonPredicate predicate = JsonPredicate.parse(map.get(ArrayContainsMatcher.ARRAY_CONTAINS_KEY));
             if (map.containsKey(ArrayContainsMatcher.INDEX_KEY)) {
@@ -173,11 +178,6 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
             } else {
                 return newArrayContainsMatcher(predicate);
             }
-        }
-
-        if (map.containsKey(ArrayLengthMatcher.ARRAY_LENGTH_KEY)) {
-            JsonPredicate predicate = JsonPredicate.parse(map.get(ArrayLengthMatcher.ARRAY_LENGTH_KEY));
-            return newArrayLengthMatcher(predicate);
         }
 
         throw new JsonException("Unknown value matcher: " + jsonValue);
