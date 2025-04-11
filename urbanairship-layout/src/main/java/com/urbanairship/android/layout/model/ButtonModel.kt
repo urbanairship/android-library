@@ -130,8 +130,9 @@ internal abstract class ButtonModel<T, I: Button>(
                 handlePagerPrevious()
             }
         }
+
+        isProcessing.update { true }
         modelScope.launch {
-            isProcessing.update { true }
             broadcast(submitEvent)
             isProcessing.update { false }
         }
@@ -157,8 +158,8 @@ internal abstract class ButtonModel<T, I: Button>(
             }
         }
 
+        isProcessing.update { true }
         modelScope.launch {
-            isProcessing.update { true }
             broadcast(validateEvent)
             isProcessing.update { false }
         }
