@@ -10,6 +10,7 @@ import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.util.Clock
+import com.urbanairship.util.TaskSleeper
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.time.Duration.Companion.milliseconds
@@ -27,6 +28,8 @@ import kotlinx.coroutines.launch
 internal class ThomasForm(
     private val feed: SharedState<State.Form>,
     private val pagerState: SharedState<State.Pager>? = null,
+    private val clock: Clock = Clock.DEFAULT_CLOCK,
+    private val sleeper: TaskSleeper = TaskSleeper.default,
     validationDispatcher: CoroutineDispatcher = Dispatchers.Main
 ) {
 
@@ -70,7 +73,7 @@ internal class ThomasForm(
         val fields = feed.changes.value.copy(status = ThomasFormStatus.VALIDATING).filteredFields
 
         val containsPending = fields.any { it.value.status.isPending }
-        val start = Clock.DEFAULT_CLOCK.currentTimeMillis().milliseconds
+        val start = clock.currentTimeMillis().milliseconds
         val processResult = fields.mapValues { (_, field) ->
             when(val fieldType = field.fieldType) {
                 is ThomasFormField.FieldType.Async<*> -> {
@@ -85,11 +88,11 @@ internal class ThomasForm(
 
         feed.update { it.copyWithProcessResult(processResult) }
 
-        val end = Clock.DEFAULT_CLOCK.currentTimeMillis().milliseconds
+        val end = clock.currentTimeMillis().milliseconds
         if (containsPending && validationMode == FormValidationMode.ON_DEMAND) {
             val remaining = 1.seconds - (end - start)
             if (remaining.isPositive()) {
-                delay(remaining)
+                sleeper.sleep(remaining)
             }
         }
 
@@ -152,7 +155,7 @@ internal class ThomasForm(
             return
         }
 
-        UALog.e("Updating field $value")
+        UALog.v("Updating field $value")
         feed.update { it.copyWithFormInput(value, predicate) }
 
         when(val method = value.fieldType) {
