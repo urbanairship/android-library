@@ -240,6 +240,29 @@ public class ValueMatcherTest extends BaseTestCase {
     }
 
     @Test
+    public void testArrayLengthMatcher() throws JsonException {
+        JsonPredicate predicate = JsonPredicate.newBuilder()
+                                               .addMatcher(JsonMatcher.newBuilder()
+                                                                      .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrapOpt(3)))
+                                                                      .build())
+                                               .build();
+
+        JsonPredicate wrongPredicate = JsonPredicate.newBuilder()
+                                               .addMatcher(JsonMatcher.newBuilder()
+                                                                      .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrapOpt(4)))
+                                                                      .build())
+                                               .build();
+
+        JsonValue elements = JsonValue.wrapOpt(Arrays.asList("toto", "titi", "tite"));
+        JsonValue arrayString = JsonValue.parseString("[\"android\", \"ios\", \"unknown\"]");
+
+        assertTrue(ValueMatcher.newArrayLengthMatcher(predicate).apply(elements));
+        assertFalse(ValueMatcher.newArrayLengthMatcher(wrongPredicate).apply(elements));
+        assertTrue(ValueMatcher.newArrayLengthMatcher(predicate).apply(arrayString));
+        assertFalse(ValueMatcher.newArrayLengthMatcher(wrongPredicate).apply(arrayString));
+    }
+
+    @Test
     public void testParse() throws JsonException {
         Double min = 5.0;
         Double max = 7.0;
