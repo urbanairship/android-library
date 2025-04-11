@@ -109,11 +109,7 @@ internal class ToggleModel(
                 thomasForm = formState,
                 initialValue = valueChanged.value,
                 valueUpdates = valueChanged,
-                actions = mapOf(
-                    ValidationAction.VALID to viewInfo.onValid,
-                    ValidationAction.EDIT to viewInfo.onEdit,
-                    ValidationAction.ERROR to viewInfo.onError
-                )
+                validatable = viewInfo
             )
         }
     }

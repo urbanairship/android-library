@@ -58,11 +58,7 @@ internal class CheckboxController(
                 thomasForm = formState,
                 initialValue = checkboxState.changes.value.selectedItems,
                 valueUpdates = checkboxState.changes.map { it.selectedItems },
-                actions = mapOf(
-                    ValidationAction.VALID to viewInfo.onValid,
-                    ValidationAction.EDIT to viewInfo.onEdit,
-                    ValidationAction.ERROR to viewInfo.onError
-                )
+                validatable = viewInfo,
             )
         }
     }

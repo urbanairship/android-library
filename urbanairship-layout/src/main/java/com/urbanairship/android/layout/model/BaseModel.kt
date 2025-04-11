@@ -17,6 +17,7 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.Accessible
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
+import com.urbanairship.android.layout.info.Validatable
 import com.urbanairship.android.layout.info.ValidationAction
 import com.urbanairship.android.layout.info.View
 import com.urbanairship.android.layout.info.ViewInfo
@@ -334,7 +335,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         thomasForm: ThomasForm,
         initialValue: T?,
         valueUpdates: Flow<T>,
-        actions: Map<ValidationAction, com.urbanairship.android.layout.info.ValidationAction?>,
+        validatable: Validatable
     ) {
         val isInitialValue = MutableStateFlow(true)
         val lastSelected = MutableStateFlow(initialValue)
@@ -370,12 +371,22 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                         null
                     }
                 }
-            }.distinctUntilChanged().mapNotNull { actions[it] }.collect {
-                if (identifier == "4e3f3d9e-a4a2-4a01-a7e4-09925d5aa30f") {
-                    print("neat")
-                }
-                runStateActions(it.actions, lastSelected.value)
             }
+                .distinctUntilChanged()
+                .mapNotNull {
+                    when(it) {
+                        ValidationAction.EDIT -> validatable.onEdit
+                        ValidationAction.VALID -> validatable.onValid
+                        ValidationAction.ERROR -> validatable.onError
+                        null -> null
+                    }
+                }
+                .collect {
+                    if (identifier == "4e3f3d9e-a4a2-4a01-a7e4-09925d5aa30f") {
+                        print("neat")
+                    }
+                    runStateActions(it.actions, lastSelected.value)
+                }
         }
     }
 

@@ -87,11 +87,7 @@ internal class TextInputModel(
             thomasForm = formState,
             initialValue = currentInput.value,
             valueUpdates = currentInput,
-            actions = mapOf(
-                ValidationAction.VALID to viewInfo.onValid,
-                ValidationAction.EDIT to viewInfo.onEdit,
-                ValidationAction.ERROR to viewInfo.onError
-            )
+            validatable = viewInfo
         )
     }
 

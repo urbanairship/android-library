@@ -138,11 +138,7 @@ internal class ScoreModel(
                 thomasForm = formState,
                 initialValue = valuesUpdate.value,
                 valueUpdates = valuesUpdate,
-                actions = mapOf(
-                    ValidationAction.VALID to viewInfo.onValid,
-                    ValidationAction.EDIT to viewInfo.onEdit,
-                    ValidationAction.ERROR to viewInfo.onError
-                )
+                validatable = viewInfo
             )
         }
     }

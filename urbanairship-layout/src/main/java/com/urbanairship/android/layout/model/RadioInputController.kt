@@ -50,11 +50,7 @@ internal class RadioInputController(
                 thomasForm = formState,
                 initialValue = radioState.changes.value.selectedItem,
                 valueUpdates = radioState.changes.map { it.selectedItem },
-                actions = mapOf(
-                    ValidationAction.VALID to viewInfo.onValid,
-                    ValidationAction.EDIT to viewInfo.onEdit,
-                    ValidationAction.ERROR to viewInfo.onError
-                )
+                validatable = viewInfo
             )
         }
     }
