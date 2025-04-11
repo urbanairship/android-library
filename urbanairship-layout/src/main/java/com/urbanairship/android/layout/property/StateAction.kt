@@ -4,6 +4,8 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.requireField
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 internal sealed class StateAction(val type: Type) {
 
@@ -12,7 +14,7 @@ internal sealed class StateAction(val type: Type) {
     data class SetState(
         val key: String,
         val value: JsonValue?,
-        val ttl: Long? = null
+        val ttl: Duration? = null
     ) : StateAction(Type.SET_STATE) {
         init {
             if (value?.isJsonList == true || value?.isJsonMap == true) {
@@ -49,7 +51,7 @@ internal sealed class StateAction(val type: Type) {
                 Type.SET_STATE -> SetState(
                     key = json.requireField("key"),
                     value = json.get("value"),
-                    ttl = json.get("ttl_seconds")?.getLong(0)
+                    ttl = json.get("ttl_seconds")?.getLong(0)?.seconds
                 )
                 Type.SET_FORM_VALUE_STATE -> SetFormValue(
                     key = json.requireField("key")

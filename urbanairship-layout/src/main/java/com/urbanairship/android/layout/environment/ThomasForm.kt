@@ -70,7 +70,8 @@ internal class ThomasForm(
             return false
         }
 
-        val fields = feed.changes.value.copy(status = ThomasFormStatus.VALIDATING).filteredFields
+        feed.update { it.copy(status = ThomasFormStatus.VALIDATING) }
+        val fields = feed.changes.value.filteredFields
 
         val containsPending = fields.any { it.value.status.isPending }
         val start = clock.currentTimeMillis().milliseconds

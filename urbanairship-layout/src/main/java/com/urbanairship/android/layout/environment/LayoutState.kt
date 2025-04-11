@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.json.JsonValue
 import java.util.UUID
 import kotlin.math.max
+import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -35,9 +36,9 @@ internal class LayoutState(
     val parentForm: ThomasForm?
 ) {
     val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
-    private var appliedState = HashMap<String, JsonValue?>()
-    private var tempMutations = HashMap<String, TempMutation?>()
-    private var runningJobs = HashMap<String, Job>()
+    private var appliedState = mutableMapOf<String, JsonValue>()
+    private var tempMutations = mutableMapOf<String, TempMutation>()
+    private var runningJobs = mutableMapOf<String, Job>()
 
     fun reportingContext(
         formContext: FormInfo? = null,
@@ -67,36 +68,14 @@ internal class LayoutState(
         actions?.forEach { action ->
             when (action) {
                 is StateAction.SetFormValue -> layout.let { state ->
-                    UALog.v("StateAction: SetFormValue ${action.key} = ${JsonValue.wrapOpt(formValue)}")
-                    state.update {
-                        it.copy(state = it.state + (action.key to JsonValue.wrapOpt(formValue)))
-                    }
+                    val value = JsonValue.wrapOpt(formValue)
+                    UALog.v("StateAction: SetFormValue ${action.key} = $value")
+                    setState(action.key, value)
                 }
 
                 is StateAction.SetState -> layout.let { state ->
                     UALog.v("StateAction: SetState ${action.key} = ${action.value}, ttl = ${action.ttl}")
-                    state.update {
-                        if (action.value?.isNull == false) {
-                            it.copy(state = it.state + (action.key to action.value))
-                        } else {
-                            it.copy(state = it.state - action.key)
-                        }
-                    }
-                    if (action.ttl != null) {
-                        val mutation = TempMutation(UUID.randomUUID().toString(), action.key, action.value)
-                        tempMutations[action.key] = mutation
-                        updateState()
-                        val job = scope.launch {
-                            delay(action.ttl*1000)
-                            removeTempMutation(mutation)
-                        }
-                        runningJobs[action.key]?.cancel()
-                        runningJobs[action.key] = job
-                    } else {
-                        tempMutations[action.key] = null
-                        appliedState[action.key] = action.value
-                        updateState()
-                    }
+                    setState(action.key, action.value, action.ttl)
                 }
 
                 StateAction.ClearState -> layout.let { state ->
@@ -104,6 +83,33 @@ internal class LayoutState(
                     clearState()
                 }
             }
+        }
+    }
+
+    private fun setState(
+        key: String,
+        value: JsonValue?,
+        ttl: Duration? = null
+    ) {
+        if (ttl != null) {
+            val mutation = TempMutation(UUID.randomUUID().toString(), key, value)
+            tempMutations[key] = mutation
+            appliedState.remove(key)
+            updateState()
+            val job = scope.launch {
+                delay(ttl)
+                removeTempMutation(mutation)
+            }
+            runningJobs[key]?.cancel()
+            runningJobs[key] = job
+        } else {
+            tempMutations.remove(key)
+            appliedState.remove(key)
+
+            if (value?.isNull == false) {
+                appliedState[key] = value
+            }
+            updateState()
         }
     }
 
@@ -115,17 +121,20 @@ internal class LayoutState(
 
     internal fun removeTempMutation(tempMutation: TempMutation) {
         if (tempMutations[tempMutation.key]?.equals(tempMutation) == true) {
-            tempMutations[tempMutation.key] = null
+            tempMutations.remove(tempMutation.key)
             this.updateState()
         }
     }
 
     private fun updateState() {
+        val copy = appliedState.toMutableMap()
         tempMutations.forEach { (key, tempMutation) ->
-            appliedState[key] = tempMutation?.value
+            if (tempMutation.value?.isNull == false) {
+                copy[key] = tempMutation.value
+            }
         }
         layout.update {
-            it.copy(state = appliedState)
+            it.copy(state = copy)
         }
     }
 
@@ -414,10 +423,11 @@ internal sealed class State {
     ) : State()
 
     internal data class Layout(
-        val state: Map<String, JsonValue?> = emptyMap()
+        val state: Map<String, JsonValue> = emptyMap(),
+        val tempState: Map<String, JsonValue> = emptyMap()
     ) : State() {
         companion object {
-            val DEFAULT = Layout(emptyMap())
+            val DEFAULT = Layout()
         }
     }
 }

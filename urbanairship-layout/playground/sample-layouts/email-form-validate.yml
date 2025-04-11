@@ -13,7 +13,7 @@ presentation:
     shade_color:
       default:
         hex: '#000000'
-        alpha: 0.75
+        alpha: 0
 view:
   type: state_controller
   view:
@@ -418,6 +418,13 @@ view:
               bottom: 24
               end: 24
             view:
+              visibility:
+                invert_when_state_matches:
+                  scope:
+                    - show_toast
+                  value:
+                    equals: true
+                default: false
               type: container
               background_color:
                 default:
@@ -456,10 +463,3 @@ view:
                           - sans-serif
                         font_size: 24
                       type: label
-                      visibility:
-                        invert_when_state_matches:
-                          scope:
-                            - show_toast
-                          value:
-                            equals: true
-                        default: false
