@@ -2,6 +2,8 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
+import android.text.Spannable
+import android.text.SpannableString
 import android.view.View
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.ViewCompat
@@ -11,8 +13,11 @@ import com.urbanairship.android.layout.info.LabelInfo
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.LabelModel
+import com.urbanairship.android.layout.property.Image.CenteredImageSpan
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.ifNotEmpty
+import com.urbanairship.android.layout.util.isLayoutRtl
 
 internal class LabelView(
     context: Context,
@@ -40,16 +45,46 @@ internal class LabelView(
             }
 
             override fun onStateUpdated(state: ThomasState) {
-                val text = state.resolveRequired(
+                val resolvedText = state.resolveRequired(
                     overrides = model.viewInfo.viewOverrides?.text,
                     default = model.viewInfo.text
                 )
 
-                if (text != lastText) {
-                    LayoutUtils.applyLabelModel(this@LabelView, model, text)
-                    lastText = text
+                if (resolvedText != lastText) {
+                    LayoutUtils.applyLabelModel(this@LabelView, model, resolvedText)
+                    lastText = resolvedText
+                }
+
+                val resolvedIconStart = state.resolveOptional(
+                    overrides = model.viewInfo.viewOverrides?.iconStart,
+                    default = model.viewInfo.iconStart
+                )
+
+                val drawableStart = when (resolvedIconStart) {
+                    is LabelInfo.IconStart.Floating ->
+                        resolvedIconStart.icon.getDrawable(context, isEnabled)
+                    else -> null
+                }
+
+                drawableStart?.let {
+                    val size = spToPx(context, model.viewInfo.textAppearance.fontSize).toInt()
+                    val space = resolvedIconStart?.let { icon -> spToPx(context, icon.space).toInt() } ?: 0
+                    it.setBounds(
+                        if (isLayoutRtl) size + space else 0,
+                        0,
+                        if (!isLayoutRtl) size + space else 0,
+                        size
+                    )
+
+                    val imageSpan = CenteredImageSpan(it)
+                    val spannableString = SpannableString(" $resolvedText").apply {
+                        setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    }
+
+                    text = spannableString
                 }
             }
+
             override fun setEnabled(enabled: Boolean) {
                 this@LabelView.isEnabled = enabled
             }

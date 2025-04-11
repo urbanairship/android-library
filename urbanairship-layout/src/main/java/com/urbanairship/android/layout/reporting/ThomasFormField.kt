@@ -4,6 +4,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.FormInputType
+import com.urbanairship.android.layout.reporting.ThomasFormField.Type
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -13,7 +14,6 @@ import com.urbanairship.util.TaskSleeper
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
@@ -61,7 +61,8 @@ public sealed class ThomasFormField<T>(
     internal open val formData: JsonMap
         get() = jsonMapOf(
             KEY_TYPE to type,
-            KEY_VALUE to JsonValue.wrapOpt(originalValue)
+            KEY_VALUE to JsonValue.wrapOpt(originalValue),
+            KEY_STATUS to status.toJson(type)
         )
 
     public fun jsonValue(): JsonValue? =
@@ -157,6 +158,7 @@ public sealed class ThomasFormField<T>(
     internal companion object {
         private const val KEY_TYPE: String = "type"
         private const val KEY_VALUE: String = "value"
+        private const val KEY_STATUS: String = "status"
         private const val KEY_SCORE_ID: String = "score_id"
         private const val KEY_CHILDREN: String = "children"
         private const val KEY_RESPONSE_TYPE: String = "response_type"
@@ -211,7 +213,7 @@ public sealed class ThomasFormField<T>(
 
     internal class AsyncValueFetcher<T>(
         private val fetchBlock: suspend () -> PendingResult<T>,
-//        private val earlyProcessDelay: Duration,
+        private val processDelay: Duration = 1.seconds,
         private val clock: Clock = Clock.DEFAULT_CLOCK,
         private val taskSleeper: TaskSleeper = TaskSleeper.default
     ) {
@@ -236,7 +238,7 @@ public sealed class ThomasFormField<T>(
             }
 
             fetchJob?.let { job ->
-                if (!job.isCancelled) {
+                if (job.isActive) {
                     return job.await()
                 }
             }
@@ -254,26 +256,26 @@ public sealed class ThomasFormField<T>(
 
         private fun initiateFetching(scope: CoroutineScope): Deferred<PendingResult<T>> {
             fetchJob?.let {
-                if (!it.isCancelled) {
+                if (it.isActive) {
                     return it
                 }
             }
 
-            _resultsFlow.update { null }
+            val isInitialCall = _resultsFlow.value == null
 
             val job = scope.async {
                 try {
+                    if (isInitialCall) {
+                        taskSleeper.sleep(processDelay)
+                        yield()
+                    }
                     processBackOff()
                     yield()
                     val result = fetchBlock.invoke()
                     yield()
                     processResult(result)
-                    return@async result
                 } catch (ex: Exception) {
-                    if (ex is CancellationException) {
-                        processResult(PendingResult.Error<T>())
-                    }
-                    return@async PendingResult.Error<T>()
+                    processResult(PendingResult.Error())
                 }
             }
 
@@ -291,15 +293,17 @@ public sealed class ThomasFormField<T>(
             }
         }
 
-        private fun processResult(result: PendingResult<T>) {
+        private fun processResult(result: PendingResult<T>): PendingResult<T> {
             _resultsFlow.update { result }
             lastAttemptTimestamp = clock.currentTimeMillis()
 
-            if (result.isError) {
-                nextBackOff = nextBackOff?.let { minOf(it * 2, MAX_BACK_OFF) } ?: INITIAL_BACK_OFF
+            nextBackOff = if (result.isError) {
+                nextBackOff?.let { minOf(it * 2, MAX_BACK_OFF) } ?: INITIAL_BACK_OFF
             } else {
-                nextBackOff = null
+                null
             }
+
+            return result
         }
 
         sealed class PendingResult<T>() {
@@ -309,6 +313,9 @@ public sealed class ThomasFormField<T>(
 
             val isError: Boolean
                 get() = this is Error
+
+            val isInvalid: Boolean
+                get() = this is Invalid
 
             val status: ThomasFormFieldStatus<T>
                 get() {
@@ -332,9 +339,9 @@ public sealed class ThomasFormField<T>(
 
 internal sealed class ThomasFormFieldStatus<T> {
     data class Valid<T>(val result: ThomasFormField.Result<T>): ThomasFormFieldStatus<T>()
-    class Invalid<T>(): ThomasFormFieldStatus<T>()
-    class Pending<T>(): ThomasFormFieldStatus<T>()
-    class Error<T>(): ThomasFormFieldStatus<T>()
+    class Invalid<T> : ThomasFormFieldStatus<T>()
+    class Pending<T> : ThomasFormFieldStatus<T>()
+    class Error<T> : ThomasFormFieldStatus<T>()
 
     val isValid: Boolean
         get() = this is Valid
@@ -344,4 +351,32 @@ internal sealed class ThomasFormFieldStatus<T> {
 
     val isInvalid: Boolean
         get() = this is Invalid
+
+    fun toJson(type: Type): JsonValue {
+        val builder = JsonMap.newBuilder()
+        when(this) {
+            is Error -> builder.put(KEY_TYPE, STATUS_ERROR)
+            is Invalid -> builder.put(KEY_TYPE, STATUS_INVALID)
+            is Pending -> builder.put(KEY_TYPE, STATUS_PENDING)
+            is Valid -> {
+                builder.put(KEY_TYPE, STATUS_VALID)
+                builder.put(KEY_RESULT, jsonMapOf(
+                    KEY_TYPE to type,
+                    KEY_VALUE to JsonValue.wrap(result.value)
+                ))
+            }
+        }
+
+        return builder.build().toJsonValue()
+    }
+
+    private companion object {
+        private const val STATUS_ERROR = "error"
+        private const val STATUS_INVALID = "invalid"
+        private const val STATUS_PENDING = "pending"
+        private const val STATUS_VALID = "valid"
+        private const val KEY_TYPE = "type"
+        private const val KEY_RESULT = "result"
+        private const val KEY_VALUE = "value"
+    }
 }

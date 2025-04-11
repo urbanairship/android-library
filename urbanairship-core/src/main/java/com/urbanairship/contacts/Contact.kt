@@ -21,15 +21,15 @@ import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.channel.AirshipChannel
-import com.urbanairship.channel.AirshipSmsValidator
 import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.SmsValidationHandler
-import com.urbanairship.channel.SmsValidator
 import com.urbanairship.channel.TagGroupsEditor
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.AuthTokenProvider
+import com.urbanairship.inputvalidation.AirshipInputValidation
+import com.urbanairship.inputvalidation.DefaultInputValidator
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
@@ -41,7 +41,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -66,7 +65,7 @@ public class Contact internal constructor(
     activityMonitor: ActivityMonitor,
     private val clock: Clock,
     private val contactManager: ContactManager,
-    private val smsValidator: SmsValidator,
+    private val smsValidator: AirshipInputValidation.Validator,
     pushManager: PushManager,
     private val subscriptionsProvider: SubscriptionsProvider = SubscriptionsProvider(
         config,
@@ -91,7 +90,8 @@ public class Contact internal constructor(
         airshipChannel: AirshipChannel,
         localeManager: LocaleManager,
         audienceOverridesProvider: AudienceOverridesProvider,
-        pushManager: PushManager
+        pushManager: PushManager,
+        smsValidator: AirshipInputValidation.Validator,
     ) : this(
         context,
         preferenceDataStore,
@@ -109,7 +109,7 @@ public class Contact internal constructor(
             localeManager,
             audienceOverridesProvider
         ),
-        AirshipSmsValidator(config),
+        smsValidator,
         pushManager
     )
 
@@ -447,7 +447,17 @@ public class Contact internal constructor(
      * @return `true` if the MSISDN and sender combination are valid, otherwise `false`.
      */
     public suspend fun validateSms(msisdn: String, sender: String): Boolean {
-        return smsValidator.validateSms(msisdn, sender)
+        val result = smsValidator.validate(AirshipInputValidation.Request.ValidateSms(
+            sms = AirshipInputValidation.Request.Sms(
+                rawInput = msisdn,
+                validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(sender)
+            )
+        ))
+
+        return when(result) {
+            AirshipInputValidation.Result.Invalid -> false
+            is AirshipInputValidation.Result.Valid -> true
+        }
     }
 
     /**
@@ -456,7 +466,7 @@ public class Contact internal constructor(
      * @param handler An implementation of [SmsValidationHandler], or `null` to remove the existing handler.
      */
     public fun setSmsValidationHandler(handler: SmsValidationHandler?) {
-        smsValidator.handler = handler
+        smsValidator.setLegacySmsDelegate(handler)
     }
 
     /**

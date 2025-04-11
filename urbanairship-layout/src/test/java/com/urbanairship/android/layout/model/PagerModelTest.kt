@@ -78,10 +78,12 @@ public class PagerModelTest {
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
 
-        pagerModel = spyk(PagerModel(
+        pagerModel =
+            spyk(PagerModel(
             availablePages = ITEMS,
             viewInfo = mockk<PagerInfo>(relaxUnitFun = true) {
                 every { gestures } returns emptyList()
+                every { disableSwipeWhen } returns null
             },
             pagerState = pagerState,
             environment = mockEnv,
@@ -140,7 +142,7 @@ public class PagerModelTest {
             assertEquals(0, initialState.pageIndex)
             assertEquals(0, initialState.lastPageIndex)
             assertTrue(initialState.hasNext)
-            assertFalse(initialState.canGoBack)
+            assertFalse(initialState.hasPrevious)
 
             // Simulate a user swipe to the first page.
             scrollsFlow.emit(PagerScrollEvent(position = 1, isInternalScroll = false))
@@ -151,7 +153,7 @@ public class PagerModelTest {
             assertEquals(1, updatedState.pageIndex)
             assertEquals(0, updatedState.lastPageIndex)
             assertTrue(updatedState.hasNext)
-            assertTrue(updatedState.canGoBack)
+            assertTrue(updatedState.hasPrevious)
 
             // Verify that we reported an event and ran actions when scrolling to the 2nd page
             verify { mockReporter.report(any(), any()) }
@@ -173,7 +175,7 @@ public class PagerModelTest {
             assertEquals(0, initialState.pageIndex)
             assertEquals(0, initialState.lastPageIndex)
             assertTrue(initialState.hasNext)
-            assertFalse(initialState.canGoBack)
+            assertFalse(initialState.hasPrevious)
 
             // Simulate an internal scroll to the first page.
             scrollsFlow.emit(PagerScrollEvent(position = 1, isInternalScroll = true))
@@ -183,7 +185,7 @@ public class PagerModelTest {
             assertEquals(1, updatedState.pageIndex)
             assertEquals(0, updatedState.lastPageIndex)
             assertTrue(updatedState.hasNext)
-            assertTrue(updatedState.canGoBack)
+            assertTrue(updatedState.hasPrevious)
 
             // Verify that we didn't report an event, but did run
             // actions again when scrolling to the 2nd page.
@@ -231,7 +233,7 @@ public class PagerModelTest {
         private const val PAGER_ID = "pager"
         private const val PAGE_1_ID = "page-one-identifier"
         private const val PAGE_2_ID = "page-two-identifier"
-        private const val PAGE_3_ID = "page-two-identifier"
+        private const val PAGE_3_ID = "page-three-identifier"
         private val EMPTY_ACTIONS = emptyMap<String, JsonValue>()
         private val EMPTY_AUTOMATED_ACTIONS = emptyList<AutomatedAction>()
         private val EMPTY_ACCESSIBILITY_ACTIONS = emptyList<AccessibilityAction>()
