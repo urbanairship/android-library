@@ -148,7 +148,7 @@ view:
                           when_state_matches:
                             key: is_valid_email
                             value:
-                              equals: false
+                              equals: "error"
                         - value:
                             radius: 5
                             stroke_width: 1
@@ -160,7 +160,7 @@ view:
                           when_state_matches:
                               key: is_valid_email
                               value:
-                                equals: true
+                                equals: "valid"
                     text_appearance:
                       alignment: start
                       font_size: 20
@@ -243,7 +243,7 @@ view:
                           when_state_matches:
                             key: another_is_valid_email
                             value:
-                              equals: false
+                              equals: "error"
                         - value:
                             type: floating
                             icon:
@@ -257,7 +257,7 @@ view:
                           when_state_matches:
                             key: another_is_valid_email
                             value:
-                              equals: true
+                              equals: "valid"
                       border:
                         - value:
                             radius: 5
@@ -269,7 +269,7 @@ view:
                           when_state_matches:
                             key: another_is_valid_email
                             value:
-                              equals: false
+                              equals: "error"
                         - value:
                             radius: 5
                             stroke_width: 1
@@ -281,7 +281,7 @@ view:
                           when_state_matches:
                               key: another_is_valid_email
                               value:
-                                equals: true
+                                equals: "valid"
                     text_appearance:
                       alignment: start
                       font_size: 20
@@ -296,15 +296,16 @@ view:
                       state_actions:
                         - type: set
                           key: another_is_valid_email
-                          value: false
+                          value: "error"
                     on_valid:
                       state_actions:
                         - type: set
                           key: another_is_valid_email
-                          value: true
+                          value: "valid"
                     on_edit:
                       state_actions:
                         - type: set
+                          value: "editing"
                           key: another_is_valid_email
                 - margin:
                   size:
@@ -314,7 +315,7 @@ view:
                     when_state_matches:
                         key: is_valid_email
                         value:
-                          equals: false
+                          equals: "error"
                     background_color:
                       default:
                         alpha: 1

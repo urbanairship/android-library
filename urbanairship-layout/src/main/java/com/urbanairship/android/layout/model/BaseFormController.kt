@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormInfo
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.hasFormBehaviors
 import com.urbanairship.android.layout.property.hasPagerBehaviors
@@ -73,6 +74,8 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                 }
             }
         }
+
+        wireFormValidation()
     }
 
     private fun initChildForm() {
@@ -80,9 +83,16 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
 
         // Update the parent form with the child form's data whenever it changes.
         modelScope.launch {
-            formState.formUpdates.collect { childState ->
-                parentFormState.updateFormInput(buildFormData(childState), pageId = properties.pagerPageId)
-            }
+            environment.layoutEvents.filterIsInstance<LayoutEvent.SubmitForm>()
+                .map {
+                    it to formState.prepareSubmit()
+                }
+                .distinctUntilChanged().collect { (event, formResult) ->
+                    formResult?.let {
+                        // TODO send the data into the parent as a formField
+                        event.onSubmitted()
+                    }
+                }
         }
 
         // Inherit the parent form's enabled and submitted states whenever they change.
@@ -122,9 +132,8 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
 
                         updateAttributes(result.attributes)
                         registerChannels(result.channels)
+                        event.onSubmitted.invoke()
                     }
-
-                    event.onSubmitted.invoke()
                 }
         }
 
@@ -148,6 +157,23 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                     UALog.v("Skipped form display reporting! No inputs are currently displayed.")
                 }
             }
+        }
+    }
+
+
+    private fun wireFormValidation() {
+        modelScope.launch {
+            environment.layoutEvents
+                .filterIsInstance<LayoutEvent.ValidateForm>()
+                .collect {
+                    if (formState.formUpdates.value.isSubmitted) {
+                        return@collect
+                    }
+
+                    if (formState.validate()) {
+                        it.onValidated()
+                    }
+                }
         }
     }
 

@@ -5,6 +5,7 @@ import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ScoreInfo
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EventHandler
@@ -14,7 +15,11 @@ import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.scoreChanges
 import com.urbanairship.android.layout.view.ScoreView
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -41,13 +46,16 @@ internal class ScoreModel(
         fun onSetSelectedScore(value: Int?)
     }
 
+    // used for on demand validation actions
+    private val valuesUpdate = MutableStateFlow(-1)
+
     init {
         // Set the initial empty score value
         formState.updateFormInput(
             value = ThomasFormField.Score(
                 identifier = viewInfo.identifier,
                 originalValue = null,
-                filedType = ThomasFormField.FiledType.just(
+                fieldType = ThomasFormField.FieldType.just(
                     value = -1,
                     validator = { it > 0 || !viewInfo.isRequired },
                     attributes = ThomasFormField.makeAttributes(
@@ -88,7 +96,7 @@ internal class ScoreModel(
                     value = ThomasFormField.Score(
                         identifier = viewInfo.identifier,
                         originalValue = score,
-                        filedType = ThomasFormField.FiledType.just(
+                        fieldType = ThomasFormField.FieldType.just(
                             value = score,
                             validator = { (it > -1) || !viewInfo.isRequired },
                             attributes = ThomasFormField.makeAttributes(
@@ -103,6 +111,8 @@ internal class ScoreModel(
                 if (viewInfo.eventHandlers.hasFormInputHandler()) {
                     handleViewEvent(EventHandler.Type.FORM_INPUT, score)
                 }
+
+                valuesUpdate.update { score }
             }
         }
 
@@ -120,6 +130,16 @@ internal class ScoreModel(
             formState.formUpdates.collect { state ->
                 listener?.setEnabled(state.isEnabled)
             }
+        }
+
+        if (formState.validationMode == FormValidationMode.ON_DEMAND) {
+            wireValidationActions(
+                identifier = viewInfo.identifier,
+                thomasForm = formState,
+                initialValue = valuesUpdate.value,
+                valueUpdates = valuesUpdate,
+                validatable = viewInfo
+            )
         }
     }
 }

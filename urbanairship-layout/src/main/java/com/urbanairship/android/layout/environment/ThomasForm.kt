@@ -2,26 +2,45 @@
 
 package com.urbanairship.android.layout.environment
 
-import com.urbanairship.AirshipDispatchers
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.ThomasFormField
+import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.android.layout.util.DelicateLayoutApi
+import com.urbanairship.util.Clock
+import com.urbanairship.util.TaskSleeper
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
 
 internal class ThomasForm(
     private val feed: SharedState<State.Form>,
     private val pagerState: SharedState<State.Pager>? = null,
-    validationDispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
+    private val clock: Clock = Clock.DEFAULT_CLOCK,
+    private val sleeper: TaskSleeper = TaskSleeper.default,
+    validationDispatcher: CoroutineDispatcher = Dispatchers.Main
 ) {
 
     val scope = CoroutineScope(validationDispatcher + SupervisorJob())
+
+
+    val validationMode: FormValidationMode
+        get() = feed.changes.value.validationMode
+
+    val status: Flow<ThomasFormStatus>
+        get() = feed.changes.map { it.status }.distinctUntilChanged()
 
     val formUpdates = feed.changes
 
@@ -29,9 +48,63 @@ internal class ThomasForm(
     val isEnabled: Boolean
         get() = feed.value.isEnabled
 
-    @OptIn(DelicateLayoutApi::class)
+
+    init {
+        if (validationMode == FormValidationMode.IMMEDIATE) {
+            scope.launch {
+                status.collect { status ->
+                    when(status) {
+                        ThomasFormStatus.ERROR,
+                        ThomasFormStatus.PENDING_VALIDATION -> {
+                            validate()
+                        }
+                        else -> {}
+                    }
+                }
+            }
+        }
+    }
+
+    suspend fun validate(): Boolean {
+        if (feed.changes.value.isSubmitted) {
+            return false
+        }
+
+        val fields = feed.changes.value.copy(status = ThomasFormStatus.VALIDATING).filteredFields
+
+        val containsPending = fields.any { it.value.status.isPending }
+        val start = clock.currentTimeMillis().milliseconds
+        val processResult = fields.mapValues { (_, field) ->
+            when(val fieldType = field.fieldType) {
+                is ThomasFormField.FieldType.Async<*> -> {
+                    fieldType.fetcher.fetch(scope, true)
+                    field
+                }
+                is ThomasFormField.FieldType.Instant<*> -> {
+                    field
+                }
+            }
+        }
+
+        feed.update { it.copyWithProcessResult(processResult) }
+
+        val end = clock.currentTimeMillis().milliseconds
+        if (containsPending && validationMode == FormValidationMode.ON_DEMAND) {
+            val remaining = 1.seconds - (end - start)
+            if (remaining.isPositive()) {
+                sleeper.sleep(remaining)
+            }
+        }
+
+        return feed.changes.value.status == ThomasFormStatus.VALID
+    }
+
+    fun lastProcessedStatus(identifier: String): ThomasFormFieldStatus<*>? {
+        return feed.changes.value.lastProcessedStatus(identifier)
+    }
+
     suspend fun prepareSubmit(): Pair<ReportingEvent.FormResult, FormInfo>? {
-        if (feed.value.isSubmitted) {
+        if (!validate()) {
             return null
         }
 
@@ -51,12 +124,10 @@ internal class ThomasForm(
         return feed.value.inputData(identifier)
     }
 
-
     fun updateFormInput(
         value: ThomasFormField<*>,
         pageId: String? = null
     ) {
-
         val predicate = predicate@ {
             val associatedPageId = pageId ?: return@predicate true
             val currentState = @OptIn(DelicateLayoutApi::class) pagerState?.value ?: return@predicate true
@@ -80,18 +151,32 @@ internal class ThomasForm(
         value: ThomasFormField<*>,
         predicate: FormFieldFilterPredicate? = null
     ) {
-        when(val method = value.filedType) {
-            is ThomasFormField.FiledType.Async -> scope.launch {
-                val fetchResult = method.fetcher.fetch(this, true)
-                yield()
-                if (!fetchResult.isError) {
-                    feed.update { it.copyWithFormInput(value, predicate) }
-                }
-            }
-            is ThomasFormField.FiledType.Instant -> {}
+        if (feed.changes.value.isSubmitted) {
+            return
         }
 
+        UALog.v("Updating field $value")
         feed.update { it.copyWithFormInput(value, predicate) }
+
+        when(val method = value.fieldType) {
+            is ThomasFormField.FieldType.Async -> scope.launch {
+                method.fetcher.fetch(this, true)
+
+                // Since ThomasFormField is a class, we just need to have the formState
+                // reevaluate its value by calling copy.
+                // TODO: separate out FormField and FormFieldResult so we can make
+                // them data classes for more predictable results
+                feed.update { it.copy() }
+            }
+
+            is ThomasFormField.FieldType.Instant -> {}
+        }
+
+        if (validationMode == FormValidationMode.IMMEDIATE) {
+            scope.launch {
+                validate()
+            }
+        }
     }
 
     fun updateWithDisplayState(identifier: String, isDisplayed: Boolean) {

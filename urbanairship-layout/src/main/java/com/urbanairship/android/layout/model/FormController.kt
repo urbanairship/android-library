@@ -42,5 +42,5 @@ internal class FormController(
             identifier = viewInfo.identifier,
             responseType = viewInfo.responseType,
             children = state.filteredFields.values.toSet(),
-            filedType = ThomasFormField.FiledType.just(emptySet()))
+            fieldType = ThomasFormField.FieldType.just(emptySet()))
 }

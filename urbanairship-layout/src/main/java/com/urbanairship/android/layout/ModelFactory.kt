@@ -230,9 +230,9 @@ internal class ThomasModelFactory : ModelFactory {
     private fun createMutableSharedState(info: ViewInfo): SharedState<State>? {
         return when (info) {
             is FormControllerInfo -> SharedState(
-                State.Form(info.identifier, FormType.Form, info.responseType))
+                State.Form(info.identifier, FormType.Form, info.responseType, info.validationMode))
             is NpsFormControllerInfo -> SharedState(
-                State.Form(info.identifier, FormType.Nps(info.npsIdentifier), info.responseType)
+                State.Form(info.identifier, FormType.Nps(info.npsIdentifier), info.responseType, info.validationMode)
             )
             is RadioInputControllerInfo -> SharedState(State.Radio(info.identifier))
             is CheckboxControllerInfo -> SharedState(

@@ -2,6 +2,7 @@ package com.urbanairship.android.layout.environment
 
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.model.PageRequest
 import com.urbanairship.android.layout.property.AttributeValue
@@ -63,7 +64,11 @@ internal class LayoutState(
                 is StateAction.SetState -> layout.let { state ->
                     UALog.v("StateAction: SetState ${action.key} = ${action.value}")
                     state.update {
-                        it.copy(state = it.state + (action.key to action.value))
+                        if (action.value?.isNull == false) {
+                            it.copy(state = it.state + (action.key to action.value))
+                        } else {
+                            it.copy(state = it.state - action.key)
+                        }
                     }
                 }
 
@@ -185,7 +190,9 @@ internal sealed class State {
         val identifier: String,
         val formType: FormType,
         val formResponseType: String?,
+        val validationMode: FormValidationMode,
         val status: ThomasFormStatus = ThomasFormStatus.PENDING_VALIDATION,
+
         /**
          * Input identifiers that are displayed in the current pager page.
          * If the form is not in a pager, this will contain all input identifiers.
@@ -195,8 +202,6 @@ internal sealed class State {
         val isEnabled: Boolean = true,
         val isDisplayReported: Boolean = false,
         private val children: Map<String, Child> = emptyMap(),
-        private val childResults: Map<String, ThomasFormFieldStatus<*>> = emptyMap()
-
     ) : State() {
 
         val filteredFields: Map<String, ThomasFormField<*>>
@@ -206,20 +211,36 @@ internal sealed class State {
 
         val isSubmitted: Boolean = status.isSubmitted
 
-        fun copyWithFormInput(
-            value: ThomasFormField<*>,
-            predicate: FormFieldFilterPredicate? = null
+        fun copyWithProcessResult(
+            results: Map<String, ThomasFormField<*>>
         ): Form {
-
-            children[value.identifier]?.field?.filedType?.cancel()
-
-            val updatedChildren = children + (value.identifier to Child(value, predicate))
-            val updatedResults = childResults + (value.identifier to value.status)
+            val updatedChildren = children.toMutableMap()
+            results.forEach { (key, value) ->
+                val existing = updatedChildren[key]
+                if (existing != null) {
+                    updatedChildren[key] = existing.copy(lastProcessStatus = value.status)
+                }
+            }
 
             return copy(
                 children = updatedChildren,
-                childResults = updatedResults,
-                status = evaluateFormStatus(updatedChildren, updatedResults)
+                status = evaluateFormStatus(updatedChildren)
+            )
+        }
+        fun copyWithFormInput(
+            value: ThomasFormField<*>,
+            predicate: FormFieldFilterPredicate? = null,
+        ): Form {
+            children[value.identifier]?.field?.fieldType?.cancel()
+
+            var updatedChildren = children
+            if (updatedChildren[value.identifier]?.lastProcessStatus?.isInvalid != true || !value.status.isInvalid) {
+                updatedChildren = updatedChildren + (value.identifier to Child(value, predicate, lastProcessStatus = value.status.makePending()))
+            }
+
+            return copy(
+                children = updatedChildren,
+                status = evaluateFormStatus(updatedChildren)
             )
         }
 
@@ -233,6 +254,10 @@ internal sealed class State {
             )
         }
 
+        fun lastProcessedStatus(identifier: String): ThomasFormFieldStatus<*>? {
+            return children[identifier]?.lastProcessStatus
+        }
+
         fun formResult(): ReportingEvent.FormResult =
             ReportingEvent.FormResult(formData(), reportingContext(), attributes(), channels())
 
@@ -244,26 +269,23 @@ internal sealed class State {
             return children[identifier]?.field as? T
         }
 
-        internal fun childStatus(identifier: String): ThomasFormFieldStatus<*>? {
-            return children[identifier]?.field?.status
-        }
-
         private fun evaluateFormStatus(
-            children: Map<String, Child>,
-            results: Map<String, ThomasFormFieldStatus<*>>
+            children: Map<String, Child>
         ): ThomasFormStatus {
             val filtered = children
                 .filterValues { it.predicate?.invoke() ?: true }
-                .keys
 
-            val filteredResults = results
-                .filter { filtered.contains(it.key) }
-
-            return if (filteredResults.values.any { it.isInvalid }) {
+            return if (filtered.any { it.value.lastProcessStatus.isInvalid }) {
+                UALog.v("Updating status to invalid: ${filtered.filter { it.value.lastProcessStatus.isInvalid }}")
                 ThomasFormStatus.INVALID
-            } else if (filteredResults.values.any { it.isError }) {
+            } else if (filtered.any { it.value.lastProcessStatus.isError }) {
+                UALog.v("Updating status to error: ${filtered.filter { it.value.lastProcessStatus.isError }}")
                 ThomasFormStatus.ERROR
+            } else if (filtered.any { it.value.lastProcessStatus.isPending }) {
+                UALog.v("Updating status to pending_validation: ${filtered.filter { it.value.lastProcessStatus.isPending }}")
+                ThomasFormStatus.PENDING_VALIDATION
             } else {
+                UALog.v("Updating status to valid")
                 ThomasFormStatus.VALID
             }
         }
@@ -277,14 +299,14 @@ internal sealed class State {
                         identifier = identifier,
                         responseType = formResponseType,
                         children = children,
-                        filedType = ThomasFormField.FiledType.just(children))
+                        fieldType = ThomasFormField.FieldType.just(children))
                 is FormType.Nps ->
                     ThomasFormField.Nps(
                         identifier = identifier,
                         scoreId = formType.scoreId,
                         responseType = formResponseType,
                         children = children,
-                        filedType = ThomasFormField.FiledType.just(children))
+                        fieldType = ThomasFormField.FieldType.just(children))
             }
         }
 
@@ -295,9 +317,9 @@ internal sealed class State {
             filteredFields
                 .values
                 .mapNotNull { value ->
-                    when(val method = value.filedType) {
-                        is ThomasFormField.FiledType.Async -> method.fetcher.results.value?.value
-                        is ThomasFormField.FiledType.Instant -> method.result
+                    when(val method = value.fieldType) {
+                        is ThomasFormField.FieldType.Async -> method.fetcher.results.value?.value
+                        is ThomasFormField.FieldType.Instant -> method.result
                     }?.attributes
                 }
                 .forEach { map.putAll(it) }
@@ -308,9 +330,9 @@ internal sealed class State {
         private fun channels(): List<ThomasChannelRegistration> {
             return filteredFields.values
                 .mapNotNull { value ->
-                    when(val method = value.filedType) {
-                        is ThomasFormField.FiledType.Async -> method.fetcher.results.value?.value
-                        is ThomasFormField.FiledType.Instant -> method.result
+                    when(val method = value.fieldType) {
+                        is ThomasFormField.FieldType.Async -> method.fetcher.results.value?.value
+                        is ThomasFormField.FieldType.Instant -> method.result
                     }?.channels
                 }
                 .flatten()
@@ -318,17 +340,9 @@ internal sealed class State {
 
         internal data class Child(
             val field: ThomasFormField<*>,
-            val predicate: FormFieldFilterPredicate? = null
+            val predicate: FormFieldFilterPredicate? = null,
+            val lastProcessStatus: ThomasFormFieldStatus<*>
         )
-
-        companion object {
-            val DEFAULT = Form(
-                identifier = "",
-                formType = FormType.Form,
-                formResponseType = "",
-                status = ThomasFormStatus.PENDING_VALIDATION
-            )
-        }
     }
 
     internal data class Checkbox(
@@ -356,7 +370,3 @@ internal sealed class State {
 }
 
 internal typealias FormFieldFilterPredicate = () -> Boolean
-
-//internal fun <T : ThomasFormField<*>> SharedState<State.Form>.inputData(identifier: String): T? {
-//    return changes.value.inputData(identifier)
-//}
