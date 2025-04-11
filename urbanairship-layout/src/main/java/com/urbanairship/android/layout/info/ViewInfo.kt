@@ -293,15 +293,43 @@ internal interface FormController : Controller {
     val responseType: String?
     val submitBehavior: FormBehaviorType?
     val formEnabled: List<EnableBehaviorType>?
+    val validationMode: FormValidationMode
+}
+
+internal enum class FormValidationMode(private val value: String) {
+    ON_DEMAND("on_demand"),
+    IMMEDIATE("immediate");
+
+    override fun toString(): String {
+        return name.lowercase()
+    }
+
+    internal companion object {
+        @Throws(JsonException::class)
+        fun from(value: String): FormValidationMode {
+            for (type in FormValidationMode.entries) {
+                if (type.value == value.lowercase()) {
+                    return type
+                }
+            }
+            throw JsonException("Unknown form validation mode value: $value")
+        }
+    }
 }
 
 internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), FormController, Controller by controller(json) {
     override val responseType: String? =
         json.optionalField("response_type")
     override val submitBehavior: FormBehaviorType? =
-        json.optionalField<String>("submit")?.let { FormBehaviorType.from(it) }
+        json.optionalField<String>("submit")?.let {
+            FormBehaviorType.from(it)
+        }
     override val formEnabled: List<EnableBehaviorType>? =
         json.optionalList("form_enabled")?.map { EnableBehaviorType.from(it.optString()) }
+    override val validationMode: FormValidationMode =
+        json.optionalMap("validation_mode")?.let {
+            FormValidationMode.from(it.requireField("type"))
+        } ?: FormValidationMode.IMMEDIATE
 }
 
 internal interface Button : View, Accessible, Identifiable {

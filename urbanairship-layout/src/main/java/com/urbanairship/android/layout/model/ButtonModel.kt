@@ -23,7 +23,10 @@ import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.widget.TappableView
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal abstract class ButtonModel<T, I: Button>(
@@ -48,15 +51,12 @@ internal abstract class ButtonModel<T, I: Button>(
     }
 
     override var listener: Listener? = null
+    private var isProcessing = MutableStateFlow(false)
 
     @CallSuper
     override fun onViewAttached(view: T) {
         viewScope.launch {
             view.taps().collect {
-
-                if (viewInfo.clickBehaviors.hasFormValidate) {
-                    handleFormValidation()
-                }
 
                 val reportingContext = layoutState.reportingContext(buttonId = viewInfo.identifier)
 
@@ -67,18 +67,28 @@ internal abstract class ButtonModel<T, I: Button>(
                 runActions(viewInfo.actions, reportingContext)
 
                 // Run any handlers for tap events.
-                if (viewInfo.eventHandlers.hasTapHandler()) {
+                if (viewInfo.eventHandlers.hasTapHandler() && !viewInfo.clickBehaviors.hasFormSubmit) {
                     handleViewEvent(EventHandler.Type.TAP)
                 }
 
-                delay(1L)
                 evaluateClickBehaviors(view.context ?: UAirship.getApplicationContext())
+            }
+        }
+
+        // If we're processing, disable the button, via the enabled listener.
+        viewScope.launch {
+            isProcessing.collect {
+                listener?.setEnabled(enabled = !it)
             }
         }
     }
 
     private suspend fun evaluateClickBehaviors(context: Context) {
-        if (viewInfo.clickBehaviors.hasFormSubmit) {
+        if (viewInfo.clickBehaviors.hasFormValidate) {
+            // If we have a FORM_VALIDATE behavior, handle it first and then
+            // handle the rest of the behaviors after validating.
+            handleFormValidation(context)
+        } else if (viewInfo.clickBehaviors.hasFormSubmit) {
             // If we have a FORM_SUBMIT behavior, handle it first and then
             // handle the rest of the behaviors after submitting.
             handleSubmit(context)
@@ -104,6 +114,11 @@ internal abstract class ButtonModel<T, I: Button>(
         listener?.dismissSoftKeyboard()
 
         val submitEvent = LayoutEvent.SubmitForm(buttonIdentifier = viewInfo.identifier) {
+            // Run any handlers for tap events.
+            if (viewInfo.eventHandlers.hasTapHandler()) {
+                handleViewEvent(EventHandler.Type.TAP)
+            }
+
             // After submitting, handle the rest of the behaviors.
             if (viewInfo.clickBehaviors.hasCancelOrDismiss) {
                 handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
@@ -115,17 +130,38 @@ internal abstract class ButtonModel<T, I: Button>(
                 handlePagerPrevious()
             }
         }
+
+        isProcessing.update { true }
         modelScope.launch {
-            environment.eventHandler.broadcast(submitEvent)
+            broadcast(submitEvent)
+            isProcessing.update { false }
         }
     }
 
-    private fun handleFormValidation() {
+    private fun handleFormValidation(context: Context) {
         // Dismiss the keyboard, if it's open.
         listener?.dismissSoftKeyboard()
 
+        val validateEvent = LayoutEvent.ValidateForm(buttonIdentifier = viewInfo.identifier) {
+            // After validating, handle the rest of the behaviors.
+            if (viewInfo.clickBehaviors.hasFormSubmit) {
+                handleSubmit(context)
+            }
+            if (viewInfo.clickBehaviors.hasCancelOrDismiss) {
+                handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
+            }
+            if (viewInfo.clickBehaviors.hasPagerNext) {
+                handlePagerNext(context, fallback = viewInfo.clickBehaviors.pagerNextFallback)
+            }
+            if (viewInfo.clickBehaviors.hasPagerPrevious) {
+                handlePagerPrevious()
+            }
+        }
+
+        isProcessing.update { true }
         modelScope.launch {
-            //TODO: il form validate
+            broadcast(validateEvent)
+            isProcessing.update { false }
         }
     }
 

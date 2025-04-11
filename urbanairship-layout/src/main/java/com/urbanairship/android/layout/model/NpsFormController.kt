@@ -42,6 +42,6 @@ internal class NpsFormController(
         viewInfo.npsIdentifier,
         viewInfo.responseType,
         state.filteredFields.values.toSet(),
-        filedType = ThomasFormField.FiledType.just(emptySet())
+        fieldType = ThomasFormField.FieldType.just(emptySet())
     )
 }

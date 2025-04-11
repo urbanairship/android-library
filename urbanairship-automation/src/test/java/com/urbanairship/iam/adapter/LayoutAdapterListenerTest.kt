@@ -61,7 +61,7 @@ public class LayoutAdapterListenerTest {
             identifier = "form id",
             responseType = null,
             children = emptySet(),
-            filedType = ThomasFormField.FiledType.just(emptySet())
+            fieldType = ThomasFormField.FieldType.just(emptySet())
             ), FormInfo("form id", "", null, true),
             mapOf(),
             emptyList()

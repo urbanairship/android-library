@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.flowOf
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame
-import org.junit.Assert.assertNull
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -33,26 +32,26 @@ public class ThomasFormFieldTest {
             Score(
                 identifier = "field-invalid",
                 originalValue = 2,
-                filedType = ThomasFormField.FiledType.just(0, { false })
+                fieldType = ThomasFormField.FieldType.just(0, { false })
             ),
             Score(
                 identifier = "field-error",
                 originalValue = 3,
-                filedType = ThomasFormField.FiledType.Async(
+                fieldType = ThomasFormField.FieldType.Async(
                     makeFetcher(ThomasFormField.AsyncValueFetcher.PendingResult.Error())
                 )
             ),
             Score(
                 identifier = "field-pending",
                 originalValue = 4,
-                filedType = ThomasFormField.FiledType.Async(
+                fieldType = ThomasFormField.FieldType.Async(
                     makeFetcher(null)
                 )
             ),
             Score(
                 identifier = "field-valid",
                 originalValue = 5,
-                filedType = ThomasFormField.FiledType.Async(
+                fieldType = ThomasFormField.FieldType.Async(
                     makeFetcher(ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
                         result = ThomasFormField.Result(6)
                     ))
@@ -64,7 +63,7 @@ public class ThomasFormFieldTest {
             identifier = "parent form",
             responseType = "parent form response type",
             children = children,
-            filedType = ThomasFormField.FiledType.just(children)
+            fieldType = ThomasFormField.FieldType.just(children)
         )
 
         val expectedJson = """
@@ -169,19 +168,19 @@ public class ThomasFormFieldTest {
     public fun justFileTypeTest() {
         val value = "test value"
 
-        assertEquals(ThomasFormField.FiledType.just(
+        assertEquals(ThomasFormField.FieldType.just(
             value = value,
             validator = { false }
-        ), ThomasFormField.FiledType.Instant<String>(null))
+        ), ThomasFormField.FieldType.Instant<String>(null))
 
-        assertEquals(ThomasFormField.FiledType.just(
+        assertEquals(ThomasFormField.FieldType.just(
             value = value,
             validator = { true }
-        ), ThomasFormField.FiledType.Instant(ThomasFormField.Result(value)))
+        ), ThomasFormField.FieldType.Instant(ThomasFormField.Result(value)))
 
-        assertEquals(ThomasFormField.FiledType.just(
+        assertEquals(ThomasFormField.FieldType.just(
             value = value
-        ), ThomasFormField.FiledType.Instant(ThomasFormField.Result(value)))
+        ), ThomasFormField.FieldType.Instant(ThomasFormField.Result(value)))
     }
 
     public companion object {
@@ -189,7 +188,7 @@ public class ThomasFormFieldTest {
             ThomasFormField.RadioInputController(
                 identifier = "single choice",
                 originalValue = JsonValue.wrap("single choice value"),
-                filedType = ThomasFormField.FiledType.just(
+                fieldType = ThomasFormField.FieldType.just(
                     value = JsonValue.wrap("single choice value"),
                     validator = { true }
                 )
@@ -200,7 +199,7 @@ public class ThomasFormFieldTest {
             ThomasFormField.CheckboxController(
                 identifier = "multiple choice",
                 originalValue = setOf(JsonValue.wrap("multiple choice value")),
-                filedType = ThomasFormField.FiledType.just(
+                fieldType = ThomasFormField.FieldType.just(
                     value = setOf(JsonValue.wrap("multiple choice value")),
                     validator = { true }
                 )
@@ -211,7 +210,7 @@ public class ThomasFormFieldTest {
                 textInput = FormInputType.TEXT,
                 identifier = "text input",
                 originalValue = "text input value",
-                filedType = ThomasFormField.FiledType.just("text input value")
+                fieldType = ThomasFormField.FieldType.just("text input value")
             )
 
         private val emailInputData: TextInput =
@@ -219,21 +218,21 @@ public class ThomasFormFieldTest {
                 textInput = FormInputType.EMAIL,
                 identifier = "email input",
                 originalValue = "text@value",
-                filedType = ThomasFormField.FiledType.just("text@value")
+                fieldType = ThomasFormField.FieldType.just("text@value")
             )
 
         private val toggleData: ThomasFormField.Toggle =
             ThomasFormField.Toggle(
                 identifier = "toggle input",
                 originalValue = true,
-                filedType = ThomasFormField.FiledType.just(true)
+                fieldType = ThomasFormField.FieldType.just(true)
             )
 
         private val scoreData: Score =
             Score(
                 identifier = "score",
                 originalValue = 5,
-                filedType = ThomasFormField.FiledType.just(5)
+                fieldType = ThomasFormField.FieldType.just(5)
             )
 
         private val npsThomasFormField: ThomasFormField.Nps
@@ -242,7 +241,7 @@ public class ThomasFormFieldTest {
                     Score(
                         identifier = "child score",
                         originalValue = 7,
-                        filedType = ThomasFormField.FiledType.just(7)
+                        fieldType = ThomasFormField.FieldType.just(7)
                     )
                 )
 
@@ -251,7 +250,7 @@ public class ThomasFormFieldTest {
                     responseType = "child nps response type",
                     scoreId = "child score",
                     children = children,
-                    filedType = ThomasFormField.FiledType.just(children)
+                    fieldType = ThomasFormField.FieldType.just(children)
                 )
             }
 
@@ -263,7 +262,7 @@ public class ThomasFormFieldTest {
                         textInput = FormInputType.TEXT,
                         identifier = "child text",
                         originalValue = "child text input",
-                        filedType = ThomasFormField.FiledType.just("child text input")
+                        fieldType = ThomasFormField.FieldType.just("child text input")
                     )
                 )
 
@@ -271,7 +270,7 @@ public class ThomasFormFieldTest {
                     identifier = "child form",
                     responseType = "child form response type",
                     children = children,
-                    filedType = ThomasFormField.FiledType.just(children)
+                    fieldType = ThomasFormField.FieldType.just(children)
                 )
             }
 
@@ -291,7 +290,7 @@ public class ThomasFormFieldTest {
             identifier = "parent form",
             responseType = "parent form response type",
             children = children,
-            filedType = ThomasFormField.FiledType.just(children)
+            fieldType = ThomasFormField.FieldType.just(children)
         )
 
         @Language("json")

@@ -15,6 +15,7 @@ import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.LabelButtonModel
 import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.Image.CenteredImageSpan
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.ColorStateListBuilder
@@ -78,7 +79,7 @@ internal class LabelButtonView(
 
                 val drawableStart = when (resolvedIconStart) {
                     is LabelInfo.IconStart.Floating ->
-                        resolvedIconStart.icon.getDrawable(context, isEnabled)
+                        resolvedIconStart.icon.getDrawable(context, isEnabled, if (isLayoutRtl) HorizontalPosition.END else HorizontalPosition.START)
                     else -> null
                 }
 
@@ -86,18 +87,24 @@ internal class LabelButtonView(
                     val size = spToPx(context, model.viewInfo.label.textAppearance.fontSize).toInt()
                     val space = resolvedIconStart?.let { icon -> spToPx(context, icon.space).toInt() } ?: 0
                     it.setBounds(
-                        if (isLayoutRtl) size + space else 0,
                         0,
-                        if (!isLayoutRtl) size + space else 0,
+                        0,
+                        size + space,
                         size
                     )
 
                     val imageSpan = CenteredImageSpan(it)
-                    val spannableString = SpannableString(" $resolvedText").apply {
-                        setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    if (isLayoutRtl) {
+                        val spannableString = SpannableString("$resolvedText ").apply {
+                            setSpan(imageSpan, length - 1, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+                        text = spannableString
+                    } else {
+                        val spannableString = SpannableString(" $resolvedText").apply {
+                            setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+                        text = spannableString
                     }
-
-                    text = spannableString
                 }
             }
 

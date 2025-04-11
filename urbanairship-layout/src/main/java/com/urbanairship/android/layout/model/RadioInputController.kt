@@ -7,12 +7,20 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.RadioInputControllerInfo
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonValue
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Controller for radio inputs. */
@@ -30,16 +38,50 @@ internal class RadioInputController(
 ) {
 
     init {
-        // Listen to radio input state updates and push them into form state.
         modelScope.launch {
+            formState.formUpdates.collect { form ->
+                radioState.update { it.copy(isEnabled = form.isEnabled) }
+            }
+        }
+
+        if (formState.validationMode == FormValidationMode.ON_DEMAND) {
+            wireValidationActions(
+                identifier = viewInfo.identifier,
+                thomasForm = formState,
+                initialValue = radioState.changes.value.selectedItem,
+                valueUpdates = radioState.changes.map { it.selectedItem },
+                validatable = viewInfo
+            )
+        }
+    }
+
+    override fun onCreateView(
+        context: Context,
+        viewEnvironment: ViewEnvironment,
+        itemProperties: ItemProperties?
+    ) = view.createView(context, viewEnvironment, itemProperties)
+
+    private fun isValid(selectedItem: JsonValue?): Boolean {
+        return if (selectedItem == null || selectedItem.isNull) {
+            !viewInfo.isRequired
+        } else {
+            true
+        }
+    }
+
+    override fun onViewAttached(view: View) {
+        super.onViewAttached(view)
+
+        // Listen to radio input state updates and push them into form state.
+        viewScope.launch {
             radioState.changes.collect { radio ->
                 formState.updateFormInput(
                     value = ThomasFormField.RadioInputController(
                         identifier = radio.identifier,
                         originalValue = radio.selectedItem,
-                        filedType = ThomasFormField.FiledType.just(
+                        fieldType = ThomasFormField.FieldType.just(
                             value = radio.selectedItem ?: JsonValue.NULL,
-                            validator = { !it.isNull || !viewInfo.isRequired },
+                            validator = { isValid(it) },
                             attributes = ThomasFormField.makeAttributes(
                                 name = viewInfo.attributeName,
                                 value = radio.attributeValue
@@ -54,17 +96,5 @@ internal class RadioInputController(
                 }
             }
         }
-
-        modelScope.launch {
-            formState.formUpdates.collect { form ->
-                radioState.update { it.copy(isEnabled = form.isEnabled) }
-            }
-        }
     }
-
-    override fun onCreateView(
-        context: Context,
-        viewEnvironment: ViewEnvironment,
-        itemProperties: ItemProperties?
-    ) = view.createView(context, viewEnvironment, itemProperties)
 }
