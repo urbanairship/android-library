@@ -7,6 +7,7 @@ import android.content.res.Resources;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 
+import com.urbanairship.android.layout.property.HorizontalPosition;
 import com.urbanairship.android.layout.shape.Shape;
 
 import androidx.annotation.NonNull;
@@ -18,12 +19,20 @@ public class ShapeDrawableWrapper extends DrawableWrapper {
 
     private final Rect tempRect = new Rect();
 
+    private HorizontalPosition gravityPosition;
+
     public ShapeDrawableWrapper(@NonNull Context context, @NonNull Shape shape) {
-        this(shape.getDrawable(context), shape.getAspectRatio(), shape.getScale());
+        this(shape.getDrawable(context), shape.getAspectRatio(), shape.getScale(), null);
     }
 
-    public ShapeDrawableWrapper(@NonNull Drawable drawable, float aspectRatio, float scale) {
+    public ShapeDrawableWrapper(@NonNull Drawable drawable, float aspectRatio, float scale, @Nullable HorizontalPosition gravityPosition) {
         this(new ShapeState(null), null);
+
+        if (gravityPosition != null) {
+            this.gravityPosition = gravityPosition;
+        } else {
+            this.gravityPosition = HorizontalPosition.CENTER;
+        }
 
         state.aspectRatio = aspectRatio;
         state.scale = scale;
@@ -56,8 +65,18 @@ public class ShapeDrawableWrapper extends DrawableWrapper {
         int widthDiff = (bounds.width() - width) / 2;
         int heightDiff = (bounds.height() - height) / 2;
 
-        r.left += widthDiff;
-        r.right -= widthDiff;
+        switch (gravityPosition) {
+            case CENTER:
+                r.left += widthDiff;
+                r.right -= widthDiff;
+                break;
+            case START:
+                r.right -= widthDiff * 2;
+                break;
+            case END:
+                r.left += widthDiff * 2;
+                break;
+        }
         r.top += heightDiff;
         r.bottom -= heightDiff;
 
@@ -112,6 +131,7 @@ public class ShapeDrawableWrapper extends DrawableWrapper {
         super(state, res);
 
         this.state = state;
+        this.gravityPosition = HorizontalPosition.CENTER;
 
         updateLocalState();
     }

@@ -61,7 +61,7 @@ view:
                     view_overrides:
                         icon_start:
                             - value:
-                                space: 8
+                                space: 50
                                 type: floating
                                 icon:
                                   type: icon
