@@ -130,7 +130,7 @@ public class Shape {
         drawable.setStroke(strokeWidth, enabledState ? strokeColor : LayoutUtils.generateDisabledColor(strokeColor));
         drawable.setCornerRadius(radius);
 
-        return new ShapeDrawableWrapper(drawable, aspectRatio, scale);
+        return new ShapeDrawableWrapper(drawable, aspectRatio, scale, null);
     }
 
     @NonNull

@@ -3,7 +3,6 @@
 package com.urbanairship.android.layout.property;
 
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.drawable.AnimatedVectorDrawable;
@@ -160,13 +159,18 @@ public abstract class Image {
 
         @Nullable
         public Drawable getDrawable(@NonNull Context context, boolean enabledState) {
+            return getDrawable(context, enabledState, null);
+        }
+
+        @Nullable
+        public Drawable getDrawable(@NonNull Context context, boolean enabledState, HorizontalPosition gravityPosition) {
             Drawable d = ContextCompat.getDrawable(context, getDrawableRes());
             if (d != null) {
                 DrawableCompat.setTint(d, enabledState ? tint.resolve(context) : LayoutUtils.generateDisabledColor(tint.resolve(context)));
                 if (d instanceof AnimatedVectorDrawable) {
                     ((AnimatedVectorDrawable) d).start();
                 }
-                return new ShapeDrawableWrapper(d, 1, scale);
+                return new ShapeDrawableWrapper(d, 1, scale, gravityPosition);
             } else {
                 return null;
             }
