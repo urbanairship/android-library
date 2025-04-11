@@ -67,18 +67,18 @@ internal class LayoutState(
     ) {
         actions?.forEach { action ->
             when (action) {
-                is StateAction.SetFormValue -> layout.let { state ->
+                is StateAction.SetFormValue -> {
                     val value = JsonValue.wrapOpt(formValue)
                     UALog.v("StateAction: SetFormValue ${action.key} = $value")
                     setState(action.key, value)
                 }
 
-                is StateAction.SetState -> layout.let { state ->
+                is StateAction.SetState -> {
                     UALog.v("StateAction: SetState ${action.key} = ${action.value}, ttl = ${action.ttl}")
                     setState(action.key, action.value, action.ttl)
                 }
 
-                StateAction.ClearState -> layout.let { state ->
+                StateAction.ClearState -> {
                     UALog.v("StateAction: ClearState")
                     clearState()
                 }
@@ -286,7 +286,7 @@ internal sealed class State {
 
             return copy(
                 children = updatedChildren,
-                status = evaluateFormStatus(updatedChildren)
+                status = evaluateFormStatus(updatedChildren,  allowValid = true)
             )
         }
         fun copyWithFormInput(
@@ -295,14 +295,14 @@ internal sealed class State {
         ): Form {
             children[value.identifier]?.field?.fieldType?.cancel()
 
-            var updatedChildren = children
+            val updatedChildren = children.toMutableMap()
             if (updatedChildren[value.identifier]?.lastProcessStatus?.isInvalid != true || !value.status.isInvalid) {
-                updatedChildren = updatedChildren + (value.identifier to Child(value, predicate, lastProcessStatus = value.status.makePending()))
+                updatedChildren[value.identifier] = Child(value, predicate, lastProcessStatus = value.status.makePending())
             }
 
             return copy(
                 children = updatedChildren,
-                status = evaluateFormStatus(updatedChildren)
+                status = evaluateFormStatus(updatedChildren, allowValid =  false)
             )
         }
 
@@ -332,7 +332,8 @@ internal sealed class State {
         }
 
         private fun evaluateFormStatus(
-            children: Map<String, Child>
+            children: Map<String, Child>,
+            allowValid: Boolean
         ): ThomasFormStatus {
             val filtered = children
                 .filterValues { it.predicate?.invoke() ?: true }
@@ -343,7 +344,7 @@ internal sealed class State {
             } else if (filtered.any { it.value.lastProcessStatus.isError }) {
                 UALog.v("Updating status to error: ${filtered.filter { it.value.lastProcessStatus.isError }}")
                 ThomasFormStatus.ERROR
-            } else if (filtered.any { it.value.lastProcessStatus.isPending }) {
+            } else if (filtered.any { it.value.lastProcessStatus.isPending } || !allowValid) {
                 UALog.v("Updating status to pending_validation: ${filtered.filter { it.value.lastProcessStatus.isPending }}")
                 ThomasFormStatus.PENDING_VALIDATION
             } else {
