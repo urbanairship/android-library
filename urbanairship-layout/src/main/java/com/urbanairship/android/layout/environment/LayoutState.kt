@@ -98,26 +98,28 @@ internal class LayoutState(
         value: JsonValue?,
         ttl: Duration? = null
     ) {
-        layout.update { current ->
-            val mutations = current.mutations.toMutableMap()
-
-            if (value != null && !value.isNull) {
-                val mutation = StateMutation(UUID.randomUUID().toString(), key, value)
+        if (value != null && !value.isNull) {
+            val mutation = StateMutation(UUID.randomUUID().toString(), key, value)
+            layout.update { current ->
+                val mutations = current.mutations.toMutableMap()
                 mutations[key] = mutation
-
-                if (ttl != null) {
-                    val job = scope.launch {
-                        delay(ttl)
-                        removeTempMutation(mutation)
-                    }
-                    runningJobs[key]?.cancel()
-                    runningJobs[key] = job
-                }
-            } else {
-                mutations.remove(key)
+                current.copy(mutations = mutations)
             }
 
-            current.copy(mutations = mutations)
+            if (ttl != null) {
+                val job = scope.launch {
+                    delay(ttl)
+                    removeTempMutation(mutation)
+                }
+                runningJobs[key]?.cancel()
+                runningJobs[key] = job
+            }
+        } else {
+            layout.update { current ->
+                val mutations = current.mutations.toMutableMap()
+                mutations.remove(key)
+                current.copy(mutations = mutations)
+            }
         }
     }
 
