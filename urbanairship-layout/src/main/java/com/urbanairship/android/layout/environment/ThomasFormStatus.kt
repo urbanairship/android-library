@@ -28,5 +28,8 @@ internal enum class ThomasFormStatus(private val type: String): JsonSerializable
     val isSubmitted: Boolean
         get() = this == SUBMITTED
 
+    val isError: Boolean
+        get() = this == ERROR
+
     override fun toJsonValue(): JsonValue = JsonValue.wrap(type)
 }

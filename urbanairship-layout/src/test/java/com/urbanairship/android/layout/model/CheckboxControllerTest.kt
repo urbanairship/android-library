@@ -85,8 +85,11 @@ public class CheckboxControllerTest {
             val item = awaitItem()
             // Verify that our checkbox controller updated the form state.
             assertTrue(item.filteredFields.containsKey(IDENTIFIER))
+            assertEquals(item.status, ThomasFormStatus.PENDING_VALIDATION)
+
             // Verify that the response is valid, since the checkbox controller is not required.
-            assertEquals(item.status, ThomasFormStatus.VALID)
+            assertEquals(awaitItem().status, ThomasFormStatus.VALIDATING)
+            assertEquals(awaitItem().status, ThomasFormStatus.VALID)
 
             ensureAllEventsConsumed()
         }
@@ -116,6 +119,8 @@ public class CheckboxControllerTest {
             skipItems(2)
 
             // Verify that the response is valid now that it has 1 selection
+            assertEquals(awaitItem().status, ThomasFormStatus.PENDING_VALIDATION)
+            assertEquals(awaitItem().status, ThomasFormStatus.VALIDATING)
             assertEquals(awaitItem().status, ThomasFormStatus.VALID)
 
             ensureAllEventsConsumed()

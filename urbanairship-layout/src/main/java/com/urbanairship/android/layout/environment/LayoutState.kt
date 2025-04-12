@@ -1,5 +1,6 @@
 package com.urbanairship.android.layout.environment
 
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormValidationMode
@@ -15,8 +16,15 @@ import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.json.JsonValue
+import java.util.UUID
 import kotlin.math.max
+import kotlin.time.Duration
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
 internal class LayoutState(
     val pager: SharedState<State.Pager>?,
@@ -27,6 +35,11 @@ internal class LayoutState(
     val thomasForm: ThomasForm?,
     val parentForm: ThomasForm?
 ) {
+    val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
+    private var appliedState = mutableMapOf<String, JsonValue>()
+    private var tempMutations = mutableMapOf<String, TempMutation>()
+    private var runningJobs = mutableMapOf<String, Job>()
+
     fun reportingContext(
         formContext: FormInfo? = null,
         pagerContext: PagerData? = null,
@@ -54,32 +67,81 @@ internal class LayoutState(
     ) {
         actions?.forEach { action ->
             when (action) {
-                is StateAction.SetFormValue -> layout.let { state ->
-                    UALog.v("StateAction: SetFormValue ${action.key} = ${JsonValue.wrapOpt(formValue)}")
-                    state.update {
-                        it.copy(state = it.state + (action.key to JsonValue.wrapOpt(formValue)))
-                    }
+                is StateAction.SetFormValue -> {
+                    val value = JsonValue.wrapOpt(formValue)
+                    UALog.v("StateAction: SetFormValue ${action.key} = $value")
+                    setState(action.key, value)
                 }
 
-                is StateAction.SetState -> layout.let { state ->
-                    UALog.v("StateAction: SetState ${action.key} = ${action.value}")
-                    state.update {
-                        if (action.value?.isNull == false) {
-                            it.copy(state = it.state + (action.key to action.value))
-                        } else {
-                            it.copy(state = it.state - action.key)
-                        }
-                    }
+                is StateAction.SetState -> {
+                    UALog.v("StateAction: SetState ${action.key} = ${action.value}, ttl = ${action.ttl}")
+                    setState(action.key, action.value, action.ttl)
                 }
 
-                StateAction.ClearState -> layout.let { state ->
+                StateAction.ClearState -> {
                     UALog.v("StateAction: ClearState")
-                    state.update {
-                        it.copy(state = emptyMap())
-                    }
+                    clearState()
                 }
             }
         }
+    }
+
+    private fun setState(
+        key: String,
+        value: JsonValue?,
+        ttl: Duration? = null
+    ) {
+        if (ttl != null) {
+            val mutation = TempMutation(UUID.randomUUID().toString(), key, value)
+            tempMutations[key] = mutation
+            appliedState.remove(key)
+            updateState()
+            val job = scope.launch {
+                delay(ttl)
+                removeTempMutation(mutation)
+            }
+            runningJobs[key]?.cancel()
+            runningJobs[key] = job
+        } else {
+            tempMutations.remove(key)
+            appliedState.remove(key)
+
+            if (value?.isNull == false) {
+                appliedState[key] = value
+            }
+            updateState()
+        }
+    }
+
+    internal data class TempMutation(
+        val id: String,
+        val key: String,
+        val value: JsonValue?
+    )
+
+    internal fun removeTempMutation(tempMutation: TempMutation) {
+        if (tempMutations[tempMutation.key]?.equals(tempMutation) == true) {
+            tempMutations.remove(tempMutation.key)
+            this.updateState()
+        }
+    }
+
+    private fun updateState() {
+        val copy = appliedState.toMutableMap()
+        tempMutations.forEach { (key, tempMutation) ->
+            if (tempMutation.value?.isNull == false) {
+                copy[key] = tempMutation.value
+            }
+        }
+        layout.update {
+            it.copy(state = copy)
+        }
+    }
+
+    private fun clearState() {
+        tempMutations.clear()
+        appliedState.clear()
+        updateState()
     }
 }
 
@@ -224,7 +286,7 @@ internal sealed class State {
 
             return copy(
                 children = updatedChildren,
-                status = evaluateFormStatus(updatedChildren)
+                status = evaluateFormStatus(updatedChildren,  allowValid = true)
             )
         }
         fun copyWithFormInput(
@@ -233,14 +295,14 @@ internal sealed class State {
         ): Form {
             children[value.identifier]?.field?.fieldType?.cancel()
 
-            var updatedChildren = children
+            val updatedChildren = children.toMutableMap()
             if (updatedChildren[value.identifier]?.lastProcessStatus?.isInvalid != true || !value.status.isInvalid) {
-                updatedChildren = updatedChildren + (value.identifier to Child(value, predicate, lastProcessStatus = value.status.makePending()))
+                updatedChildren[value.identifier] = Child(value, predicate, lastProcessStatus = value.status.makePending())
             }
 
             return copy(
                 children = updatedChildren,
-                status = evaluateFormStatus(updatedChildren)
+                status = evaluateFormStatus(updatedChildren, allowValid =  false)
             )
         }
 
@@ -270,7 +332,8 @@ internal sealed class State {
         }
 
         private fun evaluateFormStatus(
-            children: Map<String, Child>
+            children: Map<String, Child>,
+            allowValid: Boolean
         ): ThomasFormStatus {
             val filtered = children
                 .filterValues { it.predicate?.invoke() ?: true }
@@ -281,7 +344,7 @@ internal sealed class State {
             } else if (filtered.any { it.value.lastProcessStatus.isError }) {
                 UALog.v("Updating status to error: ${filtered.filter { it.value.lastProcessStatus.isError }}")
                 ThomasFormStatus.ERROR
-            } else if (filtered.any { it.value.lastProcessStatus.isPending }) {
+            } else if (filtered.any { it.value.lastProcessStatus.isPending } || !allowValid) {
                 UALog.v("Updating status to pending_validation: ${filtered.filter { it.value.lastProcessStatus.isPending }}")
                 ThomasFormStatus.PENDING_VALIDATION
             } else {
@@ -361,10 +424,11 @@ internal sealed class State {
     ) : State()
 
     internal data class Layout(
-        val state: Map<String, JsonValue?> = emptyMap()
+        val state: Map<String, JsonValue> = emptyMap(),
+        val tempState: Map<String, JsonValue> = emptyMap()
     ) : State() {
         companion object {
-            val DEFAULT = Layout(emptyMap())
+            val DEFAULT = Layout()
         }
     }
 }

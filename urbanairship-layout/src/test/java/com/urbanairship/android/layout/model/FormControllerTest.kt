@@ -129,7 +129,7 @@ public class FormControllerTest {
             }
 
             assertFalse(awaitItem().isDisplayReported)
-
+            assertFalse(awaitItem().isDisplayReported)
             assertFalse(awaitItem().isDisplayReported)
 
             assertTrue(awaitItem().isDisplayReported)
@@ -151,7 +151,7 @@ public class FormControllerTest {
                 state.copyWithDisplayState(identifier = "input-id", isDisplayed = true)
             }
 
-            skipItems(1)
+            skipItems(2)
 
             awaitItem().let { item ->
                 assertFalse(item.isDisplayReported)
@@ -192,13 +192,15 @@ public class FormControllerTest {
             }
 
             // Skip to the final VALID item
-            skipItems(2)
+            skipItems(4)
 
             assertFalse(awaitItem().filteredFields.isEmpty())
 
             // Emit FORM_SUBMIT event
             val event = spyk(LayoutEvent.SubmitForm(BUTTON_ID))
             testEventHandler.broadcast(event)
+
+            skipItems(2)
 
             // Verify state was updated
             assertTrue(awaitItem().isSubmitted)
@@ -228,7 +230,7 @@ public class FormControllerTest {
             initChildFormController()
 
             // Skip to the final VALID item
-            skipItems(1)
+            skipItems(2)
 
             assertFalse(awaitItem().isDisplayReported)
 
@@ -255,8 +257,8 @@ public class FormControllerTest {
         }
 
         // Skip child form init event, displayedInputs change, and the parent form state update above.
-        childChanges.skipItems(1)
-        parentChanges.skipItems(3)
+        childChanges.skipItems(2)
+        parentChanges.skipItems(4)
 
         // Verify that the child state was updated appropriately.
         childChanges.awaitItem().run {

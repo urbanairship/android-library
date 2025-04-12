@@ -118,6 +118,10 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
             }
         }
 
+        if (viewInfo.stateTriggers != null) {
+            setupStateListeners()
+        }
+
         return view
     }
 
@@ -160,6 +164,28 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                 updateBackground(it)
                 updateVisibility(it)
                 listener?.onStateUpdated(it)
+            }
+        }
+    }
+
+    private fun setupStateListeners() {
+        val triggers = viewInfo.stateTriggers ?: return
+        if (triggers.isEmpty()) { return }
+
+
+        modelScope.launch {
+            val triggered = mutableSetOf<String>()
+            layoutState.thomasState.collect { state ->
+                triggers.forEach { trigger ->
+                    if (triggered.contains(trigger.id) && trigger.resetWhenStateMatches?.apply(state) == true) {
+                        triggered.remove(trigger.id)
+                    }
+
+                    if (!triggered.contains(trigger.id) && trigger.triggerWhenStateMatches.apply(state)) {
+                        triggered.add(trigger.id)
+                        runStateActions(trigger.onTrigger.stateActions)
+                    }
+                }
             }
         }
     }

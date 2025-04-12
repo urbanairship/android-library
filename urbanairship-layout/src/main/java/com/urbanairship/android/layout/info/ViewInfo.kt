@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.info
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.android.layout.environment.ThomasStateTrigger
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.AttributeValue
@@ -150,6 +151,7 @@ internal interface View {
     val eventHandlers: List<EventHandler>?
     val enableBehaviors: List<EnableBehaviorType>?
     val commonViewOverrides: CommonViewOverrides?
+    val stateTriggers: List<ThomasStateTrigger>?
 }
 
 internal data class ViewPropertyOverride<T>(
@@ -199,6 +201,10 @@ internal class BaseViewInfo(json: JsonMap) : View {
 
     override val commonViewOverrides = json.optionalMap("view_overrides")?.let {
         CommonViewOverrides(it)
+    }
+
+    override val stateTriggers = json.optionalList("state_triggers")?.let { list ->
+        list.map { ThomasStateTrigger.fromJson(it.requireMap()) }
     }
 }
 
