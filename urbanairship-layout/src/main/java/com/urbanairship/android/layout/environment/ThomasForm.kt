@@ -172,12 +172,6 @@ internal class ThomasForm(
 
             is ThomasFormField.FieldType.Instant -> {}
         }
-
-        if (validationMode == FormValidationMode.IMMEDIATE) {
-            scope.launch {
-                validate()
-            }
-        }
     }
 
     fun updateWithDisplayState(identifier: String, isDisplayed: Boolean) {
