@@ -129,7 +129,7 @@ public class FormControllerTest {
             }
 
             assertFalse(awaitItem().isDisplayReported)
-
+            assertFalse(awaitItem().isDisplayReported)
             assertFalse(awaitItem().isDisplayReported)
 
             assertTrue(awaitItem().isDisplayReported)
@@ -151,7 +151,7 @@ public class FormControllerTest {
                 state.copyWithDisplayState(identifier = "input-id", isDisplayed = true)
             }
 
-            skipItems(1)
+            skipItems(2)
 
             awaitItem().let { item ->
                 assertFalse(item.isDisplayReported)
@@ -192,7 +192,7 @@ public class FormControllerTest {
             }
 
             // Skip to the final VALID item
-            skipItems(2)
+            skipItems(4)
 
             assertFalse(awaitItem().filteredFields.isEmpty())
 
