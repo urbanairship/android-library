@@ -74,13 +74,14 @@ public class RadioInputControllerTest {
             initRadioInputController()
 
             // Skip to the final VALID item
-            skipItems(2)
+            skipItems(4)
 
             val item = awaitItem()
             // Verify that our checkbox controller updated the form state.
             assertTrue(item.filteredFields.containsKey(IDENTIFIER))
             // Verify that the response is valid, since the checkbox controller is not required.
             assertTrue(item.lastProcessedStatus(IDENTIFIER)?.isValid == true)
+
 
             ensureAllEventsConsumed()
         }
@@ -95,7 +96,7 @@ public class RadioInputControllerTest {
             initRadioInputController(isRequired = true)
 
             // Skip to the final VALID item
-            skipItems(2)
+            skipItems(4)
 
             awaitItem().let {
                 // Verify that our checkbox controller updated the form state.

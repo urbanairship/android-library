@@ -119,6 +119,8 @@ public class CheckboxControllerTest {
             skipItems(2)
 
             // Verify that the response is valid now that it has 1 selection
+            assertEquals(awaitItem().status, ThomasFormStatus.PENDING_VALIDATION)
+            assertEquals(awaitItem().status, ThomasFormStatus.VALIDATING)
             assertEquals(awaitItem().status, ThomasFormStatus.VALID)
 
             ensureAllEventsConsumed()
