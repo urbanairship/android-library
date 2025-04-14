@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="pager_indicator_announcement">Side %1$s af %2$s</string>
+</resources>

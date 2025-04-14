@@ -10,6 +10,7 @@ import android.widget.Checkable
 import android.widget.ImageView
 import android.widget.LinearLayout
 import androidx.core.view.isVisible
+import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.PagerIndicatorModel
 import com.urbanairship.android.layout.property.Border
@@ -100,7 +101,8 @@ internal class PagerIndicatorView(
             (getChildAt(i) as Checkable).isChecked = i == position
         }
         if (model.announcePage == true) {
-            val announcement = "Page ${position + 1} of ${childCount}"
+            val announcement =
+                context.getString(R.string.pager_indicator_announcement, position + 1, childCount)
             this.contentDescription = announcement
             this.announceForAccessibility(announcement)
         }
