@@ -22,6 +22,7 @@ import com.urbanairship.contacts.ContactChannel
 import com.urbanairship.contacts.EmailRegistrationOptions
 import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.SmsRegistrationOptions
+import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.ConditionStateMonitor
@@ -198,27 +199,34 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
                 Effect.ShowContactManagementAddDialog(action.item)
             )
             is Action.ValidateEmailChannel -> flowOf(
-                if (action.address.airshipIsValidEmail()) {
-                    Effect.DismissContactManagementAddDialog.also {
-                        handle(
-                            Action.RegisterChannel.Email(action.item, action.address)
-                        )
+                when(val result = validateEmailAction(action)) {
+                    is AirshipInputValidation.Result.Valid -> {
+                        Effect.DismissContactManagementAddDialog.also {
+                            handle(
+                                Action.RegisterChannel.Email(action.item, result.address)
+                            )
+                        }
                     }
-                } else {
-                    val message = action.item.platform.errorMessages.invalidMessage
-                    Effect.ShowContactManagementAddDialogError(message)
+                    AirshipInputValidation.Result.Invalid -> {
+                        val message = action.item.platform.errorMessages.invalidMessage
+                        Effect.ShowContactManagementAddDialogError(message)
+
+                    }
                 }
             )
             is Action.ValidateSmsChannel -> flowOf(
-                if (contact.validateSms(action.address, action.senderId)) {
-                    Effect.DismissContactManagementAddDialog.also {
-                        handle(
-                            Action.RegisterChannel.Sms(action.item, action.address, action.senderId)
-                        )
+                when(val result = validateSmsAction(action)) {
+                    is AirshipInputValidation.Result.Valid -> {
+                        Effect.DismissContactManagementAddDialog.also {
+                            handle(
+                                Action.RegisterChannel.Sms(action.item, result.address, action.senderId)
+                            )
+                        }
                     }
-                } else {
-                    val message = action.item.platform.errorMessages.invalidMessage
-                    Effect.ShowContactManagementAddDialogError(message)
+                    AirshipInputValidation.Result.Invalid -> {
+                        val message = action.item.platform.errorMessages.invalidMessage
+                        Effect.ShowContactManagementAddDialogError(message)
+                    }
                 }
             )
             is Action.ConfirmAddChannel -> flowOf(
@@ -279,6 +287,27 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
 
             else -> emptyFlow()
         }
+
+    private suspend fun validateEmailAction(
+        action: Action.ValidateEmailChannel
+    ) = preferenceCenter.inputValidator.validate(
+        request = AirshipInputValidation.Request.ValidateEmail(
+            AirshipInputValidation.Request.Email(action.address)
+        )
+    )
+
+    private suspend fun validateSmsAction(
+        action: Action.ValidateSmsChannel
+    ) = preferenceCenter.inputValidator.validate(
+        request = AirshipInputValidation.Request.ValidateSms(
+            sms = AirshipInputValidation.Request.Sms(
+                rawInput = action.address,
+                validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(
+                    senderId = action.senderId
+                )
+            )
+        )
+    )
 
     /** Flow that reduces the current [State] and incoming [Change] to a new [State]. */
     private suspend fun states(state: State, change: Change): Flow<State> =
