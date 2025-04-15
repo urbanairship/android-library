@@ -88,6 +88,9 @@ internal class PagerModel(
 
     private val branchControl: PagerBranchControl?
 
+    val isSinglePage: Boolean
+        get() = branchControl == null && pages.size < 2
+
     init {
         @OptIn(DelicateLayoutApi::class)
         val branching = pagerState.value.branching
