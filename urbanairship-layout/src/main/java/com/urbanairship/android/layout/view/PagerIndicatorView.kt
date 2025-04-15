@@ -100,7 +100,8 @@ internal class PagerIndicatorView(
             (getChildAt(i) as Checkable).isChecked = i == position
         }
         if (model.announcePage == true) {
-            val announcement = "Page ${position + 1} of ${childCount}"
+            val announcement =
+                context.getString(com.urbanairship.R.string.ua_pager_progress, position + 1, childCount)
             this.contentDescription = announcement
             this.announceForAccessibility(announcement)
         }
