@@ -101,5 +101,5 @@
     <string name="ua_icon_button_backward_arrow">Indietro</string>
     
     <!-- Form processing -->
-    <string name="ua_form_processing_error">Errore durante l'elaborazione del modulo. Per favore riprova</string>
+    <string name="ua_form_processing_error">Errore durante l\'elaborazione del modulo. Per favore riprova</string>
 </resources>
