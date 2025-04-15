@@ -157,6 +157,7 @@ internal class PagerModel(
             state.copy(
                 pageIds = updated.map { it.identifier },
                 durations = updated.map { it.automatedActions?.earliestNavigationAction?.delay },
+                completed = if (state.branching == null) updated.size == 1 else state.completed,
             )
         }
 
