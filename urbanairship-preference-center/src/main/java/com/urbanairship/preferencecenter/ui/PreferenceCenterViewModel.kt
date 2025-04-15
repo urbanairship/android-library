@@ -303,7 +303,8 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             sms = AirshipInputValidation.Request.Sms(
                 rawInput = action.address,
                 validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(
-                    senderId = action.senderId
+                    senderId = action.senderId,
+                    prefix = action.prefix
                 )
             )
         )
@@ -668,7 +669,8 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
         data class ValidateSmsChannel(
             val item: Item.ContactManagement,
             val address: String,
-            val senderId: String
+            val senderId: String,
+            val prefix: String?
         ) : Action()
 
         data class ValidateEmailChannel(
