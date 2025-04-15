@@ -670,7 +670,7 @@ internal class PreferenceCenterViewModel @JvmOverloads constructor(
             val item: Item.ContactManagement,
             val address: String,
             val senderId: String,
-            val prefix: String?
+            val prefix: String? = null
         ) : Action()
 
         data class ValidateEmailChannel(

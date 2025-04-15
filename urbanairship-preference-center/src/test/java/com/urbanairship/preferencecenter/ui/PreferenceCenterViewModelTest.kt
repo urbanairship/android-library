@@ -65,6 +65,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
@@ -1001,7 +1002,8 @@ public class PreferenceCenterViewModelTest {
                 }
             )
         }
-        val address = "15031112222"
+        val address = "5031112222"
+        val prefix = "1"
         val senderId = "123456"
 
         val validator: AirshipInputValidation.Validator = mockk {
@@ -1012,7 +1014,10 @@ public class PreferenceCenterViewModelTest {
                         assertEquals(address, request.sms.rawInput)
                         when(val option = request.sms.validationOptions) {
                             is Request.Sms.ValidationOptions.Prefix -> fail()
-                            is Request.Sms.ValidationOptions.Sender -> assertEquals(senderId, option.senderId)
+                            is Request.Sms.ValidationOptions.Sender -> {
+                                assertEquals(senderId, option.senderId)
+                                assertEquals(prefix, option.prefix)
+                            }
                         }
                     }
                 }
@@ -1032,7 +1037,7 @@ public class PreferenceCenterViewModelTest {
             }
 
             effects.test {
-                handle(Action.ValidateSmsChannel(item, address, senderId))
+                handle(Action.ValidateSmsChannel(item, address, senderId, prefix))
                 assertThat(awaitItem()).isEqualTo(Effect.DismissContactManagementAddDialog)
                 ensureAllEventsConsumed()
             }
@@ -1065,7 +1070,10 @@ public class PreferenceCenterViewModelTest {
                         assertEquals(address, request.sms.rawInput)
                         when(val option = request.sms.validationOptions) {
                             is Request.Sms.ValidationOptions.Prefix -> fail()
-                            is Request.Sms.ValidationOptions.Sender -> assertEquals(senderId, option.senderId)
+                            is Request.Sms.ValidationOptions.Sender -> {
+                                assertEquals(senderId, option.senderId)
+                                assertNull(option.prefix)
+                            }
                         }
                     }
                 }
