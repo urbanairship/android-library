@@ -11,6 +11,8 @@ import com.urbanairship.contacts.EmailRegistrationOptions
 import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListEditor
 import com.urbanairship.contacts.SmsRegistrationOptions
+import com.urbanairship.inputvalidation.AirshipInputValidation
+import com.urbanairship.inputvalidation.AirshipInputValidation.Request
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.preferencecenter.ConditionStateMonitor
@@ -63,6 +65,8 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.fail
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -998,12 +1002,33 @@ public class PreferenceCenterViewModelTest {
                 }
             )
         }
-        val address = "15031112222"
+        val address = "5031112222"
+        val prefix = "1"
         val senderId = "123456"
 
-        viewModel(
-            mockContact = { coEvery { validateSms(address, senderId) } returns true }
-        ).run {
+        val validator: AirshipInputValidation.Validator = mockk {
+            coEvery { validate(any()) } answers {
+                when(val request = firstArg<Request>()) {
+                    is Request.ValidateEmail -> fail()
+                    is Request.ValidateSms -> {
+                        assertEquals(address, request.sms.rawInput)
+                        when(val option = request.sms.validationOptions) {
+                            is Request.Sms.ValidationOptions.Prefix -> fail()
+                            is Request.Sms.ValidationOptions.Sender -> {
+                                assertEquals(senderId, option.senderId)
+                                assertEquals(prefix, option.prefix)
+                            }
+                        }
+                    }
+                }
+
+                AirshipInputValidation.Result.Valid(address)
+            }
+        }
+
+        viewModel().run {
+            every { preferenceCenter.inputValidator } returns validator
+
             states.test {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
                 handle(Action.Refresh)
@@ -1012,12 +1037,12 @@ public class PreferenceCenterViewModelTest {
             }
 
             effects.test {
-                handle(Action.ValidateSmsChannel(item, address, senderId))
+                handle(Action.ValidateSmsChannel(item, address, senderId, prefix))
                 assertThat(awaitItem()).isEqualTo(Effect.DismissContactManagementAddDialog)
                 ensureAllEventsConsumed()
             }
 
-            coVerify { contact.validateSms(address, senderId) }
+            coVerify { validator.validate(any()) }
         }
     }
 
@@ -1037,9 +1062,30 @@ public class PreferenceCenterViewModelTest {
         val address = "15031112222"
         val senderId = "123456"
 
-        viewModel(
-            mockContact = { coEvery { validateSms(address, senderId) } returns false }
-        ).run {
+        val validator: AirshipInputValidation.Validator = mockk {
+            coEvery { validate(any()) } answers {
+                when(val request = firstArg<Request>()) {
+                    is Request.ValidateEmail -> fail()
+                    is Request.ValidateSms -> {
+                        assertEquals(address, request.sms.rawInput)
+                        when(val option = request.sms.validationOptions) {
+                            is Request.Sms.ValidationOptions.Prefix -> fail()
+                            is Request.Sms.ValidationOptions.Sender -> {
+                                assertEquals(senderId, option.senderId)
+                                assertNull(option.prefix)
+                            }
+                        }
+                    }
+                }
+
+                AirshipInputValidation.Result.Invalid
+            }
+        }
+
+        viewModel().run {
+
+            every { preferenceCenter.inputValidator } returns validator
+
             states.test {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
                 handle(Action.Refresh)
@@ -1054,7 +1100,7 @@ public class PreferenceCenterViewModelTest {
             }
         }
 
-        coVerify { contact.validateSms(address, senderId) }
+        coVerify { validator.validate(any()) }
     }
 
     @Test

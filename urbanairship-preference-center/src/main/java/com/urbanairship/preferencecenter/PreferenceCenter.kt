@@ -30,7 +30,7 @@ public class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) intern
     dataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,
     private val remoteData: RemoteData,
-    private val inputValidator: AirshipInputValidation.Validator
+    internal val inputValidator: AirshipInputValidation.Validator
 ) : AirshipComponent(context, dataStore) {
 
     private val pendingResultScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())

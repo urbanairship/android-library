@@ -66,7 +66,7 @@ internal fun PreferenceCenterFragment.showContactManagementAddDialog(
                     // a custom validation handler. The model will handle making the request
                     // and will either register the channel or show an error message via the
                     // errors flow (which is why we don't want to dismiss the dialog here).
-                    Action.ValidateSmsChannel(item, result.address, result.senderId)
+                    Action.ValidateSmsChannel(item, result.address, result.senderId, prefix = result.prefix)
             }
             onHandleAction(action)
         }
