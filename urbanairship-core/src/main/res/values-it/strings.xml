@@ -93,4 +93,13 @@
     <string name="ua_play">Riproduci</string>
     <string name="ua_pause">Pausa</string>
     <string name="ua_stop">Stop</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Chiudi</string>
+    <string name="ua_icon_button_checkmark">Conferma</string>
+    <string name="ua_icon_button_forward_arrow">Avanti</string>
+    <string name="ua_icon_button_backward_arrow">Indietro</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Errore durante l\'elaborazione del modulo. Per favore riprova</string>
 </resources>

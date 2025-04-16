@@ -98,4 +98,7 @@
     <string name="ua_icon_button_checkmark">Bevestigen</string>
     <string name="ua_icon_button_forward_arrow">Volgende</string>
     <string name="ua_icon_button_backward_arrow">Vorige</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Fout bij het verwerken van formulier. Probeer het opnieuw</string>
 </resources>

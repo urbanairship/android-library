@@ -112,4 +112,7 @@
     <string name="ua_icon_button_checkmark">Validate</string>
     <string name="ua_icon_button_forward_arrow">Next</string>
     <string name="ua_icon_button_backward_arrow">Previous</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Error processing form. Please try again</string>
 </resources>

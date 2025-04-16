@@ -98,4 +98,7 @@
     <string name="ua_icon_button_checkmark">تایید</string>
     <string name="ua_icon_button_forward_arrow">بعدی</string>
     <string name="ua_icon_button_backward_arrow">قبلی</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">خطا در پردازش فرم. لطفا دوباره تلاش کنید</string>
 </resources>

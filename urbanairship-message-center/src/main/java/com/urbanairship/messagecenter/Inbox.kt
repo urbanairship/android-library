@@ -193,7 +193,7 @@ public class Inbox @VisibleForTesting internal constructor(
             }
         } else {
             // Clean up any Message Center data stored on the device.
-            deleteAllMessages()
+            deleteAllMessagesInternal()
             inboxJobHandler.removeStoredData()
             tearDown()
         }
@@ -663,11 +663,24 @@ public class Inbox @VisibleForTesting internal constructor(
     }
 
     /**
+     * Mark all [Message]s deleted.
+     *
+     * Note that in most cases these messages aren't immediately deleted on the server, but they will
+     * be inaccessible on the device as soon as they're marked deleted.
+     */
+    public fun deleteAllMessages() {
+        scope.launch {
+            messageDao.markAllMessagesDeleted()
+            notifyInboxUpdated()
+        }
+    }
+
+    /**
      * Delete all message data stored on the device.
      *
      * @hide
      */
-    private fun deleteAllMessages() {
+    private fun deleteAllMessagesInternal() {
         scope.launch {
             messageDao.deleteAllMessages()
             notifyInboxUpdated()

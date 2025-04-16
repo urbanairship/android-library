@@ -181,6 +181,8 @@ public class ContactTest {
             isStable = true,
             resolveDateMs = testClock.currentTimeMillis)
 
+        coEvery { mockContactManager.lastContactId } returns "some contact id"
+
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
             builder = when (it) {
@@ -206,6 +208,8 @@ public class ContactTest {
         coEvery {
             mockContactManager.stableContactIdUpdate()
         } returns ContactIdUpdate("some stable verified id", null, true, testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) + 1)
+
+        coEvery { mockContactManager.lastContactId } returns "some stable verified id"
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
@@ -242,6 +246,8 @@ public class ContactTest {
         coEvery {
             mockContactManager.stableContactIdUpdate(testClock.currentTimeMillis())
         } returns ContactIdUpdate("some stable verified id", null, true, testClock.currentTimeMillis)
+
+        coEvery { mockContactManager.lastContactId } returns "some stable verified id"
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {

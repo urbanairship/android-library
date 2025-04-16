@@ -80,4 +80,25 @@
     <string name="ua_min_priority_channel_name">Pemberitahuan prioritas minimal</string>
     <string name="ua_min_priority_channel_description">Pesan prioritas mininimal</string>
     <string name="ua_min_priority_channel_id">ID Saluran Minimal</string>
+    
+    <!-- General -->
+    <string name="ua_dismiss">Tutup</string>
+    <string name="ua_escape">Keluar</string>
+    <string name="ua_next">Berikutnya</string>
+    <string name="ua_previous">Sebelumnya</string>
+    <string name="ua_submit">Kirim</string>
+    <string name="ua_loading">Memuat</string>
+    <string name="ua_pager_progress">Halaman %1$s dari %2$s</string>
+    <string name="ua_play">Putar</string>
+    <string name="ua_pause">Jeda</string>
+    <string name="ua_stop">Berhenti</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Tutup</string>
+    <string name="ua_icon_button_checkmark">Konfirmasi</string>
+    <string name="ua_icon_button_forward_arrow">Berikutnya</string>
+    <string name="ua_icon_button_backward_arrow">Sebelumnya</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Kesalahan memproses formulir. Silakan coba lagi</string>
 </resources>

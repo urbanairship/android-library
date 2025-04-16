@@ -100,4 +100,7 @@
     <string name="ua_icon_button_checkmark">Overiť</string>
     <string name="ua_icon_button_forward_arrow">Ďalej</string>
     <string name="ua_icon_button_backward_arrow">Späť</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Chyba pri spracovaní formulára. Skúste to znova</string>
 </resources>

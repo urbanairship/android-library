@@ -97,4 +97,7 @@
     <string name="ua_icon_button_checkmark">验证</string>
     <string name="ua_icon_button_forward_arrow">下一个</string>
     <string name="ua_icon_button_backward_arrow">上一个</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">处理表单时出错。请重试</string>
 </resources>

@@ -379,6 +379,33 @@ public class ContactManagerTest {
     }
 
     @Test
+    public fun testResetIfNeededNoContactId(): TestResult = runTest {
+        assertNull(contactManager.contactIdUpdates.value)
+        contactManager.resetIfNeeded()
+
+        // Resolve is called first
+        coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
+            status = 200, value = nonAnonIdentifyResult, body = null, headers = emptyMap()
+        )
+
+        coEvery {
+            mockApiClient.reset(
+                "some channel id", null
+            )
+        } returns RequestResult(
+            status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
+        )
+
+        val result = contactManager.performNextOperation()
+        assertEquals(true, result)
+        assertEquals(anonIdentityResult.contactId, contactManager.lastContactId)
+
+        contactManager.contactIdUpdates.test {
+            assertEquals(anonIdentityResult.contactId, this.awaitItem()?.contactId)
+        }
+    }
+
+    @Test
     public fun testResetServerError(): TestResult = runTest {
         contactManager.addOperation(ContactOperation.Reset)
 

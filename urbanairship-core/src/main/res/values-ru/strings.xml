@@ -94,4 +94,13 @@
     <string name="ua_play">Воспроизвести</string>
     <string name="ua_pause">Пауза</string>
     <string name="ua_stop">Стоп</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Закрыть</string>
+    <string name="ua_icon_button_checkmark">Подтвердить</string>
+    <string name="ua_icon_button_forward_arrow">Вперед</string>
+    <string name="ua_icon_button_backward_arrow">Назад</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Ошибка при обработке формы. Пожалуйста, попробуйте еще раз</string>
 </resources>

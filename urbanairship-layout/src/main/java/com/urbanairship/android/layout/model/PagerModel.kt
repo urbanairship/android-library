@@ -88,6 +88,9 @@ internal class PagerModel(
 
     private val branchControl: PagerBranchControl?
 
+    val isSinglePage: Boolean
+        get() = branchControl == null && pages.size < 2
+
     init {
         @OptIn(DelicateLayoutApi::class)
         val branching = pagerState.value.branching
@@ -157,6 +160,7 @@ internal class PagerModel(
             state.copy(
                 pageIds = updated.map { it.identifier },
                 durations = updated.map { it.automatedActions?.earliestNavigationAction?.delay },
+                completed = if (state.branching == null) updated.size == 1 else state.completed,
             )
         }
 

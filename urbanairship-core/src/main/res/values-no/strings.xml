@@ -98,4 +98,7 @@
     <string name="ua_icon_button_checkmark">Bekreft</string>
     <string name="ua_icon_button_forward_arrow">Neste</string>
     <string name="ua_icon_button_backward_arrow">Forrige</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Feil ved behandling av skjema. Vennligst prøv igjen</string>
 </resources>

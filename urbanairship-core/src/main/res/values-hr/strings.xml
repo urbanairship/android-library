@@ -99,4 +99,7 @@
     <string name="ua_icon_button_checkmark">Potvrdi</string>
     <string name="ua_icon_button_forward_arrow">Sljedeće</string>
     <string name="ua_icon_button_backward_arrow">Prethodno</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Pogreška u obradi obrasca. Molimo pokušajte ponovno</string>
 </resources>

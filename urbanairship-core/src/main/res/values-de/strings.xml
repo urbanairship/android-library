@@ -92,4 +92,13 @@
     <string name="ua_play">Spielen</string>
     <string name="ua_pause">Pausieren</string>
     <string name="ua_stop">Stoppen</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Schließen</string>
+    <string name="ua_icon_button_checkmark">Bestätigen</string>
+    <string name="ua_icon_button_forward_arrow">Weiter</string>
+    <string name="ua_icon_button_backward_arrow">Zurück</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Fehler bei der Verarbeitung des Formulars. Bitte versuchen Sie es erneut</string>
 </resources>

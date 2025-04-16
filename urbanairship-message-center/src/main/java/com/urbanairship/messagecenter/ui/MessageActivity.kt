@@ -21,7 +21,7 @@ import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment.OnMessageDeletedListener
 
 /** `Activity` that displays the Message Center message view. */
-public class MessageActivity : FragmentActivity() {
+public open class MessageActivity : FragmentActivity() {
 
     private var currentMessageId: String? = null
 

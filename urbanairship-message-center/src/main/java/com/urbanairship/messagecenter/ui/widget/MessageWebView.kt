@@ -15,19 +15,16 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
-import com.urbanairship.webkit.AirshipWebView
 import com.urbanairship.webkit.AirshipWebViewClient
 import com.urbanairship.webkit.NestedScrollAirshipWebView
+import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
-import kotlinx.coroutines.runBlocking
 
 /**
  * Base WebView configured for Airship Message Center content.
- * @hide
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public open class MessageWebView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -60,15 +57,9 @@ public open class MessageWebView @JvmOverloads constructor(
 
 /**
  * A `WebViewClient` that enables the Airship Native Bridge for Message Center.
- * @hide
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public open class MessageWebViewClient : AirshipWebViewClient() {
 
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun extendActionRequest(
         request: ActionRunRequest,
         webView: WebView
@@ -82,11 +73,7 @@ public open class MessageWebViewClient : AirshipWebViewClient() {
         return request
     }
 
-    /**
-     * @hide
-     */
     @CallSuper
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun extendJavascriptEnvironment(
         builder: JavaScriptEnvironment.Builder,
         webView: WebView
