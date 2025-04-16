@@ -227,7 +227,7 @@ internal class ContactManager(
     }
 
     internal fun resetIfNeeded() {
-        if (anonData?.isEmpty == false || lastContactIdentity?.isAnonymous == false || operations.isNotEmpty()) {
+        if (lastContactIdentity == null || anonData?.isEmpty == false || lastContactIdentity?.isAnonymous == false || operations.isNotEmpty()) {
             addOperation(ContactOperation.Reset)
         }
     }
