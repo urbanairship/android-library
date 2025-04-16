@@ -99,4 +99,7 @@
     <string name="ua_icon_button_checkmark">Apstiprināt</string>
     <string name="ua_icon_button_forward_arrow">Nākamais</string>
     <string name="ua_icon_button_backward_arrow">Iepriekšējais</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Kļūda, apstrādājot veidlapu. Lūdzu, mēģiniet vēlreiz</string>
 </resources>

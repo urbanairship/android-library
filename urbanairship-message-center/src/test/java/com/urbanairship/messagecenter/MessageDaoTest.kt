@@ -117,6 +117,19 @@ public class MessageDaoTest {
     }
 
     @Test
+    public fun testDeleteAllMessages(): TestResult = runTest  {
+        val messageIds = insertMessages(2000)
+        assertEquals(2000, messageDao.getMessages().size)
+
+        messageDao.deleteAllMessages()
+
+        val messageEntities = messageDao.getLocallyDeletedMessages()
+        assertEquals(0, messageEntities.size)
+
+        assertEquals(0, messageDao.getMessages().size)
+    }
+
+    @Test
     public fun testDeleteTooManyMessages(): TestResult = runTest  {
         val messageIds = insertMessages(2000)
         assertEquals(2000, messageDao.getMessages().size)

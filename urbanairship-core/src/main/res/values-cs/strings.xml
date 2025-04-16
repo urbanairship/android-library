@@ -100,4 +100,7 @@
     <string name="ua_icon_button_checkmark">Potvrdit</string>
     <string name="ua_icon_button_forward_arrow">Další</string>
     <string name="ua_icon_button_backward_arrow">Předchozí</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Chyba při zpracování formuláře. Zkuste to prosím znovu</string>
 </resources>

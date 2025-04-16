@@ -185,6 +185,14 @@ internal abstract class MessageDao {
         }
     }
 
+    suspend fun markAllMessagesDeleted() {
+        try {
+            markAllMessagesDeletedInternal()
+        } catch (e: Exception) {
+            UALog.e(e) { "Failed to mark messages as deleted!" }
+        }
+    }
+
     suspend fun markMessagesReadOrigin(messageIds: Set<String>) {
         try {
             runBatched(messageIds) { markMessagesReadOriginInternal(messageIds) }
@@ -305,6 +313,10 @@ internal abstract class MessageDao {
     @Transaction
     @Query("UPDATE richpush SET deleted = 1 WHERE message_id IN (:messageIds)")
     abstract suspend fun markMessagesDeletedInternal(messageIds: Set<String>)
+
+    @Transaction
+    @Query("UPDATE richpush SET deleted = 1")
+    abstract suspend fun markAllMessagesDeletedInternal()
 
     @Transaction
     @Query("UPDATE richpush SET unread_orig = 0 WHERE message_id IN (:messageIds)")

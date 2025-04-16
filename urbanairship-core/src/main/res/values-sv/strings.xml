@@ -98,4 +98,7 @@
     <string name="ua_icon_button_checkmark">Validera</string>
     <string name="ua_icon_button_forward_arrow">Nästa</string>
     <string name="ua_icon_button_backward_arrow">Föregående</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Fel vid bearbetning av formulär. Försök igen</string>
 </resources>

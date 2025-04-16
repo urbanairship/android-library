@@ -2,13 +2,20 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 19.5.0 March 31, 2025
+Minor release that adds a public method `Inbox.deleteAllMessages()` and remove restrictions for subclassing `MessageWebView` and `MessageWebViewClient`.
+
+### Changes
+- Added a new public method `Inbox.deleteAllMessages()` to delete all messages from Message Center.
+- Removed library group restrictions on `MessageWebView` and `MessageWebViewClient`.
+
+
 ## Version 19.4.0 March 24, 2025
 Minor release that adds support for Custom View in Scenes and fixes Privacy Manager issues when disabling all features.
 
 ### Changes
 - Added Custom View support to enable showing App managed views within a Scene.
 - Fixed an issue where the Privacy Manager sent multiple opt-out requests after features were disabled following being enabled.
-
 
 ## Version 19.3.0 March 6, 2025
 Minor release that fixes an issue with modal Scenes and adds support for hoisting `AirshipEmbeddedViewGroup` composable state.

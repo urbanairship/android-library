@@ -100,4 +100,7 @@
     <string name="ua_icon_button_checkmark">אמת</string>
     <string name="ua_icon_button_forward_arrow">הבא</string>
     <string name="ua_icon_button_backward_arrow">הקודם</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">שגיאה בעיבוד הטופס. אנא נסה שוב</string>
 </resources>

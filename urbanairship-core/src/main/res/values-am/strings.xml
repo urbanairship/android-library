@@ -92,4 +92,13 @@
     <string name="ua_play">ለመጫወት</string>
     <string name="ua_pause">ለተቆም</string>
     <string name="ua_stop">ለማስቆም</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">መዝጊያ</string>
+    <string name="ua_icon_button_checkmark">ማረጋገጫ</string>
+    <string name="ua_icon_button_forward_arrow">ወደፊት</string>
+    <string name="ua_icon_button_backward_arrow">ወደኋላ</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">ቅጹን በማስኬድ ላይ ስህተት። እባክዎ እንደገና ይሞክሩ</string>
 </resources>

@@ -261,6 +261,32 @@ public class InboxTest {
         }
     }
 
+    /** Test mark messages are all marked deleted in the database and the inbox. */
+    @Test
+    public fun testMarkAllMessagesDeleted(): TestResult = runTest {
+        insertTestMessages()
+
+        assertEquals(10, inbox.getCount())
+        advanceUntilIdle()
+
+        inbox.deleteAllMessages()
+        mainLooper.runToEndOfTasks()
+        advanceUntilIdle()
+
+        // Should have 0 messages
+        val count = inbox.getCount()
+        assertEquals(0, count)
+
+        val unreadCount = inbox.getUnreadCount()
+        assertEquals(0, unreadCount)
+
+        val readCount = inbox.getReadCount()
+        assertEquals(0, readCount)
+
+        val messageIds = inbox.getMessageIds()
+        assertEquals(0, messageIds.size)
+    }
+
     /** Test mark messages are marked read in the database and the inbox. */
     @Test
     public fun testMarkMessagesRead(): TestResult = runTest {

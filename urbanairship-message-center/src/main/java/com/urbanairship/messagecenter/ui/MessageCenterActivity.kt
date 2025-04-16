@@ -15,7 +15,7 @@ import com.urbanairship.UAirship
 import com.urbanairship.messagecenter.MessageCenter
 
 /** `Activity` that displays the Message Center list and message view. */
-public class MessageCenterActivity : FragmentActivity() {
+public open class MessageCenterActivity : FragmentActivity() {
 
     private lateinit var messageCenterFragment: MessageCenterFragment
 

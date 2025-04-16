@@ -2,8 +2,10 @@ package com.urbanairship.android.layout.widget
 
 import android.content.Context
 import android.view.MotionEvent
+import android.view.View
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import com.urbanairship.android.layout.view.ButtonLayoutView
 import com.urbanairship.android.layout.view.MediaView
 import com.urbanairship.webkit.AirshipWebView
 import kotlinx.coroutines.channels.Channel
@@ -16,8 +18,19 @@ internal class TouchAwareWebView(context: Context, val webViewListener: MediaVie
     private val touchesChannel = Channel<MotionEvent>(UNLIMITED)
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        // track touch events for flow consumers
         event?.let { touchesChannel.trySend(it) }
-        return super.onTouchEvent(event)
+
+        // let WebView handle the event (for example for video controls)
+        val handled = super.onTouchEvent(event)
+
+        // after WebView processes the ACTION_UP event, also handle click propagation
+        if (event?.action == MotionEvent.ACTION_UP) {
+            findButtonLayoutParent()?.let { buttonLayout ->
+                post { buttonLayout.performClick() }
+            }
+        }
+        return handled
     }
 
     fun touchEvents(): Flow<MotionEvent> = touchesChannel.receiveAsFlow()
@@ -39,9 +52,31 @@ internal class TouchAwareAirshipWebView(context: Context) : AirshipWebView(conte
     private val touchesChannel = Channel<MotionEvent>(UNLIMITED)
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
+        // track touch events for flow consumers
         event?.let { touchesChannel.trySend(it) }
-        return super.onTouchEvent(event)
+
+        // let WebView handle the event (for example for video controls)
+        val handled = super.onTouchEvent(event)
+
+        // after WebView processes the ACTION_UP event, also handle click propagation
+        if (event?.action == MotionEvent.ACTION_UP) {
+            findButtonLayoutParent()?.let { buttonLayout ->
+                post { buttonLayout.performClick() }
+            }
+        }
+        return handled
     }
 
     fun touchEvents(): Flow<MotionEvent> = touchesChannel.receiveAsFlow()
+}
+
+private fun View.findButtonLayoutParent(): ButtonLayoutView? {
+    var parent: View? = this
+    while (parent != null) {
+        parent = parent.parent as? View
+        if (parent is ButtonLayoutView) {
+            return parent
+        }
+    }
+    return null
 }

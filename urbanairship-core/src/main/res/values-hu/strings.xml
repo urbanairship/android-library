@@ -98,4 +98,7 @@
     <string name="ua_icon_button_checkmark">Megerősítés</string>
     <string name="ua_icon_button_forward_arrow">Következő</string>
     <string name="ua_icon_button_backward_arrow">Előző</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Hiba az űrlap feldolgozása során. Kérjük, próbálja újra</string>
 </resources>

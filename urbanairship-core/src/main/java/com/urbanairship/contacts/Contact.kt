@@ -182,6 +182,10 @@ public class Contact internal constructor(
     }
 
     private val channelExtender = AirshipChannel.Extender.Suspending { builder ->
+        if (contactManager.lastContactId == null) {
+            contactManager.generateDefaultContactIdIfNotSet()
+        }
+
         if (airshipChannel.id != null) {
             builder.setContactId(stableVerifiedContactId())
         } else {
@@ -242,9 +246,11 @@ public class Contact internal constructor(
     }
 
     private fun checkPrivacyManager() {
-        if (privacyManager.isContactsEnabled) {
+        if (privacyManager.isAnyFeatureEnabled) {
             contactManager.generateDefaultContactIdIfNotSet()
-        } else {
+        }
+
+        if (!privacyManager.isContactsEnabled) {
             contactManager.resetIfNeeded()
         }
     }

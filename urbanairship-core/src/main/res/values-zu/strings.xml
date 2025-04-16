@@ -92,4 +92,13 @@
     <string name="ua_play">Dlala</string>
     <string name="ua_pause">Misa</string>
     <string name="ua_stop">Yeka</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Vala</string>
+    <string name="ua_icon_button_checkmark">Qinisekisa</string>
+    <string name="ua_icon_button_forward_arrow">Okulandelayo</string>
+    <string name="ua_icon_button_backward_arrow">Okwedlule</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Iphutha lokuqhubeka lokuhlela ifomu. Sicela uzame futhi</string>
 </resources>

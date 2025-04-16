@@ -93,4 +93,13 @@
     <string name="ua_play">Redă</string>
     <string name="ua_pause">Pauză</string>
     <string name="ua_stop">Oprește</string>
+
+    <!-- Icon button accessibility labels -->
+    <string name="ua_icon_button_close">Închide</string>
+    <string name="ua_icon_button_checkmark">Confirmă</string>
+    <string name="ua_icon_button_forward_arrow">Următorul</string>
+    <string name="ua_icon_button_backward_arrow">Anterior</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Eroare la procesarea formularului. Vă rugăm să încercați din nou</string>
 </resources>

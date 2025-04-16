@@ -100,4 +100,7 @@
     <string name="ua_icon_button_checkmark">Potrdi</string>
     <string name="ua_icon_button_forward_arrow">Naprej</string>
     <string name="ua_icon_button_backward_arrow">Nazaj</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">Napaka pri obdelavi obrazca. Poskusite znova</string>
 </resources>

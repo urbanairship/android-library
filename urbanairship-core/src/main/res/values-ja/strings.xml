@@ -97,4 +97,7 @@
     <string name="ua_icon_button_checkmark">確認</string>
     <string name="ua_icon_button_forward_arrow">次へ</string>
     <string name="ua_icon_button_backward_arrow">前へ</string>
+    
+    <!-- Form processing -->
+    <string name="ua_form_processing_error">フォームの処理中にエラーが発生しました。もう一度お試しください</string>
 </resources>
