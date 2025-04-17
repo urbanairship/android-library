@@ -167,7 +167,7 @@ internal class ThomasForm(
                 // reevaluate its value by calling copy.
                 // TODO: separate out FormField and FormFieldResult so we can make
                 // them data classes for more predictable results
-                feed.update { it.copy() }
+                feed.update { it.copyWithUpdatedChildValue(value) }
             }
 
             is ThomasFormField.FieldType.Instant -> {}

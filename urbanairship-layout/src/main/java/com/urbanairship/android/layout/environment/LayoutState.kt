@@ -294,6 +294,24 @@ internal sealed class State {
                 status = evaluateFormStatus(updatedChildren,  allowValid = true)
             )
         }
+
+        fun copyWithUpdatedChildValue(
+            value: ThomasFormField<*>,
+        ): Form {
+            val updatedChildren = children
+                .toMutableMap()
+                .apply {
+                    get(value.identifier)?.let {
+                        put(value.identifier, Child(value, it.predicate, it.lastProcessStatus))
+                    }
+                }
+                .toMap()
+
+            return copy(
+                children = updatedChildren
+            )
+        }
+
         fun copyWithFormInput(
             value: ThomasFormField<*>,
             predicate: FormFieldFilterPredicate? = null,
