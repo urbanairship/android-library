@@ -9,15 +9,10 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.Autopilot
-import com.urbanairship.UALog
 import com.urbanairship.UAirship
-import com.urbanairship.actions.tags.AddTagsAction
 import com.urbanairship.liveupdate.LiveUpdateManager
 import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.sample.glance.SampleAppWidgetLiveUpdate
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.launch
 
 /**
  * Autopilot that enables user notifications on first run.
@@ -28,14 +23,6 @@ class SampleAutopilot : Autopilot() {
         val context = UAirship.getApplicationContext()
 
         val preferences = context.getSharedPreferences(NO_BACKUP_PREFERENCES, MODE_PRIVATE)
-
-        val addTagsAction = AddTagsAction()
-        MainScope().launch {
-            addTagsAction.mutationsFlow.collect {
-                UALog.e("Added: $it")
-            }
-        }
-        airship.actionRegistry.getEntry(AddTagsAction.DEFAULT_REGISTRY_NAME)?.defaultAction = addTagsAction
 
         val isFirstRun = preferences.getBoolean(FIRST_RUN_KEY, true)
         if (isFirstRun) {
