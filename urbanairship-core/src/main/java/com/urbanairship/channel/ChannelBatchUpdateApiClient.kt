@@ -49,9 +49,10 @@ internal class ChannelBatchUpdateApiClient(
             )
         )
 
-        return session.execute(request).also { response ->
-            UALog.v { "Bulk finished with response $response" }
-        }
+        // Execute the request and log the result at debug level
+        val result = session.execute(request)
+        UALog.d { "Updating channel finished with result: $result" }
+        return result
     }
 
     private fun bulkUpdateUrl(channelId: String): Uri? {

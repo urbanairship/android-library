@@ -4,6 +4,7 @@ package com.urbanairship.channel;
 
 import com.urbanairship.UALog;
 import com.urbanairship.json.JsonValue;
+import com.urbanairship.json.JsonMap;
 import com.urbanairship.util.Clock;
 import com.urbanairship.util.DateUtils;
 import com.urbanairship.util.UAStringUtil;
@@ -23,6 +24,10 @@ import androidx.annotation.Size;
 abstract public class AttributeEditor {
 
     private static final long MAX_ATTRIBUTE_FIELD_LENGTH = 1024;
+    /**
+     * Reserved key for JSON attribute expiration.
+     */
+    private static final String JSON_EXPIRY_KEY = "exp";
 
     private final List<PartialAttributeMutation> partialMutations = new ArrayList<>();
     private final Clock clock;
@@ -169,6 +174,88 @@ abstract public class AttributeEditor {
         }
 
         partialMutations.add(new PartialAttributeMutation(key, null));
+        return this;
+    }
+
+    /**
+     * Removes a JSON attribute for the given instance.
+     *
+     * @param key The attribute key.
+     * @param instanceID The instance identifier.
+     * @return The AttributeEditor.
+     */
+    @NonNull
+    public AttributeEditor removeAttribute(@NonNull String key, @NonNull String instanceID) {
+        // Validate key and instanceID
+        if (isInvalidField(key)
+                || isInvalidField(instanceID)
+                || key.contains("#")
+                || instanceID.contains("#")) {
+            UALog.e("Invalid attribute or instance ID. Must not be empty, exceed %s characters, or contain '#'.", MAX_ATTRIBUTE_FIELD_LENGTH);
+            return this;
+        }
+        String formattedKey = key + "#" + instanceID;
+        partialMutations.add(new PartialAttributeMutation(formattedKey, null));
+        return this;
+    }
+
+    /**
+     * Sets a custom attribute with a JSON payload and optional expiration.
+     *
+     * @param key The attribute key.
+     * @param instanceID The instance identifier.
+     * @param jsonMap A JsonMap representing the custom payload.
+     * @return The AttributeEditor.
+     * @throws IllegalArgumentException if the expiration is invalid, the payload is empty, or contains a reserved key.
+     */
+    @NonNull
+    public AttributeEditor setAttribute(@NonNull String key,
+                                        @NonNull String instanceID,
+                                        @NonNull JsonMap jsonMap) throws IllegalArgumentException {
+        return setAttribute(key, instanceID, jsonMap, null);
+    }
+
+    /**
+     * Sets a custom attribute with a JSON payload and optional expiration.
+     *
+     * @param key The attribute key.
+     * @param instanceID The instance identifier.
+     * @param jsonMap A JsonMap representing the custom payload.
+     * @param expiration Optional expiration Date. Must be > now and <= 731 days from now.
+     * @return The AttributeEditor.
+     * @throws IllegalArgumentException if the expiration is invalid, the payload is empty, or contains a reserved key.
+     */
+    @NonNull
+    public AttributeEditor setAttribute(@NonNull String key,
+                                        @NonNull String instanceID,
+                                        @NonNull JsonMap jsonMap,
+                                        @Nullable Date expiration) throws IllegalArgumentException {
+        long now = clock.currentTimeMillis();
+        if (expiration != null) {
+            long expMillis = expiration.getTime();
+            long maxMillis = now + 1000L * 60 * 60 * 24 * 731;
+            if (expMillis <= now || expMillis > maxMillis) {
+                throw new IllegalArgumentException("The expiration is invalid (more than 731 days or not in the future)." );
+            }
+        }
+        if (jsonMap.isEmpty()) {
+            throw new IllegalArgumentException("The input `json` payload is empty.");
+        }
+        if (jsonMap.containsKey(JSON_EXPIRY_KEY)) {
+            throw new IllegalArgumentException(
+                "The JSON contains a top-level `" + JSON_EXPIRY_KEY + "` key (reserved for expiration)."
+            );
+        }
+        // Build JSON payload with optional expiration
+        JsonMap.Builder builder = JsonMap.newBuilder().putAll(jsonMap);
+        if (expiration != null) {
+            double expSeconds = expiration.getTime() / 1000.0;
+            builder.put(JSON_EXPIRY_KEY, expSeconds);
+        }
+        JsonMap finalJson = builder.build();
+        // Format key with instanceID
+        String formattedKey = key + "#" + instanceID;
+        partialMutations.add(new PartialAttributeMutation(formattedKey, finalJson));
         return this;
     }
 

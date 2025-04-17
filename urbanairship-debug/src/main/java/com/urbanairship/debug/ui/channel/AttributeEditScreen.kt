@@ -37,6 +37,12 @@ import com.urbanairship.debug.ui.components.Section
 import com.urbanairship.debug.ui.components.TopBarNavigation
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import java.util.Date
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.Alignment
+import androidx.compose.material3.Switch
+import com.urbanairship.UALog
+import com.urbanairship.json.JsonValue
 
 @Composable
 internal fun AttributeEditScreen(
@@ -152,6 +158,45 @@ private fun inputValue(viewModel: AttributeEditViewModel) {
 
             DatePicker(state = state)
         }
+        AttributeEditViewModel.DataType.JSON -> {
+            // JSON payload input
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                value = viewModel.jsonText.value,
+                onValueChange = { viewModel.jsonText.value = it },
+                label = { Text("JSON") }
+            )
+            TextField(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                value = viewModel.instanceId.value,
+                onValueChange = { viewModel.instanceId.value = it.trim() },
+                label = { Text("Instance ID") }
+            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+                Text("Expiry")
+                Spacer(modifier = Modifier.weight(1f))
+                Switch(
+                    checked = viewModel.expiryEnabled.value,
+                    onCheckedChange = { viewModel.expiryEnabled.value = it }
+                )
+            }
+            if (viewModel.expiryEnabled.value) {
+                val state = rememberDatePickerState(viewModel.expiryDate.value.time)
+                state.selectedDateMillis?.let {
+                    viewModel.expiryDate.value = Date(it)
+                }
+                DatePicker(state = state)
+            }
+        }
     }
 }
 
@@ -163,6 +208,11 @@ internal class AttributeEditViewModel: ViewModel() {
     val textValue = mutableStateOf("")
     val numberValue = mutableStateOf("0")
     val dateValue = mutableStateOf(Date())
+    // JSON attribute fields
+    val jsonText = mutableStateOf("")
+    val instanceId = mutableStateOf("")
+    val expiryEnabled = mutableStateOf(false)
+    val expiryDate = mutableStateOf(Date())
 
     var editorProvider: Provider<AttributeEditor?>? = null
 
@@ -179,6 +229,7 @@ internal class AttributeEditViewModel: ViewModel() {
                         DataType.TEXT -> textValue.value.isNotEmpty()
                         DataType.NUMBER -> numberValue.value.toDoubleOrNull() != null
                         DataType.DATE -> true
+                        DataType.JSON -> jsonText.value.isNotEmpty() && instanceId.value.isNotEmpty()
                     }
                 }
             }
@@ -189,7 +240,7 @@ internal class AttributeEditViewModel: ViewModel() {
     }
 
     enum class DataType {
-        TEXT, NUMBER, DATE
+        TEXT, NUMBER, DATE, JSON
     }
 
     fun perform() {
@@ -206,12 +257,37 @@ internal class AttributeEditViewModel: ViewModel() {
                     DataType.TEXT -> editor.setAttribute(name.value, textValue.value)
                     DataType.NUMBER -> editor.setAttribute(name.value, numberValue.value.toDoubleOrNull() ?: 0.0)
                     DataType.DATE -> editor.setAttribute(name.value, dateValue.value)
+                    DataType.JSON -> {
+                        try {
+                            val parsed = JsonValue.parseString(jsonText.value)
+                            val jsonMap = parsed.optMap()
+                            if (expiryEnabled.value) {
+                                editor.setAttribute(
+                                    name.value,
+                                    instanceId.value,
+                                    jsonMap,
+                                    expiryDate.value
+                                )
+                            } else {
+                                editor.setAttribute(name.value, instanceId.value, jsonMap)
+                            }
+                        } catch (e: Exception) {
+                            UALog.e(e, "JSON attribute error.")
+                        }
+                    }
                 }
             }
         }
         editor.apply()
-
+        // Reset fields
         name.value = ""
+        textValue.value = ""
+        numberValue.value = "0"
+        dateValue.value = Date()
+        jsonText.value = ""
+        instanceId.value = ""
+        expiryEnabled.value = false
+        expiryDate.value = Date()
     }
 }
 
