@@ -4,7 +4,6 @@ package com.urbanairship.actions.tags
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -14,7 +13,7 @@ import kotlinx.coroutines.flow.asSharedFlow
  */
 public abstract class BaseTagsAction : Action() {
 
-    private val mutableMutations: MutableSharedFlow<TagActionMutation> =  MutableSharedFlow()
+    private val mutableMutations: MutableSharedFlow<TagActionMutation> =  MutableSharedFlow(replay = 1)
 
     /**
      * Tag mutations
