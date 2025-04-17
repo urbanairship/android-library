@@ -121,7 +121,7 @@ abstract class BaseTagsAction extends Action {
             }
 
             if (!tagsMap.isEmpty()) {
-                applyNamedUserTagGroups(tagsMap);
+                applyContactTagGroups(tagsMap);
             }
 
             // Device Tags
@@ -145,20 +145,20 @@ abstract class BaseTagsAction extends Action {
      *
      * @param tags The set of tags.
      */
-    abstract void applyChannelTags(@NonNull Set<String> tags);
+    public abstract void applyChannelTags(@NonNull Set<String> tags);
 
     /**
      * Applies channel tag group updates.
      *
      * @param tags The map of tag groups.
      */
-    abstract void applyChannelTagGroups(@NonNull Map<String, Set<String>> tags);
+    public abstract void applyChannelTagGroups(@NonNull Map<String, Set<String>> tags);
 
     /**
-     * Applies named user tag group updates.
+     * Applies contact tag group updates.
      *
      * @param tags The map of tag groups.
      */
-    abstract void applyNamedUserTagGroups(@NonNull Map<String, Set<String>> tags);
+    public abstract void applyContactTagGroups(@NonNull Map<String, Set<String>> tags);
 
 }

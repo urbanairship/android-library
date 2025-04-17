@@ -12,6 +12,7 @@ import com.urbanairship.channel.TagGroupsEditor;
 import java.util.Map;
 import java.util.Set;
 
+import androidx.annotation.CallSuper;
 import androidx.annotation.NonNull;
 
 /**
@@ -56,13 +57,15 @@ public class AddTagsAction extends BaseTagsAction {
     public static final String DEFAULT_REGISTRY_SHORT_NAME = "^+t";
 
     @Override
-    void applyChannelTags(@NonNull Set<String> tags) {
+    @CallSuper
+    public void applyChannelTags(@NonNull Set<String> tags) {
         UALog.i("AddTagsAction - Adding tags: %s", tags);
         getChannel().editTags().addTags(tags).apply();
     }
 
     @Override
-    void applyChannelTagGroups(@NonNull Map<String, Set<String>> tags) {
+    @CallSuper
+    public void applyChannelTagGroups(@NonNull Map<String, Set<String>> tags) {
         UALog.i("AddTagsAction - Adding channel tag groups: %s", tags);
 
         TagGroupsEditor tagGroupsEditor = getChannel().editTagGroups();
@@ -74,8 +77,9 @@ public class AddTagsAction extends BaseTagsAction {
     }
 
     @Override
-    void applyNamedUserTagGroups(@NonNull Map<String, Set<String>> tags) {
-        UALog.i("AddTagsAction - Adding named user tag groups: %s", tags);
+    @CallSuper
+    public void applyContactTagGroups(@NonNull Map<String, Set<String>> tags) {
+        UALog.i("AddTagsAction - Adding contact user tag groups: %s", tags);
 
         TagGroupsEditor tagGroupsEditor = UAirship.shared().getContact().editTagGroups();
         for (Map.Entry<String, Set<String>> entry : tags.entrySet()) {
