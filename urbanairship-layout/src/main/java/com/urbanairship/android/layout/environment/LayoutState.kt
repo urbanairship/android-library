@@ -227,7 +227,12 @@ internal sealed class State {
             copy(isTouchExplorationEnabled = isTouchExplorationEnabled)
 
         fun reportingContext(): PagerData =
-            PagerData(identifier, pageIndex, pageIds.getOrElse(pageIndex) { "NULL!" }, pageIds.size, completed)
+            PagerData(
+                identifier,
+                pageIndex,
+                pageIds.getOrElse(pageIndex) { "NULL!" },
+                if (branching == null) { pageIds.size } else { -1 },
+                completed)
 
         val currentPageId: String?
             get() {
