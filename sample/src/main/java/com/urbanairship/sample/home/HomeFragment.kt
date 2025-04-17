@@ -10,6 +10,7 @@ import androidx.navigation.Navigation.findNavController
 import androidx.navigation.ui.NavigationUI.setupWithNavController
 import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ClipboardAction
+import com.urbanairship.actions.tags.AddTagsAction
 import com.urbanairship.sample.R
 import com.urbanairship.sample.databinding.FragmentHomeBinding
 
@@ -31,7 +32,12 @@ class HomeFragment : Fragment(R.layout.fragment_home) {
             channelId.setOnClickListener {
                 ActionRunRequest.createRequest(ClipboardAction.DEFAULT_REGISTRY_NAME)
                     .setValue(binding.channelId.text).run()
+
+                ActionRunRequest.createRequest(AddTagsAction.DEFAULT_REGISTRY_NAME)
+                    .setValue("Neat")
+                    .run()
             }
+
         }
 
         viewModel.channelId.observe(viewLifecycleOwner) {
