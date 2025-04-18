@@ -12,34 +12,34 @@ import com.urbanairship.channel.TagGroupsEditor
 /**
  * An action that removes tags.
  *
- *
  * Accepted situations: all
  *
+ * Accepted argument value types:
+ * - A [String] for a single tag
+ * - A [Collection] of [String]s for multiple tags
+ * - A JSON payload for tag groups. An example JSON payload:
  *
- * Accepted argument value types: A string for a single tag, A Collection of Strings for multiple tags,
- * or a JSON payload for tag groups. An example JSON payload:
- * <pre>
+ * ```
  * {
- * "channel": {
- * "channel_tag_group": ["channel_tag_1", "channel_tag_2"],
- * "other_channel_tag_group": ["other_channel_tag_1"]
- * },
- * "named_user": {
- * "named_user_tag_group": ["named_user_tag_1", "named_user_tag_2"],
- * "other_named_user_tag_group": ["other_named_user_tag_1"]
- * },
- * "device": ["tag 1", "tag 2"]
+ *   "channel": {
+ *     "channel_tag_group": ["channel_tag_1", "channel_tag_2"],
+ *     "other_channel_tag_group": ["other_channel_tag_1"]
+ *   },
+ *   "named_user": {
+ *     "named_user_tag_group": ["named_user_tag_1", "named_user_tag_2"],
+ *     "other_named_user_tag_group": ["other_named_user_tag_1"]
+ *   },
+ *   "device": ["tag 1", "tag 2"]
  * }
-</pre> *
+ * ```
  *
+ * Result value: `null`
  *
- * Result value: null
+ * Default Registration Names:
+ * - ^-t
+ * - remove_tags_action
  *
- *
- * Default Registration Names: ^-t, remove_tags_action
- *
- *
- * Default Registration Predicate: Rejects SITUATION_PUSH_RECEIVED
+ * Default Registration Predicate: Rejects [SITUATION_PUSH_RECEIVED]
  */
 public class RemoveTagsAction(
     private val channelTagEditor: () -> TagEditor,
