@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 19.5.1 Apr 17, 2025
+Patch release with fix for regression in Contacts that could cause a failure to resolve a Contact ID when Contacts are disabled.
+
+### Changes
+- Fixed Contact ID resolution when contacts are disabled.
+
 ## Version 19.5.0 March 31, 2025
 Minor release that adds a public method `Inbox.deleteAllMessages()` and remove restrictions for subclassing `MessageWebView` and `MessageWebViewClient`.
 

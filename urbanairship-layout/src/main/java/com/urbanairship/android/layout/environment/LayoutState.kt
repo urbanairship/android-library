@@ -229,7 +229,12 @@ internal sealed class State {
             copy(isTouchExplorationEnabled = isTouchExplorationEnabled)
 
         fun reportingContext(): PagerData =
-            PagerData(identifier, pageIndex, pageIds.getOrElse(pageIndex) { "NULL!" }, pageIds.size, completed)
+            PagerData(
+                identifier,
+                pageIndex,
+                pageIds.getOrElse(pageIndex) { "NULL!" },
+                if (branching == null) { pageIds.size } else { -1 },
+                completed)
 
         val currentPageId: String?
             get() {
@@ -291,6 +296,24 @@ internal sealed class State {
                 status = evaluateFormStatus(updatedChildren,  allowValid = true)
             )
         }
+
+        fun copyWithUpdatedChildValue(
+            value: ThomasFormField<*>,
+        ): Form {
+            val updatedChildren = children
+                .toMutableMap()
+                .apply {
+                    get(value.identifier)?.let {
+                        put(value.identifier, Child(value, it.predicate, it.lastProcessStatus))
+                    }
+                }
+                .toMap()
+
+            return copy(
+                children = updatedChildren
+            )
+        }
+
         fun copyWithFormInput(
             value: ThomasFormField<*>,
             predicate: FormFieldFilterPredicate? = null,
