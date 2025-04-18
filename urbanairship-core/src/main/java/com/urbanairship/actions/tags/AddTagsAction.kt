@@ -40,7 +40,7 @@ import com.urbanairship.channel.TagGroupsEditor
  * - ^+t
  * - add_tags_action
  *
- * Default Registration Predicate: Rejects [SITUATION_PUSH_RECEIVED]
+ * Default Registration Predicate: Rejects [com.urbanairship.actions.Action.SITUATION_PUSH_RECEIVED]
  */
 @OpenForTesting
 public class AddTagsAction internal constructor(
