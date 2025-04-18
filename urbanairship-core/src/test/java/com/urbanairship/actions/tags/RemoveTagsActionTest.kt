@@ -10,7 +10,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-public class AddTagsActionTest {
+public class RemoveTagsActionTest {
 
     private val mockChannelTagEditor = spyk<TagEditor>()
     private val mockChannelTagGroupEditor = spyk<TagGroupsEditor>()

@@ -56,7 +56,7 @@ public class RemoveTagsAction(
     @CallSuper
     public override fun applyChannelTags(tags: Set<String>) {
         UALog.i("Removing tags: %s", tags)
-        channelTagEditor().addTags(tags).apply()
+        channelTagEditor().removeTags(tags).apply()
     }
 
     @CallSuper
@@ -64,7 +64,7 @@ public class RemoveTagsAction(
         UALog.i("Removing channel tag groups: %s", tags)
         channelTagGroupEditor().apply {
             tags.forEach {
-                addTags(it.key, it.value)
+                removeTags(it.key, it.value)
             }
         }.apply()
     }
@@ -74,7 +74,7 @@ public class RemoveTagsAction(
         UALog.i("Removing contact user tag groups: %s", tags)
         contactTagGroupEditor().apply {
             tags.forEach {
-                addTags(it.key, it.value)
+                removeTags(it.key, it.value)
             }
         }.apply()
     }
