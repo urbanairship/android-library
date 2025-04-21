@@ -19,6 +19,8 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isLayoutRtl
+import com.urbanairship.android.layout.util.resolveContentDescription
+import com.urbanairship.util.UAStringUtil
 
 internal class LabelView(
     context: Context,
@@ -46,11 +48,7 @@ internal class LabelView(
             }
 
             override fun onStateUpdated(state: ThomasState) {
-                val resolvedText = state.resolveRequired(
-                    overrides = model.viewInfo.viewOverrides?.text,
-                    default = model.viewInfo.text
-                )
-
+                val resolvedText = resolveText(state)
                 if (resolvedText != lastText) {
                     LayoutUtils.applyLabelModel(this@LabelView, model, resolvedText)
                     lastText = resolvedText
@@ -98,6 +96,24 @@ internal class LabelView(
 
             override fun setBackground(old: Background?, new: Background) {
                 LayoutUtils.updateBackground(this@LabelView, old, new)
+            }
+
+            private fun resolveText(state: ThomasState): String {
+                val ref = state.resolveOptional(
+                    overrides = model.viewInfo.viewOverrides?.ref,
+                    default = model.viewInfo.ref
+                )
+
+                val text =  state.resolveRequired(
+                    overrides = model.viewInfo.viewOverrides?.text,
+                    default = model.viewInfo.text
+                )
+
+                return if (ref != null) {
+                    UAStringUtil.namedStringResource(getContext(), ref, text)
+                } else {
+                    text
+                }
             }
         }
     }
