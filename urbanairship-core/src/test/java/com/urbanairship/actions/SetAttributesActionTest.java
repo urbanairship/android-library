@@ -255,7 +255,7 @@ public class SetAttributesActionTest extends BaseTestCase {
         final Set<AttributeMutation> attributeMutations = new HashSet<>();
         AttributeEditor attributeEditor = new AttributeEditor(clock) {
             @Override
-            protected void onApply(@NonNull List<AttributeMutation> collapsedMutations) {
+            protected void onApply(@NonNull List<? extends AttributeMutation> collapsedMutations) {
                 attributeMutations.addAll(collapsedMutations);
             }
         };
@@ -298,7 +298,7 @@ public class SetAttributesActionTest extends BaseTestCase {
         final Set<AttributeMutation> attributeMutations = new HashSet<>();
         AttributeEditor attributeEditor = new AttributeEditor(clock) {
             @Override
-            protected void onApply(@NonNull List<AttributeMutation> collapsedMutations) {
+            protected void onApply(@NonNull List<? extends AttributeMutation> collapsedMutations) {
                 attributeMutations.addAll(collapsedMutations);
             }
         };
@@ -341,8 +341,7 @@ public class SetAttributesActionTest extends BaseTestCase {
 
         final Set<AttributeMutation> attributeMutations = new HashSet<>();
         AttributeEditor attributeEditor = new AttributeEditor(clock) {
-            @Override
-            protected void onApply(@NonNull List<AttributeMutation> collapsedMutations) {
+            protected void onApply(@NonNull List<? extends AttributeMutation> collapsedMutations) {
                 attributeMutations.addAll(collapsedMutations);
             }
         };
