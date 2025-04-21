@@ -1,16 +1,19 @@
-name: CI
+name: CI Merge
 
-on: [pull_request, workflow_dispatch]
-
+on:
+    push:
+      branches:
+        - main
+        - next        
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   ci:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    name: CI
+    name: Merge CI
 
     steps:
       - name: Checkout Repo
@@ -24,6 +27,8 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
 
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
