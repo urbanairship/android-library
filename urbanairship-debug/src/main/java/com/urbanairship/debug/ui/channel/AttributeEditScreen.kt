@@ -259,18 +259,12 @@ internal class AttributeEditViewModel: ViewModel() {
                     DataType.DATE -> editor.setAttribute(name.value, dateValue.value)
                     DataType.JSON -> {
                         try {
-                            val parsed = JsonValue.parseString(jsonText.value)
-                            val jsonMap = parsed.optMap()
-                            if (expiryEnabled.value) {
-                                editor.setAttribute(
-                                    name.value,
-                                    instanceId.value,
-                                    jsonMap,
-                                    expiryDate.value
-                                )
-                            } else {
-                                editor.setAttribute(name.value, instanceId.value, jsonMap)
-                            }
+                            editor.setAttribute(
+                                attribute = name.value,
+                                instanceId = instanceId.value,
+                                expiration = if (expiryEnabled.value) { expiryDate.value } else { null },
+                                value = JsonValue.parseString(jsonText.value).optMap()
+                            )
                         } catch (e: Exception) {
                             UALog.e(e, "JSON attribute error.")
                         }

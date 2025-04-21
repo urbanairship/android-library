@@ -171,6 +171,7 @@ public abstract class AttributeEditor protected constructor(private val clock: C
      *  - The payload is empty or contains a reserved key `exp`.
      */
     @Throws(IllegalArgumentException::class)
+    @JvmOverloads
     public fun setAttribute(
         @Size(min = 1) attribute: String,
         @Size(min = 1) instanceId: String,
@@ -247,6 +248,7 @@ public abstract class AttributeEditor protected constructor(private val clock: C
         partialMutations.add(PartialAttributeMutation(key, value))
         return Result.success(Unit)
     }
+
 
     private inner class PartialAttributeMutation(var key: String, var value: Any?) {
 
