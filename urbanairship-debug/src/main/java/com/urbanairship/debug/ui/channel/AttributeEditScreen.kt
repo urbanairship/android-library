@@ -263,7 +263,7 @@ internal class AttributeEditViewModel: ViewModel() {
                                 attribute = name.value,
                                 instanceId = instanceId.value,
                                 expiration = if (expiryEnabled.value) { expiryDate.value } else { null },
-                                value = JsonValue.parseString(jsonText.value).optMap()
+                                json = JsonValue.parseString(jsonText.value).requireMap()
                             )
                         } catch (e: Exception) {
                             UALog.e(e, "JSON attribute error.")
