@@ -9,11 +9,9 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.toJsonMap
 import com.urbanairship.util.combineStates
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
 internal data class ThomasState(
     val layout: State.Layout?,
@@ -58,7 +56,6 @@ internal data class ThomasState(
         overrides: List<ViewPropertyOverride<T>>?,
         default: T? = null
     ): T? {
-
         val json = toJsonValue()
 
         return overrides

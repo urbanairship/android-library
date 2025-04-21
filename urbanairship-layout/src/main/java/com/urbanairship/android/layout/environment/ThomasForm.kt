@@ -35,7 +35,6 @@ internal class ThomasForm(
 
     val scope = CoroutineScope(validationDispatcher + SupervisorJob())
 
-
     val validationMode: FormValidationMode
         get() = feed.changes.value.validationMode
 
