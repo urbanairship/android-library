@@ -26,12 +26,13 @@ import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isLayoutRtl
 import com.urbanairship.android.layout.widget.TappableView
+import com.urbanairship.util.UAStringUtil
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.flow.Flow
 
 internal class LabelButtonView(
     context: Context,
-    model: LabelButtonModel
+    private var model: LabelButtonModel
 ) : MaterialButton(context, null, androidx.appcompat.R.attr.borderlessButtonStyle), BaseView, TappableView {
 
     init {
@@ -62,10 +63,7 @@ internal class LabelButtonView(
             }
 
             override fun onStateUpdated(state: ThomasState) {
-                val resolvedText = state.resolveRequired(
-                    overrides = model.viewInfo.label.viewOverrides?.text,
-                    default = model.viewInfo.label.text
-                )
+                val resolvedText = resolveText(state)
 
                 if (resolvedText != lastText) {
                     LayoutUtils.applyLabelModel(this@LabelButtonView, model.label, resolvedText)
@@ -172,4 +170,23 @@ internal class LabelButtonView(
     }
 
     override fun taps(): Flow<Unit> = debouncedClicks()
+
+    private fun resolveText(state: ThomasState): String {
+        val ref = state.resolveOptional(
+            overrides = model.viewInfo.label.viewOverrides?.ref,
+            default = model.viewInfo.label.ref
+        )
+
+        val text =  state.resolveRequired(
+            overrides = model.viewInfo.label.viewOverrides?.text,
+            default = model.viewInfo.label.text
+        )
+
+        return if (ref != null) {
+            UAStringUtil.namedStringResource(context, ref, text)
+        } else {
+            text
+        }
+    }
 }
+

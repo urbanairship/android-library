@@ -473,6 +473,7 @@ internal class LabelInfo(
     json: JsonMap
 ) : ViewInfo(), View by view(json), Accessible by accessible(json) {
     val text: String = json.requireField("text")
+    val ref: String? = json.optionalField("ref")
     val iconStart: IconStart? = json.optionalMap("icon_start")?.let { IconStart.fromJson(it) }
     val textAppearance: TextAppearance =
         TextAppearance.fromJson(json.requireField("text_appearance"))
@@ -554,6 +555,9 @@ internal class LabelInfo(
         }
         val iconStart = json.optionalList("icon_start")?.map {
             ViewPropertyOverride(it) { value -> IconStart.fromJson(value.optMap()) }
+        }
+        val ref = json.optionalList("ref")?.map {
+            ViewPropertyOverride(it, valueParser = { value -> value.optString() })
         }
     }
 }
