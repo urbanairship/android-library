@@ -163,7 +163,7 @@ public abstract class AttributeEditor protected constructor(private val clock: C
      *
      * @param attribute The attribute.
      * @param instanceId The instance identifier.
-     * @param jsonMap A JsonMap representing the custom payload.
+     * @param json A JsonMap representing the custom payload.
      * @return The [AttributeEditor].
      * @throws IllegalArgumentException if:
      *  - The key is empty or contains `#`.
@@ -175,7 +175,7 @@ public abstract class AttributeEditor protected constructor(private val clock: C
         @Size(min = 1) attribute: String,
         @Size(min = 1) instanceId: String,
         expiration: Date? = null,
-        jsonMap: JsonMap
+        json: JsonMap
     ): AttributeEditor {
         val now = clock.currentTimeMillis().milliseconds
         if (expiration != null) {
@@ -186,13 +186,13 @@ public abstract class AttributeEditor protected constructor(private val clock: C
             }
         }
 
-        require(!jsonMap.isEmpty) { "The input `json` payload is empty." }
-        require(!jsonMap.containsKey(JSON_EXPIRY_KEY)) { "The JSON contains a top-level `$JSON_EXPIRY_KEY` key (reserved for expiration)." }
+        require(!json.isEmpty) { "The input `json` payload is empty." }
+        require(!json.containsKey(JSON_EXPIRY_KEY)) { "The JSON contains a top-level `$JSON_EXPIRY_KEY` key (reserved for expiration)." }
 
         // Build JSON payload with optional expiration
-        val builder = JsonMap.newBuilder().putAll(jsonMap)
+        val builder = JsonMap.newBuilder().putAll(json)
         if (expiration != null) {
-            val expSeconds = expiration.time.seconds.inWholeSeconds
+            val expSeconds = expiration.time.milliseconds.inWholeSeconds
             builder.put(JSON_EXPIRY_KEY, expSeconds)
         }
         val finalJson = builder.build().toJsonValue()

@@ -4,6 +4,7 @@ package com.urbanairship.channel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
 import java.util.Date
@@ -43,7 +44,6 @@ public class AttributeEditorTest {
     public fun testInvalidAttribute() {
         editor.removeAttribute(attribute = "Cool#")
     }
-
 
     @Test(expected = IllegalArgumentException::class)
     @Throws(NumberFormatException::class)
@@ -105,6 +105,53 @@ public class AttributeEditorTest {
         expected.add(AttributeMutation.newRemoveAttributeMutation("remove", 10000))
 
         Assert.assertEquals(expected, editor.appliedMutations)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    @Throws(IllegalArgumentException::class)
+    public fun testJsonAttributeReservedKey() {
+        editor.setAttribute(
+            attribute = "cool", instanceId = "story", json = jsonMapOf(
+                "key" to "value", "exp" to "123"
+            )
+        )
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    @Throws(IllegalArgumentException::class)
+    public fun testJsonAttributeEmptyMap() {
+        editor.setAttribute(
+            attribute = "cool", instanceId = "story", json = jsonMapOf()
+        )
+    }
+
+    @Test
+    public fun testJsonAttribute() {
+        clock.currentTimeMillis = 10000
+
+        editor.setAttribute(
+            attribute = "foo", instanceId = "bar", json = jsonMapOf("key" to "value")
+        )
+        editor.removeAttribute(attribute = "foo", instanceId = "baz")
+
+        editor.setAttribute(
+            attribute = "foo", instanceId = "qux", json = jsonMapOf("key" to "value"), expiration = Date(20000)
+        )
+        editor.apply()
+
+        val expected = listOf(
+            AttributeMutation.newSetAttributeMutation("foo#bar", jsonMapOf(
+                "key" to "value"
+            ).toJsonValue(), 10000),
+            AttributeMutation.newRemoveAttributeMutation("foo#baz", 10000),
+            AttributeMutation.newSetAttributeMutation("foo#qux", jsonMapOf(
+                "key" to "value",
+                "exp" to 20
+            ).toJsonValue(), 10000),
+        )
+
+        Assert.assertEquals(expected, editor.appliedMutations)
+
     }
 
     private class TestAttributeEditor(clock: Clock) : AttributeEditor(clock) {

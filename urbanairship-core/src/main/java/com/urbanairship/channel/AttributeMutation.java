@@ -64,7 +64,7 @@ public class AttributeMutation implements JsonSerializable {
      */
     @NonNull
     public static AttributeMutation newSetAttributeMutation(@NonNull String key, @NonNull JsonValue jsonValue, long timestamp) {
-        if (jsonValue.isNull() || jsonValue.isJsonList() || jsonValue.isJsonMap() || jsonValue.isBoolean()) {
+        if (jsonValue.isNull()) {
             throw new IllegalArgumentException("Invalid attribute value: " + jsonValue);
         }
 
