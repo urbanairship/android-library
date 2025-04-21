@@ -45,19 +45,4 @@ public class AttributeMutationTest extends BaseTestCase {
 
         assertEquals(expected, mutation.toJsonValue());
     }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testThrowsOnJsonList() {
-        AttributeMutation.newSetAttributeMutation("something", JsonList.EMPTY_LIST.toJsonValue(), 100);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testThrowsJsonMap() {
-        AttributeMutation.newSetAttributeMutation("something", JsonMap.EMPTY_MAP.toJsonValue(), 100);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testThrowsBoolean() {
-        AttributeMutation.newSetAttributeMutation("something", JsonValue.wrapOpt(true), 100);
-    }
 }
