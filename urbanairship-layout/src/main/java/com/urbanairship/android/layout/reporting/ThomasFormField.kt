@@ -18,9 +18,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 
 public sealed class ThomasFormField<T>(
@@ -220,7 +222,6 @@ public sealed class ThomasFormField<T>(
 
         private var lastAttemptTimestamp: Long? = null
         private var fetchJob: Deferred<PendingResult<T>>? = null
-        private var scheduleJob: Job? = null
         private var nextBackOff: Duration? = null
 
         private val _resultsFlow = MutableStateFlow<PendingResult<T>?>(null)
@@ -243,14 +244,12 @@ public sealed class ThomasFormField<T>(
                 }
             }
 
-            scheduleJob?.cancel()
             fetchJob?.cancel()
 
             return initiateFetching(scope).await()
         }
 
         fun cancel() {
-            scheduleJob?.cancel()
             fetchJob?.cancel()
         }
 
