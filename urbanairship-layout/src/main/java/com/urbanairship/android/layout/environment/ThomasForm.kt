@@ -77,7 +77,10 @@ internal class ThomasForm(
         val processResult = fields.mapValues { (_, field) ->
             when(val fieldType = field.fieldType) {
                 is ThomasFormField.FieldType.Async<*> -> {
-                    fieldType.fetcher.fetch(scope, true)
+                    try {
+                        fieldType.fetcher.fetch(scope, true)
+                    } catch (_: Exception) { }
+
                     field
                 }
                 is ThomasFormField.FieldType.Instant<*> -> {
@@ -160,13 +163,15 @@ internal class ThomasForm(
 
         when(val method = value.fieldType) {
             is ThomasFormField.FieldType.Async -> scope.launch {
-                method.fetcher.fetch(this, true)
+                try {
+                    method.fetcher.fetch(this, true)
 
-                // Since ThomasFormField is a class, we just need to have the formState
-                // reevaluate its value by calling copy.
-                // TODO: separate out FormField and FormFieldResult so we can make
-                // them data classes for more predictable results
-                feed.update { it.copyWithUpdatedChildValue(value) }
+                    // Since ThomasFormField is a class, we just need to have the formState
+                    // reevaluate its value by calling copy.
+                    // TODO: separate out FormField and FormFieldResult so we can make
+                    // them data classes for more predictable results
+                    feed.update { it.copy() }
+                } catch (_: Exception) { }
             }
 
             is ThomasFormField.FieldType.Instant -> {}
