@@ -153,7 +153,7 @@ public class AttributeMutation implements JsonSerializable {
     }
 
     private static boolean isValidValue(@NonNull JsonValue jsonValue) {
-        return !(jsonValue.isNull() || jsonValue.isJsonList() || jsonValue.isJsonMap() || jsonValue.isBoolean());
+        return !(jsonValue.isNull() || jsonValue.isJsonList() || jsonValue.isBoolean());
     }
 
     @Override
