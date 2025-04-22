@@ -37,7 +37,7 @@ jobs:
       # NOTE: All the steps below this point will be skipped if the download step succeeds.
       - name: Checkout repo to build docs
         if: ${{ steps.download_docs.outcome == 'failure' }}
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: refs/tags/${{ inputs.version }}
 
@@ -84,7 +84,7 @@ jobs:
       # Docs should already be built and uploaded at this point, but we still need
       # this step in order for google-github-actions/auth to work in upload step.
       - name: Checkout repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: refs/tags/${{ inputs.version }}
 
@@ -96,13 +96,13 @@ jobs:
           path: build/docs
 
       - name: Setup GCP Auth
-        uses: google-github-actions/auth@v1
+        uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
       # Install gcloud, `setup-gcloud` automatically picks up authentication from `auth`.
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v1
+        uses: google-github-actions/setup-gcloud@v2
 
       - name: Upload docs
         env:
