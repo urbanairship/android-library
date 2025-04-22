@@ -40,7 +40,7 @@ internal class ChannelBatchUpdateManager(
 
     private var updates: List<AudienceUpdate>
         get() {
-            return dataStore.optJsonValue(UPDATE_DATASTORE_KEY)?.tryParse { json ->
+            return dataStore.optJsonValue(UPDATE_DATASTORE_KEY)?.tryParse(true) { json ->
                 json.requireList().map { AudienceUpdate(it.requireMap()) }
             } ?: emptyList()
         }
