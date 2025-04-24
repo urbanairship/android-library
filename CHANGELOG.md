@@ -2,7 +2,17 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
-## Version 19.5.1 Apr 17, 2025
+## Version 19.6.0 April 24, 2025
+Minor release adding branching and SMS support for Scenes.
+
+### Changes
+- Added support for branching in Scenes.
+- Added support for phone number collection and registration in Scenes.
+- Added support for setting JSON attributes for Channels and Contacts.
+- Added a new `mutationsFlow` to `AddTagsAction` and `RemoveTagsAction` to expose tag mutations when applied.
+- Updated Message Center Inbox to refresh messages on app foreground.
+
+## Version 19.5.1 April 17, 2025
 Patch release with fix for regression in Contacts that could cause a failure to resolve a Contact ID when Contacts are disabled.
 
 ### Changes
