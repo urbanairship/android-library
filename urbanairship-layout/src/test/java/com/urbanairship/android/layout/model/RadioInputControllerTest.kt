@@ -6,10 +6,11 @@ import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
-import com.urbanairship.android.layout.environment.inputData
+import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.RadioInputControllerInfo
 import com.urbanairship.android.layout.reporting.AttributeName
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonValue
 import app.cash.turbine.test
 import io.mockk.every
@@ -24,6 +25,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -46,7 +48,7 @@ public class RadioInputControllerTest {
     private val mockView: AnyModel = mockk(relaxed = true)
 
     private val formState = spyk(SharedState(
-        State.Form(identifier = "form-id", formType = FormType.Form, formResponseType = "form")
+        State.Form(identifier = "form-id", formType = FormType.Form, formResponseType = "form", validationMode = FormValidationMode.IMMEDIATE)
     ))
 
     private val radioState = spyk(SharedState(State.Radio(identifier = IDENTIFIER)))
@@ -67,15 +69,19 @@ public class RadioInputControllerTest {
     public fun testInit(): TestResult = runTest {
         formState.changes.test {
             // Sanity check initial form state.
-            assertTrue(awaitItem().data.isEmpty())
+            assertTrue(awaitItem().filteredFields.isEmpty())
 
             initRadioInputController()
 
+            // Skip to the final VALID item
+            skipItems(4)
+
             val item = awaitItem()
             // Verify that our checkbox controller updated the form state.
-            assertTrue(item.data.containsKey(IDENTIFIER))
+            assertTrue(item.filteredFields.containsKey(IDENTIFIER))
             // Verify that the response is valid, since the checkbox controller is not required.
-            assertTrue(item.inputValidity[IDENTIFIER]!!)
+            assertTrue(item.lastProcessedStatus(IDENTIFIER)?.isValid == true)
+
 
             ensureAllEventsConsumed()
         }
@@ -85,26 +91,32 @@ public class RadioInputControllerTest {
     public fun testRequired(): TestResult = runTest {
         formState.changes.test {
             // Sanity check initial form state.
-            assertTrue(awaitItem().data.isEmpty())
+            assertTrue(awaitItem().filteredFields.isEmpty())
 
             initRadioInputController(isRequired = true)
 
+            // Skip to the final VALID item
+            skipItems(4)
+
             awaitItem().let {
                 // Verify that our checkbox controller updated the form state.
-                assertTrue(it.data.containsKey(IDENTIFIER))
+                assertTrue(it.filteredFields.containsKey(IDENTIFIER))
                 // Not valid yet, since nothing is selected.
-                assertFalse(it.inputValidity[IDENTIFIER]!!)
+                assertTrue(it.lastProcessedStatus(IDENTIFIER)?.isValid == false)
             }
             radioState.update { it.copy(selectedItem = SELECTED_VALUE) }
             testScheduler.runCurrent()
 
+            // Skip to the final VALID item
+            skipItems(2)
+
             awaitItem().let {
                 // Valid now that we've selected a value
-                assertTrue(it.inputValidity[IDENTIFIER]!!)
+                assertTrue(it.lastProcessedStatus(IDENTIFIER)?.isValid == true)
                 // Make sure the controller updated form state with the selected value
                 assertEquals(
                     SELECTED_VALUE,
-                    it.inputData<FormData.RadioInputController>(IDENTIFIER)?.value
+                    it.inputData<ThomasFormField.RadioInputController>(IDENTIFIER)?.originalValue
                 )
             }
 
@@ -143,11 +155,15 @@ public class RadioInputControllerTest {
                 every { this@mockk.attributeName } returns attributeName
 
             },
-            formState = formState,
+            formState = ThomasForm(formState),
             radioState = radioState,
             environment = mockEnv,
             properties = ModelProperties(pagerPageId = null)
-        )
+        ).apply {
+            onViewAttached(mockk())
+        }
+
+        testScope.runCurrent()
     }
 
     private companion object {

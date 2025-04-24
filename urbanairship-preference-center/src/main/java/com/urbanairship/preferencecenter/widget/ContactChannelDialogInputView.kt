@@ -19,9 +19,9 @@ import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.PromptDisplay
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.RegistrationOptions
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.SmsSenderInfo
-import com.urbanairship.preferencecenter.util.emojiFlag
 import com.urbanairship.preferencecenter.util.markdownToHtml
 import com.urbanairship.preferencecenter.util.setHtml
+import com.urbanairship.util.airshipEmojiFlag
 import com.google.android.material.textfield.TextInputLayout
 
 internal class ContactChannelDialogInputView@JvmOverloads constructor(
@@ -127,7 +127,11 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
         abstract val address: String
 
         data class Email(override val address: String) : DialogResult()
-        data class Sms(override val address: String, val senderId: String) : DialogResult()
+        data class Sms(
+            override val address: String,
+            val senderId: String,
+            val prefix: String
+        ) : DialogResult()
     }
 
     /** Returns a pending ContactChannel. */
@@ -136,8 +140,12 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
 
         return when (platform) {
             is Item.ContactManagement.Platform.Email -> DialogResult.Email(address = address)
-            is Item.ContactManagement.Platform.Sms -> selectedSender?.senderId?.let { senderId ->
-                DialogResult.Sms(address = address, senderId = senderId)
+            is Item.ContactManagement.Platform.Sms -> selectedSender?.let { sender ->
+                DialogResult.Sms(
+                    address = address,
+                    senderId = sender.senderId,
+                    prefix = sender.dialingCode
+                )
             }
             else -> null
         }
@@ -202,14 +210,14 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
         }
 
         private fun formatPhone(dialingCode: String?, phoneNumber: String?): String {
-            val msisdn = (dialingCode ?: "") + (phoneNumber ?: "")
+            val msisdn = phoneNumber ?: ""
             return msisdn.filter { it.isDigit() }
         }
 
         private fun formatCountryPickerItem(
             countryCode: String,
             dialingCode: String
-        ): String = countryCode.emojiFlag?.let { flag ->
+        ): String = countryCode.airshipEmojiFlag?.let { flag ->
             "$flag $dialingCode"
         } ?: dialingCode
     }

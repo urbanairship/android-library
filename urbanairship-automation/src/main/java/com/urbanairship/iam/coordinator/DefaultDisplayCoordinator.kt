@@ -5,7 +5,7 @@ package com.urbanairship.iam.coordinator
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.util.TaskSleeper
-import com.urbanairship.automation.utils.combineStates
+import com.urbanairship.util.combineStates
 import com.urbanairship.iam.InAppMessage
 import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher

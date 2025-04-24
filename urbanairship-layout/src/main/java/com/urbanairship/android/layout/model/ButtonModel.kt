@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.event.ReportingEvent.ButtonTap
 import com.urbanairship.android.layout.info.Button
@@ -16,18 +17,21 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasCancel
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
 import com.urbanairship.android.layout.property.hasFormSubmit
+import com.urbanairship.android.layout.property.hasFormValidate
 import com.urbanairship.android.layout.property.hasPagerNext
 import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
-import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.android.layout.widget.TappableView
-import java.lang.Integer.max
-import java.lang.Integer.min
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 internal abstract class ButtonModel<T, I: Button>(
     viewInfo: I,
-    private val formState: SharedState<State.Form>?,
+    private val formState: ThomasForm?,
     private val pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
     properties: ModelProperties
@@ -47,11 +51,13 @@ internal abstract class ButtonModel<T, I: Button>(
     }
 
     override var listener: Listener? = null
+    private var isProcessing = MutableStateFlow(false)
 
     @CallSuper
     override fun onViewAttached(view: T) {
         viewScope.launch {
             view.taps().collect {
+
                 val reportingContext = layoutState.reportingContext(buttonId = viewInfo.identifier)
 
                 // Report button tap event.
@@ -61,17 +67,28 @@ internal abstract class ButtonModel<T, I: Button>(
                 runActions(viewInfo.actions, reportingContext)
 
                 // Run any handlers for tap events.
-                if (viewInfo.eventHandlers.hasTapHandler()) {
+                if (viewInfo.eventHandlers.hasTapHandler() && !viewInfo.clickBehaviors.hasFormSubmit) {
                     handleViewEvent(EventHandler.Type.TAP)
                 }
 
                 evaluateClickBehaviors(view.context ?: UAirship.getApplicationContext())
             }
         }
+
+        // If we're processing, disable the button, via the enabled listener.
+        viewScope.launch {
+            isProcessing.collect {
+                listener?.setEnabled(enabled = !it)
+            }
+        }
     }
 
     private suspend fun evaluateClickBehaviors(context: Context) {
-        if (viewInfo.clickBehaviors.hasFormSubmit) {
+        if (viewInfo.clickBehaviors.hasFormValidate) {
+            // If we have a FORM_VALIDATE behavior, handle it first and then
+            // handle the rest of the behaviors after validating.
+            handleFormValidation(context)
+        } else if (viewInfo.clickBehaviors.hasFormSubmit) {
             // If we have a FORM_SUBMIT behavior, handle it first and then
             // handle the rest of the behaviors after submitting.
             handleSubmit(context)
@@ -97,6 +114,11 @@ internal abstract class ButtonModel<T, I: Button>(
         listener?.dismissSoftKeyboard()
 
         val submitEvent = LayoutEvent.SubmitForm(buttonIdentifier = viewInfo.identifier) {
+            // Run any handlers for tap events.
+            if (viewInfo.eventHandlers.hasTapHandler()) {
+                handleViewEvent(EventHandler.Type.TAP)
+            }
+
             // After submitting, handle the rest of the behaviors.
             if (viewInfo.clickBehaviors.hasCancelOrDismiss) {
                 handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
@@ -108,8 +130,38 @@ internal abstract class ButtonModel<T, I: Button>(
                 handlePagerPrevious()
             }
         }
+
+        isProcessing.update { true }
         modelScope.launch {
-            environment.eventHandler.broadcast(submitEvent)
+            broadcast(submitEvent)
+            isProcessing.update { false }
+        }
+    }
+
+    private fun handleFormValidation(context: Context) {
+        // Dismiss the keyboard, if it's open.
+        listener?.dismissSoftKeyboard()
+
+        val validateEvent = LayoutEvent.ValidateForm(buttonIdentifier = viewInfo.identifier) {
+            // After validating, handle the rest of the behaviors.
+            if (viewInfo.clickBehaviors.hasFormSubmit) {
+                handleSubmit(context)
+            }
+            if (viewInfo.clickBehaviors.hasCancelOrDismiss) {
+                handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
+            }
+            if (viewInfo.clickBehaviors.hasPagerNext) {
+                handlePagerNext(context, fallback = viewInfo.clickBehaviors.pagerNextFallback)
+            }
+            if (viewInfo.clickBehaviors.hasPagerPrevious) {
+                handlePagerPrevious()
+            }
+        }
+
+        isProcessing.update { true }
+        modelScope.launch {
+            broadcast(validateEvent)
+            isProcessing.update { false }
         }
     }
 
@@ -118,25 +170,14 @@ internal abstract class ButtonModel<T, I: Button>(
             "Pager state is required for Buttons with pager click behaviors!"
         }
 
-        fun pagerNext() {
-            pagerState.update { state ->
-                state.copyWithPageIndex(min(state.pageIndex + 1, state.pageIds.size - 1))
+        if (pagerState.changes.first().hasNext) {
+           pagerState.update { it.copyWithPageRequest(PageRequest.NEXT) }
+        } else {
+            when(fallback) {
+                PagerNextFallback.NONE -> {}
+                PagerNextFallback.DISMISS -> handleDismiss(context, isCancel = false)
+                PagerNextFallback.FIRST -> pagerState.update { it.copyWithPageRequest(PageRequest.FIRST) }
             }
-        }
-
-        @OptIn(DelicateLayoutApi::class)
-        val hasNext = pagerState.value.hasNext
-
-        when {
-            !hasNext && fallback == PagerNextFallback.FIRST -> pagerState.update { state ->
-                state.copyWithPageIndexAndResetProgress(0)
-            }
-
-            !hasNext && fallback == PagerNextFallback.DISMISS -> handleDismiss(
-                context, isCancel = false
-            )
-
-            else -> pagerNext()
         }
     }
 
@@ -144,9 +185,7 @@ internal abstract class ButtonModel<T, I: Button>(
         checkNotNull(pagerState) {
             "Pager state is required for Buttons with pager click behaviors!"
         }
-        pagerState.update { state ->
-            state.copyWithPageIndex(max(state.pageIndex - 1, 0))
-        }
+        pagerState.update { it.copyWithPageRequest(PageRequest.BACK) }
     }
 
     private suspend fun handleDismiss(context: Context, isCancel: Boolean) {

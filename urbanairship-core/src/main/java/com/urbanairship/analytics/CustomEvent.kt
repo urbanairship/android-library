@@ -5,6 +5,10 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.Size
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
+import com.urbanairship.analytics.templates.AccountEventTemplate
+import com.urbanairship.analytics.templates.MediaEventTemplate
+import com.urbanairship.analytics.templates.RetailEventTemplate
+import com.urbanairship.analytics.templates.SearchEventTemplate
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -31,9 +35,9 @@ public class CustomEvent private constructor(
     /** The event properties. */
     public val properties: JsonMap,
 
-    private val sendId: String? = null,
-    private val templateType: String? = null,
-    private val inAppContext: JsonValue? = null
+    internal val sendId: String? = null,
+    internal val templateType: String? = null,
+    internal val inAppContext: JsonValue? = null
 ) : Event(), JsonSerializable {
 
     private constructor(builder: Builder): this(
@@ -565,6 +569,111 @@ public class CustomEvent private constructor(
         @JvmStatic
         public fun newBuilder(name: String): Builder {
             return Builder(name)
+        }
+
+        /**
+         * Creates a new CustomEvent builder from a media template
+         *
+         * @param type Event situation [MediaEventTemplate.Type]
+         * @param properties The event properties [MediaEventTemplate.Properties]
+         * @return The CustomEvent builder.
+         */
+        @JvmStatic
+        @JvmOverloads
+        public fun newBuilder(
+            type: MediaEventTemplate.Type,
+            properties: MediaEventTemplate.Properties = MediaEventTemplate.Properties()
+        ): Builder {
+
+            var updatedProperties = properties
+
+            when(type) {
+                is MediaEventTemplate.Type.Shared -> {
+                    updatedProperties = MediaEventTemplate.Properties
+                        .Builder(properties)
+                        .setSource(type.source)
+                        .setMedium(type.medium)
+                        .build()
+                }
+                else -> {}
+            }
+
+            return newBuilder(type.eventName)
+                .setTemplateType(MediaEventTemplate.TEMPLATE_NAME)
+                .setProperties(updatedProperties.toJsonValue().optMap())
+        }
+
+        /**
+         * Creates a new CustomEvent builder from an account template
+         *
+         * @param type Event situation [AccountEventTemplate.Type]
+         * @param properties The event properties [AccountEventTemplate.Properties]
+         * @return The CustomEvent builder.
+         */
+        @JvmStatic
+        @JvmOverloads
+        public fun newBuilder(
+            type: AccountEventTemplate.Type,
+            properties: AccountEventTemplate.Properties = AccountEventTemplate.Properties()
+        ): Builder {
+            return newBuilder(type.eventName)
+                .setTemplateType(AccountEventTemplate.TEMPLATE_NAME)
+                .setProperties(properties.toJsonValue().optMap())
+        }
+
+        /**
+         * Creates a new CustomEvent builder from a retail template
+         *
+         * @param type Event situation [RetailEventTemplate.Type]
+         * @param properties The event properties [RetailEventTemplate.Properties]
+         * @return The CustomEvent builder.
+         */
+        @JvmStatic
+        @JvmOverloads
+        public fun newBuilder(
+            type: RetailEventTemplate.Type,
+            properties: RetailEventTemplate.Properties = RetailEventTemplate.Properties()
+        ): Builder {
+            var updatedProperties = properties
+
+            when(type) {
+                is RetailEventTemplate.Type.Shared -> {
+                    updatedProperties = RetailEventTemplate.Properties
+                        .Builder(properties)
+                        .setSource(type.source)
+                        .setMedium(type.medium).build()
+                }
+                is RetailEventTemplate.Type.Wishlist -> {
+                    updatedProperties = RetailEventTemplate.Properties
+                        .Builder(properties)
+                        .setWhishlistName(type.name)
+                        .setWishlistId(type.id)
+                        .build()
+                }
+                else -> {}
+            }
+
+            return newBuilder(type.eventName)
+                .setTemplateType(RetailEventTemplate.TEMPLATE_NAME)
+                .setProperties(updatedProperties.toJsonValue().optMap())
+        }
+
+        /**
+         * Creates a new CustomEvent builder from a search template
+         *
+         * @param type Event situation [SearchEventTemplate.Type]
+         * @param properties The event properties [SearchEventTemplate.Properties]
+         * @return The CustomEvent builder.
+         */
+        @JvmStatic
+        @JvmOverloads
+        public fun newBuilder(
+            type: SearchEventTemplate.Type,
+            properties: SearchEventTemplate.Properties = SearchEventTemplate.Properties()
+        ): Builder {
+            return newBuilder(type.eventName)
+                .setTemplateType(SearchEventTemplate.TEMPLATE_NAME)
+                .setProperties(properties.toJsonValue().optMap())
         }
     }
 }

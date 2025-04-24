@@ -291,8 +291,7 @@ class IncomingPushRunnable implements Runnable {
         }
 
         if (channelId != null) {
-            return airship.getPushManager()
-                          .getNotificationChannelRegistry()
+            return airship.getPushManager().getNotificationChannelRegistry()
                           .getNotificationChannelSync(channelId);
         } else {
             return null;

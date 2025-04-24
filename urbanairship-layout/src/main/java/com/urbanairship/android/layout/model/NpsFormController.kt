@@ -6,9 +6,10 @@ import android.view.View
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.NpsFormControllerInfo
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 
 /**
  * Controller that manages NPS form views.
@@ -16,15 +17,15 @@ import com.urbanairship.android.layout.reporting.FormData
 internal class NpsFormController(
     viewInfo: NpsFormControllerInfo,
     override val view: AnyModel,
-    formState: SharedState<State.Form>,
-    parentFormState: SharedState<State.Form>?,
+    formState: ThomasForm,
+    parentForm: ThomasForm?,
     pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
     properties: ModelProperties
 ) : BaseFormController<View, NpsFormControllerInfo>(
     viewInfo = viewInfo,
     formState = formState,
-    parentFormState = parentFormState,
+    parentFormState = parentForm,
     pagerState = pagerState,
     environment = environment,
     properties = properties
@@ -36,10 +37,11 @@ internal class NpsFormController(
         itemProperties: ItemProperties?
     ) = view.createView(context, viewEnvironment, itemProperties)
 
-    override fun buildFormData(state: State.Form) = FormData.Nps(
+    override fun buildFormData(state: State.Form) = ThomasFormField.Nps(
         viewInfo.identifier,
         viewInfo.npsIdentifier,
         viewInfo.responseType,
-        state.data.values.toSet()
+        state.filteredFields.values.toSet(),
+        fieldType = ThomasFormField.FieldType.just(emptySet())
     )
 }

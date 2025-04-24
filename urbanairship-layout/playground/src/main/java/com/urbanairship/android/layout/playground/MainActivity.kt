@@ -29,7 +29,7 @@ import com.urbanairship.android.layout.playground.customviews.CustomWeatherView
 import com.urbanairship.android.layout.playground.customviews.CustomWeatherViewXml
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
 import com.urbanairship.android.layout.playground.embedded.EmbeddedActivity
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
@@ -213,8 +213,8 @@ class MainActivity : AppCompatActivity() {
             dumpEvents()
         }
 
-        override fun onFormResult(formData: FormData.BaseForm, state: LayoutData) {
-            "onFormResult(formData: ${formData.toJsonValue()}, state: $state)".let {
+        override fun onFormResult(thomasFormField: ThomasFormField.BaseForm, state: LayoutData) {
+            "onFormResult(formData: ${thomasFormField.toJsonValue()}, state: $state)".let {
                 events.add(it)
                 UALog.d(it)
             }

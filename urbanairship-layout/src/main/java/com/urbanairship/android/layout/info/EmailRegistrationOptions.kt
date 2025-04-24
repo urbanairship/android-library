@@ -5,6 +5,7 @@ package com.urbanairship.android.layout.info
 import com.urbanairship.android.layout.info.ThomasEmailRegistrationOptions.Type.COMMERCIAL
 import com.urbanairship.android.layout.info.ThomasEmailRegistrationOptions.Type.DOUBLE_OPT_IN
 import com.urbanairship.android.layout.info.ThomasEmailRegistrationOptions.Type.TRANSACTIONAL
+import com.urbanairship.android.layout.property.SmsLocale
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -13,6 +14,7 @@ import com.urbanairship.json.requireField
 
 public sealed class ThomasChannelRegistration {
     public data class Email(val address: String, val options: ThomasEmailRegistrationOptions): ThomasChannelRegistration()
+    public data class Sms(val address: String, val registration: SmsLocale.Registration): ThomasChannelRegistration()
 }
 
 public sealed class ThomasEmailRegistrationOptions {

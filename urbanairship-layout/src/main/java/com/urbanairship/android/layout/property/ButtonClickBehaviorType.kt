@@ -10,6 +10,7 @@ internal enum class ButtonClickBehaviorType(
     // When a button is tapped, behaviors will be run in the order they are declared here.
     // Take care when adding or removing types--form submit needs to occur before dismiss or cancel.
     FORM_SUBMIT("form_submit"),
+    FORM_VALIDATE("form_validate"),
     PAGER_NEXT("pager_next"),
     PAGER_PREVIOUS("pager_previous"),
     /** Advances to the next page if there is one, otherwise dismisses the in-app. */
@@ -66,6 +67,9 @@ internal val List<ButtonClickBehaviorType>.hasPagerResume: Boolean
 
 internal val List<ButtonClickBehaviorType>.hasFormSubmit: Boolean
     get() = contains(ButtonClickBehaviorType.FORM_SUBMIT)
+
+internal val List<ButtonClickBehaviorType>.hasFormValidate: Boolean
+    get() = contains(ButtonClickBehaviorType.FORM_VALIDATE)
 
 internal val List<ButtonClickBehaviorType>.hasDismiss: Boolean
     get() = contains(ButtonClickBehaviorType.DISMISS)

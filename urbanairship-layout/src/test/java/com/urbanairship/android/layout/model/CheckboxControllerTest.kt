@@ -6,12 +6,17 @@ import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
+import com.urbanairship.android.layout.info.FormValidationMode
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonValue
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
@@ -44,7 +49,12 @@ public class CheckboxControllerTest {
     private val mockView: AnyModel = mockk(relaxed = true)
 
     private val formState = spyk(SharedState(
-        State.Form(identifier = "form-id", formType = FormType.Form, formResponseType = "form")
+        State.Form(
+            identifier = "form-id",
+            formType = FormType.Form,
+            formResponseType = "form",
+            validationMode = FormValidationMode.IMMEDIATE
+        )
     ))
 
     private lateinit var checkboxState: SharedState<State.Checkbox>
@@ -65,38 +75,53 @@ public class CheckboxControllerTest {
     public fun testInit(): TestResult = runTest {
         formState.changes.test {
             // Sanity check initial form state.
-            assertTrue(awaitItem().data.isEmpty())
+            assertTrue(awaitItem().filteredFields.isEmpty())
 
             initCheckboxController()
 
+            // Skip to the final VALID item
+            skipItems(2)
+
             val item = awaitItem()
             // Verify that our checkbox controller updated the form state.
-            assertTrue(item.data.containsKey(IDENTIFIER))
+            assertTrue(item.filteredFields.containsKey(IDENTIFIER))
+            assertEquals(item.status, ThomasFormStatus.PENDING_VALIDATION)
+
             // Verify that the response is valid, since the checkbox controller is not required.
-            assertTrue(item.inputValidity[IDENTIFIER]!!)
+            assertEquals(awaitItem().status, ThomasFormStatus.VALIDATING)
+            assertEquals(awaitItem().status, ThomasFormStatus.VALID)
 
             ensureAllEventsConsumed()
         }
     }
 
+
     @Test
     public fun testRequiredWithMinSelection(): TestResult = runTest {
         formState.changes.test {
             // Sanity check initial form state.
-            assertTrue(awaitItem().data.isEmpty())
+            assertTrue(awaitItem().filteredFields.isEmpty())
 
             initCheckboxController(isRequired = true, minSelection = MIN_SELECTION)
 
+            // Skip to the final VALID item
+            skipItems(2)
+
             // Not valid yet, because nothing is selected.
-            assertFalse(awaitItem().inputValidity[IDENTIFIER]!!)
+            assertTrue(awaitItem().lastProcessedStatus(IDENTIFIER)?.isValid == false)
 
             checkboxState.update {
                 it.copy(selectedItems = it.selectedItems + SELECTED_VALUE)
             }
             testScheduler.runCurrent()
 
+            // Skip to the final VALID item
+            skipItems(2)
+
             // Verify that the response is valid now that it has 1 selection
-            assertTrue(awaitItem().inputValidity[IDENTIFIER]!!)
+            assertEquals(awaitItem().status, ThomasFormStatus.PENDING_VALIDATION)
+            assertEquals(awaitItem().status, ThomasFormStatus.VALIDATING)
+            assertEquals(awaitItem().status, ThomasFormStatus.VALID)
 
             ensureAllEventsConsumed()
         }
@@ -145,11 +170,13 @@ public class CheckboxControllerTest {
                 every { this@mockk.maxSelection } returns maxSelection
             },
             view = mockView,
-            formState = formState,
+            formState = ThomasForm(formState),
             checkboxState = checkboxState,
             environment = mockEnv,
             properties = ModelProperties(pagerPageId = null)
-        )
+        ).apply {
+            onViewAttached(mockk())
+        }
 
         testScope.runCurrent()
     }

@@ -58,7 +58,7 @@ public class PagerModelTest {
         every { reporter } returns mockReporter
         every { actionsRunner } returns mockActionsRunner
         every { modelScope } returns testScope
-        every { layoutState } returns mockk {
+        every { layoutState } returns mockk(relaxed = true) {
             every { reportingContext(any(), any(), any()) } returns mockk()
         }
     }
@@ -78,10 +78,12 @@ public class PagerModelTest {
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
 
-        pagerModel = spyk(PagerModel(
-            items = ITEMS,
+        pagerModel =
+            spyk(PagerModel(
+            availablePages = ITEMS,
             viewInfo = mockk<PagerInfo>(relaxUnitFun = true) {
                 every { gestures } returns emptyList()
+                every { disableSwipeWhen } returns null
             },
             pagerState = pagerState,
             environment = mockEnv,
@@ -123,7 +125,7 @@ public class PagerModelTest {
         // Verify that the model set page IDs on pagerState
         assertEquals(PAGE_IDS, state.pageIds)
         // Verify that the correct number of page items is available via the model
-        assertEquals(3, pagerModel.items.size)
+        assertEquals(3, pagerModel.pages.size)
         // Verify that actions were run for the initial page display
         verify(exactly = 1) { mockActionsRunner.run(any(), any()) }
     }
@@ -231,15 +233,15 @@ public class PagerModelTest {
         private const val PAGER_ID = "pager"
         private const val PAGE_1_ID = "page-one-identifier"
         private const val PAGE_2_ID = "page-two-identifier"
-        private const val PAGE_3_ID = "page-two-identifier"
+        private const val PAGE_3_ID = "page-three-identifier"
         private val EMPTY_ACTIONS = emptyMap<String, JsonValue>()
         private val EMPTY_AUTOMATED_ACTIONS = emptyList<AutomatedAction>()
         private val EMPTY_ACCESSIBILITY_ACTIONS = emptyList<AccessibilityAction>()
 
         private val ITEMS = listOf(
-            PagerModel.Item(mockk(relaxed = true), PAGE_1_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS),
-            PagerModel.Item(mockk(relaxed = true), PAGE_2_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS),
-            PagerModel.Item(mockk(relaxed = true), PAGE_3_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS)
+            PagerModel.Item(mockk(relaxed = true), PAGE_1_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, null, null),
+            PagerModel.Item(mockk(relaxed = true), PAGE_2_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, null, null),
+            PagerModel.Item(mockk(relaxed = true), PAGE_3_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, null, null)
         )
         private val PAGE_IDS = ITEMS.map { it.identifier }
     }

@@ -1,0 +1,46 @@
+name: CI Merge
+
+on:
+    push:
+      branches:
+        - main
+        - next        
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    name: Merge CI
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup Java Version
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: false
+
+      - name: Copy CI gradle.properties
+        run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
+        
+      - name: Test
+        run: bash ./gradlew spotlessCheck testDebugUnitTest --stacktrace --fail-fast
+
+      - name: Publish unit test reports
+        if: always()
+        uses: mikepenz/action-junit-report@a6502270b81b22b7cf745720fcf00edf7d31dc04
+        with:
+          check_name: 'Test report'
+          github_token: ${{ github.token }}
+          report_paths: '**/build/test-results/**/TEST-*.xml'
+          fail_on_failure: true

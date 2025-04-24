@@ -6,13 +6,14 @@ import android.view.View
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ImageButtonInfo
 import com.urbanairship.android.layout.view.ImageButtonView
 
 internal class ImageButtonModel(
     viewInfo: ImageButtonInfo,
-    formState: SharedState<State.Form>?,
+    formState: ThomasForm?,
     pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
     properties: ModelProperties

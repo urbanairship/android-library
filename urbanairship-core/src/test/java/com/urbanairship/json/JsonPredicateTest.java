@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -76,6 +77,31 @@ public class JsonPredicateTest extends BaseTestCase {
                          .build();
 
         assertFalse(predicate.apply(catJson));
+    }
+
+    @Test
+    public void testJSONPredicateArrayLength() throws JsonException {
+        // This JSON is flawed as you cant have an array of matchers for value. However it shows
+        // order of matcher parsing and its the same test on web, so we are using it.
+        String json = "{\n" +
+                "  \"value\": {\n" +
+                "    \"array_contains\": {\n" +
+                "      \"value\": {\n" +
+                "        \"equals\": 2\n" +
+                "      }\n" +
+                "    },\n" +
+                "    \"array_length\": {\n" +
+                "      \"value\": {\n" +
+                "        \"equals\": 1\n" +
+                "      }\n" +
+                "    }\n" +
+                "  }\n" +
+                "}";
+
+
+        JsonPredicate predicate = JsonPredicate.parse(JsonValue.parseString(json));
+        assertTrue(predicate.apply(JsonValue.wrap(Collections.singletonList(2))));
+        assertFalse(predicate.apply(JsonValue.wrap(Arrays.asList(0, 1, 2))));
     }
 
     @Test

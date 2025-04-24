@@ -1,29 +1,5 @@
 package com.urbanairship.preferencecenter.util
 
-import org.intellij.lang.annotations.Language
-
-/**
- * Returns the emoji flag for a given ISO 3166-1 alpha-2 country code.
- *
- * If the country code is not an alpha-2 country code, `null` will be returned.
- * If the country code is not a valid alpha-2 country code, the result will be a question-mark
- * flag, though this behavior may differ depending on Android version and OEM.
- */
-internal val String.emojiFlag: String?
-    get() = countryFlag(this)
-
-
-private fun countryFlag(code: String): String? {
-    val sanitizedCode = code.uppercase().replace(Regex("[^A-Z]"), "")
-    if (sanitizedCode.length != 2) {
-        return null
-    }
-
-    return sanitizedCode.map { it.code + 0x1F1A5 }.joinToString("") {
-        Character.toChars(it).concatToString()
-    }
-}
-
 /**
  * Converts basic markdown to HTML.
  *

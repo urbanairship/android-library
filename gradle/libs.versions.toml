@@ -1,7 +1,7 @@
 [versions]
 
 # Gradle plugins
-androidGradlePlugin = '8.7.2'
+androidGradlePlugin = '8.9.0'
 googleServicesPlugin = '4.4.2'
 spotlessPlugin = '6.25.0'
 nexusPublishPlugin = '1.1.0'
@@ -93,6 +93,7 @@ mockk = '1.13.5'
 
 # Doc Dependencies
 dokka = '2.0.0'
+junitKtx = "1.2.1"
 
 [plugins]
 
@@ -233,3 +234,4 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 # Dokka
 
 dokka-android = { module = "org.jetbrains.dokka:android-documentation-plugin", version.ref = "dokka" }
+androidx-junit-ktx = { group = "androidx.test.ext", name = "junit-ktx", version.ref = "junitKtx" }

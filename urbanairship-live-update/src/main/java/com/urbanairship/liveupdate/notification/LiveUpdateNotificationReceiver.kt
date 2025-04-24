@@ -7,7 +7,7 @@ import android.content.Intent
 import android.os.Build
 import com.urbanairship.UALog
 import com.urbanairship.liveupdate.LiveUpdateManager
-import com.urbanairship.push.PushManager.EXTRA_NOTIFICATION_DELETE_INTENT
+import com.urbanairship.push.PushManager
 
 /** Receiver for Live Update notifications. */
 public class LiveUpdateNotificationReceiver : BroadcastReceiver() {
@@ -36,7 +36,7 @@ public class LiveUpdateNotificationReceiver : BroadcastReceiver() {
         }
 
         // Call through to the original delete intent, if one was provided.
-        getParcelableExtraCompat<PendingIntent>(EXTRA_NOTIFICATION_DELETE_INTENT)?.let { intent ->
+        getParcelableExtraCompat<PendingIntent>(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT)?.let { intent ->
             try {
                 intent.send()
             } catch (e: PendingIntent.CanceledException) {

@@ -5,38 +5,50 @@ import android.content.Context
 import android.view.View.OnAttachStateChangeListener
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Provider
-import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.ThomasFormStatus
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.Accessible
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
+import com.urbanairship.android.layout.info.Validatable
+import com.urbanairship.android.layout.info.ValidationAction
 import com.urbanairship.android.layout.info.View
+import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.StateAction
-import com.urbanairship.android.layout.property.hasFormBehaviors
-import com.urbanairship.android.layout.property.hasPagerBehaviors
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
-import com.urbanairship.android.layout.reporting.FormData
 import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.resolveContentDescription
-import com.urbanairship.android.layout.util.resolveOptional
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.TappableView
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.toJsonMap
 import com.urbanairship.util.PlatformUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import android.view.View as AndroidView
 
@@ -55,7 +67,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
     internal interface Listener {
 
-        fun onStateUpdated(state: State.Layout) {}
+        fun onStateUpdated(state: ThomasState) { }
         fun setBackground(old: Background?, new: Background)
         fun setVisibility(visible: Boolean)
         fun setEnabled(enabled: Boolean)
@@ -93,20 +105,21 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
             }
         })
 
-        if (viewInfo.enableBehaviors != null) {
-            if (viewInfo.enableBehaviors.hasPagerBehaviors) {
-                checkNotNull(layoutState.pager) { "Pager state is required for pager behaviors" }
-                modelScope.launch {
-                    layoutState.pager.changes.collect { handlePagerBehaviors(it) }
+        if (viewInfo.enableBehaviors?.isNotEmpty() == true) {
+            modelScope.launch {
+                combine(
+                    layoutState.pager?.changes ?: flowOf(null),
+                    layoutState.thomasForm?.formUpdates ?: flowOf(null),
+                ) { pager, form ->
+                    mapEnableBehavior(pager = pager, form = form)
+                }.collect {
+                    listener?.setEnabled(it)
                 }
             }
+        }
 
-            if (viewInfo.enableBehaviors.hasFormBehaviors) {
-                checkNotNull(layoutState.form) { "Form state is required for form behaviors" }
-                modelScope.launch {
-                    layoutState.form.changes.collect { handleFormBehaviors(it) }
-                }
-            }
+        if (viewInfo.stateTriggers != null) {
+            setupStateListeners()
         }
 
         return view
@@ -147,10 +160,32 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         }
 
         viewScope.launch {
-            layoutState.layout?.changes?.collect {
+            layoutState.thomasState.collect {
                 updateBackground(it)
                 updateVisibility(it)
                 listener?.onStateUpdated(it)
+            }
+        }
+    }
+
+    private fun setupStateListeners() {
+        val triggers = viewInfo.stateTriggers ?: return
+        if (triggers.isEmpty()) { return }
+
+
+        modelScope.launch {
+            val triggered = mutableSetOf<String>()
+            layoutState.thomasState.collect { state ->
+                triggers.forEach { trigger ->
+                    if (triggered.contains(trigger.id) && trigger.resetWhenStateMatches?.apply(state) == true) {
+                        triggered.remove(trigger.id)
+                    }
+
+                    if (!triggered.contains(trigger.id) && trigger.triggerWhenStateMatches.apply(state)) {
+                        triggered.add(trigger.id)
+                        runStateActions(trigger.onTrigger.stateActions)
+                    }
+                }
             }
         }
     }
@@ -216,7 +251,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     protected fun updateAttributes(attributes: Map<AttributeName, AttributeValue>) =
         environment.attributeHandler.update(attributes)
 
-    private fun updateBackground(state: State.Layout? = null) {
+    private fun updateBackground(state: ThomasState? = null) {
         val background = if (state != null) {
             Background(
                 color = state.resolveOptional(
@@ -236,11 +271,11 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         }
     }
 
-    private fun updateVisibility(state: State.Layout) {
+    private fun updateVisibility(state: JsonSerializable) {
         val visibility = viewInfo.visibility ?: return
 
         val matcher = visibility.invertWhenStateMatcher
-        val match = matcher.apply(state.state.toJsonMap())
+        val match = matcher.apply(state)
 
         val isVisible = if (match) {
             !visibility.default
@@ -251,31 +286,61 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         listener?.setVisibility(isVisible)
     }
 
-    private fun handleFormBehaviors(state: State.Form) {
-        val behaviors = viewInfo.enableBehaviors ?: return
-        val hasFormValidationBehavior = behaviors.contains(EnableBehaviorType.FORM_VALIDATION)
-        val hasFormSubmitBehavior = behaviors.contains(EnableBehaviorType.FORM_SUBMISSION)
-        val isValid = !hasFormValidationBehavior || state.isValid
-
-        val isEnabled = when {
-            hasFormSubmitBehavior && hasFormValidationBehavior -> !state.isSubmitted && isValid
-            hasFormSubmitBehavior -> !state.isSubmitted
-            hasFormValidationBehavior -> isValid
-            else -> true
-        }
-
-        listener?.setEnabled(isEnabled)
-    }
-
-    private fun handlePagerBehaviors(state: State.Pager) {
-        val behaviors = viewInfo.enableBehaviors ?: return
-        val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
-        val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
-
-        val isEnabled =
-            (hasPagerNextBehavior && state.hasNext) || (hasPagerPrevBehavior && state.hasPrevious)
-
-        listener?.setEnabled(isEnabled)
+    private fun mapEnableBehavior(form: State.Form?, pager: State.Pager?): Boolean {
+        val behaviors = viewInfo.enableBehaviors ?: return true
+        return behaviors.map {
+            when(it) {
+                EnableBehaviorType.FORM_VALIDATION -> {
+                    if (form == null) {
+                        false
+                    } else {
+                        when(form.validationMode) {
+                            FormValidationMode.ON_DEMAND -> {
+                                when(form.status) {
+                                    ThomasFormStatus.ERROR,
+                                    ThomasFormStatus.VALID,
+                                    ThomasFormStatus.PENDING_VALIDATION -> true
+                                    ThomasFormStatus.VALIDATING,
+                                    ThomasFormStatus.INVALID,
+                                    ThomasFormStatus.SUBMITTED -> false
+                                }
+                            }
+                            FormValidationMode.IMMEDIATE -> {
+                                when(form.status) {
+                                    ThomasFormStatus.ERROR,
+                                    ThomasFormStatus.VALID -> true
+                                    ThomasFormStatus.PENDING_VALIDATION,
+                                    ThomasFormStatus.VALIDATING,
+                                    ThomasFormStatus.INVALID,
+                                    ThomasFormStatus.SUBMITTED -> false
+                                }
+                            }
+                        }
+                    }
+                }
+                EnableBehaviorType.FORM_SUBMISSION -> {
+                    if (form == null) {
+                        false
+                    } else {
+                        !form.status.isSubmitted
+                    }
+                }
+                EnableBehaviorType.PAGER_NEXT -> {
+                    if (pager?.isScrollDisabled == true) {
+                        false
+                    } else {
+                        pager?.hasNext ?: false
+                    }
+                }
+                EnableBehaviorType.PAGER_PREVIOUS -> {
+                    if (pager?.isScrollDisabled == true) {
+                        false
+                    } else {
+                        pager?.hasPrevious ?: false
+                    }
+                }
+            }
+        }.all { it }
     }
 
     fun handleViewEvent(type: EventHandler.Type, value: Any? = null) {
@@ -289,32 +354,70 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     fun runStateActions(
         actions: List<StateAction>?,
         formValue: Any? = null
-    ) = actions?.forEach { action ->
-        when (action) {
-            is StateAction.SetFormValue -> layoutState.layout?.let { state ->
-                UALog.v("StateAction: SetFormValue ${action.key} = ${JsonValue.wrapOpt(formValue)}")
-                state.update {
-                    it.copy(state = it.state + (action.key to JsonValue.wrapOpt(formValue)))
-                }
-            } ?: UALog.w("StateAction: SetFormValue skipped. Missing State Controller!")
+    ) = layoutState.processStateActions(actions, formValue)
 
-            is StateAction.SetState -> layoutState.layout?.let { state ->
-                UALog.v("StateAction: SetState ${action.key} = ${action.value}")
-                state.update {
-                    it.copy(state = it.state + (action.key to action.value))
-                }
-            } ?: UALog.w("StateAction: SetState skipped. Missing State Controller!")
+    protected fun<T> wireValidationActions(
+        identifier: String,
+        thomasForm: ThomasForm,
+        initialValue: T?,
+        valueUpdates: Flow<T>,
+        validatable: Validatable
+    ) {
+        val isInitialValue = MutableStateFlow(true)
+        val lastSelected = MutableStateFlow(initialValue)
 
-            StateAction.ClearState -> layoutState.layout?.let { state ->
-                UALog.v("StateAction: ClearState")
-                state.update {
-                    it.copy(state = emptyMap())
+        modelScope.launch {
+            combine(thomasForm.status, valueUpdates) { formState, newValue ->
+                val didEdit = if (lastSelected.value != newValue) {
+                    lastSelected.update { newValue }
+                    isInitialValue.update { false }
+                    true
+                } else {
+                    false
                 }
-            } ?: UALog.w("StateAction: ClearState skipped. Missing State Controller!")
+
+                when (formState) {
+                    ThomasFormStatus.VALID, ThomasFormStatus.INVALID, ThomasFormStatus.ERROR -> {
+                        when (thomasForm.lastProcessedStatus(identifier)) {
+                            is ThomasFormFieldStatus.Invalid<*> -> {
+                                if (thomasForm.validationMode == FormValidationMode.ON_DEMAND || !isInitialValue.value) {
+                                    ValidationAction.ERROR
+                                } else {
+                                    null
+                                }
+                            }
+                            is ThomasFormFieldStatus.Valid<*> -> ValidationAction.VALID
+                            is ThomasFormFieldStatus.Pending -> ValidationAction.EDIT
+                            else -> null
+                        }
+                    }
+                    else -> if (didEdit) {
+                        ValidationAction.EDIT
+                    } else {
+                        null
+                    }
+                }
+            }
+                .distinctUntilChanged()
+                .mapNotNull {
+                    when(it) {
+                        ValidationAction.EDIT -> validatable.onEdit
+                        ValidationAction.VALID -> validatable.onValid
+                        ValidationAction.ERROR -> validatable.onError
+                        null -> null
+                    }
+                }
+                .collect {
+                    runStateActions(it.actions, lastSelected.value)
+                }
         }
     }
 
     private companion object {
         private const val KEY_PLATFORM_OVERRIDE = "platform_action_overrides"
+    }
+
+    enum class ValidationAction {
+        EDIT, VALID, ERROR
     }
 }

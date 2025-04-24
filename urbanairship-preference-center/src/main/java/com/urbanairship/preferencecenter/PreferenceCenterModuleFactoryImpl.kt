@@ -5,6 +5,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.BuildConfig
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
+import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.preferencecenter.PreferenceCenterModuleFactory
 import com.urbanairship.remotedata.RemoteData
@@ -21,9 +22,10 @@ public class PreferenceCenterModuleFactoryImpl : PreferenceCenterModuleFactory {
         context: Context,
         dataStore: PreferenceDataStore,
         privacyManager: PrivacyManager,
-        remoteData: RemoteData
+        remoteData: RemoteData,
+        inputValidator: AirshipInputValidation.Validator
     ): Module {
-        val preferenceCenter = PreferenceCenter(context, dataStore, privacyManager, remoteData)
+        val preferenceCenter = PreferenceCenter(context, dataStore, privacyManager, remoteData, inputValidator)
         return Module.singleComponent(preferenceCenter, R.xml.ua_preference_center_actions)
     }
 

@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.info
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.android.layout.environment.ThomasStateTrigger
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.AttributeValue
@@ -9,6 +10,7 @@ import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Direction
+import com.urbanairship.android.layout.property.DisableSwipeSelector
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
@@ -18,10 +20,13 @@ import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.MarkdownOptions
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
+import com.urbanairship.android.layout.property.PageBranching
+import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.ScoreStyle
 import com.urbanairship.android.layout.property.Size
+import com.urbanairship.android.layout.property.SmsLocale
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
@@ -146,6 +151,7 @@ internal interface View {
     val eventHandlers: List<EventHandler>?
     val enableBehaviors: List<EnableBehaviorType>?
     val commonViewOverrides: CommonViewOverrides?
+    val stateTriggers: List<ThomasStateTrigger>?
 }
 
 internal data class ViewPropertyOverride<T>(
@@ -195,6 +201,10 @@ internal class BaseViewInfo(json: JsonMap) : View {
 
     override val commonViewOverrides = json.optionalMap("view_overrides")?.let {
         CommonViewOverrides(it)
+    }
+
+    override val stateTriggers = json.optionalList("state_triggers")?.let { list ->
+        list.map { ThomasStateTrigger.fromJson(it.requireMap()) }
     }
 }
 
@@ -283,15 +293,43 @@ internal interface FormController : Controller {
     val responseType: String?
     val submitBehavior: FormBehaviorType?
     val formEnabled: List<EnableBehaviorType>?
+    val validationMode: FormValidationMode
+}
+
+internal enum class FormValidationMode(private val value: String) {
+    ON_DEMAND("on_demand"),
+    IMMEDIATE("immediate");
+
+    override fun toString(): String {
+        return name.lowercase()
+    }
+
+    internal companion object {
+        @Throws(JsonException::class)
+        fun from(value: String): FormValidationMode {
+            for (type in FormValidationMode.entries) {
+                if (type.value == value.lowercase()) {
+                    return type
+                }
+            }
+            throw JsonException("Unknown form validation mode value: $value")
+        }
+    }
 }
 
 internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), FormController, Controller by controller(json) {
     override val responseType: String? =
         json.optionalField("response_type")
     override val submitBehavior: FormBehaviorType? =
-        json.optionalField<String>("submit")?.let { FormBehaviorType.from(it) }
+        json.optionalField<String>("submit")?.let {
+            FormBehaviorType.from(it)
+        }
     override val formEnabled: List<EnableBehaviorType>? =
         json.optionalList("form_enabled")?.map { EnableBehaviorType.from(it.optString()) }
+    override val validationMode: FormValidationMode =
+        json.optionalMap("validation_mode")?.let {
+            FormValidationMode.from(it.requireField("type"))
+        } ?: FormValidationMode.IMMEDIATE
 }
 
 internal interface Button : View, Accessible, Identifiable {
@@ -435,11 +473,48 @@ internal class LabelInfo(
     json: JsonMap
 ) : ViewInfo(), View by view(json), Accessible by accessible(json) {
     val text: String = json.requireField("text")
+    val ref: String? = json.optionalField("ref")
+    val iconStart: IconStart? = json.optionalMap("icon_start")?.let { IconStart.fromJson(it) }
     val textAppearance: TextAppearance =
         TextAppearance.fromJson(json.requireField("text_appearance"))
     val markdownOptions: MarkdownOptions? = json.optionalMap("markdown")?.let { MarkdownOptions(it) }
     var accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole.fromJson(it) }
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
+
+    internal sealed class IconStart(
+        val type: Type
+    ) {
+        abstract val space: Int
+
+        data class Floating(val icon: Image.Icon, override val space: Int): IconStart(Type.FLOATING)
+
+        internal enum class Type(val value: String) {
+            FLOATING("floating");
+
+            internal companion object {
+
+                @Throws(JsonException::class)
+                fun fromJson(value: String): Type = entries.firstOrNull {
+                    it.value.equals(value, ignoreCase = true)
+                }?: throw JsonException("Invalid IconStart type: $value")
+            }
+        }
+
+        internal companion object {
+            @Throws(JsonException::class)
+            fun fromJson(json: JsonMap): IconStart {
+                val type = json.requireField<String>("type").let { Type.fromJson(it) }
+                val space = json.requireField<Int>("space")
+
+                return when (type) {
+                    Type.FLOATING -> {
+                        val icon = Image.Icon.fromJson(json.requireField("icon"))
+                        Floating(icon, space)
+                    }
+                }
+            }
+        }
+    }
 
     internal enum class AccessibilityRoleType {
         HEADING;
@@ -476,6 +551,12 @@ internal class LabelInfo(
 
     internal class ViewOverrides(json: JsonMap) {
         val text = json.optionalList("text")?.map {
+            ViewPropertyOverride(it, valueParser = { value -> value.optString() })
+        }
+        val iconStart = json.optionalList("icon_start")?.map {
+            ViewPropertyOverride(it) { value -> IconStart.fromJson(value.optMap()) }
+        }
+        val ref = json.optionalList("ref")?.map {
             ViewPropertyOverride(it, valueParser = { value -> value.optString() })
         }
     }
@@ -527,6 +608,8 @@ internal class TextInputInfo(
             null
         }
     }
+
+    val smsLocales: List<SmsLocale>? = json.optionalList("locales")?.map(SmsLocale::fromJson)
 
     internal class ViewOverrides(json: JsonMap) {
         val iconEnd = json.optionalList("icon_end")?.map { iconEnd ->
@@ -584,6 +667,8 @@ internal class PagerInfo(json: JsonMap) : ViewGroupInfo<PagerItemInfo>(), View b
     val items = json.requireField<JsonList>("items").map { PagerItemInfo(it.requireMap()) }
     val isSwipeDisabled = json.optionalField("disable_swipe") ?: false
     val gestures = json.optionalList("gestures")?.let { PagerGesture.fromList(it) }
+
+    val disableSwipeWhen = json.optionalList("disable_swipe_when")?.map(DisableSwipeSelector::fromJson)
 
     override val children: List<PagerItemInfo> = items
 }
@@ -697,6 +782,8 @@ internal class PagerItemInfo(
         ?.let { AutomatedAction.fromList(it) }
     val accessibilityActions = json.optionalList("accessibility_actions")
         ?.let { AccessibilityAction.fromList(it) }
+    val stateActions = json.optionalList("state_actions")?.map(StateAction::fromJson)
+    val branching = json.get("branching")?.let(PageBranching::from)
 }
 
 internal class PagerIndicatorInfo(
@@ -749,6 +836,8 @@ internal class NpsFormControllerInfo(json: JsonMap) : FormInfo(json) {
 internal class PagerControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json) {
     override val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
+
+    val branching = json.get("branching")?.let(PagerControllerBranching::from)
 }
 
 internal class CheckboxControllerInfo(

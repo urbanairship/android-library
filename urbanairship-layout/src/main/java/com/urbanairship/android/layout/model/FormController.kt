@@ -6,9 +6,10 @@ import android.view.View
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.FormControllerInfo
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 
 /**
  * Controller that manages form input views.
@@ -16,15 +17,15 @@ import com.urbanairship.android.layout.reporting.FormData
 internal class FormController(
     viewInfo: FormControllerInfo,
     override val view: AnyModel,
-    formState: SharedState<State.Form>,
-    parentFormState: SharedState<State.Form>?,
+    formState: ThomasForm,
+    parentState: ThomasForm?,
     pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
     properties: ModelProperties
 ) : BaseFormController<View, FormControllerInfo>(
     viewInfo = viewInfo,
     formState = formState,
-    parentFormState = parentFormState,
+    parentFormState = parentState,
     pagerState = pagerState,
     environment = environment,
     properties = properties
@@ -37,5 +38,9 @@ internal class FormController(
     ) = view.createView(context, viewEnvironment, itemProperties)
 
     override fun buildFormData(state: State.Form) =
-        FormData.Form(viewInfo.identifier, viewInfo.responseType, state.data.values.toSet())
+        ThomasFormField.Form(
+            identifier = viewInfo.identifier,
+            responseType = viewInfo.responseType,
+            children = state.filteredFields.values.toSet(),
+            fieldType = ThomasFormField.FieldType.just(emptySet()))
 }

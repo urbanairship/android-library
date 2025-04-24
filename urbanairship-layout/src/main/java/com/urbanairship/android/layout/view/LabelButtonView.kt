@@ -4,28 +4,35 @@ package com.urbanairship.android.layout.view
 import android.R
 import android.content.Context
 import android.content.res.ColorStateList
+import android.text.Spannable
+import android.text.SpannableString
 import android.text.TextUtils
 import androidx.core.graphics.ColorUtils
 import androidx.core.view.isVisible
-import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasState
+import com.urbanairship.android.layout.info.LabelInfo
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.LabelButtonModel
 import com.urbanairship.android.layout.property.Color
+import com.urbanairship.android.layout.property.HorizontalPosition
+import com.urbanairship.android.layout.property.Image.CenteredImageSpan
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.ColorStateListBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
-import com.urbanairship.android.layout.util.resolveRequired
+import com.urbanairship.android.layout.util.isLayoutRtl
 import com.urbanairship.android.layout.widget.TappableView
+import com.urbanairship.util.UAStringUtil
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.flow.Flow
 
 internal class LabelButtonView(
     context: Context,
-    model: LabelButtonModel
+    private var model: LabelButtonModel
 ) : MaterialButton(context, null, androidx.appcompat.R.attr.borderlessButtonStyle), BaseView, TappableView {
 
     init {
@@ -55,15 +62,47 @@ internal class LabelButtonView(
                 this@LabelButtonView.isVisible = visible
             }
 
-            override fun onStateUpdated(state: State.Layout) {
-                val text = state.resolveRequired(
-                    overrides = model.viewInfo.label.viewOverrides?.text,
-                    default = model.viewInfo.label.text
+            override fun onStateUpdated(state: ThomasState) {
+                val resolvedText = resolveText(state)
+
+                if (resolvedText != lastText) {
+                    LayoutUtils.applyLabelModel(this@LabelButtonView, model.label, resolvedText)
+                    lastText = resolvedText
+                }
+
+                val resolvedIconStart = state.resolveOptional(
+                    overrides = model.viewInfo.label.viewOverrides?.iconStart,
+                    default = model.viewInfo.label.iconStart
                 )
 
-                if (text != lastText) {
-                    LayoutUtils.applyLabelModel(this@LabelButtonView, model.label, text)
-                    lastText = text
+                val drawableStart = when (resolvedIconStart) {
+                    is LabelInfo.IconStart.Floating ->
+                        resolvedIconStart.icon.getDrawable(context, isEnabled, if (isLayoutRtl) HorizontalPosition.END else HorizontalPosition.START)
+                    else -> null
+                }
+
+                drawableStart?.let {
+                    val size = spToPx(context, model.viewInfo.label.textAppearance.fontSize).toInt()
+                    val space = resolvedIconStart?.let { icon -> spToPx(context, icon.space).toInt() } ?: 0
+                    it.setBounds(
+                        0,
+                        0,
+                        size + space,
+                        size
+                    )
+
+                    val imageSpan = CenteredImageSpan(it)
+                    if (isLayoutRtl) {
+                        val spannableString = SpannableString("$resolvedText ").apply {
+                            setSpan(imageSpan, length - 1, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+                        text = spannableString
+                    } else {
+                        val spannableString = SpannableString(" $resolvedText").apply {
+                            setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                        }
+                        text = spannableString
+                    }
                 }
             }
 
@@ -131,4 +170,22 @@ internal class LabelButtonView(
     }
 
     override fun taps(): Flow<Unit> = debouncedClicks()
+
+    private fun resolveText(state: ThomasState): String {
+        val ref = state.resolveOptional(
+            overrides = model.viewInfo.label.viewOverrides?.ref,
+            default = model.viewInfo.label.ref
+        )
+
+        val text =  state.resolveRequired(
+            overrides = model.viewInfo.label.viewOverrides?.text,
+            default = model.viewInfo.label.text
+        )
+
+        return if (ref != null) {
+            UAStringUtil.namedStringResource(context, ref, text)
+        } else {
+            text
+        }
+    }
 }

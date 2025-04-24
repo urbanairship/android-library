@@ -3,7 +3,11 @@
 package com.urbanairship.android.layout.property;
 
 import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.drawable.AnimatedVectorDrawable;
 import android.graphics.drawable.Drawable;
+import android.text.style.ImageSpan;
 
 import com.urbanairship.android.layout.R;
 import com.urbanairship.android.layout.util.LayoutUtils;
@@ -155,10 +159,18 @@ public abstract class Image {
 
         @Nullable
         public Drawable getDrawable(@NonNull Context context, boolean enabledState) {
+            return getDrawable(context, enabledState, null);
+        }
+
+        @Nullable
+        public Drawable getDrawable(@NonNull Context context, boolean enabledState, HorizontalPosition gravityPosition) {
             Drawable d = ContextCompat.getDrawable(context, getDrawableRes());
             if (d != null) {
                 DrawableCompat.setTint(d, enabledState ? tint.resolve(context) : LayoutUtils.generateDisabledColor(tint.resolve(context)));
-                return new ShapeDrawableWrapper(d, 1, scale);
+                if (d instanceof AnimatedVectorDrawable) {
+                    ((AnimatedVectorDrawable) d).start();
+                }
+                return new ShapeDrawableWrapper(d, 1, scale, gravityPosition);
             } else {
                 return null;
             }
@@ -178,7 +190,10 @@ public abstract class Image {
             CHECKMARK("checkmark", R.drawable.ua_layout_ic_check),
             ARROW_FORWARD("forward_arrow", R.drawable.ua_layout_ic_arrow_forward),
             ARROW_BACK("back_arrow", R.drawable.ua_layout_ic_arrow_back),
-            ERROR_CIRCLE("exclamationmark_circle_fill", R.drawable.ua_layout_ic_error_circle_filled);
+            ERROR_CIRCLE("exclamationmark_circle_fill", R.drawable.ua_layout_ic_error_circle_filled),
+            ASTERISK("asterisk", R.drawable.ua_layout_ic_asterisk),
+            ASTERISK_CIRCLE("asterisk_circle_fill", R.drawable.ua_layout_ic_asterisk_circle_filled),
+            PROGRESS_SPINNER("progress_spinner", R.drawable.ua_layout_animated_progress_spinner);
 
             @NonNull
             private final String value;
@@ -199,6 +214,36 @@ public abstract class Image {
                 }
                 throw new JsonException("Unknown icon drawable resource: " + value);
             }
+        }
+    }
+
+    /**
+     * Centered image span.
+     */
+    public static final class CenteredImageSpan extends ImageSpan {
+
+        public CenteredImageSpan(Drawable drawable) {
+            super(drawable);
+        }
+
+        @Override
+        public void draw(
+                @NonNull Canvas canvas,
+                CharSequence text,
+                int start,
+                int end,
+                float x,
+                int top,
+                int y,
+                int bottom,
+                @NonNull Paint paint
+        ) {
+            canvas.save();
+            Drawable drawable = getDrawable();
+            int dy = bottom - drawable.getBounds().bottom - paint.getFontMetricsInt().descent / 2;
+            canvas.translate(x, (float)dy);
+            drawable.draw(canvas);
+            canvas.restore();
         }
     }
 }

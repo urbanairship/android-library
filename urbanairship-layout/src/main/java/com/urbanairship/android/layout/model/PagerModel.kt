@@ -17,8 +17,11 @@ import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
+import com.urbanairship.android.layout.property.DisableSwipeSelector
 import com.urbanairship.android.layout.property.GestureLocation
+import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerGesture
+import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.earliestNavigationAction
 import com.urbanairship.android.layout.property.firstPagerNextOrNull
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
@@ -33,8 +36,6 @@ import com.urbanairship.android.layout.util.pagerGestures
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
-import java.lang.Integer.max
-import java.lang.Integer.min
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -45,7 +46,7 @@ import kotlinx.coroutines.launch
 
 internal class PagerModel(
     viewInfo: PagerInfo,
-    val items: List<Item>,
+    availablePages: List<Item>,
     private val pagerState: SharedState<State.Pager>,
     environment: ModelEnvironment,
     properties: ModelProperties
@@ -58,11 +59,13 @@ internal class PagerModel(
         val identifier: String,
         val displayActions: Map<String, JsonValue>?,
         val automatedActions: List<AutomatedAction>?,
-        val accessibilityActions: List<AccessibilityAction>?
+        val accessibilityActions: List<AccessibilityAction>?,
+        val stateActions: List<StateAction>?,
+        val branching: PageBranching?
     )
 
     interface Listener : BaseModel.Listener {
-
+        fun onDataUpdated()
         fun scrollTo(position: Int)
     }
 
@@ -71,7 +74,9 @@ internal class PagerModel(
     /** Stable viewId for the recycler view.  */
     val recyclerViewId = View.generateViewId()
 
-    val pages = items.map { it.view }
+    private var _allPages: List<Item> = emptyList()
+    var pages: List<AnyModel> = emptyList()
+        private set
 
     private val pageViewIds = mutableMapOf<Int, Int>()
 
@@ -81,50 +86,125 @@ internal class PagerModel(
     private var accessibilityListener: AccessibilityManager.TouchExplorationStateChangeListener? =
         null
 
+    private val branchControl: PagerBranchControl?
+
+    val isSinglePage: Boolean
+        get() = branchControl == null && pages.size < 2
+
     init {
-        // Update pager state with our page identifiers
-        pagerState.update { state ->
-            state.copyWithPageIds(pageIds = items.map { it.identifier })
-                .copyWithDurations(durations = items.map { it.automatedActions?.earliestNavigationAction?.delay })
+        @OptIn(DelicateLayoutApi::class)
+        val branching = pagerState.value.branching
+        if (branching != null) {
+            branchControl = PagerBranchControl(
+                availablePages = availablePages,
+                controllerBranching = branching,
+                thomasState = environment.layoutState.thomasState,
+                onBranchUpdated = ::onPagesDataUpdated,
+                actionsRunner = ::runStateActions,
+            )
+            wireBranchControlFlows(branchControl)
+        } else {
+            branchControl = null
+            onPagesDataUpdated(availablePages)
         }
 
         // Listen for page changes (or the initial page display)
         // and run any actions for the current page.
         modelScope.launch {
-
             pagerState.changes.filter {
-                    // If current and last are both 0, we're initializing the pager.
-                    // Otherwise, we only want to act on changes to the pageIndex.
+                // If current and last are both 0, we're initializing the pager.
+                // Otherwise, we only want to act on changes to the pageIndex.
 
-                    (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex) && it.progress == 0
-                }.collect {
-                    // Clear any automated actions scheduled for the previous page.
-                    clearAutomatedActions(it.lastPageIndex)
+                (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex) && it.progress == 0
+            }.collect {
+                // Clear any automated actions scheduled for the previous page.
+                clearAutomatedActions(it.lastPageIndex)
+                if (it.lastPageIndex > it.pageIndex) {
+                    it.previousPageId?.let { branchControl?.removeFromHistory(it) }
+                }
 
-                    // Handle any actions defined for the current page.
-                    items[it.pageIndex].run {
-                        handlePageActions(displayActions, automatedActions)
+                // Handle any actions defined for the current page.
+                val currentPage = it.currentPageId?.let { id -> _allPages.firstOrNull { it.identifier == id } } ?: return@collect
+                runStateActions(currentPage.stateActions)
+                handlePageActions(currentPage.displayActions, currentPage.automatedActions)
 
-                        // Check if the current page has any automated pause/resume actions
-                        val hasPauseOrResumeAction = automatedActions?.hasPagerPauseOrResumeAction == true
+                it.currentPageId?.let { branchControl?.addToHistory(it) }
+                // Check if the current page has any automated pause/resume actions
+                val hasPauseOrResumeAction = currentPage.automatedActions?.hasPagerPauseOrResumeAction == true
 
-                        if (it.isTouchExplorationEnabled) {
-                            // Always pause for accessibility
-                            pauseStory()
-                        } else if (it.isMediaPaused) {
-                            // Media not ready, pause until ready
-                            pauseStory()
-                        } else {
-                            // Resume if either:
-                            // - Media just became ready (wasMediaPaused)
-                            // - OR no automated pause/resume actions exist
-                            if (it.wasMediaPaused || !hasPauseOrResumeAction) {
-                                resumeStory()
-                            }
-                        }
+                if (it.isTouchExplorationEnabled) {
+                    // Always pause for accessibility
+                    pauseStory()
+                } else if (it.isMediaPaused) {
+                    // Media not` ready, pause until ready
+                    pauseStory()
+                } else {
+                    // Resume if either:
+                    // - Media just became ready (wasMediaPaused)
+                    // - OR no automated pause/resume actions exist
+                    if (it.wasMediaPaused || !hasPauseOrResumeAction) {
+                        resumeStory()
                     }
                 }
+            }
         }
+
+        modelScope.launch { wireSwipeSelector() }
+    }
+
+    private fun onPagesDataUpdated(updated: List<Item>) {
+        _allPages = updated
+        pages = updated.map { it.view }
+        // Update pager state with our page identifiers
+        pagerState.update { state ->
+            state.copy(
+                pageIds = updated.map { it.identifier },
+                durations = updated.map { it.automatedActions?.earliestNavigationAction?.delay },
+                completed = if (state.branching == null) updated.size == 1 else state.completed,
+            )
+        }
+
+        viewScope.launch {
+            listener?.onDataUpdated()
+        }
+    }
+
+    private fun wireBranchControlFlows(control: PagerBranchControl) {
+        modelScope.launch {
+            control.isComplete.collect { complete ->
+                pagerState.update { it.copy(completed = complete) }
+            }
+        }
+    }
+
+    private suspend fun wireSwipeSelector() {
+        val selectors = viewInfo.disableSwipeWhen ?: return
+
+        environment.layoutState.thomasState.collect { state ->
+            val matched = selectors.firstOrNull { it.predicate?.apply(state) ?: true }
+            when(matched?.direction) {
+                DisableSwipeSelector.Direction.HORIZONTAL -> pagerState.update { it.copy(isScrollDisabled = true) }
+                null -> {
+                    if (pagerState.changes.value.isScrollDisabled) {
+                        pagerState.update { it.copy(isScrollDisabled = false) }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun resolve(request: PageRequest): Boolean {
+        pagerState.update {
+            val copy = it.copyWithPageRequest(request)
+
+            if (copy.pageIndex != it.pageIndex) {
+                branchControl?.onPageRequest(request)
+            }
+
+            copy
+        }
+
+        return true
     }
 
     override fun onCreateView(
@@ -151,8 +231,9 @@ internal class PagerModel(
         // the page swipe if it was triggered by the user.
         viewScope.launch {
             view.pagerScrolls().collect { (position, isInternalScroll) ->
-                pagerState.update { state ->
-                    state.copyWithPageIndex(position)
+                val request = makePageRequest(position) ?: return@collect
+                if (!resolve(request)) {
+                    return@collect
                 }
 
                 if (!isInternalScroll) {
@@ -187,10 +268,10 @@ internal class PagerModel(
 
         viewScope.launch {
             pagerState.changes
-                .map { it to items[it.pageIndex] }
+                .map { state ->  state to _allPages.firstOrNull { it.identifier == state.currentPageId } }
                 .distinctUntilChanged()
                 .collect { (state, currentItem) ->
-                    view.setAccessibilityActions(currentItem.accessibilityActions) { action ->
+                    view.setAccessibilityActions(currentItem?.accessibilityActions) { action ->
                         handleAccessibilityAction(action, state)
                     }
                 }
@@ -212,15 +293,30 @@ internal class PagerModel(
     /** Returns a stable viewId for the pager item view at the given adapter `position`.  */
     fun getPageViewId(position: Int): Int = pageViewIds.getOrPut(position) { View.generateViewId() }
 
+    private fun makePageRequest(toPosition: Int): PageRequest? {
+        val current = pagerState.changes.value.pageIndex
+
+        return if (toPosition > current) {
+            PageRequest.NEXT
+        } else if (toPosition < current) {
+            PageRequest.BACK
+        } else {
+            null
+        }
+    }
+
     private fun reportPageSwipe(pagerState: State.Pager) {
+        val currentPage = pagerState.currentPageId ?: return
+        val previousPage = pagerState.previousPageId ?: return
+
         val pagerContext = pagerState.reportingContext()
         report(
             ReportingEvent.PageSwipe(
                 pagerContext,
                 pagerState.lastPageIndex,
-                items[pagerState.lastPageIndex].identifier,
+                previousPage,
                 pagerState.pageIndex,
-                items[pagerState.pageIndex].identifier
+                currentPage
             ), layoutState.reportingContext(pagerContext = pagerContext)
         )
     }
@@ -378,24 +474,19 @@ internal class PagerModel(
 
     private fun handlePagerNext(fallback: PagerNextFallback) {
         @OptIn(DelicateLayoutApi::class)
-        val hasNext = pagerState.value.hasNext
-
-        when {
-            !hasNext && fallback == PagerNextFallback.FIRST -> pagerState.update { state ->
-                state.copyWithPageIndexAndResetProgress(0)
-            }
-
-            !hasNext && fallback == PagerNextFallback.DISMISS -> handleDismiss()
-            else -> pagerState.update { state ->
-                state.copyWithPageIndex(min(state.pageIndex + 1, state.pageIds.size - 1))
+        if (pagerState.value.hasNext) {
+            resolve(PageRequest.NEXT)
+        } else {
+            when(fallback) {
+                PagerNextFallback.NONE -> {}
+                PagerNextFallback.DISMISS -> handleDismiss()
+                PagerNextFallback.FIRST -> resolve(PageRequest.FIRST)
             }
         }
     }
 
     private fun handlePagerPrevious() {
-        pagerState.update { state ->
-            state.copyWithPageIndex(max(state.pageIndex - 1, 0))
-        }
+        resolve(PageRequest.BACK)
     }
 
     private fun handleDismiss() {
@@ -481,3 +572,9 @@ internal val List<ButtonClickBehaviorType>.pagerNextFallback: PagerNextFallback
             else -> PagerNextFallback.NONE
         }
     } ?: PagerNextFallback.NONE
+
+internal enum class PageRequest {
+    NEXT,
+    BACK,
+    FIRST
+}

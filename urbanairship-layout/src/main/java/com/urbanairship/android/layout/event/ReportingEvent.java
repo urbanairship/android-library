@@ -4,7 +4,7 @@ package com.urbanairship.android.layout.event;
 
 import com.urbanairship.android.layout.info.ThomasChannelRegistration;
 import com.urbanairship.android.layout.reporting.AttributeName;
-import com.urbanairship.android.layout.reporting.FormData;
+import com.urbanairship.android.layout.reporting.ThomasFormField;
 import com.urbanairship.android.layout.reporting.FormInfo;
 import com.urbanairship.android.layout.reporting.LayoutData;
 import com.urbanairship.android.layout.reporting.PagerData;
@@ -225,7 +225,7 @@ public abstract class ReportingEvent {
     public static class FormResult extends ReportingEvent {
 
         @NonNull
-        private final FormData.BaseForm formData;
+        private final ThomasFormField.BaseForm formData;
 
         @NonNull
         private final FormInfo formInfo;
@@ -237,7 +237,7 @@ public abstract class ReportingEvent {
         private final List<ThomasChannelRegistration> channels;
 
         public FormResult(
-                @NonNull FormData.BaseForm formData,
+                @NonNull ThomasFormField.BaseForm formData,
                 @NonNull FormInfo formInfo,
                 @NonNull Map<AttributeName, JsonValue> attributes,
                 @NonNull List<ThomasChannelRegistration> channels
@@ -250,7 +250,7 @@ public abstract class ReportingEvent {
         }
 
         @NonNull
-        public FormData.BaseForm getFormData() {
+        public ThomasFormField.BaseForm getFormData() {
             return formData;
         }
 

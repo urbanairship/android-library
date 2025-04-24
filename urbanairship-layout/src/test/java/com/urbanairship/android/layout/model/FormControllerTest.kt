@@ -1,8 +1,6 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
-import app.cash.turbine.test
-import app.cash.turbine.testIn
 import com.urbanairship.android.layout.environment.AttributeHandler
 import com.urbanairship.android.layout.environment.FormType
 import com.urbanairship.android.layout.environment.LayoutEvent
@@ -14,9 +12,10 @@ import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.ThomasChannelRegistrar
-import com.urbanairship.android.layout.environment.inputData
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormControllerInfo
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.info.ThomasEmailRegistrationOptions
 import com.urbanairship.android.layout.property.FormBehaviorType
@@ -24,13 +23,17 @@ import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.DisplayTimer
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
+import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.json.jsonMapOf
+import app.cash.turbine.test
+import app.cash.turbine.testIn
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
@@ -38,12 +41,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -83,11 +86,11 @@ public class FormControllerTest {
     private val mockView: AnyModel = mockk(relaxed = true)
 
     private val parentFormState = spyk(SharedState(State.Form(
-        identifier = PARENT_FORM_ID, formType = FormType.Form, formResponseType = "form")
+        identifier = PARENT_FORM_ID, formType = FormType.Form, formResponseType = "form", validationMode = FormValidationMode.IMMEDIATE)
     ))
 
     private val childFormState = spyk(SharedState(State.Form(
-        identifier = CHILD_FORM_ID, formType = FormType.Form, formResponseType = "form")
+        identifier = CHILD_FORM_ID, formType = FormType.Form, formResponseType = "form", validationMode = FormValidationMode.IMMEDIATE)
     ))
 
     private val pagerState = spyk(SharedState(State.Pager(
@@ -126,6 +129,8 @@ public class FormControllerTest {
             }
 
             assertFalse(awaitItem().isDisplayReported)
+            assertFalse(awaitItem().isDisplayReported)
+            assertFalse(awaitItem().isDisplayReported)
 
             assertTrue(awaitItem().isDisplayReported)
 
@@ -146,6 +151,8 @@ public class FormControllerTest {
                 state.copyWithDisplayState(identifier = "input-id", isDisplayed = true)
             }
 
+            skipItems(2)
+
             awaitItem().let { item ->
                 assertFalse(item.isDisplayReported)
                 assertFalse(item.displayedInputs.isEmpty())
@@ -158,34 +165,42 @@ public class FormControllerTest {
             ensureAllEventsConsumed()
         }
     }
-
     @Test
     public fun testParentFormSubmit(): TestResult = runTest {
         parentFormState.changes.test {
             // Init controller and verify initial state
             initParentFormController()
-            assertTrue(awaitItem().data.isEmpty())
+            assertTrue(awaitItem().filteredFields.isEmpty())
 
             // Update form data
             parentFormState.update {
                 it.copyWithFormInput(
-                    FormData.TextInput(
+                    ThomasFormField.TextInput(
                         textInput = FormInputType.TEXT,
                         identifier = TEXT_INPUT_ID,
-                        value = TEXT_INPUT_VALUE,
-                        isValid = true,
-                        attributeName = ATTR_NAME,
-                        attributeValue = ATTR_VALUE,
-                        channelRegistration = CHANNEL_REGISTRATION,
+                        originalValue = TEXT_INPUT_VALUE,
+                        fieldType = ThomasFormField.FieldType.just(
+                            value = TEXT_INPUT_VALUE,
+                            attributes = ThomasFormField.makeAttributes(
+                                name = ATTR_NAME,
+                                value = ATTR_VALUE
+                            ),
+                            channels = listOf(CHANNEL_REGISTRATION)
+                        ),
                     )
                 )
             }
 
-            assertFalse(awaitItem().data.isEmpty())
+            // Skip to the final VALID item
+            skipItems(4)
+
+            assertFalse(awaitItem().filteredFields.isEmpty())
 
             // Emit FORM_SUBMIT event
             val event = spyk(LayoutEvent.SubmitForm(BUTTON_ID))
             testEventHandler.broadcast(event)
+
+            skipItems(2)
 
             // Verify state was updated
             assertTrue(awaitItem().isSubmitted)
@@ -214,6 +229,9 @@ public class FormControllerTest {
         childFormState.changes.test {
             initChildFormController()
 
+            // Skip to the final VALID item
+            skipItems(2)
+
             assertFalse(awaitItem().isDisplayReported)
 
             verify(exactly = 0) { mockReporter.report(any<ReportingEvent.FormDisplay>(), any()) }
@@ -222,85 +240,15 @@ public class FormControllerTest {
         }
     }
 
-    @Test
-    public fun testChildFormStateChangesUpdateParentForm(): TestResult = runTest {
-        val parentChanges = parentFormState.changes.testIn(testScope)
-        val childChanges = childFormState.changes.testIn(testScope)
-
-        // Sanity check initial empty states
-        assertTrue(parentChanges.awaitItem().data.isEmpty())
-        assertTrue(childChanges.awaitItem().data.isEmpty())
-
-        initChildFormController()
-
-        parentChanges.awaitItem().run {
-            // Verify that the parent form is aware of the child form, now that it's initialized.
-            assertTrue(data.containsKey(CHILD_FORM_ID))
-            // Sanity check: child form shouldn't have any data from inputs yet.
-            assertEquals(0, inputData<FormData.Form>(CHILD_FORM_ID)?.children?.size)
-        }
-
-        childFormState.update { form ->
-            form.copyWithFormInput(
-                FormData.TextInput(
-                    textInput = FormInputType.TEXT,
-                    identifier = TEXT_INPUT_ID,
-                    value = TEXT_INPUT_VALUE,
-                    isValid = true
-                )
-            )
-        }
-
-        // Verify that we don't have any displayed inputs yet.
-        assertTrue(childChanges.awaitItem().displayedInputs.isEmpty())
-
-        // Mark a child form input as displayed.
-        childFormState.update { form ->
-            form.copyWithDisplayState(
-                identifier = TEXT_INPUT_ID,
-                isDisplayed = true
-            )
-        }
-
-        // Verify that the child state was updated appropriately.
-        childChanges.awaitItem().run {
-            // Form input data
-            assertTrue(data.containsKey(TEXT_INPUT_ID))
-            val inputData = requireNotNull(inputData<FormData.TextInput>(TEXT_INPUT_ID))
-            assertEquals(TEXT_INPUT_ID, inputData.identifier)
-            assertEquals(TEXT_INPUT_VALUE, inputData.value)
-            // Displayed state
-            assertFalse(displayedInputs.isEmpty())
-        }
-
-        // Verify that the child displayed state updated the parent displayed state.
-        parentChanges.awaitItem().run {
-            assertFalse(displayedInputs.isEmpty())
-        }
-
-        // Verify that the child form input change caused an update to the parent form state.
-        verify { parentFormState.update(any()) }
-
-        // Verify that the text input from the child form made it to the parent form state.
-        parentChanges.awaitItem().run {
-            assertTrue(data.containsKey(CHILD_FORM_ID))
-            assertEquals(1, inputData<FormData.Form>(CHILD_FORM_ID)?.children?.count {
-                it.identifier == TEXT_INPUT_ID && it.value == TEXT_INPUT_VALUE
-            })
-        }
-
-        parentChanges.ensureAllEventsConsumed()
-        childChanges.ensureAllEventsConsumed()
-    }
-
+    @OptIn(DelicateLayoutApi::class)
     @Test
     public fun testChildFormInheritsParentFormEnabledState(): TestResult = runTest {
         val parentChanges = parentFormState.changes.testIn(testScope)
         val childChanges = childFormState.changes.testIn(testScope)
 
         // Sanity check initial state.
-        assertTrue(parentChanges.awaitItem().data.isEmpty())
-        assertTrue(childChanges.awaitItem().data.isEmpty())
+        assertTrue(parentChanges.awaitItem().filteredFields.isEmpty())
+        assertTrue(childChanges.awaitItem().filteredFields.isEmpty())
         assertTrue(childFormState.value.isEnabled)
 
         initChildFormController()
@@ -309,7 +257,8 @@ public class FormControllerTest {
         }
 
         // Skip child form init event, displayedInputs change, and the parent form state update above.
-        parentChanges.skipItems(3)
+        childChanges.skipItems(2)
+        parentChanges.skipItems(4)
 
         // Verify that the child state was updated appropriately.
         childChanges.awaitItem().run {
@@ -332,8 +281,8 @@ public class FormControllerTest {
                 every { this@mockk.submitBehavior } returns FormBehaviorType.SUBMIT_EVENT
             },
             view = mockView,
-            formState = parentFormState,
-            parentFormState = null,
+            formState = ThomasForm(parentFormState),
+            parentState = null,
             pagerState = pagerState,
             environment = mockEnv,
             properties = properties
@@ -353,8 +302,8 @@ public class FormControllerTest {
                 every { this@mockk.submitBehavior } returns null
             },
             view = mockView,
-            formState = childFormState,
-            parentFormState = parentFormState,
+            formState = ThomasForm(childFormState),
+            parentState = ThomasForm(parentFormState),
             pagerState = pagerState,
             environment = mockEnv,
             properties = properties

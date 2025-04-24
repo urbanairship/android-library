@@ -2,7 +2,7 @@ package com.urbanairship.android.layout.playground.embedded
 
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ThomasListenerInterface
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
@@ -57,8 +57,8 @@ internal class EmbeddedLayoutListener(
         }
     }
 
-    override fun onFormResult(formData: FormData.BaseForm, state: LayoutData) {
-        UALog.d { "$layoutName - onFormResult(formData: ${formData.toJsonValue()}, state: $state)" }
+    override fun onFormResult(thomasFormField: ThomasFormField.BaseForm, state: LayoutData) {
+        UALog.d { "$layoutName - onFormResult(formData: ${thomasFormField.toJsonValue()}, state: $state)" }
     }
 
     override fun onFormDisplay(formInfo: FormInfo, state: LayoutData) {

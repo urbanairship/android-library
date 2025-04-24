@@ -1,6 +1,5 @@
 package com.urbanairship.android.layout.util
 
-import androidx.annotation.VisibleForTesting
 import androidx.core.text.htmlEncode
 
 internal fun String?.ifNotEmpty(block: (String) -> Unit) {

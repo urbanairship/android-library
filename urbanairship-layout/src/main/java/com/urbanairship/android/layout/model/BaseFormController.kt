@@ -7,12 +7,15 @@ import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormInfo
+import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.hasFormBehaviors
 import com.urbanairship.android.layout.property.hasPagerBehaviors
-import com.urbanairship.android.layout.reporting.FormData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.util.DelicateLayoutApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -28,8 +31,8 @@ import kotlinx.coroutines.launch
  */
 internal abstract class BaseFormController<T : View, I : FormInfo>(
     viewInfo: I,
-    private val formState: SharedState<State.Form>,
-    private val parentFormState: SharedState<State.Form>?,
+    private val formState: ThomasForm,
+    private val parentFormState: ThomasForm?,
     private val pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
     properties: ModelProperties
@@ -40,7 +43,7 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
 ) {
 
     abstract val view: AnyModel
-    abstract fun buildFormData(state: State.Form): FormData.BaseForm
+    abstract fun buildFormData(state: State.Form): ThomasFormField.BaseForm
 
     private val isChildForm = viewInfo.submitBehavior == null
 
@@ -65,12 +68,14 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
 
             if (behaviors.hasFormBehaviors) {
                 modelScope.launch {
-                    formState.changes.collect { state ->
+                    formState.formUpdates.collect { state ->
                         handleFormUpdate(state)
                     }
                 }
             }
         }
+
+        wireFormValidation()
     }
 
     private fun initChildForm() {
@@ -78,34 +83,31 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
 
         // Update the parent form with the child form's data whenever it changes.
         modelScope.launch {
-            formState.changes.collect { childState ->
-                parentFormState.update { parentState ->
-                    parentState.copyWithFormInput(buildFormData(childState))
+            environment.layoutEvents.filterIsInstance<LayoutEvent.SubmitForm>()
+                .map {
+                    it to formState.prepareSubmit()
                 }
-            }
+                .distinctUntilChanged().collect { (event, formResult) ->
+                    formResult?.let {
+                        // TODO send the data into the parent as a formField
+                        event.onSubmitted()
+                    }
+                }
         }
 
         // Inherit the parent form's enabled and submitted states whenever they change.
         modelScope.launch {
-            parentFormState.changes.collect { parentState ->
-                formState.update { childState ->
-                    var updated = childState
-                    if (parentState.isSubmitted) {
-                        updated = updated.copy(isSubmitted = true)
-                    }
-                    if (!parentState.isEnabled) {
-                        updated = updated.copy(isEnabled = false)
-                    }
-                    updated
-                }
+            parentFormState.formUpdates.collect { parentState ->
+                formState.updateStatus(
+                    isSubmitted = if (parentState.status.isSubmitted) { true } else { null },
+                    isEnabled = if (!parentState.isEnabled) { false } else { null }
+                )
             }
         }
 
         // Update the parent form with the child form's display state, whenever it changes.
         onFormInputDisplayed { isDisplayed ->
-            parentFormState.update { state ->
-                state.copyWithDisplayState(viewInfo.identifier, isDisplayed)
-            }
+            parentFormState.updateWithDisplayState(viewInfo.identifier, isDisplayed)
         }
     }
 
@@ -116,30 +118,27 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                 // to receive updates from the form state changes flow, so we're using a map here
                 // instead of a combine.
                 .map {
-                    @OptIn(DelicateLayoutApi::class) it to formState.value
-                }.distinctUntilChanged().collect { (event, form) ->
-                    if (!form.isSubmitted) {
-                        formState.update { state ->
-                            val submitted = state.copy(isSubmitted = true)
-                            val result = submitted.formResult()
-                            report(
-                                event = result, state = layoutState.reportingContext(
-                                    formContext = form.reportingContext(),
-                                    buttonId = event.buttonIdentifier
-                                )
+                    it to formState.prepareSubmit()
+                }.distinctUntilChanged().collect { (event, formResult) ->
+                    formResult?.let {
+                        val (result, context) = formResult
+                        report(
+                            event = result,
+                            state = layoutState.reportingContext(
+                                formContext = context,
+                                buttonId = event.buttonIdentifier
                             )
-                            updateAttributes(result.attributes)
-                            registerChannels(result.channels)
-                            // Mark the form state as submitted.
-                            submitted
-                        }
+                        )
+
+                        updateAttributes(result.attributes)
+                        registerChannels(result.channels)
+                        event.onSubmitted.invoke()
                     }
-                    event.onSubmitted.invoke()
                 }
         }
 
         modelScope.launch {
-            formState.changes.collect { form ->
+            formState.formUpdates.collect { form ->
                 // Bail out if we've already reported the form display.
                 if (form.isDisplayReported) return@collect
 
@@ -150,9 +149,8 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                         event = ReportingEvent.FormDisplay(formContext),
                         state = layoutState.reportingContext(formContext)
                     )
-                    formState.update { state ->
-                        state.copy(isDisplayReported = true)
-                    }
+                    formState.displayReported()
+
                     // Now that we've reported, we can stop collecting form state changes.
                     cancel("Successfully reported form display.")
                 } else {
@@ -162,14 +160,30 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
         }
     }
 
-    @OptIn(DelicateLayoutApi::class)
+
+    private fun wireFormValidation() {
+        modelScope.launch {
+            environment.layoutEvents
+                .filterIsInstance<LayoutEvent.ValidateForm>()
+                .collect {
+                    if (formState.formUpdates.value.isSubmitted) {
+                        return@collect
+                    }
+
+                    if (formState.validate()) {
+                        it.onValidated()
+                    }
+                }
+        }
+    }
+
     private fun handleFormUpdate(state: State.Form) {
         val behaviors = viewInfo.formEnabled ?: return
 
-        val isParentEnabled = parentFormState?.value?.isEnabled ?: true
+        val isParentEnabled = parentFormState?.isEnabled ?: true
         val hasFormValidationBehavior = behaviors.contains(EnableBehaviorType.FORM_VALIDATION)
         val hasFormSubmitBehavior = behaviors.contains(EnableBehaviorType.FORM_SUBMISSION)
-        val isValid = !hasFormValidationBehavior || state.isValid
+        val isValid = !hasFormValidationBehavior || state.status == ThomasFormStatus.VALID
 
         val isEnabled = isParentEnabled && when {
             hasFormSubmitBehavior && hasFormValidationBehavior -> !state.isSubmitted && isValid
@@ -178,24 +192,23 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
             else -> state.isEnabled
         }
 
-        formState.update {
-            it.copy(isEnabled = isEnabled)
-        }
+        formState.updateStatus(isEnabled = isEnabled)
     }
 
     private fun handlePagerScroll(state: State.Pager) {
+        if (state.isScrollDisabled) { return  }
         val behaviors = viewInfo.formEnabled ?: return
 
-        @OptIn(DelicateLayoutApi::class) val isParentEnabled =
-            parentFormState?.value?.isEnabled ?: true
+        val isParentEnabled = parentFormState?.isEnabled ?: true
         val hasPagerNextBehavior = behaviors.contains(EnableBehaviorType.PAGER_NEXT)
         val hasPagerPrevBehavior = behaviors.contains(EnableBehaviorType.PAGER_PREVIOUS)
 
         val isEnabled =
-            isParentEnabled && (hasPagerNextBehavior && hasPagerPrevBehavior && (state.hasNext || state.hasPrevious)) || (hasPagerNextBehavior && state.hasNext) || (hasPagerPrevBehavior && state.hasPrevious)
+            isParentEnabled &&
+                    (hasPagerNextBehavior && hasPagerPrevBehavior && (state.hasNext || state.hasPrevious)) ||
+                    (hasPagerNextBehavior && state.hasNext) ||
+                    (hasPagerPrevBehavior && state.hasPrevious)
 
-        formState.update {
-            it.copy(isEnabled = isEnabled)
-        }
+        formState.updateStatus(isEnabled = isEnabled)
     }
 }

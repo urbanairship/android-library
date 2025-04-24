@@ -5,6 +5,7 @@ import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ButtonLayoutInfo
 import com.urbanairship.android.layout.info.LabelInfo
@@ -17,7 +18,7 @@ import com.urbanairship.android.layout.view.ButtonLayoutView
 internal class ButtonLayoutModel(
     viewInfo: ButtonLayoutInfo,
     val view: AnyModel,
-    formState: SharedState<State.Form>?,
+    formState: ThomasForm?,
     pagerState: SharedState<State.Pager>?,
     environment: ModelEnvironment,
     properties: ModelProperties,

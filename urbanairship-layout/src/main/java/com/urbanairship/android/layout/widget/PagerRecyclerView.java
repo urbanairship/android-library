@@ -48,13 +48,17 @@ public class PagerRecyclerView extends RecyclerView {
         configure();
     }
 
+    public void refresh() {
+        adapter.setItems(model.getPages());
+    }
+
     public void configure() {
         setHorizontalScrollBarEnabled(false);
 
         snapHelper = new SnapHelper();
         snapHelper.attachToRecyclerView(this);
 
-        if (model.getPages().size() <= 1 || model.getViewInfo().isSwipeDisabled()) {
+        if (model.isSinglePage() || model.getViewInfo().isSwipeDisabled()) {
             layoutManager = new SwipeDisabledLinearLayoutManager(
                     getContext(),
                     LinearLayoutManager.HORIZONTAL);

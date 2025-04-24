@@ -9,12 +9,12 @@ concurrency:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     name: CI
 
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Java Version
         uses: actions/setup-java@v4
@@ -23,9 +23,7 @@ jobs:
           java-version: '17'
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-         cache-read-only: ${{ github.event.pull_request.base.ref != 'main' && github.event.pull_request.base.ref != 'next' }}
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Copy CI gradle.properties
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties

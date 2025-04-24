@@ -4,6 +4,7 @@ package com.urbanairship.json;
 
 import com.urbanairship.Predicate;
 import com.urbanairship.json.matchers.ArrayContainsMatcher;
+import com.urbanairship.json.matchers.ArrayLengthMatcher;
 import com.urbanairship.json.matchers.ExactValueMatcher;
 import com.urbanairship.json.matchers.NumberRangeMatcher;
 import com.urbanairship.json.matchers.PresenceMatcher;
@@ -104,6 +105,17 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
     }
 
     /**
+     * Creates a new array length matcher that will check the entire array.
+     *
+     * @param predicate The predicate to apply to each value of the array.
+     * @return A new ValueMatcher instance.
+     */
+    @NonNull
+    public static ValueMatcher newArrayLengthMatcher(@NonNull JsonPredicate predicate) {
+        return new ArrayLengthMatcher(predicate);
+    }
+
+    /**
      * Parses a JsonValue object into a ValueMatcher.
      *
      * @param jsonValue The predicate as a JsonValue.
@@ -148,6 +160,11 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
             } catch (Exception e) {
                 throw new JsonException("Invalid version constraint: " + map.opt(VersionMatcher.ALTERNATE_VERSION_KEY), e);
             }
+        }
+
+        if (map.containsKey(ArrayLengthMatcher.ARRAY_LENGTH_KEY)) {
+            JsonPredicate predicate = JsonPredicate.parse(map.get(ArrayLengthMatcher.ARRAY_LENGTH_KEY));
+            return newArrayLengthMatcher(predicate);
         }
 
         if (map.containsKey(ArrayContainsMatcher.ARRAY_CONTAINS_KEY)) {
