@@ -2,6 +2,14 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+
+## Version 19.6.1 April 28, 2025
+Patch release that fixes a crash with NPS scores within a Scene that uses branching. Apps planning
+on using the upcoming branching feature should update.
+
+### Changes
+- Fixed crash with a branching Scene with an NPS widget.
+
 ## Version 19.6.0 April 24, 2025
 Minor release adding branching and SMS support for Scenes.
 
