@@ -199,7 +199,7 @@ internal class LayoutListener (
      */
     private fun updatePageViewCount(data: PagerData): Int {
         if (!pagerViewCounts.containsKey(data.identifier)) {
-            pagerViewCounts[data.identifier] = HashMap(max(data.count, 0))
+            pagerViewCounts[data.identifier] = HashMap()
         }
         val pageViews = pagerViewCounts[data.identifier]
         if (pageViews != null && !pageViews.containsKey(data.index)) {
