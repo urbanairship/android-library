@@ -5,10 +5,10 @@ package com.urbanairship.iam.adapter.layout
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ThomasListenerInterface
-import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.automation.utils.ActiveTimerInterface
 import com.urbanairship.automation.utils.ManualActiveTimer
 import com.urbanairship.iam.adapter.DisplayResult
@@ -26,6 +26,7 @@ import com.urbanairship.iam.analytics.events.InAppPagerSummaryEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.analytics.events.PageViewSummary
 import com.urbanairship.json.JsonValue
+import kotlin.math.max
 
 @VisibleForTesting
 internal class LayoutListener (
@@ -198,7 +199,7 @@ internal class LayoutListener (
      */
     private fun updatePageViewCount(data: PagerData): Int {
         if (!pagerViewCounts.containsKey(data.identifier)) {
-            pagerViewCounts[data.identifier] = HashMap(data.count)
+            pagerViewCounts[data.identifier] = HashMap(max(data.count, 0))
         }
         val pageViews = pagerViewCounts[data.identifier]
         if (pageViews != null && !pageViews.containsKey(data.index)) {
