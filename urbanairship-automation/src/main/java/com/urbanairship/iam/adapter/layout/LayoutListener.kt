@@ -5,10 +5,10 @@ package com.urbanairship.iam.adapter.layout
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ThomasListenerInterface
-import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.automation.utils.ActiveTimerInterface
 import com.urbanairship.automation.utils.ManualActiveTimer
 import com.urbanairship.iam.adapter.DisplayResult
@@ -33,9 +33,9 @@ internal class LayoutListener (
     private val timer: ActiveTimerInterface = ManualActiveTimer(),
     private var onDismiss: ((DisplayResult) -> Unit)?
 ) : ThomasListenerInterface {
-    private val completedPagers: MutableSet<String> = HashSet()
-    private val pagerSummaryMap: MutableMap<String, PagerSummary> = HashMap()
-    private val pagerViewCounts: MutableMap<String, MutableMap<Int, Int>> = HashMap()
+    private val completedPagers: MutableSet<String> = mutableSetOf()
+    private val pagerSummaryMap: MutableMap<String, PagerSummary> = mutableMapOf()
+    private val pagerViewCounts: MutableMap<String, MutableMap<Int, Int>> = mutableMapOf()
 
     override fun onPageView(pagerData: PagerData, state: LayoutData, displayedAt: Long) {
         // View
@@ -197,15 +197,12 @@ internal class LayoutListener (
      * @return the updated viewed count for the current page index.
      */
     private fun updatePageViewCount(data: PagerData): Int {
-        if (!pagerViewCounts.containsKey(data.identifier)) {
-            pagerViewCounts[data.identifier] = HashMap(data.count)
-        }
-        val pageViews = pagerViewCounts[data.identifier]
-        if (pageViews != null && !pageViews.containsKey(data.index)) {
-            pageViews[data.index] = 0
-        }
-        val count = (pageViews?.get(data.index) ?: 0) + 1
-        pageViews?.set(data.index, count)
+        val pageViews = pagerViewCounts
+            .getOrPut(data.identifier) { mutableMapOf() }
+
+        val count = pageViews.getOrElse(data.index) { 0 } + 1
+        pageViews[data.index] = count
+
         return count
     }
 
