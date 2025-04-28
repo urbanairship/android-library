@@ -26,7 +26,6 @@ import com.urbanairship.iam.analytics.events.InAppPagerSummaryEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.analytics.events.PageViewSummary
 import com.urbanairship.json.JsonValue
-import kotlin.math.max
 
 @VisibleForTesting
 internal class LayoutListener (
@@ -34,9 +33,9 @@ internal class LayoutListener (
     private val timer: ActiveTimerInterface = ManualActiveTimer(),
     private var onDismiss: ((DisplayResult) -> Unit)?
 ) : ThomasListenerInterface {
-    private val completedPagers: MutableSet<String> = HashSet()
-    private val pagerSummaryMap: MutableMap<String, PagerSummary> = HashMap()
-    private val pagerViewCounts: MutableMap<String, MutableMap<Int, Int>> = HashMap()
+    private val completedPagers: MutableSet<String> = mutableSetOf()
+    private val pagerSummaryMap: MutableMap<String, PagerSummary> = mutableMapOf()
+    private val pagerViewCounts: MutableMap<String, MutableMap<Int, Int>> = mutableMapOf()
 
     override fun onPageView(pagerData: PagerData, state: LayoutData, displayedAt: Long) {
         // View
@@ -198,15 +197,12 @@ internal class LayoutListener (
      * @return the updated viewed count for the current page index.
      */
     private fun updatePageViewCount(data: PagerData): Int {
-        if (!pagerViewCounts.containsKey(data.identifier)) {
-            pagerViewCounts[data.identifier] = HashMap()
-        }
-        val pageViews = pagerViewCounts[data.identifier]
-        if (pageViews != null && !pageViews.containsKey(data.index)) {
-            pageViews[data.index] = 0
-        }
-        val count = (pageViews?.get(data.index) ?: 0) + 1
-        pageViews?.set(data.index, count)
+        val pageViews = pagerViewCounts
+            .getOrPut(data.identifier) { mutableMapOf() }
+
+        val count = pageViews.getOrElse(data.index) { 0 } + 1
+        pageViews[data.index] = count
+
         return count
     }
 
