@@ -73,25 +73,22 @@ public open class PushManager @VisibleForTesting internal constructor(
     private val activityMonitor: ActivityMonitor
 ) : AirshipComponent(context, preferenceDataStore) {
 
-    private val UA_NOTIFICATION_BUTTON_GROUP_PREFIX: String = "ua_"
-
     /**
      * Sets the notification provider used to build notifications from a push message
-     *
      *
      * If `null`, notification will not be displayed.
      *
      * @param notificationProvider The notification provider
+     *
      * @see com.urbanairship.push.notifications.NotificationProvider
-     *
      * @see com.urbanairship.push.notifications.AirshipNotificationProvider
-     *
      * @see com.urbanairship.push.notifications.CustomLayoutNotificationProvider
      */
     public var notificationProvider: NotificationProvider? =
         AirshipNotificationProvider(context, config.configOptions)
     private val actionGroupMap: MutableMap<String, NotificationActionButtonGroup> = HashMap()
-    public var notificationChannelRegistry: NotificationChannelRegistry
+    public var notificationChannelRegistry: NotificationChannelRegistry =
+        NotificationChannelRegistry(context, config.configOptions)
     public var notificationListener: NotificationListener? = null
     private val pushTokenListeners: MutableList<PushTokenListener> = CopyOnWriteArrayList()
     private val pushListeners: MutableList<PushListener> = CopyOnWriteArrayList()
@@ -127,6 +124,27 @@ public open class PushManager @VisibleForTesting internal constructor(
     public var foregroundNotificationDisplayPredicate: Predicate<PushMessage>? = null
 
     internal val statusObserver: PushNotificationStatusObserver
+
+    /**
+     * @hide
+     */
+    init {
+        actionGroupMap.putAll(
+            ActionButtonGroupsParser.fromXml(
+                context, R.xml.ua_notification_buttons
+            )
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            actionGroupMap.putAll(
+                ActionButtonGroupsParser.fromXml(
+                    context, R.xml.ua_notification_button_overrides
+                )
+            )
+        }
+
+        this.statusObserver = PushNotificationStatusObserver(pushNotificationStatus)
+    }
+
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
@@ -215,7 +233,8 @@ public open class PushManager @VisibleForTesting internal constructor(
         super.onAirshipReady(airship)
         isAirshipReady = true
 
-        privacyManager.addListener({ this.checkPermission() })
+        privacyManager.addListener { checkPermission() }
+
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
             override fun onForeground(time: Long) {
                 checkPermission()
@@ -270,7 +289,7 @@ public open class PushManager @VisibleForTesting internal constructor(
                 pushProvider = resolvePushProvider()
                 val pushDeliveryType: String? =
                     preferenceDataStore.getString(PUSH_DELIVERY_TYPE, null)
-                if (pushProvider == null || pushProvider!!.deliveryType != pushDeliveryType) {
+                if (pushProvider == null || pushProvider?.deliveryType != pushDeliveryType) {
                     clearPushToken()
                 }
             }
@@ -291,8 +310,10 @@ public open class PushManager @VisibleForTesting internal constructor(
     }
 
     private fun dispatchUpdateJob() {
-        val jobInfo: JobInfo = JobInfo.newBuilder().setAction(ACTION_UPDATE_PUSH_REGISTRATION)
-            .setAirshipComponent(PushManager::class.java).setConflictStrategy(JobInfo.REPLACE)
+        val jobInfo: JobInfo = JobInfo.newBuilder()
+            .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
+            .setAirshipComponent(PushManager::class.java)
+            .setConflictStrategy(JobInfo.REPLACE)
             .build()
 
         jobDispatcher.dispatch(jobInfo)
@@ -357,29 +378,6 @@ public open class PushManager @VisibleForTesting internal constructor(
     /**
      * @hide
      */
-    init {
-        this.notificationChannelRegistry =
-            NotificationChannelRegistry(context, config.configOptions)
-
-        actionGroupMap.putAll(
-            ActionButtonGroupsParser.fromXml(
-                context, R.xml.ua_notification_buttons
-            )
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            actionGroupMap.putAll(
-                ActionButtonGroupsParser.fromXml(
-                    context, R.xml.ua_notification_button_overrides
-                )
-            )
-        }
-
-        this.statusObserver = PushNotificationStatusObserver(pushNotificationStatus)
-    }
-
-    /**
-     * @hide
-     */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
@@ -400,10 +398,12 @@ public open class PushManager @VisibleForTesting internal constructor(
                     return JobResult.SUCCESS
                 }
 
-                val pushRunnable: IncomingPushRunnable =
-                    IncomingPushRunnable.Builder(getContext()).setLongRunning(true)
-                        .setProcessed(true).setMessage(message).setProviderClass(providerClass)
-                        .build()
+                val pushRunnable: IncomingPushRunnable = IncomingPushRunnable.Builder(context)
+                    .setLongRunning(true)
+                    .setProcessed(true)
+                    .setMessage(message)
+                    .setProviderClass(providerClass)
+                    .build()
 
                 pushRunnable.run()
 
@@ -432,42 +432,31 @@ public open class PushManager @VisibleForTesting internal constructor(
         enableUserNotifications(PermissionPromptFallback.None, consumer)
     }
 
-    public var userNotificationsEnabled: Boolean
-
     /**
-     * Determines whether user-facing push notifications are enabled.
-     *
-     * @return `true` if user push is enabled, `false` otherwise.
-     */
-    get() {
-        return preferenceDataStore.getBoolean(USER_NOTIFICATIONS_ENABLED_KEY, false)
-    }
-
-    /**
-     * Enables or disables user notifications.
-     *
+     * Whether user-facing push notifications are enabled.
      *
      * User notifications are push notifications that contain an alert message and are
      * intended to be shown to the user.
      *
-     *
-     * This setting is persisted between application starts, so there is no need to call this
-     * repeatedly. It is only necessary to call this when a user preference has changed.
-     *
-     * @param enabled A boolean indicating whether user push is enabled.
+     * This setting is persisted between application starts, so there is no need to set this
+     * repeatedly. It is only necessary to set this when a user preference has changed.
      */
-    set(enabled) {
-        if (userNotificationsEnabled != enabled) {
-            preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled)
-            if (enabled) {
-                preferenceDataStore.put(REQUEST_PERMISSION_KEY, true)
-                checkPermission { airshipChannel.updateRegistration() }
-            } else {
-                airshipChannel.updateRegistration()
-            }
-            updateStatusObserver()
+    public var userNotificationsEnabled: Boolean
+        get() {
+            return preferenceDataStore.getBoolean(USER_NOTIFICATIONS_ENABLED_KEY, false)
         }
-    }
+        set(enabled) {
+            if (userNotificationsEnabled != enabled) {
+                preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled)
+                if (enabled) {
+                    preferenceDataStore.put(REQUEST_PERMISSION_KEY, true)
+                    checkPermission { airshipChannel.updateRegistration() }
+                } else {
+                    airshipChannel.updateRegistration()
+                }
+                updateStatusObserver()
+            }
+        }
 
 
     /**
@@ -484,103 +473,61 @@ public open class PushManager @VisibleForTesting internal constructor(
         preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
         permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS,
             false,
-            promptFallback,
-            { result: PermissionRequestResult? ->
-                consumer.accept(result!!.permissionStatus == PermissionStatus.GRANTED)
-                updateStatusObserver()
-            })
+            promptFallback
+        ) { result: PermissionRequestResult? ->
+            consumer.accept(result!!.permissionStatus == PermissionStatus.GRANTED)
+            updateStatusObserver()
+        }
     }
 
-    @get:Deprecated(
+
+    @Deprecated(
         """This setting does not work on Android O+. Applications are encouraged to
-      use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead."""
+      use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
     )
-    @set:Deprecated(
-        """This setting does not work on Android O+. Applications are encouraged to
-      use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead."""
-    )
+    /** Whether sound is enabled. */
     public var isSoundEnabled: Boolean
-        /**
-         * Determines whether sound is enabled.
-         *
-         * @return A boolean indicated whether sound is enabled.
-         */
         get() {
             return preferenceDataStore.getBoolean(SOUND_ENABLED_KEY, true)
         }
-        /**
-         * Enables or disables sound.
-         *
-         * @param enabled A boolean indicating whether sound is enabled.
-         */
         set(enabled) {
             preferenceDataStore.put(SOUND_ENABLED_KEY, enabled)
         }
 
-    @get:Deprecated(
+    @Deprecated(
         """This setting does not work on Android O+. Applications are encouraged to
-      use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead."""
+      use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
     )
-    @set:Deprecated(
-        """This setting does not work on Android O+. Applications are encouraged to
-      use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead."""
-    )
+    /** Whether vibration is enabled. */
     public var isVibrateEnabled: Boolean
-        /**
-         * Determines whether vibration is enabled.
-         *
-         * @return A boolean indicating whether vibration is enabled.
-         */
         get() {
             return preferenceDataStore.getBoolean(VIBRATE_ENABLED_KEY, true)
         }
-        /**
-         * Enables or disables vibration.
-         *
-         * @param enabled A boolean indicating whether vibration is enabled.
-         */
         set(enabled) {
             preferenceDataStore.put(VIBRATE_ENABLED_KEY, enabled)
         }
 
-    @get:Deprecated(
+    /** Controls whether "Quiet Time" is enabled. */
+    @Deprecated(
         """This setting does not work on Android O+. Applications are encouraged to
-      use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead."""
-    )
-    @set:Deprecated(
-        """This setting does not work on Android O+. Applications are encouraged to
-      use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead."""
+      use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
     )
     public var isQuietTimeEnabled: Boolean
-        /**
-         * Determines whether "Quiet Time" is enabled.
-         *
-         * @return A boolean indicating whether Quiet Time is enabled.
-         */
         get() {
             return preferenceDataStore.getBoolean(QUIET_TIME_ENABLED, false)
         }
-        /**
-         * Enables or disables quiet time.
-         *
-         * @param enabled A boolean indicating whether quiet time is enabled.
-         */
         set(enabled) {
             preferenceDataStore.put(QUIET_TIME_ENABLED, enabled)
         }
 
-    @get:Deprecated(
+    /** Whether the app is currently inside of "Quiet Time". */
+    @Deprecated(
         """This setting does not work on Android O+. Applications are encouraged to
-      use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead."""
+      use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
     )
     public val isInQuietTime: Boolean
-        /**
-         * Determines whether we are currently in the middle of "Quiet Time".  Returns false if Quiet Time is disabled,
-         * and evaluates whether or not the current date/time falls within the Quiet Time interval set by the user.
-         *
-         * @return A boolean indicating whether it is currently "Quiet Time".
-         */
         get() {
+            @Suppress("DEPRECATION")
             if (!this.isQuietTimeEnabled) {
                 return false
             }
@@ -591,23 +538,19 @@ public open class PushManager @VisibleForTesting internal constructor(
                 quietTimeInterval =
                     QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL))
             } catch (e: JsonException) {
-                UALog.e("Failed to parse quiet time interval")
+                UALog.e(e, "Failed to parse quiet time interval")
                 return false
             }
 
             return quietTimeInterval.isInQuietTime(Calendar.getInstance())
         }
 
-    @get:Deprecated(
+    /** The Quiet Time interval set by the user. */
+    @Deprecated(
         """This setting does not work on Android O+. Applications are encouraged to
-      use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead."""
+      use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
     )
     public val quietTimeInterval: Array<Date>?
-        /**
-         * Returns the Quiet Time interval currently set by the user.
-         *
-         * @return An array of two Date instances, representing the start and end of Quiet Time.
-         */
         get() {
             val quietTimeInterval: QuietTimeInterval
 
@@ -615,7 +558,7 @@ public open class PushManager @VisibleForTesting internal constructor(
                 quietTimeInterval =
                     QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL))
             } catch (e: JsonException) {
-                UALog.e("Failed to parse quiet time interval")
+                UALog.e(e, "Failed to parse quiet time interval")
                 return null
             }
 
@@ -630,7 +573,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      */
     @Deprecated(
         """This setting does not work on Android O+. Applications are encouraged to
-      use {@link com.urbanairship.push.notifications.NotificationChannelCompat} instead."""
+      use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
     )
     public fun setQuietTimeInterval(startTime: Date, endTime: Date) {
         val quietTimeInterval: QuietTimeInterval =
@@ -638,24 +581,15 @@ public open class PushManager @VisibleForTesting internal constructor(
         preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue())
     }
 
+    /** Whether the app is capable of receiving push (`true` if a push token is present). */
     public val isPushAvailable: Boolean
-        /**
-         * Determines whether the app is capable of receiving push,
-         * meaning whether a FCM or ADM push token is present.
-         *
-         * @return `true` if push is available, `false` otherwise.
-         */
         get() {
             return privacyManager.isEnabled(PrivacyManager.Feature.PUSH) &&
                     !UAStringUtil.isEmpty(pushToken)
         }
 
+    /** Whether the app is currently opted in for push. */
     public val isOptIn: Boolean
-        /**
-         * Returns if the application is currently opted in for push.
-         *
-         * @return `true` if opted in for push.
-         */
         get() {
             return isPushAvailable && areNotificationsOptedIn()
         }
@@ -669,20 +603,11 @@ public open class PushManager @VisibleForTesting internal constructor(
         return userNotificationsEnabled && notificationManager.areNotificationsEnabled()
     }
 
+    /** The send metadata of the last received push, or `null` if none exists. */
     public var lastReceivedMetadata: String?
-        /**
-         * Returns the send metadata of the last received push.
-         *
-         * @return The send metadata from the last received push, or null if not found.
-         */
         get() {
             return analytics.lastReceivedMetadata
         }
-        /**
-         * Store the send metadata from the last received push.
-         *
-         * @param sendMetadata The send metadata string.
-         */
         set(sendMetadata) {
             analytics.lastReceivedMetadata = sendMetadata
         }
@@ -889,7 +814,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         if (id == null) {
             return null
         }
-        return actionGroupMap.get(id)
+        return actionGroupMap[id]
     }
 
     /**
@@ -946,8 +871,7 @@ public open class PushManager @VisibleForTesting internal constructor(
                 UALog.d(e, "Unable to parse canonical Ids.")
             }
 
-            var canonicalIds: MutableList<JsonValue?> =
-                if (jsonList == null) ArrayList() else jsonList.list
+            var canonicalIds: MutableList<JsonValue?> = jsonList?.list ?: ArrayList()
 
             // Wrap the canonicalId
             val id: JsonValue = JsonValue.wrap(canonicalId)
@@ -1007,10 +931,10 @@ public open class PushManager @VisibleForTesting internal constructor(
             UALog.d("Push registration failed. Error: %S, Recoverable %s.", e.isRecoverable, e.message, e)
             clearPushToken()
 
-            if (e.isRecoverable) {
-                return JobResult.RETRY
+            return if (e.isRecoverable) {
+                JobResult.RETRY
             } else {
-                return JobResult.SUCCESS
+                JobResult.SUCCESS
             }
         }
 
@@ -1053,9 +977,9 @@ public open class PushManager @VisibleForTesting internal constructor(
 
     public fun onTokenChanged(pushProviderClass: Class<out PushProvider?>?, token: String?) {
         if (privacyManager.isEnabled(PrivacyManager.Feature.PUSH) && pushProvider != null) {
-            if (pushProviderClass != null && pushProvider!!.javaClass == pushProviderClass) {
-                val oldToken: String = preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
-                if (token != null && !UAStringUtil.equals(token, oldToken)) {
+            if (pushProviderClass != null && pushProvider?.javaClass == pushProviderClass) {
+                val oldToken: String? = preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
+                if (token != null && token != oldToken) {
                     clearPushToken()
                 }
             }
@@ -1241,5 +1165,6 @@ public open class PushManager @VisibleForTesting internal constructor(
         public const val QUIET_TIME_INTERVAL: String = "$KEY_PREFIX.QUIET_TIME_INTERVAL"
         public const val PUSH_TOKEN_KEY: String = "$KEY_PREFIX.REGISTRATION_TOKEN_KEY"
         public const val REQUEST_PERMISSION_KEY: String = "$KEY_PREFIX.REQUEST_PERMISSION_KEY"
+        private const val UA_NOTIFICATION_BUTTON_GROUP_PREFIX: String = "ua_"
     }
 }

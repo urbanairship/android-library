@@ -219,8 +219,8 @@ public final class PreferenceDataStore {
      * @param defaultValue The value to return if the preference doesn't exist.
      * @return The String value for the preference or defaultValue if it doesn't exist.
      */
-    @SuppressLint("UnknownNullness")
-    public String getString(@NonNull String key, String defaultValue) {
+    @Nullable
+    public String getString(@NonNull String key, @Nullable String defaultValue) {
         String value = getPreference(key).get();
         return value == null ? defaultValue : value;
     }

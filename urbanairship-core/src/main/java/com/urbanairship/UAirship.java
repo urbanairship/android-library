@@ -508,7 +508,6 @@ public class UAirship {
      * @return The package name.
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
-    @SuppressLint("UnknownNullness")
     public static String getPackageName() {
         return getApplicationContext().getPackageName();
     }
@@ -558,7 +557,7 @@ public class UAirship {
      * @return The shared ApplicationInfo object for this application.
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
-    @SuppressLint("UnknownNullness")
+    @NonNull
     public static ApplicationInfo getAppInfo() {
         return getApplicationContext().getApplicationInfo();
     }
@@ -570,13 +569,9 @@ public class UAirship {
      * @return The current Application's name
      * @throws java.lang.IllegalStateException if takeOff has not been called.
      */
-    @SuppressLint("UnknownNullness")
+    @NonNull
     public static String getAppName() {
-        if (getAppInfo() != null) {
-            return getPackageManager().getApplicationLabel(getAppInfo()).toString();
-        } else {
-            return "";
-        }
+        return getPackageManager().getApplicationLabel(getAppInfo()).toString();
     }
 
     /**
