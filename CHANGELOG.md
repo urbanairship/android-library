@@ -2,6 +2,12 @@
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 
+## Version 19.6.2 April 29, 2025
+Patch release that fixes a crash in `PushManager.onTokenChanged`, introduced in release 19.6.0.
+Apps should skip release 19.6.0 and 19.6.1 and update directly to this version, or later.
+
+### Changes
+- Fixed nullability of `oldToken` in `PushManager.onTokenChanged`.
 
 ## Version 19.6.1 April 28, 2025
 Patch release that fixes a crash with NPS scores within a Scene that uses branching. Apps planning
