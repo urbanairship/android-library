@@ -1054,7 +1054,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     public fun onTokenChanged(pushProviderClass: Class<out PushProvider?>?, token: String?) {
         if (privacyManager.isEnabled(PrivacyManager.Feature.PUSH) && pushProvider != null) {
             if (pushProviderClass != null && pushProvider!!.javaClass == pushProviderClass) {
-                val oldToken: String = preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
+                val oldToken: String? = preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
                 if (token != null && !UAStringUtil.equals(token, oldToken)) {
                     clearPushToken()
                 }
