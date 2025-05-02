@@ -73,9 +73,12 @@ internal class ModalView(
                     )
                 }
             }
-            placement.border?.innerRadius?.let {
-                setClipPathBorderRadius(ResourceUtils.dpToPx(context, it))
-            }
+
+            placement.border
+                ?.innerRadii { ResourceUtils.dpToPx(context, it) }
+                ?.let {
+                    setClipPathBorderRadius(it)
+                }
         }
 
         val contentView = model.createView(context, viewEnvironment, null)

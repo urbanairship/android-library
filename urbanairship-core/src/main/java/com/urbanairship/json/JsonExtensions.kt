@@ -86,6 +86,7 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
         Double::class -> field.getDouble(0.0) as T
         Float::class -> field.getFloat(0f) as T
         Integer::class -> field.getInt(0) as T
+        Int::class -> field.getInt(0) as T
         UInt::class -> field.getInt(0).toUInt() as T
         JsonList::class -> field.optList() as T
         JsonMap::class -> field.optMap() as T

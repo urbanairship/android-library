@@ -149,6 +149,15 @@ public class ShapeButton extends AppCompatButton implements Checkable, Clippable
         clippableViewDelegate.setClipPathBorderRadius(this, borderRadius);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @MainThread
+    public void setClipPathBorderRadius(float[] borderRadii) {
+        clippableViewDelegate.setClipPathBorderRadii(this, borderRadii);
+    }
+
     public void setOnCheckedChangeListener(@Nullable OnCheckedChangeListener listener) {
         this.checkedChangeListener = listener;
     }

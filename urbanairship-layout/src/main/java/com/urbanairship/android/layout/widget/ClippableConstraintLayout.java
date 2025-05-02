@@ -40,4 +40,13 @@ public class ClippableConstraintLayout extends ConstraintLayout implements Clipp
     public void setClipPathBorderRadius(@Dimension float borderRadius) {
         clippableViewDelegate.setClipPathBorderRadius(this, borderRadius);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @MainThread
+    public void setClipPathBorderRadius(float[] borderRadii) {
+        clippableViewDelegate.setClipPathBorderRadii(this, borderRadii);
+    }
 }

@@ -2,6 +2,10 @@
 package com.urbanairship.android.layout.widget
 
 import android.graphics.Outline
+import android.graphics.Path
+import android.graphics.Rect
+import android.graphics.RectF
+import android.os.Build
 import android.view.View
 import android.view.ViewOutlineProvider
 import androidx.annotation.Dimension
@@ -19,20 +23,45 @@ internal class ClippableViewDelegate {
      */
     @MainThread
     fun setClipPathBorderRadius(view: View, @Dimension borderRadius: Float) {
-        if (borderRadius == 0f) {
+        val radii = if (borderRadius == 0f) {
+            null
+        } else {
+            FloatArray(8) { borderRadius }
+        }
+        setClipPathBorderRadii(view, radii)
+    }
+
+    /**
+     * Clips the view to the border radius.
+     *
+     * @param borderRadius The border radius.
+     */
+    @MainThread
+    fun setClipPathBorderRadii(view: View, radii: FloatArray?) {
+        val radii = radii ?: kotlin.run {
             view.clipToOutline = false
             view.outlineProvider = ViewOutlineProvider.BOUNDS
-        } else {
-            view.clipToOutline = true
-            view.outlineProvider = object : ViewOutlineProvider() {
-                override fun getOutline(view: View, outline: Outline) {
-                    outline.setRoundRect(
-                        0,
-                        0,
-                        view.right - view.left,
-                        view.bottom - view.top,
-                        borderRadius
-                    )
+            return
+        }
+
+        view.clipToOutline = true
+        view.outlineProvider = object : ViewOutlineProvider() {
+            override fun getOutline(view: View, outline: Outline) {
+
+                val rect = Rect(
+                    0,
+                    0,
+                    (view.right - view.left),
+                    (view.bottom - view.top))
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    val path = Path().apply {
+                        addRoundRect(RectF(rect), radii, Path.Direction.CW)
+                    }
+
+                    outline.setPath(path)
+                } else {
+                    outline.setRoundRect(rect, radii.max())
                 }
             }
         }

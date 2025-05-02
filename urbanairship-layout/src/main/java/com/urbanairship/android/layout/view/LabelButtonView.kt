@@ -21,6 +21,7 @@ import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.ColorStateListBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
 import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
@@ -28,6 +29,8 @@ import com.urbanairship.android.layout.util.isLayoutRtl
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.util.UAStringUtil
 import com.google.android.material.button.MaterialButton
+import com.google.android.material.shape.CornerFamily
+import com.google.android.material.shape.ShapeAppearanceModel
 import kotlinx.coroutines.flow.Flow
 
 internal class LabelButtonView(
@@ -128,7 +131,11 @@ internal class LabelButtonView(
                 val strokeWidth = border?.strokeWidth ?: LayoutUtils.DEFAULT_STROKE_WIDTH_DPS
                 val strokeColor = border?.strokeColor?.resolve(context) ?: backgroundColor
                 val disabledStrokeColor = LayoutUtils.generateDisabledColor(strokeColor)
-                val borderRadius = border?.radius ?: LayoutUtils.DEFAULT_BORDER_RADIUS
+
+                val borderShape = ShapeAppearanceModel.builder()
+                if (border?.applyToShape(borderShape, { dpToPx(context, it).toInt() }) != true) {
+                    borderShape.setAllCorners(CornerFamily.ROUNDED, dpToPx(context, LayoutUtils.DEFAULT_BORDER_RADIUS))
+                }
 
                 this@LabelButtonView.backgroundTintList =
                     ColorStateListBuilder().add(disabledColor, -R.attr.state_enabled)
@@ -141,8 +148,7 @@ internal class LabelButtonView(
                     ColorStateListBuilder().add(disabledStrokeColor, -R.attr.state_enabled)
                         .add(strokeColor).build()
 
-                this@LabelButtonView.cornerRadius =
-                    ResourceUtils.dpToPx(context, borderRadius).toInt()
+                this@LabelButtonView.shapeAppearanceModel = borderShape.build()
                 this@LabelButtonView.invalidate()
             }
         }

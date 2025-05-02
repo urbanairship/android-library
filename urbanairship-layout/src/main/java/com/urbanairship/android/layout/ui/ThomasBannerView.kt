@@ -16,7 +16,9 @@ import androidx.annotation.Keep
 import androidx.annotation.MainThread
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
+import androidx.core.view.OnApplyWindowInsetsListener
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.customview.widget.ViewDragHelper
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -30,6 +32,9 @@ import com.urbanairship.android.layout.util.Timer
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 internal class ThomasBannerView(
     context: Context,
@@ -137,7 +142,15 @@ internal class ThomasBannerView(
             .applyTo(this)
 
         if (environment.isIgnoringSafeAreas) {
-            ViewCompat.setOnApplyWindowInsetsListener(frame, ViewCompat::dispatchApplyWindowInsets)
+            var lastAppliedInset: WindowInsetsCompat? = null
+            ViewCompat.setOnApplyWindowInsetsListener(frame,
+                androidx.core.view.OnApplyWindowInsetsListener { v, insets ->
+                    //NOTE: for some reason old android versions keeps calling this method with the same inset
+                    if (lastAppliedInset == insets) { return@OnApplyWindowInsetsListener insets }
+                    lastAppliedInset = insets
+
+                    ViewCompat.dispatchApplyWindowInsets(v, insets)
+                })
         }
 
         if (animationIn != 0) {

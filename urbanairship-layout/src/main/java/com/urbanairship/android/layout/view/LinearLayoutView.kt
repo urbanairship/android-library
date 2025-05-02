@@ -116,4 +116,8 @@ internal class LinearLayoutView(
     override fun setClipPathBorderRadius(borderRadius: Float) {
         clippableViewDelegate.setClipPathBorderRadius(this, borderRadius)
     }
+
+    override fun setClipPathBorderRadius(borderRadii: FloatArray?) {
+        clippableViewDelegate.setClipPathBorderRadii(this, borderRadii)
+    }
 }

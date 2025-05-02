@@ -60,7 +60,7 @@ internal class ImageButtonView(
                         button.scaleType = image.mediaFit?.scaleType ?: FIT_CENTER
                     }
 
-                    applyImageRippleEffect(button, model.viewInfo.tapEffect, model.viewInfo.border?.radius)
+                    applyImageRippleEffect(button, model.viewInfo.tapEffect, model.viewInfo.border?.radii { dpToPx(context, it) })
 
                     addView(button)
 
@@ -152,10 +152,10 @@ internal class ImageButtonView(
         }
     }
 
-    private fun applyImageRippleEffect(view: ImageButton, tapEffect: TapEffect, radius: Int?) {
+    private fun applyImageRippleEffect(view: ImageButton, tapEffect: TapEffect, radii: FloatArray?) {
         when (tapEffect) {
             is TapEffect.Default ->
-                LayoutUtils.applyImageButtonRippleAndTint(view, radius)
+                LayoutUtils.applyImageButtonRippleAndTint(view, radii)
             is TapEffect.None ->
                 view.background = null
         }

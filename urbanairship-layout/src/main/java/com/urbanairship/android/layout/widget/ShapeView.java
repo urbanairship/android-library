@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.shape.Shape;
 
 import java.util.List;
 
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -73,5 +74,14 @@ public class ShapeView extends ImageView implements Checkable, Clippable {
     @Override
     public void setClipPathBorderRadius(float borderRadius) {
         clippableViewDelegate.setClipPathBorderRadius(this, borderRadius);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @MainThread
+    public void setClipPathBorderRadius(float[] borderRadii) {
+        clippableViewDelegate.setClipPathBorderRadii(this, borderRadii);
     }
 }

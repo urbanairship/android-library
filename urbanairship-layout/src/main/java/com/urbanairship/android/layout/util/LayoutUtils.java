@@ -90,8 +90,8 @@ public final class LayoutUtils {
             @Nullable Background oldBackground,
             @NonNull Background newBackground
     ) {
-        if (oldBackground != null && oldBackground.getBorder() != null && oldBackground.getBorder().getStrokeWidth() != null) {
-            float padding = dpToPx(view.getContext(), oldBackground.getBorder().getStrokeWidth());
+        if (oldBackground != null && oldBackground.getBorder() != null && oldBackground.getBorder().strokeWidth != null) {
+            float padding = dpToPx(view.getContext(), oldBackground.getBorder().strokeWidth);
             removePadding(view, (int) padding);
         }
 
@@ -111,25 +111,23 @@ public final class LayoutUtils {
         Context context = view.getContext();
 
         if (border != null) {
-            @Dimension float cornerRadius = border.getRadius() == null ? 0 : dpToPx(context, border.getRadius());
-            ShapeAppearanceModel shapeModel = ShapeAppearanceModel.builder()
-                                                                  .setAllCorners(CornerFamily.ROUNDED, cornerRadius)
-                                                                  .build();
-            MaterialShapeDrawable shapeDrawable = new MaterialShapeDrawable(shapeModel);
+            ShapeAppearanceModel.Builder shapeModel = ShapeAppearanceModel.builder();
+            border.applyToShape(shapeModel, (dp) -> dpToPx(context, dp));
 
+            MaterialShapeDrawable shapeDrawable = new MaterialShapeDrawable(shapeModel.build());
             if (view instanceof Clippable) {
-                ((Clippable) view).setClipPathBorderRadius(cornerRadius);
+                border.applyToClippable((Clippable) view, (dp) -> ResourceUtils.dpToPx(context, dp));
             }
 
             int borderPadding = -1;
-            if (border.getStrokeWidth() != null) {
-                float strokeWidth = dpToPx(context, border.getStrokeWidth());
+            if (border.strokeWidth != null) {
+                float strokeWidth = dpToPx(context, border.strokeWidth);
                 shapeDrawable.setStrokeWidth(strokeWidth);
                 borderPadding = (int) strokeWidth;
             }
 
-            if (border.getStrokeColor() != null) {
-                @ColorInt int strokeColor = border.getStrokeColor().resolve(context);
+            if (border.strokeColor != null) {
+                @ColorInt int strokeColor = border.strokeColor.resolve(context);
                 shapeDrawable.setStrokeColor(new ColorStateListBuilder()
                         .add(generateDisabledColor(strokeColor), -android.R.attr.state_enabled)
                         .add(strokeColor)
@@ -164,18 +162,18 @@ public final class LayoutUtils {
         TapEffect tapEffect = model.getViewInfo().getTapEffect();
         if (tapEffect instanceof TapEffect.Default) {
             Border border = model.getViewInfo().getBorder();
-            Integer borderRadius = border != null ? border.getRadius() : null;
-            applyRippleEffect(button, borderRadius);
+            if (border == null) { return; }
+            float[] radii = border.radii((dp) -> ResourceUtils.dpToPx(button.getContext(), dp));
+
+            if (radii == null) { return; }
+            applyRippleEffect(button, radii);
         } else if (tapEffect instanceof TapEffect.None) {
             button.setForeground(null);
         }
     }
 
-    private static RippleDrawable generateRippleDrawable(@NonNull Context context, @Nullable Integer borderRadius) {
-        float radius = ResourceUtils.dpToPx(context, borderRadius != null ? borderRadius : 0);
-        float[] outerRadii = new float[8];
-        Arrays.fill(outerRadii, radius);
-        ShapeDrawable mask = new ShapeDrawable(new RoundRectShape(outerRadii, null, null));
+    private static RippleDrawable generateRippleDrawable(@NonNull Context context, float[] radii) {
+        ShapeDrawable mask = new ShapeDrawable(new RoundRectShape(radii, null, null));
         ColorStateList colors = MaterialColors.getColorStateList(context,
                 com.google.android.material.R.attr.colorControlHighlight,
                 ColorStateList.valueOf(Color.TRANSPARENT)
@@ -184,25 +182,33 @@ public final class LayoutUtils {
         return new RippleDrawable(colors, null, mask);
     }
 
-    private static void applyRippleEffect(@NonNull FrameLayout frameLayout, @Nullable Integer borderRadius) {
-        RippleDrawable ripple = generateRippleDrawable(frameLayout.getContext(), borderRadius);
+    private static void applyRippleEffect(@NonNull FrameLayout frameLayout, float[] radii) {
+        RippleDrawable ripple = generateRippleDrawable(frameLayout.getContext(), radii);
         frameLayout.setForeground(ripple);
     }
 
     /** Applies a ripple effect and tint list to handle various interactions with an ImageButton button. */
     public static void applyImageButtonRippleAndTint(@NonNull ImageButton view, @Nullable Integer borderRadius) {
+        float[] radii = new float[8];
+        float converted = borderRadius == null ? 0 : dpToPx(view.getContext(), borderRadius);
+        Arrays.fill(radii, converted);
+        applyImageButtonRippleAndTint(view, radii);
+    }
+
+    /** Applies a ripple effect and tint list to handle various interactions with an ImageButton button. */
+    public static void applyImageButtonRippleAndTint(@NonNull ImageButton view, @Nullable float[] radii) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            applyImageButtonRippleAndTintApi23(view, borderRadius);
+            applyImageButtonRippleAndTintApi23(view, radii);
         } else {
-            applyImageButtonRippleAndTintCompat(view, borderRadius);
+            applyImageButtonRippleAndTintCompat(view, radii);
         }
     }
 
     /** Applies a ripple effect to the view's foreground and sets a disabled color for API 23 and above. */
     @RequiresApi(api = Build.VERSION_CODES.M)
-    private static void applyImageButtonRippleAndTintApi23(@NonNull ImageButton view, @Nullable Integer borderRadius) {
+    private static void applyImageButtonRippleAndTintApi23(@NonNull ImageButton view, @Nullable float[] radii) {
         // Sets the view's foreground to a ripple drawable
-        view.setForeground(generateRippleDrawable(view.getContext(), borderRadius));
+        view.setForeground(generateRippleDrawable(view.getContext(), radii));
 
         // Discard source pixels that don't overlap the destination pixels
         view.setImageTintMode(PorterDuff.Mode.SRC_ATOP);
@@ -218,7 +224,7 @@ public final class LayoutUtils {
     }
 
     /** Applies a compat tap effect that is similar to a ripple, and disabled/hover colors for API 22 and below. */
-    private static void applyImageButtonRippleAndTintCompat(@NonNull ImageButton view, @Nullable Integer borderRadius) {
+    private static void applyImageButtonRippleAndTintCompat(@NonNull ImageButton view, @Nullable float[] radii) {
         // Discard source pixels that don't overlap the destination pixels
         view.setImageTintMode(PorterDuff.Mode.SRC_ATOP);
 

@@ -45,4 +45,13 @@ public class ConstrainedFrameLayout extends FrameLayout implements Clippable {
     public void setClipPathBorderRadius(@Dimension float borderRadius) {
         clippableViewDelegate.setClipPathBorderRadius(this, borderRadius);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @MainThread
+    public void setClipPathBorderRadius(float[] borderRadii) {
+        clippableViewDelegate.setClipPathBorderRadii(this, borderRadii);
+    }
 }

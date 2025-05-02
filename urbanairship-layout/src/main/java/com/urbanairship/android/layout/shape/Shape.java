@@ -114,21 +114,27 @@ public class Shape {
     @NonNull
     public Drawable getDrawable(@NonNull Context context, boolean enabledState) {
         @ColorInt int drawableColor = color != null ? color.resolve(context) : Color.TRANSPARENT;
-        int strokeWidth = border != null && border.getStrokeWidth() != null
-            ? (int) dpToPx(context, border.getStrokeWidth())
+        int strokeWidth = border != null && border.strokeWidth != null
+            ? (int) dpToPx(context, border.strokeWidth)
             : 0;
-        @ColorInt int strokeColor = border != null && border.getStrokeColor() != null
-            ? border.getStrokeColor().resolve(context)
-            : 0;
-        float radius = border != null && border.getRadius() != null
-            ? dpToPx(context, border.getRadius())
+        @ColorInt int strokeColor = border != null && border.strokeColor != null
+            ? border.strokeColor.resolve(context)
             : 0;
 
         GradientDrawable drawable = new GradientDrawable();
         drawable.setShape(type.getDrawableShapeType());
         drawable.setColor(enabledState ? drawableColor : LayoutUtils.generateDisabledColor(drawableColor));
         drawable.setStroke(strokeWidth, enabledState ? strokeColor : LayoutUtils.generateDisabledColor(strokeColor));
-        drawable.setCornerRadius(radius);
+
+        if (border != null) {
+            float[] radii = border.radii((dp) -> dpToPx(context, dp));
+            if (radii != null) {
+                drawable.setCornerRadii(radii);
+            }
+        } else {
+            drawable.setCornerRadius(0);
+        }
+
 
         return new ShapeDrawableWrapper(drawable, aspectRatio, scale, null);
     }
