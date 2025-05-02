@@ -4,10 +4,12 @@ package com.urbanairship.android.layout.view
 import android.R
 import android.content.Context
 import android.content.res.ColorStateList
+import android.graphics.drawable.Drawable
 import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextUtils
 import androidx.core.graphics.ColorUtils
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.info.LabelInfo
@@ -16,6 +18,7 @@ import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.LabelButtonModel
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.HorizontalPosition
+import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.Image.CenteredImageSpan
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.ColorStateListBuilder
@@ -44,6 +47,7 @@ internal class LabelButtonView(
 
         LayoutUtils.applyLabelModel(this, model.label, model.viewInfo.label.text)
         var lastText: String = model.viewInfo.label.text
+        var lastStartDrawable: Drawable? = null
 
         isSingleLine = false
         includeFontPadding = false
@@ -80,6 +84,11 @@ internal class LabelButtonView(
                         resolvedIconStart.icon.getDrawable(context, isEnabled, if (isLayoutRtl) HorizontalPosition.END else HorizontalPosition.START)
                     else -> null
                 }
+
+                if (drawableStart == null && lastStartDrawable != null) {
+                    LayoutUtils.applyLabelModel(this@LabelButtonView, model.label, resolvedText)
+                }
+                lastStartDrawable = drawableStart
 
                 drawableStart?.let {
                     val size = spToPx(context, model.viewInfo.label.textAppearance.fontSize).toInt()
