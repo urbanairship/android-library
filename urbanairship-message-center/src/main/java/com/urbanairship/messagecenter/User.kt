@@ -118,7 +118,7 @@ public class User internal constructor(
 
     /** The registered Channel ID stored in the DataStore, or `null` if no Channel ID is stored. */
     private var registeredChannelId: String
-        get() = preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "")
+        get() = preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "") ?: ""
         set(channelId) = preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId)
 
     /** Returns `true` if the user should be updated. */

@@ -118,7 +118,10 @@ public class Inbox @VisibleForTesting internal constructor(
     private val pendingFetchCallbacks: MutableList<PendingFetchMessagesCallback> = ArrayList()
 
     private val applicationListener: ApplicationListener = object : ApplicationListener {
-        override fun onForeground(time: Long) = dispatchUpdateUserJob(false)
+        override fun onForeground(time: Long) = dispatchUpdateUserJob(
+            forcefully = false,
+            fetchMessages = true
+        )
 
         override fun onBackground(time: Long) {
             jobDispatcher.dispatch(
@@ -185,7 +188,11 @@ public class Inbox @VisibleForTesting internal constructor(
                 activityMonitor.addApplicationListener(applicationListener)
                 airshipChannel.addChannelListener(channelListener)
                 if (user.shouldUpdate()) {
-                    dispatchUpdateUserJob(true)
+                    // Update user and then fetch messages.
+                    dispatchUpdateUserJob(forcefully = true, fetchMessages = true)
+                } else if (activityMonitor.isAppForegrounded) {
+                    // Fetch messages if the app is in the foreground.
+                    fetchMessages(null, null)
                 }
                 airshipChannel.addChannelRegistrationPayloadExtender(
                     channelRegistrationPayloadExtender
@@ -700,7 +707,10 @@ public class Inbox @VisibleForTesting internal constructor(
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    internal fun dispatchUpdateUserJob(forcefully: Boolean) {
+    internal fun dispatchUpdateUserJob(
+        forcefully: Boolean,
+        fetchMessages: Boolean = false
+    ) {
         UALog.d("Updating user.")
         refreshOnMessageExpiresJob?.cancel()
 
@@ -708,7 +718,10 @@ public class Inbox @VisibleForTesting internal constructor(
             .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
             .setAirshipComponent(MessageCenter::class.java)
             .setExtras(
-                jsonMapOf(InboxJobHandler.EXTRA_FORCEFULLY to forcefully)
+                jsonMapOf(
+                    InboxJobHandler.EXTRA_FORCEFULLY to forcefully,
+                    InboxJobHandler.EXTRA_FETCH_MESSAGES to fetchMessages
+                )
             )
             .setConflictStrategy(if (forcefully) JobInfo.REPLACE else JobInfo.KEEP)
             .build()

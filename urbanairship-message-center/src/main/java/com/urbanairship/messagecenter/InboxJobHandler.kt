@@ -57,7 +57,8 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
     internal fun performJob(jobInfo: JobInfo): JobResult = runBlocking {
         when (jobInfo.action) {
             ACTION_RICH_PUSH_USER_UPDATE -> onUpdateUser(
-                jobInfo.extras.opt(EXTRA_FORCEFULLY).getBoolean(false)
+                forcefully = jobInfo.extras.opt(EXTRA_FORCEFULLY).getBoolean(false),
+                fetchMessages = jobInfo.extras.opt(EXTRA_FETCH_MESSAGES).getBoolean(false)
             ).let { JobResult.SUCCESS }
 
             ACTION_RICH_PUSH_MESSAGES_UPDATE -> onUpdateMessages().let { JobResult.SUCCESS }
@@ -91,17 +92,24 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
      *
      * @param forcefully If the user should be updated even if its been recently updated.
      */
-    private suspend fun onUpdateUser(forcefully: Boolean) {
+    private suspend fun onUpdateUser(forcefully: Boolean, fetchMessages: Boolean) {
         if (!forcefully) {
             val lastUpdateTime = dataStore.getLong(LAST_UPDATE_TIME, 0)
             val now = System.currentTimeMillis()
             if (!(lastUpdateTime > now || lastUpdateTime + USER_UPDATE_INTERVAL_MS < now)) {
-                // Not ready to update
+                // Not ready to update user, but we can still update messages
+                if (fetchMessages) {
+                    onUpdateMessages()
+                }
                 return
             }
         }
         val result = if (!user.isUserCreated) createUser() else updateUser()
         user.onUserUpdated(result.getOrDefault(false))
+
+        if (fetchMessages) {
+            onUpdateMessages()
+        }
     }
 
     /**
@@ -186,7 +194,7 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
         }
 
         // Bulk insert any new messages
-        if (messagesToInsert.size > 0) {
+        if (messagesToInsert.isNotEmpty()) {
             try {
                 val messages = MessageEntity.createMessagesFromPayload(messagesToInsert)
                 messageDao.insertMessages(messages)
@@ -217,7 +225,7 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
             }
         }
 
-        if (idsToDelete.size == 0) {
+        if (idsToDelete.isEmpty()) {
             // nothing to do
             return
         }
@@ -355,6 +363,9 @@ public class InboxJobHandler @VisibleForTesting internal constructor(
 
         /** Extra key to indicate if the rich push user needs to be updated forcefully. */
         const val EXTRA_FORCEFULLY = "EXTRA_FORCEFULLY"
+
+        /** Extra key to indicate if messages should be fetched after updating the rich push user. */
+        const val EXTRA_FETCH_MESSAGES = "EXTRA_FETCH_MESSAGES"
 
         @VisibleForTesting
         internal const val LAST_MESSAGE_REFRESH_TIME = "com.urbanairship.messages.LAST_MESSAGE_REFRESH_TIME"

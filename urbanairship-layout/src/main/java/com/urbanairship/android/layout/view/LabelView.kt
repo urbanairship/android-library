@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.text.Spannable
 import android.text.SpannableString
 import android.view.View
@@ -30,6 +31,7 @@ internal class LabelView(
     init {
         LayoutUtils.applyLabelModel(this, model, model.viewInfo.text)
         var lastText: String = model.viewInfo.text
+        var lastStartDrawable: Drawable? = null
 
         model.contentDescription(context).ifNotEmpty { contentDescription = it }
 
@@ -64,6 +66,11 @@ internal class LabelView(
                         resolvedIconStart.icon.getDrawable(context, isEnabled, if (isLayoutRtl) HorizontalPosition.END else HorizontalPosition.START)
                     else -> null
                 }
+
+                if (drawableStart == null && lastStartDrawable != null) {
+                    LayoutUtils.applyLabelModel(this@LabelView, model, resolvedText)
+                }
+                lastStartDrawable = drawableStart
 
                 drawableStart?.let {
                     val size = spToPx(context, model.viewInfo.textAppearance.fontSize).toInt()

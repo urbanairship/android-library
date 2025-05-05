@@ -66,7 +66,6 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
-    @SuppressLint("UnknownNullness")
     @Override
     public void setContentView(View view) {
         if (delegate != null) {
@@ -76,7 +75,6 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
-    @SuppressLint("UnknownNullness")
     @Override
     public void setContentView(View view, ViewGroup.LayoutParams params) {
         if (delegate != null) {
@@ -86,7 +84,6 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
-    @SuppressLint("UnknownNullness")
     @Override
     public void addContentView(View view, ViewGroup.LayoutParams params) {
         if (delegate != null) {
@@ -129,7 +126,6 @@ public abstract class ThemedActivity extends FragmentActivity {
         }
     }
 
-    @SuppressLint("UnknownNullness")
     @Override
     protected void onTitleChanged(CharSequence title, int color) {
         super.onTitleChanged(title, color);

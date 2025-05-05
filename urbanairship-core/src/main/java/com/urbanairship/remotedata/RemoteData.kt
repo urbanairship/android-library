@@ -321,7 +321,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     private val changeToken: String
         get() {
             return changeTokenLock.withLock {
-                val token = this.dataStore.getString(CHANGE_TOKEN_KEY, "").ifEmpty {
+                val token = (this.dataStore.getString(CHANGE_TOKEN_KEY, "") ?: "").ifEmpty {
                     val token = UUID.randomUUID().toString()
                     this.dataStore.put(CHANGE_TOKEN_KEY, token)
                     token
