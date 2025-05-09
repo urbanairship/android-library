@@ -6,6 +6,7 @@ import com.urbanairship.android.layout.reporting.ThomasFormField.BaseForm
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 
 /**
@@ -128,4 +129,11 @@ public interface ThomasListenerInterface {
      * @param state Optional layout state.
      */
     public fun onTimedOut(state: LayoutData?)
+
+    /**
+     * Called when the state changes.
+     *
+     * @param state View state
+     */
+    public fun onStateChanged(state: JsonSerializable)
 }

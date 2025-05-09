@@ -80,6 +80,10 @@ internal sealed class LayoutEvent {
         val context: LayoutData,
     ) : LayoutEvent()
 
+    data class StateUpdate(
+        val state: ThomasState
+    ): LayoutEvent()
+
     object Finish : LayoutEvent()
 }
 

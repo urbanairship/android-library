@@ -36,6 +36,7 @@ import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.embedded.EmbeddedViewManager
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.emptyJsonMap
 
@@ -175,6 +176,8 @@ class MainActivity : AppCompatActivity() {
 
     private val thomasListener = object : ThomasListenerInterface {
         private val events = mutableListOf<String>()
+
+        override fun onStateChanged(state: JsonSerializable) { }
 
         override fun onPageView(pagerData: PagerData, state: LayoutData, displayedAt: Long) {
             "onPageView(pagerData: $pagerData, state: $state, displayedAt: $displayedAt)".let {

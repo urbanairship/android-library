@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
@@ -70,6 +71,7 @@ public class EmbeddedLayout(
     private val viewJob = SupervisorJob()
     private val layoutScope = CoroutineScope(Dispatchers.Main.immediate + viewJob)
     private var layoutEventsJob: Job? = null
+    private var stateUpdateReportJob: Job? = null
 
     private val payload: LayoutInfo = args.payload
     private val activityMonitor: ActivityMonitor = args.inAppActivityMonitor
@@ -209,6 +211,9 @@ public class EmbeddedLayout(
             layoutEventsJob?.cancel()
             layoutEventsJob = observeLayoutEvents(modelEnvironment.layoutEvents)
 
+            stateUpdateReportJob?.cancel()
+            stateUpdateReportJob = reportStateChange(modelEnvironment.layoutEvents)
+
             embeddedView.listener = object : ThomasEmbeddedView.Listener {
                 override fun onDismissed() {
                     dismiss()
@@ -238,6 +243,15 @@ public class EmbeddedLayout(
     private fun observeLayoutEvents(events: Flow<LayoutEvent>) = layoutScope.launch {
         events.filterIsInstance<LayoutEvent.Finish>()
             .collect { dismiss() }
+    }
+
+    private fun reportStateChange(events: Flow<LayoutEvent>) = layoutScope.launch {
+        events
+            .filterIsInstance<LayoutEvent.StateUpdate>()
+            .distinctUntilChanged()
+            .collect {
+                externalListener.onStateChanged(it.state)
+            }
     }
 
     private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) {

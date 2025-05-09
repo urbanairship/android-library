@@ -39,14 +39,6 @@ internal class LayoutState(
     val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
     private var runningJobs = mutableMapOf<String, Job>()
 
-//    init {
-//        GlobalScope.launch {
-//            thomasState.collect { state ->
-//                UALog.e("STATE: ${state.toJsonValue()}")
-//            }
-//        }
-//    }
-
     fun reportingContext(
         formContext: FormInfo? = null,
         pagerContext: PagerData? = null,

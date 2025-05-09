@@ -6,11 +6,14 @@ import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 
 internal class EmbeddedLayoutListener(
     private val layoutName: String
 ) : ThomasListenerInterface {
+
+    override fun onStateChanged(state: JsonSerializable) { }
 
     override fun onPageView(pagerData: PagerData, state: LayoutData, displayedAt: Long) {
         UALog.d {

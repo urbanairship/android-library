@@ -2,15 +2,20 @@
 
 package com.urbanairship.android.layout.reporting;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.json.JsonValue;
 
 /**
  * Layout state of an event.
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class LayoutData {
+public class LayoutData implements JsonSerializable {
 
     private static LayoutData EMPTY = new LayoutData(null, null, null);
 
@@ -72,4 +77,17 @@ public class LayoutData {
                 '}';
     }
 
+    @NonNull
+    @Override
+    public JsonValue toJsonValue() {
+        return JsonMap.newBuilder()
+                .putOpt(KEY_FORM_INFO, formInfo)
+                .putOpt(KEY_PAGER_DATA, pagerData)
+                .putOpt(KEY_BUTTON_IDENTIFIER, buttonIdentifier)
+                .build().toJsonValue();
+    }
+
+    private static final String KEY_FORM_INFO = "formInfo";
+    private static final String KEY_PAGER_DATA = "pagerData";
+    private static final String KEY_BUTTON_IDENTIFIER = "buttonIdentifier";
 }

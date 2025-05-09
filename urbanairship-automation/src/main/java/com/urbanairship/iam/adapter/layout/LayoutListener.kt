@@ -25,6 +25,7 @@ import com.urbanairship.iam.analytics.events.InAppPagerCompletedEvent
 import com.urbanairship.iam.analytics.events.InAppPagerSummaryEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.analytics.events.PageViewSummary
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 
 @VisibleForTesting
@@ -188,6 +189,8 @@ internal class LayoutListener (
             DisplayResult.FINISHED
         }
     }
+
+    override fun onStateChanged(state: JsonSerializable) { }
 
 
     /**

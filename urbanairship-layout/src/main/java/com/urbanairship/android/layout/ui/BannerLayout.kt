@@ -14,6 +14,7 @@ import androidx.customview.widget.ViewDragHelper.STATE_IDLE
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.lifecycleScope
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.BannerPresentation
@@ -45,6 +46,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
@@ -171,6 +173,7 @@ internal class BannerLayout(
             }
 
             observeLayoutEvents(modelEnvironment.layoutEvents)
+            reportStateChange(modelEnvironment.layoutEvents)
 
             bannerView.setListener(object : ThomasBannerView.Listener {
                 override fun onTimedOut() = onDisplayFinished()
@@ -257,6 +260,15 @@ internal class BannerLayout(
         events
             .filterIsInstance<LayoutEvent.Finish>()
             .collect { dismiss() }
+    }
+
+    private fun reportStateChange(events: Flow<LayoutEvent>) = bannerScope.launch {
+        events
+            .filterIsInstance<LayoutEvent.StateUpdate>()
+            .distinctUntilChanged()
+            .collect {
+                externalListener.onStateChanged(it.state)
+            }
     }
 
     private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) {

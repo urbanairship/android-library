@@ -7,12 +7,16 @@ import java.util.Objects;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.json.JsonValue;
+
 /**
  * Pager state.
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class PagerData {
+public class PagerData implements JsonSerializable {
 
     private final String identifier;
     private final int pageIndex;
@@ -78,4 +82,22 @@ public class PagerData {
     public int hashCode() {
         return Objects.hash(identifier, pageIndex, pageId, count, completed);
     }
+
+    @NonNull
+    @Override
+    public JsonValue toJsonValue() {
+        return JsonMap.newBuilder()
+                .put(KEY_IDENTIFIER, identifier)
+                .put(KEY_PAGE_INDEX, pageIndex)
+                .put(KEY_PAGE_ID, pageId)
+                .put(KEY_COUNT, count)
+                .put(KEY_COMPLETED, completed)
+                .build().toJsonValue();
+    }
+
+    private static final String KEY_IDENTIFIER = "identifier";
+    private static final String KEY_PAGE_INDEX = "pageIndex";
+    private static final String KEY_PAGE_ID = "pageId";
+    private static final String KEY_COUNT = "count";
+    private static final String KEY_COMPLETED = "completed";
 }

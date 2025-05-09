@@ -3,7 +3,11 @@ package com.urbanairship.android.layout.reporting;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-public class FormInfo {
+import com.urbanairship.json.JsonMap;
+import com.urbanairship.json.JsonSerializable;
+import com.urbanairship.json.JsonValue;
+
+public class FormInfo implements JsonSerializable {
     @NonNull
     private final String identifier;
 
@@ -53,4 +57,19 @@ public class FormInfo {
                 '}';
     }
 
+    @NonNull
+    @Override
+    public JsonValue toJsonValue() {
+        return JsonMap.newBuilder()
+                .put(KEY_IDENTIFIER, identifier)
+                .put(KEY_FORM_RESPONSE_TYPE, formResponseType)
+                .put(KEY_FORM_TYPE, formType)
+                .putOpt(KEY_IS_FORM_SUBMITTED, isFormSubmitted)
+                .build().toJsonValue();
+    }
+
+    private static final String KEY_IDENTIFIER = "identifier";
+    private static final String KEY_FORM_RESPONSE_TYPE = "formResponseType";
+    private static final String KEY_FORM_TYPE = "formType";
+    private static final String KEY_IS_FORM_SUBMITTED = "isFormSubmitted";
 }

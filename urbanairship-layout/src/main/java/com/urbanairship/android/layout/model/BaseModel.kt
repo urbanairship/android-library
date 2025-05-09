@@ -5,6 +5,7 @@ import android.content.Context
 import android.view.View.OnAttachStateChangeListener
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Provider
+import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
@@ -164,6 +165,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                 updateBackground(it)
                 updateVisibility(it)
                 listener?.onStateUpdated(it)
+                broadcast(LayoutEvent.StateUpdate(it))
             }
         }
     }
