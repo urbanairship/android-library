@@ -316,13 +316,13 @@ public class RemoteDataStore(
 }
 
 /**
- * Manages remote data json files stored on disk.
+ * Manages remote data json files stored on disk (in the no backup directory).
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class RemoteDataFileManager(
     private val context: Context,
-    private val dataDirectory: File = File(context.filesDir, DATA_DIRECTORY)
+    private val dataDirectory: File = File(context.noBackupFilesDir, DATA_DIRECTORY)
 ) {
     internal fun load(filename: String): Result<JsonMap> {
         val file = File(dataDirectory, filename)
