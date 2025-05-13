@@ -194,94 +194,12 @@ class MainActivity : AppCompatActivity() {
             dumpEvents()
         }
 
-        //TODO: il remove
-//
-//        override fun onPageView(pagerData: PagerData, state: LayoutData, displayedAt: Long) {
-//            "onPageView(pagerData: $pagerData, state: $state, displayedAt: $displayedAt)".let {
-//                events.add(it)
-//                UALog.d(it)
-//            }
-//        }
-//
-//        override fun onPageSwipe(pagerData: PagerData, toPageIndex: Int, toPageId: String, fromPageIndex: Int, fromPageId: String, state: LayoutData) {
-//            "onPageSwipe(pagerData: $pagerData, toPageIndex: $toPageIndex, toPageId: $toPageId, fromPageIndex: $fromPageIndex, fromPageId: $fromPageId, state: $state)".let {
-//                events.add(it)
-//                UALog.d(it)
-//            }
-//        }
-//
-//        override fun onButtonTap(buttonId: String, reportingMetadata: JsonValue?, state: LayoutData) {
-//            "onButtonTap(buttonId: $buttonId, state: $state)".let {
-//                events.add(it)
-//                UALog.d(it)
-//            }
-//        }
-//
-//        override fun onDismiss(displayTime: Long) {
-//            "onDismiss(displayTime: $displayTime)".let {
-//                events.add(it)
-//                UALog.d(it)
-//            }
-//            dumpEvents()
-//        }
-//
-//        override fun onDismiss(buttonId: String, buttonDescription: String?, cancel: Boolean, displayTime: Long, state: LayoutData) {
-//            "onDismiss(buttonId: $buttonId, buttonDescription: $buttonDescription, cancel: $cancel, displayTime: $displayTime, state: $state".let {
-//                events.add(it)
-//                UALog.d(it)
-//            }
-//            dumpEvents()
-//        }
-//
-//        override fun onFormResult(thomasFormField: ThomasFormField.BaseForm, state: LayoutData) {
-//            "onFormResult(formData: ${thomasFormField.toJsonValue()}, state: $state)".let {
-//                events.add(it)
-//                UALog.d(it)
-//            }
-//        }
-//
-//        override fun onFormDisplay(formInfo: FormInfo, state: LayoutData) {
-//            "onFormDisplay(formInfo: $formInfo, state: $state)".let {
-//                events.add(it)
-//                UALog.d(it)
-//            }
-//        }
-//
-//        override fun onPagerGesture(
-//            gestureId: String,
-//            reportingMetadata: JsonValue?,
-//            state: LayoutData
-//        ) {
-//            "onPagerGesture(gestureId: $gestureId, reportingMetadata: $reportingMetadata, state: $state)".let {
-//                events.add(it)
-//                UALog.d(it)
-//            }
-//        }
-//
-//        override fun onPagerAutomatedAction(
-//            actionId: String,
-//            reportingMetadata: JsonValue?,
-//            state: LayoutData
-//        ) {
-//            "onPagerAutomatedAction(gestureId: $actionId, reportingMetadata: $reportingMetadata, state: $state)".let {
-//                events.add(it)
-//                UALog.d(it)
-//            } }
-
         override fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean) {
             "onVisibilityChanged(isVisible: $isVisible, isForegrounded: $isForegrounded)".let {
                 events.add(it)
                 UALog.d(it)
             }
         }
-
-        //TODO: il remove
-//        override fun onTimedOut(state: LayoutData?) {
-//            "onTimedOut(layoutContext: $state)".let {
-//                events.add(it)
-//                UALog.d(it)
-//            }
-//        }
 
         private fun dumpEvents() {
             UALog.d("\n")

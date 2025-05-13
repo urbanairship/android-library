@@ -13,6 +13,18 @@ internal class ExternalReporter(val listener: ThomasListenerInterface) : Reporte
 
     override fun report(event: ReportingEvent) {
         listener.onReportingEvent(event)
+        when (event) {
+            is ReportingEvent.Dismiss -> {
+                when (event.data) {
+                    is ReportingEvent.DismissData.ButtonTapped -> with(event.data) {
+                        listener.onDismiss(cancel)
+                    }
+                    ReportingEvent.DismissData.TimedOut -> listener.onDismiss(false)
+                    ReportingEvent.DismissData.UserDismissed -> listener.onDismiss(true)
+                }
+            }
+            else -> {}
+        }
     }
 
     override fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean) {
