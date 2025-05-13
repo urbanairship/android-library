@@ -92,7 +92,7 @@ public class PagerControllerTest {
             assertEquals(1, awaitItem().pageIndex)
 
             // Verify we reported the page view
-            verify { mockReporter.report(any<ReportingEvent.PageView>(), any()) }
+            verify { mockReporter.report(any<ReportingEvent.PageView>()) }
         }
     }
 

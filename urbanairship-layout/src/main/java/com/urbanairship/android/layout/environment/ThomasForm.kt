@@ -6,6 +6,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.reporting.FormInfo
+import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.android.layout.util.DelicateLayoutApi
@@ -114,7 +115,13 @@ internal class ThomasForm(
         val result = suspendCoroutine { cont ->
             feed.update {
                 val submitted = it.copy(status = ThomasFormStatus.SUBMITTED)
-                cont.resume(Pair(submitted.formResult(), submitted.reportingContext()))
+                val event = ReportingEvent.FormResult(
+                    data = submitted.formResult(),
+                    context = LayoutData.empty(), //will be set later
+                    attributes = submitted.attributes(),
+                    channels = submitted.channels()
+                    )
+                cont.resume(Pair(event, submitted.reportingContext()))
                 submitted
             }
         }

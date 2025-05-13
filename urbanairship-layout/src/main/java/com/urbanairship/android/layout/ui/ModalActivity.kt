@@ -36,6 +36,7 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.FullScreenAdjustResizeWorkaround.Companion.applyAdjustResizeWorkaround
 import com.urbanairship.android.layout.view.ModalView
 import com.urbanairship.util.parcelableExtra
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
@@ -189,7 +190,13 @@ public class ModalActivity : AppCompatActivity() {
     }
 
     private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) =
-        reporter.report(ReportingEvent.DismissFromOutside(displayTimer.time), state)
+        reporter.report(
+            event = ReportingEvent.Dismiss(
+                data = ReportingEvent.DismissData.UserDismissed,
+                displayTime = displayTimer.time.milliseconds,
+                context = state
+            )
+        )
 
     /**
      * Handles safe areas if necessary, and returns a boolean indicating whether insets should be
@@ -234,7 +241,6 @@ public class ModalActivity : AppCompatActivity() {
                             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                         Orientation.LANDSCAPE ->
                             requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                        else -> Unit
                     }
                 } else {
                     // Orientation locking isn't allowed on API 26 for transparent activities,

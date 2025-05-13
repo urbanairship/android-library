@@ -4,8 +4,8 @@ package com.urbanairship.android.layout.reporting;
 
 import android.app.Activity;
 
-import com.urbanairship.UALog;
 import com.urbanairship.Predicate;
+import com.urbanairship.UALog;
 import com.urbanairship.app.ActivityListener;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.FilteredActivityListener;

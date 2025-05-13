@@ -2,63 +2,19 @@
 
 package com.urbanairship.iam.analytics.events
 
+import androidx.annotation.VisibleForTesting
 import com.urbanairship.analytics.EventType
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 
-internal class InAppPagerSummaryEvent(
-    pagerData: PagerData,
-    viewedPages: List<PageViewSummary>
+internal class InAppPagerSummaryEvent @VisibleForTesting constructor(
+    override val data: JsonSerializable
 ) : InAppEvent {
 
-    private val reportData = PagerSummaryData(
-        identifier = pagerData.identifier,
-        viewedPages = viewedPages,
-        pageCount = pagerData.count,
-        completed = pagerData.isCompleted
-    )
-
     override val eventType: EventType = EventType.IN_APP_PAGER_SUMMARY
-    override val data: JsonSerializable = reportData
 
-    private data class PagerSummaryData(
-        val identifier: String,
-        val viewedPages: List<PageViewSummary>,
-        val pageCount: Int,
-        val completed: Boolean
-    ) : JsonSerializable {
-        companion object {
-            private const val IDENTIFIER = "pager_identifier"
-            private const val VIEWED_PAGES = "viewed_pages"
-            private const val PAGE_COUNT = "page_count"
-            private const val COMPLETED = "completed"
-        }
-
-        override fun toJsonValue(): JsonValue = jsonMapOf(
-            IDENTIFIER to identifier,
-            VIEWED_PAGES to viewedPages,
-            PAGE_COUNT to pageCount,
-            COMPLETED to completed
-        ).toJsonValue()
-    }
-}
-
-internal data class PageViewSummary(
-    val identifier: String,
-    val index: Int,
-    val displayTime: Long
-) : JsonSerializable {
-    companion object {
-        private const val IDENTIFIER = "page_identifier"
-        private const val INDEX = "page_index"
-        private const val DISPLAY_TIME = "display_time"
-    }
-
-    override fun toJsonValue(): JsonValue = jsonMapOf(
-        IDENTIFIER to identifier,
-        INDEX to index,
-        DISPLAY_TIME to displayTime
-    ).toJsonValue()
+    constructor(eventData: ReportingEvent.PageSummaryData): this(data = eventData)
 }

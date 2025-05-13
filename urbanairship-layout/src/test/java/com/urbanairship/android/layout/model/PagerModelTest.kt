@@ -156,7 +156,7 @@ public class PagerModelTest {
             assertTrue(updatedState.hasPrevious)
 
             // Verify that we reported an event and ran actions when scrolling to the 2nd page
-            verify { mockReporter.report(any(), any()) }
+            verify { mockReporter.report(any()) }
             verify(exactly = 2) { mockActionsRunner.run(any(), any()) }
 
             ensureAllEventsConsumed()
@@ -189,7 +189,7 @@ public class PagerModelTest {
 
             // Verify that we didn't report an event, but did run
             // actions again when scrolling to the 2nd page.
-            verify(exactly = 0) { mockReporter.report(any(), any()) }
+            verify(exactly = 0) { mockReporter.report(any()) }
             verify(exactly = 2) { mockActionsRunner.run(any(), any()) }
 
             ensureAllEventsConsumed()

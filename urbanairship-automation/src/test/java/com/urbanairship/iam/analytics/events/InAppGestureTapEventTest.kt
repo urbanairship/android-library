@@ -1,6 +1,7 @@
 package com.urbanairship.iam.analytics.events
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.json.JsonValue
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
@@ -11,8 +12,10 @@ public class InAppGestureTapEventTest {
     @Test
     public fun testEvent() {
         val event = InAppGestureEvent(
-            identifier = "gesture id",
-            metadata = JsonValue.wrap("reporting metadata")
+            data = ReportingEvent.GestureData(
+                identifier = "gesture id",
+                reportingMetadata = JsonValue.wrap("reporting metadata")
+            ),
         )
 
         val expected = """

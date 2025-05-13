@@ -1,6 +1,7 @@
 package com.urbanairship.iam.analytics.events
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.json.JsonValue
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
@@ -10,7 +11,11 @@ import org.junit.runner.RunWith
 public class InAppFormResultEventTest {
     @Test
     public fun testEvent() {
-        val event = InAppFormResultEvent(forms = JsonValue.wrap("form result"))
+        val event = InAppFormResultEvent(
+            data = ReportingEvent.FormResultData(
+                forms = JsonValue.wrap("form result")
+            )
+        )
         val expected = """
             {
                "forms": "form result"

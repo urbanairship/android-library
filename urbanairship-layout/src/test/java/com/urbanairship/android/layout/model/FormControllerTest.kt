@@ -134,7 +134,7 @@ public class FormControllerTest {
 
             assertTrue(awaitItem().isDisplayReported)
 
-            verify { mockReporter.report(any<ReportingEvent.FormDisplay>(), any()) }
+            verify { mockReporter.report(any<ReportingEvent.FormDisplay>()) }
 
             ensureAllEventsConsumed()
         }
@@ -160,7 +160,7 @@ public class FormControllerTest {
 
             assertTrue(awaitItem().isDisplayReported)
 
-            verify { mockReporter.report(any<ReportingEvent.FormDisplay>(), any()) }
+            verify { mockReporter.report(any<ReportingEvent.FormDisplay>()) }
 
             ensureAllEventsConsumed()
         }
@@ -210,7 +210,7 @@ public class FormControllerTest {
             coVerify { mockAttributeHandler.update(eq(ATTRIBUTES)) }
             coVerify { mockChannelRegistrar.register(eq(listOf(CHANNEL_REGISTRATION))) }
 
-            coVerify { mockReporter.report(any<ReportingEvent.FormResult>(), any()) }
+            coVerify { mockReporter.report(any<ReportingEvent.FormResult>()) }
 
             ensureAllEventsConsumed()
         }
@@ -234,7 +234,7 @@ public class FormControllerTest {
 
             assertFalse(awaitItem().isDisplayReported)
 
-            verify(exactly = 0) { mockReporter.report(any<ReportingEvent.FormDisplay>(), any()) }
+            verify(exactly = 0) { mockReporter.report(any<ReportingEvent.FormDisplay>()) }
 
             ensureAllEventsConsumed()
         }

@@ -38,6 +38,7 @@ import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.webkit.AirshipWebViewClient
 import java.lang.ref.WeakReference
 import java.util.Objects
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -138,18 +139,12 @@ public class EmbeddedLayout(
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
             override fun onForeground(time: Long) {
                 super.onForeground(time)
-                reporter.report(
-                    ReportingEvent.VisibilityChanged(isVisible.value, true),
-                    LayoutData.empty()
-                )
+                reporter.onVisibilityChanged(isVisible.value, true)
             }
 
             override fun onBackground(time: Long) {
                 super.onBackground(time)
-                reporter.report(
-                    ReportingEvent.VisibilityChanged(isVisible.value, false),
-                    LayoutData.empty()
-                )
+                reporter.onVisibilityChanged(isVisible.value, false)
             }
         })
 
@@ -191,19 +186,13 @@ public class EmbeddedLayout(
             embeddedView.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
                 override fun onViewAttachedToWindow(v: View) {
                     val updated = true
-                    reporter.report(
-                        ReportingEvent.VisibilityChanged(updated, activityMonitor.isAppForegrounded),
-                        LayoutData.empty()
-                    )
+                    reporter.onVisibilityChanged(updated, activityMonitor.isAppForegrounded)
                     _isVisible.value = updated
                 }
 
                 override fun onViewDetachedFromWindow(v: View) {
                     val updated = false
-                    reporter.report(
-                        ReportingEvent.VisibilityChanged(updated, activityMonitor.isAppForegrounded),
-                        LayoutData.empty()
-                    )
+                    reporter.onVisibilityChanged(updated, activityMonitor.isAppForegrounded)
                     _isVisible.value = updated
                 }
             })
@@ -255,7 +244,13 @@ public class EmbeddedLayout(
     }
 
     private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) {
-        reporter.report(ReportingEvent.DismissFromOutside(displayTimer?.time ?: 0), state)
+        reporter.report(
+            event = ReportingEvent.Dismiss(
+                data = ReportingEvent.DismissData.UserDismissed,
+                displayTime = (displayTimer?.time ?: 0).milliseconds,
+                context = state
+            )
+        )
     }
 
     override fun equals(other: Any?): Boolean {
