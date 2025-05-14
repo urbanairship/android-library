@@ -1,6 +1,7 @@
 # Android 19.x ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
+
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
 ## Version 19.6.2 April 29, 2025
