@@ -122,12 +122,14 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                 }.distinctUntilChanged().collect { (event, formResult) ->
                     formResult?.let {
                         val (result, context) = formResult
+
                         report(
-                            event = result,
-                            state = layoutState.reportingContext(
-                                formContext = context,
-                                buttonId = event.buttonIdentifier
-                            )
+                            event = result.copy(
+                                context = layoutState.reportingContext(
+                                    formContext = context,
+                                    buttonId = event.buttonIdentifier
+                                )
+                            ),
                         )
 
                         updateAttributes(result.attributes)
@@ -146,8 +148,14 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
                 if (form.displayedInputs.isNotEmpty()) {
                     val formContext = form.reportingContext()
                     report(
-                        event = ReportingEvent.FormDisplay(formContext),
-                        state = layoutState.reportingContext(formContext)
+                        event = ReportingEvent.FormDisplay(
+                            data = ReportingEvent.FormDisplayData(
+                                identifier = formContext.identifier,
+                                formType = formContext.formType,
+                                responseType = formContext.formResponseType
+                            ),
+                            context = layoutState.reportingContext(formContext)
+                        )
                     )
                     formState.displayReported()
 

@@ -11,8 +11,11 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.PagerControllerInfo
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.reporting.PagerData
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -31,6 +34,9 @@ internal class PagerController(
     properties = properties
 ) {
 
+    private val pagerViewCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
+    private val completionReported = MutableStateFlow(false)
+
     init {
         modelScope.launch {
             pagerState.changes.map { it.reportingContext() }.distinctUntilChanged()
@@ -45,9 +51,46 @@ internal class PagerController(
     ) = view.createView(context, viewEnvironment, itemProperties)
 
     private fun reportPageView(pagerContext: PagerData) {
-        report(
-            ReportingEvent.PageView(pagerContext, environment.displayTimer.time),
-            layoutState.reportingContext(pagerContext = pagerContext)
+        val event = ReportingEvent.PageView(
+            data = ReportingEvent.PageViewData(
+                identifier = pagerContext.identifier,
+                pageIdentifier = pagerContext.pageId,
+                pageIndex = pagerContext.index,
+                pageViewCount = incAndGetViewCount(pagerContext.pageId),
+                pageCount = pagerContext.count,
+                completed = pagerContext.isCompleted
+            ),
+            context = layoutState.reportingContext(pagerContext = pagerContext)
         )
+
+        report(event)
+
+        if (pagerContext.isCompleted) {
+            reportCompletion(pagerContext)
+        }
+    }
+
+    private fun reportCompletion(pagerContext: PagerData) {
+        if (completionReported.getAndUpdate { true }) {
+            return
+        }
+
+        report(
+            event = ReportingEvent.PagerComplete(
+                data = ReportingEvent.PagerCompleteData(
+                    identifier = pagerContext.identifier,
+                    pageIndex = pagerContext.index,
+                    pageCount = pagerContext.count,
+                    pageIdentifier = pagerContext.pageId
+                ),
+                context = layoutState.reportingContext(pagerContext = pagerContext)
+            )
+        )
+    }
+
+    private fun incAndGetViewCount(pageId: String): Int {
+        val count = pagerViewCounts.value.getOrElse(pageId) { 0 } + 1
+        pagerViewCounts.update { it.toMutableMap().apply { put(pageId, count) } }
+        return count
     }
 }

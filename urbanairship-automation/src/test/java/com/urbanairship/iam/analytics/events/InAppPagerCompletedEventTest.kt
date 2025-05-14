@@ -1,6 +1,7 @@
 package com.urbanairship.iam.analytics.events
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.json.JsonValue
 import junit.framework.TestCase.assertEquals
@@ -12,7 +13,12 @@ public class InAppPagerCompletedEventTest {
     @Test
     public fun testEvent() {
         val event = InAppPagerCompletedEvent(
-            PagerData("pager identifier", 3, "page identifier", 12, true)
+            data = ReportingEvent.PagerCompleteData(
+                identifier = "pager identifier",
+                pageIndex = 3,
+                pageCount = 12,
+                pageIdentifier = "page identifier"
+            )
         )
         val expected = """
             {

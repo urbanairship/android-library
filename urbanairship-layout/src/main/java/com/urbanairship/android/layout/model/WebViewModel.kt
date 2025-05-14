@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.info.WebViewInfo
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.view.WebViewView
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.launch
 
 internal class WebViewModel(
@@ -43,8 +44,11 @@ internal class WebViewModel(
 
     fun onClose() {
         report(
-            ReportingEvent.DismissFromOutside(environment.displayTimer.time),
-            layoutState.reportingContext()
+            event = ReportingEvent.Dismiss(
+                data = ReportingEvent.DismissData.UserDismissed,
+                displayTime = environment.displayTimer.time.milliseconds,
+                context = layoutState.reportingContext()
+            )
         )
         broadcast(LayoutEvent.Finish)
     }

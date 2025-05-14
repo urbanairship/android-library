@@ -22,6 +22,7 @@ import com.urbanairship.android.layout.property.hasPagerNext
 import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.widget.TappableView
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,7 +62,14 @@ internal abstract class ButtonModel<T, I: Button>(
                 val reportingContext = layoutState.reportingContext(buttonId = viewInfo.identifier)
 
                 // Report button tap event.
-                report(ButtonTap(viewInfo.identifier, viewInfo.reportingMetadata), reportingContext)
+                report(
+                    event = ButtonTap(
+                        data = ReportingEvent.ButtonTapData(
+                            identifier = viewInfo.identifier,
+                            reportingMetadata = viewInfo.reportingMetadata),
+                        context = reportingContext
+                    )
+                )
 
                 // Run any actions.
                 runActions(viewInfo.actions, reportingContext)
@@ -190,13 +198,15 @@ internal abstract class ButtonModel<T, I: Button>(
 
     private suspend fun handleDismiss(context: Context, isCancel: Boolean) {
         report(
-            ReportingEvent.DismissFromButton(
-                viewInfo.identifier,
-                reportingDescription(context),
-                isCancel,
-                environment.displayTimer.time
-            ),
-            layoutState.reportingContext(buttonId = viewInfo.identifier)
+            event = ReportingEvent.Dismiss(
+                data = ReportingEvent.DismissData.ButtonTapped(
+                    identifier = viewInfo.identifier,
+                    description = reportingDescription(context),
+                    cancel = isCancel
+                ),
+                displayTime = environment.displayTimer.time.milliseconds,
+                context = layoutState.reportingContext(buttonId = viewInfo.identifier)
+            )
         )
         modelScope.launch {
             environment.eventHandler.broadcast(LayoutEvent.Finish)

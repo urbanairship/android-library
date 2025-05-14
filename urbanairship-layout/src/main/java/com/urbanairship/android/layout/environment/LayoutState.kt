@@ -320,8 +320,7 @@ internal sealed class State {
             return children[identifier]?.lastProcessStatus
         }
 
-        fun formResult(): ReportingEvent.FormResult =
-            ReportingEvent.FormResult(formData(), reportingContext(), attributes(), channels())
+        fun formResult(): ReportingEvent.FormResultData = ReportingEvent.FormResultData(formData())
 
         fun reportingContext(): FormInfo =
             FormInfo(identifier, formType.value, formResponseType, status.isSubmitted)
@@ -374,7 +373,7 @@ internal sealed class State {
         }
 
 
-        private fun attributes(): Map<AttributeName, AttributeValue> {
+        internal fun attributes(): Map<AttributeName, AttributeValue> {
             val map = mutableMapOf<AttributeName, AttributeValue>()
 
             filteredFields
@@ -390,7 +389,7 @@ internal sealed class State {
             return map.toMap()
         }
 
-        private fun channels(): List<ThomasChannelRegistration> {
+        internal fun channels(): List<ThomasChannelRegistration> {
             return filteredFields.values
                 .mapNotNull { value ->
                     when(val method = value.fieldType) {

@@ -5,47 +5,29 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.reporting.LayoutData
 
 internal interface Reporter {
-    fun report(event: ReportingEvent, state: LayoutData)
+    fun report(event: ReportingEvent)
+    fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean)
 }
 
 internal class ExternalReporter(val listener: ThomasListenerInterface) : Reporter {
 
-    override fun report(event: ReportingEvent, state: LayoutData) {
+    override fun report(event: ReportingEvent) {
+        listener.onReportingEvent(event)
         when (event) {
-            is ReportingEvent.PageView -> with(event) {
-                listener.onPageView(pagerData, state, displayedAt)
+            is ReportingEvent.Dismiss -> {
+                when (event.data) {
+                    is ReportingEvent.DismissData.ButtonTapped -> with(event.data) {
+                        listener.onDismiss(cancel)
+                    }
+                    ReportingEvent.DismissData.TimedOut -> listener.onDismiss(false)
+                    ReportingEvent.DismissData.UserDismissed -> listener.onDismiss(true)
+                }
             }
-            is ReportingEvent.PageSwipe -> with(event) {
-                listener.onPageSwipe(
-                    pagerData, toPageIndex, toPageId, fromPageIndex, fromPageId, state)
-            }
-            is ReportingEvent.PageGesture -> with(event) {
-                listener.onPagerGesture(gestureId, reportingMetadata, state)
-            }
-            is ReportingEvent.PageAction -> with(event) {
-                listener.onPagerAutomatedAction(actionId, reportingMetadata, state)
-            }
-            is ReportingEvent.ButtonTap -> with(event) {
-                listener.onButtonTap(buttonId, reportingMetadata, state)
-            }
-            is ReportingEvent.DismissFromOutside -> with(event) {
-                listener.onDismiss(displayTime)
-            }
-            is ReportingEvent.DismissFromButton -> with(event) {
-                listener.onDismiss(buttonId, buttonDescription, isCancel, displayTime, state)
-            }
-            is ReportingEvent.FormResult -> with(event) {
-                listener.onFormResult(formData, state)
-            }
-            is ReportingEvent.FormDisplay -> with(event) {
-                listener.onFormDisplay(formInfo, state)
-            }
-            is ReportingEvent.TimedOut -> with(event) {
-                listener.onTimedOut(layoutData)
-            }
-            is ReportingEvent.VisibilityChanged -> with(event) {
-                listener.onVisibilityChanged(isVisible, isForegrounded)
-            }
+            else -> {}
         }
+    }
+
+    override fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean) {
+        listener.onVisibilityChanged(isVisible, isForegrounded)
     }
 }

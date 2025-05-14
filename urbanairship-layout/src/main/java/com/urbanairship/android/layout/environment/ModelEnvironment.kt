@@ -39,7 +39,7 @@ internal class ModelEnvironment(
             layoutEvents
                 .filterIsInstance<LayoutEvent.Report>()
                 .distinctUntilChanged()
-                .collect { (event, state) -> reporter.report(event, state) }
+                .collect { reporter.report(it.event) }
         }
     }
 
@@ -76,8 +76,7 @@ internal sealed class LayoutEvent {
     ) : LayoutEvent()
 
     data class Report(
-        val event: ReportingEvent,
-        val context: LayoutData,
+        val event: ReportingEvent
     ) : LayoutEvent()
 
     data class StateUpdate(

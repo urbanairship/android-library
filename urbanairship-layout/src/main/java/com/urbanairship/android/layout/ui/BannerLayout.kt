@@ -28,7 +28,7 @@ import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.event.ReportingEvent.DismissFromOutside
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.reporting.DisplayTimer
@@ -41,6 +41,7 @@ import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.util.ManifestUtils
 import com.urbanairship.webkit.AirshipWebViewClient
 import java.lang.ref.WeakReference
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -272,7 +273,13 @@ internal class BannerLayout(
     }
 
     private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) {
-        reporter.report(DismissFromOutside(displayTimer.time), state)
+        reporter.report(
+            event = ReportingEvent.Dismiss(
+                data = ReportingEvent.DismissData.UserDismissed,
+                displayTime = displayTimer.time.milliseconds,
+                context = state
+            )
+        )
     }
 
     @MainThread

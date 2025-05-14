@@ -1,6 +1,7 @@
 package com.urbanairship.iam.analytics.events
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.json.JsonValue
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
@@ -11,8 +12,10 @@ public class InAppPageActionEventTest {
     @Test
     public fun testEvent() {
         val event = InAppPageActionEvent(
-            identifier = "action id",
-            metadata = JsonValue.wrap("reporting metadata")
+            data = ReportingEvent.PageActionData(
+                identifier = "action id",
+                metadata = JsonValue.wrap("reporting metadata")
+            )
         )
 
         val expected = """

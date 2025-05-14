@@ -288,9 +288,7 @@ internal class TextInputModel(
             is ThomasFormField.FieldType.Async -> {
                 modelScope.launch {
                     when(method.fetcher.results.first { it != null }) {
-                        is ThomasFormField.AsyncValueFetcher.PendingResult.Error -> {
-                            //TODO: il retry?
-                        }
+                        is ThomasFormField.AsyncValueFetcher.PendingResult.Error -> { }
                         is ThomasFormField.AsyncValueFetcher.PendingResult.Invalid -> {
                             validationStatus.update { ValidationState.INVALID }
                         }

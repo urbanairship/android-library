@@ -5,10 +5,9 @@ package com.urbanairship.iam.adapter.layout
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ThomasListenerInterface
-import com.urbanairship.android.layout.reporting.FormInfo
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
-import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.automation.utils.ActiveTimerInterface
 import com.urbanairship.automation.utils.ManualActiveTimer
 import com.urbanairship.iam.adapter.DisplayResult
@@ -24,151 +23,129 @@ import com.urbanairship.iam.analytics.events.InAppPageViewEvent
 import com.urbanairship.iam.analytics.events.InAppPagerCompletedEvent
 import com.urbanairship.iam.analytics.events.InAppPagerSummaryEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
-import com.urbanairship.iam.analytics.events.PageViewSummary
 import com.urbanairship.json.JsonSerializable
-import com.urbanairship.json.JsonValue
 
 @VisibleForTesting
 internal class LayoutListener (
     val analytics: InAppMessageAnalyticsInterface,
+    private val pagersViewTracker: PagersViewTracker = PagersViewTracker(),
     private val timer: ActiveTimerInterface = ManualActiveTimer(),
     private var onDismiss: ((DisplayResult) -> Unit)?
 ) : ThomasListenerInterface {
     private val completedPagers: MutableSet<String> = mutableSetOf()
-    private val pagerSummaryMap: MutableMap<String, PagerSummary> = mutableMapOf()
-    private val pagerViewCounts: MutableMap<String, MutableMap<Int, Int>> = mutableMapOf()
 
-    override fun onPageView(pagerData: PagerData, state: LayoutData, displayedAt: Long) {
-        // View
-        val viewCount = updatePageViewCount(pagerData)
-        analytics.recordEvent(
-            event = InAppPageViewEvent(pagerData, viewCount),
-            layoutContext = state
-        )
+    override fun onReportingEvent(event: ReportingEvent) {
+        when (event) {
+            is ReportingEvent.ButtonTap -> {
+                analytics.recordEvent(
+                    event = InAppButtonTapEvent(event.data),
+                    layoutContext = event.context
+                )
+            }
+            is ReportingEvent.Dismiss -> {
+                tryDismiss { displayTime ->
+                    when(val source = event.data) {
+                        is ReportingEvent.DismissData.ButtonTapped -> {
+                            analytics.recordEvent(
+                                event = InAppResolutionEvent.buttonTap(
+                                    identifier = source.identifier,
+                                    description = source.description,
+                                    displayTime = displayTime
+                                ),
+                                layoutContext = event.context
+                            )
 
-        // Completed
-        if (pagerData.isCompleted && !completedPagers.contains(pagerData.identifier)) {
-            completedPagers.add(pagerData.identifier)
-            analytics.recordEvent(
-                event = InAppPagerCompletedEvent(pagerData),
-                layoutContext = state
-            )
-        }
+                            sendPageSummaryEvents(event.context)
 
-        // Summary
-        pagerSummaryMap
-            .getOrPut(pagerData.identifier) { PagerSummary() }
-            .updatePagerData(pagerData, displayedAt)
-    }
+                            if (source.cancel) DisplayResult.CANCEL else DisplayResult.FINISHED
+                        }
+                        ReportingEvent.DismissData.TimedOut -> {
+                            analytics.recordEvent(
+                                event = InAppResolutionEvent.timedOut(displayTime),
+                                layoutContext = event.context
+                            )
+                            DisplayResult.FINISHED
+                        }
+                        ReportingEvent.DismissData.UserDismissed -> {
+                            analytics.recordEvent(
+                                event = InAppResolutionEvent.userDismissed(displayTime),
+                                layoutContext = event.context
+                            )
 
-    override fun onPageSwipe(
-        pagerData: PagerData,
-        toPageIndex: Int,
-        toPageId: String,
-        fromPageIndex: Int,
-        fromPageId: String,
-        state: LayoutData
-    ) {
-        analytics.recordEvent(
-            InAppPageSwipeEvent(
-                from = PagerData(
-                    pagerData.identifier,
-                    fromPageIndex,
-                    fromPageId,
-                    pagerViewCounts[pagerData.identifier]?.get(fromPageIndex) ?: 0,
-                    pagerData.isCompleted),
-                to = PagerData(
-                    pagerData.identifier,
-                    toPageIndex,
-                    toPageId,
-                    pagerViewCounts[pagerData.identifier]?.get(toPageIndex) ?: 0,
-                    pagerData.isCompleted)
-            ),
-            layoutContext = state
-        )
-    }
+                            sendPageSummaryEvents(event.context)
 
-    override fun onButtonTap(
-        buttonId: String,
-        reportingMetadata: JsonValue?,
-        state: LayoutData
-    ) {
-        analytics.recordEvent(
-            event = InAppButtonTapEvent(buttonId, reportingMetadata),
-            layoutContext = state
-        )
-    }
+                            DisplayResult.FINISHED
+                        }
+                    }
+                }
+            }
+            is ReportingEvent.FormDisplay -> {
+                analytics.recordEvent(
+                    event = InAppFormDisplayEvent(event.data),
+                    layoutContext = event.context
+                )
+            }
+            is ReportingEvent.FormResult -> {
+                analytics.recordEvent(
+                    event = InAppFormResultEvent(event.data),
+                    layoutContext = event.context
+                )
+            }
+            is ReportingEvent.Gesture -> {
+                analytics.recordEvent(
+                    event = InAppGestureEvent(event.data),
+                    layoutContext = event.context
+                )
+            }
+            is ReportingEvent.PageAction -> {
+                analytics.recordEvent(
+                    event = InAppPageActionEvent(event.data),
+                    layoutContext = event.context
+                )
+            }
+            is ReportingEvent.PagerSummary -> {
+                analytics.recordEvent(
+                    event = InAppPagerSummaryEvent(event.data),
+                    layoutContext = event.context
+                )
+            }
+            is ReportingEvent.PageSwipe -> {
+                analytics.recordEvent(
+                    event = InAppPageSwipeEvent(event.data),
+                    layoutContext = event.context
+                )
+            }
+            is ReportingEvent.PageView -> {
+                analytics.recordEvent(
+                    event = InAppPageViewEvent(event.data),
+                    layoutContext = event.context
+                )
 
-    override fun onDismiss(
-        buttonId: String,
-        buttonDescription: String?,
-        cancel: Boolean,
-        displayTime: Long,
-        state: LayoutData
-    ) {
-        sendPageSummaryEvents(layoutData = state, displayTime)
-        tryDismiss { time ->
-            analytics.recordEvent(
-                InAppResolutionEvent.buttonTap(
-                    identifier = buttonId,
-                    description = buttonDescription ?: "",
-                    displayTime = time),
-                layoutContext = state
-            )
+                pagersViewTracker.onPageView(event.data, timer.time)
+            }
+            is ReportingEvent.PagerComplete -> {
+                if (completedPagers.contains(event.data.identifier)) {
+                    return
+                }
 
-            if (cancel) {
-                DisplayResult.CANCEL
-            } else {
-                DisplayResult.FINISHED
+                completedPagers.add(event.data.identifier)
+                analytics.recordEvent(
+                    event = InAppPagerCompletedEvent(event.data),
+                    layoutContext = event.context
+                )
             }
         }
     }
 
-    override fun onDismiss(displayTime: Long) {
-        sendPageSummaryEvents(null, displayTime)
+    override fun onDismiss(cancel: Boolean) {
         tryDismiss { time ->
             analytics.recordEvent(
                 InAppResolutionEvent.userDismissed(time),
                 layoutContext = null
             )
-            DisplayResult.FINISHED
+
+            if (cancel) DisplayResult.CANCEL else DisplayResult.FINISHED
         }
-    }
-
-    override fun onFormResult(thomasFormField: ThomasFormField.BaseForm, state: LayoutData) {
-        analytics.recordEvent(
-            event = InAppFormResultEvent(thomasFormField.toJsonValue()),
-            layoutContext = state
-        )
-    }
-
-    override fun onFormDisplay(formInfo: FormInfo, state: LayoutData) {
-        analytics.recordEvent(
-            event = InAppFormDisplayEvent(formInfo),
-            layoutContext = state
-        )
-    }
-
-    override fun onPagerGesture(
-        gestureId: String,
-        reportingMetadata: JsonValue?,
-        state: LayoutData
-    ) {
-        analytics.recordEvent(
-            event = InAppGestureEvent(gestureId, reportingMetadata),
-            layoutContext = state
-        )
-    }
-
-    override fun onPagerAutomatedAction(
-        actionId: String,
-        reportingMetadata: JsonValue?,
-        state: LayoutData
-    ) {
-        analytics.recordEvent(
-            event = InAppPageActionEvent(actionId, reportingMetadata),
-            layoutContext = state
-        )
     }
 
     override fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean) {
@@ -177,16 +154,6 @@ internal class LayoutListener (
             timer.start()
         } else {
             timer.stop()
-        }
-    }
-
-    override fun onTimedOut(state: LayoutData?) {
-        tryDismiss { time ->
-            analytics.recordEvent(
-                InAppResolutionEvent.timedOut(time),
-                state
-            )
-            DisplayResult.FINISHED
         }
     }
 
@@ -199,28 +166,15 @@ internal class LayoutListener (
      * @param data PagerData from the page view event.
      * @return the updated viewed count for the current page index.
      */
-    private fun updatePageViewCount(data: PagerData): Int {
-        val pageViews = pagerViewCounts
-            .getOrPut(data.identifier) { mutableMapOf() }
 
-        val count = pageViews.getOrElse(data.index) { 0 } + 1
-        pageViews[data.index] = count
 
-        return count
-    }
-
-    private fun sendPageSummaryEvents(layoutData: LayoutData?, displayTime: Long) {
-        pagerSummaryMap
-            .values
-            .forEach {
-                it.pageFinished(displayTime)
-                val data = it.pagerData ?: return@forEach
-
-                analytics.recordEvent(
-                    event = InAppPagerSummaryEvent(data, it.pageViewSummaries),
-                    layoutContext = layoutData
-                )
-            }
+    private fun sendPageSummaryEvents(layoutData: LayoutData) {
+        pagersViewTracker.generateSummaryEvents().forEach { data ->
+            analytics.recordEvent(
+                event = InAppPagerSummaryEvent(data),
+                layoutContext = layoutData
+            )
+        }
     }
 
     private fun tryDismiss(block: (Long) -> DisplayResult) {
@@ -231,29 +185,10 @@ internal class LayoutListener (
         }
 
         timer.stop()
+        pagersViewTracker.stopAll(timer.time)
+
         val result = block.invoke(timer.time)
         dismiss(result)
         onDismiss = null
-    }
-}
-
-private class PagerSummary {
-
-    var pagerData: PagerData? = null
-    val pageViewSummaries: MutableList<PageViewSummary> = mutableListOf()
-    var pageUpdateTime: Long = 0
-
-    fun updatePagerData(data: PagerData, updateTime: Long) {
-        pageFinished(updateTime)
-        pagerData = data
-        pageUpdateTime = updateTime
-    }
-
-    fun pageFinished(updateTime: Long) {
-        val data = pagerData ?: return
-
-        val duration = updateTime - pageUpdateTime
-        val summary = PageViewSummary(data.pageId, data.index, duration)
-        pageViewSummaries.add(summary)
     }
 }

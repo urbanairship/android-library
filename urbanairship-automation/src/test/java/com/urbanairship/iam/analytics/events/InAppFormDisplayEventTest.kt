@@ -1,6 +1,7 @@
 package com.urbanairship.iam.analytics.events
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.json.JsonValue
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
@@ -11,9 +12,11 @@ public class InAppFormDisplayEventTest {
     @Test
     public fun testEvent() {
         val event = InAppFormDisplayEvent(
-            identifier = "form id",
-            formType = "nps",
-            responseType = "user feedback"
+            data = ReportingEvent.FormDisplayData(
+                identifier = "form id",
+                formType = "nps",
+                responseType = "user feedback"
+            )
         )
 
         val expected = """

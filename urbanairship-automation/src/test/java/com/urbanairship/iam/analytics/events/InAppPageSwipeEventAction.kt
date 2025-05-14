@@ -1,6 +1,7 @@
 package com.urbanairship.iam.analytics.events
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.json.JsonValue
 import junit.framework.TestCase.assertEquals
@@ -12,8 +13,13 @@ public class InAppPageSwipeEventAction {
     @Test
     public fun testEvent() {
         val event = InAppPageSwipeEvent(
-            from = PagerData("pager identifier", 3, "from page identifier", 12, false),
-            to = PagerData("pager identifier", 4, "to page identifier", 12, false),
+            data = ReportingEvent.PageSwipeData(
+                identifier = "pager identifier",
+                toPageIndex = 4,
+                toPageIdentifier = "to page identifier",
+                fromPageIndex = 3,
+                fromPageIdentifier = "from page identifier"
+            ),
         )
 
         val expected = """

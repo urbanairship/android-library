@@ -2,11 +2,11 @@ package com.urbanairship.iam.adapter
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
+import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.event.ReportingEvent.FormResult
-import com.urbanairship.android.layout.reporting.ThomasFormField
-import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.automation.utils.ManualActiveTimer
 import com.urbanairship.iam.adapter.layout.LayoutListener
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
@@ -21,9 +21,9 @@ import com.urbanairship.iam.analytics.events.InAppPageSwipeEvent
 import com.urbanairship.iam.analytics.events.InAppPageViewEvent
 import com.urbanairship.iam.analytics.events.InAppPagerSummaryEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
-import com.urbanairship.iam.analytics.events.PageViewSummary
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.jsonMapOf
+import kotlin.math.max
+import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
@@ -41,7 +41,7 @@ public class LayoutAdapterListenerTest {
     private val clock = TestClock()
     private val timer = ManualActiveTimer(clock)
     private var displayResult: DisplayResult? = null
-    private val listener = LayoutListener(analytics, timer) { displayResult = it }
+    private val listener = LayoutListener(analytics, timer = timer) { displayResult = it }
     private val defaultLayoutData = LayoutData(null, null, "button")
 
     @Before
@@ -57,29 +57,25 @@ public class LayoutAdapterListenerTest {
         timer.start()
         assertTrue(timer.isStarted)
 
-        val form = FormResult(ThomasFormField.Form(
-            identifier = "form id",
-            responseType = null,
-            children = emptySet(),
-            fieldType = ThomasFormField.FieldType.just(emptySet())
-            ), FormInfo("form id", "", null, true),
+        val form = FormResult(
+            data = ReportingEvent.FormResultData(
+                ThomasFormField.Form(
+                    identifier = "form id",
+                    responseType = null,
+                    children = emptySet(),
+                    fieldType = ThomasFormField.FieldType.just(emptySet())
+                )
+            ),
+            context = defaultLayoutData,
             mapOf(),
             emptyList()
         )
 
-        listener.onFormResult(form.formData, defaultLayoutData)
+        listener.onReportingEvent(form)
 
         verifyEvents(listOf(
-            Pair(
-                InAppFormResultEvent(
-                jsonMapOf(
-                    "form id" to mapOf(
-                        "type" to "form",
-                        "children" to emptyMap<String, String>()
-                    )
-                ).toJsonValue()
-            ), defaultLayoutData)
-        ))
+            Pair(InAppFormResultEvent(form.data), defaultLayoutData))
+        )
 
         assertTrue(timer.isStarted)
         assertNull(displayResult)
@@ -90,11 +86,19 @@ public class LayoutAdapterListenerTest {
         clock.currentTimeMillis = 0
         timer.start()
 
-        val form = FormInfo("form id", "some type", "some response type", true)
-        listener.onFormDisplay(form, defaultLayoutData)
+        val event = ReportingEvent.FormDisplay(
+            data = ReportingEvent.FormDisplayData(
+                identifier = "form id",
+                formType = "some type",
+                responseType = "some response type"
+            ),
+            context = defaultLayoutData
+        )
+
+        listener.onReportingEvent(event)
 
         verifyEvents(listOf(
-            Pair(InAppFormDisplayEvent(form), defaultLayoutData)
+            Pair(InAppFormDisplayEvent(event.data), defaultLayoutData)
         ))
 
         assertTrue(timer.isStarted)
@@ -105,17 +109,21 @@ public class LayoutAdapterListenerTest {
     public fun testButtonTap() {
         timer.start()
 
-        listener.onButtonTap(
-            buttonId = "button id",
-            reportingMetadata = JsonValue.wrap("some metadata"),
-            state = defaultLayoutData
+        val data = ReportingEvent.ButtonTapData(
+            identifier = "button id",
+            reportingMetadata = JsonValue.wrap("some metadata")
+        )
+
+        listener.onReportingEvent(
+            event = ReportingEvent.ButtonTap(
+                data = data,
+                context = defaultLayoutData
+            )
         )
 
         verifyEvents(listOf(
-            Pair(
-                InAppButtonTapEvent("button id", JsonValue.wrap("some metadata")),
-                defaultLayoutData)
-        ))
+            Pair(InAppButtonTapEvent(data), defaultLayoutData))
+        )
 
         assertTrue(timer.isStarted)
         assertNull(displayResult)
@@ -128,7 +136,7 @@ public class LayoutAdapterListenerTest {
         clock.currentTimeMillis = 10
 
 
-        listener.onDismiss(5)
+        listener.onDismiss(false)
         verifyEvents(listOf(
             Pair(InAppResolutionEvent.userDismissed(5), null)
         ))
@@ -143,12 +151,16 @@ public class LayoutAdapterListenerTest {
         timer.start()
         clock.currentTimeMillis = 10
 
-        listener.onDismiss(
-            buttonId = "button id",
-            buttonDescription = "button description",
-            cancel = false,
-            displayTime = 10,
-            state = defaultLayoutData
+        listener.onReportingEvent(
+            event = ReportingEvent.Dismiss(
+                data = ReportingEvent.DismissData.ButtonTapped(
+                    identifier = "button id",
+                    description = "button description",
+                    cancel = false
+                ),
+                displayTime = 10.milliseconds,
+                context = defaultLayoutData
+            )
         )
 
         verifyEvents(listOf(
@@ -172,12 +184,16 @@ public class LayoutAdapterListenerTest {
         timer.start()
         clock.currentTimeMillis = 10
 
-        listener.onDismiss(
-            buttonId = "button id",
-            buttonDescription = "button description",
-            cancel = true,
-            displayTime = 5,
-            state = defaultLayoutData
+        listener.onReportingEvent(
+            event = ReportingEvent.Dismiss(
+                data = ReportingEvent.DismissData.ButtonTapped(
+                    identifier = "button id",
+                    description = "button description",
+                    cancel = true
+                ),
+                displayTime = 5.milliseconds,
+                context = defaultLayoutData
+            )
         )
 
         verifyEvents(listOf(
@@ -200,14 +216,25 @@ public class LayoutAdapterListenerTest {
         timer.start()
 
         val pageInfo = makePagerInfo("foo", 0)
-        listener.onPageView(pageInfo, defaultLayoutData, 10)
+        val data = ReportingEvent.PageViewData(
+            identifier = pageInfo.identifier,
+            pageIdentifier = pageInfo.pageId,
+            pageIndex = pageInfo.index,
+            pageViewCount = 1,
+            pageCount = pageInfo.count,
+            completed = pageInfo.isCompleted
+        )
+
+        listener.onReportingEvent(
+            event = ReportingEvent.PageView(
+                data = data,
+                context = defaultLayoutData
+            )
+        )
 
         verifyEvents(listOf(
-            Pair(
-                InAppPageViewEvent(pageInfo, 1),
-                defaultLayoutData
-            )
-        ))
+            Pair(InAppPageViewEvent(data), defaultLayoutData))
+        )
 
         assertTrue(timer.isStarted)
         assertNull(displayResult)
@@ -217,17 +244,21 @@ public class LayoutAdapterListenerTest {
     public fun testPageGesture() {
         timer.start()
 
-        listener.onPagerGesture(
-            gestureId = "gesture id",
-            reportingMetadata = JsonValue.wrap("some metadata"),
-            state = defaultLayoutData)
+        val data = ReportingEvent.GestureData(
+            identifier = "gesture id",
+            reportingMetadata = JsonValue.wrap("some metadata")
+        )
+
+        listener.onReportingEvent(
+            event = ReportingEvent.Gesture(
+                data = data,
+                context = defaultLayoutData
+            )
+        )
 
         verifyEvents(listOf(
-            Pair(
-                InAppGestureEvent("gesture id", JsonValue.wrap("some metadata")),
-                defaultLayoutData
-            )
-        ))
+            Pair(InAppGestureEvent(data), defaultLayoutData))
+        )
 
         assertTrue(timer.isStarted)
         assertNull(displayResult)
@@ -236,18 +267,21 @@ public class LayoutAdapterListenerTest {
     @Test
     public fun testPageAction() {
         timer.start()
-        listener.onPagerAutomatedAction(
-            actionId = "action id",
-            reportingMetadata = JsonValue.wrap("some metadata"),
-            state = defaultLayoutData
+
+        val data = ReportingEvent.PageActionData(
+            identifier = "action id", metadata = JsonValue.wrap("some metadata")
+        )
+
+        listener.onReportingEvent(
+            event = ReportingEvent.PageAction(
+                data = data,
+                context = defaultLayoutData
+            )
         )
 
         verifyEvents(listOf(
-            Pair(
-                InAppPageActionEvent("action id", JsonValue.wrap("some metadata")),
-                defaultLayoutData
-            )
-        ))
+            Pair(InAppPageActionEvent(data), defaultLayoutData))
+        )
 
         assertTrue(timer.isStarted)
         assertNull(displayResult)
@@ -257,20 +291,28 @@ public class LayoutAdapterListenerTest {
     public fun testPageSwipe() {
         timer.start()
         val pager = makePagerInfo("foo", 0)
+        val data = ReportingEvent.PageSwipeData(
+            identifier = pager.identifier,
+            toPageIndex = 1,
+            toPageIdentifier = "page-1",
+            fromPageIndex = 0,
+            fromPageIdentifier = "page-0"
+        )
 
-        listener.onPageSwipe(pager, 1, "page-1", 0, "page-0", defaultLayoutData)
+        listener.onReportingEvent(
+            event = ReportingEvent.PageSwipe(
+                data = data,
+                context = defaultLayoutData
+            )
+        )
 
         verifyEvents(listOf(
-            Pair(
-                InAppPageSwipeEvent(makePagerInfo("foo", 0), makePagerInfo("foo", 1)),
-                defaultLayoutData
-            )
-        ))
+            Pair(InAppPageSwipeEvent(data), defaultLayoutData))
+        )
 
         assertTrue(timer.isStarted)
         assertNull(displayResult)
     }
-
 
     @Test
     public fun testDismissPagerSummary() {
@@ -279,27 +321,86 @@ public class LayoutAdapterListenerTest {
         val page0 = makePagerInfo("foo", 0)
         val page1 = makePagerInfo("foo", 1)
 
-        listener.onPageView(page0, defaultLayoutData, 5)
-        listener.onPageView(page1, defaultLayoutData, 10)
-        listener.onPageView(page0, defaultLayoutData, 20)
-        listener.onDismiss(40)
+        val actions = listOf(
+            ReportingEvent.PageView(
+                data = ReportingEvent.PageViewData(
+                    identifier = page0.identifier,
+                    pageIdentifier = page0.pageId,
+                    pageIndex = page0.index,
+                    pageViewCount = 5,
+                    pageCount = page0.count,
+                    completed = page0.isCompleted
+                ),
+                context = defaultLayoutData
+            ),
+            ReportingEvent.PageView(
+                data = ReportingEvent.PageViewData(
+                    identifier = page1.identifier,
+                    pageIdentifier = page1.pageId,
+                    pageIndex = page1.index,
+                    pageViewCount = 10,
+                    pageCount = page1.count,
+                    completed = page1.isCompleted
+                ),
+                context = defaultLayoutData
+            ),
+            ReportingEvent.PageView(
+                data = ReportingEvent.PageViewData(
+                    identifier = page0.identifier,
+                    pageIdentifier = page0.pageId,
+                    pageIndex = page0.index,
+                    pageViewCount = 20,
+                    pageCount = page0.count,
+                    completed = page0.isCompleted
+                ),
+                context = defaultLayoutData
+            )
+        )
+
+        actions.forEachIndexed { index, event ->
+            listener.onReportingEvent(event)
+            clock.currentTimeMillis += 10 * max(index, 1)
+        }
+
+        val dismiss = ReportingEvent.Dismiss(
+            data = ReportingEvent.DismissData.UserDismissed,
+            displayTime = 40.milliseconds,
+            context = defaultLayoutData
+        )
+        listener.onReportingEvent(dismiss)
 
         val expected = listOf(
-            Pair(InAppPageViewEvent(page0, 1), defaultLayoutData),
-            Pair(InAppPageViewEvent(page1, 1), defaultLayoutData),
-            Pair(InAppPageViewEvent(page0, 2), defaultLayoutData),
+            Pair(InAppPageViewEvent(actions[0].data), defaultLayoutData),
+            Pair(InAppPageViewEvent(actions[1].data), defaultLayoutData),
+            Pair(InAppPageViewEvent(actions[2].data), defaultLayoutData),
+            Pair(InAppResolutionEvent.userDismissed(30), defaultLayoutData),
             Pair(
                 InAppPagerSummaryEvent(
-                    pagerData = page0,
-                    viewedPages = listOf(
-                        PageViewSummary("page-0", 0, 5),
-                        PageViewSummary("page-1", 1, 10),
-                        PageViewSummary("page-0", 0, 20),
+                    eventData = ReportingEvent.PageSummaryData(
+                        identifier = page0.identifier,
+                        pageCount = page0.count,
+                        completed = page0.isCompleted,
+                        viewedPages = listOf(
+                            ReportingEvent.PageSummaryData.PageView(
+                                identifier = page0.pageId,
+                                index = 0,
+                                displayTime = 5.milliseconds
+                            ),
+                            ReportingEvent.PageSummaryData.PageView(
+                                identifier = page1.pageId,
+                                index = 1,
+                                displayTime = 10.milliseconds
+                            ),
+                            ReportingEvent.PageSummaryData.PageView(
+                                identifier = page0.pageId,
+                                index = 0,
+                                displayTime = 20.milliseconds
+                            )
+                        )
                     )
                 ),
-                null
-            ),
-            Pair(InAppResolutionEvent.userDismissed(30), null)
+                defaultLayoutData
+            )
         )
         verifyEvents(expected)
 
@@ -351,8 +452,12 @@ public class LayoutAdapterListenerTest {
         timer.start()
         clock.currentTimeMillis = 10
 
-        listener.onTimedOut(
-            state = defaultLayoutData
+        listener.onReportingEvent(
+            event = ReportingEvent.Dismiss(
+                data = ReportingEvent.DismissData.TimedOut,
+                displayTime = 10.milliseconds,
+                context = defaultLayoutData
+            )
         )
 
         verifyEvents(listOf(

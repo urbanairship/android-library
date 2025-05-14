@@ -36,6 +36,7 @@ import com.urbanairship.android.layout.util.pagerGestures
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -310,38 +311,45 @@ internal class PagerModel(
         val previousPage = pagerState.previousPageId ?: return
 
         val pagerContext = pagerState.reportingContext()
-        report(
-            ReportingEvent.PageSwipe(
-                pagerContext,
-                pagerState.lastPageIndex,
-                previousPage,
-                pagerState.pageIndex,
-                currentPage
-            ), layoutState.reportingContext(pagerContext = pagerContext)
+        val event = ReportingEvent.PageSwipe(
+            data = ReportingEvent.PageSwipeData(
+                identifier = pagerContext.identifier,
+                fromPageIndex = pagerState.lastPageIndex,
+                fromPageIdentifier = previousPage,
+                toPageIndex = pagerState.pageIndex,
+                toPageIdentifier = currentPage
+            ),
+            context = layoutState.reportingContext(pagerContext = pagerContext)
         )
+
+        report(event)
     }
 
     private fun reportGesture(gesture: PagerGesture, pagerState: State.Pager) {
         val pagerContext = pagerState.reportingContext()
-        report(
-            ReportingEvent.PageGesture(
-                gesture.identifier,
-                gesture.reportingMetadata,
-                pagerContext
-            ), layoutState.reportingContext(pagerContext = pagerContext)
+
+        val event = ReportingEvent.Gesture(
+            data = ReportingEvent.GestureData(
+                identifier = gesture.identifier,
+                reportingMetadata = gesture.reportingMetadata
+            ),
+            context = layoutState.reportingContext(pagerContext = pagerContext)
         )
+
+        report(event)
     }
 
     private fun reportAutomatedAction(action: AutomatedAction, pagerState: State.Pager) {
         val pagerContext = pagerState.reportingContext()
-        report(
-            ReportingEvent.PageAction(
-                action.identifier,
-                action.reportingMetadata,
-                pagerContext
+        val event = ReportingEvent.PageAction(
+            data = ReportingEvent.PageActionData(
+                identifier = action.identifier,
+                metadata = action.reportingMetadata
             ),
-            layoutState.reportingContext(pagerContext = pagerContext)
+            context = layoutState.reportingContext(pagerContext = pagerContext)
         )
+
+        report(event)
     }
 
     private fun handleAccessibilityAction(action: AccessibilityAction, pagerState: State.Pager) {
@@ -493,9 +501,13 @@ internal class PagerModel(
         clearAutomatedActions()
 
         report(
-            ReportingEvent.DismissFromOutside(environment.displayTimer.time),
-            layoutState.reportingContext()
+            event = ReportingEvent.Dismiss(
+                data = ReportingEvent.DismissData.UserDismissed,
+                displayTime = environment.displayTimer.time.milliseconds,
+                context = layoutState.reportingContext()
+            )
         )
+
         broadcast(LayoutEvent.Finish)
     }
 

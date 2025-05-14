@@ -221,8 +221,8 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
     protected val layoutState = environment.layoutState
 
-    protected fun report(event: ReportingEvent, state: LayoutData) =
-        environment.reporter.report(event, state)
+    protected fun report(event: ReportingEvent) =
+        environment.reporter.report(event)
 
     protected fun runActions(
         actions: Map<String, JsonValue>?,
