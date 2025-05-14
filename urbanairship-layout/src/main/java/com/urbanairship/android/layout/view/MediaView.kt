@@ -43,6 +43,7 @@ import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
+import java.nio.file.Files.find
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
@@ -91,6 +92,7 @@ internal class MediaView(
         when (model.viewInfo.mediaType) {
             MediaType.IMAGE -> configureImageView(model)
             MediaType.VIDEO,
+            MediaType.VIMEO,
             MediaType.YOUTUBE -> {
                 model.pagerState?.update { state ->
                     state.copyWithMediaPaused(true)
@@ -104,22 +106,26 @@ internal class MediaView(
             // Use javascript to pause/resume the videos instead of webView.onPause()/onResume()
             // because the WebView triggers an unwanted visibilitychange event.
             override fun onPause() {
-                if (model.viewInfo.mediaType == MediaType.VIDEO) {
-                    webView?.evaluateJavascript("videoElement.pause();", null)
-                } else if (model.viewInfo.mediaType == MediaType.YOUTUBE) {
-                    webView?.evaluateJavascript("player.pauseVideo();", null)
+                val script = when (model.viewInfo.mediaType) {
+                    MediaType.VIDEO -> "videoElement.pause();"
+                    MediaType.YOUTUBE -> "player.pauseVideo();"
+                    MediaType.VIMEO -> "vimeoPlayer.pause();"
+                    else -> null
                 }
+                script?.let { webView?.evaluateJavascript(it, null) }
             }
 
             // Use javascript to pause/resume the videos instead of webView.onPause()/onResume()
             // because the WebView triggers an unwanted visibilitychange event.
             override fun onResume() {
                 if (model.viewInfo.video?.autoplay == true) {
-                    if (model.viewInfo.mediaType == MediaType.VIDEO) {
-                        webView?.evaluateJavascript("videoElement.play();", null)
-                    } else if (model.viewInfo.mediaType == MediaType.YOUTUBE) {
-                        webView?.evaluateJavascript("player.playVideo();", null)
+                    val script = when (model.viewInfo.mediaType) {
+                        MediaType.VIDEO -> "videoElement.play();"
+                        MediaType.YOUTUBE -> "player.playVideo();"
+                        MediaType.VIMEO -> "vimeoPlayer.play();"
+                        else -> null
                     }
+                    script?.let { webView?.evaluateJavascript(it, null) }
                 }
             }
 
@@ -267,7 +273,8 @@ internal class MediaView(
                     }
                 }
             }
-            MediaType.YOUTUBE -> FixedAspectRatioFrameLayout(context).apply {
+            MediaType.YOUTUBE,
+            MediaType.VIMEO -> FixedAspectRatioFrameLayout(context).apply {
                 layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
                     gravity = Gravity.CENTER
                 }
@@ -370,6 +377,17 @@ internal class MediaView(
                         } ?: model.viewInfo.url.let {
                             weakWebView.loadUrl(it)
                         }
+                    }
+                    MediaType.VIMEO -> {
+                        val video = model.viewInfo.video ?: Video.defaultVideo()
+                        weakWebView.loadData(
+                            String.format(
+                                VIMEO_HTML_FORMAT,
+                                model.viewInfo.url,
+                                // Sets the onPlayerReady function to autoplay the video
+                                if (video.autoplay) VIMEO_AUTO_PLAYING_JS_CODE else ""
+                            ), "text/html", "UTF-8"
+                        )
                     }
                 }
             }
@@ -593,5 +611,42 @@ internal class MediaView(
         """.trimIndent()
 
         private val YOUTUBE_ID_RE = Regex("""embed/([a-zA-Z0-9_-]+).*""")
+
+        @Language("HTML")
+        private val VIMEO_HTML_FORMAT = """
+            <body style="margin:0">
+
+              <iframe id="vimeoIframe" src="%s&playsinline=1"
+                width="100%%" height="100%%" frameborder="0"
+                webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+              <script src="https://player.vimeo.com/api/player.js"></script>
+              <script>
+                const vimeoIframe = document.querySelector('%%23vimeoIframe');
+                const vimeoPlayer = new Vimeo.Player(vimeoIframe);
+
+                vimeoPlayer.ready().then(function() {
+                    VideoListenerInterface.onVideoReady();
+
+                    // Autoplaying code placeholder
+                    %s
+                });
+              </script>
+            </body>
+        """.trimIndent()
+
+        @Language("JS")
+        private val VIMEO_AUTO_PLAYING_JS_CODE = """
+            vimeoPlayer.play();
+
+            document.addEventListener("visibilitychange", () => {
+              if (document.visibilityState === "visible") {
+                vimeoPlayer.setCurrentTime(0);
+                vimeoPlayer.play();
+              } else {
+                vimeoPlayer.pause();
+              }
+            });
+        """.trimIndent()
     }
 }

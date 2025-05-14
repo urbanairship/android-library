@@ -290,6 +290,7 @@ internal fun InAppMessage.getUrlInfos(): List<UrlInfo> {
         val content = media ?: return emptyList()
         return when(content.type) {
             InAppMessageMediaInfo.MediaType.YOUTUBE -> listOf(UrlInfo(UrlInfo.UrlType.VIDEO, content.url))
+            InAppMessageMediaInfo.MediaType.VIMEO -> listOf(UrlInfo(UrlInfo.UrlType.VIDEO, content.url))
             InAppMessageMediaInfo.MediaType.VIDEO -> listOf(UrlInfo(UrlInfo.UrlType.VIDEO, content.url))
             InAppMessageMediaInfo.MediaType.IMAGE -> listOf(UrlInfo(UrlInfo.UrlType.IMAGE, content.url))
         }

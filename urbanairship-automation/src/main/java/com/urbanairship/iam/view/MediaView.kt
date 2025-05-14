@@ -80,6 +80,7 @@ internal class MediaView @JvmOverloads constructor(
 
         when (mediaInfo.type) {
             InAppMessageMediaInfo.MediaType.YOUTUBE,
+            InAppMessageMediaInfo.MediaType.VIMEO,
             InAppMessageMediaInfo.MediaType.VIDEO -> loadWebView(mediaInfo)
             InAppMessageMediaInfo.MediaType.IMAGE -> {
                 val imageView = ImageView(context)

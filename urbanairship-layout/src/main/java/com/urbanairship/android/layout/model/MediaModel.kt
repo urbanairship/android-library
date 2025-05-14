@@ -28,8 +28,10 @@ internal class MediaModel(
 
     val mediaViewId: Int = View.generateViewId()
 
-    interface Listener : BaseModel.Listener {
+    private val isPlayableMedia: Boolean =
+        viewInfo.mediaType.let {it == MediaType.VIDEO || it == MediaType.YOUTUBE || it == MediaType.VIMEO }
 
+    interface Listener : BaseModel.Listener {
         fun onPause()
         fun onResume()
     }
@@ -50,7 +52,7 @@ internal class MediaModel(
         }
 
         modelScope.launch {
-            if (viewInfo.mediaType == MediaType.VIDEO || viewInfo.mediaType == MediaType.YOUTUBE) {
+            if (isPlayableMedia) {
                 pagerState?.changes?.distinctUntilChanged { old, new -> old.isStoryPaused == new.isStoryPaused }
                     ?.collect {
                         if (it.isStoryPaused) {
