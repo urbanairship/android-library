@@ -1,7 +1,7 @@
 # Android 19.x ChangeLog
 
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
-[Other Releases](https://github.com/urbanairship/android-library/releases)
+[All Releases](https://github.com/urbanairship/android-library/releases)
 
 ## Version 19.6.2 April 29, 2025
 Patch release that fixes a crash in `PushManager.onTokenChanged`, introduced in release 19.6.0.
