@@ -70,6 +70,7 @@ public class UrlInfo {
                         break;
                     case VIDEO:
                     case YOUTUBE:
+                    case VIMEO:
                         urlInfos.add(new UrlInfo(UrlType.VIDEO, mediaInfo.getUrl()));
                         break;
                 }

@@ -11,7 +11,8 @@ import com.urbanairship.json.JsonException;
 public enum MediaType {
     IMAGE("image"),
     VIDEO("video"),
-    YOUTUBE("youtube");
+    YOUTUBE("youtube"),
+    VIMEO("vimeo");
 
     @NonNull
     private final String value;

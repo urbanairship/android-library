@@ -25,6 +25,11 @@ public class InAppMessageMediaInfo(
         YOUTUBE("youtube"),
 
         /**
+         * Vimeo media type.
+         */
+        VIMEO("vimeo"),
+
+        /**
          * Video media type.
          */
         VIDEO("video"),
