@@ -35,12 +35,15 @@ public data class AirshipDeviceAudienceResult(
             )
         }
 
-        internal fun reduced(results: List<AirshipDeviceAudienceResult>): AirshipDeviceAudienceResult {
+        internal fun reduced(
+            results: List<AirshipDeviceAudienceResult>,
+            reducer: (Boolean, Boolean) -> Boolean
+        ): AirshipDeviceAudienceResult {
             var isMatch = true
             var metadata: MutableList<JsonValue>? = null
 
             results.forEach { item ->
-                isMatch = isMatch && item.isMatch
+                isMatch = reducer(isMatch, item.isMatch)
                 item.reportingMetadata?.let { partial ->
                     if (metadata == null) {
                         metadata = mutableListOf()

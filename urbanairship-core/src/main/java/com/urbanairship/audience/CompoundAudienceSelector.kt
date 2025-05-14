@@ -151,7 +151,9 @@ public sealed class CompoundAudienceSelector: JsonSerializable {
                     }
                 }
 
-                return AirshipDeviceAudienceResult.reduced(results)
+                return AirshipDeviceAudienceResult.reduced(results) { first, second ->
+                    first && second
+                }
             }
             is Or -> {
                 if (selectors.isEmpty()) {
@@ -167,7 +169,9 @@ public sealed class CompoundAudienceSelector: JsonSerializable {
                     }
                 }
 
-                return AirshipDeviceAudienceResult.reduced(results)
+                return AirshipDeviceAudienceResult.reduced(results) { first, second ->
+                    first || second
+                }
             }
         }
     }

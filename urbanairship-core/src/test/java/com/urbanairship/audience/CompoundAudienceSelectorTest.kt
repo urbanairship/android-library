@@ -104,6 +104,23 @@ public class CompoundAudienceSelectorTest {
     }
 
     @Test
+    public fun testOrMissFirstSelector(): TestResult = runTest {
+        val requiresAnalytics = AudienceSelector.newBuilder().setRequiresAnalytics(true).build()
+        val doesNotRequireAnalytics = AudienceSelector.newBuilder().setRequiresAnalytics(false).build()
+
+        every { infoProvider.analyticsEnabled } returns false
+
+        val result = CompoundAudienceSelector.Or(
+            listOf(
+                CompoundAudienceSelector.Atomic(requiresAnalytics),
+                CompoundAudienceSelector.Atomic(doesNotRequireAnalytics)
+            )
+        ).evaluate(0, infoProvider, hashChecker)
+
+        assertTrue(result.isMatch)
+    }
+
+    @Test
     public fun testEmptyOr(): TestResult = runTest {
         val selector = CompoundAudienceSelector.Or(emptyList())
         val result = selector.evaluate(0, infoProvider, hashChecker)
