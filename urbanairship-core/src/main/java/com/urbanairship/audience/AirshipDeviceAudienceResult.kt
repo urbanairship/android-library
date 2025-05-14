@@ -39,11 +39,11 @@ public data class AirshipDeviceAudienceResult(
             results: List<AirshipDeviceAudienceResult>,
             reducer: (Boolean, Boolean) -> Boolean
         ): AirshipDeviceAudienceResult {
-            var isMatch = true
+            var isMatch: Boolean? = null
             var metadata: MutableList<JsonValue>? = null
 
             results.forEach { item ->
-                isMatch = reducer(isMatch, item.isMatch)
+                isMatch = isMatch?.let { reducer(it, item.isMatch) } ?: item.isMatch
                 item.reportingMetadata?.let { partial ->
                     if (metadata == null) {
                         metadata = mutableListOf()
@@ -52,7 +52,7 @@ public data class AirshipDeviceAudienceResult(
                 }
             }
 
-            return AirshipDeviceAudienceResult(isMatch, metadata)
+            return AirshipDeviceAudienceResult(isMatch ?: true, metadata)
         }
     }
 

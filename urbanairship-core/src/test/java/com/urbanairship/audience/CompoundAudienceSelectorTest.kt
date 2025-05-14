@@ -121,6 +121,21 @@ public class CompoundAudienceSelectorTest {
     }
 
     @Test
+    public fun testOrMiss(): TestResult = runTest {
+        val requiresAnalytics = AudienceSelector.newBuilder().setRequiresAnalytics(true).build()
+
+        every { infoProvider.analyticsEnabled } returns false
+
+        val result = CompoundAudienceSelector.Or(
+            listOf(
+                CompoundAudienceSelector.Atomic(requiresAnalytics),
+            )
+        ).evaluate(0, infoProvider, hashChecker)
+
+        assertFalse(result.isMatch)
+    }
+
+    @Test
     public fun testEmptyOr(): TestResult = runTest {
         val selector = CompoundAudienceSelector.Or(emptyList())
         val result = selector.evaluate(0, infoProvider, hashChecker)
