@@ -14,4 +14,3 @@ public interface Timer {
     public fun start()
     public fun stop()
 }
-
