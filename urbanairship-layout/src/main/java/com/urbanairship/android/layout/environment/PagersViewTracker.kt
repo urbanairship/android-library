@@ -34,6 +34,10 @@ internal class PagersViewTracker {
         lastPagerPageEvent.update { it.toMutableMap().apply { put(pageEvent.identifier, pageEvent) } }
     }
 
+    fun stop(pagerId: String, currentDisplayTime: Duration) {
+        trackers.value[pagerId]?.stop(currentDisplayTime)
+    }
+
     fun stopAll(currentDisplayTime: Duration) {
         trackers.value.values.forEach { it.stop(currentDisplayTime) }
     }
