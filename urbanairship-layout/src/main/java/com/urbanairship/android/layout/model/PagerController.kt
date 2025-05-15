@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.PagerControllerInfo
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.reporting.PagerData
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.getAndUpdate
@@ -64,6 +65,11 @@ internal class PagerController(
         )
 
         report(event)
+
+        environment.pagerTracker.onPageView(
+            pageEvent = event.data,
+            currentDisplayTime = environment.displayTimer.time.milliseconds
+        )
 
         if (pagerContext.isCompleted) {
             reportCompletion(pagerContext)

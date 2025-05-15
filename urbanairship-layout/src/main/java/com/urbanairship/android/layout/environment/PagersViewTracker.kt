@@ -1,5 +1,6 @@
-package com.urbanairship.iam.adapter.layout
+package com.urbanairship.android.layout.environment
 
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.event.ReportingEvent
 import kotlin.time.Duration
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -64,11 +65,15 @@ internal class PagersViewTracker {
             val startTime = currentPageViewStartedTime ?: return
             val page = currentPage ?: return
 
+            if (currentDisplayTime < startTime) {
+                UALog.w { "Current display time is less than start time." }
+            }
+
             viewHistory.add(
                 ReportingEvent.PageSummaryData.PageView(
                     identifier = page.identifier,
                     index = page.index,
-                    displayTime = (currentDisplayTime - startTime)
+                    displayTime = (currentDisplayTime - startTime).absoluteValue
                 )
             )
 

@@ -45,8 +45,6 @@ internal class LayoutListener (
                                 displayTime = event.displayTime
                             ), layoutContext = event.context
                         )
-
-                        if (source.cancel) DisplayResult.CANCEL else DisplayResult.FINISHED
                     }
 
                     ReportingEvent.DismissData.TimedOut -> {
@@ -55,7 +53,6 @@ internal class LayoutListener (
                                 displayTime = event.displayTime
                             ), layoutContext = event.context
                         )
-                        DisplayResult.FINISHED
                     }
 
                     ReportingEvent.DismissData.UserDismissed -> {
@@ -64,7 +61,6 @@ internal class LayoutListener (
                                 displayTime = event.displayTime
                             ), layoutContext = event.context
                         )
-                        DisplayResult.FINISHED
                     }
                 }
             }
