@@ -5,49 +5,41 @@ import android.content.Context
 import android.view.View
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
+import android.widget.HorizontalScrollView
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
-import androidx.core.widget.NestedScrollView
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
-import com.urbanairship.android.layout.model.ScrollLayoutModel
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
-import com.urbanairship.android.layout.property.Direction
+import com.urbanairship.android.layout.model.HorizontalScrollLayoutModel
 import com.urbanairship.android.layout.util.LayoutUtils
 
-internal class ScrollLayoutView(
+internal class HorizontalScrollLayoutView(
     context: Context,
-    model: ScrollLayoutModel,
+    model: HorizontalScrollLayoutModel,
     viewEnvironment: ViewEnvironment
-) : NestedScrollView(context), BaseView {
+) : HorizontalScrollView(context), BaseView {
 
     init {
         isFillViewport = false
         clipToOutline = true
 
         val contentView = model.view.createView(context, viewEnvironment, null).apply {
-            layoutParams = if (model.viewInfo.direction == Direction.VERTICAL) {
-                LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-            } else {
-                LayoutParams(WRAP_CONTENT, MATCH_PARENT)
-            }
+            LayoutParams(WRAP_CONTENT, MATCH_PARENT)
         }
         addView(contentView)
 
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
-                this@ScrollLayoutView.isVisible = visible
+                this@HorizontalScrollLayoutView.isVisible = visible
             }
             override fun setEnabled(enabled: Boolean) {
-                this@ScrollLayoutView.isEnabled = enabled
+                this@HorizontalScrollLayoutView.isEnabled = enabled
             }
 
             override fun setBackground(old: Background?, new: Background) {
-                LayoutUtils.updateBackground(this@ScrollLayoutView, old, new)
+                LayoutUtils.updateBackground(this@HorizontalScrollLayoutView, old, new)
             }
         }
 

@@ -47,6 +47,7 @@ import com.urbanairship.android.layout.model.ContainerLayoutModel
 import com.urbanairship.android.layout.model.CustomViewModel
 import com.urbanairship.android.layout.model.EmptyModel
 import com.urbanairship.android.layout.model.FormController
+import com.urbanairship.android.layout.model.HorizontalScrollLayoutModel
 import com.urbanairship.android.layout.model.ImageButtonModel
 import com.urbanairship.android.layout.model.LabelButtonModel
 import com.urbanairship.android.layout.model.LabelModel
@@ -60,12 +61,13 @@ import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.model.RadioInputController
 import com.urbanairship.android.layout.model.RadioInputModel
 import com.urbanairship.android.layout.model.ScoreModel
-import com.urbanairship.android.layout.model.ScrollLayoutModel
 import com.urbanairship.android.layout.model.StateController
 import com.urbanairship.android.layout.model.StoryIndicatorModel
 import com.urbanairship.android.layout.model.TextInputModel
 import com.urbanairship.android.layout.model.ToggleModel
+import com.urbanairship.android.layout.model.VerticalScrollLayoutModel
 import com.urbanairship.android.layout.model.WebViewModel
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.ViewType
 import com.urbanairship.android.layout.view.CustomView
 
@@ -382,12 +384,22 @@ internal class ThomasModelFactory : ModelFactory {
                 environment = environment,
                 properties = properties
             )
-            is ScrollLayoutInfo -> ScrollLayoutModel(
-                viewInfo = info,
-                view = children.first().first,
-                environment = environment,
-                properties = properties
-            )
+            is ScrollLayoutInfo -> {
+                when(info.direction) {
+                    Direction.VERTICAL -> VerticalScrollLayoutModel(
+                        viewInfo = info,
+                        view = children.first().first,
+                        environment = environment,
+                        properties = properties
+                    )
+                    Direction.HORIZONTAL -> HorizontalScrollLayoutModel(
+                        viewInfo = info,
+                        view = children.first().first,
+                        environment = environment,
+                        properties = properties
+                    )
+                }
+            }
             is ButtonLayoutInfo -> ButtonLayoutModel(
                 viewInfo = info,
                 view = children.first().first,

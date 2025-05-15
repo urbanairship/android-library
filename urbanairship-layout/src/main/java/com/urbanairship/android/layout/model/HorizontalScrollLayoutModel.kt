@@ -5,14 +5,14 @@ import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ScrollLayoutInfo
-import com.urbanairship.android.layout.view.ScrollLayoutView
+import com.urbanairship.android.layout.view.HorizontalScrollLayoutView
 
-internal class ScrollLayoutModel(
+internal class HorizontalScrollLayoutModel(
     viewInfo: ScrollLayoutInfo,
     val view: AnyModel,
     environment: ModelEnvironment,
     properties: ModelProperties
-) : BaseModel<ScrollLayoutView, ScrollLayoutInfo, BaseModel.Listener>(
+) : BaseModel<HorizontalScrollLayoutView, ScrollLayoutInfo, BaseModel.Listener>(
     viewInfo = viewInfo,
     environment = environment,
     properties = properties
@@ -22,7 +22,7 @@ internal class ScrollLayoutModel(
         context: Context,
         viewEnvironment: ViewEnvironment,
         itemProperties: ItemProperties?
-    ) = ScrollLayoutView(context, this, viewEnvironment).apply {
+    ) = HorizontalScrollLayoutView(context, this, viewEnvironment).apply {
         id = viewId
     }
 }
