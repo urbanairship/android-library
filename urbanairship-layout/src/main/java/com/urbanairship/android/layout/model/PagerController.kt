@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.PagerControllerInfo
 import com.urbanairship.android.layout.property.PagerControllerBranching
+import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -42,7 +43,11 @@ internal class PagerController(
 
     init {
         modelScope.launch {
-            pagerState.changes.map { it.reportingContext() }.distinctUntilChanged()
+            pagerState.changes.map {
+                val history = environment.pagerTracker.viewedPages(it.identifier) ?: emptyList()
+                it.reportingContext(history)
+            }
+                .distinctUntilChanged()
                 .collect(::reportPageView)
         }
 

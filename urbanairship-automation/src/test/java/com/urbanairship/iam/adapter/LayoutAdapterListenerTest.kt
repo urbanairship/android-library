@@ -338,7 +338,7 @@ public class LayoutAdapterListenerTest {
     }
 
     private fun makePagerInfo(identifier: String, page: Int): PagerData {
-        return PagerData(identifier, page, "page-$page", 100, false)
+        return PagerData(identifier, page, "page-$page", 100, emptyList(),false)
     }
 
     private fun verifyEvents(expected: List<Pair<InAppEvent, LayoutData?>>) {

@@ -34,7 +34,8 @@ internal class LayoutState(
     val layout: SharedState<State.Layout>,
     val thomasState: StateFlow<ThomasState>,
     val thomasForm: ThomasForm?,
-    val parentForm: ThomasForm?
+    val parentForm: ThomasForm?,
+    val pagerTracker: PagersViewTracker?
 ) {
     val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
     private var runningJobs = mutableMapOf<String, Job>()
@@ -43,12 +44,20 @@ internal class LayoutState(
         formContext: FormInfo? = null,
         pagerContext: PagerData? = null,
         buttonId: String? = null
-    ): LayoutData =
-        LayoutData(
+    ): LayoutData {
+
+        val reportPagerContext = (pagerContext ?: pager?.changes?.value?.reportingContext(emptyList()))?.let {
+            val history = pagerTracker?.viewedPages(it.identifier) ?: return@let it
+            it.copy(history = history)
+        }
+
+        return LayoutData(
             formContext ?: thomasForm?.formUpdates?.value?.reportingContext(),
-            pagerContext ?: pager?.changes?.value?.reportingContext(),
+            reportPagerContext,
             buttonId
         )
+    }
+
 
     companion object {
         @JvmField
@@ -56,7 +65,8 @@ internal class LayoutState(
             layout = SharedState(State.Layout.DEFAULT),
             thomasState = makeThomasState(null, null),
             thomasForm = null,
-            parentForm = null
+            parentForm = null,
+            pagerTracker = null
         )
     }
 
@@ -220,13 +230,14 @@ internal sealed class State {
         fun copyWithTouchExplorationState(isTouchExplorationEnabled: Boolean) =
             copy(isTouchExplorationEnabled = isTouchExplorationEnabled)
 
-        fun reportingContext(): PagerData =
+        fun reportingContext(history: List<ReportingEvent.PageSummaryData.PageView>): PagerData =
             PagerData(
-                identifier,
-                pageIndex,
-                pageIds.getOrElse(pageIndex) { "NULL!" },
-                if (branching == null) { pageIds.size } else { -1 },
-                completed)
+                identifier = identifier,
+                index = pageIndex,
+                pageId = pageIds.getOrElse(pageIndex) { "NULL!" },
+                count = if (branching == null) { pageIds.size } else { -1 },
+                history = history,
+                isCompleted = completed)
 
         val currentPageId: String?
             get() {

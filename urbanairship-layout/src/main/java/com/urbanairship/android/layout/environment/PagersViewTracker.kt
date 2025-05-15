@@ -42,6 +42,10 @@ internal class PagersViewTracker {
         trackers.value.values.forEach { it.stop(currentDisplayTime) }
     }
 
+    fun viewedPages(identifier: String): List<ReportingEvent.PageSummaryData.PageView>? {
+        return trackers.value[identifier]?.viewHistory
+    }
+
     fun generateSummaryEvents(): List<ReportingEvent.PageSummaryData> {
         return lastPagerPageEvent.value.map { (pagerId, pageEvent) ->
             ReportingEvent.PageSummaryData(

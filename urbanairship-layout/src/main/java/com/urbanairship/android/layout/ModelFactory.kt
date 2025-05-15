@@ -3,6 +3,7 @@ package com.urbanairship.android.layout
 import com.urbanairship.android.layout.environment.FormType
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.PagersViewTracker
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
@@ -207,7 +208,7 @@ internal class ThomasModelFactory : ModelFactory {
                 }
                 // Setup environment and properties
                 val childEnvironment = environment.withState(
-                    node.controllers.buildLayoutState(layoutStates)
+                    node.controllers.buildLayoutState(layoutStates, environment.pagerTracker)
                 )
                 val properties = ModelProperties(
                     pagerPageId = node.pagerPageId,
@@ -281,7 +282,7 @@ internal class ThomasModelFactory : ModelFactory {
         val story: Tag?
     ) {
         @Suppress("UNCHECKED_CAST")
-        fun buildLayoutState(states: Map<Tag, SharedState<State>?>): LayoutState {
+        fun buildLayoutState(states: Map<Tag, SharedState<State>?>, pagerTracker: PagersViewTracker?): LayoutState {
             val childForm = form.firstOrNull()
             val parentForm = form.getOrNull(1)
 
@@ -300,7 +301,8 @@ internal class ThomasModelFactory : ModelFactory {
                 checkbox = checkbox?.let { states[it] as? SharedState<State.Checkbox> },
                 radio = radio?.let { states[it] as? SharedState<State.Radio> },
                 layout = layoutFlow,
-                thomasState = makeThomasState(formFlow, layoutFlow)
+                thomasState = makeThomasState(formFlow, layoutFlow),
+                pagerTracker = pagerTracker
             )
         }
 

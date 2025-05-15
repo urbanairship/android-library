@@ -22,6 +22,7 @@ internal data class InAppEventContext(
         var pageIdentifier: String,
         var pageIndex: Int,
         var completed: Boolean,
+        var history: List<JsonSerializable>,
         var count: Int
     ) : JsonSerializable {
         companion object {
@@ -29,6 +30,7 @@ internal data class InAppEventContext(
             private const val KEY_PAGE_IDENTIFIER = "page_identifier"
             private const val KEY_PAGE_INDEX = "page_index"
             private const val KEY_COMPLETED = "completed"
+            private const val KEY_HISTORY = "page_history"
             private const val KEY_COUNT = "count"
         }
 
@@ -37,6 +39,7 @@ internal data class InAppEventContext(
             KEY_PAGE_IDENTIFIER to pageIdentifier,
             KEY_PAGE_INDEX to pageIndex,
             KEY_COMPLETED to completed,
+            KEY_HISTORY to history,
             KEY_COUNT to count
         ).toJsonValue()
     }
@@ -160,6 +163,7 @@ private fun InAppEventContext.Companion.makePagerContext(context: LayoutData?): 
         pageIdentifier = info.pageId,
         pageIndex = info.index,
         completed = info.isCompleted,
-        count = info.count
+        count = info.count,
+        history = info.history
     )
 }

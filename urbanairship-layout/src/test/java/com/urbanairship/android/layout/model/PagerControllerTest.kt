@@ -5,6 +5,7 @@ import android.content.Context
 import app.cash.turbine.test
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.PagersViewTracker
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
@@ -45,12 +46,18 @@ public class PagerControllerTest {
     private val mockDisplayTimer: DisplayTimer = mockk() {
         every { time } returns System.currentTimeMillis()
     }
+    private val mockPagerTracker: PagersViewTracker = mockk() {
+        every { onPageView(any(), any()) } returns Unit
+        every { generateSummaryEvents() } returns emptyList()
+        every { viewedPages(any()) } returns emptyList()
+    }
     private val mockEnv: ModelEnvironment = mockk() {
         every { reporter } returns mockReporter
         every { actionsRunner } returns mockActionsRunner
         every { displayTimer } returns mockDisplayTimer
         every { layoutState } returns LayoutState.EMPTY
         every { modelScope } returns testScope
+        every { pagerTracker } returns mockPagerTracker
     }
     private val mockView: AnyModel = mockk(relaxed = true)
 

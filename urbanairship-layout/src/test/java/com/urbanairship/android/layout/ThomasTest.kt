@@ -57,6 +57,11 @@ public class ThomasTest {
         every { layoutState } returns LayoutState.EMPTY
         every { layoutEvents } returns emptyFlow()
         every { modelScope } returns testScope
+        every { pagerTracker } returns mockk() {
+            every { onPageView(any(), any()) } returns Unit
+            every { generateSummaryEvents() } returns emptyList()
+            every { viewedPages(any()) } returns emptyList()
+        }
 
         every { withState(any()) } returns this
     }
