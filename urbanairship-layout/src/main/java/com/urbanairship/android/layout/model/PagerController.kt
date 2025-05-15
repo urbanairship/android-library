@@ -67,24 +67,27 @@ internal class PagerController(
     ) = view.createView(context, viewEnvironment, itemProperties)
 
     private fun reportPageView(pagerContext: PagerData) {
+
+        val eventData = ReportingEvent.PageViewData(
+            identifier = pagerContext.identifier,
+            pageIdentifier = pagerContext.pageId,
+            pageIndex = pagerContext.index,
+            pageViewCount = incAndGetViewCount(pagerContext.pageId),
+            pageCount = pagerContext.count,
+            completed = pagerContext.isCompleted
+        )
+        // call this before page view to generate the correct history in the context
+        environment.pagerTracker.onPageView(
+            pageEvent = eventData,
+            currentDisplayTime = environment.displayTimer.time.milliseconds
+        )
+
         val event = ReportingEvent.PageView(
-            data = ReportingEvent.PageViewData(
-                identifier = pagerContext.identifier,
-                pageIdentifier = pagerContext.pageId,
-                pageIndex = pagerContext.index,
-                pageViewCount = incAndGetViewCount(pagerContext.pageId),
-                pageCount = pagerContext.count,
-                completed = pagerContext.isCompleted
-            ),
+            data = eventData,
             context = layoutState.reportingContext(pagerContext = pagerContext)
         )
 
         report(event)
-
-        environment.pagerTracker.onPageView(
-            pageEvent = event.data,
-            currentDisplayTime = environment.displayTimer.time.milliseconds
-        )
 
         if (pagerContext.isCompleted) {
             reportCompletion(pagerContext)
