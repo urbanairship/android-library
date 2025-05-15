@@ -4,13 +4,15 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestClock
 import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.automation.utils.ActiveTimer
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.iam.info.InAppMessageTextInfo
+import com.urbanairship.util.timer.ActiveTimer
+import com.urbanairship.util.timer.ManualTimer
+import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
@@ -25,9 +27,8 @@ import org.junit.runner.RunWith
 public class InAppMessageDisplayListenerTests {
     private val analytics: InAppMessageAnalyticsInterface = mockk()
     private var recordedEvents = mutableListOf<Pair<InAppEvent, LayoutData?>>()
-    private val activityMonitor = TestActivityMonitor()
     private val clock = TestClock()
-    private val timer = ActiveTimer(activityMonitor, clock)
+    private val timer = ManualTimer(clock)
     private var displayResult: DisplayResult? = null
     private val listener = InAppMessageDisplayListener(analytics, timer) { displayResult = it }
 
@@ -71,7 +72,7 @@ public class InAppMessageDisplayListenerTests {
             InAppResolutionEvent.buttonTap(
                 identifier = "button id",
                 description = "button label",
-                displayTime = 10
+                displayTime = 10.milliseconds
             )
         ))
 
@@ -99,7 +100,7 @@ public class InAppMessageDisplayListenerTests {
             InAppResolutionEvent.buttonTap(
                 identifier = "button id",
                 description = "button label",
-                displayTime = 10
+                displayTime = 10.milliseconds
             )
         ))
 
@@ -114,7 +115,7 @@ public class InAppMessageDisplayListenerTests {
         assertTrue(timer.isStarted)
         clock.currentTimeMillis = 3
         listener.onTimedOut()
-        verifyEvents(listOf(InAppResolutionEvent.timedOut(3)))
+        verifyEvents(listOf(InAppResolutionEvent.timedOut(3.milliseconds)))
         assertFalse(timer.isStarted)
         assertEquals(displayResult, DisplayResult.FINISHED)
     }
@@ -127,7 +128,7 @@ public class InAppMessageDisplayListenerTests {
         clock.currentTimeMillis = 3
 
         listener.onUserDismissed()
-        verifyEvents(listOf(InAppResolutionEvent.userDismissed(3)))
+        verifyEvents(listOf(InAppResolutionEvent.userDismissed(3.milliseconds)))
         assertFalse(timer.isStarted)
         assertEquals(displayResult, DisplayResult.FINISHED)
     }
@@ -140,7 +141,7 @@ public class InAppMessageDisplayListenerTests {
 
         listener.onMessageTapDismissed()
 
-        verifyEvents(listOf(InAppResolutionEvent.messageTap(2)))
+        verifyEvents(listOf(InAppResolutionEvent.messageTap(2.milliseconds)))
         assertFalse(timer.isStarted)
         assertEquals(displayResult, DisplayResult.FINISHED)
     }

@@ -7,6 +7,7 @@ import com.urbanairship.json.jsonMapOf
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.time.Duration.Companion.milliseconds
 
 @RunWith(AndroidJUnit4::class)
 public class InAppResolutionEventTest {
@@ -15,13 +16,13 @@ public class InAppResolutionEventTest {
         val event = InAppResolutionEvent.buttonTap(
             identifier = "button id",
             description = "button description",
-            displayTime = 100000
+            displayTime = 100000.milliseconds
         )
 
         val expected = """
             {
                "resolution": {
-                   "display_time":100,
+                   "display_time":"100.00",
                    "button_description":"button description",
                    "type":"button_click",
                    "button_id":"button id"
@@ -35,11 +36,11 @@ public class InAppResolutionEventTest {
 
     @Test
     public fun testMessageTap() {
-        val event = InAppResolutionEvent.messageTap(100_000)
+        val event = InAppResolutionEvent.messageTap(100_000.milliseconds)
         val expected = """
             {
                "resolution": {
-                   "display_time":100,
+                   "display_time":"100.00",
                    "type":"message_click"
                 }
             }
@@ -51,11 +52,11 @@ public class InAppResolutionEventTest {
 
     @Test
     public fun testUserDismissed() {
-        val event = InAppResolutionEvent.userDismissed(100_000)
+        val event = InAppResolutionEvent.userDismissed(100_000.milliseconds)
         val expected = """
             {
                "resolution": {
-                  "display_time":100,
+                  "display_time":"100.00",
                   "type":"user_dismissed"
                }
             }
@@ -67,12 +68,12 @@ public class InAppResolutionEventTest {
 
     @Test
     public fun testTimedOut() {
-        val event = InAppResolutionEvent.timedOut(100000)
+        val event = InAppResolutionEvent.timedOut(100000.milliseconds)
         val expected = """
             {
                "resolution": {
-                  "display_time":100,
-                  "type":"timed_out"
+                  "display_time": "100.00",
+                  "type": "timed_out"
                }
             }
         """.trimIndent()
@@ -95,7 +96,7 @@ public class InAppResolutionEventTest {
         val expected = """
             {
                "resolution": {
-                  "display_time":0,
+                  "display_time":"0.00",
                   "type":"control"
                },
                "device": {
@@ -115,7 +116,7 @@ public class InAppResolutionEventTest {
         val expected = """
             {
             "resolution": {
-               "display_time":0,
+               "display_time":"0.00",
                "type":"audience_check_excluded"
             }
          }

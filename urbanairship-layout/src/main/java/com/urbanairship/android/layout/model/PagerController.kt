@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import android.view.View
+import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
@@ -10,9 +11,12 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.PagerControllerInfo
 import com.urbanairship.android.layout.property.PagerControllerBranching
+import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -39,8 +43,20 @@ internal class PagerController(
 
     init {
         modelScope.launch {
-            pagerState.changes.map { it.reportingContext() }.distinctUntilChanged()
+            pagerState.changes.map {
+                val history = environment.pagerTracker.viewedPages(it.identifier) ?: emptyList()
+                it.reportingContext(history)
+            }
+                .distinctUntilChanged()
                 .collect(::reportPageView)
+        }
+
+        modelScope.launch {
+            environment.eventHandler.layoutEvents
+                .filterIsInstance<LayoutEvent.Finish>()
+                .collect {
+                    stopAndReportPagerSummary()
+                }
         }
     }
 
@@ -51,15 +67,23 @@ internal class PagerController(
     ) = view.createView(context, viewEnvironment, itemProperties)
 
     private fun reportPageView(pagerContext: PagerData) {
+
+        val eventData = ReportingEvent.PageViewData(
+            identifier = pagerContext.identifier,
+            pageIdentifier = pagerContext.pageId,
+            pageIndex = pagerContext.index,
+            pageViewCount = incAndGetViewCount(pagerContext.pageId),
+            pageCount = pagerContext.count,
+            completed = pagerContext.isCompleted
+        )
+        // call this before page view to generate the correct history in the context
+        environment.pagerTracker.onPageView(
+            pageEvent = eventData,
+            currentDisplayTime = environment.displayTimer.time.milliseconds
+        )
+
         val event = ReportingEvent.PageView(
-            data = ReportingEvent.PageViewData(
-                identifier = pagerContext.identifier,
-                pageIdentifier = pagerContext.pageId,
-                pageIndex = pagerContext.index,
-                pageViewCount = incAndGetViewCount(pagerContext.pageId),
-                pageCount = pagerContext.count,
-                completed = pagerContext.isCompleted
-            ),
+            data = eventData,
             context = layoutState.reportingContext(pagerContext = pagerContext)
         )
 
@@ -84,6 +108,26 @@ internal class PagerController(
                     pageIdentifier = pagerContext.pageId
                 ),
                 context = layoutState.reportingContext(pagerContext = pagerContext)
+            )
+        )
+    }
+
+    private fun stopAndReportPagerSummary() {
+        val pagerIdentifier = pagerState.changes.value.identifier
+        environment.pagerTracker.stop(
+            pagerId = pagerIdentifier,
+            currentDisplayTime = environment.displayTimer.time.milliseconds
+        )
+
+        val summary = environment.pagerTracker
+            .generateSummaryEvents()
+            .firstOrNull { it.identifier == pagerIdentifier }
+            ?: return
+
+        report(
+            event = ReportingEvent.PagerSummary(
+                data = summary,
+                context = layoutState.reportingContext()
             )
         )
     }

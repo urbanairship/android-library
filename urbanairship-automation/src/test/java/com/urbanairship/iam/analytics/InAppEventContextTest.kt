@@ -26,7 +26,8 @@ public class InAppEventContextTest {
                 pageIdentifier = "page id",
                 pageIndex = 1,
                 completed = true,
-                count = 2
+                count = 2,
+                history = emptyList()
             ),
             button = InAppEventContext.Button(
                 identifier = "button id"
@@ -59,7 +60,8 @@ public class InAppEventContextTest {
                  "page_index":1,
                  "identifier":"pager id",
                  "completed":true,
-                 "count":2
+                 "count":2,
+                 "page_history":[]
               },
               "experiments":[
                  {"experiment 1": "result"},
@@ -83,7 +85,7 @@ public class InAppEventContextTest {
         val reportingMetadata = JsonValue.wrap("reporting info")
         val layoutData = LayoutData(
             FormInfo("form-identifier", "form-type", "form-response-type", true),
-            PagerData("pager-id", 1, "page-id", 2, false),
+            PagerData("pager-id", 1, "page-id", 2, emptyList(), false),
             "button-identifier"
         )
         val displayContext = InAppEventContext.Display(
@@ -105,7 +107,8 @@ public class InAppEventContextTest {
                 pageIndex = 1,
                 pageIdentifier = "page-id",
                 count = 2,
-                completed = false
+                completed = false,
+                history = emptyList()
             ),
             form = InAppEventContext.Form(
                 identifier = "form-identifier",

@@ -117,7 +117,7 @@ public class InAppMessageAnalyticsTest {
     public fun testData(): TestResult = runTest {
         val layoutData = LayoutData(
             FormInfo("form-id", "form-type", "response-type", true),
-            PagerData("pager-id", 1, "page-id", 2, false),
+            PagerData("pager-id", 1, "page-id", 2, emptyList(), false),
             "button-id"
         )
 

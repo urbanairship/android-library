@@ -1,7 +1,8 @@
-package com.urbanairship.iam.adapter.layout
+package com.urbanairship.android.layout.environment
 
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.event.ReportingEvent
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -14,7 +15,7 @@ internal class PagersViewTracker {
 
     fun onPageView(
         pageEvent: ReportingEvent.PageViewData,
-        currentTime: Long
+        currentDisplayTime: Duration
     ) {
         val tracker = trackers.value[pageEvent.identifier] ?: kotlin.run {
             val tracker = Tracker()
@@ -27,14 +28,22 @@ internal class PagersViewTracker {
                 identifier = pageEvent.pageIdentifier,
                 index = pageEvent.pageIndex
             ),
-            time = currentTime
+            currentDisplayTime = currentDisplayTime
         )
 
         lastPagerPageEvent.update { it.toMutableMap().apply { put(pageEvent.identifier, pageEvent) } }
     }
 
-    fun stopAll(time: Long) {
-        trackers.value.values.forEach { it.stop(time) }
+    fun stop(pagerId: String, currentDisplayTime: Duration) {
+        trackers.value[pagerId]?.stop(currentDisplayTime)
+    }
+
+    fun stopAll(currentDisplayTime: Duration) {
+        trackers.value.values.forEach { it.stop(currentDisplayTime) }
+    }
+
+    fun viewedPages(identifier: String): List<ReportingEvent.PageSummaryData.PageView>? {
+        return trackers.value[identifier]?.viewHistory
     }
 
     fun generateSummaryEvents(): List<ReportingEvent.PageSummaryData> {
@@ -51,24 +60,28 @@ internal class PagersViewTracker {
     private class Tracker {
         private var currentPage: ViewedPage? = null
         val viewHistory: MutableList<ReportingEvent.PageSummaryData.PageView> = mutableListOf()
-        private var currentPageViewStartedTime: Long? = null
+        private var currentPageViewStartedTime: Duration? = null
 
-        fun start(page: ViewedPage, time: Long) {
+        fun start(page: ViewedPage, currentDisplayTime: Duration) {
             if (currentPage == page) { return }
-            stop(time)
+            stop(currentDisplayTime)
             currentPage = page
-            currentPageViewStartedTime = time
+            currentPageViewStartedTime = currentDisplayTime
         }
 
-        fun stop(atTime: Long) {
+        fun stop(currentDisplayTime: Duration) {
             val startTime = currentPageViewStartedTime ?: return
             val page = currentPage ?: return
+
+            if (currentDisplayTime < startTime) {
+                UALog.w { "Current display time is less than start time." }
+            }
 
             viewHistory.add(
                 ReportingEvent.PageSummaryData.PageView(
                     identifier = page.identifier,
                     index = page.index,
-                    displayTime = (atTime - startTime).milliseconds
+                    displayTime = (currentDisplayTime - startTime).absoluteValue
                 )
             )
 

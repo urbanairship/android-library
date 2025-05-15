@@ -1,9 +1,9 @@
-package com.urbanairship.automation.utils
+package com.urbanairship.util.timer
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestClock
-import com.urbanairship.automation.utils.ActiveTimer
+import kotlin.time.Duration.Companion.milliseconds
 import junit.framework.TestCase.assertEquals
 import org.junit.After
 import org.junit.Before
@@ -32,12 +32,12 @@ public class ActiveTimerTest {
         subject.start()
         clock.currentTimeMillis = 2
 
-        assertEquals(2, subject.time)
+        assertEquals(2.milliseconds, subject.time)
 
         clock.currentTimeMillis = 3
         subject.stop()
 
-        assertEquals(3, subject.time)
+        assertEquals(3.milliseconds, subject.time)
     }
 
     @Test
@@ -45,18 +45,18 @@ public class ActiveTimerTest {
         createSubject()
         subject.start()
         clock.currentTimeMillis = 1
-        assertEquals(1, subject.time)
+        assertEquals(1.milliseconds, subject.time)
         subject.stop()
 
         clock.currentTimeMillis += 1
-        assertEquals(1, subject.time)
+        assertEquals(1.milliseconds, subject.time)
         subject.start()
         clock.currentTimeMillis += 2
         subject.stop()
-        assertEquals(3, subject.time)
+        assertEquals(3.milliseconds, subject.time)
 
         clock.currentTimeMillis += 1
-        assertEquals(3, subject.time)
+        assertEquals(3.milliseconds, subject.time)
     }
 
     @Test
@@ -65,7 +65,7 @@ public class ActiveTimerTest {
         subject.start()
         clock.currentTimeMillis = 2
 
-        assertEquals(0, subject.time)
+        assertEquals(0.milliseconds, subject.time)
     }
 
     @Test
@@ -74,12 +74,12 @@ public class ActiveTimerTest {
 
         subject.start()
         clock.currentTimeMillis = 2
-        assertEquals(2, subject.time)
+        assertEquals(2.milliseconds, subject.time)
         clock.currentTimeMillis = 3
         subject.start()
         clock.currentTimeMillis = 2
         subject.stop()
-        assertEquals(2, subject.time)
+        assertEquals(2.milliseconds, subject.time)
     }
 
     @Test
@@ -89,12 +89,12 @@ public class ActiveTimerTest {
         clock.currentTimeMillis = 3
         subject.stop()
 
-        assertEquals(3, subject.time)
+        assertEquals(3.milliseconds, subject.time)
 
         clock.currentTimeMillis = 5
         subject.stop()
 
-        assertEquals(3, subject.time)
+        assertEquals(3.milliseconds, subject.time)
     }
 
     @Test
@@ -103,24 +103,24 @@ public class ActiveTimerTest {
 
         subject.start()
         clock.currentTimeMillis = 3
-        assertEquals(0, subject.time)
+        assertEquals(0.milliseconds, subject.time)
         stateTracker.foreground()
         clock.currentTimeMillis += 3
-        assertEquals(3, subject.time)
+        assertEquals(3.milliseconds, subject.time)
 
         stateTracker.background()
         clock.currentTimeMillis = 5
-        assertEquals(3, subject.time)
+        assertEquals(3.milliseconds, subject.time)
     }
 
     @Test
     public fun testActiveNotificationDoesNothingOnDisabledTimer() {
         createSubject(isForeground = false)
-        assertEquals(0, subject.time)
+        assertEquals(0.milliseconds, subject.time)
 
         stateTracker.foreground()
         clock.currentTimeMillis += 3
-        assertEquals(0, subject.time)
+        assertEquals(0.milliseconds, subject.time)
 
     }
 
@@ -129,14 +129,14 @@ public class ActiveTimerTest {
         createSubject()
         subject.start()
         clock.currentTimeMillis = 2
-        assertEquals(2, subject.time)
+        assertEquals(2.milliseconds, subject.time)
 
         stateTracker.background()
         clock.currentTimeMillis = 5
-        assertEquals(2, subject.time)
+        assertEquals(2.milliseconds, subject.time)
 
         subject.stop()
-        assertEquals(2, subject.time)
+        assertEquals(2.milliseconds, subject.time)
     }
 
     private fun createSubject(isForeground: Boolean = true) {

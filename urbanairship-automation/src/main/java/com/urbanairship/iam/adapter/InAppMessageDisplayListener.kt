@@ -3,19 +3,18 @@
 package com.urbanairship.iam.adapter
 
 import com.urbanairship.UALog
-import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.automation.utils.ActiveTimer
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.info.InAppMessageButtonInfo
+import com.urbanairship.util.timer.Timer
+import kotlin.time.Duration
 
 internal class InAppMessageDisplayListener(
     val analytics: InAppMessageAnalyticsInterface,
-    private val timer: ActiveTimer,
+    private val timer: Timer,
     private var onDismiss: ((DisplayResult) -> Unit)?,
 ) {
-
     fun onAppear() {
         timer.start()
         analytics.recordEvent(InAppDisplayEvent(), null)
@@ -32,33 +31,14 @@ internal class InAppMessageDisplayListener(
         timer.start()
     }
 
-    fun onButtonDismissed(
-        identifier: String,
-        description: String,
-        behavior: InAppMessageButtonInfo.Behavior,
-        layoutContext: LayoutData?
-    ) {
-        tryDismiss { time ->
-            analytics.recordEvent(
-                InAppResolutionEvent.buttonTap(
-                identifier = identifier,
-                description = description,
-                displayTime = time),
-                layoutContext = layoutContext
-            )
-
-            if (behavior == InAppMessageButtonInfo.Behavior.CANCEL) DisplayResult.CANCEL
-            else DisplayResult.FINISHED
-        }
-    }
-
     fun onButtonDismissed(info: InAppMessageButtonInfo) {
-        tryDismiss { time ->
+        tryDismiss { displayTime ->
             analytics.recordEvent(
                 InAppResolutionEvent.buttonTap(
-                identifier = info.identifier,
-                description = info.label.text,
-                displayTime = time),
+                    identifier = info.identifier,
+                    description = info.label.text,
+                    displayTime = displayTime
+                ),
                 layoutContext = null
             )
 
@@ -68,27 +48,40 @@ internal class InAppMessageDisplayListener(
     }
 
     fun onTimedOut() {
-        tryDismiss {
-            analytics.recordEvent(InAppResolutionEvent.timedOut(it), layoutContext = null)
+        tryDismiss { displayTime ->
+            analytics.recordEvent(
+                InAppResolutionEvent.timedOut(
+                    displayTime = displayTime
+                ), layoutContext = null
+            )
             DisplayResult.FINISHED
         }
     }
 
     fun onUserDismissed() {
-        tryDismiss {
-            analytics.recordEvent(InAppResolutionEvent.userDismissed(it), layoutContext = null)
+        tryDismiss { displayTime ->
+            analytics.recordEvent(
+                InAppResolutionEvent.userDismissed(
+                    displayTime = displayTime
+                ), layoutContext = null
+            )
             DisplayResult.FINISHED
         }
     }
 
     fun onMessageTapDismissed() {
-        tryDismiss {
-            analytics.recordEvent(InAppResolutionEvent.messageTap(it), layoutContext = null)
+        tryDismiss { displayTime ->
+            analytics.recordEvent(
+                InAppResolutionEvent.messageTap(
+                    displayTime = displayTime
+                ),
+                layoutContext = null
+            )
             DisplayResult.FINISHED
         }
     }
 
-    private fun tryDismiss(block: (Long) -> DisplayResult) {
+    private fun tryDismiss(block: (Duration) -> DisplayResult) {
         val dismiss = this.onDismiss
         if (dismiss == null) {
             UALog.e { "Dismissed already called!" }

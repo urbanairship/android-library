@@ -29,8 +29,8 @@ internal class ModelEnvironment(
     val modelScope: CoroutineScope = CoroutineScope(Dispatchers.Main + SupervisorJob()),
     val attributeHandler: AttributeHandler = AttributeHandler(),
     val channelRegistrar: ThomasChannelRegistrar = ThomasChannelRegistrar(),
-
     val eventHandler: LayoutEventHandler = LayoutEventHandler(modelScope),
+    val pagerTracker: PagersViewTracker = PagersViewTracker()
 ) {
     val layoutEvents: Flow<LayoutEvent> = eventHandler.layoutEvents
 
@@ -52,6 +52,7 @@ internal class ModelEnvironment(
             modelScope = modelScope,
             attributeHandler = attributeHandler,
             eventHandler = this.eventHandler,
+            pagerTracker = this.pagerTracker
         )
 }
 

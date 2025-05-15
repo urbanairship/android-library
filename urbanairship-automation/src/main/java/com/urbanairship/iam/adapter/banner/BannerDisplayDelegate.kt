@@ -7,7 +7,6 @@ import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.MainThread
-import androidx.core.view.ViewCompat
 import com.urbanairship.Predicate
 import com.urbanairship.UALog.e
 import com.urbanairship.actions.ActionRunner
@@ -16,7 +15,6 @@ import com.urbanairship.app.ActivityListener
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.automation.R
-import com.urbanairship.automation.utils.ActiveTimer
 import com.urbanairship.iam.adapter.DelegatingDisplayAdapter
 import com.urbanairship.iam.adapter.DisplayResult
 import com.urbanairship.iam.adapter.InAppMessageDisplayListener
@@ -28,6 +26,7 @@ import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.iam.view.BannerView
 import com.urbanairship.iam.view.InAppViewUtils
 import com.urbanairship.util.ManifestUtils
+import com.urbanairship.util.timer.ActiveTimer
 import java.lang.ref.WeakReference
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.Dispatchers
@@ -45,9 +44,9 @@ internal class BannerDisplayDelegate(
 ) : DelegatingDisplayAdapter.Delegate {
 
     override val activityPredicate: Predicate<Activity> = object : Predicate<Activity> {
-        override fun apply(activity: Activity): Boolean {
+        override fun apply(value: Activity): Boolean {
             try {
-                if (getContainerView(activity) == null) {
+                if (getContainerView(value) == null) {
                     e("BannerAdapter - Unable to display in-app message. No view group found.")
                     return false
                 }
@@ -92,14 +91,15 @@ internal class BannerDisplayDelegate(
         analyticsListener = InAppMessageDisplayListener(
             analytics = analytics,
             timer = ActiveTimer(activityMonitor),
-            onDismiss = { continuation?.resumeWith(Result.success(it)) })
+            onDismiss = { continuation?.resumeWith(Result.success(it)) }
+        )
 
         activityMonitor.addActivityListener(listener)
 
         return withContext(Dispatchers.Main.immediate) {
             suspendCancellableCoroutine {
                 continuation = it
-                display(context)
+                display()
             }
         }
     }
@@ -117,7 +117,7 @@ internal class BannerDisplayDelegate(
      * @param activity The activity.
      * @return The banner view.
      */
-    internal fun onCreateView(activity: Activity): BannerView {
+    private fun onCreateView(activity: Activity): BannerView {
         return BannerView(activity, displayContent.banner, assets)
     }
 
@@ -194,10 +194,8 @@ internal class BannerDisplayDelegate(
 
     /**
      * Attempts to display the banner.
-     *
-     * @param context THe application context.
      */
-    private fun display(context: Context) {
+    private fun display() {
         val activity = activityMonitor.getResumedActivities(activityPredicate).firstOrNull() ?: return
         val container = getContainerView(activity) ?: return
 
@@ -248,8 +246,8 @@ internal class BannerDisplayDelegate(
     @MainThread
     private fun onActivityResumed(activity: Activity) {
         val currentView = getCurrentView()
-        if (currentView == null || !ViewCompat.isAttachedToWindow(currentView)) {
-            display(activity)
+        if (currentView == null || !currentView.isAttachedToWindow) {
+            display()
         } else if (activity === getLastActivity()) {
             currentView.onResume()
         }
@@ -265,7 +263,7 @@ internal class BannerDisplayDelegate(
             currentView = null
             lastActivity = null
             view.dismiss(false)
-            display(activity.applicationContext)
+            display()
         }
     }
 

@@ -310,7 +310,7 @@ internal class PagerModel(
         val currentPage = pagerState.currentPageId ?: return
         val previousPage = pagerState.previousPageId ?: return
 
-        val pagerContext = pagerState.reportingContext()
+        val pagerContext = pagerState.reportingContext(emptyList())
         val event = ReportingEvent.PageSwipe(
             data = ReportingEvent.PageSwipeData(
                 identifier = pagerContext.identifier,
@@ -326,7 +326,7 @@ internal class PagerModel(
     }
 
     private fun reportGesture(gesture: PagerGesture, pagerState: State.Pager) {
-        val pagerContext = pagerState.reportingContext()
+        val pagerContext = pagerState.reportingContext(emptyList())
 
         val event = ReportingEvent.Gesture(
             data = ReportingEvent.GestureData(
@@ -340,7 +340,7 @@ internal class PagerModel(
     }
 
     private fun reportAutomatedAction(action: AutomatedAction, pagerState: State.Pager) {
-        val pagerContext = pagerState.reportingContext()
+        val pagerContext = pagerState.reportingContext(emptyList())
         val event = ReportingEvent.PageAction(
             data = ReportingEvent.PageActionData(
                 identifier = action.identifier,
