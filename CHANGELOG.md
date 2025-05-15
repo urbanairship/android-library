@@ -5,10 +5,11 @@
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
 ## Version 19.7.0 May 15, 2025
-Minor release that adds support for using Feature Flags as an audience condition for other Feature Flags.
+Minor release that adds support for using Feature Flags as an audience condition for other Feature Flags and Vimeo videos in Scenes.
 
 ### Changes
 - Added support for using Feature Flags as an audience condition for other Feature Flags.
+- Added support for Vimeo videos in Scenes.
 - Fixed minor issue with SMS collection in Scenes where the button loading indicator does not clear if submission encounters an error.
 
 ## Version 19.6.2 April 29, 2025
