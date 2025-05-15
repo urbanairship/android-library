@@ -2,12 +2,10 @@ package com.urbanairship.util;
 
 import com.urbanairship.AirshipComponent;
 import com.urbanairship.UAirship;
-import com.urbanairship.base.Supplier;
 
 import java.util.concurrent.Callable;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 /**

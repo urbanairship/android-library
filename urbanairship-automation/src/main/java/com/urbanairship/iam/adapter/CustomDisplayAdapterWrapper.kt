@@ -4,11 +4,11 @@ package com.urbanairship.iam.adapter
 
 import android.content.Context
 import com.urbanairship.app.GlobalActivityMonitor
-import com.urbanairship.automation.utils.ActiveTimer
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppResolutionEvent
 import com.urbanairship.iam.info.InAppMessageButtonInfo
+import com.urbanairship.util.timer.ActiveTimer
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -66,20 +66,27 @@ internal class CustomDisplayAdapterWrapper (
             }
             is CustomDisplayResolution.MessageTap -> {
                 analytics.recordEvent(
-                    event = InAppResolutionEvent.messageTap(timer.time),
+                    event = InAppResolutionEvent.messageTap(
+                        displayTime = timer.time
+                    ),
                     layoutContext = null)
                 DisplayResult.FINISHED
             }
             is CustomDisplayResolution.TimedOut -> {
                 analytics.recordEvent(
-                    event = InAppResolutionEvent.timedOut(timer.time),
+                    event = InAppResolutionEvent.timedOut(
+                        displayTime = timer.time
+                    ),
                     layoutContext = null)
                 DisplayResult.FINISHED
             }
             is CustomDisplayResolution.UserDismissed -> {
                 analytics.recordEvent(
-                    event = InAppResolutionEvent.userDismissed(timer.time),
-                    layoutContext = null)
+                    event = InAppResolutionEvent.userDismissed(
+                        displayTime = timer.time
+                    ),
+                    layoutContext = null
+                )
                 DisplayResult.FINISHED
             }
         }

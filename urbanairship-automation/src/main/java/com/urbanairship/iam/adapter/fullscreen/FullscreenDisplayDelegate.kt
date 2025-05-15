@@ -7,7 +7,6 @@ import android.content.Intent
 import com.urbanairship.Predicate
 import com.urbanairship.actions.ActionRunner
 import com.urbanairship.app.ActivityMonitor
-import com.urbanairship.automation.utils.ActiveTimer
 import com.urbanairship.iam.InAppMessageActivity
 import com.urbanairship.iam.adapter.DelegatingDisplayAdapter
 import com.urbanairship.iam.adapter.DisplayResult
@@ -17,6 +16,7 @@ import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.InAppMessageDisplayContent
+import com.urbanairship.util.timer.ActiveTimer
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine

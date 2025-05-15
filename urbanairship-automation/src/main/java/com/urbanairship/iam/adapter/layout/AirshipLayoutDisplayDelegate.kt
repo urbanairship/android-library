@@ -4,11 +4,9 @@ package com.urbanairship.iam.adapter.layout
 import android.app.Activity
 import android.content.Context
 import com.urbanairship.Predicate
-import com.urbanairship.analytics.Event.Priority
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.display.DisplayException
 import com.urbanairship.android.layout.util.CachedImage
-import com.urbanairship.android.layout.util.ImageCache
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.embedded.EmbeddedViewManager
 import com.urbanairship.iam.InAppMessageWebViewClient

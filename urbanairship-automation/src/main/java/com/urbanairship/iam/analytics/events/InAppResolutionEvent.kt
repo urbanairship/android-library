@@ -8,18 +8,19 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import java.util.concurrent.TimeUnit
+import com.urbanairship.util.UAStringUtil
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.DurationUnit
 
 internal class InAppResolutionEvent(
     reportData: JsonSerializable?
 ) : InAppEvent {
-
-
     override val eventType: EventType = EventType.IN_APP_RESOLUTION
     override val data: JsonSerializable? = reportData
 
     companion object {
-        fun buttonTap(identifier: String, description: String, displayTime: Long): InAppResolutionEvent {
+        fun buttonTap(identifier: String, description: String, displayTime: Duration): InAppResolutionEvent {
             return InAppResolutionEvent(
                 ResolutionData(
                     resolutionType = ResolutionData.ResolutionType.ButtonTap(identifier, description),
@@ -28,7 +29,7 @@ internal class InAppResolutionEvent(
             )
         }
 
-        fun messageTap(displayTime: Long): InAppResolutionEvent {
+        fun messageTap(displayTime: Duration): InAppResolutionEvent {
             return InAppResolutionEvent(
                 ResolutionData(
                     resolutionType = ResolutionData.ResolutionType.MessageTap,
@@ -37,7 +38,7 @@ internal class InAppResolutionEvent(
             )
         }
 
-        fun userDismissed(displayTime: Long): InAppResolutionEvent {
+        fun userDismissed(displayTime: Duration): InAppResolutionEvent {
             return InAppResolutionEvent(
                 ResolutionData(
                     resolutionType = ResolutionData.ResolutionType.UserDismissed,
@@ -46,7 +47,7 @@ internal class InAppResolutionEvent(
             )
         }
 
-        fun timedOut(displayTime: Long): InAppResolutionEvent {
+        fun timedOut(displayTime: Duration): InAppResolutionEvent {
             return InAppResolutionEvent(
                 ResolutionData(
                     resolutionType = ResolutionData.ResolutionType.TimedOut,
@@ -59,7 +60,7 @@ internal class InAppResolutionEvent(
             return InAppResolutionEvent(
                 ResolutionData(
                     resolutionType = ResolutionData.ResolutionType.Interrupted,
-                    displayTime = 0L
+                    displayTime = 0.seconds
                 )
             )
         }
@@ -68,7 +69,7 @@ internal class InAppResolutionEvent(
             return InAppResolutionEvent(
                 ResolutionData(
                     resolutionType = ResolutionData.ResolutionType.Control,
-                    displayTime = 0L,
+                    displayTime = 0.seconds,
                     deviceInfo = DeviceInfo(
                         channel = experimentResult.channelId,
                         contact = experimentResult.contactId
@@ -81,7 +82,7 @@ internal class InAppResolutionEvent(
             return InAppResolutionEvent(
                 ResolutionData(
                     resolutionType = ResolutionData.ResolutionType.AudienceExcluded,
-                    displayTime = 0L
+                    displayTime = 0.seconds
                 )
             )
         }
@@ -104,7 +105,7 @@ internal class InAppResolutionEvent(
 
     private data class ResolutionData(
         val resolutionType: ResolutionType,
-        val displayTime: Long,
+        val displayTime: Duration,
         val deviceInfo: DeviceInfo? = null
     ) : JsonSerializable {
 
@@ -118,7 +119,7 @@ internal class InAppResolutionEvent(
             RESOLUTION to JsonMap
                 .newBuilder()
                 .putAll(resolutionType.toJsonValue().optMap())
-                .put(DISPLAY_TIME, TimeUnit.MILLISECONDS.toSeconds(displayTime))
+                .put(DISPLAY_TIME, String.format("%.2f", displayTime.toDouble(DurationUnit.SECONDS)))
                 .build(),
             DEVICE to deviceInfo,
         ).toJsonValue()

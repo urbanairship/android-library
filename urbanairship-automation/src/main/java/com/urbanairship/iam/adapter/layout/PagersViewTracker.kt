@@ -1,7 +1,7 @@
 package com.urbanairship.iam.adapter.layout
 
 import com.urbanairship.android.layout.event.ReportingEvent
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -14,7 +14,7 @@ internal class PagersViewTracker {
 
     fun onPageView(
         pageEvent: ReportingEvent.PageViewData,
-        currentTime: Long
+        currentDisplayTime: Duration
     ) {
         val tracker = trackers.value[pageEvent.identifier] ?: kotlin.run {
             val tracker = Tracker()
@@ -27,14 +27,14 @@ internal class PagersViewTracker {
                 identifier = pageEvent.pageIdentifier,
                 index = pageEvent.pageIndex
             ),
-            time = currentTime
+            currentDisplayTime = currentDisplayTime
         )
 
         lastPagerPageEvent.update { it.toMutableMap().apply { put(pageEvent.identifier, pageEvent) } }
     }
 
-    fun stopAll(time: Long) {
-        trackers.value.values.forEach { it.stop(time) }
+    fun stopAll(currentDisplayTime: Duration) {
+        trackers.value.values.forEach { it.stop(currentDisplayTime) }
     }
 
     fun generateSummaryEvents(): List<ReportingEvent.PageSummaryData> {
@@ -51,16 +51,16 @@ internal class PagersViewTracker {
     private class Tracker {
         private var currentPage: ViewedPage? = null
         val viewHistory: MutableList<ReportingEvent.PageSummaryData.PageView> = mutableListOf()
-        private var currentPageViewStartedTime: Long? = null
+        private var currentPageViewStartedTime: Duration? = null
 
-        fun start(page: ViewedPage, time: Long) {
+        fun start(page: ViewedPage, currentDisplayTime: Duration) {
             if (currentPage == page) { return }
-            stop(time)
+            stop(currentDisplayTime)
             currentPage = page
-            currentPageViewStartedTime = time
+            currentPageViewStartedTime = currentDisplayTime
         }
 
-        fun stop(atTime: Long) {
+        fun stop(currentDisplayTime: Duration) {
             val startTime = currentPageViewStartedTime ?: return
             val page = currentPage ?: return
 
@@ -68,7 +68,7 @@ internal class PagersViewTracker {
                 ReportingEvent.PageSummaryData.PageView(
                     identifier = page.identifier,
                     index = page.index,
-                    displayTime = (atTime - startTime).milliseconds
+                    displayTime = (currentDisplayTime - startTime)
                 )
             )
 
