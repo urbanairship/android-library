@@ -4,6 +4,13 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.7.0 May 15, 2025
+Minor release that adds support for using Feature Flags as an audience condition for other Feature Flags.
+
+### Changes
+- Added support for using Feature Flags as an audience condition for other Feature Flags.
+- Fixed minor issue with SMS collection in Scenes where the button loading indicator does not clear if submission encounters an error.
+
 ## Version 19.6.2 April 29, 2025
 Patch release that fixes a crash in `PushManager.onTokenChanged`, introduced in release 19.6.0.
 Apps should skip release 19.6.0 and 19.6.1 and update directly to this version, or later.
