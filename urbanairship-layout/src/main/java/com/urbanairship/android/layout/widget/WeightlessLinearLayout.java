@@ -735,7 +735,7 @@ public class WeightlessLinearLayout extends ViewGroup {
                 int absoluteGravity = GravityCompat.getAbsoluteGravity(gravity, layoutDirection);
                 switch (absoluteGravity & Gravity.HORIZONTAL_GRAVITY_MASK) {
                     case Gravity.CENTER_HORIZONTAL:
-                        childLeft = paddingLeft + ((childSpace - childWidth) / 2) + lp.leftMargin - lp.rightMargin;
+                        childLeft = paddingLeft + ((childSpace - childWidth - lp.leftMargin - lp.rightMargin) / 2) + lp.leftMargin;
                         break;
 
                     case Gravity.RIGHT:
@@ -829,7 +829,7 @@ public class WeightlessLinearLayout extends ViewGroup {
                         break;
 
                     case Gravity.CENTER_VERTICAL:
-                        childTop = paddingTop + ((childSpace - childHeight) / 2) + lp.topMargin - lp.bottomMargin;
+                        childTop = paddingTop + ((childSpace - childHeight - lp.topMargin - lp.bottomMargin) / 2) + lp.topMargin;
                         break;
 
                     case Gravity.BOTTOM:
