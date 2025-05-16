@@ -55,6 +55,7 @@ public sealed class ThomasFormField<T>(
         SINGLE_CHOICE("single_choice"),
         TEXT("text_input"),
         EMAIL("email_input"),
+        SMS("sms_input"),
         SCORE("score");
 
         override fun toJsonValue(): JsonValue = JsonValue.wrap(value)
@@ -97,7 +98,11 @@ public sealed class ThomasFormField<T>(
         override val identifier: String,
         override val originalValue: String?,
         override val fieldType: FieldType<String>
-    ) : ThomasFormField<String>(if (textInput == FormInputType.EMAIL) Type.EMAIL else Type.TEXT)
+    ) : ThomasFormField<String>(when(textInput) {
+        FormInputType.EMAIL -> Type.EMAIL
+        FormInputType.SMS -> Type.SMS
+        else -> Type.TEXT
+    })
 
     public data class Score(
         override val identifier: String,
