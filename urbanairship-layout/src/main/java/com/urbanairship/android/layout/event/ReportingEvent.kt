@@ -234,7 +234,7 @@ public sealed class ReportingEvent {
     }
 
     public data class FormResultData(
-        val forms: ThomasFormField.BaseForm?
+        private val forms: ThomasFormField.BaseForm?
     ): JsonSerializable {
 
         internal companion object {
