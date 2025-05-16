@@ -61,6 +61,18 @@ public sealed class ThomasFormField<T>(
         override fun toJsonValue(): JsonValue = JsonValue.wrap(value)
     }
 
+    internal open fun formData(withState: Boolean = true): JsonMap {
+        val builder = JsonMap.newBuilder()
+
+        builder.put(KEY_TYPE, type)
+        builder.put(KEY_VALUE, JsonValue.wrapOpt(originalValue))
+        if (withState) {
+            builder.put(KEY_STATUS, status.toJson(type))
+        }
+
+        return builder.build()
+    }
+
     internal open val formData: JsonMap
         get() = jsonMapOf(
             KEY_TYPE to type,
@@ -118,17 +130,18 @@ public sealed class ThomasFormField<T>(
     ) : ThomasFormField<Set<ThomasFormField<*>>>(type), JsonSerializable {
         protected abstract val responseType: String?
 
-        protected val childrenJson: JsonSerializable
-            get() {
-                val builder: JsonMap.Builder = JsonMap.newBuilder()
-                for (child in originalValue) {
-                    builder.putOpt(child.identifier, child.formData)
-                }
-                return builder.build()
+        protected fun childrenJson(withState: Boolean = true): JsonSerializable {
+            val builder: JsonMap.Builder = JsonMap.newBuilder()
+            for (child in originalValue) {
+                builder.putOpt(child.identifier, child.formData(withState))
             }
+            return builder.build()
+        }
 
-        override fun toJsonValue(): JsonValue =
-            jsonMapOf(identifier to formData).toJsonValue()
+        override fun toJsonValue(): JsonValue = toJsonValue(withState = true)
+
+        public fun toJsonValue(withState: Boolean = true): JsonValue =
+            jsonMapOf(identifier to formData(withState)).toJsonValue()
     }
 
     public data class Form(
@@ -138,12 +151,11 @@ public sealed class ThomasFormField<T>(
         override val fieldType: FieldType<Set<ThomasFormField<*>>>
     ) : BaseForm(Type.FORM, identifier, children, fieldType = fieldType) {
 
-        override val formData: JsonMap
-            get() = jsonMapOf(
-                KEY_TYPE to type,
-                KEY_CHILDREN to childrenJson,
-                KEY_RESPONSE_TYPE to responseType
-            )
+        override fun formData(withState: Boolean): JsonMap = jsonMapOf(
+            KEY_TYPE to type,
+            KEY_CHILDREN to childrenJson(withState),
+            KEY_RESPONSE_TYPE to responseType
+        )
     }
 
     public data class Nps(
@@ -153,13 +165,13 @@ public sealed class ThomasFormField<T>(
         val children: Set<ThomasFormField<*>>,
         override val fieldType: FieldType<Set<ThomasFormField<*>>>
     ) : BaseForm(Type.NPS_FORM, identifier, children, fieldType = fieldType) {
-        override val formData: JsonMap
-            get() = jsonMapOf(
-                KEY_TYPE to type,
-                KEY_CHILDREN to childrenJson,
-                KEY_SCORE_ID to scoreId,
-                KEY_RESPONSE_TYPE to responseType
-            )
+
+        override fun formData(withState: Boolean): JsonMap = jsonMapOf(
+            KEY_TYPE to type,
+            KEY_CHILDREN to childrenJson(withState),
+            KEY_SCORE_ID to scoreId,
+            KEY_RESPONSE_TYPE to responseType
+        )
     }
 
     internal companion object {
