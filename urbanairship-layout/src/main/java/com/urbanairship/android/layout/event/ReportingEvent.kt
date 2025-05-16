@@ -5,6 +5,7 @@ import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -233,12 +234,14 @@ public sealed class ReportingEvent {
     }
 
     public data class FormResultData(
-        val forms: JsonSerializable?
+        private val forms: ThomasFormField.BaseForm?
     ): JsonSerializable {
 
         internal companion object {
             private const val FORMS = "forms"
         }
-        override fun toJsonValue(): JsonValue = jsonMapOf(FORMS  to forms).toJsonValue()
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            FORMS  to forms?.toJsonValue(withState = false)
+        ).toJsonValue()
     }
 }
