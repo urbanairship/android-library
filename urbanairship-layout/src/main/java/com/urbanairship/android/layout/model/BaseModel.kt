@@ -80,6 +80,8 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
     private var background: Background? = null
 
+    internal open var isShrinkable: Boolean = false
+
     fun createView(
         context: Context,
         viewEnvironment: ViewEnvironment,

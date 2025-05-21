@@ -36,6 +36,9 @@ internal class MediaModel(
         fun onResume()
     }
 
+    /** Media views are shrinkable by default. */
+    override var isShrinkable: Boolean = true
+
     override fun onCreateView(
         context: Context,
         viewEnvironment: ViewEnvironment,
