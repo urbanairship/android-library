@@ -21,18 +21,20 @@ import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel.Item
 import com.urbanairship.android.layout.model.ItemProperties
+import com.urbanairship.android.layout.model.MediaModel
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout
+import com.urbanairship.android.layout.widget.ShrinkableView
 
 internal class ContainerLayoutView(
     context: Context,
-    model: ContainerLayoutModel,
+    private val model: ContainerLayoutModel,
     private val viewEnvironment: ViewEnvironment
-) : ClippableConstraintLayout(context), BaseView {
+) : ClippableConstraintLayout(context), BaseView, ShrinkableView {
 
     private val frameShouldIgnoreSafeArea = SparseBooleanArray()
     private val frameMargins = SparseArray<Margin>()
@@ -63,6 +65,9 @@ internal class ContainerLayoutView(
             }
         }
     }
+
+    /** Container layouts may be shrunk if they contain any media views. */
+    override fun isShrinkable(): Boolean = model.isShrinkable
 
     private fun addItems(items: List<Item>, constraintBuilder: ConstraintSetBuilder) {
         for (item in items) {

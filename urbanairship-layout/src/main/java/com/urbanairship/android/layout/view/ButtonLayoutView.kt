@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ButtonLayoutModel
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.ItemProperties
+import com.urbanairship.android.layout.model.MediaModel
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.TapEffect
@@ -25,6 +26,7 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.findTargetDescendant
 import com.urbanairship.android.layout.util.ifNotEmpty
+import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
@@ -37,7 +39,7 @@ internal class ButtonLayoutView(
     val model: ButtonLayoutModel,
     viewEnvironment: ViewEnvironment,
     val itemProperties: ItemProperties?
-) : FrameLayout(context), BaseView, TappableView {
+) : FrameLayout(context), BaseView, TappableView, ShrinkableView {
 
     private val isButtonForAccessibility: Boolean
     get() = when (model.viewInfo.accessibilityRole) {
@@ -50,7 +52,6 @@ internal class ButtonLayoutView(
 
     private val rippleAnimationDuration =
         resources.getInteger(android.R.integer.config_shortAnimTime).milliseconds
-
 
     init {
         isClickable = true
@@ -112,6 +113,9 @@ internal class ButtonLayoutView(
 
     /** Tell talkback that we're a button. **/
     override fun getAccessibilityClassName(): CharSequence = Button::class.java.name
+
+    /** Button layouts may be shrunk if they contain a media view. */
+    override fun isShrinkable(): Boolean = model.isShrinkable
 
     private fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean {
         return findTargetDescendant(view) { it.isClickable && it.isEnabled } != null

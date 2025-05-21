@@ -30,6 +30,8 @@ internal class ButtonLayoutModel(
     properties = properties,
 ) {
 
+    override var isShrinkable: Boolean = view.isShrinkable
+
     override fun contentDescription(context: Context): String? {
         return viewInfo.contentDescriptionResolver(context)
     }

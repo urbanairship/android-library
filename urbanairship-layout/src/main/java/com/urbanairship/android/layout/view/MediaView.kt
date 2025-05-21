@@ -36,6 +36,7 @@ import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.widget.CropImageView
+import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.android.layout.widget.TouchAwareWebView
 import com.urbanairship.app.FilteredActivityListener
@@ -60,7 +61,7 @@ internal class MediaView(
     model: MediaModel,
     private val viewEnvironment: ViewEnvironment,
     private val itemProperties: ItemProperties?,
-) : FrameLayout(context, null), BaseView, TappableView {
+) : FrameLayout(context, null), BaseView, TappableView, ShrinkableView {
 
     private val activityListener = object : SimpleActivityListener() {
         override fun onActivityPaused(activity: Activity) {
@@ -157,6 +158,9 @@ internal class MediaView(
         super.onVisibilityChanged(changedView, visibility)
         visibilityChangeListener?.onVisibilityChanged(visibility)
     }
+
+    /** Media views are always shrinkable. */
+    override fun isShrinkable(): Boolean = true
 
     private fun configureImageView(model: MediaModel) {
         val cached = viewEnvironment.imageCache()?.get(model.viewInfo.url)

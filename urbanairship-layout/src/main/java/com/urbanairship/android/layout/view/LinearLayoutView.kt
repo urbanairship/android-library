@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.LinearLayoutModel
+import com.urbanairship.android.layout.model.MediaModel
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Direction
@@ -28,14 +29,15 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
 import com.urbanairship.android.layout.widget.Clippable
 import com.urbanairship.android.layout.widget.ClippableViewDelegate
+import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.WeightlessLinearLayout
 import com.urbanairship.android.layout.widget.WeightlessLinearLayout.LayoutParams.WRAP_CONTENT
 
 internal class LinearLayoutView(
     context: Context,
-    model: LinearLayoutModel,
+    private val model: LinearLayoutModel,
     private val viewEnvironment: ViewEnvironment
-) : WeightlessLinearLayout(context), BaseView, Clippable {
+) : WeightlessLinearLayout(context), BaseView, Clippable, ShrinkableView {
 
     private val clippableViewDelegate: ClippableViewDelegate = ClippableViewDelegate()
 
@@ -72,6 +74,8 @@ internal class LinearLayoutView(
             noInsets
         }
     }
+
+    override fun isShrinkable(): Boolean = model.isShrinkable
 
     private fun addItems(items: List<LinearLayoutModel.Item>) {
         for (i in items.indices) {
