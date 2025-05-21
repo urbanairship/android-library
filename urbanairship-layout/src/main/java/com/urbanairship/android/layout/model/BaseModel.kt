@@ -260,7 +260,8 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                     overrides = viewInfo.commonViewOverrides?.backgroundColor,
                     default = viewInfo.backgroundColor
                 ), border = state.resolveOptional(
-                    overrides = viewInfo.commonViewOverrides?.border, default = viewInfo.border
+                    overrides = viewInfo.commonViewOverrides?.border,
+                    default = viewInfo.border
                 )
             )
         } else {

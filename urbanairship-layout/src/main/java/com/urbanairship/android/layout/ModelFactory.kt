@@ -8,9 +8,11 @@ import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.makeThomasState
+import com.urbanairship.android.layout.info.BasicToggleLayoutInfo
 import com.urbanairship.android.layout.info.ButtonLayoutInfo
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.android.layout.info.CheckboxInfo
+import com.urbanairship.android.layout.info.CheckboxToggleLayoutInfo
 import com.urbanairship.android.layout.info.ContainerLayoutInfo
 import com.urbanairship.android.layout.info.ContainerLayoutItemInfo
 import com.urbanairship.android.layout.info.CustomViewInfo
@@ -31,6 +33,7 @@ import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.info.PagerItemInfo
 import com.urbanairship.android.layout.info.RadioInputControllerInfo
 import com.urbanairship.android.layout.info.RadioInputInfo
+import com.urbanairship.android.layout.info.RadioInputToggleLayoutInfo
 import com.urbanairship.android.layout.info.ScoreInfo
 import com.urbanairship.android.layout.info.ScrollLayoutInfo
 import com.urbanairship.android.layout.info.StateControllerInfo
@@ -41,9 +44,11 @@ import com.urbanairship.android.layout.info.ViewGroupInfo
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.info.WebViewInfo
 import com.urbanairship.android.layout.model.AnyModel
+import com.urbanairship.android.layout.model.BasicToggleLayoutModel
 import com.urbanairship.android.layout.model.ButtonLayoutModel
 import com.urbanairship.android.layout.model.CheckboxController
 import com.urbanairship.android.layout.model.CheckboxModel
+import com.urbanairship.android.layout.model.CheckboxToggleLayoutModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel
 import com.urbanairship.android.layout.model.CustomViewModel
 import com.urbanairship.android.layout.model.EmptyModel
@@ -61,6 +66,7 @@ import com.urbanairship.android.layout.model.PagerIndicatorModel
 import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.model.RadioInputController
 import com.urbanairship.android.layout.model.RadioInputModel
+import com.urbanairship.android.layout.model.RadioInputToggleLayoutModel
 import com.urbanairship.android.layout.model.ScoreModel
 import com.urbanairship.android.layout.model.StateController
 import com.urbanairship.android.layout.model.StoryIndicatorModel
@@ -464,6 +470,37 @@ internal class ThomasModelFactory : ModelFactory {
             is StateControllerInfo -> StateController(
                 viewInfo = info,
                 view = children.first().first,
+                environment = environment,
+                properties = properties
+            )
+
+            is BasicToggleLayoutInfo -> BasicToggleLayoutModel(
+                viewInfo = info,
+                view = children.first().first,
+                formState = environment.layoutState.thomasForm
+                    ?: throw ModelFactoryException("Required form state was null for RadioInputController!"),
+                environment = environment,
+                properties = properties
+            )
+
+            is CheckboxToggleLayoutInfo -> CheckboxToggleLayoutModel(
+                viewInfo = info,
+                view = children.first().first,
+                checkboxState = environment.layoutState.checkbox
+                    ?: throw ModelFactoryException("Required checkbox state was null for CheckboxController!"),
+                formState = environment.layoutState.thomasForm
+                    ?: throw ModelFactoryException("Required form state was null for RadioInputController!"),
+                environment = environment,
+                properties = properties
+            )
+
+            is RadioInputToggleLayoutInfo -> RadioInputToggleLayoutModel(
+                viewInfo = info,
+                view = children.first().first,
+                radioState = environment.layoutState.radio
+                    ?: throw ModelFactoryException("Required radio state was null for RadioInputController!"),
+                formState = environment.layoutState.thomasForm
+                    ?: throw ModelFactoryException("Required form state was null for RadioInputController!"),
                 environment = environment,
                 properties = properties
             )

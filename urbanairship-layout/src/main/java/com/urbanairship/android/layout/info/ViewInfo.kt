@@ -60,6 +60,9 @@ import com.urbanairship.android.layout.property.ViewType.STATE_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.STORY_INDICATOR
 import com.urbanairship.android.layout.property.ViewType.TEXT_INPUT
 import com.urbanairship.android.layout.property.ViewType.TOGGLE
+import com.urbanairship.android.layout.property.ViewType.BASIC_TOGGLE_LAYOUT
+import com.urbanairship.android.layout.property.ViewType.CHECKBOX_TOGGLE_LAYOUT
+import com.urbanairship.android.layout.property.ViewType.RADIO_INPUT_TOGGLE_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.UNKNOWN
 import com.urbanairship.android.layout.property.ViewType.WEB_VIEW
 import com.urbanairship.android.layout.reporting.AttributeName
@@ -75,6 +78,7 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalList
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
+import com.urbanairship.json.requireMap
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -107,12 +111,15 @@ public sealed class ViewInfo : View {
                 CHECKBOX_CONTROLLER -> CheckboxControllerInfo(json)
                 CHECKBOX -> CheckboxInfo(json)
                 TOGGLE -> ToggleInfo(json)
+                BASIC_TOGGLE_LAYOUT -> BasicToggleLayoutInfo(json)
+                CHECKBOX_TOGGLE_LAYOUT -> CheckboxToggleLayoutInfo(json)
+                RADIO_INPUT_TOGGLE_LAYOUT -> RadioInputToggleLayoutInfo(json)
                 RADIO_INPUT_CONTROLLER -> RadioInputControllerInfo(json)
                 RADIO_INPUT -> RadioInputInfo(json)
                 TEXT_INPUT -> TextInputInfo(json)
                 SCORE -> ScoreInfo(json)
                 STATE_CONTROLLER -> StateControllerInfo(json)
-                UNKNOWN -> throw JsonException("Unknown view type! '$type'")
+                UNKNOWN -> throw JsonException("Unknown view type! '${json.requireField<String>("type")}'")
             }
         }
     }
@@ -405,7 +412,15 @@ internal class ButtonLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), 
     }
 }
 
-internal interface Checkable : View, Accessible {
+internal interface BaseCheckable: View, Accessible {
+}
+
+internal open class BaseCheckableInfo(
+    json: JsonMap
+) : ViewInfo(), BaseCheckable, View by view(json), Accessible by accessible(json) {
+}
+
+internal interface Checkable : BaseCheckable, View, Accessible {
     val style: ToggleStyle
 }
 
@@ -838,6 +853,41 @@ internal class PagerControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 
     val branching = json.get("branching")?.let(PagerControllerBranching::from)
+}
+
+internal open class BaseToggleLayoutInfo(json: JsonMap) :  ViewGroupInfo<ViewItemInfo>(), Identifiable by identifiable(json), View by view(json) {
+    val onToggleOn: ToggleActions = ToggleActions(
+        stateActions = json.requireMap("on_toggle_on")
+            .optionalList("state_actions")
+            ?.map { StateAction.fromJson(it.requireMap()) }
+    )
+
+    val onToggleOff: ToggleActions = ToggleActions(
+        stateActions = json.requireMap("on_toggle_off")
+            .optionalList("state_actions")
+            ?.map { StateAction.fromJson(it.requireMap()) }
+    )
+
+    val attributeValue: AttributeValue? = json.optionalField("attribute_value")
+    val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
+
+    internal class ToggleActions(
+        val stateActions: List<StateAction>?
+    )
+
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
+}
+
+internal class BasicToggleLayoutInfo(json: JsonMap) : BaseToggleLayoutInfo(json), Validatable by validatable(json) {
+    val attributeName: AttributeName? = attributeNameFromJson(json)
+}
+
+internal class CheckboxToggleLayoutInfo(json: JsonMap) : BaseToggleLayoutInfo(json) {
+    val reportingValue: JsonValue = json.requireField("reporting_value")
+}
+
+internal class RadioInputToggleLayoutInfo(json: JsonMap) : BaseToggleLayoutInfo(json) {
+    val reportingValue: JsonValue = json.requireField("reporting_value")
 }
 
 internal class CheckboxControllerInfo(

@@ -28,6 +28,9 @@ public enum ViewType {
     CHECKBOX_CONTROLLER("checkbox_controller"),
     CHECKBOX("checkbox"),
     TOGGLE("toggle"),
+    BASIC_TOGGLE_LAYOUT("basic_toggle_layout"),
+    RADIO_INPUT_TOGGLE_LAYOUT("radio_input_toggle_layout"),
+    CHECKBOX_TOGGLE_LAYOUT("checkbox_toggle_layout"),
     RADIO_INPUT_CONTROLLER("radio_input_controller"),
     RADIO_INPUT("radio_input"),
     TEXT_INPUT("text_input"),
@@ -38,8 +41,9 @@ public enum ViewType {
 
     /** View types that provide values for forms (possibly via an intermediate controller). */
     private static final List<ViewType> FORM_INPUTS = Arrays.asList(
-        CHECKBOX_CONTROLLER, CHECKBOX, RADIO_INPUT_CONTROLLER, RADIO_INPUT,
-        TOGGLE, TEXT_INPUT, SCORE, FORM_CONTROLLER, NPS_FORM_CONTROLLER
+            CHECKBOX_CONTROLLER, CHECKBOX, RADIO_INPUT_CONTROLLER, RADIO_INPUT,
+            TOGGLE, CHECKBOX_TOGGLE_LAYOUT, RADIO_INPUT_TOGGLE_LAYOUT, BASIC_TOGGLE_LAYOUT,
+            TEXT_INPUT, SCORE, FORM_CONTROLLER, NPS_FORM_CONTROLLER
     );
 
     private static final List<ViewType> CONTROLLERS = Arrays.asList(
