@@ -73,13 +73,6 @@ public sealed class ThomasFormField<T>(
         return builder.build()
     }
 
-    internal open val formData: JsonMap
-        get() = jsonMapOf(
-            KEY_TYPE to type,
-            KEY_VALUE to JsonValue.wrapOpt(originalValue),
-            KEY_STATUS to status.toJson(type)
-        )
-
     public fun jsonValue(): JsonValue? =
         JsonValue.wrapOpt(originalValue).let {
             if (it != JsonValue.NULL) it else null
@@ -195,7 +188,7 @@ public sealed class ThomasFormField<T>(
     }
 
     override fun toString(): String {
-        return "${formData.toJsonValue()}"
+        return "${formData().toJsonValue()}"
     }
 
     public sealed class FieldType<T> {
