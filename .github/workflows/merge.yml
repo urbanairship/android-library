@@ -11,7 +11,8 @@ concurrency:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on:
+      labels: airship-large-runner
     timeout-minutes: 20
     name: Merge CI
 
