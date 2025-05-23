@@ -833,6 +833,7 @@ internal class StoryIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json
 
 internal class StateControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), View by view(json) {
     val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
+    val initialState: JsonMap? = json.optionalField("initial_state")
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }
 

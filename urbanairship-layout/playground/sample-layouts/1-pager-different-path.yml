@@ -23,6 +23,8 @@ view:
   response_type: user_feedback
   view:
     type: state_controller
+    initial_state:
+      next_page: cats
     view:
       type: pager_controller
       identifier: "pager-controller-id"

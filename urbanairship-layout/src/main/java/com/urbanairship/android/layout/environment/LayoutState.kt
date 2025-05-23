@@ -16,6 +16,7 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import java.util.UUID
 import kotlin.math.max
@@ -434,7 +435,7 @@ internal sealed class State {
     ) : State()
 
     internal data class Layout(
-        var mutations: Map<String, StateMutation>  = emptyMap()
+        var mutations: Map<String, StateMutation> = emptyMap()
     ) : State() {
 
         var state: Map<String, JsonValue> = run {
@@ -443,6 +444,14 @@ internal sealed class State {
 
         companion object {
             val DEFAULT = Layout()
+        }
+
+        fun copyWithState(state: JsonMap): Layout {
+            val mutations = state.associate {
+                it.key to StateMutation(UUID.randomUUID().toString(), it.key, it.value)
+            }
+
+            return copy(mutations = mutations)
         }
     }
 }
