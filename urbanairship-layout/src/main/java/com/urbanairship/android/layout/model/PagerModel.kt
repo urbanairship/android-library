@@ -39,9 +39,11 @@ import com.urbanairship.json.JsonValue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
@@ -88,6 +90,7 @@ internal class PagerModel(
         null
 
     private val branchControl: PagerBranchControl?
+    private val lastDisplayedPageId = MutableStateFlow<String?>(null)
 
     val isSinglePage: Boolean
         get() = branchControl == null && pages.size < 2
@@ -126,7 +129,14 @@ internal class PagerModel(
 
                 // Handle any actions defined for the current page.
                 val currentPage = it.currentPageId?.let { id -> _allPages.firstOrNull { it.identifier == id } } ?: return@collect
-                runStateActions(currentPage.stateActions)
+
+                // Page state actions could be run multiple time when branching update path.
+                // So we remember last page identifier and do not run state actions for it.
+                if (lastDisplayedPageId.value != currentPage.identifier) {
+                    lastDisplayedPageId.update { currentPage.identifier }
+                    runStateActions(currentPage.stateActions)
+                }
+
                 handlePageActions(currentPage.displayActions, currentPage.automatedActions)
 
                 it.currentPageId?.let { branchControl?.addToHistory(it) }
