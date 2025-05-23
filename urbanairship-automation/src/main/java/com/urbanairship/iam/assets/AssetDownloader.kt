@@ -8,6 +8,7 @@ import androidx.core.net.toUri
 import com.urbanairship.util.FileUtils
 import com.urbanairship.util.toURL
 import java.io.File
+import java.util.UUID
 
 /**
  * Wrapper for the download tasks that is responsible for downloading assets
@@ -24,7 +25,8 @@ internal class DefaultAssetDownloader(context: Context): AssetDownloader {
     @Throws(java.net.MalformedURLException::class)
     override suspend fun downloadAsset(remoteUri: Uri): Uri? {
         return remoteUri.lastPathSegment?.let { lastPathSegment ->
-            val tmpFile = File(cacheFolder, lastPathSegment)
+            val uuid = UUID.randomUUID().toString()
+            val tmpFile = File(cacheFolder, "${uuid}-$lastPathSegment")
             FileUtils.downloadFile(remoteUri.toURL(), tmpFile)
             tmpFile.toUri()
         }

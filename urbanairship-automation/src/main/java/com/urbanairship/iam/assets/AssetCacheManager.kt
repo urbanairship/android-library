@@ -14,7 +14,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 
 /**
@@ -29,6 +33,8 @@ internal class AssetCacheManager(
     private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
     private val tasks = mutableMapOf<String, Deferred<Result<AirshipCachedAssets>>>()
     private val lock = ReentrantLock()
+
+    val downloadSemaphore = Semaphore(MAX_CONCURRENT_DOWNLOADS)
 
     /**
      * Cache assets for a given identifier.
@@ -48,34 +54,43 @@ internal class AssetCacheManager(
         lock.withLock { tasks[identifier] }?.await()
 
         val task = scope.async {
-            try {
-                val directory = fileManager.ensureCacheDirectory(identifier)
-                val cache = DefaultAirshipCachedAssets(directory, fileManager)
+            val startTime = System.currentTimeMillis()
 
+            val directory = fileManager.ensureCacheDirectory(identifier)
+            val cache = DefaultAirshipCachedAssets(directory, fileManager)
+
+            // Process assets in parallel with controlled concurrency
+            coroutineScope {
                 // Using toSet() here to remove any duplicates from assets
-                for (asset in assets.toSet()) {
-                    if (!isActive) break
-                    if (cache.isCached(asset)) break
+                assets.toSet().map { asset ->
+                    async {
+                        if (!isActive) return@async
+                        if (cache.isCached(asset)) return@async
 
-                    cache.cacheUri(asset)?.let { cacheURI ->
-                        val tempURI = downloader.downloadAsset(asset.toUri())
-                        if (tempURI == null) {
-                            throw IllegalStateException("Failed to download asset for $identifier! $asset")
-                        } else {
-                            fileManager.moveAsset(tempURI, cacheURI)
-                            cache.generateAndStoreMetadata(asset)
+                        downloadSemaphore.withPermit {
+                            if (!isActive) return@async
+
+                            cache.cacheUri(asset)?.let { cacheURI ->
+                                val tempURI = downloader.downloadAsset(asset.toUri())
+                                if (tempURI == null) {
+                                    throw IllegalStateException("Failed to download asset for $identifier! $asset")
+                                } else {
+                                    fileManager.moveAsset(tempURI, cacheURI)
+                                    cache.generateAndStoreMetadata(asset)
+                                }
+                            }
                         }
                     }
-                }
+                }.awaitAll()
+            }
 
-                if (isActive) {
-                    Result.success(cache)
-                } else {
-                    Result.failure(CancellationException())
-                }
-            } catch (ex: Exception) {
-                UALog.e(ex) { "Failed to cache assets for $identifier!" }
-                Result.failure<AirshipCachedAssets>(ex)
+            val endTime = System.currentTimeMillis()
+            UALog.d { "Inapp message $identifier: ${assets.size} in ${endTime - startTime}ms" }
+
+            if (isActive) {
+                Result.success(cache)
+            } else {
+                Result.failure(CancellationException())
             }
         }
 
@@ -98,5 +113,10 @@ internal class AssetCacheManager(
         } catch (ex: Exception) {
             UALog.e(ex) { "Failed to clear cache" }
         }
+    }
+
+    internal companion object {
+        /** The number of allowed concurrent downloads to be shared across all messages. */
+        private const val MAX_CONCURRENT_DOWNLOADS = 6
     }
 }
