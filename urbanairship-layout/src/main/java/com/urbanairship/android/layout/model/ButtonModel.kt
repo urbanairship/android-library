@@ -23,12 +23,11 @@ import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
 
 internal abstract class ButtonModel<T, I: Button>(
     viewInfo: I,
@@ -73,6 +72,9 @@ internal abstract class ButtonModel<T, I: Button>(
 
                 // Run any actions.
                 runActions(viewInfo.actions, reportingContext)
+
+                // Let the parent views update their state (mostly for pager to update pages in branching)
+                yield()
 
                 // Run any handlers for tap events.
                 if (viewInfo.eventHandlers.hasTapHandler() && !viewInfo.clickBehaviors.hasFormSubmit) {
