@@ -1,7 +1,6 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.property
 
-import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap

@@ -3,11 +3,9 @@ package com.urbanairship.android.layout.reporting
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.event.ReportingEvent
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import java.util.Objects
 
 /**
  * Pager state.

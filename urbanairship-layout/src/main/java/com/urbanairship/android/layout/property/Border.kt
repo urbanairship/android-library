@@ -4,7 +4,6 @@ package com.urbanairship.android.layout.property
 import android.os.Build
 import androidx.annotation.Dimension
 import androidx.annotation.RestrictTo
-import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.widget.Clippable
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap

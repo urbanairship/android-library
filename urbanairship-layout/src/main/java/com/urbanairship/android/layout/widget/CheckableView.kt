@@ -11,7 +11,6 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
-import com.urbanairship.android.layout.info.CheckableInfo
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.property.CheckboxStyle
 import com.urbanairship.android.layout.property.SwitchStyle
@@ -19,7 +18,6 @@ import com.urbanairship.android.layout.property.ToggleType
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.ifNotEmpty
-import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.view.BaseView
 
 internal abstract class CheckableView<M : CheckableModel<*, *>>(

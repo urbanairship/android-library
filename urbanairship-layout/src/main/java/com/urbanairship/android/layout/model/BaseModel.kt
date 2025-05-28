@@ -5,7 +5,6 @@ import android.content.Context
 import android.view.View.OnAttachStateChangeListener
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Provider
-import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
@@ -19,9 +18,7 @@ import com.urbanairship.android.layout.info.Accessible
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.info.Validatable
-import com.urbanairship.android.layout.info.ValidationAction
 import com.urbanairship.android.layout.info.View
-import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
@@ -43,8 +40,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf

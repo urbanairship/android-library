@@ -14,7 +14,6 @@ import androidx.customview.widget.ViewDragHelper.STATE_IDLE
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.lifecycleScope
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.BannerPresentation

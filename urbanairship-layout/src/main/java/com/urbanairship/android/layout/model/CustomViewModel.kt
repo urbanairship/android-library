@@ -3,15 +3,14 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import android.view.View
-import com.urbanairship.android.layout.AirshipCustomViewManager
-import com.urbanairship.android.layout.AirshipCustomViewHandler
 import com.urbanairship.android.layout.AirshipCustomViewArguments
 import com.urbanairship.android.layout.AirshipCustomViewArguments.SizeInfo
+import com.urbanairship.android.layout.AirshipCustomViewHandler
+import com.urbanairship.android.layout.AirshipCustomViewManager
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.CustomViewInfo
 import com.urbanairship.android.layout.view.CustomView
-import com.urbanairship.json.jsonMapOf
 
 /** Model for customer provided views. */
 internal class CustomViewModel(

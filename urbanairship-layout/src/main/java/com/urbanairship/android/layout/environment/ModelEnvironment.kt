@@ -6,7 +6,6 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.DisplayTimer
-import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.channel.AttributeEditor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

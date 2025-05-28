@@ -16,8 +16,6 @@ import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.scoreChanges
 import com.urbanairship.android.layout.view.ScoreView
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch

@@ -6,7 +6,6 @@ import android.content.Context;
 
 import com.urbanairship.android.layout.property.BannerPlacement;
 import com.urbanairship.android.layout.property.BannerPlacementSelector;
-import com.urbanairship.android.layout.property.ModalPlacementSelector;
 import com.urbanairship.android.layout.property.Orientation;
 import com.urbanairship.android.layout.property.PresentationType;
 import com.urbanairship.android.layout.property.WindowSize;

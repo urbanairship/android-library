@@ -10,7 +10,6 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import kotlin.time.Duration
-import kotlin.time.DurationUnit
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public sealed class ReportingEvent {

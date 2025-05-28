@@ -1,25 +1,17 @@
 package com.urbanairship.android.layout.ui
 
-import android.animation.Animator
-import android.animation.AnimatorInflater
-import android.animation.AnimatorListenerAdapter
 import android.content.Context
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import androidx.annotation.AnimatorRes
 import androidx.annotation.MainThread
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
 import com.urbanairship.android.layout.EmbeddedPresentation
-import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
-import com.urbanairship.android.layout.property.ConstrainedSize
-import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
-import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.widget.ClippableFrameLayout
 import com.urbanairship.android.layout.widget.ConstrainedFrameLayout
 

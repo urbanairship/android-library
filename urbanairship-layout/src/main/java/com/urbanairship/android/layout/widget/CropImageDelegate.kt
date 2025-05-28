@@ -7,12 +7,12 @@ import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.ImageView
 import android.widget.ImageView.ScaleType
-import java.lang.ref.WeakReference
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.view.ImageButtonView
 import com.urbanairship.android.layout.view.MediaView
+import java.lang.ref.WeakReference
 
 /**
  * Delegate for shared `ImageView` cropping logic. Used by `CropImageButton` and `CropImageView`,

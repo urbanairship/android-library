@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import com.urbanairship.android.layout.AirshipCustomViewArguments
 import com.urbanairship.android.layout.AirshipCustomViewHandler
 import com.urbanairship.android.layout.playground.R
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.requireField
 
 /** XML-based weather view. */

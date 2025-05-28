@@ -10,7 +10,6 @@ import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsCompat.Type.systemBars
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LinearLayoutItemInfo
@@ -18,9 +17,6 @@ import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.LinearLayoutModel
-import com.urbanairship.android.layout.model.MediaModel
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.Size.DimensionType.ABSOLUTE
 import com.urbanairship.android.layout.property.Size.DimensionType.AUTO

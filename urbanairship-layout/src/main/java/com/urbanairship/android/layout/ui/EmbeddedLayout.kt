@@ -50,7 +50,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 
 private object EmbeddedViewModelStore : ViewModelStore()

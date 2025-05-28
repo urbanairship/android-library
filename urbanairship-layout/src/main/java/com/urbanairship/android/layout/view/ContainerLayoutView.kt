@@ -10,10 +10,8 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
 import androidx.core.graphics.Insets
-import androidx.core.view.OnApplyWindowInsetsListener as OnApplyWindowInsetsListenerCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
@@ -21,14 +19,12 @@ import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel
 import com.urbanairship.android.layout.model.ContainerLayoutModel.Item
 import com.urbanairship.android.layout.model.ItemProperties
-import com.urbanairship.android.layout.model.MediaModel
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout
 import com.urbanairship.android.layout.widget.ShrinkableView
+import androidx.core.view.OnApplyWindowInsetsListener as OnApplyWindowInsetsListenerCompat
 
 internal class ContainerLayoutView(
     context: Context,

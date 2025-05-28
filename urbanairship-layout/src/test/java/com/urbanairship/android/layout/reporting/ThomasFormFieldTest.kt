@@ -9,7 +9,6 @@ import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.flowOf
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotSame

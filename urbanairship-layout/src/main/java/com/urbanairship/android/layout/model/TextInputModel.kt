@@ -5,9 +5,7 @@ import android.content.Context
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasForm
-import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
@@ -21,10 +19,7 @@ import com.urbanairship.inputvalidation.AirshipInputValidation
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 

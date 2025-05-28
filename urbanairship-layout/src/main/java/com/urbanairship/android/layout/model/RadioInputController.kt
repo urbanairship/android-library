@@ -7,7 +7,6 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
-import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.RadioInputControllerInfo
@@ -15,12 +14,7 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonValue
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Controller for radio inputs. */

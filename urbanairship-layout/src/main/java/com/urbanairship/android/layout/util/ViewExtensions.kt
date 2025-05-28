@@ -28,7 +28,6 @@ import androidx.core.text.TextUtilsCompat
 import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.core.text.toSpannable
 import androidx.core.view.descendants
-import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.view.PagerView

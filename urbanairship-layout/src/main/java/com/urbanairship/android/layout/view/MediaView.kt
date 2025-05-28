@@ -44,7 +44,6 @@ import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
-import java.nio.file.Files.find
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter

@@ -6,7 +6,6 @@ import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.info.CheckboxToggleLayoutInfo
 import com.urbanairship.android.layout.info.RadioInputToggleLayoutInfo
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler

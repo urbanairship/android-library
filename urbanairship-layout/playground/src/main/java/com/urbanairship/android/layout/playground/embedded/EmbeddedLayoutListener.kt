@@ -3,12 +3,7 @@ package com.urbanairship.android.layout.playground.embedded
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.event.ReportingEvent
-import com.urbanairship.android.layout.reporting.ThomasFormField
-import com.urbanairship.android.layout.reporting.FormInfo
-import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.json.JsonSerializable
-import com.urbanairship.json.JsonValue
 
 internal class EmbeddedLayoutListener(
     private val layoutName: String

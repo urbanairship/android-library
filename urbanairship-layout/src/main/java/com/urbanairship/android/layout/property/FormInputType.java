@@ -2,6 +2,8 @@
 
 package com.urbanairship.android.layout.property;
 
+import com.urbanairship.json.JsonException;
+
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
@@ -12,8 +14,6 @@ import static android.text.InputType.TYPE_TEXT_FLAG_AUTO_CORRECT;
 import static android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
 import static android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE;
 import static android.text.InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS;
-
-import com.urbanairship.json.JsonException;
 
 public enum FormInputType {
     EMAIL("email", TYPE_CLASS_TEXT | TYPE_TEXT_VARIATION_EMAIL_ADDRESS),

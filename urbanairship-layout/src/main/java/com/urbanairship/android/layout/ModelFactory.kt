@@ -76,7 +76,6 @@ import com.urbanairship.android.layout.model.VerticalScrollLayoutModel
 import com.urbanairship.android.layout.model.WebViewModel
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.ViewType
-import com.urbanairship.android.layout.view.CustomView
 
 internal class ModelFactoryException(message: String) : Exception(message)
 

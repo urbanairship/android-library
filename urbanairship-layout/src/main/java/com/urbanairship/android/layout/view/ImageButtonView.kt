@@ -19,8 +19,6 @@ import com.urbanairship.android.layout.model.ImageButtonModel
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.MediaFit
-import com.urbanairship.android.layout.property.Size
-import com.urbanairship.android.layout.property.Size.Dimension
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.dpToPx

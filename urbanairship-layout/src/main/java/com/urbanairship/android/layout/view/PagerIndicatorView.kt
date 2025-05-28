@@ -12,8 +12,6 @@ import android.widget.LinearLayout
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.PagerIndicatorModel
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.widget.ShapeView

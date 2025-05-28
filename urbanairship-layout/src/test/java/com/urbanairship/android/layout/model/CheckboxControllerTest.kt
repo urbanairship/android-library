@@ -10,7 +10,6 @@ import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.android.layout.info.FormValidationMode
-import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonValue
 import app.cash.turbine.test
 import io.mockk.every

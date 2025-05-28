@@ -14,13 +14,9 @@ import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ButtonLayoutInfo
 import com.urbanairship.android.layout.model.Background
-import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ButtonLayoutModel
 import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.ItemProperties
-import com.urbanairship.android.layout.model.MediaModel
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.debouncedClicks

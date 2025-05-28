@@ -2,11 +2,11 @@
 
 package com.urbanairship.android.layout;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.android.layout.property.PresentationType;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
+
+import androidx.annotation.NonNull;
 
 public abstract class BasePresentation {
     @NonNull

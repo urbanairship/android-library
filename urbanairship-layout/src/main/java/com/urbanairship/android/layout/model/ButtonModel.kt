@@ -1,4 +1,5 @@
 /* Copyright Airship and Contributors */
+
 package com.urbanairship.android.layout.model
 
 import android.content.Context
@@ -23,9 +24,7 @@ import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.yield
 
@@ -51,12 +50,12 @@ internal abstract class ButtonModel<T, I: Button>(
     }
 
     override var listener: Listener? = null
-    private var isProcessing = MutableStateFlow(false)
 
     @CallSuper
     override fun onViewAttached(view: T) {
         viewScope.launch {
             view.taps().collect {
+                listener?.setEnabled(enabled = false)
 
                 val reportingContext = layoutState.reportingContext(buttonId = viewInfo.identifier)
 
@@ -73,22 +72,14 @@ internal abstract class ButtonModel<T, I: Button>(
                 // Run any actions.
                 runActions(viewInfo.actions, reportingContext)
 
-                // Let the parent views update their state (mostly for pager to update pages in branching)
-                yield()
-
                 // Run any handlers for tap events.
                 if (viewInfo.eventHandlers.hasTapHandler() && !viewInfo.clickBehaviors.hasFormSubmit) {
                     handleViewEvent(EventHandler.Type.TAP)
+                    yield()
                 }
 
                 evaluateClickBehaviors(view.context ?: UAirship.getApplicationContext())
-            }
-        }
-
-        // If we're processing, disable the button, via the enabled listener.
-        viewScope.launch {
-            isProcessing.collect {
-                listener?.setEnabled(enabled = !it)
+                listener?.setEnabled(enabled = true)
             }
         }
     }
@@ -119,7 +110,7 @@ internal abstract class ButtonModel<T, I: Button>(
         }
     }
 
-    private fun handleSubmit(context: Context) {
+    private suspend fun handleSubmit(context: Context) {
         // Dismiss the keyboard, if it's open.
         listener?.dismissSoftKeyboard()
 
@@ -141,14 +132,12 @@ internal abstract class ButtonModel<T, I: Button>(
             }
         }
 
-        isProcessing.update { true }
         modelScope.launch {
             broadcast(submitEvent)
-            isProcessing.update { false }
-        }
+        }.join()
     }
 
-    private fun handleFormValidation(context: Context) {
+    private suspend fun handleFormValidation(context: Context) {
         // Dismiss the keyboard, if it's open.
         listener?.dismissSoftKeyboard()
 
@@ -168,11 +157,9 @@ internal abstract class ButtonModel<T, I: Button>(
             }
         }
 
-        isProcessing.update { true }
         modelScope.launch {
             broadcast(validateEvent)
-            isProcessing.update { false }
-        }
+        }.join()
     }
 
     private suspend fun handlePagerNext(context: Context, fallback: PagerNextFallback) {
@@ -212,6 +199,6 @@ internal abstract class ButtonModel<T, I: Button>(
         )
         modelScope.launch {
             environment.eventHandler.broadcast(LayoutEvent.Finish)
-        }
+        }.join()
     }
 }

@@ -30,10 +30,7 @@ import com.urbanairship.android.layout.playground.customviews.CustomWeatherView
 import com.urbanairship.android.layout.playground.customviews.CustomWeatherViewXml
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
 import com.urbanairship.android.layout.playground.embedded.EmbeddedActivity
-import com.urbanairship.android.layout.reporting.ThomasFormField
-import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.embedded.EmbeddedViewManager

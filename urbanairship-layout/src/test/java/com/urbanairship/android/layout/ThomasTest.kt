@@ -15,9 +15,9 @@ import com.urbanairship.android.layout.ui.LayoutViewModel
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import java.io.IOException
 import io.mockk.every
 import io.mockk.mockk
-import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow

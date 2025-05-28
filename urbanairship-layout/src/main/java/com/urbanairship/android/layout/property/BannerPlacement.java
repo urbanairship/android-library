@@ -2,14 +2,14 @@
 
 package com.urbanairship.android.layout.property;
 
-import static com.urbanairship.android.layout.model.SafeAreaAware.ignoreSafeAreaFromJson;
+import com.urbanairship.android.layout.model.SafeAreaAware;
+import com.urbanairship.json.JsonException;
+import com.urbanairship.json.JsonMap;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.urbanairship.android.layout.model.SafeAreaAware;
-import com.urbanairship.json.JsonException;
-import com.urbanairship.json.JsonMap;
+import static com.urbanairship.android.layout.model.SafeAreaAware.ignoreSafeAreaFromJson;
 
 public class BannerPlacement implements SafeAreaAware {
     @NonNull
