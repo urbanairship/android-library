@@ -14,12 +14,11 @@ import com.google.android.material.shape.CornerFamily
 import com.google.android.material.shape.ShapeAppearanceModel
 
 public class Border public constructor(
-    @JvmField @get:Dimension(unit = Dimension.DP) public val radius: Int?,
+    @JvmField public val radius: Int?,
     @JvmField public val strokeWidth: Int?,
     @JvmField public val strokeColor: Color?,
     @JvmField public val cornerRadius: CornerRadius? = null
 ) {
-
     @get:Dimension(unit = Dimension.DP)
     public val innerRadius: Int?
         get() {
@@ -123,7 +122,7 @@ public class Border public constructor(
             bottomRight?.let { shape.setBottomRightCornerSize(toPxConverter(it).toFloat()) }
         }
 
-        internal fun getRadii(toPxConverter: (Int) -> Float): FloatArray? {
+        internal fun getRadii(toPxConverter: (Int) -> Float): FloatArray {
             return FloatArray(8).apply {
 
                 val setCorner: (radius: Int?, index: Int) -> Unit = function@ { radius, index ->
@@ -142,7 +141,7 @@ public class Border public constructor(
         }
 
         internal val maxCornerRadius: Int?
-            get() = listOf(topLeft, topRight, bottomLeft, bottomRight).mapNotNull { it }.max()
+            get() = listOf(topLeft, topRight, bottomLeft, bottomRight).mapNotNull { it }.maxOrNull()
     }
 
     public companion object {

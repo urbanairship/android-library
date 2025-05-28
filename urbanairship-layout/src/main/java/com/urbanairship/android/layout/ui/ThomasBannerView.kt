@@ -314,7 +314,7 @@ internal class ThomasBannerView(
     override fun computeScroll() {
         super.computeScroll()
         if (dragHelper?.continueSettling(true) == true) {
-            ViewCompat.postInvalidateOnAnimation(this)
+            this.postInvalidateOnAnimation()
         }
     }
 

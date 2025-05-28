@@ -90,7 +90,8 @@ public sealed class ViewInfo : View {
         @JvmStatic
         @Throws(JsonException::class)
         public fun viewInfoFromJson(json: JsonMap): ViewInfo {
-            return when (val type = ViewType.from(json.requireField<String>("type"))) {
+            val type = json.requireField<String>("type")
+            return when (ViewType.from(type)) {
                 CONTAINER -> ContainerLayoutInfo(json)
                 LINEAR_LAYOUT -> LinearLayoutInfo(json)
                 SCROLL_LAYOUT -> ScrollLayoutInfo(json)
@@ -119,7 +120,7 @@ public sealed class ViewInfo : View {
                 TEXT_INPUT -> TextInputInfo(json)
                 SCORE -> ScoreInfo(json)
                 STATE_CONTROLLER -> StateControllerInfo(json)
-                UNKNOWN -> throw JsonException("Unknown view type! '${json.requireField<String>("type")}'")
+                UNKNOWN -> throw JsonException("Unknown view type! '$type'")
             }
         }
     }

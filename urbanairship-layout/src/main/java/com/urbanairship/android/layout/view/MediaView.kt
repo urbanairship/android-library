@@ -309,6 +309,7 @@ internal class MediaView(
         frameLayout.addView(progressBar, progressBarLayoutParams)
         wv.setBackgroundColor(Color.TRANSPARENT)
 
+        @Suppress("DEPRECATION")
         wv.settings.apply {
             if (model.viewInfo.mediaType == MediaType.VIDEO && model.viewInfo.video?.autoplay == true) {
                 mediaPlaybackRequiresUserGesture = false
@@ -417,7 +418,9 @@ internal class MediaView(
         load.run()
     }
 
+
     private val MediaModel.videoStyle: String
+        @Suppress("DEPRECATION")
         get() = when (viewInfo.mediaFit) {
             MediaFit.CENTER -> "object-fit: none;"
             MediaFit.CENTER_INSIDE -> "object-fit: contain;"

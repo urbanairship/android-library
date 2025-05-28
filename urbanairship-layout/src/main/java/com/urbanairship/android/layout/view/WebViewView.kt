@@ -123,6 +123,7 @@ internal class WebViewView(
         }
         frameLayout.addView(progressBar, progressBarLayoutParams)
 
+        @Suppress("DEPRECATION")
         wv.settings.run {
             javaScriptEnabled = true
             if (ManifestUtils.shouldEnableLocalStorage()) {

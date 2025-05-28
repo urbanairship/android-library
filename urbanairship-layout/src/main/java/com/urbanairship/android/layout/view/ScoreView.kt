@@ -111,7 +111,7 @@ internal class ScoreView(
                 bindings = style.bindings,
                 padding = 0
             ).apply {
-                setOnClickListener { onScoreClick(this, i) }
+                setOnClickListener { onScoreClick(i) }
             }
 
             scoreToViewIds.append(i, button.id)
@@ -139,7 +139,7 @@ internal class ScoreView(
             bindings.unselected.textAppearance
         ).apply {
             id = viewId
-            setOnClickListener { onScoreClick(this, score) }
+            setOnClickListener { onScoreClick(score) }
         }
 
         // Apply constraints to the button
@@ -178,7 +178,7 @@ internal class ScoreView(
         }
     }
 
-    private fun onScoreClick(view: View, score: Int) {
+    private fun onScoreClick(score: Int) {
         if (!isEnabled || score == selectedScore) return
         selectedScore = score
         setSelectedScore(score)
