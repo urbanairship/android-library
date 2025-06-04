@@ -1,15 +1,10 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.messagecenter
 
-import android.content.Context
-import android.os.Looper
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
 import com.urbanairship.UAirship
-import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.http.RequestAuth.ChannelTokenAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestException
@@ -19,7 +14,6 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
-import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
@@ -36,20 +30,13 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.Shadows.shadowOf
-import org.robolectric.shadows.ShadowLooper
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class InboxApiClientTest {
 
     private val testDispatcher = StandardTestDispatcher()
-
-    private val context = ApplicationProvider.getApplicationContext<Context>()
-
-    private val mockChannel = mockk<AirshipChannel> {}
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
-    private val user = User(dataStore, mockChannel)
+    private val userCredentials = UserCredentials("fakeUserId", "password")
 
     private val requestSession = TestRequestSession()
     private val runtimeConfig = TestAirshipRuntimeConfig(
@@ -64,16 +51,11 @@ public class InboxApiClientTest {
         )
     )
 
-    private val mainLooper: ShadowLooper = shadowOf(Looper.getMainLooper())
-
     private val inboxApiClient = InboxApiClient(runtimeConfig, requestSession.toSuspendingRequestSession())
 
     @Before
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
-
-        // Set a valid user
-        user.setUser("fakeUserId", "password")
     }
 
     @After
@@ -108,7 +90,7 @@ public class InboxApiClientTest {
 
         requestSession.addResponse(200, responseBody)
 
-        val (status, result) = inboxApiClient.fetchMessages(user, "channelId", "some last modified")
+        val (status, result) = inboxApiClient.fetchMessages(userCredentials, "channelId", "some last modified")
 
         assertEquals(200, status)
         assertEquals("GET", requestSession.lastRequest.method)
@@ -125,7 +107,7 @@ public class InboxApiClientTest {
     @Test
     public fun testNullUrlUpdateMessages(): TestResult = runTest {
         runtimeConfig.updateRemoteConfig(RemoteConfig())
-        val result = inboxApiClient.fetchMessages(user, "channelId", null)
+        val result = inboxApiClient.fetchMessages(userCredentials, "channelId", null)
 
         assertFalse(result.isSuccessful)
         assertNotNull(result.exception)
@@ -141,7 +123,7 @@ public class InboxApiClientTest {
         )
         val expectedJsonMap = jsonMapOf("messages" to JsonValue.wrapOpt(reportings))
 
-        val (status) = inboxApiClient.syncDeletedMessageState(user, "channelId", reportings)
+        val (status) = inboxApiClient.syncDeletedMessageState(userCredentials, "channelId", reportings)
 
         assertEquals(200, status)
         assertEquals("POST", requestSession.lastRequest.method)
@@ -154,7 +136,7 @@ public class InboxApiClientTest {
     @Test
     public fun testNullUrlSyncDeletedMessageState(): TestResult = runTest {
         runtimeConfig.updateRemoteConfig(RemoteConfig())
-        val result = inboxApiClient.syncDeletedMessageState(user, "channelId", emptyList())
+        val result = inboxApiClient.syncDeletedMessageState(userCredentials, "channelId", emptyList())
 
         assertFalse(result.isSuccessful)
         assertNotNull(result.exception)
@@ -169,7 +151,7 @@ public class InboxApiClientTest {
         )
         val expectedJsonMap = jsonMapOf("messages" to JsonValue.wrapOpt(reportings))
 
-        val (status) = inboxApiClient.syncReadMessageState(user, "channelId", reportings)
+        val (status) = inboxApiClient.syncReadMessageState(userCredentials, "channelId", reportings)
 
         assertEquals(200, status)
         assertEquals("POST", requestSession.lastRequest.method)
@@ -182,7 +164,7 @@ public class InboxApiClientTest {
     @Test
     public fun testNullUrlSyncReadMessageState(): TestResult = runTest {
         runtimeConfig.updateRemoteConfig(RemoteConfig())
-        val result = inboxApiClient.syncReadMessageState(user, "channelId", emptyList())
+        val result = inboxApiClient.syncReadMessageState(userCredentials, "channelId", emptyList())
 
         assertFalse(result.isSuccessful)
         assertNotNull(result.exception)
@@ -231,11 +213,12 @@ public class InboxApiClientTest {
         assertEquals("someUserToken", userCredentials.password)
     }
 
-    @Test(expected = RequestException::class)
+    @Test
     public fun testNullUrlCreateUser(): TestResult = runTest {
         runtimeConfig.updateRemoteConfig(RemoteConfig())
         runtimeConfig.setPlatform(0)
-        inboxApiClient.createUser("channelId")
+        val result = inboxApiClient.createUser("channelId")
+        assertNotNull(result.exception)
     }
 
     @Test
@@ -243,7 +226,7 @@ public class InboxApiClientTest {
         requestSession.addResponse(200)
         runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM)
 
-        val (status) = inboxApiClient.updateUser(user, "channelId")
+        val (status) = inboxApiClient.updateUser(userCredentials, "channelId")
 
         assertEquals(200, status)
         assertEquals("POST", requestSession.lastRequest.method)
@@ -257,7 +240,7 @@ public class InboxApiClientTest {
         requestSession.addResponse(200)
         runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM)
 
-        val (status) = inboxApiClient.updateUser(user, "channelId")
+        val (status) = inboxApiClient.updateUser(userCredentials, "channelId")
 
         assertEquals(200, status)
         assertEquals("POST", requestSession.lastRequest.method)
@@ -266,10 +249,11 @@ public class InboxApiClientTest {
         assertEquals("{\"amazon_channels\":{\"add\":[\"channelId\"]}}", requestSession.lastRequest.body!!.content)
     }
 
-    @Test(expected = RequestException::class)
+    @Test
     public fun testNullUrlUpdateUser(): TestResult = runTest {
         runtimeConfig.updateRemoteConfig(RemoteConfig())
         runtimeConfig.setPlatform(0)
-        inboxApiClient.updateUser(user, "channelId")
+        val result = inboxApiClient.updateUser(userCredentials, "channelId")
+        assertNotNull(result.exception)
     }
 }

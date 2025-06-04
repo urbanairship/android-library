@@ -64,12 +64,10 @@ public class MessageCenterTest {
         coEvery { fetchMessages() } returns true
     }
     private val onShowMessageCenterListener = mockk<OnShowMessageCenterListener> {}
-    private val config = TestAirshipRuntimeConfig()
 
     private val messageCenter: MessageCenter = MessageCenter(
         context = context,
         dataStore = dataStore,
-        config = config,
         privacyManager = privacyManager,
         inbox = inbox,
         pushManager = pushManager,
@@ -198,21 +196,7 @@ public class MessageCenterTest {
         coVerify { inbox.fetchMessages() }
     }
 
-    @Test
-    public fun testUrlConfigUpdateCallback() {
-        val remoteConfig = RemoteConfig(
-            RemoteAirshipConfig(
-                "https://remote-data",
-                "https://device",
-                "https://wallet",
-                "https://analytics",
-                "https://metered-usage"
-            )
-        )
-        config.updateRemoteConfig(remoteConfig)
 
-        verify { inbox.dispatchUpdateUserJob(true) }
-    }
 
     @Test
     public fun testPrivacyManagerListenerUpdatesEnabledState() {
@@ -225,7 +209,6 @@ public class MessageCenterTest {
 
         verify(exactly = 1) {
             inbox.setEnabled(false)
-            inbox.updateEnabledState()
         }
     }
 
@@ -240,7 +223,6 @@ public class MessageCenterTest {
 
         verify {
             inbox.setEnabled(true)
-            inbox.updateEnabledState()
         }
 
         verify(exactly = 0) { pushManager.addInternalPushListener(any()) }
@@ -257,10 +239,6 @@ public class MessageCenterTest {
 
         verify {
             inbox.setEnabled(false)
-            inbox.updateEnabledState()
-            // Verify that MessageCenter was torn down
-            inbox.tearDown()
-            pushManager.removePushListener(any())
         }
     }
 
@@ -276,13 +254,13 @@ public class MessageCenterTest {
     @Test
     public fun testPerformJobWhenEnabled() {
         val (airship, jobInfo) = mockk<UAirship>() to mockk<JobInfo>()
-        every { inbox.onPerformJob(airship, jobInfo) } returns JobResult.SUCCESS
+        coEvery { inbox.performUpdate() } returns Result.success(true)
         every { privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns true
 
         val result = messageCenter.onPerformJob(airship, jobInfo)
 
         assertEquals(JobResult.SUCCESS, result)
-        verify { inbox.onPerformJob(airship, jobInfo) }
+        coVerify { inbox.performUpdate() }
     }
 
     @Test
@@ -292,7 +270,7 @@ public class MessageCenterTest {
         val result = messageCenter.onPerformJob(mockk<UAirship>(), mockk<JobInfo>())
 
         assertEquals(JobResult.SUCCESS, result)
-        verify(exactly = 0) { inbox.onPerformJob(any(), any()) }
+        coVerify(exactly = 0) { inbox.performUpdate() }
     }
 
     @Test
