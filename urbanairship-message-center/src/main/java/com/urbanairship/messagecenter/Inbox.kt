@@ -5,42 +5,40 @@ import android.content.Context
 import android.os.Looper
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.WorkerThread
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.Cancelable
 import com.urbanairship.CancelableOperation
 import com.urbanairship.PendingResult
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
-import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.GlobalActivityMonitor.Companion.shared
 import com.urbanairship.channel.AirshipChannel
-import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.config.AirshipRuntimeConfig
-import com.urbanairship.job.JobDispatcher
-import com.urbanairship.job.JobInfo
-import com.urbanairship.job.JobResult
-import com.urbanairship.json.jsonMapOf
-import com.urbanairship.messagecenter.Inbox.FetchMessagesCallback
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
+import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 
 /**
@@ -51,16 +49,16 @@ import kotlinx.coroutines.withContext
  */
 public class Inbox @VisibleForTesting internal constructor(
     dataStore: PreferenceDataStore,
-    private val jobDispatcher: JobDispatcher,
     public val user: User,
     private val messageDao: MessageDao,
     private val activityMonitor: ActivityMonitor,
     private val airshipChannel: AirshipChannel,
-    private val privacyManager: PrivacyManager,
-    config: AirshipRuntimeConfig,
+    private val config: AirshipRuntimeConfig,
     private val taskSleeper: TaskSleeper = TaskSleeper.default,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
-    dispatcher: CoroutineDispatcher = Dispatchers.IO
+    dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    private val refreshDispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
+    private val updateScheduler: (UpdateType) -> Unit
 ) {
     private val job = SupervisorJob()
     private val scope = CoroutineScope(dispatcher + job)
@@ -86,124 +84,112 @@ public class Inbox @VisibleForTesting internal constructor(
         dataStore: PreferenceDataStore,
         airshipChannel: AirshipChannel,
         config: AirshipRuntimeConfig,
-        privacyManager: PrivacyManager
+        updateScheduler: (UpdateType) -> Unit
     ) : this(
         dataStore = dataStore,
-        jobDispatcher = JobDispatcher.shared(context),
-        user = User(dataStore, airshipChannel),
+        user = User(dataStore),
         messageDao = MessageDatabase.createDatabase(context, config.configOptions).dao,
         activityMonitor = shared(context),
         airshipChannel = airshipChannel,
-        privacyManager = privacyManager,
-        config = config
+        config = config,
+        updateScheduler = updateScheduler
     )
-
-    private val listeners: MutableList<InboxListener> = CopyOnWriteArrayList()
-
-    private var isFetchingMessages = false
-    private var refreshOnMessageExpiresJob: Job? = null
 
     @VisibleForTesting
     internal var inboxJobHandler: InboxJobHandler = InboxJobHandler(
-        inbox = this,
         user = user,
-        channel = airshipChannel,
         runtimeConfig = config,
         dataStore = dataStore,
         messageDao = messageDao
     )
 
+    internal enum class RefreshResult { LOCAL, REMOTE_SUCCESS, REMOTE_FAILED }
+    internal enum class UpdateType { REQUIRED, BEST_ATTEMPT }
+
+    // The DAO flows will not auto refresh on expired messages, so we use this and update it
+    // with a random UUID string to force updates.
+    private val expiryRefresh = MutableStateFlow<String?>(null)
+    @VisibleForTesting
+    internal val refreshResults = MutableSharedFlow<RefreshResult>()
+    private val listeners: MutableList<InboxListener> = CopyOnWriteArrayList()
+    private var refreshOnMessageExpiresJob: Job? = null
     private val isEnabled = AtomicBoolean(false)
-    private val isStarted = AtomicBoolean(false)
-    private val pendingFetchCallbacks: MutableList<PendingFetchMessagesCallback> = ArrayList()
 
-    private val applicationListener: ApplicationListener = object : ApplicationListener {
-        override fun onForeground(time: Long) = dispatchUpdateUserJob(
-            forcefully = false,
-            fetchMessages = true
-        )
-
-        override fun onBackground(time: Long) {
-            jobDispatcher.dispatch(
-                JobInfo.newBuilder()
-                    .setAction(InboxJobHandler.ACTION_SYNC_MESSAGE_STATE)
-                    .setAirshipComponent(MessageCenter::class.java)
-                    .setConflictStrategy(JobInfo.KEEP)
-                    .build()
-            )
-
-            refreshOnMessageExpiresJob?.cancel()
-        }
+    private val applicationListener = object : ApplicationListener {
+        override fun onForeground(time: Long) = scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
+        override fun onBackground(time: Long) = scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
     }
 
-    private val channelListener: AirshipChannelListener =
-        AirshipChannelListener { dispatchUpdateUserJob(true) }
+    private val configListener = AirshipRuntimeConfig.ConfigChangeListener {
+        scheduleUpdateIfEnabled(UpdateType.REQUIRED)
+    }
 
-    private val channelRegistrationPayloadExtender = AirshipChannel.Extender.Blocking { builder ->
-        if (privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
+    private val channelRegistrationPayloadExtender = AirshipChannel.Extender.Suspending { builder ->
+        if (isEnabled.get()) {
             builder.setUserId(user.id)
         } else {
             builder
         }
     }
 
-    private val userListener = User.Listener { success: Boolean ->
-        if (success) {
-            fetchMessages { UALog.v { "Inbox updated after user update." } }
-        }
-    }
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun init() {
-        updateEnabledState()
-    }
-
-    /**
-     * @hide
-     */
-    @WorkerThread
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    internal fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
-        if (!isEnabled.get()) {
-            return JobResult.SUCCESS
-        }
-
-        return inboxJobHandler.performJob(jobInfo)
-    }
-
-    /**
-     * Initializes or tears down the Inbox based on the current enabled state.
-     *
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    internal fun updateEnabledState() {
-        if (isEnabled.get()) {
-            if (!isStarted.getAndSet(true)) {
-                // Refresh the inbox whenever the user is updated.
-                user.addListener(userListener)
-                activityMonitor.addApplicationListener(applicationListener)
-                airshipChannel.addChannelListener(channelListener)
-                if (user.shouldUpdate()) {
-                    // Update user and then fetch messages.
-                    dispatchUpdateUserJob(forcefully = true, fetchMessages = true)
-                } else if (activityMonitor.isAppForegrounded) {
-                    // Fetch messages if the app is in the foreground.
-                    fetchMessages(null, null)
-                }
-                airshipChannel.addChannelRegistrationPayloadExtender(
-                    channelRegistrationPayloadExtender
-                )
+    init {
+        scope.launch {
+            val id = airshipChannel.id
+            airshipChannel.channelIdFlow.filter { it == id }.collect {
+                scheduleUpdate(UpdateType.REQUIRED)
             }
-        } else {
-            // Clean up any Message Center data stored on the device.
-            deleteAllMessagesInternal()
-            inboxJobHandler.removeStoredData()
-            tearDown()
         }
+
+        scope.launch {
+            refreshResults.collect { status ->
+                notifyInboxUpdated()
+                if (status == RefreshResult.REMOTE_SUCCESS) {
+                    setupRefreshOnMessageExpiresJob()
+                }
+            }
+        }
+
+        airshipChannel.addChannelRegistrationPayloadExtender(channelRegistrationPayloadExtender)
+        activityMonitor.addApplicationListener(applicationListener)
+        config.addConfigListener(configListener)
+        setupRefreshOnMessageExpiresJob()
+    }
+
+    internal suspend fun performUpdate(): Result<Boolean> {
+        if (!isEnabled.get()) {
+            refreshResults.emit(RefreshResult.REMOTE_FAILED)
+            return Result.failure(IllegalStateException("Unable to update when disabled"))
+        }
+
+        return updateInbox().let {
+            if (it) {
+                refreshResults.emit(RefreshResult.REMOTE_SUCCESS)
+            } else {
+                refreshResults.emit(RefreshResult.REMOTE_FAILED)
+            }
+            Result.success(it)
+        }
+    }
+
+    private suspend fun updateInbox(): Boolean = withContext(refreshDispatcher) {
+        val channelId = airshipChannel.id ?: return@withContext false
+        val userCredentials = inboxJobHandler.getOrCreateUserCredentials(channelId) ?: return@withContext false
+
+        val syncedRead = inboxJobHandler.syncReadMessageState(
+            userCredentials = userCredentials, channelId = channelId
+        )
+
+        val syncedDeleted = inboxJobHandler.syncDeletedMessageState(
+            userCredentials = userCredentials, channelId = channelId
+        )
+
+        if (!syncedRead || !syncedDeleted) {
+            return@withContext false
+        }
+
+        return@withContext inboxJobHandler.syncMessageList(
+            userCredentials = userCredentials, channelId = channelId
+        )
     }
 
     /**
@@ -212,14 +198,13 @@ public class Inbox @VisibleForTesting internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     internal fun tearDown() {
         activityMonitor.removeApplicationListener(applicationListener)
-        airshipChannel.removeChannelListener(channelListener)
         airshipChannel.removeChannelRegistrationPayloadExtender(channelRegistrationPayloadExtender)
-        user.removeListener(userListener)
-        isStarted.set(false)
         refreshOnMessageExpiresJob?.cancel()
+        config.removeRemoteConfigListener(configListener)
     }
 
-    private fun setupRefreshOnMessageExpiresJob() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    internal fun setupRefreshOnMessageExpiresJob() {
         refreshOnMessageExpiresJob?.cancel()
 
         refreshOnMessageExpiresJob = scope.launch {
@@ -228,13 +213,14 @@ public class Inbox @VisibleForTesting internal constructor(
             val refreshDate = getMessages()
                 .mapNotNull { it.expirationDate }
                 .filter { it.time > now }
-                .minOrNull()
-            ?: return@launch
+                .minOrNull() ?: return@launch
 
             val delay = (refreshDate.time - clock.currentTimeMillis()).milliseconds
-
             taskSleeper.sleep(delay)
-            fetchMessages()
+
+            if (isActive) {
+                expiryRefresh.update { UUID.randomUUID().toString() }
+            }
         }
     }
 
@@ -245,7 +231,15 @@ public class Inbox @VisibleForTesting internal constructor(
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     internal fun setEnabled(isEnabled: Boolean) {
-        this.isEnabled.set(isEnabled)
+        if (this.isEnabled.compareAndSet(!isEnabled, isEnabled)) {
+            if (isEnabled) {
+                scheduleUpdate(UpdateType.BEST_ATTEMPT)
+            } else {
+                // Clean up any Message Center data stored on the device.
+                deleteAllMessagesInternal()
+                inboxJobHandler.removeStoredData()
+            }
+        }
     }
 
     /**
@@ -296,20 +290,12 @@ public class Inbox @VisibleForTesting internal constructor(
      * @return A cancelable object that can be used to cancel the callback.
      */
     public fun fetchMessages(
-        looper: Looper? = null,
-        callback: FetchMessagesCallback? = null
+        looper: Looper? = null, callback: FetchMessagesCallback? = null
     ): Cancelable {
         val cancelableOperation = PendingFetchMessagesCallback(callback, looper)
-        synchronized(pendingFetchCallbacks) {
-            pendingFetchCallbacks.add(cancelableOperation)
-            if (!isFetchingMessages) {
-                val jobInfo: JobInfo =
-                    JobInfo.newBuilder().setAction(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE)
-                        .setAirshipComponent(MessageCenter::class.java)
-                        .setConflictStrategy(JobInfo.REPLACE).build()
-                jobDispatcher.dispatch(jobInfo)
-            }
-            isFetchingMessages = true
+        scope.launch {
+            cancelableOperation.result = fetchMessages()
+            cancelableOperation.run()
         }
         return cancelableOperation
     }
@@ -322,35 +308,19 @@ public class Inbox @VisibleForTesting internal constructor(
      *
      * @return `true` if the fetch was successful, `false` otherwise.
      */
-    @OptIn(ExperimentalCoroutinesApi::class)
     @JvmSynthetic
-    public suspend fun fetchMessages(): Boolean = suspendCancellableCoroutine { continuation ->
-        val callback = FetchMessagesCallback { success: Boolean ->
-            continuation.resume(success) {
-                UALog.e { "Failed to resume fetchMessages coroutine." }
-            }
+    public suspend fun fetchMessages(): Boolean {
+        if (!isEnabled.get()) {
+            UALog.e { "Failed to resume fetchMessages, Message Center is disabled." }
+            return false
         }
 
-        val cancelable = fetchMessages(callback)
-
-        continuation.invokeOnCancellation {
-            cancelable.cancel()
+        scope.launch {
+            scheduleUpdate(UpdateType.REQUIRED)
         }
+
+        return refreshResults.first { it != RefreshResult.LOCAL } == RefreshResult.REMOTE_SUCCESS
     }
-
-    internal fun onUpdateMessagesFinished(result: Boolean) {
-        synchronized(pendingFetchCallbacks) {
-            for (callback: PendingFetchMessagesCallback in pendingFetchCallbacks) {
-                callback.result = result
-                callback.run()
-            }
-            isFetchingMessages = false
-            pendingFetchCallbacks.clear()
-        }
-
-        setupRefreshOnMessageExpiresJob()
-    }
-
 
     /** The total message count. */
     @JvmSynthetic
@@ -412,8 +382,7 @@ public class Inbox @VisibleForTesting internal constructor(
      * @return A filtered collection of messages
      */
     private fun filterMessages(
-        messages: Collection<Message>,
-        predicate: Predicate<Message>?
+        messages: Collection<Message>, predicate: Predicate<Message>?
     ): Collection<Message> = predicate?.let { messages.filter(it::apply) } ?: messages
 
     /**
@@ -424,9 +393,7 @@ public class Inbox @VisibleForTesting internal constructor(
      */
     @JvmSynthetic
     public suspend fun getMessages(predicate: Predicate<Message>? = null): List<Message> =
-        messageDao.getMessages()
-            .mapNotNull { it.toMessage() }
-            .let { filterMessages(it, predicate) }
+        messageDao.getMessages().mapNotNull { it.toMessage() }.let { filterMessages(it, predicate) }
             .sortedWith(Message.SENT_DATE_COMPARATOR)
 
     /**
@@ -438,14 +405,18 @@ public class Inbox @VisibleForTesting internal constructor(
      * @return A flow of filtered and sorted [Message]s.
      */
     @JvmSynthetic
-    public fun getMessagesFlow(predicate: Predicate<Message>? = null): Flow<List<Message>> =
-        messageDao.getMessagesFlow()
-            .map {
-                val messages = it.mapNotNull(MessageEntity::toMessage)
-                filterMessages(messages, predicate)
-                    .sortedWith(Message.SENT_DATE_COMPARATOR)
-            }
-            .distinctUntilChanged()
+    public fun getMessagesFlow(predicate: Predicate<Message>? = null): Flow<List<Message>> {
+        return combine(messageDao.getMessagesFlow(), expiryRefresh) { messages, _ ->
+            messages
+        }.map {
+            val messages = it.mapNotNull(MessageEntity::toMessage)
+            filterMessages(messages, predicate)
+                .sortedWith(Message.SENT_DATE_COMPARATOR)
+                .filter { message ->
+                    !message.isExpired
+                }
+        }.distinctUntilChanged()
+    }
 
     /**
      * Gets a list of RichPushMessages as a [PendingResult], filtered by the provided predicate,
@@ -486,14 +457,18 @@ public class Inbox @VisibleForTesting internal constructor(
      * @return A flow of filtered and sorted [Message]s.
      */
     @JvmSynthetic
-    public fun getUnreadMessagesFlow(predicate: Predicate<Message>? = null): Flow<List<Message>> =
-        messageDao.getUnreadMessagesFlow()
-            .map {
-                val messages = it.mapNotNull(MessageEntity::toMessage)
-                filterMessages(messages, predicate)
-                    .sortedWith(Message.SENT_DATE_COMPARATOR)
-            }
-            .distinctUntilChanged()
+    public fun getUnreadMessagesFlow(predicate: Predicate<Message>? = null): Flow<List<Message>> {
+        return combine(messageDao.getUnreadMessagesFlow(), expiryRefresh) { messages, _ ->
+            messages
+        }.map {
+            val messages = it.mapNotNull(MessageEntity::toMessage)
+            filterMessages(messages, predicate)
+                .sortedWith(Message.SENT_DATE_COMPARATOR)
+                .filter { message ->
+                    !message.isExpired
+                }
+        }.distinctUntilChanged()
+    }
 
     /**
      * Gets a list of unread RichPushMessages as a [PendingResult], filtered by the provided predicate,
@@ -599,7 +574,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun markMessagesRead(messageIds: Set<String>) {
         scope.launch {
             messageDao.markMessagesRead(messageIds)
-            notifyInboxUpdated()
+            refreshResults.tryEmit(RefreshResult.LOCAL)
         }
     }
 
@@ -611,7 +586,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun markMessagesRead(vararg messageIds: String) {
         scope.launch {
             messageDao.markMessagesRead(messageIds.toSet())
-            notifyInboxUpdated()
+            refreshResults.tryEmit(RefreshResult.LOCAL)
         }
     }
 
@@ -623,7 +598,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun markMessagesUnread(messageIds: Set<String>) {
         scope.launch {
             messageDao.markMessagesUnread(messageIds)
-            notifyInboxUpdated()
+            refreshResults.tryEmit(RefreshResult.LOCAL)
         }
     }
 
@@ -635,7 +610,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun markMessagesUnread(vararg messageIds: String) {
         scope.launch {
             messageDao.markMessagesUnread(messageIds.toSet())
-            notifyInboxUpdated()
+            refreshResults.tryEmit(RefreshResult.LOCAL)
         }
     }
 
@@ -650,7 +625,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun deleteMessages(messageIds: Set<String>) {
         scope.launch {
             messageDao.markMessagesDeleted(messageIds)
-            notifyInboxUpdated()
+            refreshResults.tryEmit(RefreshResult.LOCAL)
         }
     }
 
@@ -665,7 +640,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun deleteMessages(vararg messageIds: String) {
         scope.launch {
             messageDao.markMessagesDeleted(messageIds.toSet())
-            notifyInboxUpdated()
+            refreshResults.tryEmit(RefreshResult.LOCAL)
         }
     }
 
@@ -678,7 +653,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun deleteAllMessages() {
         scope.launch {
             messageDao.markAllMessagesDeleted()
-            notifyInboxUpdated()
+            refreshResults.tryEmit(RefreshResult.LOCAL)
         }
     }
 
@@ -690,11 +665,12 @@ public class Inbox @VisibleForTesting internal constructor(
     private fun deleteAllMessagesInternal() {
         scope.launch {
             messageDao.deleteAllMessages()
-            notifyInboxUpdated()
+            refreshResults.tryEmit(RefreshResult.LOCAL)
         }
     }
 
     /** Notifies all of the registered listeners that the inbox updated. */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     internal fun notifyInboxUpdated() {
         scope.launch {
             for (listener in listeners) {
@@ -707,26 +683,18 @@ public class Inbox @VisibleForTesting internal constructor(
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    internal fun dispatchUpdateUserJob(
-        forcefully: Boolean,
-        fetchMessages: Boolean = false
+    private fun scheduleUpdate(
+        reason: UpdateType
     ) {
-        UALog.d("Updating user.")
-        refreshOnMessageExpiresJob?.cancel()
+        updateScheduler(reason)
+    }
 
-        val jobInfo = JobInfo.newBuilder()
-            .setAction(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE)
-            .setAirshipComponent(MessageCenter::class.java)
-            .setExtras(
-                jsonMapOf(
-                    InboxJobHandler.EXTRA_FORCEFULLY to forcefully,
-                    InboxJobHandler.EXTRA_FETCH_MESSAGES to fetchMessages
-                )
-            )
-            .setConflictStrategy(if (forcefully) JobInfo.REPLACE else JobInfo.KEEP)
-            .build()
-
-        jobDispatcher.dispatch(jobInfo)
+    internal fun scheduleUpdateIfEnabled(
+        reason: UpdateType
+    ) {
+        if (isEnabled.get()) {
+            updateScheduler(reason)
+        }
     }
 
     internal class PendingFetchMessagesCallback(

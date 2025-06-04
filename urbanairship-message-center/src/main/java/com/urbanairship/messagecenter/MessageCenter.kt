@@ -17,6 +17,7 @@ import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.messagecenter.ui.MessageCenterActivity
@@ -29,6 +30,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * Airship Message Center.
@@ -41,11 +43,10 @@ public class MessageCenter
 internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
-    private val config: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     public val inbox: Inbox,
     private val pushManager: PushManager,
-    private val dispatcher: CoroutineDispatcher = Dispatchers.IO
+    dispatcher: CoroutineDispatcher
 ) : AirshipComponent(context, dataStore) {
 
     private val job = SupervisorJob()
@@ -74,6 +75,10 @@ internal constructor(
     private var onShowMessageCenterListener: OnShowMessageCenterListener? = null
 
     private val pushListener: PushListener = PushListener { message: PushMessage, _: Boolean ->
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
+            return@PushListener
+        }
+
         scope.launch {
             val hasMessageId = !message.richPushMessageId.isNullOrEmpty()
             val hasMessageData = inbox.getMessage(message.richPushMessageId) != null
@@ -84,8 +89,6 @@ internal constructor(
             }
         }
     }
-
-    private val isStarted = AtomicBoolean(false)
 
     /**
      * @hide
@@ -99,13 +102,16 @@ internal constructor(
         channel: AirshipChannel,
         pushManager: PushManager
     ) : this(
-        context,
-        dataStore,
-        config,
-        privacyManager,
-        Inbox(context, dataStore, channel, config, privacyManager),
-        pushManager
+        context = context,
+        dataStore = dataStore,
+        privacyManager = privacyManager,
+        inbox = Inbox(context, dataStore, channel, config) { reason ->
+            JobDispatcher.shared(context).scheduleInboxUpdateJob(reason)
+        },
+        pushManager = pushManager,
+        dispatcher = Dispatchers.IO
     )
+
 
     /**
      * @hide
@@ -123,10 +129,10 @@ internal constructor(
      */
     @VisibleForTesting
     internal fun initialize() {
+        pushManager.addInternalPushListener(pushListener)
         privacyManager.addListener {
             AirshipExecutors.newSerialExecutor().execute { updateInboxEnabledState() }
         }
-        config.addConfigListener { inbox.dispatchUpdateUserJob(true) }
         updateInboxEnabledState()
     }
 
@@ -139,15 +145,6 @@ internal constructor(
     internal fun updateInboxEnabledState() {
         val isEnabled = privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)
         inbox.setEnabled(isEnabled)
-        inbox.updateEnabledState()
-        if (isEnabled) {
-            if (!isStarted.getAndSet(true)) {
-                UALog.v("Initializing Inbox...")
-                pushManager.addInternalPushListener(pushListener)
-            }
-        } else {
-            tearDown()
-        }
     }
 
     /**
@@ -166,7 +163,15 @@ internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
         return if (privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
-            inbox.onPerformJob(airship, jobInfo)
+            runBlocking {
+                inbox.performUpdate().fold(onSuccess = { result ->
+                    if (result) {
+                        JobResult.SUCCESS
+                    } else {
+                        JobResult.RETRY
+                    }
+                }, onFailure = { JobResult.FAILURE })
+            }
         } else {
             JobResult.SUCCESS
         }
@@ -179,7 +184,6 @@ internal constructor(
     public override fun tearDown() {
         inbox.tearDown()
         pushManager.removePushListener(pushListener)
-        isStarted.set(false)
     }
 
     /** The inbox user. */
@@ -264,6 +268,11 @@ internal constructor(
     public companion object {
 
         /**
+         * Job action to update the inbox.
+         */
+        internal const val ACTION_UPDATE_INBOX = "ACTION_UPDATE_INBOX"
+
+        /**
          * Intent action to view the message center.
          */
         public const val VIEW_MESSAGE_CENTER_INTENT_ACTION: String = "com.urbanairship.VIEW_RICH_PUSH_INBOX"
@@ -310,4 +319,22 @@ internal constructor(
             }
         }
     }
+}
+
+internal fun JobDispatcher.scheduleInboxUpdateJob(reason: Inbox.UpdateType) {
+    val jobInfo = JobInfo.newBuilder()
+        .setAction(MessageCenter.ACTION_UPDATE_INBOX)
+        .setAirshipComponent(MessageCenter::class.java)
+        .let {
+            when(reason) {
+                Inbox.UpdateType.BEST_ATTEMPT ->
+                    it.setNetworkAccessRequired(true)
+                        .setConflictStrategy(JobInfo.KEEP)
+
+                Inbox.UpdateType.REQUIRED ->
+                    it.setConflictStrategy(JobInfo.REPLACE)
+            }
+        }
+        .build()
+    this.dispatch(jobInfo)
 }
