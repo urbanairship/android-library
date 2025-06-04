@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.info
 import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.environment.ThomasStateTrigger
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
+import com.urbanairship.android.layout.info.LabelInfo.ViewOverrides
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.AutomatedAction
@@ -45,6 +46,7 @@ import com.urbanairship.android.layout.property.ViewType.CONTAINER
 import com.urbanairship.android.layout.property.ViewType.CUSTOM_VIEW
 import com.urbanairship.android.layout.property.ViewType.EMPTY_VIEW
 import com.urbanairship.android.layout.property.ViewType.FORM_CONTROLLER
+import com.urbanairship.android.layout.property.ViewType.ICON_VIEW
 import com.urbanairship.android.layout.property.ViewType.IMAGE_BUTTON
 import com.urbanairship.android.layout.property.ViewType.LABEL
 import com.urbanairship.android.layout.property.ViewType.LABEL_BUTTON
@@ -58,6 +60,8 @@ import com.urbanairship.android.layout.property.ViewType.RADIO_INPUT
 import com.urbanairship.android.layout.property.ViewType.RADIO_INPUT_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.RADIO_INPUT_TOGGLE_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.SCORE
+import com.urbanairship.android.layout.property.ViewType.SCORE_CONTROLLER
+import com.urbanairship.android.layout.property.ViewType.SCORE_TOGGLE_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.SCROLL_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.STATE_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.STORY_INDICATOR
@@ -120,7 +124,10 @@ public sealed class ViewInfo : View {
                 TEXT_INPUT -> TextInputInfo(json)
                 SCORE -> ScoreInfo(json)
                 STATE_CONTROLLER -> StateControllerInfo(json)
-                UNKNOWN -> throw JsonException("Unknown view type! '$type'")
+                ICON_VIEW -> IconViewInfo(json)
+                SCORE_CONTROLLER -> ScoreControllerInfo(json)
+                SCORE_TOGGLE_LAYOUT -> ScoreToggleLayoutInfo(json)
+                UNKNOWN -> throw JsonException("Unknown view type! '${json.requireField<String>("type")}'")
             }
         }
     }
@@ -409,6 +416,17 @@ internal class ButtonLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), 
                     null -> null
                 }
             }
+        }
+    }
+}
+
+internal class IconViewInfo(json: JsonMap) : ViewInfo(), View by view(json), Accessible by accessible(json) {
+    val image = Image.Icon.fromJson(json.requireField("icon"))
+    val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
+
+    internal class ViewOverrides(json: JsonMap) {
+        val icon = json.optionalList("icon")?.map {
+            ViewPropertyOverride(it, valueParser = { json -> Image.Icon.fromJson(json.requireMap()) })
         }
     }
 }
@@ -892,6 +910,10 @@ internal class RadioInputToggleLayoutInfo(json: JsonMap) : BaseToggleLayoutInfo(
     val reportingValue: JsonValue = json.requireField("reporting_value")
 }
 
+internal class ScoreToggleLayoutInfo(json: JsonMap) : BaseToggleLayoutInfo(json) {
+    val reportingValue: JsonValue = json.requireField("reporting_value")
+}
+
 internal class CheckboxControllerInfo(
     json: JsonMap
 ) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json), Validatable by validatable(json),
@@ -903,6 +925,15 @@ internal class CheckboxControllerInfo(
 }
 
 internal class RadioInputControllerInfo(
+    json: JsonMap
+) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json), Validatable by validatable(json),
+    Accessible by accessible(json) {
+    val attributeName: AttributeName? = attributeNameFromJson(json)
+
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
+}
+
+internal class ScoreControllerInfo(
     json: JsonMap
 ) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json), Validatable by validatable(json),
     Accessible by accessible(json) {

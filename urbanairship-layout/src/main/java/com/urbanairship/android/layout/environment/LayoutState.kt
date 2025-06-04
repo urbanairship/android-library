@@ -32,6 +32,7 @@ internal class LayoutState(
     val pager: SharedState<State.Pager>?,
     val checkbox: SharedState<State.Checkbox>?,
     val radio: SharedState<State.Radio>?,
+    val score: SharedState<State.Score>?,
     val layout: SharedState<State.Layout>,
     val thomasState: StateFlow<ThomasState>,
     val thomasForm: ThomasForm?,
@@ -67,7 +68,8 @@ internal class LayoutState(
             thomasState = makeThomasState(null, null),
             thomasForm = null,
             parentForm = null,
-            pagerTracker = null
+            pagerTracker = null,
+            score = null
         )
     }
 
@@ -423,16 +425,75 @@ internal sealed class State {
         val identifier: String,
         val minSelection: Int,
         val maxSelection: Int,
-        val selectedItems: Set<JsonValue> = emptySet(),
+        val selectedItems: Set<Selected> = emptySet(),
         val isEnabled: Boolean = true,
-    ) : State()
+    ) : State() {
+
+        internal data class Selected(
+            val identifier: String?,
+            val reportingValue: JsonValue
+        )
+
+        fun isSelected(
+            identifier: String? = null,
+            reportingValue: JsonValue? = null
+        ): Boolean {
+            return if (reportingValue != null) {
+                val toSearch = Selected(identifier, reportingValue)
+                selectedItems.any { it == toSearch }
+            } else {
+                selectedItems.any { it.identifier == identifier }
+            }
+        }
+    }
 
     internal data class Radio(
         val identifier: String,
-        val selectedItem: JsonValue? = null,
-        val attributeValue: AttributeValue? = null,
+        val selectedItem: Selected? = null,
         val isEnabled: Boolean = true,
-    ) : State()
+    ) : State() {
+
+        fun isSelected(
+            identifier: String? = null,
+            reportingValue: JsonValue? = null
+        ): Boolean {
+            return if (identifier != null) {
+                selectedItem?.identifier == identifier
+            } else {
+                selectedItem?.reportingValue == reportingValue
+            }
+        }
+
+        internal data class Selected(
+            val identifier: String?,
+            val reportingValue: JsonValue?,
+            val attributeValue: AttributeValue?
+        )
+    }
+
+    internal data class Score(
+        val identifier: String,
+        val selectedItem: Selected? = null,
+        val isEnabled: Boolean = true,
+    ) : State() {
+
+        fun isSelected(
+            identifier: String? = null,
+            reportingValue: JsonValue? = null
+        ): Boolean {
+            return if (identifier != null) {
+                selectedItem?.identifier == identifier
+            } else {
+                selectedItem?.reportingValue == reportingValue
+            }
+        }
+
+        internal data class Selected(
+            val identifier: String?,
+            val reportingValue: JsonValue?,
+            val attributeValue: AttributeValue?
+        )
+    }
 
     internal data class Layout(
         var mutations: Map<String, StateMutation> = emptyMap()

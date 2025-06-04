@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.info.ContainerLayoutItemInfo
 import com.urbanairship.android.layout.info.CustomViewInfo
 import com.urbanairship.android.layout.info.EmptyInfo
 import com.urbanairship.android.layout.info.FormControllerInfo
+import com.urbanairship.android.layout.info.IconViewInfo
 import com.urbanairship.android.layout.info.ImageButtonInfo
 import com.urbanairship.android.layout.info.ItemInfo
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
@@ -34,7 +35,9 @@ import com.urbanairship.android.layout.info.PagerItemInfo
 import com.urbanairship.android.layout.info.RadioInputControllerInfo
 import com.urbanairship.android.layout.info.RadioInputInfo
 import com.urbanairship.android.layout.info.RadioInputToggleLayoutInfo
+import com.urbanairship.android.layout.info.ScoreControllerInfo
 import com.urbanairship.android.layout.info.ScoreInfo
+import com.urbanairship.android.layout.info.ScoreToggleLayoutInfo
 import com.urbanairship.android.layout.info.ScrollLayoutInfo
 import com.urbanairship.android.layout.info.StateControllerInfo
 import com.urbanairship.android.layout.info.StoryIndicatorInfo
@@ -54,6 +57,7 @@ import com.urbanairship.android.layout.model.CustomViewModel
 import com.urbanairship.android.layout.model.EmptyModel
 import com.urbanairship.android.layout.model.FormController
 import com.urbanairship.android.layout.model.HorizontalScrollLayoutModel
+import com.urbanairship.android.layout.model.IconModel
 import com.urbanairship.android.layout.model.ImageButtonModel
 import com.urbanairship.android.layout.model.LabelButtonModel
 import com.urbanairship.android.layout.model.LabelModel
@@ -67,6 +71,8 @@ import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.model.RadioInputController
 import com.urbanairship.android.layout.model.RadioInputModel
 import com.urbanairship.android.layout.model.RadioInputToggleLayoutModel
+import com.urbanairship.android.layout.model.ScoreController
+import com.urbanairship.android.layout.model.ScoreInputToggleLayoutModel
 import com.urbanairship.android.layout.model.ScoreModel
 import com.urbanairship.android.layout.model.StateController
 import com.urbanairship.android.layout.model.StoryIndicatorModel
@@ -243,6 +249,7 @@ internal class ThomasModelFactory : ModelFactory {
                 State.Form(info.identifier, FormType.Nps(info.npsIdentifier), info.responseType, info.validationMode)
             )
             is RadioInputControllerInfo -> SharedState(State.Radio(info.identifier))
+            is ScoreControllerInfo -> SharedState(State.Score(info.identifier))
             is CheckboxControllerInfo -> SharedState(
                 State.Checkbox(info.identifier, info.minSelection, info.maxSelection)
             )
@@ -285,6 +292,7 @@ internal class ThomasModelFactory : ModelFactory {
         val pager: Tag?,
         val checkbox: Tag?,
         val radio: Tag?,
+        val score: Tag?,
         val layout: Tag?,
         val story: Tag?
     ) {
@@ -307,6 +315,7 @@ internal class ThomasModelFactory : ModelFactory {
                 pager = pagerFlow,
                 checkbox = checkbox?.let { states[it] as? SharedState<State.Checkbox> },
                 radio = radio?.let { states[it] as? SharedState<State.Radio> },
+                score = score?.let { states[it] as? SharedState<State.Score> },
                 layout = layoutFlow,
                 thomasState = makeThomasState(formFlow, layoutFlow),
                 pagerTracker = pagerTracker
@@ -318,6 +327,7 @@ internal class ThomasModelFactory : ModelFactory {
             var pager: Tag? = null,
             var checkbox: Tag? = null,
             var radio: Tag? = null,
+            var score: Tag? = null,
             var layout: Tag? = null,
             var story: Tag? = null
         ) {
@@ -327,6 +337,7 @@ internal class ThomasModelFactory : ModelFactory {
                 ViewType.PAGER_CONTROLLER -> copy(pager = tag)
                 ViewType.CHECKBOX_CONTROLLER -> copy(checkbox = tag)
                 ViewType.RADIO_INPUT_CONTROLLER -> copy(radio = tag)
+                ViewType.SCORE_CONTROLLER -> copy(score = tag)
                 ViewType.STATE_CONTROLLER -> copy(layout = tag)
                 ViewType.STORY_INDICATOR -> copy(story = tag)
                 else -> this
@@ -337,6 +348,7 @@ internal class ThomasModelFactory : ModelFactory {
                 pager = pager,
                 checkbox = checkbox,
                 radio = radio,
+                score = score,
                 layout = layout,
                 story = story
             )
@@ -466,6 +478,18 @@ internal class ThomasModelFactory : ModelFactory {
                 environment = environment,
                 properties = properties
             )
+
+            is ScoreControllerInfo -> ScoreController(
+                viewInfo = info,
+                view = children.first().first,
+                formState = environment.layoutState.thomasForm
+                    ?: throw ModelFactoryException("Required form state(score) was null for ScoreController!"),
+                scoreState = environment.layoutState.score
+                    ?: throw ModelFactoryException("Required radio state(score) was null for ScoreController!"),
+                environment = environment,
+                properties = properties
+            )
+
             is StateControllerInfo -> StateController(
                 viewInfo = info,
                 view = children.first().first,
@@ -500,6 +524,17 @@ internal class ThomasModelFactory : ModelFactory {
                     ?: throw ModelFactoryException("Required radio state was null for RadioInputController!"),
                 formState = environment.layoutState.thomasForm
                     ?: throw ModelFactoryException("Required form state was null for RadioInputController!"),
+                environment = environment,
+                properties = properties
+            )
+
+            is ScoreToggleLayoutInfo -> ScoreInputToggleLayoutModel(
+                viewInfo = info,
+                view = children.first().first,
+                scoreState = environment.layoutState.score
+                    ?: throw ModelFactoryException("Required score state was null for ScoreToggleLayout!"),
+                formState = environment.layoutState.thomasForm
+                    ?: throw ModelFactoryException("Required form state(score) was null for RadioInputController!"),
                 environment = environment,
                 properties = properties
             )
@@ -592,6 +627,11 @@ internal class ThomasModelFactory : ModelFactory {
             properties = properties
         )
         is CustomViewInfo -> CustomViewModel(
+            viewInfo = info,
+            environment = environment,
+            properties = properties
+        )
+        is IconViewInfo -> IconModel(
             viewInfo = info,
             environment = environment,
             properties = properties

@@ -95,6 +95,14 @@ public sealed class ThomasFormField<T>(
         Type.SINGLE_CHOICE,
     )
 
+    public data class ScoreInputController(
+        override val identifier: String,
+        override val originalValue: JsonValue?,
+        override val fieldType: FieldType<JsonValue>
+    ) : ThomasFormField<JsonValue>(
+        Type.SCORE,
+    )
+
     public data class TextInput(
         val textInput: FormInputType,
         override val identifier: String,

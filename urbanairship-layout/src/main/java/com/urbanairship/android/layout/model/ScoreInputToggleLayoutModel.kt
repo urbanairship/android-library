@@ -6,21 +6,20 @@ import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.info.RadioInputToggleLayoutInfo
+import com.urbanairship.android.layout.info.ScoreToggleLayoutInfo
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler
-import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.android.layout.view.ToggleLayoutView
 import kotlinx.coroutines.launch
 
-internal class RadioInputToggleLayoutModel(
-    viewInfo: RadioInputToggleLayoutInfo,
+internal class ScoreInputToggleLayoutModel(
+    viewInfo: ScoreToggleLayoutInfo,
     view: AnyModel,
-    private val radioState: SharedState<State.Radio>,
+    private val scoreState: SharedState<State.Score>,
     private val formState: ThomasForm,
     environment: ModelEnvironment,
     properties: ModelProperties
-) : BaseToggleLayoutModel<ToggleLayoutView<RadioInputToggleLayoutModel>, RadioInputToggleLayoutInfo>(viewInfo, view, formState, environment, properties) {
+) : BaseToggleLayoutModel<ToggleLayoutView<ScoreInputToggleLayoutModel>, ScoreToggleLayoutInfo>(viewInfo, view, formState, environment, properties) {
 
     override fun onCreateView(
         context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?
@@ -28,21 +27,21 @@ internal class RadioInputToggleLayoutModel(
         id = viewId
     }
 
-    override fun onViewCreated(view: ToggleLayoutView<RadioInputToggleLayoutModel>) {
+    override fun onViewCreated(view: ToggleLayoutView<ScoreInputToggleLayoutModel>) {
         super.onViewCreated(view)
         onFormInputDisplayed { isDisplayed ->
             formState.updateWithDisplayState(
-                identifier = @OptIn(DelicateLayoutApi::class) radioState.value.identifier,
+                identifier = scoreState.changes.value.identifier,
                 isDisplayed = isDisplayed
             )
         }
     }
 
-    override fun onViewAttached(view: ToggleLayoutView<RadioInputToggleLayoutModel>) {
+    override fun onViewAttached(view: ToggleLayoutView<ScoreInputToggleLayoutModel>) {
         super.onViewAttached(view)
         // Update checked state whenever the selection state changes.
         viewScope.launch {
-            radioState.changes.collect { state ->
+            scoreState.changes.collect { state ->
                 setChecked(isChecked = state.isSelected(identifier = viewInfo.identifier))
                 listener?.setEnabled(state.isEnabled)
             }
@@ -52,7 +51,7 @@ internal class RadioInputToggleLayoutModel(
         viewScope.launch {
             isOn.collect { isOn ->
                 if (isOn) {
-                    radioState.update { state ->
+                    scoreState.update { state ->
                         state.copy(
                             selectedItem = viewInfo.asSelected()
                         )
@@ -67,10 +66,8 @@ internal class RadioInputToggleLayoutModel(
     }
 }
 
-private fun RadioInputToggleLayoutInfo.asSelected(): State.Radio.Selected {
-    return State.Radio.Selected(
-        identifier = identifier,
-        reportingValue = reportingValue,
-        attributeValue = attributeValue
-    )
-}
+private fun ScoreToggleLayoutInfo.asSelected(): State.Score.Selected = State.Score.Selected(
+    identifier = identifier,
+    reportingValue = reportingValue,
+    attributeValue = attributeValue
+)

@@ -43,7 +43,7 @@ internal class CheckboxToggleLayoutModel(
         // Update checked state whenever the selection state changes.
         viewScope.launch {
             checkboxState.changes.collect { state ->
-                val isChecked = state.selectedItems.contains(viewInfo.reportingValue)
+                val isChecked = state.isSelected(viewInfo.identifier)
                 setChecked(isChecked = isChecked)
                 listener?.setEnabled(state.isEnabled && (state.selectedItems.size < state.maxSelection || isChecked))
             }
@@ -55,9 +55,9 @@ internal class CheckboxToggleLayoutModel(
                 checkboxState.update { state ->
                     state.copy(
                         selectedItems = if (isOn) {
-                            state.selectedItems + viewInfo.reportingValue
+                            state.selectedItems + viewInfo.asSelected()
                         } else {
-                            state.selectedItems - viewInfo.reportingValue
+                            state.selectedItems - viewInfo.asSelected()
                         }
                     )
                 }
@@ -68,4 +68,11 @@ internal class CheckboxToggleLayoutModel(
             }
         }
     }
+}
+
+private fun CheckboxToggleLayoutInfo.asSelected(): State.Checkbox.Selected {
+    return State.Checkbox.Selected(
+        identifier = identifier,
+        reportingValue = reportingValue
+    )
 }

@@ -37,18 +37,21 @@ public enum ViewType {
     SCORE("score"),
     STATE_CONTROLLER("state_controller"),
     CUSTOM_VIEW("custom_view"),
+    ICON_VIEW("icon_view"),
+    SCORE_CONTROLLER("score_controller"),
+    SCORE_TOGGLE_LAYOUT("score_toggle_layout"),
     UNKNOWN("");
 
     /** View types that provide values for forms (possibly via an intermediate controller). */
     private static final List<ViewType> FORM_INPUTS = Arrays.asList(
             CHECKBOX_CONTROLLER, CHECKBOX, RADIO_INPUT_CONTROLLER, RADIO_INPUT,
             TOGGLE, CHECKBOX_TOGGLE_LAYOUT, RADIO_INPUT_TOGGLE_LAYOUT, BASIC_TOGGLE_LAYOUT,
-            TEXT_INPUT, SCORE, FORM_CONTROLLER, NPS_FORM_CONTROLLER
+            TEXT_INPUT, SCORE, FORM_CONTROLLER, NPS_FORM_CONTROLLER, SCORE_CONTROLLER, SCORE_TOGGLE_LAYOUT
     );
 
     private static final List<ViewType> CONTROLLERS = Arrays.asList(
             CHECKBOX_CONTROLLER, FORM_CONTROLLER, NPS_FORM_CONTROLLER, PAGER_CONTROLLER,
-            RADIO_INPUT_CONTROLLER, STATE_CONTROLLER
+            RADIO_INPUT_CONTROLLER, STATE_CONTROLLER, SCORE_CONTROLLER
     );
 
     @NonNull

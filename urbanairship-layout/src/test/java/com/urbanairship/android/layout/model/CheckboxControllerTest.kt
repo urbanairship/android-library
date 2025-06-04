@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.json.JsonValue
+import java.util.UUID
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
@@ -183,6 +184,9 @@ public class CheckboxControllerTest {
     private companion object {
         private const val IDENTIFIER = "checkbox-controller-id"
         private const val MIN_SELECTION = 1
-        private val SELECTED_VALUE = JsonValue.wrap("foo")
+        private val SELECTED_VALUE = State.Checkbox.Selected(
+            identifier = UUID.randomUUID().toString(),
+            reportingValue = JsonValue.wrap("foo")
+        )
     }
 }

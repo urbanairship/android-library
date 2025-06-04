@@ -72,13 +72,13 @@ internal class RadioInputController(
                 formState.updateFormInput(
                     value = ThomasFormField.RadioInputController(
                         identifier = radio.identifier,
-                        originalValue = radio.selectedItem,
+                        originalValue = radio.selectedItem?.reportingValue,
                         fieldType = ThomasFormField.FieldType.just(
-                            value = radio.selectedItem ?: JsonValue.NULL,
+                            value = radio.selectedItem?.reportingValue ?: JsonValue.NULL,
                             validator = { isValid(it) },
                             attributes = ThomasFormField.makeAttributes(
                                 name = viewInfo.attributeName,
-                                value = radio.attributeValue
+                                value = radio.selectedItem?.attributeValue
                             ),
                         )
                     ),
@@ -86,7 +86,7 @@ internal class RadioInputController(
                 )
 
                 if (viewInfo.eventHandlers.hasFormInputHandler()) {
-                    handleViewEvent(EventHandler.Type.FORM_INPUT, radio.selectedItem)
+                    handleViewEvent(EventHandler.Type.FORM_INPUT, radio.selectedItem?.reportingValue)
                 }
             }
         }
