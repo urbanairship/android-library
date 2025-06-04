@@ -24,9 +24,7 @@ import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.yield
 
 internal abstract class ButtonModel<T, I: Button>(
     viewInfo: I,
@@ -75,7 +73,6 @@ internal abstract class ButtonModel<T, I: Button>(
                 // Run any handlers for tap events.
                 if (viewInfo.eventHandlers.hasTapHandler() && !viewInfo.clickBehaviors.hasFormSubmit) {
                     handleViewEvent(EventHandler.Type.TAP)
-                    yield()
                 }
 
                 evaluateClickBehaviors(view.context ?: UAirship.getApplicationContext())
@@ -102,7 +99,7 @@ internal abstract class ButtonModel<T, I: Button>(
             // No FORM_SUBMIT, CANCEL, or DISMISS, so we only need to
             // handle pager behaviors.
             if (viewInfo.clickBehaviors.hasPagerNext) {
-                handlePagerNext(context, fallback = viewInfo.clickBehaviors.pagerNextFallback)
+                handlePagerNext()
             }
             if (viewInfo.clickBehaviors.hasPagerPrevious) {
                 handlePagerPrevious()
@@ -125,16 +122,14 @@ internal abstract class ButtonModel<T, I: Button>(
                 handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
             }
             if (viewInfo.clickBehaviors.hasPagerNext) {
-                handlePagerNext(context, fallback = viewInfo.clickBehaviors.pagerNextFallback)
+                handlePagerNext()
             }
             if (viewInfo.clickBehaviors.hasPagerPrevious) {
                 handlePagerPrevious()
             }
         }
 
-        modelScope.launch {
-            broadcast(submitEvent)
-        }.join()
+        broadcast(submitEvent).join()
     }
 
     private suspend fun handleFormValidation(context: Context) {
@@ -150,40 +145,21 @@ internal abstract class ButtonModel<T, I: Button>(
                 handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
             }
             if (viewInfo.clickBehaviors.hasPagerNext) {
-                handlePagerNext(context, fallback = viewInfo.clickBehaviors.pagerNextFallback)
+                handlePagerNext()
             }
             if (viewInfo.clickBehaviors.hasPagerPrevious) {
                 handlePagerPrevious()
             }
         }
 
-        modelScope.launch {
-            broadcast(validateEvent)
-        }.join()
+        broadcast(validateEvent).join()
     }
 
-    private suspend fun handlePagerNext(context: Context, fallback: PagerNextFallback) {
-        checkNotNull(pagerState) {
-            "Pager state is required for Buttons with pager click behaviors!"
-        }
+    private suspend fun handlePagerNext() = broadcast(
+        LayoutEvent.PagerNext(viewInfo.clickBehaviors.pagerNextFallback)
+    ).join()
 
-        if (pagerState.changes.first().hasNext) {
-           pagerState.update { it.copyWithPageRequest(PageRequest.NEXT) }
-        } else {
-            when(fallback) {
-                PagerNextFallback.NONE -> {}
-                PagerNextFallback.DISMISS -> handleDismiss(context, isCancel = false)
-                PagerNextFallback.FIRST -> pagerState.update { it.copyWithPageRequest(PageRequest.FIRST) }
-            }
-        }
-    }
-
-    private fun handlePagerPrevious() {
-        checkNotNull(pagerState) {
-            "Pager state is required for Buttons with pager click behaviors!"
-        }
-        pagerState.update { it.copyWithPageRequest(PageRequest.BACK) }
-    }
+    private suspend fun handlePagerPrevious() = broadcast(LayoutEvent.PagerPrevious).join()
 
     private suspend fun handleDismiss(context: Context, isCancel: Boolean) {
         report(
@@ -197,8 +173,7 @@ internal abstract class ButtonModel<T, I: Button>(
                 context = layoutState.reportingContext(buttonId = viewInfo.identifier)
             )
         )
-        modelScope.launch {
-            environment.eventHandler.broadcast(LayoutEvent.Finish)
-        }.join()
+
+        broadcast(LayoutEvent.Finish).join()
     }
 }

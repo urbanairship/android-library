@@ -42,7 +42,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -147,7 +149,7 @@ internal class PagerModel(
                     // Always pause for accessibility
                     pauseStory()
                 } else if (it.isMediaPaused) {
-                    // Media not` ready, pause until ready
+                    // Media not ready, pause until ready
                     pauseStory()
                 } else {
                     // Resume if either:
@@ -161,6 +163,18 @@ internal class PagerModel(
         }
 
         modelScope.launch { wireSwipeSelector() }
+
+        // Handle pager next and previous events from ButtonModel.
+        environment.layoutEvents
+            .filter { it is LayoutEvent.PagerNext || it is LayoutEvent.PagerPrevious }
+            .onEach { event ->
+                when (event) {
+                    is LayoutEvent.PagerNext -> handlePagerNext(event.fallback)
+                    is LayoutEvent.PagerPrevious -> handlePagerPrevious()
+                    else -> {}
+                }
+            }
+            .launchIn(modelScope)
     }
 
     private fun onPagesDataUpdated(updated: List<Item>) {
@@ -522,7 +536,10 @@ internal class PagerModel(
     }
 
     private fun pauseStory() {
-        UALog.v { "pause story" }
+        if (navigationActionTimer?.isStarted == true || automatedActionsTimers.isNotEmpty()) {
+            UALog.v { "pause story" }
+        }
+
         navigationActionTimer?.stop()
         for (timer in automatedActionsTimers) {
             timer.stop()
@@ -533,7 +550,7 @@ internal class PagerModel(
     }
 
     private fun resumeStory() {
-        if (navigationActionTimer?.isStarted != true || automatedActionsTimers.isNotEmpty()) {
+        if (navigationActionTimer?.isStarted == false || automatedActionsTimers.isNotEmpty()) {
             UALog.v { "resume story" }
         }
 

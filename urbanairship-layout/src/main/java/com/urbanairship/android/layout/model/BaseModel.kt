@@ -36,6 +36,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.util.PlatformUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.Flow
@@ -240,7 +241,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         environment.actionsRunner.run(mergedActions, state)
     }
 
-    protected fun broadcast(event: LayoutEvent) = modelScope.launch {
+    protected fun broadcast(event: LayoutEvent): Job = modelScope.launch {
         environment.eventHandler.broadcast(event)
     }
 
