@@ -1,3 +1,4 @@
+/* Copyright Airship and Contributors */
 package com.urbanairship.messagecenter
 
 import android.app.Application
@@ -8,7 +9,6 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.messagecenter.core.Inbox
 import com.urbanairship.messagecenter.core.MessageCenter
-import com.urbanairship.messagecenter.core.MessageCenter.OnShowMessageCenterListener
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import io.mockk.coEvery
