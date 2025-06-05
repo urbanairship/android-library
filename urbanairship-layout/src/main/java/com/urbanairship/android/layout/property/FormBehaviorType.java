@@ -4,11 +4,11 @@
 
 package com.urbanairship.android.layout.property;
 
+import com.urbanairship.json.JsonException;
+
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
-
-import com.urbanairship.json.JsonException;
 
 public enum FormBehaviorType {
     SUBMIT_EVENT("submit_event");

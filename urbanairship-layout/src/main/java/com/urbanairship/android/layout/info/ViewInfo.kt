@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.info
 import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.environment.ThomasStateTrigger
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
+import com.urbanairship.android.layout.info.LabelInfo.ViewOverrides
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.AutomatedAction
@@ -36,13 +37,16 @@ import com.urbanairship.android.layout.property.TextInputTextAppearance
 import com.urbanairship.android.layout.property.ToggleStyle
 import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.property.ViewType
+import com.urbanairship.android.layout.property.ViewType.BASIC_TOGGLE_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.BUTTON_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.CHECKBOX
 import com.urbanairship.android.layout.property.ViewType.CHECKBOX_CONTROLLER
+import com.urbanairship.android.layout.property.ViewType.CHECKBOX_TOGGLE_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.CONTAINER
 import com.urbanairship.android.layout.property.ViewType.CUSTOM_VIEW
 import com.urbanairship.android.layout.property.ViewType.EMPTY_VIEW
 import com.urbanairship.android.layout.property.ViewType.FORM_CONTROLLER
+import com.urbanairship.android.layout.property.ViewType.ICON_VIEW
 import com.urbanairship.android.layout.property.ViewType.IMAGE_BUTTON
 import com.urbanairship.android.layout.property.ViewType.LABEL
 import com.urbanairship.android.layout.property.ViewType.LABEL_BUTTON
@@ -54,7 +58,10 @@ import com.urbanairship.android.layout.property.ViewType.PAGER_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.PAGER_INDICATOR
 import com.urbanairship.android.layout.property.ViewType.RADIO_INPUT
 import com.urbanairship.android.layout.property.ViewType.RADIO_INPUT_CONTROLLER
+import com.urbanairship.android.layout.property.ViewType.RADIO_INPUT_TOGGLE_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.SCORE
+import com.urbanairship.android.layout.property.ViewType.SCORE_CONTROLLER
+import com.urbanairship.android.layout.property.ViewType.SCORE_TOGGLE_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.SCROLL_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.STATE_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.STORY_INDICATOR
@@ -75,6 +82,7 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalList
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
+import com.urbanairship.json.requireMap
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -86,7 +94,8 @@ public sealed class ViewInfo : View {
         @JvmStatic
         @Throws(JsonException::class)
         public fun viewInfoFromJson(json: JsonMap): ViewInfo {
-            return when (val type = ViewType.from(json.requireField<String>("type"))) {
+            val type = json.requireField<String>("type")
+            return when (ViewType.from(type)) {
                 CONTAINER -> ContainerLayoutInfo(json)
                 LINEAR_LAYOUT -> LinearLayoutInfo(json)
                 SCROLL_LAYOUT -> ScrollLayoutInfo(json)
@@ -107,12 +116,18 @@ public sealed class ViewInfo : View {
                 CHECKBOX_CONTROLLER -> CheckboxControllerInfo(json)
                 CHECKBOX -> CheckboxInfo(json)
                 TOGGLE -> ToggleInfo(json)
+                BASIC_TOGGLE_LAYOUT -> BasicToggleLayoutInfo(json)
+                CHECKBOX_TOGGLE_LAYOUT -> CheckboxToggleLayoutInfo(json)
+                RADIO_INPUT_TOGGLE_LAYOUT -> RadioInputToggleLayoutInfo(json)
                 RADIO_INPUT_CONTROLLER -> RadioInputControllerInfo(json)
                 RADIO_INPUT -> RadioInputInfo(json)
                 TEXT_INPUT -> TextInputInfo(json)
                 SCORE -> ScoreInfo(json)
                 STATE_CONTROLLER -> StateControllerInfo(json)
-                UNKNOWN -> throw JsonException("Unknown view type! '$type'")
+                ICON_VIEW -> IconViewInfo(json)
+                SCORE_CONTROLLER -> ScoreControllerInfo(json)
+                SCORE_TOGGLE_LAYOUT -> ScoreToggleLayoutInfo(json)
+                UNKNOWN -> throw JsonException("Unknown view type! '${json.requireField<String>("type")}'")
             }
         }
     }
@@ -405,7 +420,26 @@ internal class ButtonLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), 
     }
 }
 
-internal interface Checkable : View, Accessible {
+internal class IconViewInfo(json: JsonMap) : ViewInfo(), View by view(json), Accessible by accessible(json) {
+    val image = Image.Icon.fromJson(json.requireField("icon"))
+    val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
+
+    internal class ViewOverrides(json: JsonMap) {
+        val icon = json.optionalList("icon")?.map {
+            ViewPropertyOverride(it, valueParser = { json -> Image.Icon.fromJson(json.requireMap()) })
+        }
+    }
+}
+
+internal interface BaseCheckable: View, Accessible {
+}
+
+internal open class BaseCheckableInfo(
+    json: JsonMap
+) : ViewInfo(), BaseCheckable, View by view(json), Accessible by accessible(json) {
+}
+
+internal interface Checkable : BaseCheckable, View, Accessible {
     val style: ToggleStyle
 }
 
@@ -818,6 +852,7 @@ internal class StoryIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json
 
 internal class StateControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), View by view(json) {
     val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
+    val initialState: JsonMap? = json.optionalField("initial_state")
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }
 
@@ -840,6 +875,45 @@ internal class PagerControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(
     val branching = json.get("branching")?.let(PagerControllerBranching::from)
 }
 
+internal open class BaseToggleLayoutInfo(json: JsonMap) :  ViewGroupInfo<ViewItemInfo>(), Identifiable by identifiable(json), View by view(json) {
+    val onToggleOn: ToggleActions = ToggleActions(
+        stateActions = json.requireMap("on_toggle_on")
+            .optionalList("state_actions")
+            ?.map { StateAction.fromJson(it.requireMap()) }
+    )
+
+    val onToggleOff: ToggleActions = ToggleActions(
+        stateActions = json.requireMap("on_toggle_off")
+            .optionalList("state_actions")
+            ?.map { StateAction.fromJson(it.requireMap()) }
+    )
+
+    val attributeValue: AttributeValue? = json.optionalField("attribute_value")
+    val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
+
+    internal class ToggleActions(
+        val stateActions: List<StateAction>?
+    )
+
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
+}
+
+internal class BasicToggleLayoutInfo(json: JsonMap) : BaseToggleLayoutInfo(json), Validatable by validatable(json) {
+    val attributeName: AttributeName? = attributeNameFromJson(json)
+}
+
+internal class CheckboxToggleLayoutInfo(json: JsonMap) : BaseToggleLayoutInfo(json) {
+    val reportingValue: JsonValue = json.requireField("reporting_value")
+}
+
+internal class RadioInputToggleLayoutInfo(json: JsonMap) : BaseToggleLayoutInfo(json) {
+    val reportingValue: JsonValue = json.requireField("reporting_value")
+}
+
+internal class ScoreToggleLayoutInfo(json: JsonMap) : BaseToggleLayoutInfo(json) {
+    val reportingValue: JsonValue = json.requireField("reporting_value")
+}
+
 internal class CheckboxControllerInfo(
     json: JsonMap
 ) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json), Validatable by validatable(json),
@@ -851,6 +925,15 @@ internal class CheckboxControllerInfo(
 }
 
 internal class RadioInputControllerInfo(
+    json: JsonMap
+) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json), Validatable by validatable(json),
+    Accessible by accessible(json) {
+    val attributeName: AttributeName? = attributeNameFromJson(json)
+
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
+}
+
+internal class ScoreControllerInfo(
     json: JsonMap
 ) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json), Validatable by validatable(json),
     Accessible by accessible(json) {

@@ -7,18 +7,12 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
-import com.urbanairship.PrivacyManager
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.TestTaskSleeper
-import com.urbanairship.UAirship
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.channel.AirshipChannel
-import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.channel.ChannelRegistrationPayload
-import com.urbanairship.job.JobDispatcher
-import com.urbanairship.job.JobInfo
-import com.urbanairship.job.JobResult
 import com.urbanairship.messagecenter.core.Inbox.FetchMessagesCallback
 import com.urbanairship.messagecenter.MessageCenterTestUtils.createMessage
 import com.urbanairship.messagecenter.core.Inbox
@@ -35,6 +29,7 @@ import java.util.Date
 import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.Called
+import io.mockk.clearMocks
 import io.mockk.coVerify
 import io.mockk.confirmVerified
 import io.mockk.every
@@ -49,6 +44,7 @@ import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -74,12 +70,14 @@ public class InboxTest {
     private val mainLooper: ShadowLooper = shadowOf(Looper.getMainLooper())
 
     private val mockUser = mockk<User>(relaxUnitFun = true) {}
-    private val mockDispatcher = mockk<JobDispatcher>(relaxUnitFun = true) {}
     private val mockChannel = mockk<AirshipChannel>(relaxUnitFun = true) {}
     private val spyActivityMonitor = spyk(GlobalActivityMonitor.shared(context))
+    private val mockScheduler = mockk<(Inbox.UpdateType) -> Unit>(relaxed = true) {}
 
     private val db = MessageDatabase.createInMemoryDatabase(context, testDispatcher)
     private val spyMessageDao: MessageDao = spyk(db.dao)
+
+    private lateinit var extender: AirshipChannel.Extender.Suspending
 
     private val clock = TestClock()
     private val taskSleeper = TestTaskSleeper(clock) { sleep ->
@@ -87,10 +85,7 @@ public class InboxTest {
     }
 
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
-    private val privacyManager = PrivacyManager(
-        dataStore = dataStore,
-        defaultEnabledFeatures = PrivacyManager.Feature.ALL
-    )
+
     private val runtimeConfig = TestAirshipRuntimeConfig(
         RemoteConfig(
             RemoteAirshipConfig(
@@ -103,19 +98,7 @@ public class InboxTest {
         )
     )
 
-    private val inbox = Inbox(
-        dataStore = dataStore,
-        jobDispatcher = mockDispatcher,
-        user = mockUser,
-        messageDao = spyMessageDao,
-        activityMonitor = spyActivityMonitor,
-        airshipChannel = mockChannel,
-        privacyManager = privacyManager,
-        config = runtimeConfig,
-        taskSleeper = taskSleeper,
-        clock = clock,
-        dispatcher = testDispatcher
-    )
+    private lateinit var inbox: Inbox
 
     private var testPredicate: Predicate<Message> = Predicate<Message> { message ->
         val substring = message.id.replace("_message_id", "")
@@ -129,6 +112,27 @@ public class InboxTest {
     public fun setUp() {
         Dispatchers.setMain(testDispatcher)
 
+        every { mockChannel.id } returns "some-channel"
+        every { mockChannel.channelIdFlow } returns MutableStateFlow("some-channel")
+
+        val argument = slot<AirshipChannel.Extender.Suspending>()
+
+        inbox = Inbox(
+            dataStore = dataStore,
+            user = mockUser,
+            messageDao = spyMessageDao,
+            activityMonitor = spyActivityMonitor,
+            airshipChannel = mockChannel,
+            config = runtimeConfig,
+            taskSleeper = taskSleeper,
+            clock = clock,
+            dispatcher = testDispatcher,
+            updateScheduler = mockScheduler
+        )
+
+        verify { mockChannel.addChannelRegistrationPayloadExtender(capture(argument)) }
+        extender = argument.captured
+
         MessageCenterTestUtils.setup()
 
         spyMessageDao.queryClock = clock
@@ -141,34 +145,25 @@ public class InboxTest {
         Dispatchers.resetMain()
     }
 
-    /** Test init dispatches the user update job if necessary. */
     @Test
-    public fun testInitUserShouldUpdate() {
-        every { mockUser.shouldUpdate() } returns true
+    public fun testUrlConfigUpdateCallback() {
+        val remoteConfig = RemoteConfig(
+            RemoteAirshipConfig(
+                "https://remote-data",
+                "https://device",
+                "https://wallet",
+                "https://analytics",
+                "https://metered-usage"
+            )
+        )
+        runtimeConfig.updateRemoteConfig(remoteConfig)
 
-        inbox.init()
-
-        verify {
-            mockDispatcher.dispatch(withArg { jobInfo ->
-                assertEquals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE, jobInfo.action)
-            })
-        }
+        verify { mockScheduler(Inbox.UpdateType.REQUIRED) }
     }
 
     /** Test channel registration extender adds the user id. */
     @Test
-    public fun testChannelRegistrationDisabledTokenRegistration() {
-        every { mockUser.shouldUpdate() } returns false
-
-        val argument = slot<AirshipChannel.Extender.Blocking>()
-
-        inbox.init()
-
-        verify { mockChannel.addChannelRegistrationPayloadExtender(capture(argument)) }
-
-        val extender = argument.captured
-        assertNotNull(extender)
-
+    public fun testChannelRegistrationDisabledTokenRegistration(): TestResult = runTest {
         every { mockUser.id } returns "cool"
 
         val builder = ChannelRegistrationPayload.Builder()
@@ -180,51 +175,16 @@ public class InboxTest {
 
     /** Test channel creation updates the user. */
     @Test
-    public fun testChannelCreateUpdatesUser() {
-        every { mockUser.shouldUpdate() } returns false
+    public fun testChannelCreateUpdatesUser(): TestResult = runTest {
+        val flow = MutableStateFlow<String?>(null)
 
-        val argument = slot<AirshipChannelListener>()
+        every { mockChannel.channelIdFlow } returns flow
+        every { mockChannel.id } returns null
 
-        inbox.init()
+        flow.emit("some-channel")
+        advanceUntilIdle()
 
-        verify { mockChannel.addChannelListener(capture(argument)) }
-
-        val listener = argument.captured
-        assertNotNull(listener)
-
-        clearInvocations(mockDispatcher)
-        listener.onChannelCreated("some-channel")
-
-        verify {
-            mockDispatcher.dispatch(withArg { jobInfo ->
-                assertEquals(InboxJobHandler.ACTION_RICH_PUSH_USER_UPDATE, jobInfo.action)
-            })
-        }
-    }
-
-    /** Test user updates refresh the inbox. */
-    @Test
-    public fun testUserUpdateRefreshesInbox() {
-        every { mockUser.shouldUpdate() } returns false
-
-        val argument = slot<User.Listener>()
-
-        inbox.init()
-
-        verify { mockUser.addListener(capture(argument)) }
-
-        val listener = argument.captured
-        assertNotNull(listener)
-
-        clearInvocations(mockDispatcher)
-
-        listener.onUserUpdated(true)
-
-        verify {
-            mockDispatcher.dispatch(withArg { jobInfo ->
-                assertEquals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, jobInfo.action)
-            })
-        }
+        verify { mockScheduler(Inbox.UpdateType.REQUIRED) }
     }
 
     /** Tests the inbox reports the correct number of messages. */
@@ -348,66 +308,27 @@ public class InboxTest {
 
     /** Test fetch messages starts the AirshipService. */
     @Test
-    public fun testFetchMessages() {
+    public fun testFetchMessages(): TestResult = runTest {
         inbox.fetchMessages(null, null)
+        advanceUntilIdle()
 
         verify {
-            mockDispatcher.dispatch(withArg { jobInfo ->
-                assertEquals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, jobInfo.action)
-            })
-        }
-    }
-
-    /** Test fetching messages skips triggering the rich push service if already refreshing. */
-    @Test
-    public fun testRefreshMessagesAlreadyRefreshing() {
-        // Start refreshing messages
-        inbox.fetchMessages(null)
-
-        // Try to refresh again
-        inbox.fetchMessages(null)
-
-        verify(exactly = 1) {
-            mockDispatcher.dispatch(withArg { jobInfo ->
-                assertEquals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, jobInfo.action)
-            })
-        }
-    }
-
-    /** Test multiple fetch requests only performs a single request if the first one has yet to finish. */
-    @Test
-    public fun testRefreshMessageResponse() {
-        val callback = mockk<FetchMessagesCallback>(relaxUnitFun = true)
-
-        // Start refreshing messages
-        inbox.fetchMessages(null)
-
-        // Force another update
-        inbox.fetchMessages(callback)
-
-        // Verify we dispatched only 1 job
-        verify(exactly = 1) {
-            mockDispatcher.dispatch(withArg { jobInfo ->
-                assertEquals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, jobInfo.action)
-                assertEquals(JobInfo.REPLACE, jobInfo.conflictStrategy)
-            })
+            mockScheduler(Inbox.UpdateType.REQUIRED)
         }
     }
 
     /** Test fetch message request with a callback */
     @Test
-    public fun testRefreshMessagesWithCallback() {
+    public fun testRefreshMessagesWithCallback(): TestResult = runTest {
         val callback = mockk<FetchMessagesCallback>(relaxUnitFun = true)
 
-        inbox.fetchMessages(callback)
+        inbox.fetchMessages(Looper.getMainLooper(), callback)
+        advanceUntilIdle()
 
         verify {
-            mockDispatcher.dispatch(withArg { jobInfo ->
-                assertEquals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, jobInfo.action)
-            })
+            mockScheduler(Inbox.UpdateType.REQUIRED)
         }
-
-        inbox.onUpdateMessagesFinished(true)
+        inbox.refreshResults.emit(Inbox.RefreshResult.REMOTE_SUCCESS)
         mainLooper.runToEndOfTasks()
 
         verify { callback.onFinished(true) }
@@ -436,9 +357,9 @@ public class InboxTest {
             spyMessageDao.insertMessages(messages)
             val inserted = awaitItem()
             assertEquals(3, inserted.size)
+            inbox.setupRefreshOnMessageExpiresJob()
 
             // Notify the inbox
-            inbox.onUpdateMessagesFinished(true)
             advanceUntilIdle()
             mainLooper.runToEndOfTasks()
 
@@ -449,49 +370,26 @@ public class InboxTest {
         assertEquals(1.seconds, taskSleeper.sleeps.firstOrNull())
 
         verify {
-            mockDispatcher.dispatch(withArg { jobInfo ->
-                assertEquals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, jobInfo.action)
-            })
+            mockScheduler(Inbox.UpdateType.REQUIRED)
         }
-    }
-
-    /** Test failed fetch message request with a callback */
-    @Test
-    public fun testFetchMessagesFailWithCallback() {
-        val callback = mockk<FetchMessagesCallback>(relaxUnitFun = true)
-
-        inbox.fetchMessages(callback)
-
-        verify {
-            mockDispatcher.dispatch(withArg { jobInfo ->
-                assertEquals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, jobInfo.action)
-            })
-        }
-
-        inbox.onUpdateMessagesFinished(false)
-        mainLooper.runToEndOfTasks()
-
-        verify { callback.onFinished(false) }
     }
 
     /** Test canceling the fetch message request with a callback */
     @Test
-    public fun testFetchMessagesCallbackCanceled() {
+    public fun testFetchMessagesCallbackCanceled(): TestResult = runTest {
         val callback = mockk<FetchMessagesCallback>(relaxUnitFun = true)
 
         val cancelable = inbox.fetchMessages(callback)
 
         assertNotNull(cancelable)
         cancelable.cancel()
+        advanceUntilIdle()
 
         verify {
-            mockDispatcher.dispatch(withArg { jobInfo ->
-                assertEquals(InboxJobHandler.ACTION_RICH_PUSH_MESSAGES_UPDATE, jobInfo.action)
-            })
+            mockScheduler(Inbox.UpdateType.REQUIRED)
         }
 
-        inbox.onUpdateMessagesFinished(false)
-
+        mainLooper.runToEndOfTasks()
         verify { callback wasNot Called }
 
         confirmVerified(callback)
@@ -567,65 +465,58 @@ public class InboxTest {
     /** Test init doesn't update the user or refresh if `FEATURE_MESSAGE_CENTER` is disabled. */
     @Test
     public fun testInitWhenDisabledDispatchesNoJobs() {
-        inbox.setEnabled(false)
-        inbox.init()
+        clearMocks(mockScheduler, verificationMarks = true)
 
-        verify(exactly = 0) { mockDispatcher.dispatch(any()) }
+        inbox.setEnabled(false)
+
+        verify(exactly = 0) {
+            mockScheduler(any())
+        }
     }
 
     /** Verify that calls to `onPerformJob` are no-ops if `FEATURE_MESSAGE_CENTER` is disabled. */
     @Test
-    public fun testOnPerformJobWhenDisabled() {
+    public fun testOnPerformJobWhenDisabled(): TestResult = runTest {
         val jobHandler = mockk<InboxJobHandler>()
 
         inbox.setEnabled(false)
         inbox.inboxJobHandler = jobHandler
 
-        val jobResult = inbox.onPerformJob(mockk<UAirship>(), mockk<JobInfo>())
+        val result = inbox.performUpdate()
+        advanceUntilIdle()
 
-        assertEquals(JobResult.SUCCESS, jobResult)
-
-        verify(exactly = 0) { jobHandler.performJob(any<JobInfo>()) }
+        assertTrue(result.isFailure)
+        confirmVerified(jobHandler)
     }
 
     /** Verify updateEnabledState when disabled. */
     @Test
     public fun testUpdateEnabledStateNotEnabled(): TestResult = runTest {
         inbox.setEnabled(false)
-        inbox.updateEnabledState()
 
         advanceUntilIdle()
 
         coVerify {
             spyMessageDao.deleteAllMessages()
-            spyActivityMonitor.removeApplicationListener(any())
-            mockChannel.removeChannelListener(any())
-            mockChannel.removeChannelRegistrationPayloadExtender(any())
-            mockUser.removeListener(any())
         }
     }
 
     /** Verify updateEnabledState when enabled. */
     @Test
     public fun testUpdateEnabledStateEnabled(): TestResult = runTest {
-        every { mockUser.shouldUpdate() } returns false
 
         inbox.setEnabled(true)
-        inbox.updateEnabledState()
         advanceUntilIdle()
         mainLooper.runToEndOfTasks()
 
         // Update again to make sure that we don't restart the Inbox if already started.
-        inbox.updateEnabledState()
+        inbox.setEnabled(true)
         advanceUntilIdle()
         mainLooper.runToEndOfTasks()
 
         coVerify {
-            mockUser.addListener(any())
             spyActivityMonitor.addApplicationListener(any())
-            //spyMessageDao.getMessages()
-            mockChannel.addChannelListener(any())
-            mockUser.shouldUpdate()
+            spyMessageDao.getMessages()
             mockChannel.addChannelRegistrationPayloadExtender(any())
         }
     }

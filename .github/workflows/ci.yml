@@ -8,8 +8,9 @@ concurrency:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on:
+      labels: airship-large-runner
+    timeout-minutes: 25
     name: CI
 
     steps:

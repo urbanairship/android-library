@@ -331,6 +331,85 @@ public class WeightlessLinearLayout extends ViewGroup {
         // Either expand children with percentage dimensions to take up available space or shrink them if they extend
         // beyond our current bounds.
         int delta = height - totalLength;
+
+        // If the delta is negative, the content is too big for the layout. We need to find
+        // children with wrap_content height that we can shrink.
+        if (delta < 0) {
+            List<View> shrinkableChildren = new ArrayList<>();
+            List<Integer> originalHeights = new ArrayList<>();
+            int totalShrinkableHeight = 0;
+
+            for (int i = 0; i < count; i++) {
+                View child = getChildAt(i);
+                if (child == null || child.getVisibility() == View.GONE) {
+                    continue;
+                }
+
+                LayoutParams lp = (LayoutParams) child.getLayoutParams();
+                if (lp.height == LayoutParams.WRAP_CONTENT &&
+                        lp.maxHeightPercent == 0 &&
+                        child instanceof ShrinkableView &&
+                        ((ShrinkableView) child).isShrinkable()) {
+
+                    shrinkableChildren.add(child);
+
+                    int childHeight = child.getMeasuredHeight();
+                    originalHeights.add(childHeight);
+                    totalShrinkableHeight += childHeight;
+                }
+            }
+
+            if (!shrinkableChildren.isEmpty() && totalShrinkableHeight >= Math.abs(delta)) {
+                float shrinkRatio = (float) (totalShrinkableHeight + delta) / totalShrinkableHeight;
+                // Remeasure with reduced heights
+                for (int i = 0; i < shrinkableChildren.size(); i++) {
+                    View child = shrinkableChildren.get(i);
+                    LayoutParams lp = (LayoutParams) child.getLayoutParams();
+
+                    int newHeight = Math.max(0, (int)(originalHeights.get(i) * shrinkRatio));
+                    int originalWidth = child.getMeasuredWidth();
+
+                    // Preserve original width based on layout params
+                    int widthSpec;
+                    if (lp.width == 0 && lp.maxWidthPercent > 0) {
+                        int childWidth;
+                        if (widthSize == 0 && widthMode == MeasureSpec.UNSPECIFIED) {
+                            childWidth = LayoutParams.WRAP_CONTENT;
+                            widthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.UNSPECIFIED);
+                        } else {
+                            childWidth = (int) (widthSize * lp.maxWidthPercent) - (lp.getMarginStart() + lp.getMarginEnd());
+                            widthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY);
+                        }
+                    } else if (lp.width == LayoutParams.MATCH_PARENT && widthMode != MeasureSpec.EXACTLY) {
+                        widthSpec = MeasureSpec.makeMeasureSpec(originalWidth, MeasureSpec.EXACTLY);
+                    } else {
+                        widthSpec = getChildMeasureSpec(widthMeasureSpec, lp.getMarginStart() + lp.getMarginEnd(), lp.width);
+                    }
+
+                    // Remeasure with new height
+                    int heightSpec = MeasureSpec.makeMeasureSpec(newHeight, MeasureSpec.EXACTLY);
+                    child.measure(widthSpec, heightSpec);
+                }
+
+                // Recalculate totalLength
+                totalLength = 0;
+                for (int i = 0; i < count; i++) {
+                    View child = getChildAt(i);
+                    if (child == null || child.getVisibility() == View.GONE) {
+                        continue;
+                    }
+
+                    LayoutParams lp = (LayoutParams) child.getLayoutParams();
+                    totalLength += child.getMeasuredHeight() + lp.topMargin + lp.bottomMargin;
+                }
+                totalLength += getPaddingTop() + getPaddingBottom();
+
+                // Delta should now be close to zero
+                delta = height - totalLength;
+            }
+        }
+
+        // Measure any skipped children or distribute leftover space to percentage-width children.
         if (skippedMeasure || (delta != 0 && !childrenWithMaxPercent.isEmpty())) {
             Collections.sort(childrenWithMaxPercent, (v1, v2) -> {
                 float p1 = ((LayoutParams) v1.getLayoutParams()).maxHeightPercent;
@@ -560,6 +639,84 @@ public class WeightlessLinearLayout extends ViewGroup {
         // Either expand children with percentage dimensions to take up available space or shrink them if they extend
         // beyond our current bounds.
         int delta = width - totalLength;
+
+        // If the delta is negative, the content is too big for the layout. We need to find
+        // children with wrap_content width that we can shrink.
+        if (delta < 0) {
+            List<View> shrinkableChildren = new ArrayList<>();
+            List<Integer> originalWidths = new ArrayList<>();
+            int totalShrinkableWidth = 0;
+
+            for (int i = 0; i < count; i++) {
+                View child = getChildAt(i);
+                if (child == null || child.getVisibility() == View.GONE) {
+                    continue;
+                }
+
+                LayoutParams lp = (LayoutParams) child.getLayoutParams();
+                if (lp.width == LayoutParams.WRAP_CONTENT &&
+                        child instanceof ShrinkableView &&
+                        ((ShrinkableView) child).isShrinkable()) {
+
+                    shrinkableChildren.add(child);
+
+                    int childWidth = child.getMeasuredWidth();
+                    originalWidths.add(childWidth);
+                    totalShrinkableWidth += childWidth;
+                }
+            }
+
+            if (!shrinkableChildren.isEmpty() && totalShrinkableWidth >= Math.abs(delta)) {
+                float shrinkRatio = (float) (totalShrinkableWidth + delta) / totalShrinkableWidth;
+                // Remeasure with reduced heights
+                for (int i = 0; i < shrinkableChildren.size(); i++) {
+                    View child = shrinkableChildren.get(i);
+                    LayoutParams lp = (LayoutParams) child.getLayoutParams();
+
+                    int newWidth = Math.max(0, (int)(originalWidths.get(i) * shrinkRatio));
+                    int originalHeight = child.getMeasuredHeight();
+
+                    // Preserve original height based on layout params
+                    int heightSpec;
+                    if (lp.height == 0 && lp.maxHeightPercent > 0) {
+                        int childHeight;
+                        if (heightSize == 0 && heightMode == MeasureSpec.UNSPECIFIED) {
+                            childHeight = LayoutParams.WRAP_CONTENT;
+                            heightSpec = MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.UNSPECIFIED);
+                        } else {
+                            childHeight = (int) (heightSize * lp.maxHeightPercent) - (lp.topMargin + lp.bottomMargin);
+                            heightSpec = MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.EXACTLY);
+                        }
+                    } else if (lp.height == LayoutParams.MATCH_PARENT && heightMode != MeasureSpec.EXACTLY) {
+                        heightSpec = MeasureSpec.makeMeasureSpec(originalHeight, MeasureSpec.EXACTLY);
+                    } else {
+                        heightSpec = getChildMeasureSpec(heightMeasureSpec, lp.topMargin + lp.bottomMargin, lp.height);
+                    }
+
+                    // Remeasure with new height
+                    int widthSpec = MeasureSpec.makeMeasureSpec(newWidth, MeasureSpec.EXACTLY);
+                    child.measure(widthSpec, heightSpec);
+                }
+
+                // Recalculate totalLength
+                totalLength = 0;
+                for (int i = 0; i < count; i++) {
+                    View child = getChildAt(i);
+                    if (child == null || child.getVisibility() == View.GONE) {
+                        continue;
+                    }
+
+                    LayoutParams lp = (LayoutParams) child.getLayoutParams();
+                    totalLength += child.getMeasuredWidth() + lp.getMarginStart() + lp.getMarginEnd();
+                }
+                totalLength += getPaddingStart() + getPaddingEnd();
+
+                // Delta should now be close to zero
+                delta = width - totalLength;
+            }
+        }
+
+        // Measure any skipped children or distribute leftover space to percentage-width children.
         if (skippedMeasure || (delta != 0 && !childrenWithMaxPercent.isEmpty())) {
             Collections.sort(childrenWithMaxPercent, (v1, v2) -> {
                 float p1 = ((LayoutParams) v1.getLayoutParams()).maxWidthPercent;

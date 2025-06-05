@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
 import com.urbanairship.android.layout.AirshipCustomViewArguments
 import com.urbanairship.android.layout.AirshipCustomViewHandler
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.requireField
 
 public class CustomMapView: AirshipCustomViewHandler {

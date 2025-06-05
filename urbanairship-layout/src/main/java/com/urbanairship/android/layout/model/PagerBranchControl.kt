@@ -2,7 +2,6 @@
 
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.property.PageBranching
@@ -10,6 +9,7 @@ import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.json.JsonSerializable
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -23,7 +23,7 @@ internal class PagerBranchControl(
     private val thomasState: StateFlow<ThomasState>,
     private val onBranchUpdated: (List<PagerModel.Item>) -> Unit,
     private val actionsRunner: (List<StateAction>) -> Unit,
-    private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.newSerialDispatcher() + SupervisorJob())
+    private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
 ) {
 
     private val history = mutableListOf<PagerModel.Item>()
@@ -33,7 +33,9 @@ internal class PagerBranchControl(
 
     init {
         scope.launch {
-            thomasState.collect { updateState() }
+            thomasState.collect {
+                updateState()
+            }
         }
     }
 

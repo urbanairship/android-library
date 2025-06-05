@@ -5,7 +5,6 @@ import android.content.Context
 import android.view.View.OnAttachStateChangeListener
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Provider
-import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
@@ -19,9 +18,7 @@ import com.urbanairship.android.layout.info.Accessible
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.info.Validatable
-import com.urbanairship.android.layout.info.ValidationAction
 import com.urbanairship.android.layout.info.View
-import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
@@ -39,12 +36,11 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.util.PlatformUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
@@ -79,6 +75,8 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     val viewId: Int = AndroidView.generateViewId()
 
     private var background: Background? = null
+
+    internal open var isShrinkable: Boolean = false
 
     fun createView(
         context: Context,
@@ -243,7 +241,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         environment.actionsRunner.run(mergedActions, state)
     }
 
-    protected fun broadcast(event: LayoutEvent) = modelScope.launch {
+    protected fun broadcast(event: LayoutEvent): Job = modelScope.launch {
         environment.eventHandler.broadcast(event)
     }
 
@@ -260,7 +258,8 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                     overrides = viewInfo.commonViewOverrides?.backgroundColor,
                     default = viewInfo.backgroundColor
                 ), border = state.resolveOptional(
-                    overrides = viewInfo.commonViewOverrides?.border, default = viewInfo.border
+                    overrides = viewInfo.commonViewOverrides?.border,
+                    default = viewInfo.border
                 )
             )
         } else {

@@ -1,4 +1,3 @@
-/* Copyright Airship and Contributors */
 package com.urbanairship.messagecenter
 
 import android.app.Application
@@ -7,7 +6,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
-import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.messagecenter.core.Inbox
 import com.urbanairship.messagecenter.core.MessageCenter
 import com.urbanairship.messagecenter.core.MessageCenter.OnShowMessageCenterListener
@@ -50,12 +48,10 @@ public class MessageCenterTest {
     private val inbox = mockk<Inbox>(relaxUnitFun = true) {
         coEvery { fetchMessages() } returns true
     }
-    private val config = TestAirshipRuntimeConfig()
 
     private val messageCenter: MessageCenter = MessageCenter(
         context = context,
         dataStore = dataStore,
-        config = config,
         privacyManager = privacyManager,
         inbox = inbox,
         pushManager = pushManager,
@@ -89,71 +85,6 @@ public class MessageCenterTest {
         messageCenter.showMessageCenter()
         val intent = shadowApplication.nextStartedActivity
         assertEquals(MessageCenter.VIEW_MESSAGE_CENTER_INTENT_ACTION, intent.action)
-        assertEquals(context.packageName, intent.getPackage())
-    }
-
-    @Test
-    public fun testShowMessageCenterListener() {
-        val listener = mockk<OnShowMessageCenterListener> {
-            every { onShowMessageCenter(null) } returns true
-        }
-
-        messageCenter.setOnShowMessageCenterListener(listener)
-        messageCenter.showMessageCenter()
-
-        verify { listener.onShowMessageCenter(null) }
-        assertNull(shadowApplication.nextStartedActivity)
-    }
-
-    @Test
-    public fun testShowMessageCenterListenerDefaultBehavior() {
-        val listener = mockk<OnShowMessageCenterListener> {
-            every { onShowMessageCenter(null) } returns false
-        }
-
-        messageCenter.setOnShowMessageCenterListener(listener)
-        messageCenter.showMessageCenter()
-
-        val intent = shadowApplication.nextStartedActivity
-        assertEquals(MessageCenter.VIEW_MESSAGE_CENTER_INTENT_ACTION, intent.action)
-        assertEquals(context.packageName, intent.getPackage())
-    }
-
-    @Test
-    public fun testShowMessage() {
-        messageCenter.showMessageCenter("id")
-
-        val intent = shadowApplication.nextStartedActivity
-        assertEquals(MessageCenter.VIEW_MESSAGE_INTENT_ACTION, intent.action)
-        assertEquals("message:id", intent.data.toString())
-        assertEquals(context.packageName, intent.getPackage())
-    }
-
-    @Test
-    public fun testShowMessageListener() {
-        val listener = mockk<OnShowMessageCenterListener> {
-            every { onShowMessageCenter("id") } returns true
-        }
-
-        messageCenter.setOnShowMessageCenterListener(listener)
-        messageCenter.showMessageCenter("id")
-
-        verify { listener.onShowMessageCenter("id") }
-        assertNull(shadowApplication.nextStartedActivity)
-    }
-
-    @Test
-    public fun testShowMessageListenerDefaultBehavior() {
-        val listener = mockk<OnShowMessageCenterListener> {
-            every { onShowMessageCenter("id") } returns false
-        }
-
-        messageCenter.setOnShowMessageCenterListener(listener)
-        messageCenter.showMessageCenter("id")
-
-        val intent = shadowApplication.nextStartedActivity
-        assertEquals(MessageCenter.VIEW_MESSAGE_INTENT_ACTION, intent.action)
-        assertEquals("message:id", intent.data.toString())
         assertEquals(context.packageName, intent.getPackage())
     }
 

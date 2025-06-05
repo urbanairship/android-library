@@ -7,14 +7,12 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.annotation.MainThread
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
-import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.customview.widget.ViewDragHelper.STATE_DRAGGING
 import androidx.customview.widget.ViewDragHelper.STATE_IDLE
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
-import androidx.lifecycle.lifecycleScope
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.BannerPresentation
@@ -285,7 +283,7 @@ internal class BannerLayout(
     @MainThread
     private fun onActivityResumed(activity: Activity) {
         val currentView = currentView?.get()
-        if (currentView == null || !ViewCompat.isAttachedToWindow(currentView)) {
+        if (currentView == null || !currentView.isAttachedToWindow) {
             display()
         } else if (activity === lastActivity?.get()) {
             currentView.onResume()

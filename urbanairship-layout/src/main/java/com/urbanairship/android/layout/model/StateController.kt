@@ -21,5 +21,11 @@ internal class StateController(
         context: Context,
         viewEnvironment: ViewEnvironment,
         itemProperties: ItemProperties?
-    ) = view.createView(context, viewEnvironment, itemProperties)
+    ): View {
+        viewInfo.initialState?.let { state ->
+            environment.layoutState.layout.update { it.copyWithState(state = state) }
+        }
+
+        return view.createView(context, viewEnvironment, itemProperties)
+    }
 }

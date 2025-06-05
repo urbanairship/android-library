@@ -9,7 +9,6 @@ import android.text.Spannable
 import android.text.SpannableString
 import android.text.TextUtils
 import androidx.core.graphics.ColorUtils
-import androidx.core.graphics.drawable.toDrawable
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.info.LabelInfo
@@ -18,7 +17,6 @@ import com.urbanairship.android.layout.model.ButtonModel
 import com.urbanairship.android.layout.model.LabelButtonModel
 import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.HorizontalPosition
-import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.Image.CenteredImageSpan
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.ColorStateListBuilder

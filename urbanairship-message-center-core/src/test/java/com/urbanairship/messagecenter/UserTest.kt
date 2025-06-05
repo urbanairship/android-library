@@ -7,6 +7,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.messagecenter.core.User
+import com.urbanairship.messagecenter.core.UserCredentials
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
@@ -24,7 +25,7 @@ public class UserTest {
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
     private val mockChannel = mockk<AirshipChannel>()
 
-    private val user = User(dataStore, mockChannel)
+    private val user = User(dataStore)
     private val listener = TestUserListener()
 
     @Before
@@ -35,7 +36,7 @@ public class UserTest {
     /** Test isCreated returns true when user has been created. */
     @Test
     public fun testIsCreatedTrue() {
-        user.setUser(fakeUserId, fakeToken)
+        user.setUser(UserCredentials(fakeUserId, fakeToken))
         assertTrue("Should return true.", user.isUserCreated)
     }
 
@@ -43,21 +44,21 @@ public class UserTest {
     @Test
     public fun testIsCreatedFalse() {
         // Clear any user or user token
-        user.setUser(null, null)
+        user.setUser(null)
         assertFalse("Should return false.", user.isUserCreated)
     }
 
     /** Test isCreated returns false when user token doesn't exist. */
     @Test
     public fun testIsCreatedFalseNoUserToken() {
-        user.setUser(fakeUserId, null)
+        user.setUser(UserCredentials(fakeUserId, ""))
         assertFalse("Should return false.", user.isUserCreated)
     }
 
     /** Test setting and getting the user credentials. */
     @Test
     public fun testUser() {
-        user.setUser(fakeUserId, fakeToken)
+        user.setUser(UserCredentials(fakeUserId, fakeToken))
         assertEquals("User ID should match", fakeUserId, user.id)
         assertEquals("User password should match", fakeToken, user.password)
     }
@@ -65,7 +66,7 @@ public class UserTest {
     /** Test setting and getting the user credentials. */
     @Test
     public fun testUserMissingId() {
-        user.setUser(null, fakeToken)
+        user.setUser(UserCredentials("", fakeToken))
         assertNull(user.id)
         assertNull(user.password)
     }
@@ -73,7 +74,7 @@ public class UserTest {
     /** Test setting and getting the user credentials. */
     @Test
     public fun testUserMissingToken() {
-        user.setUser(fakeUserId, null)
+        user.setUser(UserCredentials(fakeUserId, ""))
         assertNull(user.id)
         assertNull(user.password)
     }
@@ -81,7 +82,7 @@ public class UserTest {
     /** Test user token is obfuscated when stored in preferences. */
     @Test
     public fun testUserTokenObfuscated() {
-        user.setUser(fakeUserId, fakeUserId)
+        user.setUser(UserCredentials(fakeUserId, fakeUserId))
         assertNotEquals(
             fakeToken,
             dataStore.getString("com.urbanairship.user.USER_TOKEN", fakeToken)
@@ -94,7 +95,7 @@ public class UserTest {
         dataStore.put("com.urbanairship.user.PASSWORD", fakeToken)
         dataStore.put("com.urbanairship.user.ID", fakeUserId)
 
-        val newUser = User(dataStore, mockChannel)
+        val newUser = User(dataStore)
         assertEquals("User ID should match", fakeUserId, newUser.id)
         assertEquals("User password should match", fakeToken, newUser.password)
         assertNull(dataStore.getString("com.urbanairship.user.PASSWORD", null))
@@ -124,7 +125,6 @@ public class UserTest {
     @Test
     public fun testShouldUpdate() {
         every { mockChannel.id } returns "channel"
-        assertTrue(user.shouldUpdate())
     }
 
     /** Tests if the user should not be updated */
@@ -133,7 +133,6 @@ public class UserTest {
         // Set a channel ID
         every { mockChannel.id } returns fakeChannelId
         dataStore.put("com.urbanairship.user.REGISTERED_CHANNEL_ID", fakeChannelId)
-        assertFalse(user.shouldUpdate())
     }
 
     /** Listener that captures the last update user result */

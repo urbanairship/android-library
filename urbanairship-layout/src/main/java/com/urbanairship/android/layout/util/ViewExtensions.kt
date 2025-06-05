@@ -28,7 +28,6 @@ import androidx.core.text.TextUtilsCompat
 import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.core.text.toSpannable
 import androidx.core.view.descendants
-import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.view.PagerView
@@ -110,7 +109,7 @@ internal fun EditText.onEditing(idleDelay: Duration = 1.seconds): Flow<Boolean> 
             val isDoneAction =
                 actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE
             val isDoneKey =
-                keyEvent?.action == KeyEvent.ACTION_DOWN && keyEvent?.keyCode == KeyEvent.KEYCODE_ENTER
+                keyEvent?.action == KeyEvent.ACTION_DOWN && keyEvent.keyCode == KeyEvent.KEYCODE_ENTER
             if (isDoneKey || isDoneAction) {
                 trySend(false)
                 textEditTimeoutJob?.cancel()

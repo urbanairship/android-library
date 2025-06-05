@@ -2,7 +2,6 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
-import app.cash.turbine.test
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.PagersViewTracker
@@ -14,6 +13,7 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.PagerControllerInfo
 import com.urbanairship.android.layout.reporting.DisplayTimer
+import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk

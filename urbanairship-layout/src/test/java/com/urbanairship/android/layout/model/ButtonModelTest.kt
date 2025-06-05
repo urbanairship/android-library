@@ -7,11 +7,7 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.LabelButtonInfo
-import com.urbanairship.android.layout.info.LabelInfo
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
-import com.urbanairship.android.layout.property.Color
-import com.urbanairship.android.layout.property.TextAlignment
-import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.view.LabelButtonView
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -28,7 +24,6 @@ import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -36,7 +31,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.objectweb.asm.Label
 import org.robolectric.RobolectricTestRunner
 
 @OptIn(ExperimentalCoroutinesApi::class)

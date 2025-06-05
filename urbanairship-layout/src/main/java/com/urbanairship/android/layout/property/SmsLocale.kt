@@ -9,7 +9,6 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
-import kotlin.jvm.Throws
 
 /** Locale configuration for a phone number */
 public class SmsLocale(

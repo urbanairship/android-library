@@ -2,7 +2,6 @@ package com.urbanairship.android.layout.environment
 
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.event.ReportingEvent
-import com.urbanairship.android.layout.reporting.LayoutData
 
 internal interface Reporter {
     fun report(event: ReportingEvent)

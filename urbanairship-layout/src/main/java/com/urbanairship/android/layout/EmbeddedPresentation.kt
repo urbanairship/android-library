@@ -5,8 +5,6 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.property.EmbeddedPlacement
 import com.urbanairship.android.layout.property.EmbeddedPlacementSelector
-import com.urbanairship.android.layout.property.ModalPlacement
-import com.urbanairship.android.layout.property.ModalPlacementSelector
 import com.urbanairship.android.layout.property.PresentationType
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.json.JsonException

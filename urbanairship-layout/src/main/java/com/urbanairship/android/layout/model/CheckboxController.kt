@@ -7,21 +7,14 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
-import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField
-import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.json.JsonValue
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -81,12 +74,14 @@ internal class CheckboxController(
 
         viewScope.launch {
             checkboxState.changes.collect { checkbox ->
+                val items = checkbox.selectedItems.map { it.reportingValue }.toSet()
+
                 formState.updateFormInput(
                     value = ThomasFormField.CheckboxController(
                         identifier = checkbox.identifier,
-                        originalValue = checkbox.selectedItems,
+                        originalValue = items,
                         fieldType = ThomasFormField.FieldType.just(
-                            value = checkbox.selectedItems,
+                            value = items,
                             validator = { isValid(it) }
                         )
                     ),
@@ -94,7 +89,7 @@ internal class CheckboxController(
                 )
 
                 if (viewInfo.eventHandlers.hasFormInputHandler()) {
-                    handleViewEvent(EventHandler.Type.FORM_INPUT, checkbox.selectedItems.toList())
+                    handleViewEvent(EventHandler.Type.FORM_INPUT, items.toList())
                 }
             }
         }

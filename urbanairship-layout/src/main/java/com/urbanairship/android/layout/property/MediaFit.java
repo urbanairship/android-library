@@ -4,11 +4,11 @@ package com.urbanairship.android.layout.property;
 
 import android.widget.ImageView;
 
+import com.urbanairship.json.JsonException;
+
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
-
-import com.urbanairship.json.JsonException;
 
 /**
  * Property that determines how an image should be scaled in an {@code ImageView}.

@@ -25,6 +25,7 @@ import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -61,6 +62,7 @@ public class PagerModelTest {
         every { layoutState } returns mockk(relaxed = true) {
             every { reportingContext(any(), any(), any()) } returns mockk()
         }
+        every { layoutEvents } returns emptyFlow()
     }
     private val mockView: PagerView = mockk(relaxUnitFun = true) {
         every { context } returns mockk {

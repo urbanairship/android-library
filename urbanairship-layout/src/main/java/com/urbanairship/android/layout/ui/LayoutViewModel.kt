@@ -5,12 +5,11 @@ import androidx.lifecycle.ViewModel
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ModelFactory
 import com.urbanairship.android.layout.ModelFactoryException
-import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.ThomasModelFactory
-import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
+import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.reporting.DisplayTimer

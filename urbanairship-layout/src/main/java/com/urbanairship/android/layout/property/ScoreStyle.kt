@@ -2,7 +2,6 @@
 package com.urbanairship.android.layout.property
 
 import androidx.annotation.Dimension
-import com.urbanairship.android.layout.property.ScoreStyle.WrappingNumberRange.Wrapping.Companion
 import com.urbanairship.android.layout.shape.Shape
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap

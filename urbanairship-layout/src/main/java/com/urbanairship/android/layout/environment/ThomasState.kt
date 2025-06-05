@@ -43,7 +43,7 @@ internal data class ThomasState(
             .apply {
                 put(FORMS, jsonMapOf(
                     CURRENT to jsonMapOf(
-                        DATA to formState.formData,
+                        DATA to formState.formData(),
                         STATUS to jsonMapOf(TYPE to form.status)
                     )
                 ).toJsonValue())

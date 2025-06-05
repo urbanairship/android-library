@@ -4,12 +4,12 @@ package com.urbanairship.android.layout.shape;
 
 import android.graphics.drawable.GradientDrawable;
 
+import com.urbanairship.json.JsonException;
+
 import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-
-import com.urbanairship.json.JsonException;
 
 /**
  * Shape types.

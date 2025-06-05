@@ -16,13 +16,10 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 
 public sealed class ThomasFormField<T>(
@@ -73,13 +70,6 @@ public sealed class ThomasFormField<T>(
         return builder.build()
     }
 
-    internal open val formData: JsonMap
-        get() = jsonMapOf(
-            KEY_TYPE to type,
-            KEY_VALUE to JsonValue.wrapOpt(originalValue),
-            KEY_STATUS to status.toJson(type)
-        )
-
     public fun jsonValue(): JsonValue? =
         JsonValue.wrapOpt(originalValue).let {
             if (it != JsonValue.NULL) it else null
@@ -103,6 +93,14 @@ public sealed class ThomasFormField<T>(
         override val fieldType: FieldType<JsonValue>
     ) : ThomasFormField<JsonValue>(
         Type.SINGLE_CHOICE,
+    )
+
+    public data class ScoreInputController(
+        override val identifier: String,
+        override val originalValue: JsonValue?,
+        override val fieldType: FieldType<JsonValue>
+    ) : ThomasFormField<JsonValue>(
+        Type.SCORE,
     )
 
     public data class TextInput(
@@ -195,7 +193,7 @@ public sealed class ThomasFormField<T>(
     }
 
     override fun toString(): String {
-        return "${formData.toJsonValue()}"
+        return "${formData().toJsonValue()}"
     }
 
     public sealed class FieldType<T> {

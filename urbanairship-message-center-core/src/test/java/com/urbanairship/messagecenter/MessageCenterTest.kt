@@ -1,15 +1,19 @@
-/* Copyright Airship and Contributors */
 package com.urbanairship.messagecenter
 
-import android.app.Application
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import org.junit.runner.RunWith
+import org.robolectric.Shadows
+import org.robolectric.shadows.ShadowApplication
+import android.app.Application
+import android.content.Intent
+import android.net.Uri
 import com.urbanairship.PrivacyManager
-import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.UAirship
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
@@ -20,19 +24,14 @@ import com.urbanairship.mockk.clearInvocations
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
-import com.urbanairship.remoteconfig.RemoteAirshipConfig
-import com.urbanairship.remoteconfig.RemoteConfig
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -44,9 +43,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.Shadows
-import org.robolectric.shadows.ShadowApplication
 
 /** Tests for [MessageCenter] */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -59,19 +55,17 @@ public class MessageCenterTest {
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
     private val shadowApplication: ShadowApplication = Shadows.shadowOf(context as Application?)
     private val privacyManager = mockk<PrivacyManager>(relaxUnitFun = true) {
-       every { isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns true
+        every { isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns true
     }
     private val pushManager = mockk<PushManager>(relaxUnitFun = true) {}
     private val inbox = mockk<Inbox>(relaxUnitFun = true) {
         coEvery { fetchMessages() } returns true
     }
     private val onShowMessageCenterListener = mockk<OnShowMessageCenterListener> {}
-    private val config = TestAirshipRuntimeConfig()
 
     private val messageCenter: MessageCenter = MessageCenter(
         context = context,
         dataStore = dataStore,
-        config = config,
         privacyManager = privacyManager,
         inbox = inbox,
         pushManager = pushManager,
@@ -93,8 +87,6 @@ public class MessageCenterTest {
         val privacyListenerSlot = slot<PrivacyManager.Listener>()
         verify { privacyManager.addListener(capture(privacyListenerSlot)) }
         privacyManagerListener = privacyListenerSlot.captured
-
-        val messageCenterActivityClass = "com.urbanairship.messagecenter.ui.MessageCenterActivity"
     }
 
     @After
@@ -156,22 +148,6 @@ public class MessageCenterTest {
     }
 
     @Test
-    public fun testUrlConfigUpdateCallback() {
-        val remoteConfig = RemoteConfig(
-            RemoteAirshipConfig(
-                "https://remote-data",
-                "https://device",
-                "https://wallet",
-                "https://analytics",
-                "https://metered-usage"
-            )
-        )
-        config.updateRemoteConfig(remoteConfig)
-
-        verify { inbox.dispatchUpdateUserJob(true) }
-    }
-
-    @Test
     public fun testPrivacyManagerListenerUpdatesEnabledState() {
         // Clear setup invocations
         clearInvocations(pushManager, inbox)
@@ -182,7 +158,6 @@ public class MessageCenterTest {
 
         verify(exactly = 1) {
             inbox.setEnabled(false)
-            inbox.updateEnabledState()
         }
     }
 
@@ -197,7 +172,6 @@ public class MessageCenterTest {
 
         verify {
             inbox.setEnabled(true)
-            inbox.updateEnabledState()
         }
 
         verify(exactly = 0) { pushManager.addInternalPushListener(any()) }
@@ -214,10 +188,6 @@ public class MessageCenterTest {
 
         verify {
             inbox.setEnabled(false)
-            inbox.updateEnabledState()
-            // Verify that MessageCenter was torn down
-            inbox.tearDown()
-            pushManager.removePushListener(any())
         }
     }
 
@@ -233,13 +203,13 @@ public class MessageCenterTest {
     @Test
     public fun testPerformJobWhenEnabled() {
         val (airship, jobInfo) = mockk<UAirship>() to mockk<JobInfo>()
-        every { inbox.onPerformJob(airship, jobInfo) } returns JobResult.SUCCESS
+        coEvery { inbox.performUpdate() } returns Result.success(true)
         every { privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns true
 
         val result = messageCenter.onPerformJob(airship, jobInfo)
 
         assertEquals(JobResult.SUCCESS, result)
-        verify { inbox.onPerformJob(airship, jobInfo) }
+        coVerify { inbox.performUpdate() }
     }
 
     @Test
@@ -249,7 +219,7 @@ public class MessageCenterTest {
         val result = messageCenter.onPerformJob(mockk<UAirship>(), mockk<JobInfo>())
 
         assertEquals(JobResult.SUCCESS, result)
-        verify(exactly = 0) { inbox.onPerformJob(any(), any()) }
+        coVerify(exactly = 0) { inbox.performUpdate() }
     }
 
     @Test

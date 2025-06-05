@@ -1,7 +1,6 @@
 package com.urbanairship.android.layout
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.analytics.Event.Priority
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.json.JsonMap

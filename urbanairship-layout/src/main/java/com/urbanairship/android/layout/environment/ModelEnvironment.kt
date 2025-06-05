@@ -3,10 +3,10 @@ package com.urbanairship.android.layout.environment
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.model.PagerNextFallback
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.DisplayTimer
-import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.channel.AttributeEditor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -84,7 +84,13 @@ internal sealed class LayoutEvent {
         val state: ThomasState
     ): LayoutEvent()
 
-    object Finish : LayoutEvent()
+    data class PagerNext(
+        val fallback: PagerNextFallback
+    ) : LayoutEvent()
+
+    data object PagerPrevious : LayoutEvent()
+
+    data object Finish : LayoutEvent()
 }
 
 internal class AttributeHandler(

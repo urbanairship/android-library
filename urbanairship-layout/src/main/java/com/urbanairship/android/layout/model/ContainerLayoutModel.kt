@@ -18,6 +18,10 @@ internal class ContainerLayoutModel(
     environment = environment,
     properties = properties
 ) {
+
+    /** Container layouts may be shrunk if they contain any media views. */
+    override var isShrinkable: Boolean = items.any { it.model.isShrinkable }
+
     data class Item(
         val info: ContainerLayoutItemInfo,
         val model: AnyModel

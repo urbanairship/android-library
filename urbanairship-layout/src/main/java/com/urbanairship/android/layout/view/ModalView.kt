@@ -50,7 +50,16 @@ internal class ModalView(
 
         modalFrame = ConstrainedFrameLayout(context, size).apply {
             id = View.generateViewId()
-            layoutParams = LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT)
+            layoutParams = LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT).apply {
+                margin?.let {
+                    setMargins(
+                        ResourceUtils.dpToPx(context, it.start).toInt(),
+                        ResourceUtils.dpToPx(context, it.top).toInt(),
+                        ResourceUtils.dpToPx(context, it.end).toInt(),
+                        ResourceUtils.dpToPx(context, it.bottom).toInt()
+                    )
+                }
+            }
             clipChildren = false
             clipToPadding = false
             outlineProvider = ViewOutlineProvider.BOUNDS
@@ -63,16 +72,7 @@ internal class ModalView(
         }
 
         val containerView = ClippableFrameLayout(context).apply {
-            layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
-                margin?.let {
-                    setMargins(
-                        ResourceUtils.dpToPx(context, it.start).toInt(),
-                        ResourceUtils.dpToPx(context, it.top).toInt(),
-                        ResourceUtils.dpToPx(context, it.end).toInt(),
-                        ResourceUtils.dpToPx(context, it.bottom).toInt()
-                    )
-                }
-            }
+            layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
 
             placement.border
                 ?.innerRadii { ResourceUtils.dpToPx(context, it) }

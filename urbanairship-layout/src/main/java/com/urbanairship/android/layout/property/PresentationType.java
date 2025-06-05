@@ -2,11 +2,11 @@
 
 package com.urbanairship.android.layout.property;
 
-import androidx.annotation.NonNull;
-
 import com.urbanairship.json.JsonException;
 
 import java.util.Locale;
+
+import androidx.annotation.NonNull;
 
 /**
  * Defines how a layout should be presented.

@@ -19,6 +19,9 @@ internal class LinearLayoutModel(
     properties = properties
 ) {
 
+    /** Linear layouts may be shrunk if they contain any media views. */
+    override var isShrinkable: Boolean = items.any { it.model.isShrinkable }
+
     data class Item(
         val info: LinearLayoutItemInfo, val model: AnyModel
     )

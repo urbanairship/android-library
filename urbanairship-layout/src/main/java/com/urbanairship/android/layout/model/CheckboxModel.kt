@@ -57,7 +57,7 @@ internal class CheckboxModel(
         // Update checked state whenever the selection state changes.
         viewScope.launch {
             checkboxState.changes.collect { state ->
-                val isChecked = state.selectedItems.contains(viewInfo.reportingValue)
+                val isChecked = state.isSelected(reportingValue = viewInfo.reportingValue)
                 setChecked(isChecked = isChecked)
                 setEnabled(isEnabled = state.isEnabled && (state.selectedItems.size < state.maxSelection || isChecked))
             }
@@ -72,11 +72,15 @@ internal class CheckboxModel(
         viewScope.launch {
             checkedChanges.collect { isChecked ->
                 checkboxState.update { state ->
+                    val selected = State.Checkbox.Selected(
+                        identifier = null,
+                        reportingValue = viewInfo.reportingValue
+                    )
                     state.copy(
                         selectedItems = if (isChecked) {
-                            state.selectedItems + viewInfo.reportingValue
+                            state.selectedItems + selected
                         } else {
-                            state.selectedItems - viewInfo.reportingValue
+                            state.selectedItems - selected
                         }
                     )
                 }

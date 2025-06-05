@@ -54,7 +54,7 @@ internal class RadioInputModel(
         // Update checked state whenever the selected radio state changes.
         viewScope.launch {
             radioState.changes.collect { state ->
-                setChecked(isChecked = state.selectedItem == viewInfo.reportingValue)
+                setChecked(isChecked = state.isSelected(reportingValue = viewInfo.reportingValue))
                 setEnabled(isEnabled = state.isEnabled)
             }
         }
@@ -69,8 +69,7 @@ internal class RadioInputModel(
             checkedChanges.filter { isSelected -> isSelected }.collect {
                     radioState.update { state ->
                         state.copy(
-                            selectedItem = viewInfo.reportingValue,
-                            attributeValue = viewInfo.attributeValue
+                            selectedItem = viewInfo.asSelected()
                         )
                     }
                 }
@@ -85,4 +84,12 @@ internal class RadioInputModel(
             }
         }
     }
+}
+
+private fun RadioInputInfo.asSelected(): State.Radio.Selected {
+    return State.Radio.Selected(
+        identifier = null,
+        reportingValue = reportingValue,
+        attributeValue = attributeValue
+    )
 }

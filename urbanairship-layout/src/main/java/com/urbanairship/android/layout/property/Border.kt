@@ -4,7 +4,6 @@ package com.urbanairship.android.layout.property
 import android.os.Build
 import androidx.annotation.Dimension
 import androidx.annotation.RestrictTo
-import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.widget.Clippable
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
@@ -15,12 +14,11 @@ import com.google.android.material.shape.CornerFamily
 import com.google.android.material.shape.ShapeAppearanceModel
 
 public class Border public constructor(
-    @JvmField @get:Dimension(unit = Dimension.DP) public val radius: Int?,
+    @JvmField public val radius: Int?,
     @JvmField public val strokeWidth: Int?,
     @JvmField public val strokeColor: Color?,
     @JvmField public val cornerRadius: CornerRadius? = null
 ) {
-
     @get:Dimension(unit = Dimension.DP)
     public val innerRadius: Int?
         get() {
@@ -124,7 +122,7 @@ public class Border public constructor(
             bottomRight?.let { shape.setBottomRightCornerSize(toPxConverter(it).toFloat()) }
         }
 
-        internal fun getRadii(toPxConverter: (Int) -> Float): FloatArray? {
+        internal fun getRadii(toPxConverter: (Int) -> Float): FloatArray {
             return FloatArray(8).apply {
 
                 val setCorner: (radius: Int?, index: Int) -> Unit = function@ { radius, index ->
@@ -143,7 +141,7 @@ public class Border public constructor(
         }
 
         internal val maxCornerRadius: Int?
-            get() = listOf(topLeft, topRight, bottomLeft, bottomRight).mapNotNull { it }.max()
+            get() = listOf(topLeft, topRight, bottomLeft, bottomRight).mapNotNull { it }.maxOrNull()
     }
 
     public companion object {
@@ -154,10 +152,7 @@ public class Border public constructor(
             return Border(
                 radius = json.opt("radius").integer,
                 strokeWidth = json.opt("stroke_width").integer,
-                strokeColor = json.opt("stroke_color")
-                    .optMap()["stroke_color"]
-                    ?.requireMap()
-                    ?.let { Color.fromJson(it) },
+                strokeColor = json.get("stroke_color")?.requireMap()?.let { Color.fromJson(it) },
                 cornerRadius = json.get("corner_radius")?.let(CornerRadius::fromJson)
             )
         }

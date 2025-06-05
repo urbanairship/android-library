@@ -5,8 +5,6 @@ import android.content.Context
 import android.util.SparseIntArray
 import android.view.View
 import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Checkable
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
@@ -113,7 +111,7 @@ internal class ScoreView(
                 bindings = style.bindings,
                 padding = 0
             ).apply {
-                setOnClickListener { onScoreClick(this, i) }
+                setOnClickListener { onScoreClick(i) }
             }
 
             scoreToViewIds.append(i, button.id)
@@ -141,7 +139,7 @@ internal class ScoreView(
             bindings.unselected.textAppearance
         ).apply {
             id = viewId
-            setOnClickListener { onScoreClick(this, score) }
+            setOnClickListener { onScoreClick(score) }
         }
 
         // Apply constraints to the button
@@ -180,7 +178,7 @@ internal class ScoreView(
         }
     }
 
-    private fun onScoreClick(view: View, score: Int) {
+    private fun onScoreClick(score: Int) {
         if (!isEnabled || score == selectedScore) return
         selectedScore = score
         setSelectedScore(score)

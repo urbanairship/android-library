@@ -7,9 +7,7 @@ import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.model.CheckboxModel
-import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.CheckboxStyle
-import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.property.SwitchStyle
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.widget.CheckableView

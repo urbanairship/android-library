@@ -20,7 +20,6 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isLayoutRtl
-import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.util.UAStringUtil
 
 internal class LabelView(

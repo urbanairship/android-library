@@ -16,7 +16,6 @@ import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
 import android.widget.ProgressBar
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
@@ -25,8 +24,6 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.WebViewModel
-import com.urbanairship.android.layout.property.Border
-import com.urbanairship.android.layout.property.Color
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.widget.TappableView
@@ -126,6 +123,7 @@ internal class WebViewView(
         }
         frameLayout.addView(progressBar, progressBarLayoutParams)
 
+        @Suppress("DEPRECATION")
         wv.settings.run {
             javaScriptEnabled = true
             if (ManifestUtils.shouldEnableLocalStorage()) {

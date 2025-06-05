@@ -6,7 +6,6 @@ import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalList
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField

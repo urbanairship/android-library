@@ -10,8 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 /** The Airship rich push user. */
 public class User internal constructor(
-    private val preferences: PreferenceDataStore,
-    private val channel: AirshipChannel
+    private val preferences: PreferenceDataStore
 ) {
 
     init {
@@ -75,13 +74,12 @@ public class User internal constructor(
     /**
      * Set private properties to the User when it's created.
      *
-     * @param userId The user's Id
-     * @param userToken The user's token
+     * @param userCredentials The user credentials
      * @param channelId The channel Id that will be registered
      */
-    internal fun onCreated(userId: String, userToken: String, channelId: String) {
+    internal fun onCreated(userCredentials: UserCredentials, channelId: String) {
         registeredChannelId = channelId
-        setUser(userId, userToken)
+        setUser(userCredentials)
     }
 
     /** Returns `true` if the user credentials are available, otherwise `false. */
@@ -91,14 +89,20 @@ public class User internal constructor(
     /**
      * Updates the user
      *
-     * @param userId The user ID from the response
-     * @param userToken The user token from the response
+     * @param userCredentials The user credentials
      */
-    internal fun setUser(userId: String?, userToken: String?) {
-        UALog.d("Setting Rich Push user: %s", userId)
-        preferences.put(USER_ID_KEY, userId)
-        preferences.put(USER_TOKEN_KEY, encode(userToken, userId))
+    internal fun setUser(userCredentials: UserCredentials?) {
+        UALog.d("Setting Rich Push user: %s", userCredentials)
+        preferences.put(USER_ID_KEY, userCredentials?.username)
+        preferences.put(USER_TOKEN_KEY, encode(userCredentials?.password, userCredentials?.username))
     }
+
+    internal val userCredentials: UserCredentials?
+        get() {
+            val id = id ?: return null
+            val password = password ?: return null
+            return UserCredentials(id, password)
+        }
 
     /** The user's ID. */
     public val id: String?
@@ -117,14 +121,10 @@ public class User internal constructor(
         }
 
     /** The registered Channel ID stored in the DataStore, or `null` if no Channel ID is stored. */
-    private var registeredChannelId: String
+    internal var registeredChannelId: String
         get() = preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "") ?: ""
         set(channelId) = preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId)
 
-    /** Returns `true` if the user should be updated. */
-    internal fun shouldUpdate(): Boolean {
-        return channel.id != null && registeredChannelId != channel.id
-    }
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

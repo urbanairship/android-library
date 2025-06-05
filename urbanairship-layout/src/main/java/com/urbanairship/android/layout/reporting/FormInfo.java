@@ -1,11 +1,11 @@
 package com.urbanairship.android.layout.reporting;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
 import com.urbanairship.json.JsonMap;
 import com.urbanairship.json.JsonSerializable;
 import com.urbanairship.json.JsonValue;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public class FormInfo implements JsonSerializable {
     @NonNull

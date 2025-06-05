@@ -25,11 +25,11 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.android.material.color.MaterialColors;
-import com.google.android.material.shape.CornerFamily;
 import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.Fonts;
 import com.urbanairship.android.layout.R;
+import com.urbanairship.android.layout.info.BaseToggleLayoutInfo;
 import com.urbanairship.android.layout.model.Background;
 import com.urbanairship.android.layout.model.ButtonLayoutModel;
 import com.urbanairship.android.layout.model.LabelModel;
@@ -50,7 +50,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import androidx.annotation.ColorInt;
-import androidx.annotation.Dimension;
 import androidx.annotation.FloatRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -59,8 +58,6 @@ import androidx.annotation.RestrictTo;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.graphics.ColorUtils;
-
-import static com.urbanairship.android.layout.util.ResourceUtils.dpToPx;
 
 /**
  * Helpers for layout rendering.
@@ -170,6 +167,21 @@ public final class LayoutUtils {
         } else if (tapEffect instanceof TapEffect.None) {
             button.setForeground(null);
         }
+    }
+
+    public static void applyToggleLayoutRippleEffect(@NonNull FrameLayout toggle, @NonNull BaseToggleLayoutInfo info) {
+        Border border = info.getBorder();
+
+        float[] radii = null;
+        if (border == null) {
+            radii = new float[8];
+            Arrays.fill(radii, dpToPx(toggle.getContext(), DEFAULT_BORDER_RADIUS));
+        } else {
+            radii = border.radii((dp) -> ResourceUtils.dpToPx(toggle.getContext(), dp));
+        }
+
+        if (radii == null) { return; }
+        applyRippleEffect(toggle, radii);
     }
 
     private static RippleDrawable generateRippleDrawable(@NonNull Context context, float[] radii) {

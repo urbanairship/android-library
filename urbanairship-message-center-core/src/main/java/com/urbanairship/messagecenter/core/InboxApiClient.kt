@@ -28,13 +28,11 @@ internal class InboxApiClient constructor(
 ) {
 
     suspend fun fetchMessages(
-        user: User,
+        user: UserCredentials,
         channelId: String,
         ifModifiedSince: String?
     ): RequestResult<JsonList> {
-        val userId = user.id ?: return errorResult("Failed to delete messages! User ID cannot be null!")
-
-        val url = getUserApiUrl(userId, MESSAGES_PATH)
+        val url = getUserApiUrl(user.username, MESSAGES_PATH)
 
         val headers = mutableMapOf(
             "Accept" to "application/vnd.urbanairship+json; version=3;",
@@ -55,14 +53,11 @@ internal class InboxApiClient constructor(
     }
 
     suspend fun syncDeletedMessageState(
-        user: User,
+        user: UserCredentials,
         channelId: String,
         reportingsToDelete: List<JsonValue>
     ): RequestResult<Unit> {
-        val userId = user.id ?: return errorResult("Failed to delete messages! User ID cannot be null!")
-
-        val url = getUserApiUrl(userId, DELETE_MESSAGES_PATH)
-
+        val url = getUserApiUrl(user.username, DELETE_MESSAGES_PATH)
         val payload = jsonMapOf(MESSAGES_REPORTINGS_KEY to JsonValue.wrapOpt(reportingsToDelete))
 
         UALog.v { "Deleting inbox messages with payload: $payload" }
@@ -78,14 +73,11 @@ internal class InboxApiClient constructor(
     }
 
     suspend fun syncReadMessageState(
-        user: User,
+        user: UserCredentials,
         channelId: String,
         reportingsToUpdate: List<JsonValue>
     ): RequestResult<Unit> {
-        val userId = user.id ?: return errorResult("Failed to delete messages! User ID cannot be null!")
-
-        val url = getUserApiUrl(userId, MARK_READ_MESSAGES_PATH)
-
+        val url = getUserApiUrl(user.username, MARK_READ_MESSAGES_PATH)
         val payload = jsonMapOf(MESSAGES_REPORTINGS_KEY to JsonValue.wrapOpt(reportingsToUpdate))
 
         UALog.v { "Marking inbox messages read request with payload: $payload" }
@@ -100,11 +92,10 @@ internal class InboxApiClient constructor(
         return session.execute(request)
     }
 
-    @Throws(RequestException::class)
     suspend fun createUser(channelId: String): RequestResult<UserCredentials> {
         val url = getUserApiUrl()
-
-        val payload = JsonMap.newBuilder().putOpt(payloadChannelsKey, listOf(channelId)).build()
+        val channelKey = payloadChannelsKey ?: return errorResult("Missing platform")
+        val payload = JsonMap.newBuilder().putOpt(channelKey, listOf(channelId)).build()
 
         UALog.v("Creating Rich Push user with payload: %s", payload)
 
@@ -128,12 +119,11 @@ internal class InboxApiClient constructor(
 
     }
 
-    suspend fun updateUser(user: User, channelId: String): RequestResult<Unit> {
-        val userId = user.id ?: return errorResult("Failed to update user! User ID cannot be null!")
+    suspend fun updateUser(user: UserCredentials, channelId: String): RequestResult<Unit> {
+        val channelKey = payloadChannelsKey ?: return errorResult("Missing platform")
+        val payload = jsonMapOf(channelKey to jsonMapOf(PAYLOAD_ADD_KEY to listOf(channelId)))
 
-        val url = getUserApiUrl(userId)
-
-        val payload = jsonMapOf(payloadChannelsKey to jsonMapOf(PAYLOAD_ADD_KEY to listOf(channelId)))
+        val url = getUserApiUrl(user.username)
 
         UALog.v { "Updating user with payload: $payload" }
 
@@ -168,22 +158,15 @@ internal class InboxApiClient constructor(
     }
 
     /** The payload channels key based on the platform. */
-    @get:Throws(RequestException::class)
-    private val payloadChannelsKey: String
+    private val payloadChannelsKey: String?
         get() = when (runtimeConfig.platform) {
             UAirship.AMAZON_PLATFORM -> PAYLOAD_AMAZON_CHANNELS_KEY
             UAirship.ANDROID_PLATFORM -> PAYLOAD_ANDROID_CHANNELS_KEY
-            else -> throw RequestException("Invalid platform")
+            else -> null
         }
 
-    @Throws(RequestException::class)
-    private fun getUserAuth(user: User): RequestAuth {
-        val userId = user.id
-        val userPassword = user.password
-        if (userId == null || userPassword == null) {
-            throw RequestException("Missing user credentials")
-        }
-        return BasicAuth(userId, userPassword)
+    private fun getUserAuth(user: UserCredentials): RequestAuth {
+        return BasicAuth(user.username, user.password)
     }
 
     private fun  <T> errorResult(message: String): RequestResult<T> {

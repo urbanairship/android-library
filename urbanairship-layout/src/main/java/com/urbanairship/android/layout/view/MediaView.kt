@@ -36,6 +36,7 @@ import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.widget.CropImageView
+import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.android.layout.widget.TouchAwareWebView
 import com.urbanairship.app.FilteredActivityListener
@@ -43,7 +44,6 @@ import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
 import java.lang.ref.WeakReference
-import java.nio.file.Files.find
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
@@ -60,7 +60,7 @@ internal class MediaView(
     model: MediaModel,
     private val viewEnvironment: ViewEnvironment,
     private val itemProperties: ItemProperties?,
-) : FrameLayout(context, null), BaseView, TappableView {
+) : FrameLayout(context, null), BaseView, TappableView, ShrinkableView {
 
     private val activityListener = object : SimpleActivityListener() {
         override fun onActivityPaused(activity: Activity) {
@@ -157,6 +157,9 @@ internal class MediaView(
         super.onVisibilityChanged(changedView, visibility)
         visibilityChangeListener?.onVisibilityChanged(visibility)
     }
+
+    /** Media views are always shrinkable. */
+    override fun isShrinkable(): Boolean = true
 
     private fun configureImageView(model: MediaModel) {
         val cached = viewEnvironment.imageCache()?.get(model.viewInfo.url)
@@ -306,6 +309,7 @@ internal class MediaView(
         frameLayout.addView(progressBar, progressBarLayoutParams)
         wv.setBackgroundColor(Color.TRANSPARENT)
 
+        @Suppress("DEPRECATION")
         wv.settings.apply {
             if (model.viewInfo.mediaType == MediaType.VIDEO && model.viewInfo.video?.autoplay == true) {
                 mediaPlaybackRequiresUserGesture = false
@@ -414,7 +418,9 @@ internal class MediaView(
         load.run()
     }
 
+
     private val MediaModel.videoStyle: String
+        @Suppress("DEPRECATION")
         get() = when (viewInfo.mediaFit) {
             MediaFit.CENTER -> "object-fit: none;"
             MediaFit.CENTER_INSIDE -> "object-fit: contain;"

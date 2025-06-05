@@ -3,15 +3,12 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import android.view.View
 import android.widget.FrameLayout
-import android.widget.TextView
 import androidx.core.view.isVisible
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.CustomViewModel
-import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.util.LayoutUtils
-import com.urbanairship.json.jsonMapOf
 
 /** Wrapper for customer provided views. */
 internal class CustomView(

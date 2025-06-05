@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.info.RadioInputControllerInfo
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonValue
+import java.util.UUID
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
@@ -115,7 +116,7 @@ public class RadioInputControllerTest {
                 assertTrue(it.lastProcessedStatus(IDENTIFIER)?.isValid == true)
                 // Make sure the controller updated form state with the selected value
                 assertEquals(
-                    SELECTED_VALUE,
+                    SELECTED_VALUE.reportingValue,
                     it.inputData<ThomasFormField.RadioInputController>(IDENTIFIER)?.originalValue
                 )
             }
@@ -168,6 +169,10 @@ public class RadioInputControllerTest {
 
     private companion object {
         private const val IDENTIFIER = "identifier"
-        private val SELECTED_VALUE = JsonValue.wrap("foo")
+        private val SELECTED_VALUE = State.Radio.Selected(
+            identifier = UUID.randomUUID().toString(),
+            reportingValue = JsonValue.wrap("foo"),
+            attributeValue = null
+        )
     }
 }
