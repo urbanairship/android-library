@@ -15,7 +15,8 @@ Message Center:
 Scenes:
 - Fixed layout issues with modal frames, specifically related to margins and borders.
 - Fixed several issues related to Scene branching.
-- Added support for custom corner radii on borders, offering more flexible styling options.
+- Added support for custom corner radii on borders.
+- Added support for more flexible survey toggles.
 
 ## Version 19.8.0 - May 23, 2025
 Minor release focused on performance improvements for Scenes.
