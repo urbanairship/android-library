@@ -51,11 +51,9 @@ public class Border public constructor(
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun radii(toPxConverter: (Int) -> Float): FloatArray? {
-        if (radius != null) {
-            return FloatArray(8, { _ -> toPxConverter(radius) })
+        return cornerRadius?.getRadii(toPxConverter) ?: radius?.let {
+            FloatArray(8) { _ -> toPxConverter(it) }
         }
-
-        return cornerRadius?.getRadii(toPxConverter)
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -63,26 +61,26 @@ public class Border public constructor(
         shape: ShapeAppearanceModel.Builder,
         toPxConverter: (Int) -> Int
     ): Boolean {
-        radius?.let {
-            shape.setAllCorners(CornerFamily.ROUNDED, toPxConverter(it).toFloat())
+        if (cornerRadius != null) {
+            cornerRadius.applyToShape(shape, toPxConverter)
+        } else if (radius != null) {
+            shape.setAllCorners(CornerFamily.ROUNDED, toPxConverter(radius).toFloat())
         }
-
-        cornerRadius?.applyToShape(shape, toPxConverter)
 
         return radius != null || cornerRadius != null
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun applyToClippable(view: Clippable, toPxConverter: (Int) -> Float) {
-        if (radius != null) {
-            view.setClipPathBorderRadius(toPxConverter(radius))
-        } else if (cornerRadius != null) {
+        if (cornerRadius != null) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 view.setClipPathBorderRadius(cornerRadius.getRadii(toPxConverter))
             } else {
                 val radius = cornerRadius.maxCornerRadius ?: 0
                 view.setClipPathBorderRadius(radius.toFloat())
             }
+        } else if (radius != null) {
+            view.setClipPathBorderRadius(toPxConverter(radius))
         }
     }
 
