@@ -220,6 +220,7 @@ public class Inbox @VisibleForTesting internal constructor(
 
             if (isActive) {
                 expiryRefresh.update { UUID.randomUUID().toString() }
+                refreshResults.tryEmit(RefreshResult.LOCAL)
             }
         }
     }
