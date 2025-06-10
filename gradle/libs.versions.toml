@@ -1,7 +1,7 @@
 [versions]
 
 # Gradle plugins
-androidGradlePlugin = '8.9.0'
+androidGradlePlugin = '8.9.3'
 googleServicesPlugin = '4.4.2'
 spotlessPlugin = '6.25.0'
 nexusPublishPlugin = '1.1.0'
@@ -40,7 +40,7 @@ androidx-navigation = '2.7.7'
 androidx-slidingpanelayout = '1.2.0'
 
 # Using the RC to test the new features from I/O 2024 (Scaffold, TitleBar, LazyColumn, etc.)
-androidx-glance = '1.1.0-rc01' # Only used in Sample app
+androidx-glance = '1.1.1' # Only used in Sample app
 
 androidx-activity-compose = '1.9.1'
 
@@ -51,12 +51,12 @@ androidx-recyclerview = "1.3.2"
 androidx-room = '2.6.1'
 androidx-startup = '1.1.1'
 androidx-swiperefreshlayout = '1.1.0'
-androidx-test-core = '1.5.0'
-androidx-test-espresso = '3.5.1'
-androidx-test-junit = '1.1.5'
-androidx-test-rules = '1.5.0'
-androidx-test-runner = '1.5.2'
-androidx-test-truth = '1.5.0'
+androidx-test-core = '1.6.1'
+androidx-test-espresso = '3.6.1'
+androidx-test-junit = '1.2.1'
+androidx-test-rules = '1.6.1'
+androidx-test-runner = '1.6.2'
+androidx-test-truth = '1.6.0'
 androidx-vectordrawable = '1.1.0'
 androidx-webkit = '1.10.0'
 androidx-work = '2.9.0'
@@ -87,9 +87,9 @@ google-truth = '1.1.3'
 junit = '4.13.2'
 mockito = '4.6.1'
 mockito-kotlin = '4.0.0'
-robolectric = '4.14-beta-1'
+robolectric = '4.15-beta-1'
 turbine = '0.10.0'
-mockk = '1.13.5'
+mockk = '1.14.2'
 
 # Doc Dependencies
 dokka = '2.0.0'

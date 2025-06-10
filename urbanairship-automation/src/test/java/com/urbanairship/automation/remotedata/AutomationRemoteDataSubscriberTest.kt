@@ -38,6 +38,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -53,7 +54,7 @@ public class AutomationRemoteDataSubscriberTest {
     private val testDispatcher = StandardTestDispatcher()
     private val unconfinedTestDispatcher = UnconfinedTestDispatcher()
 
-    private var updatesFlow = MutableSharedFlow<InAppRemoteData>(extraBufferCapacity = Int.MAX_VALUE)
+    private var updatesFlow = MutableSharedFlow<InAppRemoteData>(replay = 0, extraBufferCapacity = Int.MAX_VALUE)
     private val remoteDataAccess: AutomationRemoteDataAccessInterface = mockk {
         every { this@mockk.updatesFlow } returns this@AutomationRemoteDataSubscriberTest.updatesFlow
         every { this@mockk.sourceFor(any()) } answers { getSource(firstArg()) }
@@ -81,7 +82,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testSchedulingAutomations(): TestResult = runTest {
+    public fun testSchedulingAutomations(): TestResult = runTest(unconfinedTestDispatcher) {
         val appSchedules = makeSchedules(source = RemoteDataSource.APP)
         val contactSchedules = makeSchedules(source = RemoteDataSource.CONTACT)
 
@@ -99,14 +100,11 @@ public class AutomationRemoteDataSubscriberTest {
         )
 
         coJustRun { engine.upsertSchedules(any()) }
-
         subscriber.subscribe()
-        advanceUntilIdle()
+        yield()
+        updatesFlow.emit(data)
 
-        assertTrue(updatesFlow.tryEmit(data))
-        advanceUntilIdle()
-
-        coVerify(timeout = 1000) {
+        coVerify {
             engine.upsertSchedules(appSchedules)
             engine.upsertSchedules(contactSchedules)
         }

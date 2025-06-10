@@ -34,45 +34,40 @@ public class DeferredResolver internal constructor(
     )
 
     public suspend fun <T> resolve(request: DeferredRequest, parser: (JsonValue) -> T): DeferredResult<T> {
-        if (isUrlOutDated(request.uri)) {
-            return DeferredResult.OutOfDate()
-        }
-
         return doResolve(
-            uri = resolveUrlMapping(request.uri),
-            channelId = request.channelId,
-            contactId = request.contactId,
+            request = request,
             stateOverrides = StateOverrides(request),
             audienceOverrides = audienceOverridesProvider.channelOverrides(request.channelId, request.contactId),
-            triggerContext = request.triggerContext,
             resultParser = parser,
             allowRetry = true
         )
     }
 
     private suspend fun <T> doResolve(
-        uri: Uri,
-        channelId: String,
-        contactId: String?,
+        request: DeferredRequest,
         stateOverrides: StateOverrides,
         audienceOverrides: AudienceOverrides.Channel,
-        triggerContext: DeferredTriggerContext?,
         resultParser: (JsonValue) -> T,
         allowRetry: Boolean
     ): DeferredResult<T> {
+        val resolvedUrl = resolveUrlMapping(request.uri)
+        if (isUrlOutDated(resolvedUrl)) {
+            UALog.e { "Failed to resolve deferred: $resolvedUrl. Out of date." }
+            return DeferredResult.OutOfDate()
+        }
 
         val response: RequestResult<JsonValue>
         try {
             response = apiClient.resolve(
-                uri = uri,
-                channelId = channelId,
-                contactId = contactId,
+                uri = resolvedUrl,
+                channelId = request.channelId,
+                contactId = request.contactId,
                 stateOverrides = stateOverrides,
                 audienceOverrides = audienceOverrides,
-                triggerContext = triggerContext
+                triggerContext = request.triggerContext
             )
         } catch (ex: Exception) {
-            UALog.e(ex) { "Failed to resolve deferred: $uri" }
+            UALog.e(ex) { "Failed to resolve deferred: $resolvedUrl" }
             return DeferredResult.TimedOut()
         }
 
@@ -92,12 +87,12 @@ public class DeferredResolver internal constructor(
             }
             404 -> return DeferredResult.NotFound()
             409 -> {
-                addOutdatedUrl(uri)
+                addOutdatedUrl(resolvedUrl)
                 return DeferredResult.OutOfDate()
             }
             429 -> {
                 response.locationHeader?.let {
-                    addUrlMapping(uri, it)
+                    addUrlMapping(request.uri, it)
                 }
                 return DeferredResult.RetriableError(
                     retryAfter = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0),
@@ -110,7 +105,7 @@ public class DeferredResolver internal constructor(
                         retryAfter = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0),
                         statusCode = statusCode
                     )
-                addUrlMapping(uri, redirect)
+                addUrlMapping(request.uri, redirect)
 
                 val retryDelay = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, -1)
                 if (retryDelay > 0) {
@@ -119,12 +114,9 @@ public class DeferredResolver internal constructor(
 
                 if (allowRetry) {
                     return doResolve(
-                        uri = redirect,
-                        channelId = channelId,
-                        contactId = contactId,
+                        request = request,
                         stateOverrides = stateOverrides,
                         audienceOverrides = audienceOverrides,
-                        triggerContext = triggerContext,
                         resultParser = resultParser,
                         allowRetry = false
                     )
