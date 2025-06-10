@@ -15,7 +15,6 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
-import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.core.view.doOnAttach
 import androidx.core.view.isVisible
@@ -84,10 +83,13 @@ internal class MediaView(
 
     private var visibilityChangeListener: BaseView.VisibilityChangeListener? = null
     private var webView: TouchAwareWebView? = null
-    private var imageView: ImageView? = null
+    private var imageView: CropImageView? = null
+    private var newBackground: Background? = null
 
     init {
         id = model.viewId
+
+        clipToOutline = true
 
         when (model.viewInfo.mediaType) {
             MediaType.IMAGE -> configureImageView(model)
@@ -138,7 +140,15 @@ internal class MediaView(
             }
 
             override fun setBackground(old: Background?, new: Background) {
-                LayoutUtils.updateBackground(this@MediaView, old, new)
+                webView?.let {
+                    LayoutUtils.applyMediaVideoBorderAndBackground(this@MediaView, it.background, new.border, new.color)
+                } ?: imageView?.let {
+                    // Image views are inflated onAttach, so we aren't likely to hit this case.
+                    LayoutUtils.applyMediaImageBorderAndBackground(it, it.background, new.border, new.color)
+                } ?: run {
+                    // If neither child is ready, store the background to be applied later.
+                    newBackground = new
+                }
             }
         }
     }
@@ -173,7 +183,6 @@ internal class MediaView(
             return
         }
 
-
         doOnAttach {
             val parentLayoutParams = layoutParams
 
@@ -181,6 +190,12 @@ internal class MediaView(
                 id = model.mediaViewId
                 layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
                 adjustViewBounds = true
+                clipToOutline = true
+
+                // Apply background and border, if available.
+                newBackground?.let {
+                    LayoutUtils.applyMediaImageBorderAndBackground(this, this.background, model.viewInfo.border, model.viewInfo.backgroundColor)
+                }
 
                 if (model.viewInfo.mediaFit == MediaFit.FIT_CROP) {
                     // Use parent size and a matrix to crop the image.
