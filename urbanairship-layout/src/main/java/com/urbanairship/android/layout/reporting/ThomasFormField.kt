@@ -62,9 +62,17 @@ public sealed class ThomasFormField<T>(
         val builder = JsonMap.newBuilder()
 
         builder.put(KEY_TYPE, type)
-        builder.put(KEY_VALUE, JsonValue.wrapOpt(originalValue))
+
         if (withState) {
             builder.put(KEY_STATUS, status.toJson(type))
+            builder.put(KEY_VALUE, JsonValue.wrapOpt(originalValue))
+        } else {
+            val value = if (status is ThomasFormFieldStatus.Valid) {
+                (status as ThomasFormFieldStatus.Valid).result.value
+            } else {
+                originalValue
+            }
+            builder.put(KEY_VALUE, JsonValue.wrapOpt(value))
         }
 
         return builder.build()
@@ -133,6 +141,18 @@ public sealed class ThomasFormField<T>(
             for (child in originalValue) {
                 builder.putOpt(child.identifier, child.formData(withState))
             }
+            return builder.build()
+        }
+
+        override fun formData(withState: Boolean): JsonMap {
+            val builder = JsonMap.newBuilder()
+
+            builder.put(KEY_TYPE, type)
+            builder.put(KEY_VALUE, childrenJson(withState))
+            if (withState) {
+                builder.put(KEY_STATUS, status.toJson(type))
+            }
+
             return builder.build()
         }
 
