@@ -13,6 +13,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
+import com.urbanairship.messagecenter.core.R as CoreR
 import com.urbanairship.messagecenter.animator.animateFadeIn
 import com.urbanairship.messagecenter.animator.animateFadeOut
 import com.urbanairship.messagecenter.animator.slideInBottomAnimator
@@ -232,7 +233,7 @@ public class MessageListView @JvmOverloads constructor(
             } else {
                 // We have a count. Format the title with the count: "Mark as read (3)", "Delete (5)", etc.
                 context.getString(
-                    R.string.ua_edit_toolbar_item_title_with_count,
+                    CoreR.string.ua_edit_toolbar_item_title_with_count,
                     context.getString(titleResId),
                     count
                 )

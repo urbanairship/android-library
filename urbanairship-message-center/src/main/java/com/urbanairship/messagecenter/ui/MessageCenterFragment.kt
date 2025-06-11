@@ -12,6 +12,7 @@ import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
+import com.urbanairship.messagecenter.core.R as CoreR
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment.OnMessageDeletedListener
 import com.urbanairship.messagecenter.ui.MessageListFragment.OnMessageClickListener
@@ -116,11 +117,11 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
                 }
 
                 override fun onDeleteMessages(count: Int) = showListSnackbar(
-                    resources.getQuantityString(R.plurals.ua_mc_description_deleted, count, count)
+                    resources.getQuantityString(CoreR.plurals.ua_mc_description_deleted, count, count)
                 )
 
                 override fun onMarkMessagesRead(count: Int) = showListSnackbar(
-                    resources.getQuantityString(R.plurals.ua_mc_description_marked_read, count, count)
+                    resources.getQuantityString(CoreR.plurals.ua_mc_description_marked_read, count, count)
                 )
             }
 
@@ -136,7 +137,7 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
         messageFragment?.run {
             onMessageDeletedListener = OnMessageDeletedListener {
                 showListSnackbar(
-                    resources.getQuantityString(R.plurals.ua_mc_description_deleted, 1, 1)
+                    resources.getQuantityString(CoreR.plurals.ua_mc_description_deleted, 1, 1)
                 )
                 closeMessage()
             }

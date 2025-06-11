@@ -13,7 +13,8 @@ import androidx.appcompat.widget.Toolbar
 import androidx.core.content.withStyledAttributes
 import androidx.core.view.isVisible
 import com.urbanairship.messagecenter.R
-import com.urbanairship.R as coreR
+import com.urbanairship.messagecenter.core.R as MessageCenterCoreR
+import com.urbanairship.R as CoreR
 
 /** A [MessageListFragment] with a toolbar, used by [MessageCenterFragment]. */
 public open class MessageCenterListFragment @JvmOverloads constructor(
@@ -48,7 +49,7 @@ public open class MessageCenterListFragment @JvmOverloads constructor(
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        var toolbarTitle = getString(coreR.string.ua_message_center_title)
+        var toolbarTitle = getString(CoreR.string.ua_message_center_title)
 
         requireContext().withStyledAttributes(
             set = null,
@@ -156,8 +157,8 @@ public open class MessageCenterListFragment @JvmOverloads constructor(
 
         // Announce edit mode
         val announcement = getString(
-            if (editing) R.string.ua_announce_enter_edit_mode
-            else R.string.ua_announce_leave_edit_mode
+            if (editing) MessageCenterCoreR.string.ua_announce_enter_edit_mode
+            else MessageCenterCoreR.string.ua_announce_leave_edit_mode
         )
         view?.announceForAccessibility(announcement)
     }

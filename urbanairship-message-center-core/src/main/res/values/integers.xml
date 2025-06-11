@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- Message List Item edit mode animations -->
-    <integer name="flip_animation_duration_full">300</integer>
-    <integer name="flip_animation_duration_half">150</integer>
-</resources>
