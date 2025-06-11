@@ -150,7 +150,7 @@ internal class TextInputView(
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
                     val locale = adapter.getItem(p2)
-                    input.hint = locale.prefix
+                    input.hint = model.viewInfo.hintText ?: locale.prefix
                     model.onNewLocale(locale)
                 }
 

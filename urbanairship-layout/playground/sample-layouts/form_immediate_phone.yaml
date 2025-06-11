@@ -84,6 +84,11 @@ view:
                           hex: "#cccccc"
                           alpha: 1
                     text_appearance:
+                      place_holder_color:
+                        default:
+                          type: hex
+                          hex: "#000000"
+                          alpha: 1
                       alignment: start
                       font_size: 20
                       color:
