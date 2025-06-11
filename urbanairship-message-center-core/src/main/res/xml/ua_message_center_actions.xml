@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <ActionEntry class="com.urbanairship.messagecenter.core.actions.MessageCenterAction">
+    <ActionEntry class="com.urbanairship.messagecenter.actions.MessageCenterAction">
         <name>open_mc_action</name>
         <name>^mc</name>
         <name>open_mc_overlay_action</name>

@@ -12,14 +12,7 @@ import com.urbanairship.http.RequestResult
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
-import com.urbanairship.messagecenter.core.InboxApiClient
-import com.urbanairship.messagecenter.core.InboxJobHandler
-import com.urbanairship.messagecenter.core.InboxJobHandler.Companion.LAST_MESSAGE_REFRESH_TIME
-import com.urbanairship.messagecenter.core.Message
-import com.urbanairship.messagecenter.core.MessageDao
-import com.urbanairship.messagecenter.core.MessageEntity
-import com.urbanairship.messagecenter.core.User
-import com.urbanairship.messagecenter.core.UserCredentials
+import com.urbanairship.messagecenter.InboxJobHandler.Companion.LAST_MESSAGE_REFRESH_TIME
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import java.net.HttpURLConnection.HTTP_CREATED

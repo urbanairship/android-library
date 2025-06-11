@@ -1,10 +1,9 @@
 /* Copyright Airship and Contributors */
-package com.urbanairship.messagecenter.core
+package com.urbanairship.messagecenter
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
-import com.urbanairship.channel.AirshipChannel
 import java.io.UnsupportedEncodingException
 import java.util.concurrent.CopyOnWriteArrayList
 

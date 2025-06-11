@@ -1,4 +1,4 @@
-package com.urbanairship.messagecenter.core
+package com.urbanairship.messagecenter
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
@@ -8,7 +8,6 @@ import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
-import com.urbanairship.messagecenter.core.Message.Companion.create
 import com.urbanairship.util.UAStringUtil
 
 @Entity(
@@ -58,7 +57,7 @@ internal data class MessageEntity(
     }
 
     fun toMessage(): Message? = try {
-        create(JsonValue.parseString(rawMessageObject), unread, deleted)
+        Message.Companion.create(JsonValue.parseString(rawMessageObject), unread, deleted)
     } catch (e: JsonException) {
         UALog.e(e) { "Failed to create Message from JSON" }
         null

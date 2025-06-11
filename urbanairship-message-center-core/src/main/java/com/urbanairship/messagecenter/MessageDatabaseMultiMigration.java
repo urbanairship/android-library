@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.messagecenter.core;
+package com.urbanairship.messagecenter;
 
 import com.urbanairship.db.RecoverableMigration;
 
@@ -8,20 +8,20 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 
-import static com.urbanairship.messagecenter.core.MessageDatabase.BODY_URL;
-import static com.urbanairship.messagecenter.core.MessageDatabase.DELETED;
-import static com.urbanairship.messagecenter.core.MessageDatabase.EXPIRATION;
-import static com.urbanairship.messagecenter.core.MessageDatabase.EXTRA;
-import static com.urbanairship.messagecenter.core.MessageDatabase.KEY;
-import static com.urbanairship.messagecenter.core.MessageDatabase.MESSAGE_ID;
-import static com.urbanairship.messagecenter.core.MessageDatabase.MESSAGE_URL;
-import static com.urbanairship.messagecenter.core.MessageDatabase.RAW_MESSAGE;
-import static com.urbanairship.messagecenter.core.MessageDatabase.READ_URL;
-import static com.urbanairship.messagecenter.core.MessageDatabase.TABLE_NAME;
-import static com.urbanairship.messagecenter.core.MessageDatabase.TIMESTAMP;
-import static com.urbanairship.messagecenter.core.MessageDatabase.TITLE;
-import static com.urbanairship.messagecenter.core.MessageDatabase.UNREAD;
-import static com.urbanairship.messagecenter.core.MessageDatabase.UNREAD_ORIG;
+import static com.urbanairship.messagecenter.MessageDatabase.BODY_URL;
+import static com.urbanairship.messagecenter.MessageDatabase.DELETED;
+import static com.urbanairship.messagecenter.MessageDatabase.EXPIRATION;
+import static com.urbanairship.messagecenter.MessageDatabase.EXTRA;
+import static com.urbanairship.messagecenter.MessageDatabase.KEY;
+import static com.urbanairship.messagecenter.MessageDatabase.MESSAGE_ID;
+import static com.urbanairship.messagecenter.MessageDatabase.MESSAGE_URL;
+import static com.urbanairship.messagecenter.MessageDatabase.RAW_MESSAGE;
+import static com.urbanairship.messagecenter.MessageDatabase.READ_URL;
+import static com.urbanairship.messagecenter.MessageDatabase.TABLE_NAME;
+import static com.urbanairship.messagecenter.MessageDatabase.TIMESTAMP;
+import static com.urbanairship.messagecenter.MessageDatabase.TITLE;
+import static com.urbanairship.messagecenter.MessageDatabase.UNREAD;
+import static com.urbanairship.messagecenter.MessageDatabase.UNREAD_ORIG;
 
 /**
  * Message database migration that can handle migration from most previous versions of the DB,

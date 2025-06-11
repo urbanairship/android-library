@@ -6,9 +6,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
-import com.urbanairship.messagecenter.core.MessageDao
-import com.urbanairship.messagecenter.core.MessageDatabase
-import com.urbanairship.messagecenter.core.MessageEntity
 import java.util.UUID
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers

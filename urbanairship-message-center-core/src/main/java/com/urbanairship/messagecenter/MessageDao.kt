@@ -1,4 +1,4 @@
-package com.urbanairship.messagecenter.core
+package com.urbanairship.messagecenter
 
 import androidx.annotation.VisibleForTesting
 import androidx.core.util.Consumer

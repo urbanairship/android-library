@@ -5,4 +5,4 @@
  * Requires {@code urbanairship-message-center} module.
  */
 
-package com.urbanairship.messagecenter.core;
+package com.urbanairship.messagecenter;

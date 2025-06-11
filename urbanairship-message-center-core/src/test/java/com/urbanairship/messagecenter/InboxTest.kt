@@ -13,15 +13,8 @@ import com.urbanairship.TestTaskSleeper
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.ChannelRegistrationPayload
-import com.urbanairship.messagecenter.core.Inbox.FetchMessagesCallback
+import com.urbanairship.messagecenter.Inbox.FetchMessagesCallback
 import com.urbanairship.messagecenter.MessageCenterTestUtils.createMessage
-import com.urbanairship.messagecenter.core.Inbox
-import com.urbanairship.messagecenter.core.InboxJobHandler
-import com.urbanairship.messagecenter.core.Message
-import com.urbanairship.messagecenter.core.MessageDao
-import com.urbanairship.messagecenter.core.MessageDatabase
-import com.urbanairship.messagecenter.core.MessageEntity
-import com.urbanairship.messagecenter.core.User
 import com.urbanairship.mockk.clearInvocations
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig

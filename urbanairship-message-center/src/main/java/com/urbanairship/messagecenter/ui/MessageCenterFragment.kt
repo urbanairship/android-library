@@ -11,12 +11,12 @@ import androidx.fragment.app.Fragment
 import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
-import com.urbanairship.messagecenter.core.Message
+import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment.OnMessageDeletedListener
 import com.urbanairship.messagecenter.ui.MessageListFragment.OnMessageClickListener
-import com.urbanairship.messagecenter.core.ui.view.MessageViewState
-import com.urbanairship.messagecenter.core.util.setImportantForAccessibility
+import com.urbanairship.messagecenter.ui.view.MessageViewState
+import com.urbanairship.messagecenter.util.setImportantForAccessibility
 import com.google.android.material.snackbar.Snackbar
 
 /** `Fragment` that displays the Message Center list and message view. */

@@ -6,15 +6,14 @@ import android.util.AttributeSet
 import android.webkit.WebView
 import androidx.annotation.CallSuper
 import androidx.annotation.MainThread
-import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.javascript.JavaScriptEnvironment
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
-import com.urbanairship.messagecenter.core.Message
-import com.urbanairship.messagecenter.core.MessageCenter
+import com.urbanairship.messagecenter.Message
+import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.webkit.AirshipWebViewClient
 import com.urbanairship.webkit.NestedScrollAirshipWebView
 import kotlinx.coroutines.runBlocking

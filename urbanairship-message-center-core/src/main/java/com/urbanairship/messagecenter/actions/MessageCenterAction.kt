@@ -1,14 +1,14 @@
 /* Copyright Airship and Contributors */
-package com.urbanairship.messagecenter.core.actions
+package com.urbanairship.messagecenter.actions
 
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
-import com.urbanairship.messagecenter.core.Inbox
-import com.urbanairship.messagecenter.core.Message
-import com.urbanairship.messagecenter.core.MessageCenter
+import com.urbanairship.messagecenter.Inbox
+import com.urbanairship.messagecenter.Message
+import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.push.PushMessage
 import com.urbanairship.util.AirshipComponentUtils.callableForComponent
 import com.urbanairship.util.UAStringUtil

@@ -4,10 +4,6 @@ package com.urbanairship.messagecenter
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.json.JsonValue
-import com.urbanairship.messagecenter.core.Message
-import com.urbanairship.messagecenter.core.MessageDao
-import com.urbanairship.messagecenter.core.MessageDatabase
-import com.urbanairship.messagecenter.core.MessageEntity
 import com.urbanairship.util.DateUtils
 import java.util.Date
 import kotlinx.coroutines.Dispatchers

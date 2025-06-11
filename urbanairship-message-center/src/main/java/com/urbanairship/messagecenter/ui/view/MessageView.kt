@@ -9,18 +9,14 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.MainThread
 import androidx.core.view.isVisible
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.findViewTreeLifecycleOwner
 import com.urbanairship.UALog
-import com.urbanairship.messagecenter.core.Message
+import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
-import com.urbanairship.messagecenter.core.ui.view.MessageViewState
-import com.urbanairship.messagecenter.core.ui.view.MessageViewState.Error.Type.LOAD_FAILED
-import com.urbanairship.messagecenter.core.ui.view.MessageViewState.Error.Type.UNAVAILABLE
+import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.LOAD_FAILED
+import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.UNAVAILABLE
 import com.urbanairship.messagecenter.ui.widget.MessageWebView
 import com.urbanairship.messagecenter.ui.widget.MessageWebViewClient
-import com.urbanairship.messagecenter.core.util.getActivity
+import com.urbanairship.messagecenter.util.getActivity
 import com.urbanairship.webkit.AirshipWebChromeClient
 
 /** A `WebView` configured to display Airship Message Center message content. */

@@ -1,5 +1,6 @@
-package com.urbanairship.messagecenter.core.animator
+package com.urbanairship.messagecenter.animator
 
+import android.R
 import android.animation.ObjectAnimator
 import android.view.View
 import android.view.ViewPropertyAnimator
@@ -8,7 +9,7 @@ import androidx.core.animation.doOnStart
 import androidx.core.view.isVisible
 
 public val View.shortAnimTime: Long
-    get() = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
+    get() = resources.getInteger(R.integer.config_shortAnimTime).toLong()
 
 public val View.slideInBottomAnimator: ObjectAnimator
     get() = ObjectAnimator.ofFloat(

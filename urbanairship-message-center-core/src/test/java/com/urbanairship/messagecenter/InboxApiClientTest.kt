@@ -12,9 +12,6 @@ import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.messagecenter.core.InboxApiClient
-import com.urbanairship.messagecenter.core.User
-import com.urbanairship.messagecenter.core.UserCredentials
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import junit.framework.TestCase.assertEquals

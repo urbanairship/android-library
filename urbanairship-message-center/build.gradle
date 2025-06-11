@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.room)
 }
 
-description = "Core Airship Android SDK Message Center module"
+description = "Airship Android SDK Message Center module"
 
 android {
     namespace 'com.urbanairship.messagecenter'

@@ -1,4 +1,4 @@
-package com.urbanairship.messagecenter.core;
+package com.urbanairship.messagecenter;
 
 import android.content.Context;
 
@@ -6,6 +6,8 @@ import com.urbanairship.PreferenceDataStore;
 import com.urbanairship.PrivacyManager;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.config.AirshipRuntimeConfig;
+import com.urbanairship.messagecenter.core.BuildConfig;
+import com.urbanairship.messagecenter.core.R;
 import com.urbanairship.modules.Module;
 import com.urbanairship.modules.messagecenter.MessageCenterModuleFactory;
 import com.urbanairship.push.PushManager;

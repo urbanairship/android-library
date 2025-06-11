@@ -7,8 +7,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
-import com.urbanairship.messagecenter.core.Inbox
-import com.urbanairship.messagecenter.core.MessageCenter
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import io.mockk.coEvery

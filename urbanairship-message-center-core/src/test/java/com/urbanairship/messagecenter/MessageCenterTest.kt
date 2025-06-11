@@ -18,9 +18,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.UAirship
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
-import com.urbanairship.messagecenter.core.Inbox
-import com.urbanairship.messagecenter.core.MessageCenter
-import com.urbanairship.messagecenter.core.MessageCenter.OnShowMessageCenterListener
+import com.urbanairship.messagecenter.MessageCenter.OnShowMessageCenterListener
 import com.urbanairship.mockk.clearInvocations
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager

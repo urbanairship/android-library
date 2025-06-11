@@ -7,9 +7,9 @@ import android.view.View
 import androidx.annotation.LayoutRes
 import androidx.appcompat.widget.Toolbar
 import com.urbanairship.UALog
-import com.urbanairship.messagecenter.core.Message
+import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
-import com.urbanairship.messagecenter.core.ui.view.MessageViewState
+import com.urbanairship.messagecenter.ui.view.MessageViewState
 import com.google.android.material.appbar.CollapsingToolbarLayout
 
 /** A [MessageListFragment] with a toolbar, used by [MessageCenterFragment]. */

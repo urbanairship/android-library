@@ -1,4 +1,4 @@
-package com.urbanairship.messagecenter.core.util
+package com.urbanairship.messagecenter.util
 
 import android.app.Activity
 import android.content.Context

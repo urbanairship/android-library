@@ -6,8 +6,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionValue
-import com.urbanairship.messagecenter.core.MessageCenter
-import com.urbanairship.messagecenter.core.actions.MessageCenterAction
+import com.urbanairship.messagecenter.MessageCenter
+import com.urbanairship.messagecenter.actions.MessageCenterAction
 import com.urbanairship.push.PushMessage
 import io.mockk.mockk
 import io.mockk.verify

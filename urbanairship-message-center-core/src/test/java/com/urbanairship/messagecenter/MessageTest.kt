@@ -4,7 +4,6 @@ package com.urbanairship.messagecenter
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
-import com.urbanairship.messagecenter.core.Message
 import com.urbanairship.util.DateUtils
 import java.util.Date
 import junit.framework.TestCase.assertEquals

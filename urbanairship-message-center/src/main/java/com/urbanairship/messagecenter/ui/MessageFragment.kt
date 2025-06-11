@@ -12,12 +12,12 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.urbanairship.UALog
-import com.urbanairship.messagecenter.core.Message
+import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.view.MessageView
-import com.urbanairship.messagecenter.core.ui.view.MessageViewState
-import com.urbanairship.messagecenter.core.ui.view.MessageViewModel
-import com.urbanairship.messagecenter.core.ui.view.SubscriptionCancellation
+import com.urbanairship.messagecenter.ui.view.MessageViewState
+import com.urbanairship.messagecenter.ui.view.MessageViewModel
+import com.urbanairship.messagecenter.ui.view.SubscriptionCancellation
 import kotlinx.coroutines.launch
 
 /** Fragment that displays a Message Center [Message]. */

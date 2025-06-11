@@ -1,4 +1,4 @@
-package com.urbanairship.messagecenter.core.ui.view
+package com.urbanairship.messagecenter.ui.view
 
 import android.os.Parcelable
 import androidx.lifecycle.LiveData
@@ -12,9 +12,9 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
-import com.urbanairship.messagecenter.core.Inbox
-import com.urbanairship.messagecenter.core.Message
-import com.urbanairship.messagecenter.core.MessageCenter
+import com.urbanairship.messagecenter.Inbox
+import com.urbanairship.messagecenter.Message
+import com.urbanairship.messagecenter.MessageCenter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

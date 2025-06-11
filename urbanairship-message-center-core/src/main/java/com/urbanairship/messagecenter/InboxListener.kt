@@ -1,6 +1,6 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.messagecenter.core
+package com.urbanairship.messagecenter
 
 /** Inbox listener. */
 public interface InboxListener {

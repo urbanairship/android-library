@@ -1,4 +1,4 @@
-package com.urbanairship.messagecenter.core.util
+package com.urbanairship.messagecenter.util
 
 import android.view.View
 import android.widget.ImageView

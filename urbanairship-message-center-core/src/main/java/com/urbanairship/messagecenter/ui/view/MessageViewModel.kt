@@ -1,4 +1,4 @@
-package com.urbanairship.messagecenter.core.ui.view
+package com.urbanairship.messagecenter.ui.view
 
 import android.os.Parcelable
 import androidx.lifecycle.LiveData
@@ -11,12 +11,10 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.urbanairship.UALog
-import com.urbanairship.messagecenter.core.Inbox
-import com.urbanairship.messagecenter.core.InboxListener
-import com.urbanairship.messagecenter.core.Message
-import com.urbanairship.messagecenter.core.MessageCenter
-import com.urbanairship.messagecenter.core.ui.view.MessageViewState.Error.Type.LOAD_FAILED
-import com.urbanairship.messagecenter.core.ui.view.MessageViewState.Error.Type.UNAVAILABLE
+import com.urbanairship.messagecenter.Inbox
+import com.urbanairship.messagecenter.InboxListener
+import com.urbanairship.messagecenter.Message
+import com.urbanairship.messagecenter.MessageCenter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -130,16 +128,16 @@ public class MessageViewModel(
             // If we don't have the message, refresh the inbox
             if (!inbox.fetchMessages()) {
                 // Fetch failed, return an error
-                return MessageViewState.Error(LOAD_FAILED)
+                return MessageViewState.Error(MessageViewState.Error.Type.LOAD_FAILED)
             }
 
             // Try to get the message again, now that we've refreshed
-            inbox.getMessage(messageId) ?: return MessageViewState.Error(UNAVAILABLE)
+            inbox.getMessage(messageId) ?: return MessageViewState.Error(MessageViewState.Error.Type.UNAVAILABLE)
         }
 
         if (message.isExpired) {
             // Message is expired, return an error
-            return MessageViewState.Error(UNAVAILABLE)
+            return MessageViewState.Error(MessageViewState.Error.Type.UNAVAILABLE)
         }
 
         // Message is available, return it

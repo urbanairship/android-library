@@ -6,8 +6,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.channel.AirshipChannel
-import com.urbanairship.messagecenter.core.User
-import com.urbanairship.messagecenter.core.UserCredentials
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertEquals
