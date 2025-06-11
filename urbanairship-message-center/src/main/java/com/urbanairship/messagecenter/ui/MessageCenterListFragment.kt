@@ -4,17 +4,15 @@ import android.content.Context
 import android.os.Bundle
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
-import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
 import android.view.accessibility.AccessibilityManager
 import androidx.annotation.LayoutRes
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.withStyledAttributes
 import androidx.core.view.isVisible
 import com.urbanairship.messagecenter.R
-import com.urbanairship.messagecenter.core.R as MessageCenterCoreR
 import com.urbanairship.R as CoreR
+import com.urbanairship.messagecenter.core.R as MessageCenterCoreR
 
 /** A [MessageListFragment] with a toolbar, used by [MessageCenterFragment]. */
 public open class MessageCenterListFragment @JvmOverloads constructor(

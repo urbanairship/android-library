@@ -15,8 +15,8 @@ import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.view.MessageView
-import com.urbanairship.messagecenter.ui.view.MessageViewState
 import com.urbanairship.messagecenter.ui.view.MessageViewModel
+import com.urbanairship.messagecenter.ui.view.MessageViewState
 import com.urbanairship.messagecenter.ui.view.SubscriptionCancellation
 import kotlinx.coroutines.launch
 

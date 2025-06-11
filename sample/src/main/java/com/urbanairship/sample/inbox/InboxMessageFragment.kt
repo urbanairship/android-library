@@ -11,7 +11,6 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment
-import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment.OnMessageDeletedListener
 import com.urbanairship.sample.MainActivity.TOP_LEVEL_DESTINATIONS
 import com.urbanairship.sample.R
 import com.urbanairship.messagecenter.R as messageCenterR

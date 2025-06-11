@@ -16,10 +16,10 @@ import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.webkit.AirshipWebViewClient
 import com.urbanairship.webkit.NestedScrollAirshipWebView
-import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
+import kotlinx.coroutines.runBlocking
 
 /**
  * Base WebView configured for Airship Message Center content.

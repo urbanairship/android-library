@@ -12,13 +12,13 @@ import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.core.R as CoreR
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment.OnMessageDeletedListener
 import com.urbanairship.messagecenter.ui.MessageListFragment.OnMessageClickListener
 import com.urbanairship.messagecenter.ui.view.MessageViewState
 import com.urbanairship.messagecenter.util.setImportantForAccessibility
 import com.google.android.material.snackbar.Snackbar
+import com.urbanairship.messagecenter.core.R as CoreR
 
 /** `Fragment` that displays the Message Center list and message view. */
 public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message_center) {

@@ -16,8 +16,8 @@ import androidx.fragment.app.commitNow
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
-import com.urbanairship.messagecenter.core.R
 import com.urbanairship.messagecenter.MessageCenter
+import com.urbanairship.messagecenter.core.R
 import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment.OnMessageDeletedListener
 
 /** `Activity` that displays the Message Center message view. */

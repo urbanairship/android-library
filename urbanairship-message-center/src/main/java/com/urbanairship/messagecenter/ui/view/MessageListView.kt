@@ -13,7 +13,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
-import com.urbanairship.messagecenter.core.R as CoreR
 import com.urbanairship.messagecenter.animator.animateFadeIn
 import com.urbanairship.messagecenter.animator.animateFadeOut
 import com.urbanairship.messagecenter.animator.slideInBottomAnimator
@@ -21,6 +20,7 @@ import com.urbanairship.messagecenter.animator.slideOutBottomAnimator
 import com.urbanairship.messagecenter.ui.widget.EditableRecyclerView
 import com.urbanairship.messagecenter.ui.widget.MessageRecyclerAdapter
 import com.urbanairship.messagecenter.ui.widget.MessageRecyclerView
+import com.urbanairship.messagecenter.core.R as CoreR
 
 /** `View` that displays a list of messages. */
 public class MessageListView @JvmOverloads constructor(
