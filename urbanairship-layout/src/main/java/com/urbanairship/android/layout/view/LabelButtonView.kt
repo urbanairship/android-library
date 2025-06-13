@@ -140,9 +140,10 @@ internal class LabelButtonView(
                 val disabledStrokeColor = LayoutUtils.generateDisabledColor(strokeColor)
 
                 val borderShape = ShapeAppearanceModel.builder()
-                if (border?.applyToShape(borderShape, { dpToPx(context, it).toInt() }) != true) {
+                if (border?.applyToShape(borderShape) { dpToPx(context, it).toInt() } != true) {
                     borderShape.setAllCorners(CornerFamily.ROUNDED, dpToPx(context, LayoutUtils.DEFAULT_BORDER_RADIUS))
                 }
+                clipToOutline = true
 
                 this@LabelButtonView.backgroundTintList =
                     ColorStateListBuilder().add(disabledColor, -R.attr.state_enabled)
