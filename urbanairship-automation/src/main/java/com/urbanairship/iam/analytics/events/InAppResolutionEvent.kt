@@ -9,6 +9,7 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.UAStringUtil
+import java.util.Locale
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.DurationUnit
@@ -119,7 +120,7 @@ internal class InAppResolutionEvent(
             RESOLUTION to JsonMap
                 .newBuilder()
                 .putAll(resolutionType.toJsonValue().optMap())
-                .put(DISPLAY_TIME, String.format("%.2f", displayTime.toDouble(DurationUnit.SECONDS)))
+                .put(DISPLAY_TIME, String.format(Locale.US, "%.2f", displayTime.toDouble(DurationUnit.SECONDS)))
                 .build(),
             DEVICE to deviceInfo,
         ).toJsonValue()
