@@ -8,6 +8,9 @@ import com.urbanairship.json.matchers.ArrayLengthMatcher;
 import com.urbanairship.json.matchers.ExactValueMatcher;
 import com.urbanairship.json.matchers.NumberRangeMatcher;
 import com.urbanairship.json.matchers.PresenceMatcher;
+import com.urbanairship.json.matchers.StringBeginsMatcher;
+import com.urbanairship.json.matchers.StringContainsMatcher;
+import com.urbanairship.json.matchers.StringEndsMatcher;
 import com.urbanairship.json.matchers.VersionMatcher;
 import com.urbanairship.util.IvyVersionMatcher;
 
@@ -178,6 +181,18 @@ public abstract class ValueMatcher implements JsonSerializable, Predicate<JsonSe
             } else {
                 return newArrayContainsMatcher(predicate);
             }
+        }
+
+        if (map.containsKey(StringBeginsMatcher.STRING_BEGINS)) {
+            return new StringBeginsMatcher(map.opt(StringBeginsMatcher.STRING_BEGINS));
+        }
+
+        if (map.containsKey(StringEndsMatcher.STRING_ENDS)) {
+            return new StringEndsMatcher(map.opt(StringEndsMatcher.STRING_ENDS));
+        }
+
+        if (map.containsKey(StringContainsMatcher.STRING_CONTAINS)) {
+            return new StringContainsMatcher(map.opt(StringContainsMatcher.STRING_CONTAINS));
         }
 
         throw new JsonException("Unknown value matcher: " + jsonValue);
