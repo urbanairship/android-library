@@ -4,16 +4,23 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
-## Version 19.9.0 - June 10, 2025
-A minor update with enhancements to the Scenes and Message Center functionalities. This version is required for Scene branching and phone number collection.
+## Version 19.9.0 - June 16, 2025
+A minor update with enhancements to the Scenes and Message Center functionality and bug fixes for Analytics and Automation. This version is required for Scene branching and phone number collection.
 
 ### Changes
+Analytics:
+- Fixed bug that could cause locale-based descrepancies in reports.
+
+Automation:
+- Fixed version trigger predicate matching to properly evaluate app version conditions.
+
 Message Center:
 - Automatically retries failed message list refreshes for improved reliability.
 - Expired messages will no longer trigger a network request to refresh the listing.
 
 Scenes:
 - Fixed layout issues with modal frames, specifically related to margins and borders.
+- Fixed border rendering issues when stroke thickness exceeds corner radius.
 - Fixed several issues related to Scene branching.
 - Added support for custom corner radii on borders.
 - Added support for more flexible survey toggles.
