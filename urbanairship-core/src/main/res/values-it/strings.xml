@@ -99,6 +99,10 @@
     <string name="ua_icon_button_checkmark">Conferma</string>
     <string name="ua_icon_button_forward_arrow">Avanti</string>
     <string name="ua_icon_button_backward_arrow">Indietro</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Nuovo messaggio visualizzato nell\'app</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Messaggio in-app ignorato</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Errore durante l\'elaborazione del modulo. Per favore riprova</string>

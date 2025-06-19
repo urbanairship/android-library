@@ -100,6 +100,10 @@
     <string name="ua_icon_button_checkmark">Підтвердити</string>
     <string name="ua_icon_button_forward_arrow">Вперед</string>
     <string name="ua_icon_button_backward_arrow">Назад</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Відображено нове повідомлення в додатку</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Повідомлення в додатку закрито</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Помилка обробки форми. Будь ласка, спробуйте ще раз</string>

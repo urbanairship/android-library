@@ -98,6 +98,10 @@
     <string name="ua_icon_button_checkmark">Vahvista</string>
     <string name="ua_icon_button_forward_arrow">Seuraava</string>
     <string name="ua_icon_button_backward_arrow">Edellinen</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Uusi sovelluksen sisäinen viesti näytettiin</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Sovelluksen sisäinen viesti hylätty</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Virhe lomakkeen käsittelyssä. Yritä uudelleen</string>

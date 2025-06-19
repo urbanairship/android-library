@@ -98,6 +98,10 @@
     <string name="ua_icon_button_checkmark">Kinnita</string>
     <string name="ua_icon_button_forward_arrow">Järgmine</string>
     <string name="ua_icon_button_backward_arrow">Eelmine</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Kuvati uus rakendusesisene teade</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Rakendusesisene sõnum lükati tagasi</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Viga vormi töötlemisel. Palun proovige uuesti</string>

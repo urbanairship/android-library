@@ -97,6 +97,10 @@
     <string name="ua_icon_button_checkmark">確認</string>
     <string name="ua_icon_button_forward_arrow">次へ</string>
     <string name="ua_icon_button_backward_arrow">前へ</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">新しいアプリ内メッセージが表示されました</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">アプリ内メッセージは閉じられました</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">フォームの処理中にエラーが発生しました。もう一度お試しください</string>
