@@ -129,6 +129,17 @@ public class AirshipConfigOptions {
 
     private static final int DEFAULT_PRODUCTION_LOG_LEVEL = Log.ERROR;
     private static final int DEFAULT_DEVELOPMENT_LOG_LEVEL = Log.DEBUG;
+    /**
+     * Log privacy levels.
+     *
+     * When the privacy level is set to {@link #PUBLIC},
+     * logs with level {@code Log.VERBOSE} and {@code Log.DEBUG} will be logged at
+     * {@code Log.INFO}. This affords more visible logging for debugging purposes.
+     */
+    public enum PrivacyLevel {
+        PRIVATE,
+        PUBLIC
+    }
     private static final long DEFAULT_BG_REPORTING_INTERVAL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
     private static final Pattern APP_CREDENTIAL_PATTERN = Pattern.compile("^[a-zA-Z0-9\\-_]{22}$");
@@ -305,6 +316,8 @@ public class AirshipConfigOptions {
      */
     public final int logLevel;
 
+    public final PrivacyLevel logPrivacyLevel;
+
     /**
      * Flag indicating whether or not to launch the launcher activity when a push notification or push
      * notification button is opened and the application intent receiver did not launch an activity.
@@ -453,10 +466,12 @@ public class AirshipConfigOptions {
             this.appKey = firstOrEmpty(builder.productionAppKey, builder.appKey);
             this.appSecret = firstOrEmpty(builder.productionAppSecret, builder.appSecret);
             this.logLevel = first(builder.productionLogLevel, builder.logLevel, DEFAULT_PRODUCTION_LOG_LEVEL);
+            this.logPrivacyLevel = builder.productionLogPrivacyLevel;
         } else {
             this.appKey = firstOrEmpty(builder.developmentAppKey, builder.appKey);
             this.appSecret = firstOrEmpty(builder.developmentAppSecret, builder.appSecret);
             this.logLevel = first(builder.developmentLogLevel, builder.logLevel, DEFAULT_DEVELOPMENT_LOG_LEVEL);
+            this.logPrivacyLevel = builder.developmentLogPrivacyLevel;
         }
 
         switch (builder.site) {
@@ -569,6 +584,18 @@ public class AirshipConfigOptions {
         throw new IllegalArgumentException("Invalid site: " + value);
     }
 
+    private static PrivacyLevel parseLogPrivacyLevel(String privacyLevel) {
+        if (PrivacyLevel.PRIVATE.name().equalsIgnoreCase(privacyLevel)) {
+            return PrivacyLevel.PRIVATE;
+        }
+
+        if (PrivacyLevel.PUBLIC.name().equalsIgnoreCase(privacyLevel)) {
+            return PrivacyLevel.PUBLIC;
+        }
+
+        throw new IllegalArgumentException("Invalid log privacy level: " + privacyLevel);
+    }
+
     /**
      * Returns the first String that is not empty or null.
      *
@@ -651,6 +678,8 @@ public class AirshipConfigOptions {
         private static final String FIELD_DEVELOPMENT_LOG_LEVEL = "developmentLogLevel";
         private static final String FIELD_PRODUCTION_LOG_LEVEL = "productionLogLevel";
         private static final String FIELD_LOG_LEVEL = "logLevel";
+        private static final String FIELD_DEVELOPMENT_LOG_PRIVACY_LEVEL = "developmentLogPrivacyLevel";
+        private static final String FIELD_PRODUCTION_LOG_PRIVACY_LEVEL = "productionLogPrivacyLevel";
         private static final String FIELD_AUTO_LAUNCH_APPLICATION = "autoLaunchApplication";
         private static final String FIELD_CHANNEL_CREATION_DELAY_ENABLED = "channelCreationDelayEnabled";
         private static final String FIELD_CHANNEL_CAPTURE_ENABLED = "channelCaptureEnabled";
@@ -696,6 +725,8 @@ public class AirshipConfigOptions {
         private Integer developmentLogLevel;
         private Integer productionLogLevel;
         private Integer logLevel;
+        private PrivacyLevel developmentLogPrivacyLevel = PrivacyLevel.PRIVATE;
+        private PrivacyLevel productionLogPrivacyLevel = PrivacyLevel.PRIVATE;
         private boolean autoLaunchApplication = true;
         private boolean channelCreationDelayEnabled = false;
         private boolean channelCaptureEnabled = true;
@@ -1015,6 +1046,14 @@ public class AirshipConfigOptions {
 
                         case FIELD_LOG_LEVEL:
                             this.setLogLevel(UALog.parseLogLevel(configParser.getString(name), DEFAULT_PRODUCTION_LOG_LEVEL));
+                            break;
+
+                        case FIELD_DEVELOPMENT_LOG_PRIVACY_LEVEL:
+                            this.setDevelopmentLogPrivacyLevel(parseLogPrivacyLevel(configParser.getString(name)));
+                            break;
+
+                        case FIELD_PRODUCTION_LOG_PRIVACY_LEVEL:
+                            this.setProductionLogPrivacyLevel(parseLogPrivacyLevel(configParser.getString(name)));
                             break;
 
                         case FIELD_AUTO_LAUNCH_APPLICATION:
@@ -1494,6 +1533,18 @@ public class AirshipConfigOptions {
         @NonNull
         public Builder setLogLevel(int logLevel) {
             this.logLevel = logLevel;
+            return this;
+        }
+
+        @NonNull
+        public Builder setDevelopmentLogPrivacyLevel(PrivacyLevel privacyLevel) {
+            this.developmentLogPrivacyLevel = privacyLevel;
+            return this;
+        }
+
+        @NonNull
+        public Builder setProductionLogPrivacyLevel(PrivacyLevel privacyLevel) {
+            this.productionLogPrivacyLevel = privacyLevel;
             return this;
         }
 
