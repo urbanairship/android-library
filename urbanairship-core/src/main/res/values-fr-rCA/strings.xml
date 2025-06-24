@@ -99,6 +99,10 @@
     <string name="ua_icon_button_checkmark">Valider</string>
     <string name="ua_icon_button_forward_arrow">Suivant</string>
     <string name="ua_icon_button_backward_arrow">Précédent</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Nouveau message intégré à l\'application qui s\'affiche</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Message intégré à l\'application fermé</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Erreur lors du traitement du formulaire. Veuillez réessayer</string>

@@ -98,6 +98,10 @@
     <string name="ua_icon_button_checkmark">Validar</string>
     <string name="ua_icon_button_forward_arrow">Següent</string>
     <string name="ua_icon_button_backward_arrow">Anterior</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">S\'ha mostrat un nou missatge dins de l\'aplicació</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Missatge dins l\'aplicació ignorat</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Error en processar el formulari. Si us plau, torneu-ho a provar</string>

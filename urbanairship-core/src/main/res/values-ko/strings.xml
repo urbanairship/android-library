@@ -97,6 +97,10 @@
     <string name="ua_icon_button_checkmark">확인</string>
     <string name="ua_icon_button_forward_arrow">다음</string>
     <string name="ua_icon_button_backward_arrow">이전</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">새로운 앱 내 메시지가 표시됨</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">앱 내 메시지가 닫혔습니다</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">양식 처리 중 오류가 발생했습니다. 다시 시도해 주세요</string>

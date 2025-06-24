@@ -252,6 +252,7 @@ internal open class BannerView(
      */
     @MainThread
     private fun removeSelf() {
+        announceForAccessibility(context.getString(com.urbanairship.R.string.ua_in_app_dismiss_accessibility_announce))
         val group = this.parent as? ViewGroup ?: return
         group.removeView(this)
         subView = null
@@ -262,6 +263,8 @@ internal open class BannerView(
 
         if (visibility == VISIBLE && !isDismissed) {
             val view = onCreateView(LayoutInflater.from(context), this)
+            announceForAccessibility(context.getString(com.urbanairship.R.string.ua_in_app_display_accessibility_announce))
+
             if (applyLegacyWindowInsetFix) {
                 applyLegacyWindowInsetFix(view)
             }

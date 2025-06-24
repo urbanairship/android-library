@@ -97,6 +97,10 @@
     <string name="ua_icon_button_checkmark">Xác nhận</string>
     <string name="ua_icon_button_forward_arrow">Tiếp theo</string>
     <string name="ua_icon_button_backward_arrow">Trước</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Tin nhắn mới trong ứng dụng được hiển thị</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Tin nhắn trong ứng dụng đã bị loại bỏ</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Lỗi khi xử lý biểu mẫu. Vui lòng thử lại</string>

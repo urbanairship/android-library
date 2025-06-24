@@ -98,6 +98,10 @@
     <string name="ua_icon_button_checkmark">Bestätigen</string>
     <string name="ua_icon_button_forward_arrow">Weiter</string>
     <string name="ua_icon_button_backward_arrow">Zurück</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Neue In-App-Nachricht angezeigt</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">In-App-Nachricht abgelehnt</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Fehler bei der Verarbeitung des Formulars. Bitte versuchen Sie es erneut</string>

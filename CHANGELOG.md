@@ -4,7 +4,7 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
-## Version 19.9.0 - June 16, 2025
+## Version 19.9.0 - June 17, 2025
 A minor update with enhancements to the Scenes and Message Center functionality and bug fixes for Analytics and Automation. This version is required for Scene branching and phone number collection.
 
 ### Changes

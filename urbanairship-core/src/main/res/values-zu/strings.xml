@@ -98,6 +98,10 @@
     <string name="ua_icon_button_checkmark">Qinisekisa</string>
     <string name="ua_icon_button_forward_arrow">Okulandelayo</string>
     <string name="ua_icon_button_backward_arrow">Okwedlule</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Umlayezo omusha wangaphakathi nohlelo ubonisiwe</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Umlayezo wangaphakathi nohlelo uchithiwe</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Iphutha lokuqhubeka lokuhlela ifomu. Sicela uzame futhi</string>

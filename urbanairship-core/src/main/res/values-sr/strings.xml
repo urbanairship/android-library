@@ -99,6 +99,10 @@
     <string name="ua_icon_button_checkmark">Потврди</string>
     <string name="ua_icon_button_forward_arrow">Следеће</string>
     <string name="ua_icon_button_backward_arrow">Претходно</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Приказана је нова порука у апликацији</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Порука у апликацији је одбачена</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Грешка приликом обраде обрасца. Молимо покушајте поново</string>
