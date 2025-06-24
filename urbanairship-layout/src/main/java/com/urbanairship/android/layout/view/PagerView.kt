@@ -91,6 +91,7 @@ internal class PagerView(
         }
 
     private var gestureDetector: PagerGestureDetector? = null
+    private var accessibilityListener: AccessibilityManager.TouchExplorationStateChangeListener? = null
 
     private val view: PagerRecyclerView = PagerRecyclerView(context, model, viewEnvironment)
 
@@ -125,18 +126,6 @@ internal class PagerView(
         }
         addView(view, MATCH_PARENT, MATCH_PARENT)
         model.listener = modelListener
-
-        // If Talkback is enabled, focus the first focusable view
-        val accessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-        val accessibilityListener = AccessibilityManager.TouchExplorationStateChangeListener { isEnabled ->
-            if (isEnabled) {
-                val accessibleView = view.descendants.first { it.isImportantForAccessibility }
-                accessibleView.postDelayed({
-                    accessibleView.performAccessibilityAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
-                }, 1000)
-            }
-        }
-        accessibilityManager.addTouchExplorationStateChangeListener(accessibilityListener)
 
         view.setPagerScrollListener { position, isInternalScroll ->
             scrollListener?.onScrollTo(position, isInternalScroll)
@@ -181,6 +170,34 @@ internal class PagerView(
 
         // We're just snooping, so always let the event pass through.
         return super.onInterceptTouchEvent(event)
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // Register accessibility listener when view is attached
+        if (accessibilityListener == null) {
+            val accessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+            val listener = AccessibilityManager.TouchExplorationStateChangeListener { isEnabled ->
+                if (isEnabled) {
+                    val accessibleView = view.descendants.firstOrNull { it.isImportantForAccessibility }
+                    accessibleView?.postDelayed({
+                        accessibleView.performAccessibilityAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null)
+                    }, 1000)
+                }
+            }
+            accessibilityListener = listener
+            accessibilityManager.addTouchExplorationStateChangeListener(listener)
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        // Remove the accessibility listener to prevent memory leaks
+        accessibilityListener?.let { listener ->
+            val accessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+            accessibilityManager.removeTouchExplorationStateChangeListener(listener)
+        }
+        accessibilityListener = null
     }
 
     private fun generateMotionEvent(action: Int, xCoordinate: Float): MotionEvent {
