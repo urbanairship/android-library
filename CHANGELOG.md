@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.9.1 - June 24, 2025
+Patch release that enhances logging, fixes a potential memory leak in paging Scenes, and improves accessibility.
+
+### Changes
+- Fixed potential memory leak in paging Scenes by improving accessibility listener lifecycle management.
+- Added 'logPrivacyLevel' to the config to improve managing logging visibility.
+- Added accessibility dismissal announcement for in-app messages.
+
 ## Version 19.9.0 - June 17, 2025
 A minor update with enhancements to the Scenes and Message Center functionality and bug fixes for Analytics and Automation. This version is required for Scene branching and phone number collection.
 

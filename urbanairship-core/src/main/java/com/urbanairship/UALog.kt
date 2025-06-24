@@ -4,6 +4,7 @@ package com.urbanairship
 import android.util.Log
 import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
+import com.urbanairship.AirshipConfigOptions.PrivacyLevel
 import java.util.Locale
 
 /**
@@ -37,6 +38,10 @@ public object UALog {
      */
     @JvmStatic
     public var logLevel: Int = Log.ERROR
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @JvmStatic
+    public var logPrivacyLevel: PrivacyLevel = PrivacyLevel.PRIVATE
 
     /**
      * The log handler.
@@ -290,7 +295,12 @@ public object UALog {
             message
         }
 
-        handler.log(tag, logLevel, throwable, actualMessage)
+        if (this.logPrivacyLevel == PrivacyLevel.PUBLIC && (logLevel == Log.VERBOSE || logLevel == Log.DEBUG)) {
+            handler.log(tag, Log.INFO, throwable, actualMessage)
+        } else {
+            handler.log(tag, logLevel, throwable, actualMessage)
+        }
+
     }
 
     private fun prependCallingClassName(message: () -> String): () -> String {

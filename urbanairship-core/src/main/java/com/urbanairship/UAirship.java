@@ -410,6 +410,7 @@ public class UAirship {
         options.validate();
 
         UALog.setLogLevel(options.logLevel);
+        UALog.setLogPrivacyLevel(options.logPrivacyLevel);
         UALog.setTag(UAirship.getAppName() + " - " + UALog.DEFAULT_TAG);
 
         UALog.i("Airship taking off!");
