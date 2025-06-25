@@ -2,6 +2,7 @@ plugins {
     id 'airship-module'
     alias(libs.plugins.ksp)
     alias(libs.plugins.room)
+    alias(libs.plugins.compose.compiler)
 }
 
 description = "Airship Android Debug Tools"
@@ -19,10 +20,6 @@ android {
 
     buildFeatures{
         compose = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 }
 

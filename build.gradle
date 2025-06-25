@@ -98,7 +98,7 @@ spotless {
         targetExclude '.idea/**'
 
         trimTrailingWhitespace()
-        indentWithSpaces()
+        leadingTabsToSpaces()
         endWithNewline()
     }
     def ktlintVersion = libs.versions.ktlint.get()
@@ -118,7 +118,7 @@ spotless {
         //ktlint(ktlintVersion).userData(ktlintUserData)
 
         trimTrailingWhitespace()
-        indentWithSpaces()
+        leadingTabsToSpaces()
         endWithNewline()
     }
     kotlinGradle {
@@ -128,7 +128,7 @@ spotless {
         //ktlint(ktlintVersion).userData(ktlintUserData)
 
         trimTrailingWhitespace()
-        indentWithSpaces()
+        leadingTabsToSpaces()
         endWithNewline()
     }
 }

@@ -1,5 +1,6 @@
 package com.urbanairship.messagecenter
 
+import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.core.util.Consumer
 import androidx.room.Dao
@@ -20,9 +21,12 @@ import kotlinx.coroutines.flow.emptyFlow
  *
  * Note: In order to avoid potential crashes in customer apps, all generated DAO methods
  * should call through to a separate "internal" method that wraps the internal DAO call with a try/catch.
+ *
+ * @hide
  */
 @Dao
-internal abstract class MessageDao {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public abstract class MessageDao {
 
     @VisibleForTesting
     internal var queryClock: Clock = Clock.DEFAULT_CLOCK
@@ -32,19 +36,19 @@ internal abstract class MessageDao {
         get() = DateUtils.createIso8601TimeStamp(queryClock.currentTimeMillis())
 
     @VisibleForTesting
-    suspend fun insert(message: MessageEntity) = try {
+    internal suspend fun insert(message: MessageEntity) = try {
         insertInternal(message)
     } catch (e: Exception) {
         UALog.e(e) { "Failed to insert message!" }
     }
 
-    suspend fun insertMessages(messages: List<MessageEntity>) = try {
+    internal suspend fun insertMessages(messages: List<MessageEntity>) = try {
         insertMessagesInternal(messages)
     } catch (e: Exception) {
         UALog.e(e) { "Failed to insert messages!" }
     }
 
-    suspend fun getMessage(id: String): MessageEntity? {
+    internal suspend fun getMessage(id: String): MessageEntity? {
         return try {
             getMessageInternal(id)
         } catch (e: Exception) {
@@ -53,7 +57,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun getMessageByUrl(url: String): MessageEntity? {
+    internal suspend fun getMessageByUrl(url: String): MessageEntity? {
         return try {
             getMessageByUrlInternal(url)
         } catch (e: Exception) {
@@ -62,7 +66,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun getMessages(): List<MessageEntity> {
+    internal suspend fun getMessages(): List<MessageEntity> {
         return try {
             getMessagesInternal(currentTimestamp)
         } catch (e: Exception) {
@@ -71,7 +75,7 @@ internal abstract class MessageDao {
         }
     }
 
-    fun getMessagesFlow(): Flow<List<MessageEntity>> {
+    internal fun getMessagesFlow(): Flow<List<MessageEntity>> {
         return try {
             getMessagesFlowInternal(currentTimestamp)
         } catch (e: Exception) {
@@ -80,7 +84,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun getMessageCount(): Int {
+    internal suspend fun getMessageCount(): Int {
         return try {
             getMessageCountInternal(currentTimestamp)
         } catch (e: Exception) {
@@ -89,7 +93,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun getReadMessages(): List<MessageEntity> {
+    internal suspend fun getReadMessages(): List<MessageEntity> {
         return try {
             getReadMessagesInternal(currentTimestamp)
         } catch (e: Exception) {
@@ -98,7 +102,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun getReadMessageCount(): Int {
+    internal suspend fun getReadMessageCount(): Int {
         return try {
             getReadMessageCountInternal(currentTimestamp)
         } catch (e: Exception) {
@@ -107,7 +111,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun getUnreadMessages(): List<MessageEntity> {
+    internal suspend fun getUnreadMessages(): List<MessageEntity> {
         return try {
             getUnreadMessagesInternal(currentTimestamp)
         } catch (e: Exception) {
@@ -116,7 +120,7 @@ internal abstract class MessageDao {
         }
     }
 
-    fun getUnreadMessagesFlow(): Flow<List<MessageEntity>> {
+    internal fun getUnreadMessagesFlow(): Flow<List<MessageEntity>> {
         return try {
             getUnreadMessagesFlowInternal(currentTimestamp)
         } catch (e: Exception) {
@@ -125,7 +129,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun getUnreadMessageCount(): Int {
+    internal suspend fun getUnreadMessageCount(): Int {
         return try {
             getUnreadMessageCountInternal(currentTimestamp)
         } catch (e: Exception) {
@@ -134,7 +138,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun getMessageIds(): List<String> {
+    internal suspend fun getMessageIds(): List<String> {
         return try {
             getMessageIdsInternal(currentTimestamp)
         } catch (e: Exception) {
@@ -143,7 +147,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun getLocallyReadMessages(): List<MessageEntity> {
+    internal suspend fun getLocallyReadMessages(): List<MessageEntity> {
         return try {
             getLocallyReadMessagesInternal()
         } catch (e: Exception) {
@@ -152,7 +156,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun getLocallyDeletedMessages(): List<MessageEntity> {
+    internal suspend fun getLocallyDeletedMessages(): List<MessageEntity> {
         return try {
             getLocallyDeletedMessagesInternal()
         } catch (e: Exception) {
@@ -161,7 +165,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun markMessagesRead(messageIds: Set<String>) {
+    internal suspend fun markMessagesRead(messageIds: Set<String>) {
         try {
             runBatched(messageIds) { markMessagesReadInternal(messageIds) }
         } catch (e: Exception) {
@@ -169,7 +173,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun markMessagesUnread(messageIds: Set<String>) {
+    internal suspend fun markMessagesUnread(messageIds: Set<String>) {
         try {
             runBatched(messageIds) { markMessagesUnreadInternal(messageIds) }
         } catch (e: Exception) {
@@ -177,7 +181,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun markMessagesDeleted(messageIds: Set<String>) {
+    internal suspend fun markMessagesDeleted(messageIds: Set<String>) {
         try {
             runBatched(messageIds) { markMessagesDeletedInternal(messageIds) }
         } catch (e: Exception) {
@@ -185,7 +189,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun markAllMessagesDeleted() {
+    internal suspend fun markAllMessagesDeleted() {
         try {
             markAllMessagesDeletedInternal()
         } catch (e: Exception) {
@@ -193,7 +197,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun markMessagesReadOrigin(messageIds: Set<String>) {
+    internal suspend fun markMessagesReadOrigin(messageIds: Set<String>) {
         try {
             runBatched(messageIds) { markMessagesReadOriginInternal(messageIds) }
         } catch (e: Exception) {
@@ -201,7 +205,7 @@ internal abstract class MessageDao {
         }
     }
 
-    fun deleteMessages(messageIds: Set<String>) {
+    internal fun deleteMessages(messageIds: Set<String>) {
         try {
             deleteMessagesInternal(messageIds)
         } catch (e: Exception) {
@@ -209,7 +213,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun deleteAllMessages() {
+    internal suspend fun deleteAllMessages() {
         try {
             deleteAllMessagesInternal()
         } catch (e: Exception) {
@@ -217,7 +221,7 @@ internal abstract class MessageDao {
         }
     }
 
-    suspend fun messageExists(messageId: String): Boolean {
+    internal suspend fun messageExists(messageId: String): Boolean {
         return try {
             messageExistsInternal(messageId)
         } catch (e: Exception) {
@@ -227,103 +231,103 @@ internal abstract class MessageDao {
     }
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertInternal(message: MessageEntity)
+    internal abstract suspend fun insertInternal(message: MessageEntity)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    abstract suspend fun insertMessagesInternal(messages: List<MessageEntity>)
+    internal abstract suspend fun insertMessagesInternal(messages: List<MessageEntity>)
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE message_id = :id")
-    abstract suspend fun getMessageInternal(id: String): MessageEntity?
+    internal abstract suspend fun getMessageInternal(id: String): MessageEntity?
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE message_body_url = :url")
-    abstract suspend fun getMessageByUrlInternal(url: String): MessageEntity?
+    internal abstract suspend fun getMessageByUrlInternal(url: String): MessageEntity?
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE $NOT_EXPIRED_OR_DELETED")
-    abstract suspend fun getMessagesInternal(
+    internal abstract suspend fun getMessagesInternal(
         currentTimestamp: String
     ): List<MessageEntity>
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE $NOT_EXPIRED_OR_DELETED")
-    abstract fun getMessagesFlowInternal(
+    internal abstract fun getMessagesFlowInternal(
         currentTimestamp: String
     ): Flow<List<MessageEntity>>
 
     @Transaction
     @Query("SELECT COUNT(*) FROM richpush WHERE $NOT_EXPIRED_OR_DELETED")
-    abstract suspend fun getMessageCountInternal(
+    internal abstract suspend fun getMessageCountInternal(
         currentTimestamp: String
     ): Int
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE unread = 0 AND $NOT_EXPIRED_OR_DELETED")
-    abstract suspend fun getReadMessagesInternal(
+    internal abstract suspend fun getReadMessagesInternal(
         currentTimestamp: String
     ): List<MessageEntity>
 
     @Transaction
     @Query("SELECT COUNT(*) FROM richpush WHERE unread = 0 AND $NOT_EXPIRED_OR_DELETED")
-    abstract suspend fun getReadMessageCountInternal(
+    internal abstract suspend fun getReadMessageCountInternal(
         currentTimestamp: String
     ): Int
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE unread = 1 AND $NOT_EXPIRED_OR_DELETED")
-    abstract suspend fun getUnreadMessagesInternal(
+    internal abstract suspend fun getUnreadMessagesInternal(
         currentTimestamp: String
     ): List<MessageEntity>
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE unread = 1 AND $NOT_EXPIRED_OR_DELETED")
-    abstract fun getUnreadMessagesFlowInternal(
+    internal abstract fun getUnreadMessagesFlowInternal(
         currentTimestamp: String
     ): Flow<List<MessageEntity>>
 
     @Transaction
     @Query("SELECT COUNT(*) FROM richpush WHERE unread = 1 AND $NOT_EXPIRED_OR_DELETED")
-    abstract suspend fun getUnreadMessageCountInternal(
+    internal abstract suspend fun getUnreadMessageCountInternal(
         currentTimestamp: String
     ): Int
 
     @Transaction
     @Query("SELECT message_id FROM richpush WHERE $NOT_EXPIRED_OR_DELETED")
-    abstract suspend fun getMessageIdsInternal(
+    internal abstract suspend fun getMessageIdsInternal(
         currentTimestamp: String
     ): List<String>
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE unread = 0 AND unread <> unread_orig")
-    abstract suspend fun getLocallyReadMessagesInternal(): List<MessageEntity>
+    internal abstract suspend fun getLocallyReadMessagesInternal(): List<MessageEntity>
 
     @Transaction
     @Query("SELECT * FROM richpush WHERE deleted = 1")
-    abstract suspend fun getLocallyDeletedMessagesInternal(): List<MessageEntity>
+    internal abstract suspend fun getLocallyDeletedMessagesInternal(): List<MessageEntity>
 
     @Transaction
     @Query("UPDATE richpush SET unread = 0 WHERE message_id IN (:messageIds)")
-    abstract suspend fun markMessagesReadInternal(messageIds: Set<String>)
+    internal abstract suspend fun markMessagesReadInternal(messageIds: Set<String>)
 
     @Transaction
     @Query("UPDATE richpush SET unread = 1 WHERE message_id IN (:messageIds)")
-    abstract suspend fun markMessagesUnreadInternal(messageIds: Set<String>)
+    internal abstract suspend fun markMessagesUnreadInternal(messageIds: Set<String>)
 
     @Transaction
     @Query("UPDATE richpush SET deleted = 1 WHERE message_id IN (:messageIds)")
-    abstract suspend fun markMessagesDeletedInternal(messageIds: Set<String>)
+    internal abstract suspend fun markMessagesDeletedInternal(messageIds: Set<String>)
 
     @Transaction
     @Query("UPDATE richpush SET deleted = 1")
-    abstract suspend fun markAllMessagesDeletedInternal()
+    internal abstract suspend fun markAllMessagesDeletedInternal()
 
     @Transaction
     @Query("UPDATE richpush SET unread_orig = 0 WHERE message_id IN (:messageIds)")
-    abstract suspend fun markMessagesReadOriginInternal(messageIds: Set<String>)
+    internal abstract suspend fun markMessagesReadOriginInternal(messageIds: Set<String>)
 
     @Transaction
-    open fun deleteMessagesInternal(messageIds: Set<String>) {
+    internal open fun deleteMessagesInternal(messageIds: Set<String>) {
         val consumer = Consumer { ids: List<String> -> deleteMessagesBatchInternal(ids) }
         BatchedQueryHelper.runBatched(messageIds.toList(), consumer)
     }
@@ -333,14 +337,14 @@ internal abstract class MessageDao {
      * which stops us from bumping into the max query params limit of 999.
      */
     @Query("DELETE FROM richpush WHERE message_id IN (:messageIds)")
-    abstract fun deleteMessagesBatchInternal(messageIds: List<String>)
+    internal abstract fun deleteMessagesBatchInternal(messageIds: List<String>)
 
     @Transaction
     @Query("DELETE FROM richpush")
-    abstract suspend fun deleteAllMessagesInternal()
+    internal abstract suspend fun deleteAllMessagesInternal()
 
     @Query("SELECT EXISTS(SELECT 1 FROM richpush WHERE message_id = :id)")
-    abstract suspend fun messageExistsInternal(id: String): Boolean
+    internal abstract suspend fun messageExistsInternal(id: String): Boolean
 
     private companion object {
         private const val NOT_EXPIRED = "(expiration_timestamp IS NULL OR datetime(expiration_timestamp) >= datetime(:currentTimestamp))"
