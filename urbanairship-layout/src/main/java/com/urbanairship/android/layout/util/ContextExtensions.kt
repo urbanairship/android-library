@@ -16,7 +16,7 @@ internal fun Context.resolveContentDescription(
 ) : String? {
     if (contentDescription != null) { return contentDescription }
     if (localizedContentDescription != null) {
-        localizedContentDescription.ref?.let { ref ->
+        return localizedContentDescription.ref?.let { ref ->
             UAStringUtil.namedStringResource(
                 this, ref, localizedContentDescription.fallback
             )
