@@ -5,9 +5,6 @@ import android.content.Context
 import android.view.View
 import android.widget.RadioButton
 import androidx.appcompat.widget.SwitchCompat
-import androidx.core.view.AccessibilityDelegateCompat
-import androidx.core.view.ViewCompat
-import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.CheckableModel
@@ -15,7 +12,6 @@ import com.urbanairship.android.layout.model.RadioInputModel
 import com.urbanairship.android.layout.property.CheckboxStyle
 import com.urbanairship.android.layout.property.SwitchStyle
 import com.urbanairship.android.layout.util.LayoutUtils
-import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.ShapeButton
 
@@ -23,6 +19,8 @@ internal class RadioInputView(
     context: Context,
     model: RadioInputModel
 ) : CheckableView<RadioInputModel>(context, model) {
+
+    override val accessibilityNodeClassName = RadioButton::class.java.name
 
     init {
         val baseBackground = this.background
@@ -40,28 +38,6 @@ internal class RadioInputView(
                 LayoutUtils.updateBackground(this@RadioInputView, baseBackground, old, new)
             }
         }
-
-        model.contentDescription(context)?.ifNotEmpty {
-            contentDescription = it
-        }
-
-        // Apply accessibility role and state handling
-        ViewCompat.setAccessibilityDelegate(this, object : AccessibilityDelegateCompat() {
-            override fun onInitializeAccessibilityNodeInfo(
-                host: View,
-                info: AccessibilityNodeInfoCompat
-            ) {
-                super.onInitializeAccessibilityNodeInfo(host, info)
-
-                info.className = RadioButton::class.java.name
-
-                info.isCheckable = host.isEnabled
-
-                if (host.isEnabled) {
-                    info.isChecked = checkableView.isChecked
-                }
-            }
-        })
     }
 
     override fun createSwitchView(style: SwitchStyle): SwitchCompat {
