@@ -1,6 +1,5 @@
 /* Copyright Airship and Contributors */
-
-package com.urbanairship.app;
+package com.urbanairship.app
 
 /**
  * Listener for application foreground and backgrounds.
@@ -12,13 +11,12 @@ public interface ApplicationListener {
      *
      * @param milliseconds Time in milliseconds when the foreground occurred.
      */
-    void onForeground(long milliseconds);
+    public fun onForeground(milliseconds: Long)
 
     /**
      * Called when the app is backgrounded.
      *
      * @param milliseconds Time in milliseconds when the background occurred.
      */
-    void onBackground(long milliseconds);
-
+    public fun onBackground(milliseconds: Long)
 }
