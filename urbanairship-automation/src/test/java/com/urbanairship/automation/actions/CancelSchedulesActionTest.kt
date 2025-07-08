@@ -28,78 +28,78 @@ public class CancelSchedulesActionTest {
     @Test
     public fun testAcceptsSituations() {
         val valid = listOf(
-            Action.SITUATION_MANUAL_INVOCATION,
-            Action.SITUATION_WEB_VIEW_INVOCATION,
-            Action.SITUATION_PUSH_RECEIVED,
-            Action.SITUATION_AUTOMATION
+            Action.Situation.MANUAL_INVOCATION,
+            Action.Situation.WEB_VIEW_INVOCATION,
+            Action.Situation.PUSH_RECEIVED,
+            Action.Situation.AUTOMATION
         )
 
         val rejected = listOf(
-            Action.SITUATION_PUSH_OPENED,
-            Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON,
-            Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON
+            Action.Situation.PUSH_OPENED,
+            Action.Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON,
+            Action.Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON
         )
 
         valid.forEach { situation ->
-            assertTrue(action.acceptsArguments(ActionArguments(situation, null, null)))
+            assertTrue(action.acceptsArguments(ActionArguments(situation, ActionValue())))
         }
 
         rejected.forEach { situation ->
-            assertFalse(action.acceptsArguments(ActionArguments(situation, null, null)))
+            assertFalse(action.acceptsArguments(ActionArguments(situation, ActionValue())))
         }
     }
 
     @Test
     public fun testArguments(): TestResult = runTest {
         //should accept all
-        var args = ActionArguments(Action.SITUATION_AUTOMATION, ActionValue.wrap("all"), null)
-        assertEquals(ActionResult.STATUS_COMPLETED, action.perform(args).status)
+        var args = ActionArguments(Action.Situation.AUTOMATION, ActionValue.wrap("all"))
+        assertEquals(ActionResult.Status.COMPLETED, action.perform(args).status)
         coVerify { automation.cancelSchedulesWith(AutomationSchedule.ScheduleType.ACTIONS) }
 
         //should fail other strings
-        args = ActionArguments(Action.SITUATION_AUTOMATION, ActionValue.wrap("invalid"), null)
+        args = ActionArguments(Action.Situation.AUTOMATION, ActionValue.wrap("invalid"))
         assertThrows(IllegalArgumentException::class.java) { action.perform(args) }
 
         //should accept dictionaries with groups
-        args = ActionArguments(Action.SITUATION_AUTOMATION, ActionValue.wrap(
+        args = ActionArguments(Action.Situation.AUTOMATION, ActionValue.wrap(
             jsonMapOf("groups" to "test")
-        ), null)
-        assertEquals(ActionResult.STATUS_COMPLETED, action.perform(args).status)
+        ))
+        assertEquals(ActionResult.Status.COMPLETED, action.perform(args).status)
         coVerify { automation.cancelSchedules("test") }
 
         //should accept dictionaries with groups array
-        args = ActionArguments(Action.SITUATION_AUTOMATION, ActionValue.wrap(
+        args = ActionArguments(Action.Situation.AUTOMATION, ActionValue.wrap(
             jsonMapOf("groups" to listOf("group-list-item"))
-        ), null)
-        assertEquals(ActionResult.STATUS_COMPLETED, action.perform(args).status)
+        ))
+        assertEquals(ActionResult.Status.COMPLETED, action.perform(args).status)
         coVerify { automation.cancelSchedules("group-list-item") }
 
         //should accept dictionaries with ids
-        args = ActionArguments(Action.SITUATION_AUTOMATION, ActionValue.wrap(
+        args = ActionArguments(Action.Situation.AUTOMATION, ActionValue.wrap(
             jsonMapOf("ids" to "test")
-        ), null)
-        assertEquals(ActionResult.STATUS_COMPLETED, action.perform(args).status)
+        ))
+        assertEquals(ActionResult.Status.COMPLETED, action.perform(args).status)
         coVerify { automation.cancelSchedules(listOf("test")) }
 
         //should accept dictionaries with ids array
-        args = ActionArguments(Action.SITUATION_AUTOMATION, ActionValue.wrap(
+        args = ActionArguments(Action.Situation.AUTOMATION, ActionValue.wrap(
             jsonMapOf("ids" to listOf("id-from-list"))
-        ), null)
-        assertEquals(ActionResult.STATUS_COMPLETED, action.perform(args).status)
+        ))
+        assertEquals(ActionResult.Status.COMPLETED, action.perform(args).status)
         coVerify { automation.cancelSchedules(listOf("id-from-list")) }
 
         //should accept dictionaries with ids and groups
-        args = ActionArguments(Action.SITUATION_AUTOMATION, ActionValue.wrap(
+        args = ActionArguments(Action.Situation.AUTOMATION, ActionValue.wrap(
             jsonMapOf(
                 "ids" to listOf("id-from-list1"),
                 "groups" to "group1")
-        ), null)
-        assertEquals(ActionResult.STATUS_COMPLETED, action.perform(args).status)
+        ))
+        assertEquals(ActionResult.Status.COMPLETED, action.perform(args).status)
         coVerify { automation.cancelSchedules(listOf("id-from-list1")) }
         coVerify { automation.cancelSchedules("group1") }
 
         //should fail if neither groups nor ids key found
-        args = ActionArguments(Action.SITUATION_AUTOMATION, ActionValue.wrap("neither"), null)
+        args = ActionArguments(Action.Situation.AUTOMATION, ActionValue.wrap("neither"))
         assertThrows(IllegalArgumentException::class.java) { action.perform(args) }
     }
 }

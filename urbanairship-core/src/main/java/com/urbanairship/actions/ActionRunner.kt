@@ -16,14 +16,14 @@ public interface ActionRunner {
      * Called to run an action.
      * @param name The action name.
      * @param value The action value.
-     * @param situation The situation. Defaults to [Action.SITUATION_MANUAL_INVOCATION]
+     * @param situation The situation. Defaults to [Action.Situation.MANUAL_INVOCATION]
      * @param extender An optional request extender.
      * @param callback An optional completion callback.
      */
     public fun run(
         name: String,
         value: JsonSerializable?,
-        situation: Int? = null,
+        situation: Action.Situation? = null,
         extender: ActionRunRequestExtender? = null,
         callback: ActionCompletionCallback? = null
     )
@@ -37,16 +37,14 @@ public object DefaultActionRunner: ActionRunner {
     override fun run(
         name: String,
         value: JsonSerializable?,
-        situation: Int?,
+        situation: Action.Situation?,
         extender: ActionRunRequestExtender?,
         callback: ActionCompletionCallback?
     ) {
         ActionRunRequest.createRequest(name)
             .setValue(value)
             .let { request ->
-                situation?.let {
-                    request.setSituation(situation)
-                }
+                request.setSituation(situation ?: Action.Situation.MANUAL_INVOCATION)
 
                 extender?.let {
                     extender.extend(request)
@@ -63,11 +61,21 @@ public object DefaultActionRunner: ActionRunner {
 public suspend fun ActionRunner.runSuspending(
     name: String,
     value: JsonSerializable? = null,
-    situation: Int? = null,
+    situation: Action.Situation? = null,
     extender: ActionRunRequestExtender? = null
 ): ActionResult {
     return suspendCancellableCoroutine { continuation ->
-        this.run(name, value, situation, extender) { _, result -> continuation.resume(result) }
+        this.run(
+            name = name,
+            value = value,
+            situation = situation,
+            extender = extender,
+            callback = object : ActionCompletionCallback {
+                override fun onFinish(arguments: ActionArguments, result: ActionResult) {
+                    continuation.resume(result)
+                }
+            }
+        )
     }
 }
 
@@ -77,7 +85,7 @@ public suspend fun ActionRunner.runSuspending(
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public suspend fun ActionRunner.runSuspending(
     actions: Map<String, JsonSerializable>,
-    situation: Int? = null,
+    situation: Action.Situation? = null,
     extender: ActionRunRequestExtender? = null
 ) {
     actions.forEach {
@@ -87,7 +95,7 @@ public suspend fun ActionRunner.runSuspending(
 
 public fun ActionRunner.run(
     actions: Map<String, JsonSerializable>,
-    situation: Int? = null,
+    situation: Action.Situation? = null,
     extender: ActionRunRequestExtender? = null
 ) {
     actions.forEach {

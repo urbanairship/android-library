@@ -85,7 +85,7 @@ public class RemoveTagsAction(
     public class RemoveTagsPredicate public constructor() : ActionRegistry.Predicate {
 
         override fun apply(arguments: ActionArguments): Boolean {
-            return SITUATION_PUSH_RECEIVED != arguments.situation
+            return Situation.PUSH_RECEIVED != arguments.situation
         }
     }
 

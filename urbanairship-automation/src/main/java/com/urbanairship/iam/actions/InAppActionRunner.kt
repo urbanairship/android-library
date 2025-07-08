@@ -29,7 +29,7 @@ internal class InAppActionRunner(
     override fun run(
         name: String,
         value: JsonSerializable?,
-        situation: Int?,
+        situation: Action.Situation?,
         extender: ActionRunRequestExtender?,
         callback: ActionCompletionCallback?
     ) {
@@ -39,14 +39,14 @@ internal class InAppActionRunner(
     override fun run(actions: Map<String, JsonValue>, state: LayoutData) {
         val metadata = metadata(state)
         actions.forEach {
-            run(it.key, it.value, Action.SITUATION_AUTOMATION, null, null, metadata)
+            run(it.key, it.value, Action.Situation.AUTOMATION, null, null, metadata)
         }
     }
 
     private fun run(
         name: String,
         value: JsonSerializable?,
-        situation: Int?,
+        situation: Action.Situation?,
         extender: ActionRunRequestExtender?,
         callback: ActionCompletionCallback?,
         metadata: Bundle

@@ -254,7 +254,7 @@ class MainActivity : AppCompatActivity() {
 
     private val actionRunner: ThomasActionRunner = object: ThomasActionRunner {
         override fun run(actions: Map<String, JsonValue>, state: LayoutData) {
-            DefaultActionRunner.run(actions, Action.SITUATION_AUTOMATION)
+            DefaultActionRunner.run(actions, Action.Situation.AUTOMATION)
         }
     }
 }

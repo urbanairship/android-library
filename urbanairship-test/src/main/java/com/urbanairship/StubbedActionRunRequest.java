@@ -42,7 +42,7 @@ public class StubbedActionRunRequest extends ActionRunRequest {
 
     @NonNull
     @Override
-    public ActionRunRequest setSituation(@Action.Situation int situation) {
+    public ActionRunRequest setSituation(Action.Situation situation) {
         return this;
     }
 

@@ -28,7 +28,7 @@ internal class ActionAutomationExecutor(val actionRunner: ActionRunner = Default
             return ScheduleExecuteResult.FINISHED
         }
 
-        actionRunner.runSuspending(data.optMap().map, Action.SITUATION_AUTOMATION)
+        actionRunner.runSuspending(data.optMap().map, Action.Situation.AUTOMATION)
         return ScheduleExecuteResult.FINISHED
     }
 

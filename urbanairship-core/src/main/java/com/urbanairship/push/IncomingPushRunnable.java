@@ -358,7 +358,7 @@ class IncomingPushRunnable implements Runnable {
             ActionRunRequest.createRequest(action.getKey())
                             .setMetadata(metadata)
                             .setValue(action.getValue())
-                            .setSituation(Action.SITUATION_PUSH_RECEIVED)
+                            .setSituation(Action.Situation.PUSH_RECEIVED)
                             .run();
         }
     }

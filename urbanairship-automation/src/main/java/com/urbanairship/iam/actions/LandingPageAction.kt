@@ -78,11 +78,11 @@ public class LandingPageAction(
      */
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
         return when(arguments.situation) {
-            SITUATION_PUSH_OPENED,
-            SITUATION_WEB_VIEW_INVOCATION,
-            SITUATION_MANUAL_INVOCATION,
-            SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON,
-            SITUATION_AUTOMATION -> true
+            Situation.PUSH_OPENED,
+            Situation.WEB_VIEW_INVOCATION,
+            Situation.MANUAL_INVOCATION,
+            Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON,
+            Situation.AUTOMATION -> true
             else -> false
         }
     }

@@ -212,7 +212,7 @@ class NotificationIntentProcessor {
      */
     private void runNotificationResponseActions(@NonNull final Runnable completionHandler) {
         Map<String, ActionValue> actions = null;
-        int situation = 0;
+        Action.Situation situation = Action.Situation.MANUAL_INVOCATION;
         Bundle metadata = new Bundle();
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, notificationInfo.getMessage());
 
@@ -225,10 +225,12 @@ class NotificationIntentProcessor {
                     metadata.putBundle(ActionArguments.REMOTE_INPUT_METADATA, actionButtonInfo.getRemoteInput());
                 }
 
-                situation = actionButtonInfo.isForeground() ? Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON : Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON;
+                situation = actionButtonInfo.isForeground()
+                        ? Action.Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON
+                        : Action.Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON;
             }
         } else {
-            situation = Action.SITUATION_PUSH_OPENED;
+            situation = Action.Situation.PUSH_OPENED;
             actions = notificationInfo.getMessage().getActions();
         }
 
@@ -248,7 +250,7 @@ class NotificationIntentProcessor {
      * @param metadata The metadata.
      * @param completionHandler The completion handler.
      */
-    private void runActions(@NonNull final Map<String, ActionValue> actions, final int situation, @NonNull final Bundle metadata, @NonNull final Runnable completionHandler) {
+    private void runActions(@NonNull final Map<String, ActionValue> actions, final Action.Situation situation, @NonNull final Bundle metadata, @NonNull final Runnable completionHandler) {
         executor.execute(new Runnable() {
             @Override
             public void run() {

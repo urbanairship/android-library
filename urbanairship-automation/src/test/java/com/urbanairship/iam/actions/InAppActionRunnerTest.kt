@@ -93,7 +93,7 @@ public class InAppActionRunnerTest {
         val metadataSlot = slot<Bundle>()
         val mockRequest: ActionRunRequest = mockk {
             every { setValue(JsonValue.wrap("bar")) } returns this
-            every { setSituation(Action.SITUATION_AUTOMATION) } returns this
+            every { setSituation(Action.Situation.AUTOMATION) } returns this
             every { setMetadata(capture(metadataSlot)) } returns this
             every { this@mockk.run(any()) } just runs
         }
@@ -130,7 +130,7 @@ public class InAppActionRunnerTest {
         val metadataSlot = slot<Bundle>()
         val mockRequest: ActionRunRequest = mockk {
             every { setValue(JsonValue.wrap("bar")) } returns this
-            every { setSituation(Action.SITUATION_AUTOMATION) } returns this
+            every { setSituation(Action.Situation.AUTOMATION) } returns this
             every { setMetadata(capture(metadataSlot)) } returns this
             every { this@mockk.run(any()) } just runs
         }
