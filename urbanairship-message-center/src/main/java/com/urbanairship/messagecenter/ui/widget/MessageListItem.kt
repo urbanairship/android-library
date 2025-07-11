@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.CheckBox
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -14,7 +15,9 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.annotation.StyleRes
 import androidx.core.content.withStyledAttributes
+import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.accessibility.AccessibilityViewCommand.CommandArguments
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
@@ -97,6 +100,15 @@ public class MessageListItem @JvmOverloads constructor(
             mergeDrawableStates(state, STATE_HIGHLIGHTED)
         }
         return state
+    }
+
+    override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
+        super.onInitializeAccessibilityNodeInfo(info)
+
+        // When in editing mode, announce this view as a checkbox
+        if (isEditing) {
+            info.className = CheckBox::class.java.name
+        }
     }
 
     private val views = Views(this)

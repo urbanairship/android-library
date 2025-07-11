@@ -105,4 +105,7 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Hiba az űrlap feldolgozása során. Kérjük, próbálja újra</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Választógomb-csoport</string>
 </resources>

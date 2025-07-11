@@ -105,4 +105,7 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Iphutha lokuqhubeka lokuhlela ifomu. Sicela uzame futhi</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Iqoqo lerediyo</string>
 </resources>

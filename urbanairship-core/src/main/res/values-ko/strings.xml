@@ -104,4 +104,7 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">양식 처리 중 오류가 발생했습니다. 다시 시도해 주세요</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">라디오 그룹</string>
 </resources>

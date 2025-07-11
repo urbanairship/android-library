@@ -106,4 +106,7 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Erro ao processar o formulário. Por favor, tente novamente</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Grupo de opções</string>
 </resources>

@@ -106,4 +106,7 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Pogreška u obradi obrasca. Molimo pokušajte ponovno</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Grupa izbornih gumbova</string>
 </resources>

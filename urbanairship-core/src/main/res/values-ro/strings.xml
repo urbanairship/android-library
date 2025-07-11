@@ -106,4 +106,7 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Eroare la procesarea formularului. Vă rugăm să încercați din nou</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Grup de butoane radio</string>
 </resources>
