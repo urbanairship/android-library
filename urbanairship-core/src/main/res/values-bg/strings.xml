@@ -105,4 +105,7 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Грешка при обработка на формуляра. Моля, опитайте отново</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Радио група</string>
 </resources>

@@ -105,4 +105,7 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Kesalahan memproses formulir. Silakan coba lagi</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Grup radio</string>
 </resources>

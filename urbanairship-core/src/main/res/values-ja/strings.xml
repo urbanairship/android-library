@@ -104,4 +104,7 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">フォームの処理中にエラーが発生しました。もう一度お試しください</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">ラジオグループ</string>
 </resources>

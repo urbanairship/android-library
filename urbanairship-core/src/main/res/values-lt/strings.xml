@@ -107,4 +107,7 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Klaida apdorojant formą. Bandykite dar kartą</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Radijo grupė</string>
 </resources>

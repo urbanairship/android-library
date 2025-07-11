@@ -119,4 +119,7 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Error processing form. Please try again</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Radio group</string>
 </resources>

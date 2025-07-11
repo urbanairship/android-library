@@ -105,4 +105,7 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Hitilafu katika kusindika fomu. Tafadhali jaribu tena</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Kikundi cha redio</string>
 </resources>

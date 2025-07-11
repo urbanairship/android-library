@@ -161,7 +161,7 @@ public class RadioInputControllerTest {
             environment = mockEnv,
             properties = ModelProperties(pagerPageId = null)
         ).apply {
-            onViewAttached(mockk())
+            onViewAttached(mockk(relaxed = true))
         }
 
         testScope.runCurrent()

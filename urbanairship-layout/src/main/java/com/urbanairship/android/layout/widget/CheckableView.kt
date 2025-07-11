@@ -11,6 +11,7 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import androidx.core.view.doOnAttach
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.property.CheckboxStyle
 import com.urbanairship.android.layout.property.SwitchStyle
@@ -85,6 +86,7 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
         val lp = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
             topMargin = -3
         }
+
         configureAccessibility(switchView)
         addView(switchView, lp)
     }
@@ -93,6 +95,7 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
         val checkboxView = createCheckboxView(style)
         checkboxView.id = model.checkableViewId
         checkableView = CheckableViewAdapter.Checkbox(checkboxView)
+
         configureAccessibility(checkboxView)
         addView(checkboxView, MATCH_PARENT, MATCH_PARENT)
     }
@@ -134,6 +137,12 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
 
     override fun setEnabled(isEnabled: Boolean) {
         checkableView.setEnabled(isEnabled)
+    }
+
+    fun updateAccessibility() {
+        // Re-configure accessibility to ensure content descriptions are current
+        val view = getChildAt(0)
+        view?.let { configureAccessibility(it) }
     }
 
     companion object {
