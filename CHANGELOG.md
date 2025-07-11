@@ -4,6 +4,15 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.9.2 - July 11, 2025
+Patch release with several fixes and accessibility improvements for Scenes. 
+
+### Changes
+- Fixed a crash when dismissing an in-app automation view.
+- Fixed multiple page views being recorded for pages in branching Scenes.
+- Fixed a bug in Message Center Message WebView that could potentially interfere with JS in other web views.
+- Accessibility fixes and improvements for Scenes.
+
 ## Version 19.9.1 - June 24, 2025
 Patch release that enhances logging, fixes a potential memory leak in paging Scenes, and improves accessibility.
 
