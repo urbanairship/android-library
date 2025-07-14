@@ -4,7 +4,7 @@
 androidGradlePlugin = '8.9.3'
 googleServicesPlugin = '4.4.2'
 spotlessPlugin = '6.25.0'
-nexusPublishPlugin = '1.1.0'
+nexusPublishPlugin = '2.0.0'
 gradle-versions =  '0.41.0'
 kspPlugin = '1.9.23-1.0.20'
 binary-compatibility-validator = '0.15.0-Beta.2'

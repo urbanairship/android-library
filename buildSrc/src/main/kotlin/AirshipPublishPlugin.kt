@@ -46,6 +46,10 @@ class AirshipPublishPlugin : Plugin<Project> {
         configure<NexusPublishExtension> {
             repositories {
                 sonatype {
+                    // see: https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuration
+                    nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+                    snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
+
                     username.set(user)
                     password.set(pass)
                     if (!profileId.isNullOrEmpty()) {
