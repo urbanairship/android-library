@@ -22,10 +22,10 @@ public class ScopedSubscriptionListMutationTest extends TestCase {
         String jsonString = "{ \"scope\": \"app\", \"action\": \"subscribe\", \"list_id\": \"listId\", \"timestamp\": \"" + EPOCH  + "\" }";
         ScopedSubscriptionListMutation mutation = ScopedSubscriptionListMutation.fromJsonValue(JsonValue.parseString(jsonString));
 
-        assertEquals(Scope.APP, mutation.getScope());
-        assertEquals(ScopedSubscriptionListMutation.ACTION_SUBSCRIBE, mutation.getAction());
-        assertEquals(EPOCH, mutation.getTimestamp());
-        assertEquals("listId", mutation.getListId());
+        assertEquals(Scope.APP, mutation.scope);
+        assertEquals(ScopedSubscriptionListMutation.ACTION_SUBSCRIBE, mutation.action);
+        assertEquals(EPOCH, mutation.timestamp);
+        assertEquals("listId", mutation.listId);
     }
 
     @Test

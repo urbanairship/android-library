@@ -64,7 +64,9 @@ internal class SubscriptionsProvider(
             return data
         }
 
-        val subscriptions = data.toMutableMap().mapValues { it.value.toMutableSet() }
+        val subscriptions = data
+            .mapValues { it.value.toMutableSet() }
+            .toMutableMap()
 
         mutations.forEach { mutation ->
             mutation.apply(subscriptions)
