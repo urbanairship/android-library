@@ -4,12 +4,10 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.actions.Action
-import com.urbanairship.actions.ActionRunRequest
-import com.urbanairship.actions.run
 import com.urbanairship.automation.AutomationSchedule
+import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
-import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.actions.InAppActionRunner
@@ -176,7 +174,7 @@ public class InAppMessageAutomationExecutorTest {
 
         coEvery { assetManager.clearCache(any()) } just runs
 
-        coEvery { actionRunner.run(any(), any(), eq(Action.SITUATION_AUTOMATION)) } just runs
+        coEvery { actionRunner.run(any(), any(), Action.Situation.AUTOMATION) } just runs
 
         val result = execute()
 
@@ -232,7 +230,7 @@ public class InAppMessageAutomationExecutorTest {
         every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
         every { analytics.recordEvent(any(), any()) } just runs
 
-        coEvery { actionRunner.run(any(), any(), eq(Action.SITUATION_AUTOMATION)) } just runs
+        coEvery { actionRunner.run(any(), any(), Action.Situation.AUTOMATION) } just runs
 
         coEvery { assetManager.clearCache(any()) } just runs
 
@@ -243,7 +241,7 @@ public class InAppMessageAutomationExecutorTest {
 
         verify { delegate.messageWillDisplay(any(), any()) }
         verify { delegate.messageFinishedDisplaying(any(), any()) }
-        verify { actionRunner.run(any(), any(), eq(Action.SITUATION_AUTOMATION)) }
+        verify { actionRunner.run(any(), any(), Action.Situation.AUTOMATION) }
     }
 
     @Test
@@ -290,14 +288,14 @@ public class InAppMessageAutomationExecutorTest {
             DisplayResult.CANCEL
         }
 
-        coEvery { actionRunner.run(any(), any(), Action.SITUATION_AUTOMATION) } just runs
+        coEvery { actionRunner.run(any(), any(), Action.Situation.AUTOMATION) } just runs
 
         coEvery { assetManager.clearCache(any()) } just runs
 
         val result = execute()
 
         assertEquals(result, ScheduleExecuteResult.CANCEL)
-        verify { actionRunner.run(any(), any(), eq(Action.SITUATION_AUTOMATION)) }
+        verify { actionRunner.run(any(), any(), Action.Situation.AUTOMATION) }
     }
 
     private fun checkReady(): ScheduleReadyResult = executor.isReady(preparedData, preparedInfo)

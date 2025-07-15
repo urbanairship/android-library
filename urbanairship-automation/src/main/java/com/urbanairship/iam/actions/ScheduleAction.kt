@@ -32,10 +32,10 @@ constructor(
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
         return when(arguments.situation) {
-            SITUATION_MANUAL_INVOCATION,
-            SITUATION_WEB_VIEW_INVOCATION,
-            SITUATION_PUSH_RECEIVED,
-            SITUATION_AUTOMATION -> true
+            Situation.MANUAL_INVOCATION,
+            Situation.WEB_VIEW_INVOCATION,
+            Situation.PUSH_RECEIVED,
+            Situation.AUTOMATION -> true
             else -> false
         }
     }

@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
-import com.urbanairship.actions.ActionArguments.PUSH_MESSAGE_METADATA
 import com.urbanairship.actions.ActionResult
 import com.urbanairship.actions.ActionValue
 import com.urbanairship.automation.AutomationSchedule
@@ -35,24 +34,24 @@ public class LandingPageActionTest {
         val action = LandingPageAction()
 
         val validSituations = listOf(
-            Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON,
-            Action.SITUATION_PUSH_OPENED,
-            Action.SITUATION_MANUAL_INVOCATION,
-            Action.SITUATION_WEB_VIEW_INVOCATION,
-            Action.SITUATION_AUTOMATION,
+            Action.Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON,
+            Action.Situation.PUSH_OPENED,
+            Action.Situation.MANUAL_INVOCATION,
+            Action.Situation.WEB_VIEW_INVOCATION,
+            Action.Situation.AUTOMATION,
         )
 
         val rejectedSituations = listOf(
-            Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON,
-            Action.SITUATION_PUSH_RECEIVED
+            Action.Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON,
+            Action.Situation.PUSH_RECEIVED
         )
 
         validSituations.forEach { situation ->
-            assertTrue(action.acceptsArguments(ActionArguments(situation, null, null)))
+            assertTrue(action.acceptsArguments(ActionArguments(situation)))
         }
 
         rejectedSituations.forEach { situation ->
-            assertFalse(action.acceptsArguments(ActionArguments(situation, null, null)))
+            assertFalse(action.acceptsArguments(ActionArguments(situation)))
         }
     }
 
@@ -96,10 +95,10 @@ public class LandingPageActionTest {
             }
         )
 
-        val args = ActionArguments(Action.SITUATION_MANUAL_INVOCATION, ActionValue.wrap("https://some-url"), null)
+        val args = ActionArguments(Action.Situation.MANUAL_INVOCATION, ActionValue.wrap("https://some-url"))
 
         val result = action.perform(args)
-        assertEquals(result.status, ActionResult.STATUS_COMPLETED)
+        assertEquals(result.status, ActionResult.Status.COMPLETED)
 
         urlCheckedJob.join()
         scheduleCalledJob.join()
@@ -155,10 +154,10 @@ public class LandingPageActionTest {
             "aspect_lock" to true
         )
 
-        val args = ActionArguments(Action.SITUATION_MANUAL_INVOCATION, ActionValue.wrap(argsJson), null)
+        val args = ActionArguments(Action.Situation.MANUAL_INVOCATION, ActionValue.wrap(argsJson))
 
         val result = action.perform(args)
-        assertEquals(result.status, ActionResult.STATUS_COMPLETED)
+        assertEquals(result.status, ActionResult.Status.COMPLETED)
 
         urlCheckedJob.join()
         scheduleCalledJob.join()
@@ -204,10 +203,10 @@ public class LandingPageActionTest {
             }
         )
 
-        val args = ActionArguments(Action.SITUATION_MANUAL_INVOCATION, ActionValue.wrap("some-url"), null)
+        val args = ActionArguments(Action.Situation.MANUAL_INVOCATION, ActionValue.wrap("some-url"))
 
         val result = action.perform(args)
-        assertEquals(result.status, ActionResult.STATUS_COMPLETED)
+        assertEquals(result.status, ActionResult.Status.COMPLETED)
 
         urlCheckedJob.join()
         scheduleCalledJob.join()
@@ -259,10 +258,10 @@ public class LandingPageActionTest {
             }
         )
 
-        val args = ActionArguments(Action.SITUATION_MANUAL_INVOCATION, ActionValue.wrap("https://some-url"), null)
+        val args = ActionArguments(Action.Situation.MANUAL_INVOCATION, ActionValue.wrap("https://some-url"))
 
         val result = action.perform(args)
-        assertEquals(result.status, ActionResult.STATUS_COMPLETED)
+        assertEquals(result.status, ActionResult.Status.COMPLETED)
 
         urlCheckedJob.join()
         scheduleCalledJob.join()
@@ -283,7 +282,7 @@ public class LandingPageActionTest {
             }
         )
 
-        val args = ActionArguments(Action.SITUATION_MANUAL_INVOCATION, ActionValue.wrap("https://some-url"), null)
+        val args = ActionArguments(Action.Situation.MANUAL_INVOCATION, ActionValue.wrap("https://some-url"))
 
         assertThrows(IllegalArgumentException::class.java) { action.perform(args) }
         checkJob.join()
@@ -294,7 +293,7 @@ public class LandingPageActionTest {
         val scheduledJob = Job()
 
         val metadata = Bundle().also {
-            it.putParcelable(PUSH_MESSAGE_METADATA, PushMessage(mapOf(
+            it.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, PushMessage(mapOf(
                 EXTRA_SEND_ID to "some-send-ID"
             )))
         }
@@ -308,7 +307,7 @@ public class LandingPageActionTest {
             }
         )
 
-        val args = ActionArguments(Action.SITUATION_MANUAL_INVOCATION, ActionValue.wrap("https://some-url"), metadata)
+        val args = ActionArguments(Action.Situation.MANUAL_INVOCATION, ActionValue.wrap("https://some-url"), metadata)
         action.perform(args)
         scheduledJob.join()
     }

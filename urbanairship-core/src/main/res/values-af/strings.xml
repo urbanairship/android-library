@@ -98,7 +98,14 @@
     <string name="ua_icon_button_checkmark">Bevestig</string>
     <string name="ua_icon_button_forward_arrow">Volgende</string>
     <string name="ua_icon_button_backward_arrow">Vorige</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Nuwe inprogram-boodskap word vertoon</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Inprogram-boodskap is van die hand gewys</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Fout met die verwerking van vorm. Probeer asseblief weer</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Radiogroep</string>
 </resources>

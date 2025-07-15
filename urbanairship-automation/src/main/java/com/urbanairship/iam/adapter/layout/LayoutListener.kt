@@ -124,6 +124,7 @@ internal class LayoutListener (
 
         val result = if (cancel) DisplayResult.CANCEL else DisplayResult.FINISHED
         dismiss(result)
+        this.onDismiss = null
     }
 
     override fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean) {

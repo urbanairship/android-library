@@ -98,7 +98,14 @@
     <string name="ua_icon_button_checkmark">Doğrula</string>
     <string name="ua_icon_button_forward_arrow">Sonraki</string>
     <string name="ua_icon_button_backward_arrow">Önceki</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Yeni uygulama içi mesaj görüntülendi</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Uygulama içi mesaj reddedildi</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Form işlenirken hata oluştu. Lütfen tekrar deneyin</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Radyo grubu</string>
 </resources>

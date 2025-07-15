@@ -113,7 +113,7 @@ internal class InAppMessageAutomationExecutor(
                     DisplayResult.FINISHED -> ScheduleExecuteResult.FINISHED
                 }
                 data.message.actions?.let {
-                    data.actionRunner.run(it.map, Action.SITUATION_AUTOMATION)
+                    data.actionRunner.run(it.map, Action.Situation.AUTOMATION)
                 }
             } catch (ex: Exception) {
                 UALog.e(ex) { "Failed to display message" }

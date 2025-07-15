@@ -102,7 +102,14 @@
     <string name="ua_icon_button_checkmark">تحقق</string>
     <string name="ua_icon_button_forward_arrow">التالي</string>
     <string name="ua_icon_button_backward_arrow">السابق</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">تم عرض رسالة جديدة داخل التطبيق</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">: "تم رفض الرسالة الموجودة داخل التطبيق</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">خطأ في معالجة النموذج. يرجى المحاولة مرة أخرى</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">مجموعة أزرار الاختيار</string>
 </resources>

@@ -93,7 +93,7 @@ public class ChannelAuthTokenProviderTest {
         assertEquals(token.getOrNull(), "some token")
 
         // For second call
-        coVerify(exactly = 2) { client.getToken(channelId) }
+        coVerify(exactly = 1) { client.getToken(channelId) }
         confirmVerified(client)
     }
 

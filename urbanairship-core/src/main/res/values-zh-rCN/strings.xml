@@ -97,7 +97,14 @@
     <string name="ua_icon_button_checkmark">验证</string>
     <string name="ua_icon_button_forward_arrow">下一个</string>
     <string name="ua_icon_button_backward_arrow">上一个</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">显示新的应用内消息</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">应用内消息已关闭</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">处理表单时出错。请重试</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">单选按钮组</string>
 </resources>

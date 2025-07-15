@@ -99,7 +99,14 @@
     <string name="ua_icon_button_checkmark">Confirmă</string>
     <string name="ua_icon_button_forward_arrow">Următorul</string>
     <string name="ua_icon_button_backward_arrow">Anterior</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Mesaj nou afișat în aplicație</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Mesaj în aplicație închis</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Eroare la procesarea formularului. Vă rugăm să încercați din nou</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Grup de butoane radio</string>
 </resources>

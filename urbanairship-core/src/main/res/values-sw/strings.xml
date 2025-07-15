@@ -98,7 +98,14 @@
     <string name="ua_icon_button_checkmark">Thibitisha</string>
     <string name="ua_icon_button_forward_arrow">Ifuatayo</string>
     <string name="ua_icon_button_backward_arrow">Iliyopita</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Ujumbe mpya wa ndani ya programu umeonyeshwa</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Ujumbe wa ndani ya programu umekataliwa</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Hitilafu katika kusindika fomu. Tafadhali jaribu tena</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Kikundi cha redio</string>
 </resources>

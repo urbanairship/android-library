@@ -3,17 +3,13 @@
     <!-- Accessibility -->
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
-        <item quantity="one">S\'ha marcat 
-        <xliff:g example="1" id="count">%1$d</xliff:g>missatge com a llegit</item>
-        <item quantity="other">S\'han marcat 
-        <xliff:g example="7" id="count">%1$d</xliff:g>missatges com a llegits</item>
+        <item quantity="one">S\'ha marcat <xliff:g example="1" id="count">%1$d</xliff:g> missatge com a llegit</item>
+        <item quantity="other">S\'han marcat <xliff:g example="7" id="count">%1$d</xliff:g> missatges com a llegits</item>
     </plurals>
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_deleted">
-        <item quantity="one">S\'ha suprimit 
-        <xliff:g example="1" id="count">%1$d</xliff:g>missatge</item>
-        <item quantity="other">S\'han suprimit 
-        <xliff:g example="7" id="count">%1$d</xliff:g>missatges</item>
+        <item quantity="one">S\'ha suprimit <xliff:g example="1" id="count">%1$d</xliff:g> missatge</item>
+        <item quantity="other">S\'han suprimit <xliff:g example="7" id="count">%1$d</xliff:g> missatges</item>
     </plurals>
     <!-- Message item content descriptions. Used on the Inbox (message list) screen. -->
     <!-- Prepended to the content description for messages that are currently selected. -->
@@ -22,9 +18,7 @@
     <string name="ua_mc_description_state_unread">Sense llegir,</string>
     <!-- Content description for message items in the message list. Dates will be formatted using
     the DateFormat.LONG format in the current locale. -->
-    <string name="ua_mc_description_title_and_date">
-    <xliff:g example="This week\'s top deals" id="title">%1$s</xliff:g>, el dia 
-    <xliff:g example="May 1st, 2021" id="sent_date">%2$s</xliff:g></string>
+    <string name="ua_mc_description_title_and_date"><xliff:g example="This week\'s top deals" id="title">%1$s</xliff:g>, el dia <xliff:g example="May 1st, 2021" id="sent_date">%2$s</xliff:g></string>
     <!-- Message item actions. Displayed in TalkBack Actions menu when screen reader is active. -->
     <!-- Action that selects the focused message. -->
     <string name="ua_mc_action_select">Seleccioneu missatge</string>

@@ -99,7 +99,14 @@
     <string name="ua_icon_button_checkmark">Potvrdi</string>
     <string name="ua_icon_button_forward_arrow">Sljedeće</string>
     <string name="ua_icon_button_backward_arrow">Prethodno</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Prikazana je nova poruka u aplikaciji</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Poruka u aplikaciji odbačena</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Pogreška u obradi obrasca. Molimo pokušajte ponovno</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Grupa izbornih gumbova</string>
 </resources>

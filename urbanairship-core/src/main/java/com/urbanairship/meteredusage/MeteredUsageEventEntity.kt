@@ -84,10 +84,12 @@ public enum class MeteredUsageType(public val value: String) {
     }
 }
 
-private class UsageTypeConverter {
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class UsageTypeConverter {
     @TypeConverter
-    fun toUsageType(value: String) = MeteredUsageType.fromString(value)
+    public fun toUsageType(value: String): MeteredUsageType = MeteredUsageType.fromString(value)
 
     @TypeConverter
-    fun fromUsageType(type: MeteredUsageType) = type.value
+    public fun fromUsageType(type: MeteredUsageType): String = type.value
 }

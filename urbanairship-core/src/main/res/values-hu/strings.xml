@@ -98,7 +98,14 @@
     <string name="ua_icon_button_checkmark">Megerősítés</string>
     <string name="ua_icon_button_forward_arrow">Következő</string>
     <string name="ua_icon_button_backward_arrow">Előző</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Új alkalmazáson belüli üzenet megjelenítése</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Alkalmazáson belüli üzenet elvetve</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Hiba az űrlap feldolgozása során. Kérjük, próbálja újra</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Választógomb-csoport</string>
 </resources>

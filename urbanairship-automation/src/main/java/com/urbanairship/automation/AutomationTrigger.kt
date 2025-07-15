@@ -8,6 +8,7 @@ import com.urbanairship.automation.engine.triggerprocessor.MatchResult
 import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -15,6 +16,7 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.util.UAStringUtil
+import com.urbanairship.util.VersionUtils
 import java.util.Objects
 import java.util.UUID
 
@@ -364,7 +366,7 @@ public class EventAutomationTrigger internal constructor(
                     return null
                 }
 
-                if (!isPredicatedMatching(JsonValue.wrap(updatedVersion))) {
+                if (!isPredicatedMatching(VersionUtils.createVersionObject(updatedVersion.toLong()))) {
                     return null
                 }
 

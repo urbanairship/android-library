@@ -156,7 +156,7 @@ public class PreparedTriggerTest: BaseTestCase() {
         assertEquals(1.0,
             check(
                 EventAutomationTriggerType.VERSION,
-                AutomationEvent.StateChanged(state = TriggerableState(versionUpdated = "1.2.3")))?.count)
+                AutomationEvent.StateChanged(state = TriggerableState(versionUpdated = "123")))?.count)
 
         assertNull(check(EventAutomationTriggerType.ACTIVE_SESSION, AutomationEvent.StateChanged(state = TriggerableState())))
         assertEquals(1.0,

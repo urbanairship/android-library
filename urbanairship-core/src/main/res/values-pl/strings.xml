@@ -100,7 +100,14 @@
     <string name="ua_icon_button_checkmark">Zatwierdź</string>
     <string name="ua_icon_button_forward_arrow">Dalej</string>
     <string name="ua_icon_button_backward_arrow">Wstecz</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Wyświetlono nową wiadomość w aplikacji</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Wiadomość w aplikacji została odrzucona</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Błąd przetwarzania formularza. Proszę spróbować ponownie</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Grupa opcji</string>
 </resources>

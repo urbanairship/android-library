@@ -115,14 +115,12 @@ internal class TextInputModel(
             value = if (text?.isNotEmpty() == true) AttributeValue.wrap(text) else null
         )
 
-        val channelRegistration = channelRegistration(text)?.let { listOf(it) }
-
         if (text.isNullOrEmpty()) {
             return ThomasFormField.FieldType.just(
                 value = text ?: "",
                 validator = { !viewInfo.isRequired },
                 attributes = attributes,
-                channels = channelRegistration
+                channels = channelRegistration(text)?.let { listOf(it) }
             )
         }
 
@@ -147,7 +145,7 @@ internal class TextInputModel(
                                     ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
                                         result = ThomasFormField.Result(
                                             value = result.address,
-                                            channels = channelRegistration,
+                                            channels = channelRegistration(result.address)?.let { listOf(it) },
                                             attributes = attributes
                                         )
                                     )
@@ -161,7 +159,7 @@ internal class TextInputModel(
                 return ThomasFormField.FieldType.just(
                     value = text,
                     attributes = attributes,
-                    channels = channelRegistration
+                    channels = channelRegistration(text)?.let { listOf(it) }
                 )
             }
             FormInputType.SMS -> {
@@ -197,7 +195,7 @@ internal class TextInputModel(
                                     ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
                                         result = ThomasFormField.Result(
                                             value = result.address,
-                                            channels = channelRegistration,
+                                            channels = channelRegistration(result.address)?.let { listOf(it) },
                                             attributes = attributes
                                         )
                                     )
@@ -210,12 +208,12 @@ internal class TextInputModel(
             FormInputType.TEXT -> ThomasFormField.FieldType.just(
                 value = text,
                 attributes = attributes,
-                channels = channelRegistration
+                channels = channelRegistration(text)?.let { listOf(it) }
             )
             FormInputType.TEXT_MULTILINE -> ThomasFormField.FieldType.just(
                 value = text,
                 attributes = attributes,
-                channels = channelRegistration
+                channels = channelRegistration(text)?.let { listOf(it) }
             )
         }
     }

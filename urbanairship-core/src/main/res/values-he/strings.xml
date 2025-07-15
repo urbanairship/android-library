@@ -101,7 +101,14 @@
     <string name="ua_icon_button_checkmark">אשר</string>
     <string name="ua_icon_button_forward_arrow">הבא</string>
     <string name="ua_icon_button_backward_arrow">הקודם</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">הודעה חדשה בתוך האפליקציה מוצגת</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">הודעה בתוך האפליקציה נסגרה</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">שגיאה בעיבוד הטופס. אנא נסה שוב</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">קבוצת רדיו</string>
 </resources>

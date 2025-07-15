@@ -34,9 +34,11 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.embedded.EmbeddedViewManager
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.emptyJsonMap
+import com.urbanairship.json.jsonMapOf
 
 class MainActivity : AppCompatActivity() {
 
@@ -177,22 +179,64 @@ class MainActivity : AppCompatActivity() {
 
         override fun onStateChanged(state: JsonSerializable) { }
 
-        override fun onReportingEvent(event: ReportingEvent) {
-            val message = event.toString()
-            events.add(message)
-            UALog.d(message)
-        }
-
-        override fun onDismiss(cancel: Boolean) {
-            "onDismiss(cancel: $cancel)".let {
+        override fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean) {
+            "onVisibilityChanged(isVisible: $isVisible, isForegrounded: $isForegrounded)".let {
                 events.add(it)
                 UALog.d(it)
             }
-            dumpEvents()
         }
 
-        override fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean) {
-            "onVisibilityChanged(isVisible: $isVisible, isForegrounded: $isForegrounded)".let {
+        override fun onDismiss(cancel: Boolean) {
+            "onDismiss(cancel: $cancel".let {
+                events.add(it)
+                UALog.d(it)
+            }
+        }
+
+        @Throws(JsonException::class)
+        override fun onReportingEvent(event: ReportingEvent) {
+            when (event) {
+                is ReportingEvent.ButtonTap -> logEvent("button_tap", event.data, event.context)
+
+                is ReportingEvent.FormDisplay -> logEvent("form_display", event.data, event.context)
+
+                is ReportingEvent.FormResult -> logEvent("form_result", event.data, event.context)
+
+                is ReportingEvent.Gesture -> logEvent("gesture", event.data, event.context)
+
+                is ReportingEvent.PageAction -> logEvent("page_action", event.data, event.context)
+
+                is ReportingEvent.PageSwipe -> logEvent("page_swipe", event.data, event.context)
+
+                is ReportingEvent.PageView -> logEvent("page_view", event.data, event.context)
+
+                is ReportingEvent.PagerComplete -> logEvent("pager_complete", event.data, event.context)
+
+                is ReportingEvent.PagerSummary -> logEvent("pager_summary", event.data, event.context)
+
+                is ReportingEvent.Dismiss -> when (val eventData = event.data) {
+                    is ReportingEvent.DismissData.ButtonTapped -> {
+                        logEvent(
+                            name = "dismiss",
+                            event = jsonMapOf(
+                                "button_identifier" to eventData.identifier,
+                                "button_description" to eventData.description
+                            ),
+                            context = event.context
+                        )
+                    }
+
+                    ReportingEvent.DismissData.TimedOut ->
+                        logEvent("dismiss", JsonValue.wrap("timedOut"), event.context)
+
+                    ReportingEvent.DismissData.UserDismissed ->
+                        logEvent("dismiss", JsonValue.wrap("userDismissed"), event.context)
+                }.also { dumpEvents() }
+            }
+        }
+
+        private fun logEvent(name: String, event: JsonSerializable, context: LayoutData) {
+            "$name - event: ${event.toJsonValue()}, context: ${context.toJsonValue()}".let {
                 events.add(it)
                 UALog.d(it)
             }
@@ -210,7 +254,7 @@ class MainActivity : AppCompatActivity() {
 
     private val actionRunner: ThomasActionRunner = object: ThomasActionRunner {
         override fun run(actions: Map<String, JsonValue>, state: LayoutData) {
-            DefaultActionRunner.run(actions, Action.SITUATION_AUTOMATION)
+            DefaultActionRunner.run(actions, Action.Situation.AUTOMATION)
         }
     }
 }

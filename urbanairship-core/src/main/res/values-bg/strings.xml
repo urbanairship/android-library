@@ -98,7 +98,14 @@
     <string name="ua_icon_button_checkmark">Потвърди</string>
     <string name="ua_icon_button_forward_arrow">Напред</string>
     <string name="ua_icon_button_backward_arrow">Назад</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Показано е ново съобщение в приложението</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Съобщението в приложението е отхвърлено</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Грешка при обработка на формуляра. Моля, опитайте отново</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Радио група</string>
 </resources>

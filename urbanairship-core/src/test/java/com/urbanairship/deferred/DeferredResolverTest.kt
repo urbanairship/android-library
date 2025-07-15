@@ -213,6 +213,40 @@ public class DeferredResolverTest {
     }
 
     @Test
+    public fun testRedirectTwice(): TestResult = runTest {
+        requestSession.addResponse(
+            statusCode = 307,
+            headers = mapOf(
+                "Location" to "https://redirect.co/1",
+            )
+        )
+
+        requestSession.addResponse(
+            statusCode = 307,
+            headers = mapOf(
+                "Location" to "https://redirect.co/2",
+            )
+        )
+
+        requestSession.addResponse(
+            statusCode = 200,
+            body = JsonValue.wrap("body").toString(),
+            headers = emptyMap()
+        )
+
+        val originalRequest = makeRequest()
+        val result = resolver.resolve(originalRequest) { it } as? DeferredResult.RetriableError
+        assertNotNull(result)
+        assertEquals(originalRequest.uri, requestSession.requests.first().url)
+        assertEquals(requestSession.lastRequest.url, Uri.parse("https://redirect.co/1"))
+        assertEquals(2, requestSession.requests.size)
+
+        val successResult = resolver.resolve(makeRequest()) { it } as? DeferredResult.Success<JsonValue>
+        assertEquals(requestSession.lastRequest.url, Uri.parse("https://redirect.co/2"))
+        assertNotNull(successResult)
+    }
+
+    @Test
     public fun testInvalidResponseCode(): TestResult = runTest {
         requestSession.addResponse(
             statusCode = 502,

@@ -100,7 +100,14 @@
     <string name="ua_icon_button_checkmark">Overiť</string>
     <string name="ua_icon_button_forward_arrow">Ďalej</string>
     <string name="ua_icon_button_backward_arrow">Späť</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Zobrazila sa nová správa v aplikácii</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Správa v aplikácii bola zrušená</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Chyba pri spracovaní formulára. Skúste to znova</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Skupina prepínačov</string>
 </resources>

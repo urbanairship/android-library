@@ -4,6 +4,7 @@ package com.urbanairship.actions.tags
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.Action.Situation
 import com.urbanairship.actions.ActionTestUtils
+import com.urbanairship.actions.ActionValue
 import com.urbanairship.json.jsonMapOf
 import app.cash.turbine.test
 import io.mockk.spyk
@@ -28,36 +29,36 @@ public class BaseTagsActionTest {
 
     @Test
     public fun testAcceptsArguments() {
-        val acceptedSituations: IntArray = intArrayOf(
-            Action.SITUATION_PUSH_OPENED,
-            Action.SITUATION_MANUAL_INVOCATION,
-            Action.SITUATION_WEB_VIEW_INVOCATION,
-            Action.SITUATION_PUSH_RECEIVED,
-            Action.SITUATION_AUTOMATION,
-            Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON,
-            Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON
+        val acceptedSituations = listOf(
+            Situation.PUSH_OPENED,
+            Situation.MANUAL_INVOCATION,
+            Situation.WEB_VIEW_INVOCATION,
+            Situation.PUSH_RECEIVED,
+            Situation.AUTOMATION,
+            Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON,
+            Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON
         )
 
-        var args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "tag1")
+        var args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "tag1")
         assertTrue(action.acceptsArguments(args))
 
-        args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, "[tag1,tag2,tag3]")
+        args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, "[tag1,tag2,tag3]")
         assertTrue(action.acceptsArguments(args))
 
         args = ActionTestUtils.createArgs(
-            Action.SITUATION_MANUAL_INVOCATION, "{group: [tag1, tag2, tag3]}"
+            Situation.MANUAL_INVOCATION, "{group: [tag1, tag2, tag3]}"
         )
         assertTrue(action.acceptsArguments(args))
 
 
-        args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, 1)
+        args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, 1)
         assertFalse(action.acceptsArguments(args))
 
-        args = ActionTestUtils.createArgs(Action.SITUATION_MANUAL_INVOCATION, null)
+        args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, ActionValue())
         assertFalse(action.acceptsArguments(args))
 
         // Check every accepted situation
-        for (@Situation situation in acceptedSituations) {
+        for (situation in acceptedSituations) {
             args = ActionTestUtils.createArgs(situation, "tag1")
             assertTrue(action.acceptsArguments(args))
         }
@@ -65,14 +66,14 @@ public class BaseTagsActionTest {
 
     @Test
     public fun testSingleTag() {
-        val singleTagArg = ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "tag1")
+        val singleTagArg = ActionTestUtils.createArgs(Situation.PUSH_OPENED, "tag1")
         action.perform(singleTagArg)
     }
 
     @Test
     public fun testSingleTagFlow(): TestResult = runTest {
         action.mutationsFlow.test {
-            val singleTagArg = ActionTestUtils.createArgs(Action.SITUATION_PUSH_OPENED, "tag1")
+            val singleTagArg = ActionTestUtils.createArgs(Situation.PUSH_OPENED, "tag1")
             action.perform(singleTagArg)
             assertEquals(awaitItem(), TagActionMutation.ChannelTags(setOf("tag1")))
         }
@@ -86,7 +87,7 @@ public class BaseTagsActionTest {
     public fun testTagList(): TestResult = runTest {
         action.mutationsFlow.test {
             val collectionArgs = ActionTestUtils.createArgs(
-                Action.SITUATION_PUSH_RECEIVED, mutableListOf("tag1", "tag2", "tag3")
+                Situation.PUSH_RECEIVED, mutableListOf("tag1", "tag2", "tag3")
             )
             action.perform(collectionArgs)
 
@@ -109,7 +110,7 @@ public class BaseTagsActionTest {
         )
 
         action.mutationsFlow.test {
-            val args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, json)
+            val args = ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, json)
             action.perform(args)
 
             assertEquals(
@@ -155,7 +156,7 @@ public class BaseTagsActionTest {
         )
 
         action.mutationsFlow.test {
-            val args = ActionTestUtils.createArgs(Action.SITUATION_PUSH_RECEIVED, json)
+            val args = ActionTestUtils.createArgs(Situation.PUSH_RECEIVED, json)
             action.perform(args)
 
             assertEquals(

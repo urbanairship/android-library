@@ -21,7 +21,7 @@ internal class PagerBranchControl(
     private val availablePages: List<PagerModel.Item>,
     private val controllerBranching: PagerControllerBranching,
     private val thomasState: StateFlow<ThomasState>,
-    private val onBranchUpdated: (List<PagerModel.Item>) -> Unit,
+    private val onBranchUpdated: (List<PagerModel.Item>, Boolean) -> Unit,
     private val actionsRunner: (List<StateAction>) -> Unit,
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
 ) {
@@ -42,8 +42,33 @@ internal class PagerBranchControl(
     private fun updateState() {
         val payload = thomasState.value
 
-        reEvaluatePath(payload)
-        evaluateCompletion(payload)
+        // Re-evaluate the path based on the current payload
+        if (history.isEmpty() && availablePages.isNotEmpty()) {
+            history.add(availablePages.first())
+        }
+
+        // Evaluate completion
+        val runCompletedStateActions = if (!_isComplete.value) {
+            val matched = controllerBranching.completions
+                .firstOrNull { it.predicate?.apply(payload) != false }
+
+            val completed = matched != null
+
+            _isComplete.update { completed }
+
+            completed
+        } else {
+            // We're already complete, no need to run actions again
+            false
+        }
+
+        // Notify branch updated
+        onBranchUpdated(history.dropLast(1) + buildPathFrom(history.last(), payload), _isComplete.value)
+
+        // Run completion state actions if we just completed
+        if (runCompletedStateActions) {
+            performCompletionStateActions(payload)
+        }
     }
 
     fun addToHistory(id: String) {
@@ -86,14 +111,6 @@ internal class PagerBranchControl(
         }
     }
 
-    private fun reEvaluatePath(payload: JsonSerializable) {
-        if (history.isEmpty() && availablePages.isNotEmpty()) {
-            history.add(availablePages.first())
-        }
-
-        onBranchUpdated(history.dropLast(1) + buildPathFrom(history.last(), payload))
-    }
-
     private fun buildPathFrom(page: PagerModel.Item, payload: JsonSerializable): List<PagerModel.Item> {
         var pageIndex = availablePages.indexOf(page)
         if (pageIndex < 0) { return emptyList() }
@@ -114,23 +131,6 @@ internal class PagerBranchControl(
         }
 
         return result.toList()
-    }
-
-    private fun evaluateCompletion(payload: JsonSerializable) {
-        if (_isComplete.value) {
-            return //once complete always complete
-        }
-
-        val matched = controllerBranching.completions
-            .firstOrNull { it.predicate?.apply(payload) != false }
-
-        val completed = matched != null
-
-        if (completed && !_isComplete.value) {
-            performCompletionStateActions(payload)
-        }
-
-        _isComplete.update { completed }
     }
 
     private fun performCompletionStateActions(payload: JsonSerializable) {

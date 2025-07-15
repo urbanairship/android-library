@@ -249,7 +249,7 @@ public class NativeBridge {
                 actionRunner.run(
                         actionName,
                         arg,
-                        Action.SITUATION_WEB_VIEW_INVOCATION,
+                        Action.Situation.WEB_VIEW_INVOCATION,
                         actionRunRequestExtender,
                         actionCompletionCallback
                 );
@@ -286,25 +286,27 @@ public class NativeBridge {
         actionRunner.run(
                 name,
                 actionValue,
-                Action.SITUATION_WEB_VIEW_INVOCATION,
+                Action.Situation.WEB_VIEW_INVOCATION,
                 actionRunRequestExtender,
                 new ActionCompletionCallback() {
                     @Override
                     public void onFinish(@NonNull ActionArguments arguments, @NonNull ActionResult result) {
 
                         String errorMessage = null;
+
                         switch (result.getStatus()) {
-                            case ActionResult.STATUS_COMPLETED:
+                            case COMPLETED:
                                 break;
-                            case ActionResult.STATUS_ACTION_NOT_FOUND:
+                            case ACTION_NOT_FOUND:
                                 errorMessage = String.format("Action %s not found", name);
                                 break;
-                            case ActionResult.STATUS_REJECTED_ARGUMENTS:
+                            case REJECTED_ARGUMENTS:
                                 errorMessage = String.format("Action %s rejected its arguments", name);
                                 break;
-                            case ActionResult.STATUS_EXECUTION_ERROR:
-                                if (result.getException() != null) {
-                                    errorMessage = result.getException().getMessage();
+                            case EXECUTION_ERROR:
+                                if (result instanceof ActionResult.Error) {
+                                    ActionResult.Error error = (ActionResult.Error)result;
+                                    errorMessage = error.getException().getMessage();
                                 } else {
                                     errorMessage = String.format("Action %s failed with unspecified error", name);
                                 }

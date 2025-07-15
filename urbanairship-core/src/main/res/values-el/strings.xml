@@ -98,7 +98,14 @@
     <string name="ua_icon_button_checkmark">Επαλήθευση</string>
     <string name="ua_icon_button_forward_arrow">Επόμενο</string>
     <string name="ua_icon_button_backward_arrow">Προηγούμενο</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Εμφανίστηκε νέο μήνυμα εντός εφαρμογής</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Το μήνυμα εντός εφαρμογής απορρίφθηκε</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Σφάλμα επεξεργασίας φόρμας. Παρακαλώ δοκιμάστε ξανά</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Ομάδα επιλογών</string>
 </resources>

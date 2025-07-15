@@ -28,24 +28,24 @@ public class ScheduleActionTest {
     @Test
     public fun testAcceptsArguments() {
         val valid = listOf(
-            Action.SITUATION_MANUAL_INVOCATION,
-            Action.SITUATION_WEB_VIEW_INVOCATION,
-            Action.SITUATION_PUSH_RECEIVED,
-            Action.SITUATION_AUTOMATION
+            Action.Situation.MANUAL_INVOCATION,
+            Action.Situation.WEB_VIEW_INVOCATION,
+            Action.Situation.PUSH_RECEIVED,
+            Action.Situation.AUTOMATION
         )
 
         val rejected = listOf(
-            Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON,
-            Action.SITUATION_BACKGROUND_NOTIFICATION_ACTION_BUTTON,
-            Action.SITUATION_PUSH_OPENED
+            Action.Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON,
+            Action.Situation.BACKGROUND_NOTIFICATION_ACTION_BUTTON,
+            Action.Situation.PUSH_OPENED
         )
 
         for (situation in valid) {
-            assertTrue(action.acceptsArguments(ActionArguments(situation, null, null)))
+            assertTrue(action.acceptsArguments(ActionArguments(situation)))
         }
 
         for (situation in rejected) {
-            assertFalse(action.acceptsArguments(ActionArguments(situation, null, null)))
+            assertFalse(action.acceptsArguments(ActionArguments(situation)))
         }
     }
 
@@ -72,7 +72,7 @@ public class ScheduleActionTest {
 
         assertNull(scheduled)
 
-        val scheduleID = action.perform(ActionArguments(Action.SITUATION_AUTOMATION, ActionValue.wrap(scheduleJson), null)).value.string
+        val scheduleID = action.perform(ActionArguments(Action.Situation.AUTOMATION, ActionValue.wrap(scheduleJson))).value.string
         assertEquals("test-id", scheduleID)
 
         assertEquals("test-id", scheduled?.identifier)
@@ -93,8 +93,8 @@ public class ScheduleActionTest {
     @Test
     public fun testScheduleThrowsOnInvalidSource(): TestResult = runTest {
         assertThrows(JsonException::class.java) { action.perform(ActionArguments(
-            Action.SITUATION_AUTOMATION,
-            ActionValue.wrap(jsonMapOf()),
-            null))}
+            Action.Situation.AUTOMATION,
+            ActionValue.wrap(jsonMapOf())
+        ))}
     }
 }

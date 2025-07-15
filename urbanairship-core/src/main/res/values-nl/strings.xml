@@ -98,7 +98,14 @@
     <string name="ua_icon_button_checkmark">Bevestigen</string>
     <string name="ua_icon_button_forward_arrow">Volgende</string>
     <string name="ua_icon_button_backward_arrow">Vorige</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Nieuw in-app bericht weergegeven</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Bericht in de app verwijderd</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Fout bij het verwerken van formulier. Probeer het opnieuw</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Keuzerondje-groep</string>
 </resources>

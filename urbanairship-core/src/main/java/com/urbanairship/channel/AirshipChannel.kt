@@ -361,14 +361,14 @@ public class AirshipChannel internal constructor(
      */
     public fun editAttributes(): AttributeEditor {
         return object : AttributeEditor(clock) {
-            override fun onApply(mutations: List<AttributeMutation>) {
+            override fun onApply(collapsedMutations: List<AttributeMutation>) {
                 if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
                     UALog.w { "AirshipChannel - Unable to apply attribute edits when opted out of tags and attributes." }
                     return
                 }
 
-                if (mutations.isNotEmpty()) {
-                    channelManager.addUpdate(attributes = mutations)
+                if (collapsedMutations.isNotEmpty()) {
+                    channelManager.addUpdate(attributes = collapsedMutations)
                     updateRegistration()
                 }
             }

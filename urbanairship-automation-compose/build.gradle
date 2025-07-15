@@ -1,6 +1,7 @@
 plugins {
     id 'airship-module'
     id 'kotlin-android'
+    alias(libs.plugins.compose.compiler)
 }
 
 description = "Airship Android Automation Compose UI."
@@ -14,10 +15,6 @@ android {
 
     buildFeatures {
         compose true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = libs.versions.compose.compiler.get()
     }
 }
 

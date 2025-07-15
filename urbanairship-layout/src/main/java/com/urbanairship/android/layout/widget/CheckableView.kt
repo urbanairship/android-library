@@ -11,6 +11,7 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
+import androidx.core.view.doOnAttach
 import com.urbanairship.android.layout.model.CheckableModel
 import com.urbanairship.android.layout.property.CheckboxStyle
 import com.urbanairship.android.layout.property.SwitchStyle
@@ -27,6 +28,11 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
 
     var checkedChangeListener: CheckableViewAdapter.OnCheckedChangeListener? = null
 
+    open val accessibilityNodeClassName: CharSequence = when (model.viewInfo.style.type) {
+        ToggleType.CHECKBOX -> CheckBox::class.java.name
+        ToggleType.SWITCH -> SwitchCompat::class.java.name
+    }
+
     lateinit var checkableView: CheckableViewAdapter<*>
 
     init {
@@ -34,29 +40,6 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
             ToggleType.SWITCH -> configureSwitch(model.viewInfo.style as SwitchStyle)
             ToggleType.CHECKBOX -> configureCheckbox(model.viewInfo.style as CheckboxStyle)
         }
-
-        model.contentDescription(context)?.ifNotEmpty { contentDescription = it }
-
-        ViewCompat.setAccessibilityDelegate(this, object : AccessibilityDelegateCompat() {
-            override fun onInitializeAccessibilityNodeInfo(
-                host: View,
-                info: AccessibilityNodeInfoCompat
-            ) {
-                super.onInitializeAccessibilityNodeInfo(host, info)
-
-                // Determine className based on toggle type
-                when (model.viewInfo.style.type) {
-                    ToggleType.CHECKBOX -> info.className = CheckBox::class.java.name
-                    ToggleType.SWITCH -> info.className = SwitchCompat::class.java.name
-                }
-
-                info.isCheckable = host.isEnabled
-
-                if (host.isEnabled) {
-                    info.isChecked = checkableView.isChecked
-                }
-            }
-        })
     }
 
 
@@ -103,6 +86,7 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
         val lp = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
             topMargin = -3
         }
+        configureAccessibility(switchView)
         addView(switchView, lp)
     }
 
@@ -110,7 +94,27 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
         val checkboxView = createCheckboxView(style)
         checkboxView.id = model.checkableViewId
         checkableView = CheckableViewAdapter.Checkbox(checkboxView)
+        configureAccessibility(checkboxView)
         addView(checkboxView, MATCH_PARENT, MATCH_PARENT)
+    }
+
+    private fun configureAccessibility(view: View) {
+        ViewCompat.setAccessibilityDelegate(view, object : AccessibilityDelegateCompat() {
+            override fun onInitializeAccessibilityNodeInfo(
+                host: View,
+                info: AccessibilityNodeInfoCompat
+            ) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+
+                model.contentDescription(context)?.ifNotEmpty { info.contentDescription = it }
+                info.isCheckable = host.isEnabled
+                info.className = accessibilityNodeClassName
+
+                if (host.isEnabled) {
+                    info.isChecked = checkableView.isChecked
+                }
+            }
+        })
     }
 
     protected open fun createSwitchView(style: SwitchStyle): SwitchCompat {
@@ -131,6 +135,12 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
 
     override fun setEnabled(isEnabled: Boolean) {
         checkableView.setEnabled(isEnabled)
+    }
+
+    fun updateAccessibility() {
+        // Re-configure accessibility to ensure content descriptions are current
+        val view = getChildAt(0)
+        view?.let { configureAccessibility(it) }
     }
 
     companion object {

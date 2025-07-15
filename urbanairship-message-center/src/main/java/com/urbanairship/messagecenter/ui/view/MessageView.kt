@@ -123,13 +123,11 @@ public class MessageView @JvmOverloads constructor(
     /** Pauses the WebView. */
     public fun pauseWebView(): Unit = with (views.webView) {
         onPause()
-        pauseTimers()
     }
 
     /** Resumes the WebView. */
     public fun resumeWebView(): Unit = with (views.webView) {
         onResume()
-        resumeTimers()
     }
 
     /** Saves WebView state. */

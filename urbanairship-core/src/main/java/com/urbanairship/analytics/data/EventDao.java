@@ -5,6 +5,8 @@ import com.urbanairship.util.UAStringUtil;
 
 import java.util.List;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.room.Dao;
 import androidx.room.Delete;
@@ -27,10 +29,12 @@ public abstract class EventDao {
 
     @Transaction
     @Query("SELECT * FROM events ORDER BY id ASC")
+    @NonNull
     public abstract List<EventEntity> get();
 
     @Transaction
     @Query("SELECT id, eventId, data FROM events ORDER BY id ASC LIMIT :limit")
+    @NonNull
     public abstract List<EventEntity.EventIdAndData> getBatch(int limit);
 
     @Transaction
@@ -56,6 +60,7 @@ public abstract class EventDao {
     public abstract int databaseSize();
 
     @Query("SELECT sessionId FROM events ORDER BY id ASC LIMIT 1")
+    @Nullable
     abstract String oldestSessionId();
 
     @Query("DELETE FROM events WHERE sessionId = :sessionId")

@@ -24,12 +24,12 @@ public class MessageCenterActionTest {
     /** Test accepts arguments */
     @Test
     public fun testAcceptsArguments() {
-        val situations = intArrayOf(
-            Action.SITUATION_PUSH_OPENED,
-            Action.SITUATION_MANUAL_INVOCATION,
-            Action.SITUATION_WEB_VIEW_INVOCATION,
-            Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON,
-            Action.SITUATION_AUTOMATION
+        val situations = arrayOf(
+            Action.Situation.PUSH_OPENED,
+            Action.Situation.MANUAL_INVOCATION,
+            Action.Situation.WEB_VIEW_INVOCATION,
+            Action.Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON,
+            Action.Situation.AUTOMATION
         )
 
         // Should accept null value
@@ -48,14 +48,14 @@ public class MessageCenterActionTest {
     /** Test action perform when the message ID is not specified it starts an activity to view the inbox. */
     @Test
     public fun testPerformNoMessageId() {
-        action.perform(createArgs(Action.SITUATION_MANUAL_INVOCATION, null))
+        action.perform(createArgs(Action.Situation.MANUAL_INVOCATION, null))
         verify { mockMessageCenter.showMessageCenter() }
     }
 
     /** Test action perform when the message is available it starts an activity to view the message. */
     @Test
     public fun testPerform() {
-        action.perform(createArgs(Action.SITUATION_MANUAL_INVOCATION, "message_id"))
+        action.perform(createArgs(Action.Situation.MANUAL_INVOCATION, "message_id"))
         verify { mockMessageCenter.showMessageCenter("message_id") }
     }
 
@@ -66,7 +66,7 @@ public class MessageCenterActionTest {
         pushBundle.putString(PushMessage.EXTRA_RICH_PUSH_ID, "the_message_id")
         val metadata = Bundle()
         metadata.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, PushMessage(pushBundle))
-        action.perform(createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto", metadata))
+        action.perform(createArgs(Action.Situation.MANUAL_INVOCATION, "auto", metadata))
         verify { mockMessageCenter.showMessageCenter("the_message_id") }
     }
 
@@ -75,27 +75,27 @@ public class MessageCenterActionTest {
     public fun testPerformMessageIdPlaceHolderRichPushMessageMetadata() {
         val metadata = Bundle()
         metadata.putString(ActionArguments.RICH_PUSH_ID_METADATA, "the_message_id")
-        action.perform(createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto", metadata))
+        action.perform(createArgs(Action.Situation.MANUAL_INVOCATION, "auto", metadata))
         verify { mockMessageCenter.showMessageCenter("the_message_id") }
     }
 
     /** Test "auto" placeholder will fail to find the message ID if no metadata is available and tries to view the inbox instead */
     @Test
     public fun testPerformMessageIdPlaceHolderNoMetadata() {
-        action.perform(createArgs(Action.SITUATION_MANUAL_INVOCATION, "auto"))
+        action.perform(createArgs(Action.Situation.MANUAL_INVOCATION, "auto"))
         verify { mockMessageCenter.showMessageCenter() }
     }
 
     /** Test "" placeholder will load the inbox. */
     @Test
     public fun testPerformEmptyMessageId() {
-        action.perform(createArgs(Action.SITUATION_MANUAL_INVOCATION, ""))
+        action.perform(createArgs(Action.Situation.MANUAL_INVOCATION, ""))
         verify { mockMessageCenter.showMessageCenter() }
     }
 
     private fun createArgs(
-        situation: Int,
+        situation: Action.Situation,
         value: String?,
         metadata: Bundle? = null
-    ): ActionArguments = ActionArguments(situation, ActionValue.wrap(value), metadata)
+    ): ActionArguments = ActionArguments(situation, ActionValue.wrap(value), metadata ?: Bundle())
 }

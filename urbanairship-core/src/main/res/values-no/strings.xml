@@ -98,7 +98,14 @@
     <string name="ua_icon_button_checkmark">Bekreft</string>
     <string name="ua_icon_button_forward_arrow">Neste</string>
     <string name="ua_icon_button_backward_arrow">Forrige</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Ny melding i appen vises</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Melding i appen ble avvist</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Feil ved behandling av skjema. Vennligst prøv igjen</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Radiogruppe</string>
 </resources>

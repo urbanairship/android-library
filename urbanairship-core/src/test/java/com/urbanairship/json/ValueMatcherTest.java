@@ -3,6 +3,10 @@
 package com.urbanairship.json;
 
 import com.urbanairship.BaseTestCase;
+import com.urbanairship.json.matchers.ExactValueMatcher;
+import com.urbanairship.json.matchers.StringBeginsMatcher;
+import com.urbanairship.json.matchers.StringContainsMatcher;
+import com.urbanairship.json.matchers.StringEndsMatcher;
 
 import org.junit.Test;
 
@@ -324,6 +328,24 @@ public class ValueMatcherTest extends BaseTestCase {
 
         matcher = ValueMatcher.newVersionMatcher("1.2.4");
         assertEquals(matcher, ValueMatcher.parse(json));
+
+        json = JsonMap.newBuilder()
+                      .put(StringBeginsMatcher.STRING_BEGINS, "hello")
+                      .build()
+                      .toJsonValue();
+        assertEquals(new StringBeginsMatcher(JsonValue.wrap("hello")), ValueMatcher.parse(json));
+
+        json = JsonMap.newBuilder()
+                      .put(StringEndsMatcher.STRING_ENDS, "goodbye")
+                      .build()
+                      .toJsonValue();
+        assertEquals(new StringEndsMatcher(JsonValue.wrap("goodbye")), ValueMatcher.parse(json));
+
+        json = JsonMap.newBuilder()
+                      .put(StringContainsMatcher.STRING_CONTAINS, "world")
+                      .build()
+                      .toJsonValue();
+        assertEquals(new StringContainsMatcher(JsonValue.wrap("world")), ValueMatcher.parse(json));
     }
 
     @Test
@@ -352,4 +374,64 @@ public class ValueMatcherTest extends BaseTestCase {
         assertEquals(matcher, ValueMatcher.parse(json));
     }
 
+    @Test
+    public void testStringBeginsMatcher() {
+        ValueMatcher matcher = new StringBeginsMatcher(JsonValue.wrap("foo"));
+        assertTrue(matcher.apply(JsonValue.wrap("foobar")));
+        assertTrue(matcher.apply(JsonValue.wrap("FOOBAR"), true));
+        assertFalse(matcher.apply(JsonValue.wrap("FOOBAR")));
+        assertFalse(matcher.apply(JsonValue.wrap("barfoo")));
+    }
+
+    @Test
+    public void testStringEndsMatcher() {
+        ValueMatcher matcher = new StringEndsMatcher(JsonValue.wrap("bar"));
+        assertTrue(matcher.apply(JsonValue.wrap("foobar")));
+        assertTrue(matcher.apply(JsonValue.wrap("FOOBAR"), true));
+        assertFalse(matcher.apply(JsonValue.wrap("FOOBAR")));
+        assertFalse(matcher.apply(JsonValue.wrap("barfoo")));
+    }
+
+    @Test
+    public void testStringContainsMatcher() {
+        ValueMatcher matcher = new StringContainsMatcher(JsonValue.wrap("oob"));
+        assertTrue(matcher.apply(JsonValue.wrap("foobar")));
+        assertTrue(matcher.apply(JsonValue.wrap("FOOBAR"), true));
+        assertFalse(matcher.apply(JsonValue.wrap("FOOBAR")));
+        assertFalse(matcher.apply(JsonValue.wrap("barfoo")));
+    }
+
+    @Test
+    public void testStringContainsMatcherEdgeCase() {
+        // this one fails if the implementation is
+        // return containerComparableLowerCase.contains(containeeComparableLowerCase);
+        ValueMatcher matcher = new StringContainsMatcher(JsonValue.wrap("iẞAR"));
+        assertFalse(matcher.apply(JsonValue.wrap("fooİẞar")));
+        assertTrue(matcher.apply(JsonValue.wrap("FOOİẞAR"), true));
+    }
+
+    @Test
+    public void testStringEndsMatcherEdgeCase() {
+        // this one fails if the implementation is
+        // containerComparable.toLowerCase().endsWith(containeeComparable.toLowerCase());
+        ValueMatcher matcher = new StringEndsMatcher(JsonValue.wrap("i"));
+        assertFalse(matcher.apply(JsonValue.wrap("fooİ")));
+        assertTrue(matcher.apply(JsonValue.wrap("fooİ"), true));
+    }
+
+    @Test
+    public void testStringBeginsMatcherEdgeCase() {
+        // this one fails if the implementation is
+        // containerComparable.toLowerCase().startsWidth(containeeComparable.toLowerCase());
+        ValueMatcher matcher = new StringBeginsMatcher(JsonValue.wrap("i"));
+        assertFalse(matcher.apply(JsonValue.wrap("İfoo")));
+        assertTrue(matcher.apply(JsonValue.wrap("İfoo"), true));
+    }
+
+    @Test
+    public void testStringEqualsMatcherEdgeCase() {
+        ValueMatcher matcher = new ExactValueMatcher(JsonValue.wrap("i"));
+        assertFalse(matcher.apply(JsonValue.wrap("İ")));
+        assertTrue(matcher.apply(JsonValue.wrap("İ"), true));
+    }
 }

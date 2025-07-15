@@ -100,7 +100,14 @@
     <string name="ua_icon_button_checkmark">Patvirtinti</string>
     <string name="ua_icon_button_forward_arrow">Kitas</string>
     <string name="ua_icon_button_backward_arrow">Ankstesnis</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Rodomas naujas pranešimas programoje</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Pranešimas programoje atmestas</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Klaida apdorojant formą. Bandykite dar kartą</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Radijo grupė</string>
 </resources>

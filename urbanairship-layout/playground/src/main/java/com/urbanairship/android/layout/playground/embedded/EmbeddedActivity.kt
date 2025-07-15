@@ -192,7 +192,7 @@ private fun displayLayout(context: Context, fileName: String, embeddedId: String
             listener = listener,
             actionRunner = object: ThomasActionRunner {
                 override fun run(actions: Map<String, JsonValue>, state: LayoutData) {
-                    DefaultActionRunner.run(actions, Action.SITUATION_AUTOMATION)
+                    DefaultActionRunner.run(actions, Action.Situation.AUTOMATION)
                 }
             },
             embeddedViewManager = EmbeddedViewManager

@@ -25,6 +25,7 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.android.material.color.MaterialColors;
+import com.google.android.material.imageview.ShapeableImageView;
 import com.google.android.material.shape.MaterialShapeDrawable;
 import com.google.android.material.shape.ShapeAppearanceModel;
 import com.urbanairship.Fonts;
@@ -142,6 +143,95 @@ public final class LayoutUtils {
             if (borderPadding > -1) {
                 addPadding(view, borderPadding);
             }
+        } else if (backgroundColor != null) {
+            applyBackgrounds(view, baseBackground, new ColorDrawable(backgroundColor.resolve(context)));
+        }
+    }
+
+    public static void applyMediaVideoBorderAndBackground(
+            @NonNull View view,
+            @Nullable Drawable baseBackground,
+            @Nullable Border border,
+            @Nullable Color backgroundColor
+    ) {
+        Context context = view.getContext();
+
+        if (border != null) {
+            ShapeAppearanceModel.Builder shapeModel = ShapeAppearanceModel.builder();
+            border.applyToShape(shapeModel, (dp) -> dpToPx(context, dp));
+
+            MaterialShapeDrawable backgroundDrawable = new MaterialShapeDrawable(shapeModel.build());
+            if (view instanceof Clippable) {
+                border.applyToClippable((Clippable) view, (dp) -> ResourceUtils.dpToPx(context, dp));
+            }
+
+            MaterialShapeDrawable strokeDrawable = new MaterialShapeDrawable(shapeModel.build());
+            strokeDrawable.setFillColor(new ColorStateListBuilder()
+                    .add(Color.TRANSPARENT)
+                    .build());
+
+            int borderPadding = -1;
+            if (border.strokeWidth != null) {
+                float strokeWidth = dpToPx(context, border.strokeWidth);
+                strokeDrawable.setStrokeWidth(strokeWidth);
+                borderPadding = (int) strokeWidth;
+            }
+
+            if (border.strokeColor != null) {
+                @ColorInt int strokeColor = border.strokeColor.resolve(context);
+                strokeDrawable.setStrokeColor(new ColorStateListBuilder()
+                        .add(generateDisabledColor(strokeColor), -android.R.attr.state_enabled)
+                        .add(strokeColor)
+                        .build());
+            }
+
+            @ColorInt int fillColor = backgroundColor != null ? backgroundColor.resolve(context) : Color.TRANSPARENT;
+            backgroundDrawable.setFillColor(new ColorStateListBuilder()
+                    .add(generateDisabledColor(fillColor), -android.R.attr.state_enabled)
+                    .add(fillColor)
+                    .build());
+
+            // Set the background color and apply the stroke as the foreground
+            applyBackgrounds(view, baseBackground, backgroundDrawable);
+            view.setForeground(strokeDrawable);
+
+            if (borderPadding > -1) {
+                addPadding(view, borderPadding);
+            }
+        } else if (backgroundColor != null) {
+            applyBackgrounds(view, baseBackground, new ColorDrawable(backgroundColor.resolve(context)));
+        }
+    }
+
+    public static void applyMediaImageBorderAndBackground(
+            @NonNull ShapeableImageView view,
+            @Nullable Drawable baseBackground,
+            @Nullable Border border,
+            @Nullable Color backgroundColor
+    ) {
+        Context context = view.getContext();
+
+        if (border != null) {
+            ShapeAppearanceModel.Builder shapeModel = ShapeAppearanceModel.builder();
+            border.applyToShape(shapeModel, (dp) -> dpToPx(context, dp));
+
+            if (border.strokeWidth != null) {
+                float strokeWidth = dpToPx(context, border.strokeWidth);
+                view.setStrokeWidth(strokeWidth);
+            }
+
+            if (border.strokeColor != null) {
+                @ColorInt int strokeColor = border.strokeColor.resolve(context);
+                view.setStrokeColor(new ColorStateListBuilder()
+                        .add(generateDisabledColor(strokeColor), -android.R.attr.state_enabled)
+                        .add(strokeColor)
+                        .build());
+            }
+
+            @ColorInt int fillColor = backgroundColor != null ? backgroundColor.resolve(context) : Color.TRANSPARENT;
+            view.setBackgroundColor(fillColor);
+
+            view.setShapeAppearanceModel(shapeModel.build());
         } else if (backgroundColor != null) {
             applyBackgrounds(view, baseBackground, new ColorDrawable(backgroundColor.resolve(context)));
         }

@@ -99,7 +99,9 @@ internal class PagerModel(
 
     init {
         @OptIn(DelicateLayoutApi::class)
-        val branching = pagerState.value.branching
+        val state = pagerState.value
+        val branching = state.branching
+
         if (branching != null) {
             branchControl = PagerBranchControl(
                 availablePages = availablePages,
@@ -111,7 +113,7 @@ internal class PagerModel(
             wireBranchControlFlows(branchControl)
         } else {
             branchControl = null
-            onPagesDataUpdated(availablePages)
+            onPagesDataUpdated(availablePages, state.completed)
         }
 
         // Listen for page changes (or the initial page display)
@@ -177,7 +179,7 @@ internal class PagerModel(
             .launchIn(modelScope)
     }
 
-    private fun onPagesDataUpdated(updated: List<Item>) {
+    private fun onPagesDataUpdated(updated: List<Item>, completed: Boolean) {
         _allPages = updated
         pages = updated.map { it.view }
         // Update pager state with our page identifiers
@@ -185,7 +187,7 @@ internal class PagerModel(
             state.copy(
                 pageIds = updated.map { it.identifier },
                 durations = updated.map { it.automatedActions?.earliestNavigationAction?.delay },
-                completed = if (state.branching == null) updated.size == 1 else state.completed,
+                completed = if (state.branching == null) updated.size == 1 else completed,
             )
         }
 

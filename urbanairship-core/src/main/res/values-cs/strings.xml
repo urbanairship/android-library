@@ -100,7 +100,14 @@
     <string name="ua_icon_button_checkmark">Potvrdit</string>
     <string name="ua_icon_button_forward_arrow">Další</string>
     <string name="ua_icon_button_backward_arrow">Předchozí</string>
+
+    <!-- In App message accessibility labels -->
+    <string name="ua_in_app_display_accessibility_announce">Zobrazila se nová zpráva v aplikaci</string>
+    <string name="ua_in_app_dismiss_accessibility_announce">Zpráva v aplikaci byla zavřena</string>
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Chyba při zpracování formuláře. Zkuste to prosím znovu</string>
+    
+    <!-- Accessibility -->
+    <string name="ua_accessibility_radio_group">Skupina přepínačů</string>
 </resources>

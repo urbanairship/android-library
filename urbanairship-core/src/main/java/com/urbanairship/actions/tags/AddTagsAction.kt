@@ -87,7 +87,7 @@ public class AddTagsAction internal constructor(
     public class AddTagsPredicate public constructor() : ActionRegistry.Predicate {
 
         override fun apply(arguments: ActionArguments): Boolean {
-            return SITUATION_PUSH_RECEIVED != arguments.situation
+            return Situation.PUSH_RECEIVED != arguments.situation
         }
     }
 
