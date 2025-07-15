@@ -8,8 +8,12 @@ plugins {
 
 description = "Airship Android SDK Message Center module"
 
+airshipModule {
+    published = true
+}
+
 android {
-    namespace 'com.urbanairship.messagecenter'
+    namespace 'com.urbanairship.messagecenter.core'
 
     room {
         schemaDirectory("$projectDir/schemas")
@@ -18,7 +22,6 @@ android {
 
 dependencies {
     api project(':urbanairship-core')
-    api project(':urbanairship-message-center-core')
 
     // Kotlin
     implementation(libs.kotlinx.coroutines.core)

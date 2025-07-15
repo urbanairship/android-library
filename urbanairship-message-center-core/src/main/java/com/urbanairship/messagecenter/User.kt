@@ -4,7 +4,6 @@ package com.urbanairship.messagecenter
 import androidx.annotation.RestrictTo
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
-import com.urbanairship.channel.AirshipChannel
 import java.io.UnsupportedEncodingException
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -131,10 +130,10 @@ public class User internal constructor(
     public companion object {
 
         private const val KEY_PREFIX = "com.urbanairship.user"
-        private const val USER_ID_KEY = "${KEY_PREFIX}.ID"
-        private const val USER_PASSWORD_KEY = "${KEY_PREFIX}.PASSWORD"
-        private const val USER_TOKEN_KEY = "${KEY_PREFIX}.USER_TOKEN"
-        private const val USER_REGISTERED_CHANNEL_ID_KEY = "${KEY_PREFIX}.REGISTERED_CHANNEL_ID"
+        private const val USER_ID_KEY = "$KEY_PREFIX.ID"
+        private const val USER_PASSWORD_KEY = "$KEY_PREFIX.PASSWORD"
+        private const val USER_TOKEN_KEY = "$KEY_PREFIX.USER_TOKEN"
+        private const val USER_REGISTERED_CHANNEL_ID_KEY = "$KEY_PREFIX.REGISTERED_CHANNEL_ID"
 
         /**
          * A flag indicating whether the user has been created.

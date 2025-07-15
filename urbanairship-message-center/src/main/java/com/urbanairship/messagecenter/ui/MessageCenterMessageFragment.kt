@@ -1,34 +1,21 @@
 package com.urbanairship.messagecenter.ui
 
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
-import android.view.TextureView
 import android.view.View
-import android.view.ViewGroup
-import android.view.WindowInsets.Type.systemBars
-import android.widget.TextView
 import androidx.annotation.LayoutRes
 import androidx.appcompat.widget.Toolbar
-import androidx.core.content.contentValuesOf
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.updatePadding
-import androidx.lifecycle.ViewModelStoreOwner
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
-import com.urbanairship.messagecenter.ui.view.MessageView
 import com.urbanairship.messagecenter.ui.view.MessageViewState
-import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.CollapsingToolbarLayout
-import com.urbanairship.R as AirshipCoreR
 
 /** A [MessageListFragment] with a toolbar, used by [MessageCenterFragment]. */
 public open class MessageCenterMessageFragment(
     @LayoutRes contentLayoutId: Int = R.layout.ua_fragment_message_center_message
-) : MessageFragment(contentLayoutId) {
+) : com.urbanairship.messagecenter.ui.MessageFragment(contentLayoutId) {
 
     /** Gets the message title from the arguments. */
     private val messageTitle: String? by lazy { arguments?.getString(ARG_MESSAGE_TITLE) }
@@ -132,7 +119,7 @@ public open class MessageCenterMessageFragment(
 
     public companion object {
         /** Required `String` argument for the message ID. */
-        public const val ARG_MESSAGE_ID: String = MessageFragment.ARG_MESSAGE_ID
+        public const val ARG_MESSAGE_ID: String = com.urbanairship.messagecenter.ui.MessageFragment.ARG_MESSAGE_ID
 
         /** Optional `String` argument for the message title. */
         public const val ARG_MESSAGE_TITLE: String = "message_title"

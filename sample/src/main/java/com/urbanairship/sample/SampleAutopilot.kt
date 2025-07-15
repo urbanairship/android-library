@@ -61,7 +61,6 @@ class SampleAutopilot : Autopilot() {
             val intent = Intent(Intent.ACTION_VIEW, uri)
                 .setPackage(UAirship.getPackageName())
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-
             UAirship.getApplicationContext().startActivity(intent)
             true
         }

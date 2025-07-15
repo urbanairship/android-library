@@ -20,6 +20,7 @@ import com.urbanairship.messagecenter.animator.slideOutBottomAnimator
 import com.urbanairship.messagecenter.ui.widget.EditableRecyclerView
 import com.urbanairship.messagecenter.ui.widget.MessageRecyclerAdapter
 import com.urbanairship.messagecenter.ui.widget.MessageRecyclerView
+import com.urbanairship.messagecenter.core.R as CoreR
 
 /** `View` that displays a list of messages. */
 public class MessageListView @JvmOverloads constructor(
@@ -232,7 +233,7 @@ public class MessageListView @JvmOverloads constructor(
             } else {
                 // We have a count. Format the title with the count: "Mark as read (3)", "Delete (5)", etc.
                 context.getString(
-                    R.string.ua_edit_toolbar_item_title_with_count,
+                    CoreR.string.ua_edit_toolbar_item_title_with_count,
                     context.getString(titleResId),
                     count
                 )

@@ -1,8 +1,6 @@
 package com.urbanairship.messagecenter.ui
 
-import android.content.Intent
 import android.content.res.Configuration
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
@@ -14,13 +12,13 @@ import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment.OnMessageDeletedListener
 import com.urbanairship.messagecenter.ui.MessageListFragment.OnMessageClickListener
 import com.urbanairship.messagecenter.ui.view.MessageViewState
 import com.urbanairship.messagecenter.util.setImportantForAccessibility
 import com.google.android.material.snackbar.Snackbar
+import com.urbanairship.messagecenter.core.R as CoreR
 
 /** `Fragment` that displays the Message Center list and message view. */
 public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message_center) {
@@ -119,11 +117,11 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
                 }
 
                 override fun onDeleteMessages(count: Int) = showListSnackbar(
-                    resources.getQuantityString(R.plurals.ua_mc_description_deleted, count, count)
+                    resources.getQuantityString(CoreR.plurals.ua_mc_description_deleted, count, count)
                 )
 
                 override fun onMarkMessagesRead(count: Int) = showListSnackbar(
-                    resources.getQuantityString(R.plurals.ua_mc_description_marked_read, count, count)
+                    resources.getQuantityString(CoreR.plurals.ua_mc_description_marked_read, count, count)
                 )
             }
 
@@ -139,7 +137,7 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
         messageFragment?.run {
             onMessageDeletedListener = OnMessageDeletedListener {
                 showListSnackbar(
-                    resources.getQuantityString(R.plurals.ua_mc_description_deleted, 1, 1)
+                    resources.getQuantityString(CoreR.plurals.ua_mc_description_deleted, 1, 1)
                 )
                 closeMessage()
             }

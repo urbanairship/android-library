@@ -1,6 +1,5 @@
 package com.urbanairship.messagecenter.ui.view
 
-import android.os.Parcel
 import android.os.Parcelable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.SavedStateHandle
@@ -16,8 +15,6 @@ import com.urbanairship.messagecenter.Inbox
 import com.urbanairship.messagecenter.InboxListener
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
-import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.LOAD_FAILED
-import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.UNAVAILABLE
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -108,7 +105,7 @@ public class MessageViewModel(
         inbox.deleteMessages(messages.map { it.id }.toSet())
     }
 
-    internal fun subscribeForMessageUpdates(): SubscriptionCancellation {
+    public fun subscribeForMessageUpdates(): SubscriptionCancellation {
         val listener = object : InboxListener {
             override fun onInboxUpdated() {
                 val messageId = currentMessage?.id ?: return
@@ -131,16 +128,16 @@ public class MessageViewModel(
             // If we don't have the message, refresh the inbox
             if (!inbox.fetchMessages()) {
                 // Fetch failed, return an error
-                return MessageViewState.Error(LOAD_FAILED)
+                return MessageViewState.Error(MessageViewState.Error.Type.LOAD_FAILED)
             }
 
             // Try to get the message again, now that we've refreshed
-            inbox.getMessage(messageId) ?: return MessageViewState.Error(UNAVAILABLE)
+            inbox.getMessage(messageId) ?: return MessageViewState.Error(MessageViewState.Error.Type.UNAVAILABLE)
         }
 
         if (message.isExpired) {
             // Message is expired, return an error
-            return MessageViewState.Error(UNAVAILABLE)
+            return MessageViewState.Error(MessageViewState.Error.Type.UNAVAILABLE)
         }
 
         // Message is available, return it
@@ -194,6 +191,6 @@ public sealed class MessageViewAction {
     public data object ErrorRetryClicked : MessageViewAction()
 }
 
-internal interface SubscriptionCancellation {
-    fun cancel()
+public interface SubscriptionCancellation {
+    public fun cancel()
 }

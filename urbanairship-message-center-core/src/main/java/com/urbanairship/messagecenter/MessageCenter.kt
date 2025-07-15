@@ -20,11 +20,9 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
-import com.urbanairship.messagecenter.ui.MessageCenterActivity
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
-import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +38,7 @@ import kotlinx.coroutines.runBlocking
 public class MessageCenter
 @VisibleForTesting
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-internal constructor(
+public constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,
@@ -127,8 +125,9 @@ internal constructor(
      *
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @VisibleForTesting
-    internal fun initialize() {
+    public fun initialize() {
         pushManager.addInternalPushListener(pushListener)
         privacyManager.addListener {
             AirshipExecutors.newSerialExecutor().execute { updateInboxEnabledState() }
@@ -246,9 +245,15 @@ internal constructor(
             }
         }
 
-        // Fallback to the message center activity
-        intent.setClass(context, MessageCenterActivity::class.java)
-        context.startActivity(intent)
+        // Fallback to the message center activity, if available
+        try {
+            val clazz = Class.forName("com.urbanairship.messagecenter.ui.MessageCenterActivity")
+            intent.setClass(context, clazz)
+            context.startActivity(intent)
+        } catch (e: ClassNotFoundException) {
+            UALog.w { "Unable to start MessageCenterActivity, the message-center module is not available"}
+        }
+
     }
 
     override fun onAirshipDeepLink(uri: Uri): Boolean {

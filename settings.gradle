@@ -28,6 +28,7 @@ include ':urbanairship-adm',
         ':urbanairship-layout',
         ':urbanairship-layout:playground',
         ':urbanairship-live-update',
+        ':urbanairship-message-center-core',
         ':urbanairship-message-center',
         // preference is no longer published as of SDK 18.0.0.
         // TODO: migrate sample, goat and debug, and remove this module

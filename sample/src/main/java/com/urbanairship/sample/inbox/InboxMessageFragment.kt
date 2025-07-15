@@ -11,10 +11,10 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment
-import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment.OnMessageDeletedListener
 import com.urbanairship.sample.MainActivity.TOP_LEVEL_DESTINATIONS
 import com.urbanairship.sample.R
 import com.urbanairship.messagecenter.R as messageCenterR
+import com.urbanairship.messagecenter.core.R as messageCenterCoreR
 
 /** MessageFragment that supports navigation and overrides the default toolbar. */
 class InboxMessageFragment : MessageCenterMessageFragment(R.layout.fragment_inbox_message) {
@@ -34,7 +34,7 @@ class InboxMessageFragment : MessageCenterMessageFragment(R.layout.fragment_inbo
             findNavController().popBackStack()
 
             context?.run {
-                val msg = getQuantityString(messageCenterR.plurals.ua_mc_description_deleted, 1, 1)
+                val msg = getQuantityString(messageCenterCoreR.plurals.ua_mc_description_deleted, 1, 1)
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
             }
         }

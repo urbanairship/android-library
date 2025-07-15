@@ -1,6 +1,5 @@
 package com.urbanairship.messagecenter.ui.view
 
-import android.os.Parcel
 import android.os.Parcelable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.SavedStateHandle
@@ -45,7 +44,7 @@ public class MessageListViewModel(
      *
      * @see MessageListState
      */
-    private val _states: MutableStateFlow<MessageListState> = MutableStateFlow( restoredState ?:  MessageListState.Loading)
+    private val _states: MutableStateFlow<MessageListState> = MutableStateFlow( restoredState ?: MessageListState.Loading)
 
     /** A `Flow` of Message List [States][MessageListState] (data consumed by the view in order to display the message list). */
     public val states: StateFlow<MessageListState> = _states.asStateFlow()

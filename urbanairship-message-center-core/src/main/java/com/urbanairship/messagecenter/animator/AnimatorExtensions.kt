@@ -1,15 +1,17 @@
 package com.urbanairship.messagecenter.animator
 
+import android.R
 import android.animation.ObjectAnimator
 import android.view.View
+import android.view.ViewPropertyAnimator
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.view.isVisible
 
-private val View.shortAnimTime
-    get() = resources.getInteger(android.R.integer.config_shortAnimTime).toLong()
+public val View.shortAnimTime: Long
+    get() = resources.getInteger(R.integer.config_shortAnimTime).toLong()
 
-internal val View.slideInBottomAnimator: ObjectAnimator
+public val View.slideInBottomAnimator: ObjectAnimator
     get() = ObjectAnimator.ofFloat(
         this,
         View.TRANSLATION_Y,
@@ -22,7 +24,7 @@ internal val View.slideInBottomAnimator: ObjectAnimator
         }
     }
 
-internal val View.slideOutBottomAnimator: ObjectAnimator
+public val View.slideOutBottomAnimator: ObjectAnimator
     get() = ObjectAnimator.ofFloat(
         this,
         View.TRANSLATION_Y,
@@ -38,10 +40,10 @@ internal val View.slideOutBottomAnimator: ObjectAnimator
         }
     }
 
-internal fun View.animateFadeIn(
+public fun View.animateFadeIn(
     duration: Long = shortAnimTime
-) = animate().alpha(1f).setDuration(duration)
+): ViewPropertyAnimator = animate().alpha(1f).setDuration(duration)
 
-internal fun View.animateFadeOut(
+public fun View.animateFadeOut(
     duration: Long = shortAnimTime
-) = animate().alpha(0f).setDuration(duration)
+): ViewPropertyAnimator = animate().alpha(0f).setDuration(duration)

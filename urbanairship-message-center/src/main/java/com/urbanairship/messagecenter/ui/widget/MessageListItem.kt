@@ -33,6 +33,7 @@ import com.urbanairship.messagecenter.util.setTextOrHide
 import com.urbanairship.util.AccessibilityUtils
 import java.text.DateFormat
 import com.urbanairship.R as coreR
+import com.urbanairship.messagecenter.core.R as CoreR
 
 /**
  * A `View` representing a message in the Message Center message list.
@@ -248,16 +249,16 @@ public class MessageListItem @JvmOverloads constructor(
         val sb = StringBuilder()
         // Selected state
         if (isEditing && isSelected) {
-            sb.append(context.getString(R.string.ua_mc_description_state_selected))
+            sb.append(context.getString(CoreR.string.ua_mc_description_state_selected))
         }
         // Read state
         if (!isRead) {
-            sb.append(context.getString(R.string.ua_mc_description_state_unread))
+            sb.append(context.getString(CoreR.string.ua_mc_description_state_unread))
         }
         // Title and date
         sb.append(
             context.getString(
-                R.string.ua_mc_description_title_and_date,
+                CoreR.string.ua_mc_description_title_and_date,
                 message.title,
                 dateFormatter.format(message.sentDate)
             )
@@ -280,14 +281,14 @@ public class MessageListItem @JvmOverloads constructor(
         val message = boundMessage ?: return
 
         // Update click action to read "Tap to read message" instead of "Tap to activate".
-        AccessibilityUtils.setClickActionLabel(this, R.string.ua_mc_action_click)
+        AccessibilityUtils.setClickActionLabel(this, CoreR.string.ua_mc_action_click)
 
         addAccessibilityAction(coreR.string.ua_delete) {
             accessibilityActionListener?.onDelete(message)
         }
 
         if (!isRead) {
-            addAccessibilityAction(R.string.ua_description_mark_read) {
+            addAccessibilityAction(CoreR.string.ua_description_mark_read) {
                 accessibilityActionListener?.onMarkRead(message)
             }
         }
@@ -300,8 +301,8 @@ public class MessageListItem @JvmOverloads constructor(
             // Add custom actions to support item selection on the item view.
             // This replaces checkbox/icon clicks when in screen reader mode.
             AccessibilityUtils.setClickActionLabel(this,
-                if (isSelected) R.string.ua_mc_action_unselect
-                else R.string.ua_mc_action_select
+                if (isSelected) CoreR.string.ua_mc_action_unselect
+                else CoreR.string.ua_mc_action_select
             )
         }
     }

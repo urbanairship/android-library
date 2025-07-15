@@ -6,7 +6,6 @@ import android.util.AttributeSet
 import android.webkit.WebView
 import androidx.annotation.CallSuper
 import androidx.annotation.MainThread
-import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionRunRequest
@@ -17,10 +16,10 @@ import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.webkit.AirshipWebViewClient
 import com.urbanairship.webkit.NestedScrollAirshipWebView
-import kotlinx.coroutines.runBlocking
 import java.text.SimpleDateFormat
 import java.util.Locale
 import java.util.TimeZone
+import kotlinx.coroutines.runBlocking
 
 /**
  * Base WebView configured for Airship Message Center content.

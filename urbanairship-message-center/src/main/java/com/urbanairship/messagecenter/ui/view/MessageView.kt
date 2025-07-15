@@ -8,32 +8,16 @@ import android.webkit.WebView
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.annotation.MainThread
-import androidx.annotation.RestrictTo
-import androidx.core.view.isGone
 import androidx.core.view.isVisible
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.findViewTreeLifecycleOwner
-import androidx.lifecycle.findViewTreeViewModelStoreOwner
-import androidx.lifecycle.get
-import com.urbanairship.Provider
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
-import com.urbanairship.messagecenter.animator.animateFadeIn
-import com.urbanairship.messagecenter.animator.animateFadeOut
 import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.LOAD_FAILED
 import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.UNAVAILABLE
 import com.urbanairship.messagecenter.ui.widget.MessageWebView
 import com.urbanairship.messagecenter.ui.widget.MessageWebViewClient
 import com.urbanairship.messagecenter.util.getActivity
 import com.urbanairship.webkit.AirshipWebChromeClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 
 /** A `WebView` configured to display Airship Message Center message content. */
 public class MessageView @JvmOverloads constructor(

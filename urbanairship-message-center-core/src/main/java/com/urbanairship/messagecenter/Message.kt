@@ -1,5 +1,4 @@
-
-package com.urbanairship.messagecenter;
+package com.urbanairship.messagecenter
 
 import android.os.Parcelable
 import com.urbanairship.UALog
