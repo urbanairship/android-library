@@ -28,8 +28,18 @@ import com.urbanairship.permission.PermissionsManager
  * Default Registration Names: [DEFAULT_REGISTRY_NAME], [DEFAULT_REGISTRY_SHORT_NAME]
  */
 public class EnableFeatureAction @JvmOverloads public constructor(
-    permissionsManagerSupplier: Supplier<PermissionsManager> = Supplier { UAirship.shared().permissionsManager },
-    private val locationClientSupplier: Supplier<AirshipLocationClient?> = Supplier { UAirship.shared().locationClient }
+    permissionsManagerSupplier: Supplier<PermissionsManager> = object :
+        Supplier<PermissionsManager> {
+        override fun get(): PermissionsManager {
+            return UAirship.shared().permissionsManager
+        }
+    },
+    private val locationClientSupplier: Supplier<AirshipLocationClient?> = object :
+        Supplier<AirshipLocationClient?> {
+        override fun get(): AirshipLocationClient? {
+            return UAirship.shared().locationClient
+        }
+    }
 ) : PromptPermissionAction(permissionsManagerSupplier) {
 
     @Throws(JsonException::class, IllegalArgumentException::class)

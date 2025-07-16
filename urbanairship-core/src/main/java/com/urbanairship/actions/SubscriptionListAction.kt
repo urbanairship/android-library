@@ -58,8 +58,9 @@ public class SubscriptionListAction @VisibleForTesting internal constructor(
      * Default constructor.
      */
     public constructor() : this(
-        Supplier<SubscriptionListEditor?> { UAirship.shared().channel.editSubscriptionLists() },
-        Supplier<ScopedSubscriptionListEditor?> { UAirship.shared().contact.editSubscriptionLists() })
+        channelEditorSupplier = Supplier<SubscriptionListEditor?> { UAirship.shared().channel.editSubscriptionLists() },
+        contactEditorSupplier = Supplier<ScopedSubscriptionListEditor?> { UAirship.shared().contact.editSubscriptionLists() }
+    )
 
     override fun perform(arguments: ActionArguments): ActionResult {
         val channelEditor = requireNotNull(channelEditorSupplier.get())

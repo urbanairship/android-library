@@ -11,6 +11,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UAirship
 import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonMap
 import com.urbanairship.liveupdate.data.LiveUpdateDatabase
@@ -154,10 +155,14 @@ internal constructor(
     public override fun init() {
         super.init()
 
-        channel.addChannelListener { updateLiveActivityEnablement() }
-        privacyManager.addListener (object : PrivacyManager.Listener {
-            override fun onEnabledFeaturesChanged() = updateLiveActivityEnablement()
-        })
+        channel.addChannelListener(
+            listener = object : AirshipChannelListener {
+                override fun onChannelCreated(channelId: String) {
+                    updateLiveActivityEnablement()
+                }
+            }
+        )
+        privacyManager.addListener { updateLiveActivityEnablement() }
 
         pushManager.addPushListener { message, _ ->
             message.liveUpdatePayload

@@ -1,9 +1,7 @@
 /* Copyright Airship and Contributors */
+package com.urbanairship.channel
 
-package com.urbanairship.channel;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
+import androidx.annotation.WorkerThread
 
 /**
  * Channel listener.
@@ -16,6 +14,5 @@ public interface AirshipChannelListener {
      * @param channelId The channel ID.
      */
     @WorkerThread
-    void onChannelCreated(@NonNull String channelId);
-
+    public fun onChannelCreated(channelId: String)
 }

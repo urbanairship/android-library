@@ -77,9 +77,9 @@ internal class ChannelBatchUpdateManager(
             update.liveUpdates?.let { mergedLiveUpdates.addAll(it) }
         }
 
-        mergedTags = TagGroupsMutation.collapseMutations(mergedTags)
-        mergedAttributes = AttributeMutation.collapseMutations(mergedAttributes)
-        mergedSubLists = SubscriptionListMutation.collapseMutations(mergedSubLists)
+        mergedTags = TagGroupsMutation.collapseMutations(mergedTags).toMutableList()
+        mergedAttributes = AttributeMutation.collapseMutations(mergedAttributes).toMutableList()
+        mergedSubLists = SubscriptionListMutation.collapseMutations(mergedSubLists).toMutableList()
 
         if (mergedTags.isEmpty() && mergedAttributes.isEmpty() && mergedSubLists.isEmpty() && mergedLiveUpdates.isEmpty()) {
             popAudienceUpdates(updates)

@@ -21,6 +21,7 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
@@ -220,20 +221,22 @@ public class Analytics @VisibleForTesting public constructor(
             onForeground(clock.currentTimeMillis())
         }
 
-        airshipChannel.addChannelListener { uploadEvents() }
+        airshipChannel.addChannelListener(
+            object : AirshipChannelListener {
+                override fun onChannelCreated(channelId: String) = uploadEvents()
+            }
+        )
 
-        privacyManager.addListener(object : PrivacyManager.Listener {
-            override fun onEnabledFeaturesChanged() {
-                if (!privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
-                    clearPendingEvents()
-                    synchronized(associatedIdentifiersLock) {
-                        dataStore.remove(
-                            ASSOCIATED_IDENTIFIERS_KEY
-                        )
-                    }
+        privacyManager.addListener {
+            if (!privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
+                clearPendingEvents()
+                synchronized(associatedIdentifiersLock) {
+                    dataStore.remove(
+                        ASSOCIATED_IDENTIFIERS_KEY
+                    )
                 }
             }
-        })
+        }
     }
 
     /**

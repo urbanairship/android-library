@@ -5,6 +5,8 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.actions.Action.Situation
 import com.urbanairship.actions.ActionValue.Companion.wrap
+import com.urbanairship.base.Supplier
+import com.urbanairship.channel.ChannelSubscriptions
 import com.urbanairship.channel.SubscriptionListEditor
 import com.urbanairship.channel.SubscriptionListMutation
 import com.urbanairship.contacts.Scope
@@ -37,7 +39,10 @@ public class SubscriptionListActionTest {
             }
         }
 
-    private val action = SubscriptionListAction({ channelEditor }, { contactEditor })
+    private val action = SubscriptionListAction(
+        channelEditorSupplier = { channelEditor },
+        contactEditorSupplier = { contactEditor }
+    )
 
     @Test
     public fun testAcceptsArguments() {

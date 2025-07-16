@@ -6,6 +6,7 @@ import androidx.core.os.bundleOf
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.UAirship
+import com.urbanairship.base.Supplier
 import com.urbanairship.push.PushMessage
 import io.mockk.every
 import io.mockk.mockk
@@ -21,7 +22,7 @@ import org.robolectric.Shadows
 public class DeepLinkActionTest {
 
     private val mockShip: UAirship = mockk()
-    private val action = DeepLinkAction { mockShip }
+    private val action = DeepLinkAction(airshipSupplier = { mockShip })
 
     @Test
     public fun testPerform() {
@@ -32,7 +33,7 @@ public class DeepLinkActionTest {
         val result = action.perform(args)
 
         assertEquals(result.status, ActionResult.Status.COMPLETED)
-        assertEquals(deepLink, result.value?.getString(""))
+        assertEquals(deepLink, result.value.getString(""))
 
         verify { mockShip.deepLink(any()) }
     }
@@ -58,7 +59,7 @@ public class DeepLinkActionTest {
         val args = ActionTestUtils.createArgs(Action.Situation.WEB_VIEW_INVOCATION, deepLink)
         val result = action.perform(args)
 
-        assertEquals(deepLink, result.value?.getString(""))
+        assertEquals(deepLink, result.value.getString(""))
         validateLastActivity(deepLink, null)
     }
 
@@ -70,7 +71,7 @@ public class DeepLinkActionTest {
         val args = ActionTestUtils.createArgs(Action.Situation.WEB_VIEW_INVOCATION, deepLink)
         val result = action.perform(args)
 
-        assertEquals(deepLink, result.value?.getString(""))
+        assertEquals(deepLink, result.value.getString(""))
         validateLastActivity(deepLink, null)
     }
 
@@ -88,7 +89,7 @@ public class DeepLinkActionTest {
             ActionTestUtils.createArgs(Action.Situation.PUSH_OPENED, "http://example.com", metadata)
         val result = action.perform(args)
 
-        assertEquals("Value should be the uri", "http://example.com", result.value?.getString(""))
+        assertEquals("Value should be the uri", "http://example.com", result.value.getString(""))
         validateLastActivity("http://example.com", message)
     }
 

@@ -6,6 +6,7 @@ import android.content.Context
 import com.urbanairship.PushProviders
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.UAirship
+import com.urbanairship.base.Supplier
 import com.urbanairship.http.RequestException
 import com.urbanairship.push.PushProvider
 import io.mockk.every
@@ -28,10 +29,9 @@ public class RemoteDataUrlFactoryTest {
     }
 
     private val factory: RemoteDataUrlFactory = RemoteDataUrlFactory(
-        runtimeConfig
-    ) {
-        pushProviders
-    }
+        runtimeConfig,
+        pushProvidersSupplier = { pushProviders }
+    )
 
     /**
      * Test the SDK version is sent as a query parameter.

@@ -2,6 +2,7 @@
 package com.urbanairship.actions
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.base.Supplier
 import com.urbanairship.modules.location.AirshipLocationClient
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionsManager
@@ -17,7 +18,9 @@ public class EnableFeatureActionTest {
 
     private val mockLocation: AirshipLocationClient = mockk(relaxed = true)
     private val mockPermissionManager: PermissionsManager = mockk()
-    private val action = EnableFeatureAction({ mockPermissionManager }, { mockLocation })
+    private val action = EnableFeatureAction(
+        permissionsManagerSupplier = { mockPermissionManager },
+        locationClientSupplier = { mockLocation })
 
     @Test
     public fun testLocation() {

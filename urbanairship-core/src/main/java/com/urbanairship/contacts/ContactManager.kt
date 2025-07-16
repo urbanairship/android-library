@@ -947,7 +947,7 @@ internal class ContactManager(
                 updateOperation.attributes?.forEach { mutation ->
                     when (mutation.action) {
                         AttributeMutation.ATTRIBUTE_ACTION_SET -> attributes[mutation.name] =
-                            mutation.value
+                            mutation.value ?: JsonValue.NULL
                         AttributeMutation.ATTRIBUTE_ACTION_REMOVE -> attributes.remove(mutation.name)
                     }
                 }

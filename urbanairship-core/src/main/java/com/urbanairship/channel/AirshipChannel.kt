@@ -520,8 +520,8 @@ public class AirshipChannel internal constructor(
         var builder = ChannelRegistrationPayload.Builder()
 
         when (runtimeConfig.platform) {
-            UAirship.ANDROID_PLATFORM -> builder.setDeviceType(ChannelRegistrationPayload.ANDROID_DEVICE_TYPE)
-            UAirship.AMAZON_PLATFORM -> builder.setDeviceType(ChannelRegistrationPayload.AMAZON_DEVICE_TYPE)
+            UAirship.ANDROID_PLATFORM -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
+            UAirship.AMAZON_PLATFORM -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.AMAZON)
             else -> throw IllegalStateException("Unable to get platform")
         }
 

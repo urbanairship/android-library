@@ -21,6 +21,7 @@ import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.SmsValidationHandler
@@ -221,11 +222,15 @@ public class Contact internal constructor(
             }
         }
 
-        airshipChannel.addChannelListener {
-            if (privacyManager.isContactsEnabled) {
-                contactManager.addOperation(ContactOperation.Resolve)
+        airshipChannel.addChannelListener(
+            listener = object : AirshipChannelListener {
+                override fun onChannelCreated(channelId: String) {
+                    if (privacyManager.isContactsEnabled) {
+                        contactManager.addOperation(ContactOperation.Resolve)
+                    }
+                }
             }
-        }
+        )
 
         subscriptionsScope.launch {
             contactManager.contactIdUpdates
