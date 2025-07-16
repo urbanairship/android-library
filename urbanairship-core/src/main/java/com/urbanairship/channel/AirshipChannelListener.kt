@@ -6,7 +6,7 @@ import androidx.annotation.WorkerThread
 /**
  * Channel listener.
  */
-public interface AirshipChannelListener {
+public fun interface AirshipChannelListener {
 
     /**
      * Called when a channel ID is created.
