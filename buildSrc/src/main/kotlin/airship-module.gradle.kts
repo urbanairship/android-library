@@ -1,13 +1,15 @@
-import java.net.URI
 import java.time.Year
-import kotlin.apply
 import org.gradle.api.JavaVersion
 import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 
 plugins {
     id("com.android.library")
     id("kotlin-android")
     id("org.jetbrains.dokka")
+    id("maven-publish")
 }
 
 interface AirshipModuleExtension {
@@ -55,19 +57,23 @@ android {
         unitTests.isIncludeAndroidResources = true
     }
 
-    compileOptions.apply {
+    compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-        freeCompilerArgs = listOf("-Xexplicit-api=strict", "-Xjvm-default=all-compatibility")
     }
 
     lint {
         targetSdk = targetSdkVersion
         checkOnly += setOf("Interoperability", "NewApi", "InlinedApi")
+    }
+}
+
+kotlin {
+    explicitApi = ExplicitApiMode.Warning
+
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_1_8
+        jvmDefault = JvmDefaultMode.ENABLE
     }
 }
 

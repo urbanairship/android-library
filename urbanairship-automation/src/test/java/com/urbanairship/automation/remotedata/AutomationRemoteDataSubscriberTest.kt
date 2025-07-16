@@ -17,11 +17,9 @@ import com.urbanairship.remotedata.RemoteDataSource
 import java.util.UUID
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
-import io.mockk.Ordering
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
-import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -32,13 +30,10 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runBlockingTest
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
-import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -52,7 +47,6 @@ public class AutomationRemoteDataSubscriberTest {
     private val clock = TestClock().apply { currentTimeMillis = 1000 }
 
     private val testDispatcher = StandardTestDispatcher()
-    private val unconfinedTestDispatcher = UnconfinedTestDispatcher()
 
     private var updatesFlow = MutableSharedFlow<InAppRemoteData>(replay = 0, extraBufferCapacity = Int.MAX_VALUE)
     private val remoteDataAccess: AutomationRemoteDataAccessInterface = mockk {
@@ -68,7 +62,7 @@ public class AutomationRemoteDataSubscriberTest {
         coEvery { this@mockk.setConstraints(any()) } returns Result.success(Unit)
     }
     private var subscriber: AutomationRemoteDataSubscriber = AutomationRemoteDataSubscriber(
-        dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.11", unconfinedTestDispatcher
+        dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.11", testDispatcher
     )
 
     @Before
@@ -82,7 +76,7 @@ public class AutomationRemoteDataSubscriberTest {
     }
 
     @Test
-    public fun testSchedulingAutomations(): TestResult = runTest(unconfinedTestDispatcher) {
+    public fun testSchedulingAutomations(): TestResult = runTest {
         val appSchedules = makeSchedules(source = RemoteDataSource.APP)
         val contactSchedules = makeSchedules(source = RemoteDataSource.CONTACT)
 
@@ -101,10 +95,12 @@ public class AutomationRemoteDataSubscriberTest {
 
         coJustRun { engine.upsertSchedules(any()) }
         subscriber.subscribe()
-        yield()
-        updatesFlow.emit(data)
 
-        coVerify {
+        advanceUntilIdle()
+        updatesFlow.emit(data)
+        advanceUntilIdle()
+
+        coVerify(timeout = 2000) {
             engine.upsertSchedules(appSchedules)
             engine.upsertSchedules(contactSchedules)
         }

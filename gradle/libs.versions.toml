@@ -1,13 +1,13 @@
 [versions]
 
 # Gradle plugins
-androidGradlePlugin = '8.10.1'
-googleServicesPlugin = '4.4.2'
-spotlessPlugin = '7.0.4'
+androidGradlePlugin = '8.11.1'
+googleServicesPlugin = '4.4.3'
+spotlessPlugin = '7.1.0'
 nexusPublishPlugin = '1.1.0'
 gradle-versions =  '0.52.0'
-kspPlugin = '2.0.21-1.0.28'
-binary-compatibility-validator = '0.17.0'
+kspPlugin = '2.2.0-2.0.2'
+binary-compatibility-validator = '0.18.1'
 
 # Spotless plugins
 ktlint = '1.1.1'
@@ -15,35 +15,35 @@ ktlint = '1.1.1'
 # Dependencies
 
 # Kotlin
-kotlin = '2.0.21'
-kotlinx-coroutines = '1.9.0'
-kotlinx-serialization = '1.7.3'
+kotlin = '2.2.0'
+kotlinx-coroutines = '1.10.2'
+kotlinx-serialization = '1.9.0'
 
 # Compose
-compose-bom = '2025.06.00'
+compose-bom = '2025.06.01'
 
 # Androidx
-androidx-activity = '1.9.3'
+androidx-activity = '1.10.1'
 androidx-annotation = '1.9.1'
-androidx-appcompat = '1.7.0'
+androidx-appcompat = '1.7.1'
 androidx-concurrentfutures = '1.2.0'
-androidx-constraintlayout-xml = '2.2.0'
-androidx-constraintlayout-compose = '1.0.1'
-androidx-core = '1.15.0'
-androidx-customview = '1.1.0'
-androidx-fragment = '1.8.5'
-androidx-lifecycle = '2.8.7'
-androidx-navigation = '2.8.5'
+androidx-constraintlayout-xml = '2.2.1'
+androidx-constraintlayout-compose = '1.1.1'
+androidx-core = '1.16.0'
+androidx-customview = '1.2.0'
+androidx-fragment = '1.8.8'
+androidx-lifecycle = '2.9.1'
+androidx-navigation = '2.9.1'
 androidx-slidingpanelayout = '1.2.0'
 
 androidx-glance = '1.1.1' # Only used in Sample app
 
-androidx-activity-compose = '1.9.3'
+androidx-activity-compose = '1.10.1'
 
 androidx-preference = '1.2.1'
 androidx-recyclerview = "1.4.0"
-androidx-room = '2.7.1'
-androidx-startup = '1.1.1'
+androidx-room = '2.7.2'
+androidx-startup = '1.2.0'
 androidx-swiperefreshlayout = '1.1.0'
 androidx-test-core = '1.6.1'
 androidx-test-espresso = '3.6.1'
@@ -53,18 +53,18 @@ androidx-test-runner = '1.6.2'
 androidx-test-truth = '1.6.0'
 androidx-vectordrawable = '1.2.0'
 androidx-webkit = '1.14.0'
-androidx-work = '2.10.1'
+androidx-work = '2.10.2'
 
 # Material
 google-material = '1.12.0'
 
 # Google Play Services
 playservices-adsidentifier = '18.2.0'
-playservices-base = '18.3.0'
+playservices-base = '18.7.2'
 playservices-location = '21.3.0'
 
 # Firebase
-firebase-messaging = '24.1.1'
+firebase-messaging = '24.1.2'
 
 # Glide (image loader)
 glide = '4.16.0'
