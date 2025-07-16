@@ -22,7 +22,6 @@ import com.urbanairship.actions.Action;
 import com.urbanairship.actions.ActionArguments;
 import com.urbanairship.actions.ActionRunRequest;
 import com.urbanairship.actions.ActionValue;
-import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.app.ActivityMonitor;
 import com.urbanairship.app.GlobalActivityMonitor;
 import com.urbanairship.job.JobDispatcher;
@@ -124,7 +123,6 @@ class IncomingPushRunnable implements Runnable {
 
         if (message.isPing() || message.isRemoteDataUpdate()) {
             UALog.v("Received internal push.");
-            airship.getAnalytics().addEvent(new PushArrivedEvent(message));
             airship.getPushManager().onPushReceived(message, false);
             return;
         }
@@ -246,7 +244,6 @@ class IncomingPushRunnable implements Runnable {
     }
 
     private void postProcessPushFinished(@NonNull UAirship airship, @NonNull PushMessage message, boolean notificationPosted) {
-        airship.getAnalytics().addEvent(new PushArrivedEvent(message));
         airship.getPushManager().onPushReceived(message, notificationPosted);
     }
 

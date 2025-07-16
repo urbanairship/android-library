@@ -52,7 +52,7 @@ public class CustomEvent private constructor(
         inAppContext = builder.inAppContext
     )
 
-    override fun getType(): EventType = EventType.CUSTOM_EVENT
+    override val type: EventType = EventType.CUSTOM_EVENT
 
     /**
      * @hide

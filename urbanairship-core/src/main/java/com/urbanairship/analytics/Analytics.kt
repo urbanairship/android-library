@@ -38,6 +38,7 @@ import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executor
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,7 +74,7 @@ public class Analytics @VisibleForTesting public constructor(
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public interface AnalyticsHeaderDelegate {
-        public fun onCreateAnalyticsHeaders(): Map<String, String?>
+        public fun onCreateAnalyticsHeaders(): Map<String, String>
     }
 
     private val _events: MutableSharedFlow<AirshipEventData> = MutableSharedFlow(
@@ -257,20 +258,26 @@ public class Analytics @VisibleForTesting public constructor(
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
-        if ((EventManager.ACTION_SEND == jobInfo.action)) {
-            if (!isEnabled) {
-                return JobResult.SUCCESS
+        return when(jobInfo.action) {
+            EventManager.ACTION_SEND -> {
+                if (!isEnabled) {
+                    return JobResult.SUCCESS
+                }
+
+                val channelId = airshipChannel.id
+                if (channelId == null) {
+                    UALog.d { "No channel ID, skipping analytics send." }
+                    return JobResult.SUCCESS
+                }
+
+                if (eventManager.uploadEvents(channelId, analyticHeaders)) {
+                    JobResult.SUCCESS
+                } else {
+                    JobResult.RETRY
+                }
             }
-            val channelId = airshipChannel.id
-            if (channelId == null) {
-                UALog.d { "No channel ID, skipping analytics send." }
-                return JobResult.SUCCESS
-            }
-            return if (!eventManager.uploadEvents(channelId, analyticHeaders)) {
-                JobResult.RETRY
-            } else JobResult.SUCCESS
+            else -> JobResult.SUCCESS
         }
-        return JobResult.SUCCESS
     }
 
     /**
@@ -278,15 +285,17 @@ public class Analytics @VisibleForTesting public constructor(
      * @param event The region event.
      */
     public fun recordCustomEvent(event: CustomEvent) {
-        if (addEvent(event)) {
-            eventFeed.emit(
-                AirshipEventFeed.Event.Analytics(
-                    event.type,
-                    event.toJsonValue(),
-                    event.eventValue?.toDouble()
-                )
-            )
+        if (!addEvent(event)) {
+            return
         }
+
+        eventFeed.emit(
+            AirshipEventFeed.Event.Analytics(
+                event.type,
+                event.toJsonValue(),
+                event.eventValue?.toDouble()
+            )
+        )
     }
 
     /**
@@ -294,18 +303,20 @@ public class Analytics @VisibleForTesting public constructor(
      * @param event The region event.
      */
     public fun recordRegionEvent(event: RegionEvent) {
-        if (addEvent(event)) {
-            when (event.boundaryEvent) {
-                RegionEvent.BOUNDARY_EVENT_ENTER -> {
-                    _regions.update {
-                        it.toMutableSet().apply { add(event.regionId) }.toSet()
-                    }
-                }
+        if (!addEvent(event)) {
+            return
+        }
 
-                RegionEvent.BOUNDARY_EVENT_EXIT -> {
-                    _regions.update {
-                        it.toMutableSet().apply { remove(event.regionId) }.toSet()
-                    }
+        when (event.boundaryEvent) {
+            RegionEvent.Boundary.ENTER -> {
+                _regions.update {
+                    it.toMutableSet().apply { add(event.regionId) }.toSet()
+                }
+            }
+
+            RegionEvent.Boundary.EXIT -> {
+                _regions.update {
+                    it.toMutableSet().apply { remove(event.regionId) }.toSet()
                 }
             }
         }
@@ -316,7 +327,7 @@ public class Analytics @VisibleForTesting public constructor(
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun addEvent(event: Event): Boolean {
-        if (!event.isValid) {
+        if (!event.isValid()) {
             UALog.e { "Analytics - Invalid event: $event" }
             return false
         }
@@ -357,13 +368,9 @@ public class Analytics @VisibleForTesting public constructor(
 
         eventFeed.emit(feedEvent)
 
-
-
         UALog.v { "Adding event: ${event.type}" }
         executor.execute { eventManager.addEvent(eventData, event.priority) }
-        _events.tryEmit(
-            eventData
-        )
+        _events.tryEmit(eventData)
         return true
     }
 
@@ -396,7 +403,7 @@ public class Analytics @VisibleForTesting public constructor(
         conversionSendId = null
         conversionMetadata = null
         if (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
-            eventManager.scheduleEventUpload(0, TimeUnit.MILLISECONDS)
+            eventManager.scheduleEventUpload(0.seconds)
         }
     }
 
@@ -528,14 +535,14 @@ public class Analytics @VisibleForTesting public constructor(
      */
     public fun uploadEvents() {
         if (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
-            eventManager.scheduleEventUpload(SCHEDULE_SEND_DELAY_SECONDS, TimeUnit.SECONDS)
+            eventManager.scheduleEventUpload(SCHEDULE_SEND_DELAY_SECONDS)
         }
     }
 
     @get:WorkerThread
-    private val analyticHeaders: Map<String, String?>
+    private val analyticHeaders: Map<String, String>
         get() {
-            val headers: MutableMap<String, String?> = HashMap()
+            val headers: MutableMap<String, String> = HashMap()
 
             // Delegates
             for (delegate: AnalyticsHeaderDelegate in headerDelegates) {
@@ -553,8 +560,8 @@ public class Analytics @VisibleForTesting public constructor(
             }
 
             // App info
-            headers["X-UA-Package-Name"] = packageName
-            headers["X-UA-Package-Version"] = packageVersion
+            headers["X-UA-Package-Name"] = packageName ?: ""
+            headers["X-UA-Package-Version"] = packageVersion ?: ""
             headers["X-UA-Android-Version-Code"] = Build.VERSION.SDK_INT.toString()
 
             // Airship info
@@ -563,8 +570,8 @@ public class Analytics @VisibleForTesting public constructor(
             headers["X-UA-Lib-Version"] = UAirship.getVersion()
             headers["X-UA-App-Key"] = runtimeConfig.configOptions.appKey
             headers["X-UA-In-Production"] = runtimeConfig.configOptions.inProduction.toString()
-            headers["X-UA-Channel-ID"] = airshipChannel.id
-            headers["X-UA-Push-Address"] = airshipChannel.id
+            headers["X-UA-Channel-ID"] = airshipChannel.id ?: ""
+            headers["X-UA-Push-Address"] = airshipChannel.id ?: ""
             if (sdkExtensions.isNotEmpty()) {
                 headers["X-UA-Frameworks"] = UAStringUtil.join(sdkExtensions, ",")
             }
@@ -619,7 +626,7 @@ public class Analytics @VisibleForTesting public constructor(
         /**
          * Minimum amount of delay when [.uploadEvents] is called.
          */
-        private const val SCHEDULE_SEND_DELAY_SECONDS: Long = 10
+        private val SCHEDULE_SEND_DELAY_SECONDS = 10.seconds
         private const val ASSOCIATED_IDENTIFIERS_KEY = "com.urbanairship.analytics.ASSOCIATED_IDENTIFIERS"
         private const val LAST_RECEIVED_METADATA = "com.urbanairship.push.LAST_RECEIVED_METADATA"
     }

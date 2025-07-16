@@ -29,6 +29,6 @@ internal class FeatureFlagInteractionEvent private constructor(
         )
     )
 
-    override fun getType(): EventType = EventType.FEATURE_FLAG_INTERACTION
+    override val type: EventType = EventType.FEATURE_FLAG_INTERACTION
     override fun getEventData(conversionData: ConversionData): JsonMap = data
 }

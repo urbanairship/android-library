@@ -84,7 +84,7 @@ private data class AnalyticsEvent(
         private const val RENDERED_LOCALE = "rendered_locale"
     }
 
-    override fun getType(): EventType = eventType
+    override val type: EventType = eventType
 
     override fun getEventData(conversionData: ConversionData): JsonMap {
         return JsonMap.newBuilder()

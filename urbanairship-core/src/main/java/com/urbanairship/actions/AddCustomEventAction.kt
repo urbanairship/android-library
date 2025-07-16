@@ -87,7 +87,7 @@ public class AddCustomEventAction public constructor() : Action() {
         val event = eventBuilder.build()
         event.track()
 
-        return if (event.isValid) {
+        return if (event.isValid()) {
             newEmptyResult()
         } else {
             newErrorResult(IllegalArgumentException("Unable to add custom event. Event is invalid."))

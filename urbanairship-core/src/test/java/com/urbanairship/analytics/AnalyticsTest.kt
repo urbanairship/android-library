@@ -26,7 +26,7 @@ import com.urbanairship.permission.PermissionsManager
 import java.util.Locale
 import java.util.TimeZone
 import java.util.concurrent.Executor
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import io.mockk.every
@@ -134,7 +134,7 @@ public class AnalyticsTest {
                 match {
                     it.type == EventType.APP_BACKGROUND
                 },
-                eq(Event.NORMAL_PRIORITY),
+                eq(Event.Priority.NORMAL),
             )
         }
     }
@@ -144,7 +144,7 @@ public class AnalyticsTest {
     public fun testOnBackgroundSchedulesEventUpload() {
         activityMonitor.background()
         verify {
-            mockEventManager.scheduleEventUpload(0, TimeUnit.MILLISECONDS)
+            mockEventManager.scheduleEventUpload(0.milliseconds)
         }
     }
 
@@ -216,8 +216,8 @@ public class AnalyticsTest {
             every { eventId } returns "event-id"
             every { type } returns EventType.APP_BACKGROUND
             every { time } returns "1000"
-            every { priority } returns Event.HIGH_PRIORITY
-            every { isValid } returns false
+            every { priority } returns Event.Priority.HIGH
+            every { isValid() } returns false
         }
 
         analytics.addEvent(event)
@@ -245,7 +245,7 @@ public class AnalyticsTest {
                 match {
                     it.type == EventType.ASSOCIATE_IDENTIFIERS
                 },
-                eq(Event.NORMAL_PRIORITY),
+                eq(Event.Priority.NORMAL),
             )
         }
 
@@ -269,7 +269,7 @@ public class AnalyticsTest {
                 match {
                     it.type == EventType.ASSOCIATE_IDENTIFIERS
                 },
-                eq(Event.NORMAL_PRIORITY),
+                eq(Event.Priority.NORMAL),
             )
         }
     }
@@ -289,7 +289,7 @@ public class AnalyticsTest {
                 match {
                     it.type == EventType.SCREEN_TRACKING && it.body.requireMap().requireField<String>("screen") == "test_screen"
                 },
-                eq(Event.NORMAL_PRIORITY),
+                eq(Event.Priority.NORMAL),
             )
         }
     }
@@ -310,7 +310,7 @@ public class AnalyticsTest {
                 match {
                     it.type == EventType.SCREEN_TRACKING && it.body.requireMap().requireField<String>("screen") == "test_screen_1"
                 },
-                eq(Event.NORMAL_PRIORITY),
+                eq(Event.Priority.NORMAL),
             )
         }
     }
@@ -419,7 +419,7 @@ public class AnalyticsTest {
         val expectedHeaders = mapOf(
             "X-UA-Device-Family" to "android",
             "X-UA-Package-Name" to UAirship.getPackageName(),
-            "X-UA-Package-Version" to UAirship.getPackageInfo()!!.versionName,
+            "X-UA-Package-Version" to (UAirship.getPackageInfo()?.versionName ?: ""),
             "X-UA-App-Key" to  runtimeConfig.configOptions.appKey,
             "X-UA-In-Production" to  runtimeConfig.configOptions.inProduction.toString(),
             "X-UA-Device-Model" to  Build.MODEL,
@@ -582,13 +582,13 @@ public class AnalyticsTest {
     public fun testAnalyticHeaderDelegate() {
         every { mockChannel.id } returns "channel"
         analytics.addHeaderDelegate(object : AnalyticsHeaderDelegate {
-            override fun onCreateAnalyticsHeaders(): Map<String, String?> {
+            override fun onCreateAnalyticsHeaders(): Map<String, String> {
                 return mapOf("foo" to "bar")
             }
         })
 
         analytics.addHeaderDelegate(object : AnalyticsHeaderDelegate {
-            override fun onCreateAnalyticsHeaders(): Map<String, String?> {
+            override fun onCreateAnalyticsHeaders(): Map<String, String> {
                 return mapOf("cool" to "story", "neat" to "rad")
             }
         })
@@ -634,30 +634,24 @@ public class AnalyticsTest {
             assertThat(awaitItem()).isEmpty()
 
             analytics.recordRegionEvent(
-                RegionEvent.newBuilder()
-                    .setRegionId("foo")
+                RegionEvent.newBuilder("foo", RegionEvent.Boundary.ENTER)
                     .setSource("source")
-                    .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_ENTER)
                     .build()
             )
 
             assertThat(awaitItem()).isEqualTo(setOf("foo"))
 
             analytics.recordRegionEvent(
-                RegionEvent.newBuilder()
-                    .setRegionId("bar")
+                RegionEvent.newBuilder("bar", RegionEvent.Boundary.EXIT)
                     .setSource("source")
-                    .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_EXIT)
                     .build()
             )
 
             expectNoEvents()
 
             analytics.recordRegionEvent(
-                RegionEvent.newBuilder()
-                    .setRegionId("baz")
+                RegionEvent.newBuilder("baz", RegionEvent.Boundary.ENTER)
                     .setSource("source")
-                    .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_ENTER)
                     .build()
             )
             assertThat(awaitItem()).isEqualTo(setOf("foo", "baz"))
@@ -671,10 +665,8 @@ public class AnalyticsTest {
             mockEventFeed.emit(AirshipEventFeed.Event.Screen("foo"))
         }
 
-        val regionEnter = RegionEvent.newBuilder()
-            .setRegionId("foo")
+        val regionEnter = RegionEvent.newBuilder("foo", RegionEvent.Boundary.ENTER)
             .setSource("source")
-            .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_ENTER)
             .build()
 
         analytics.recordRegionEvent(regionEnter)
@@ -688,10 +680,8 @@ public class AnalyticsTest {
             )
         }
 
-        val regionExit = RegionEvent.newBuilder()
-            .setRegionId("bar")
+        val regionExit = RegionEvent.newBuilder("bar", RegionEvent.Boundary.EXIT)
             .setSource("source")
-            .setBoundaryEvent(RegionEvent.BOUNDARY_EVENT_EXIT)
             .build()
 
         analytics.recordRegionEvent(regionExit)

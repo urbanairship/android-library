@@ -187,7 +187,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         airshipChannel.addChannelRegistrationPayloadExtender(channelExtender)
         val headersDelegate = this.createAnalyticsHeaders()
         analytics.addHeaderDelegate(object : AnalyticsHeaderDelegate {
-            override fun onCreateAnalyticsHeaders(): Map<String, String?> {
+            override fun onCreateAnalyticsHeaders(): Map<String, String> {
                 return headersDelegate
             }
         })
@@ -964,14 +964,14 @@ public open class PushManager @VisibleForTesting internal constructor(
         return internalNotificationListeners
     }
 
-    private fun createAnalyticsHeaders(): Map<String, String?> {
-        if (privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
-            val headers: MutableMap<String, String?> = HashMap()
-            headers["X-UA-Channel-Opted-In"] = isOptIn.toString()
-            headers["X-UA-Channel-Background-Enabled"] = isPushAvailable.toString()
-            return headers
+    private fun createAnalyticsHeaders(): Map<String, String> {
+        return if (privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
+            mapOf(
+                "X-UA-Channel-Opted-In" to isOptIn.toString(),
+                "X-UA-Channel-Background-Enabled" to isPushAvailable.toString()
+            )
         } else {
-            return emptyMap()
+            emptyMap()
         }
     }
 

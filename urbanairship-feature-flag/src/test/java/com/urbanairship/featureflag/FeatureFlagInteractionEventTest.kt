@@ -37,7 +37,7 @@ public class FeatureFlagInteractionEventTest {
         val event = FeatureFlagInteractionEvent(flag)
         assert(event.type.reportingName == "feature_flag_interaction")
         assert(event.type == EventType.FEATURE_FLAG_INTERACTION)
-        assert(event.priority == Event.NORMAL_PRIORITY)
+        assert(event.priority == Event.Priority.NORMAL)
         assert(event.data == expectedData)
     }
 

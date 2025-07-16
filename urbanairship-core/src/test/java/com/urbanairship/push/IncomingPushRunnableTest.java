@@ -16,7 +16,6 @@ import com.urbanairship.TestActivityMonitor;
 import com.urbanairship.TestApplication;
 import com.urbanairship.TestPushProvider;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.analytics.PushArrivedEvent;
 import com.urbanairship.job.JobDispatcher;
 import com.urbanairship.job.JobInfo;
 import com.urbanairship.push.notifications.NotificationArguments;
@@ -152,7 +151,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         pushRunnable.run();
 
         verify(notificationManager).notify("testNotificationTag", TEST_NOTIFICATION_ID, notificationProvider.notification);
-        verify(analytics).addEvent(any(PushArrivedEvent.class));
 
         ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(notificationProvider.notification.contentIntent);
         assertTrue("The pending intent is an activity intent.", shadowPendingIntent.isActivityIntent());
@@ -551,7 +549,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
         verify(jobDispatcher, Mockito.never()).dispatch(any(JobInfo.class));
         verifyNoInteractions(notificationProvider);
         verify(pushManager).onPushReceived(message, false);
-        verify(analytics).addEvent(any(PushArrivedEvent.class));
     }
 
     @Test
@@ -572,7 +569,6 @@ public class IncomingPushRunnableTest extends BaseTestCase {
 
         verifyNoInteractions(mockChannelRegistry);
         verify(notificationManager).notify("testNotificationTag", TEST_NOTIFICATION_ID, notificationProvider.notification);
-        verify(analytics).addEvent(any(PushArrivedEvent.class));
 
         verify(pushManager).onPushReceived(message, true);
         verify(pushManager).onNotificationPosted(message, TEST_NOTIFICATION_ID, "testNotificationTag");
