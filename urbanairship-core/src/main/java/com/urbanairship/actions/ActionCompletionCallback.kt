@@ -5,7 +5,7 @@ package com.urbanairship.actions
  * An interface for callbacks signaling the completion of an
  * [com.urbanairship.actions.Action].
  */
-public interface ActionCompletionCallback {
+public fun interface ActionCompletionCallback {
 
     /**
      * Signals completion of the action.

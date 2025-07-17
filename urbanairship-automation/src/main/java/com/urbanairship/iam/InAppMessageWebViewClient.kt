@@ -6,6 +6,7 @@ import androidx.annotation.CallSuper
 import com.urbanairship.javascript.JavaScriptEnvironment
 import com.urbanairship.javascript.NativeBridge
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonValue
 import com.urbanairship.webkit.AirshipWebViewClient
 
 /**
@@ -29,6 +30,6 @@ internal open class InAppMessageWebViewClient: AirshipWebViewClient {
         webView: WebView
     ): JavaScriptEnvironment.Builder {
         return super.extendJavascriptEnvironment(builder, webView)
-            .addGetter("getMessageExtras", messageExtras)
+            .addGetter("getMessageExtras", messageExtras ?: JsonValue.NULL)
     }
 }
