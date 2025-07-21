@@ -465,6 +465,9 @@ internal class LinearLayoutItemInfo(
 ) : ItemInfo(viewInfoFromJson(json.requireField("view"))) {
     val size = Size.fromJson(json.requireField("size"))
     val margin = json.optionalMap("margin")?.let { Margin.fromJson(it) }
+
+    val position: Position? = json.optionalMap("position")
+        ?.let { Position.fromJson(it) }
 }
 
 internal class ContainerLayoutInfo(
