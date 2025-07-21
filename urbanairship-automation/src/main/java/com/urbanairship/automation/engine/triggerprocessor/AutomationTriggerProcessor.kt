@@ -42,11 +42,9 @@ internal class AutomationTriggerProcessor(
             return
         }
 
-        val results = mutableListOf<PreparedTrigger.EventProcessResult>()
-
-        this.preparedTriggers.values.forEach { triggers ->
-            triggers.forEach{ it.process(event)?.let(results::add)}
-        }
+        val results = this.preparedTriggers.values.flatMap { triggers ->
+            triggers.map { it.process(event) }
+        }.filterNotNull()
 
         for (item in results.sortedWith(compareBy { it.priority })) {
             val result = item.triggerResult ?: continue

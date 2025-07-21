@@ -1,7 +1,7 @@
 presentation:
   type: modal
   android:
-    disable_back_button: false
+    disable_back_button: true
   default_placement:
     ignore_safe_area: true
     border:

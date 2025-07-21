@@ -19,7 +19,7 @@ internal class ExternalReporter(val listener: ThomasListenerInterface) : Reporte
                         listener.onDismiss(cancel)
                     }
                     ReportingEvent.DismissData.TimedOut -> listener.onDismiss(false)
-                    ReportingEvent.DismissData.UserDismissed -> listener.onDismiss(true)
+                    ReportingEvent.DismissData.UserDismissed -> listener.onDismiss(false)
                 }
             }
             else -> {}
