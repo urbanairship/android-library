@@ -26,6 +26,8 @@ import io.mockk.slot
 import io.mockk.verify
 import java.util.Locale
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -160,12 +162,12 @@ public class ContactManagerTest {
     public fun testJobRateLimits(): TestResult = runTest {
         verify {
             mockJobDispatcher.setRateLimit(
-                ContactManager.IDENTITY_RATE_LIMIT, 1, 5, TimeUnit.SECONDS
+                ContactManager.IDENTITY_RATE_LIMIT, 1, 5.seconds
             )
         }
         verify {
             mockJobDispatcher.setRateLimit(
-                ContactManager.UPDATE_RATE_LIMIT, 1, 500, TimeUnit.MILLISECONDS
+                ContactManager.UPDATE_RATE_LIMIT, 1, 500.milliseconds
             )
         }
     }

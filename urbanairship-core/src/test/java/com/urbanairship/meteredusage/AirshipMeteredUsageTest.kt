@@ -17,6 +17,8 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.MeteredUsageConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -59,7 +61,7 @@ public class AirshipMeteredUsageTest {
             jobDispatcher = mockJobDispatcher
         )
 
-        verify(exactly = 1) { mockJobDispatcher.setRateLimit(any(), any(), any(), any()) }
+        verify(exactly = 1) { mockJobDispatcher.setRateLimit(any(), any(), any()) }
     }
 
     @Test
@@ -68,46 +70,46 @@ public class AirshipMeteredUsageTest {
 
         testConfig.updateRemoteConfig(
             RemoteConfig(
-                meteredUsageConfig = MeteredUsageConfig(false, 0, 10)
+                meteredUsageConfig = MeteredUsageConfig(false, 0.milliseconds, 10.milliseconds)
             )
         )
         verify {
             mockJobDispatcher.setRateLimit(
-                "MeteredUsage.rateLimit", 1, 10, TimeUnit.MILLISECONDS
+                "MeteredUsage.rateLimit", 1, 10.milliseconds
             )
         }
 
         testConfig.updateRemoteConfig(
             RemoteConfig(
-                meteredUsageConfig = MeteredUsageConfig(true, 15, 30)
+                meteredUsageConfig = MeteredUsageConfig(true, 15.milliseconds, 30.milliseconds)
             )
         )
         verify {
             mockJobDispatcher.setRateLimit(
-                "MeteredUsage.rateLimit", 1, 30, TimeUnit.MILLISECONDS
+                "MeteredUsage.rateLimit", 1, 30.milliseconds
             )
         }
-        verify { mockJobDispatcher.dispatch(makeJobInfo(15)) }
+        verify { mockJobDispatcher.dispatch(makeJobInfo(15.milliseconds)) }
 
         testConfig.updateRemoteConfig(
             RemoteConfig(
-                meteredUsageConfig = MeteredUsageConfig(true, 10, 20)
+                meteredUsageConfig = MeteredUsageConfig(true, 10.milliseconds, 20.milliseconds)
             )
         )
 
         verify {
             mockJobDispatcher.setRateLimit(
-                "MeteredUsage.rateLimit", 1, 20, TimeUnit.MILLISECONDS
+                "MeteredUsage.rateLimit", 1, 20.milliseconds
             )
         }
-        verify(exactly = 0) { mockJobDispatcher.dispatch(makeJobInfo(10)) }
+        verify(exactly = 0) { mockJobDispatcher.dispatch(makeJobInfo(10.milliseconds)) }
     }
 
     @Test
     public fun testAddEvent(): TestResult = runTest {
         testConfig.updateRemoteConfig(
             RemoteConfig(
-                meteredUsageConfig = MeteredUsageConfig(true, 1, 2)
+                meteredUsageConfig = MeteredUsageConfig(true, 1.milliseconds, 2.milliseconds)
             )
         )
 
@@ -127,7 +129,7 @@ public class AirshipMeteredUsageTest {
         )
 
         manager.addEvent(event)
-        verify(exactly = 1) { mockJobDispatcher.dispatch(makeJobInfo(0)) }
+        verify(exactly = 1) { mockJobDispatcher.dispatch(makeJobInfo(0.milliseconds)) }
 
         events = eventsStore.getAllEvents()
         assertEquals(1, events.size)
@@ -137,7 +139,7 @@ public class AirshipMeteredUsageTest {
 
         every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns false
         manager.addEvent(event)
-        verify(exactly = 2) { mockJobDispatcher.dispatch(makeJobInfo(0)) }
+        verify(exactly = 2) { mockJobDispatcher.dispatch(makeJobInfo(0.milliseconds)) }
 
         events = eventsStore.getAllEvents()
         assertEquals(event.eventId, events.first().eventId)
@@ -154,7 +156,7 @@ public class AirshipMeteredUsageTest {
 
         testConfig.updateRemoteConfig(
             RemoteConfig(
-                meteredUsageConfig = MeteredUsageConfig(false, 1, 2)
+                meteredUsageConfig = MeteredUsageConfig(false, 1.milliseconds, 2.milliseconds)
             )
         )
 
@@ -182,7 +184,7 @@ public class AirshipMeteredUsageTest {
 
         testConfig.updateRemoteConfig(
             RemoteConfig(
-                meteredUsageConfig = MeteredUsageConfig(true, 1, 2)
+                meteredUsageConfig = MeteredUsageConfig(true, 1.milliseconds, 2.milliseconds)
             )
         )
 
@@ -223,7 +225,7 @@ public class AirshipMeteredUsageTest {
 
         testConfig.updateRemoteConfig(
             RemoteConfig(
-                meteredUsageConfig = MeteredUsageConfig(true, 1, 2)
+                meteredUsageConfig = MeteredUsageConfig(true, 1.milliseconds, 2.milliseconds)
             )
         )
 
@@ -244,7 +246,7 @@ public class AirshipMeteredUsageTest {
     public fun testPerformJobUploadsEvents(): TestResult = runTest {
         testConfig.updateRemoteConfig(
             RemoteConfig(
-                meteredUsageConfig = MeteredUsageConfig(true, 1, 2)
+                meteredUsageConfig = MeteredUsageConfig(true, 1.milliseconds, 2.milliseconds)
             )
         )
 
@@ -278,7 +280,7 @@ public class AirshipMeteredUsageTest {
     public fun testPerformJobStripsEventInfo(): TestResult = runTest {
         testConfig.updateRemoteConfig(
             RemoteConfig(
-                meteredUsageConfig = MeteredUsageConfig(true, 1, 2)
+                meteredUsageConfig = MeteredUsageConfig(true, 1.milliseconds, 2.milliseconds)
             )
         )
 
@@ -312,7 +314,7 @@ public class AirshipMeteredUsageTest {
     public fun testPerformJobKeepsEventsOnFailure(): TestResult = runTest {
         testConfig.updateRemoteConfig(
             RemoteConfig(
-                meteredUsageConfig = MeteredUsageConfig(true, 1, 2)
+                meteredUsageConfig = MeteredUsageConfig(true, 1.milliseconds, 2.milliseconds)
             )
         )
 
@@ -343,15 +345,15 @@ public class AirshipMeteredUsageTest {
     }
 
     private fun makeJobInfo(
-        delay: Long = 0,
+        delay: Duration = 0.milliseconds,
         jobId: String = "MeteredUsage.upload"
     ): JobInfo {
         return JobInfo.newBuilder()
             .setAirshipComponent(AirshipMeteredUsage::class.java)
             .setAction(jobId)
-            .setConflictStrategy(JobInfo.KEEP)
+            .setConflictStrategy(JobInfo.ConflictStrategy.KEEP)
             .setNetworkAccessRequired(true)
-            .setMinDelay(delay, TimeUnit.MILLISECONDS)
+            .setMinDelay(delay)
             .build()
     }
 }

@@ -16,7 +16,6 @@ import com.urbanairship.TestAirshipRuntimeConfig;
 import com.urbanairship.TestApplication;
 import com.urbanairship.UAirship;
 import com.urbanairship.analytics.Analytics;
-import com.urbanairship.base.Extender;
 import com.urbanairship.base.Supplier;
 import com.urbanairship.channel.AirshipChannel;
 import com.urbanairship.channel.ChannelRegistrationPayload;
@@ -29,7 +28,6 @@ import com.urbanairship.permission.PermissionStatus;
 import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.notifications.NotificationActionButtonGroup;
 
-import junit.framework.Assert;
 import junit.framework.TestCase;
 
 import org.junit.Before;
@@ -90,7 +88,7 @@ public class PushManagerTest extends BaseTestCase {
     @Before
     public void setup() {
 
-        preferenceDataStore = TestApplication.getApplication().preferenceDataStore;
+        preferenceDataStore = TestApplication.getApplication().getPreferenceDataStore();
         privacyManager = new PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL);
         when(mockPushProvider.getDeliveryType()).thenReturn("some type");
         when(mockPushProviders.getBestProvider(anyInt())).thenReturn(mockPushProvider);

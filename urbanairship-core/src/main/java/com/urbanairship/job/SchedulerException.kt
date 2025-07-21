@@ -1,15 +1,14 @@
 /* Copyright Airship and Contributors */
+package com.urbanairship.job
 
-package com.urbanairship.job;
-
-import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo
 
 /**
  * Exceptions thrown by the Schedulers.
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class SchedulerException extends Exception {
+public class SchedulerException : Exception {
 
     /**
      * Default constructor.
@@ -17,17 +16,12 @@ public class SchedulerException extends Exception {
      * @param message The exception message.
      * @param e The root exception.
      */
-    SchedulerException(String message, Exception e) {
-        super(message, e);
-    }
+    internal constructor(message: String?, e: Exception?) : super(message, e)
 
     /**
      * Creates a scheduler exception for the given message.
      *
      * @param message The exception message.
      */
-    SchedulerException(String message) {
-        super(message);
-    }
-
+    internal constructor(message: String?) : super(message)
 }

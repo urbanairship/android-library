@@ -47,7 +47,7 @@ public class RemoteDataRefreshManagerTest {
             .setAction(RemoteData.ACTION_REFRESH)
             .setNetworkAccessRequired(true)
             .setAirshipComponent(RemoteData::class.java)
-            .setConflictStrategy(JobInfo.REPLACE)
+            .setConflictStrategy(JobInfo.ConflictStrategy.REPLACE)
             .build()
 
         remoteDataRefreshManager.dispatchRefreshJob()

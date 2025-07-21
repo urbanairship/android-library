@@ -77,7 +77,8 @@ public class AirshipChannel internal constructor(
     private val scope = CoroutineScope(updateDispatcher + SupervisorJob())
     private val channelRegistrationPayloadExtenders: MutableList<Extender> = CopyOnWriteArrayList()
 
-    internal constructor(
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public constructor(
         context: Context,
         dataStore: PreferenceDataStore,
         runtimeConfig: AirshipRuntimeConfig,
@@ -257,7 +258,7 @@ public class AirshipChannel internal constructor(
             }
 
             if (registrationResult == RegistrationResult.NEEDS_UPDATE || channelManager.hasPending) {
-                dispatchUpdateJob(conflictStrategy = JobInfo.REPLACE)
+                dispatchUpdateJob(conflictStrategy = ConflictStrategy.REPLACE)
             }
 
             JobResult.SUCCESS
@@ -495,12 +496,10 @@ public class AirshipChannel internal constructor(
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun updateRegistration() {
-        dispatchUpdateJob(JobInfo.KEEP)
+        dispatchUpdateJob(ConflictStrategy.KEEP)
     }
 
-    private fun dispatchUpdateJob(
-        @ConflictStrategy conflictStrategy: Int
-    ) {
+    private fun dispatchUpdateJob(conflictStrategy: ConflictStrategy) {
         if (!isRegistrationAllowed || !runtimeConfig.isDeviceUrlAvailable) {
             return
         }

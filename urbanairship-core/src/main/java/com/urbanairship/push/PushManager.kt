@@ -313,7 +313,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         val jobInfo: JobInfo = JobInfo.newBuilder()
             .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
             .setAirshipComponent(PushManager::class.java)
-            .setConflictStrategy(JobInfo.REPLACE)
+            .setConflictStrategy(JobInfo.ConflictStrategy.REPLACE)
             .build()
 
         jobDispatcher.dispatch(jobInfo)

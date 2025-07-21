@@ -396,7 +396,7 @@ class IncomingPushRunnable implements Runnable {
     private void reschedulePush(@NonNull PushMessage message) {
         JobInfo jobInfo = JobInfo.newBuilder()
                                  .setAction(PushManager.ACTION_DISPLAY_NOTIFICATION)
-                                 .setConflictStrategy(JobInfo.APPEND)
+                                 .setConflictStrategy(JobInfo.ConflictStrategy.APPEND)
                                  .setAirshipComponent(PushManager.class)
                                  .setExtras(JsonMap.newBuilder()
                                                    .putOpt(EXTRA_PUSH, message)

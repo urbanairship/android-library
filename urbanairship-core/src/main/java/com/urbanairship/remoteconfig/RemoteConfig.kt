@@ -11,6 +11,8 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import kotlin.jvm.Throws
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -147,14 +149,14 @@ public data class ContactConfig @JvmOverloads constructor(
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class MeteredUsageConfig internal constructor(
     public val isEnabled: Boolean,
-    public val initialDelayMs: Long,
-    public val intervalMs: Long
+    public val initialDelay: Duration,
+    public val interval: Duration
 ) : JsonSerializable {
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
         IS_ENABLED_KEY to isEnabled,
-        INITIAL_DELAY_MS_KEY to initialDelayMs,
-        INTERVAL_MS_KEY to intervalMs
+        INITIAL_DELAY_MS_KEY to initialDelay.inWholeMilliseconds,
+        INTERVAL_MS_KEY to interval.inWholeMilliseconds
     ).toJsonValue()
 
     /** @hide */
@@ -164,14 +166,14 @@ public data class MeteredUsageConfig internal constructor(
         private const val INITIAL_DELAY_MS_KEY = "initial_delay_ms"
         private const val INTERVAL_MS_KEY = "interval_ms"
 
-        private const val DEFAULT_INITIAL_DELAY = 15L
-        private const val DEFAULT_INTERVAL = 30L
+        private val DEFAULT_INITIAL_DELAY = 15.milliseconds
+        private val DEFAULT_INTERVAL = 30.milliseconds
 
         @JvmStatic
         public fun fromJson(json: JsonMap): MeteredUsageConfig = MeteredUsageConfig(
             isEnabled = json.optionalField(IS_ENABLED_KEY) ?: false,
-            initialDelayMs = json.optionalField(INITIAL_DELAY_MS_KEY) ?: DEFAULT_INITIAL_DELAY,
-            intervalMs = json.optionalField(INTERVAL_MS_KEY) ?: DEFAULT_INTERVAL
+            initialDelay = json.optionalField<Long>(INITIAL_DELAY_MS_KEY)?.milliseconds ?: DEFAULT_INITIAL_DELAY,
+            interval = json.optionalField<Long>(INTERVAL_MS_KEY)?.milliseconds ?: DEFAULT_INTERVAL,
         )
 
         @JvmStatic

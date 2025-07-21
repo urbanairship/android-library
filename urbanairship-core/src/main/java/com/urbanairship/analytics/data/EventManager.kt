@@ -68,23 +68,23 @@ public class EventManager @VisibleForTesting internal constructor(
      * @param timeUnit The time unit of the delay.
      */
     public fun scheduleEventUpload(delay: Duration) {
-        var milliseconds = delay.inWholeMilliseconds
+        var milliseconds = delay
 
         UALog.v("Requesting to schedule event upload with delay $delay")
 
-        var conflictStrategy = JobInfo.REPLACE
+        var conflictStrategy = JobInfo.ConflictStrategy.REPLACE
 
         isScheduled.update { current ->
             // If its currently scheduled at an earlier time then skip rescheduling
             if (current) {
                 val previousScheduledTime = preferenceDataStore.getLong(SCHEDULED_SEND_TIME, 0)
                 val currentDelay = max(
-                    (clock.currentTimeMillis() - previousScheduledTime).toDouble(), 0.0
-                ).toLong()
+                    (clock.currentTimeMillis() - previousScheduledTime), 0
+                ).milliseconds
 
                 if (currentDelay < milliseconds) {
                     UALog.v("Event upload already scheduled for an earlier time.")
-                    conflictStrategy = JobInfo.KEEP
+                    conflictStrategy = JobInfo.ConflictStrategy.KEEP
                     milliseconds = currentDelay
                 }
             }
@@ -94,13 +94,13 @@ public class EventManager @VisibleForTesting internal constructor(
                 .setAction(ACTION_SEND)
                 .setNetworkAccessRequired(true)
                 .setAirshipComponent(Analytics::class.java)
-                .setMinDelay(milliseconds, TimeUnit.MILLISECONDS)
+                .setMinDelay(milliseconds)
                 .setConflictStrategy(conflictStrategy)
                 .build()
 
             jobDispatcher.dispatch(jobInfo)
 
-            preferenceDataStore.put(SCHEDULED_SEND_TIME, clock.currentTimeMillis() + milliseconds)
+            preferenceDataStore.put(SCHEDULED_SEND_TIME, clock.currentTimeMillis() + milliseconds.inWholeMilliseconds)
             true
         }
     }

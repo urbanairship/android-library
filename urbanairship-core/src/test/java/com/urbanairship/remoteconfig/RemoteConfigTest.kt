@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PrivacyManager
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -67,8 +68,8 @@ public class RemoteConfigTest {
             ),
             meteredUsageConfig = MeteredUsageConfig(
                 isEnabled = true,
-                initialDelayMs = 100,
-                intervalMs = 200
+                initialDelay = 100.milliseconds,
+                interval = 200.milliseconds
             ),
             contactConfig = ContactConfig(
                 foregroundIntervalMs = 400,

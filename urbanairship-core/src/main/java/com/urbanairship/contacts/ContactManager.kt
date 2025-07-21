@@ -30,6 +30,8 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -206,8 +208,8 @@ internal class ContactManager(
             stableContactIdUpdate().contactId
         }
 
-        jobDispatcher.setRateLimit(IDENTITY_RATE_LIMIT, 1, 5, TimeUnit.SECONDS)
-        jobDispatcher.setRateLimit(UPDATE_RATE_LIMIT, 1, 500, TimeUnit.MILLISECONDS)
+        jobDispatcher.setRateLimit(IDENTITY_RATE_LIMIT, 1, 5.seconds)
+        jobDispatcher.setRateLimit(UPDATE_RATE_LIMIT, 1, 500.milliseconds)
 
         yieldContactUpdates()
 
@@ -321,7 +323,7 @@ internal class ContactManager(
                     val identifiers = nextOperationGroup.operations.map { it.identifier }
                     operations = operations.filter { !identifiers.contains(it.identifier) }
                     if (operations.isNotEmpty()) {
-                        dispatchContactUpdateJob(JobInfo.REPLACE)
+                        dispatchContactUpdateJob(ConflictStrategy.REPLACE)
                     }
                 }
                 true
@@ -333,7 +335,7 @@ internal class ContactManager(
         }
     }
 
-    private fun dispatchContactUpdateJob(@ConflictStrategy conflictStrategy: Int = JobInfo.KEEP) {
+    private fun dispatchContactUpdateJob(conflictStrategy: ConflictStrategy = ConflictStrategy.KEEP) {
         if (channel.id.isNullOrEmpty()) {
             return
         }
@@ -352,7 +354,7 @@ internal class ContactManager(
             .setConflictStrategy(conflictStrategy).addRateLimit(UPDATE_RATE_LIMIT)
 
         val next = operations.firstOrNull { !isSkippable(it.operation) }?.operation
-        if (next is ContactOperation.Reset || next is ContactOperation.Resolve || next is ContactOperation.Reset) {
+        if (next is ContactOperation.Reset || next is ContactOperation.Resolve) {
             builder.addRateLimit(IDENTITY_RATE_LIMIT)
         }
 

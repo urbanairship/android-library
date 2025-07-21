@@ -52,7 +52,10 @@ import kotlinx.coroutines.flow.update
 /**
  * This class is the primary interface to the Airship Analytics API.
  */
-public class Analytics @VisibleForTesting public constructor(
+public class Analytics
+@VisibleForTesting
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     private val runtimeConfig: AirshipRuntimeConfig,
@@ -183,7 +186,8 @@ public class Analytics @VisibleForTesting public constructor(
 
     private val sdkExtensions: MutableList<String> = ArrayList()
 
-    internal constructor(
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public constructor(
         context: Context,
         dataStore: PreferenceDataStore,
         runtimeConfig: AirshipRuntimeConfig,

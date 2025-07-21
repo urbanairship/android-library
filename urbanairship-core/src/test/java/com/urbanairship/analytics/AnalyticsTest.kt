@@ -54,7 +54,7 @@ public class AnalyticsTest {
     private val mockPermissionsManager: PermissionsManager = mockk(relaxed = true)
     private val mockEventFeed: AirshipEventFeed = mockk(relaxed = true)
 
-    private val dataStore = TestApplication.getApplication().preferenceDataStore
+    private val dataStore = TestApplication.getApplication().getPreferenceDataStore()
     private val localeManager = LocaleManager(context, dataStore)
     private val executor = Executor { obj: Runnable -> obj.run() }
     private val runtimeConfig = TestAirshipRuntimeConfig()

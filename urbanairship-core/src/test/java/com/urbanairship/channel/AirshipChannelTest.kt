@@ -94,14 +94,14 @@ public class AirshipChannelTest {
         .setAction("ACTION_UPDATE_CHANNEL")
         .setNetworkAccessRequired(true)
         .setAirshipComponent(AirshipChannel::class.java)
-        .setConflictStrategy(JobInfo.REPLACE)
+        .setConflictStrategy(JobInfo.ConflictStrategy.REPLACE)
         .build()
 
     private val keepJob = JobInfo.newBuilder()
         .setAction("ACTION_UPDATE_CHANNEL")
         .setNetworkAccessRequired(true)
         .setAirshipComponent(AirshipChannel::class.java)
-        .setConflictStrategy(JobInfo.KEEP)
+        .setConflictStrategy(JobInfo.ConflictStrategy.KEEP)
         .build()
 
     private val channel = AirshipChannel(

@@ -334,10 +334,10 @@ internal fun JobDispatcher.scheduleInboxUpdateJob(reason: Inbox.UpdateType) {
             when(reason) {
                 Inbox.UpdateType.BEST_ATTEMPT ->
                     it.setNetworkAccessRequired(true)
-                        .setConflictStrategy(JobInfo.KEEP)
+                        .setConflictStrategy(JobInfo.ConflictStrategy.KEEP)
 
                 Inbox.UpdateType.REQUIRED ->
-                    it.setConflictStrategy(JobInfo.REPLACE)
+                    it.setConflictStrategy(JobInfo.ConflictStrategy.REPLACE)
             }
         }
         .build()

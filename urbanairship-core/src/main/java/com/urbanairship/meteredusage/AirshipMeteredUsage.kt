@@ -18,8 +18,9 @@ import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.remoteconfig.MeteredUsageConfig
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicReference
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -48,7 +49,7 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
     private val usageConfig: AtomicReference<MeteredUsageConfig> = AtomicReference(MeteredUsageConfig.DEFAULT)
 
     init {
-        jobDispatcher.setRateLimit(RATE_LIMIT_ID, 1, MeteredUsageConfig.DEFAULT.intervalMs, TimeUnit.MILLISECONDS)
+        jobDispatcher.setRateLimit(RATE_LIMIT_ID, 1, MeteredUsageConfig.DEFAULT.interval)
 
         config.addConfigListener {
             updateConfig()
@@ -63,14 +64,14 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
             return
         }
 
-        jobDispatcher.setRateLimit(RATE_LIMIT_ID, 1, config.intervalMs, TimeUnit.MILLISECONDS)
+        jobDispatcher.setRateLimit(RATE_LIMIT_ID, 1, config.interval)
 
         if (!old.isEnabled && config.isEnabled) {
-            scheduleUpload(config.initialDelayMs)
+            scheduleUpload(config.initialDelay)
         }
     }
 
-    private fun scheduleUpload(delay: Long) {
+    private fun scheduleUpload(delay: Duration) {
         if (!usageConfig.get().isEnabled) {
             return
         }
@@ -78,9 +79,9 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
         jobDispatcher.dispatch(JobInfo.newBuilder()
             .setAirshipComponent(AirshipMeteredUsage::class.java)
             .setAction(WORK_ID)
-            .setConflictStrategy(JobInfo.KEEP)
+            .setConflictStrategy(JobInfo.ConflictStrategy.KEEP)
             .setNetworkAccessRequired(true)
-            .setMinDelay(delay, TimeUnit.MILLISECONDS)
+            .setMinDelay(delay)
             .build()
         )
     }
@@ -101,7 +102,7 @@ public class AirshipMeteredUsage @JvmOverloads internal constructor(
         }
 
         store.addEvent(eventToStore)
-        scheduleUpload(delay = 0)
+        scheduleUpload(delay = 0.seconds)
     }
 
     override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {

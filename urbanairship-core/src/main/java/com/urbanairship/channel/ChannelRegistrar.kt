@@ -3,6 +3,7 @@
 package com.urbanairship.channel
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
@@ -58,7 +59,8 @@ public sealed class ChannelGenerationMethod {
         }
 }
 
-internal class ChannelRegistrar(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class ChannelRegistrar(
     private val dataStore: PreferenceDataStore,
     private val channelApiClient: ChannelApiClient,
     private val activityMonitor: ActivityMonitor,
@@ -66,7 +68,7 @@ internal class ChannelRegistrar(
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val privacyManager: PrivacyManager
 ) {
-    constructor(
+    public constructor(
         context: Context,
         dataStore: PreferenceDataStore,
         runtimeConfig: AirshipRuntimeConfig,
@@ -79,10 +81,10 @@ internal class ChannelRegistrar(
         privacyManager = privacyManager
     )
 
-    var payloadBuilder: (suspend () -> ChannelRegistrationPayload)? = null
+    internal var payloadBuilder: (suspend () -> ChannelRegistrationPayload)? = null
 
     private val _channelIdFlow: MutableStateFlow<String?> = MutableStateFlow(this.channelId)
-    val channelIdFlow: StateFlow<String?> = _channelIdFlow.asStateFlow()
+    internal val channelIdFlow: StateFlow<String?> = _channelIdFlow.asStateFlow()
 
     internal var channelId: String?
         get() = dataStore.getString(CHANNEL_ID_KEY, null)

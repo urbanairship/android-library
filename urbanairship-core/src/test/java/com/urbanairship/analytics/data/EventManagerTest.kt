@@ -18,6 +18,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import java.net.HttpURLConnection
+import kotlin.time.Duration.Companion.seconds
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -35,7 +36,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
     private val clock = TestClock()
 
     private val testAirshipRuntimeConfig = TestAirshipRuntimeConfig()
-    private val dataStore: PreferenceDataStore = TestApplication.getApplication().preferenceDataStore
+    private val dataStore: PreferenceDataStore = TestApplication.getApplication().getPreferenceDataStore()
 
     private val eventManager: EventManager = EventManager(
         preferenceDataStore = dataStore,
@@ -66,7 +67,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
             val info: JobInfo = firstArg()
 
             assertEquals(EventManager.ACTION_SEND, info.action)
-            assertEquals(10000L, info.minDelayMs)
+            assertEquals(10.seconds, info.minDelay)
         }
 
         eventManager.addEvent(testEvent, Event.Priority.NORMAL)
@@ -92,7 +93,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         every { mockDispatcher.dispatch(any()) } answers {
             val info: JobInfo = firstArg()
             assertEquals(EventManager.ACTION_SEND, info.action)
-            assertEquals(20000L, info.minDelayMs)
+            assertEquals(20.seconds, info.minDelay)
         }
 
         eventManager.addEvent(testEvent, Event.Priority.NORMAL)
@@ -223,7 +224,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         every { mockDispatcher.dispatch(any()) } answers {
             val info: JobInfo = firstArg()
             assertEquals(EventManager.ACTION_SEND, info.action)
-            assertEquals(0L, info.minDelayMs)
+            assertEquals(0.seconds, info.minDelay)
         }
 
         eventManager.addEvent(testEvent, Event.Priority.HIGH)

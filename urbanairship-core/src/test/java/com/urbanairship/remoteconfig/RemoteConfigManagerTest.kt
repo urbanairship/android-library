@@ -14,6 +14,7 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -42,7 +43,7 @@ public class RemoteConfigManagerTest : BaseTestCase() {
     }
 
     private var privacyManager: PrivacyManager = PrivacyManager(
-        TestApplication.getApplication().preferenceDataStore,
+        TestApplication.getApplication().getPreferenceDataStore(),
         PrivacyManager.Feature.ALL
     )
 
@@ -91,7 +92,7 @@ public class RemoteConfigManagerTest : BaseTestCase() {
     public fun testRemoteConfig(): TestResult = runTest {
         val commonRemoteConfig = RemoteConfig(
             meteredUsageConfig = MeteredUsageConfig(
-                true, 10, 100
+                true, 10.milliseconds, 100.milliseconds
             ),
             contactConfig = ContactConfig(
                 10, 100
