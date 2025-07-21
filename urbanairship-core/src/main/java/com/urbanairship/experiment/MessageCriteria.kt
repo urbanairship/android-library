@@ -46,7 +46,7 @@ internal data class MessageCriteria(
 
     fun evaluate(info: MessageInfo): Boolean {
         val messageType = messageTypePredicate?.apply(JsonValue.wrap(info.messageType)) ?: false
-        val campaigns = campaignPredicate?.apply(info.campaigns) ?: false
+        val campaigns = campaignPredicate?.apply(info.campaigns ?: JsonValue.NULL) ?: false
 
         return messageType || campaigns
     }

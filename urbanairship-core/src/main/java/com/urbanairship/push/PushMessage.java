@@ -487,7 +487,7 @@ public class PushMessage implements Parcelable, JsonSerializable {
         try {
             JsonMap actionsJson = JsonValue.parseString(actionsPayload).getMap();
             if (actionsJson != null) {
-                for (Map.Entry<String, JsonValue> entry : actionsJson) {
+                for (Map.Entry<? extends String, ? extends JsonValue> entry : actionsJson) {
                     actions.put(entry.getKey(), new ActionValue(entry.getValue()));
                 }
             }

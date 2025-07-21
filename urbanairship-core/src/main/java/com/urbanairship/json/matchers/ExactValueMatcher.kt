@@ -1,7 +1,6 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.json.matchers
 
-import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
 import com.urbanairship.json.jsonMapOf
@@ -11,20 +10,15 @@ import com.urbanairship.json.jsonMapOf
  *
  * @hide
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class ExactValueMatcher
-/**
- * Default constructor.
- *
- * @param expected The expected value.
- */
-public constructor(private val expected: JsonValue) : ValueMatcher() {
+internal class ExactValueMatcher(
+    private val expected: JsonValue
+) : ValueMatcher() {
 
     override fun toJsonValue(): JsonValue  = jsonMapOf(
         EQUALS_VALUE_KEY to expected
     ).toJsonValue()
 
-    protected override fun apply(value: JsonValue, ignoreCase: Boolean): Boolean {
+    override fun apply(value: JsonValue, ignoreCase: Boolean): Boolean {
         return if (ignoreCase) {
             equalsIgnoreCase(value, expected)
         } else {
@@ -96,7 +90,7 @@ public constructor(private val expected: JsonValue) : ValueMatcher() {
         return expected.hashCode()
     }
 
-    public companion object {
-        public const val EQUALS_VALUE_KEY: String = "equals"
+    companion object {
+        const val EQUALS_VALUE_KEY: String = "equals"
     }
 }

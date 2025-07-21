@@ -1,14 +1,10 @@
 /* Copyright Airship and Contributors */
-
-package com.urbanairship.json;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+package com.urbanairship.json
 
 /**
  * Thrown when a JsonValue is unable to wrap an object or unable to parse a JSON encoded String.
  */
-public class JsonException extends Exception {
+public class JsonException : Exception {
 
     /**
      * Constructs a new JsonException with the current stack trace and the
@@ -16,9 +12,7 @@ public class JsonException extends Exception {
      *
      * @param message The detail message for this exception.
      */
-    public JsonException(@NonNull String message) {
-        super(message);
-    }
+    public constructor(message: String) : super(message)
 
     /**
      * Constructs a new JsonException with the current stack trace, the
@@ -27,8 +21,5 @@ public class JsonException extends Exception {
      * @param message The detail message for this exception.
      * @param cause The cause of this exception.
      */
-    public JsonException(@NonNull String message, @Nullable Throwable cause) {
-        super(message, cause);
-    }
-
+    public constructor(message: String, cause: Throwable?) : super(message, cause)
 }

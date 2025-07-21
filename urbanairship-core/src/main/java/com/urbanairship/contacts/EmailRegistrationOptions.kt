@@ -92,7 +92,7 @@ public class EmailRegistrationOptions private constructor(
             val map = value.optMap()
             val commercialOptedIn = map.opt(COMMERCIAL_OPTED_IN_KEY).getLong(-1)
             val transactionalOptedIn = map.opt(TRANSACTIONAL_OPTED_IN_KEY).getLong(-1)
-            val properties = map.opt(PROPERTIES_KEY).getMap()
+            val properties = map.opt(PROPERTIES_KEY).map
             val doubleOptIn = map.opt(DOUBLE_OPT_IN_KEY).getBoolean(false)
             return EmailRegistrationOptions(
                 transactionalOptedIn,

@@ -1,26 +1,21 @@
 package com.urbanairship.json.matchers
 
-import androidx.annotation.RestrictTo
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
+import com.urbanairship.json.jsonMapOf
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class ArrayLengthMatcher(
+internal class ArrayLengthMatcher(
     private val predicate: JsonPredicate
 ) : ValueMatcher() {
 
-    public companion object {
-        public const val ARRAY_LENGTH_KEY: String = "array_length"
+    companion object {
+        const val ARRAY_LENGTH_KEY: String = "array_length"
     }
 
-    override fun toJsonValue(): JsonValue {
-        return JsonMap.newBuilder()
-            .putOpt(ARRAY_LENGTH_KEY, predicate)
-            .build()
-            .toJsonValue()
-    }
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        ARRAY_LENGTH_KEY to predicate
+    ).toJsonValue()
 
     override fun apply(jsonValue: JsonValue, ignoreCase: Boolean): Boolean {
         if (!jsonValue.isJsonList) {

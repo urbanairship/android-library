@@ -6,6 +6,7 @@ import com.urbanairship.TestRequestSession
 import com.urbanairship.UAirship
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.toSuspendingRequestSession
+import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
@@ -109,6 +110,6 @@ public class MeteredUsageApiClientTest {
                     "usage_type" to "iax_impression",
                 ),
             )
-        ).toString(), request.body?.content)
+        ).toString(sortKeys = true), JsonValue.parseString(request.body?.content).toString(true))
     }
 }

@@ -871,7 +871,7 @@ public open class PushManager @VisibleForTesting internal constructor(
                 UALog.d(e, "Unable to parse canonical Ids.")
             }
 
-            var canonicalIds: MutableList<JsonValue?> = jsonList?.list ?: ArrayList()
+            var canonicalIds: MutableList<JsonValue> = jsonList?.list?.toMutableList() ?: mutableListOf()
 
             // Wrap the canonicalId
             val id: JsonValue = JsonValue.wrap(canonicalId)

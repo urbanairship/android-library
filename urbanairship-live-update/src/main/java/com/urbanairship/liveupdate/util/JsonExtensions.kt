@@ -24,7 +24,7 @@ internal fun List<JsonSerializable>.toJsonList(): JsonList = JsonList(this.map {
 internal val JsonList.isNotEmpty: Boolean
     get() = !isEmpty
 
-internal fun Map<String, JsonValue?>.toJsonMap(): JsonMap = JsonMap(this)
+internal fun Map<String, JsonValue>.toJsonMap(): JsonMap = JsonMap(this)
 
 /**
  * Gets the field with the given [key] from the [JsonMap], ensuring it is non-null.

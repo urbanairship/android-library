@@ -55,7 +55,7 @@ public class MessageTest {
     @Throws(JsonException::class)
     public fun testMessageExpiry() {
         // Add expiry
-        val map = JsonValue.parseString(MCRAP_MESSAGE).requireMap().map
+        val map = JsonValue.parseString(MCRAP_MESSAGE).requireMap().map.toMutableMap()
         map["message_expiry"] = JsonValue.wrap(DateUtils.createIso8601TimeStamp(10000L))
         val message = requireNotNull(
             Message.create(JsonValue.wrap(map), true, false)
@@ -71,7 +71,7 @@ public class MessageTest {
     @Test
     @Throws(JsonException::class)
     public fun testMessageMissingSentDate() {
-        val map = JsonValue.parseString(MCRAP_MESSAGE).requireMap().map
+        val map = JsonValue.parseString(MCRAP_MESSAGE).requireMap().map.toMutableMap()
 
         // remove sent date
         map.remove("message_sent")

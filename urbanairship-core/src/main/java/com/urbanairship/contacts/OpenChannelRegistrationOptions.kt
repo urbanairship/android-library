@@ -63,7 +63,7 @@ public class OpenChannelRegistrationOptions private constructor(
         @Throws(JsonException::class)
         internal fun fromJson(value: JsonValue): OpenChannelRegistrationOptions {
             val platformName = value.optMap().opt(PLATFORM_NAME_KEY).requireString()
-            val identifiersJson = value.optMap().opt(IDENTIFIERS_KEY).getMap()
+            val identifiersJson = value.optMap().opt(IDENTIFIERS_KEY).map
             var parsedIdentifiers: MutableMap<String, String>? = null
             if (identifiersJson != null) {
                 parsedIdentifiers = HashMap()

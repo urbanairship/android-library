@@ -294,7 +294,7 @@ class NotificationIntentProcessor {
         try {
             JsonMap actionsJson = JsonValue.parseString(payload).getMap();
             if (actionsJson != null) {
-                for (Map.Entry<String, JsonValue> entry : actionsJson) {
+                for (Map.Entry<? extends String, ? extends JsonValue> entry : actionsJson) {
                     actionValueMap.put(entry.getKey(), new ActionValue(entry.getValue()));
                 }
             }
