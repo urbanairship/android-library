@@ -30,6 +30,7 @@ import io.mockk.runs
 import io.mockk.verify
 import java.util.Locale
 import java.util.UUID
+import io.mockk.clearMocks
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -41,8 +42,11 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.reset
 import org.robolectric.RobolectricTestRunner
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -109,11 +113,21 @@ public class RemoteDataTest {
         coroutineDispatcher = testDispatcher
     )
 
+    @Before
+    public fun verifyStartupTask() {
+        remoteData.onAirshipReady(mock())
+        coVerify {
+            mockRefreshManager.performRefresh(
+                any(), any(), any()
+            )
+        }
+    }
+
     @Test
     public fun testConfigChangeDispatchesUpdate(): TestResult = runTest {
         every { mockContactRemoteDataProvider.isEnabled } returns false
 
-        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 0) { mockRefreshManager.dispatchRefreshJob() }
         config.updateRemoteConfig(
             RemoteConfig(
                 airshipConfig = RemoteAirshipConfig(
@@ -122,7 +136,7 @@ public class RemoteDataTest {
             )
         )
         testDispatcher.scheduler.advanceUntilIdle()
-        verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
     }
 
     @Test
@@ -141,62 +155,62 @@ public class RemoteDataTest {
     @Test
     public fun testPrivacyManagerChangesDispatchesUpdate(): TestResult = runTest {
         privacyManager.setEnabledFeatures(PrivacyManager.Feature.NONE)
-        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 0) { mockRefreshManager.dispatchRefreshJob() }
         privacyManager.setEnabledFeatures(PrivacyManager.Feature.ANALYTICS)
         testDispatcher.scheduler.advanceUntilIdle()
-        verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
     }
 
     @Test
     public fun testLocalChangeDispatchesUpdate(): TestResult = runTest {
-        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 0) { mockRefreshManager.dispatchRefreshJob() }
         localListener.forEach { it.onLocaleChanged(Locale.CANADA_FRENCH) }
         testDispatcher.scheduler.advanceUntilIdle()
-        verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
     }
 
     @Test
     public fun testContactIDChangesDispatchesUpdate(): TestResult = runTest {
-        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 0) { mockRefreshManager.dispatchRefreshJob() }
         contactIdUpdates.emit(ContactIdUpdate("some contact", null, false, 0))
         testDispatcher.scheduler.advanceUntilIdle()
-        verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
     }
 
     @Test
     public fun testRemoteDataPushDispatchesUpdates(): TestResult = runTest {
-        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 0) { mockRefreshManager.dispatchRefreshJob() }
         val mockPush = mockk<PushMessage> {
             every { this@mockk.isRemoteDataUpdate } returns true
         }
         pushListeners.forEach { it.onPushReceived(mockPush, false) }
         testDispatcher.scheduler.advanceUntilIdle()
-        verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
     }
 
     @Test
     public fun testForegroundDispatchesEveryInterval(): TestResult = runTest {
-        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 0) { mockRefreshManager.dispatchRefreshJob() }
         testActivityMonitor.foreground()
         testDispatcher.scheduler.advanceUntilIdle()
-        verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
 
         testActivityMonitor.background()
         testActivityMonitor.foreground()
         testDispatcher.scheduler.advanceUntilIdle()
-        verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
 
         testClock.currentTimeMillis += remoteData.getRefreshInterval() - 1
         testActivityMonitor.background()
         testActivityMonitor.foreground()
         testDispatcher.scheduler.advanceUntilIdle()
-        verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
 
         testClock.currentTimeMillis += 1
         testActivityMonitor.background()
         testActivityMonitor.foreground()
         testDispatcher.scheduler.advanceUntilIdle()
-        verify(exactly = 3) { mockRefreshManager.dispatchRefreshJob() }
+        verify(exactly = 2) { mockRefreshManager.dispatchRefreshJob() }
     }
 
     @Test
@@ -382,7 +396,7 @@ public class RemoteDataTest {
         privacyManager.setEnabledFeatures(PrivacyManager.Feature.ANALYTICS)
         assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(mockk(), jobInfo))
 
-        coVerify(exactly = 2) { mockRefreshManager.performRefresh(any(), any(), any()) }
+        coVerify(exactly = 3) { mockRefreshManager.performRefresh(any(), any(), any()) }
     }
 
     @Test
