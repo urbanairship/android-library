@@ -48,7 +48,7 @@ public class EnableFeatureActionTest {
         assertTrue(args.fallbackSystemSettings)
 
         action.onStart(arguments)
-        verify(exactly = 1) { mockLocation.setBackgroundLocationAllowed(true) }
+        verify(exactly = 1) { mockLocation.isBackgroundLocationAllowed = true }
     }
 
     @Test

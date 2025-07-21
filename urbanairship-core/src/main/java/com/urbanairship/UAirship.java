@@ -776,7 +776,7 @@ public class UAirship {
         // Location
         LocationModule locationModule = Modules.location(application, preferenceDataStore, privacyManager, channel, permissionsManager);
         processModule(locationModule);
-        this.locationClient = locationModule == null ? null : locationModule.getLocationClient();
+        this.locationClient = locationModule == null ? null : locationModule.locationClient;
 
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
@@ -808,7 +808,7 @@ public class UAirship {
 
     private void processModule(@Nullable Module module) {
         if (module != null) {
-            components.addAll(module.getComponents());
+            components.addAll(module.components);
             module.registerActions(application, getActionRegistry());
         }
     }
