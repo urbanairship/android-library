@@ -25,11 +25,9 @@ android {
 
 dependencies {
     api project(':urbanairship-core')
-    implementation project(':urbanairship-ads-identifier')
     implementation project(':urbanairship-automation')
     implementation project(':urbanairship-message-center')
     implementation project(':urbanairship-preference-center')
-    implementation project(':urbanairship-preference')
     implementation project(':urbanairship-feature-flag')
 
     // Kotlin
@@ -47,6 +45,8 @@ dependencies {
     debugImplementation(libs.compose.ui.tooling)
 
     // AndroidX
+    implementation(libs.androidx.fragment.fragmentktx)
+
     implementation(libs.androidx.corektx)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.lifecycle.runtimektx)

@@ -15,14 +15,11 @@ import com.urbanairship.channel.ChannelRegistrar
 import com.urbanairship.contacts.Contact
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobDispatcher.Companion.setInstance
-import com.urbanairship.job.JobInfo
 import com.urbanairship.locale.LocaleManager
-import com.urbanairship.modules.location.AirshipLocationClient
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.push.PushManager
 import com.urbanairship.util.PlatformUtils
 import java.lang.reflect.Method
-import kotlin.time.Duration
 import org.robolectric.TestLifecycleApplication
 
 @SuppressLint("VisibleForTests")
@@ -166,10 +163,6 @@ public class TestApplication public constructor() : Application(), TestLifecycle
 
     public fun setPushManager(pushManager: PushManager?) {
         UAirship.shared().pushManager = pushManager
-    }
-
-    public fun setLocationClient(locationClient: AirshipLocationClient?) {
-        UAirship.shared().locationClient = locationClient
     }
 
     public fun setChannelCapture(channelCapture: ChannelCapture?) {

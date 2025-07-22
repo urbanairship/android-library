@@ -7,7 +7,6 @@ import androidx.annotation.Size
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.urbanairship.AirshipComponent
-import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
@@ -30,7 +29,6 @@ import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.AuthTokenProvider
 import com.urbanairship.inputvalidation.AirshipInputValidation
-import com.urbanairship.inputvalidation.DefaultInputValidator
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
@@ -290,15 +288,6 @@ public class Contact internal constructor(
         preferenceDataStore.remove(LEGACY_TAG_GROUP_MUTATIONS_KEY)
         preferenceDataStore.remove(LEGACY_ATTRIBUTE_MUTATION_STORE_KEY)
         preferenceDataStore.remove(LEGACY_NAMED_USER_ID_KEY)
-    }
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @AirshipComponentGroups.Group
-    override fun getComponentGroup(): Int {
-        return AirshipComponentGroups.CONTACT
     }
 
     /**

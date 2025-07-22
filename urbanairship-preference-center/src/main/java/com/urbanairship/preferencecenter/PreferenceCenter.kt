@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
-import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
@@ -72,11 +71,6 @@ public class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) intern
     private val isFeatureEnabled: Boolean
         get() = privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
 
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun getComponentGroup(): Int = AirshipComponentGroups.PREFERENCE_CENTER
 
     /**
      * Opens the Preference Center with the given [preferenceCenterId].

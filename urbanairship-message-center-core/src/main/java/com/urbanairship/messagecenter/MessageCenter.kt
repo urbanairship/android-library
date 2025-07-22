@@ -8,7 +8,6 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.urbanairship.AirshipComponent
-import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipExecutors
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
@@ -144,15 +143,6 @@ public constructor(
     internal fun updateInboxEnabledState() {
         val isEnabled = privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)
         inbox.setEnabled(isEnabled)
-    }
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @AirshipComponentGroups.Group
-    override fun getComponentGroup(): Int {
-        return AirshipComponentGroups.MESSAGE_CENTER
     }
 
     /**

@@ -3,7 +3,6 @@ package com.urbanairship.remoteconfig
 
 import android.content.Context
 import androidx.annotation.RestrictTo
-import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
@@ -12,9 +11,7 @@ import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.config.AirshipRuntimeConfig
-import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
-import com.urbanairship.json.JsonValue
 import com.urbanairship.remotedata.RemoteData
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope

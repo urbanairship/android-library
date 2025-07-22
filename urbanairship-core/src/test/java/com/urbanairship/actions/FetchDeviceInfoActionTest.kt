@@ -7,7 +7,6 @@ import com.urbanairship.actions.Action.Situation
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.contacts.Contact
 import com.urbanairship.json.JsonValue
-import com.urbanairship.modules.location.AirshipLocationClient
 import com.urbanairship.push.PushManager
 import io.mockk.every
 import io.mockk.mockk
@@ -24,7 +23,6 @@ public class FetchDeviceInfoActionTest {
     private var airshipChannel: AirshipChannel = mockk()
     private var pushManager: PushManager = mockk()
     private var contact: Contact = mockk()
-    private var locationClient: AirshipLocationClient = mockk()
     private var action = FetchDeviceInfoAction()
 
     private val acceptedSituations = arrayOf(
@@ -43,7 +41,6 @@ public class FetchDeviceInfoActionTest {
             setChannel(airshipChannel)
             setPushManager(pushManager)
             setContact(contact)
-            setLocationClient(locationClient)
         }
     }
 
@@ -73,18 +70,13 @@ public class FetchDeviceInfoActionTest {
         every { airshipChannel.id } returns channelId
         every { pushManager.isOptIn } returns true
         every { airshipChannel.tags } returns tags.toSet()
-        every { locationClient.isLocationUpdatesEnabled } returns true
         every { contact.namedUserId } returns namedUserId
 
-        val result = action
-            .perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, ActionValue()))
-            .value
-            ?.map
+        val result = action.perform(ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, ActionValue())).value.map
 
         assertEquals(channelId, result?.opt(FetchDeviceInfoAction.CHANNEL_ID_KEY)?.string)
         assertEquals(true, result?.get(FetchDeviceInfoAction.PUSH_OPT_IN_KEY)?.getBoolean(false))
         assertEquals(JsonValue.wrap(tags), result?.get(FetchDeviceInfoAction.TAGS_KEY))
-        assertEquals(true, result?.get(FetchDeviceInfoAction.LOCATION_ENABLED_KEY)?.getBoolean(false))
         assertEquals(namedUserId, result?.get(FetchDeviceInfoAction.NAMED_USER_ID_KEY)?.string)
     }
 
@@ -99,20 +91,15 @@ public class FetchDeviceInfoActionTest {
         every { airshipChannel.id } returns channelId
         every { pushManager.isOptIn } returns true
         every { airshipChannel.tags } returns emptySet()
-        every { locationClient.isLocationUpdatesEnabled } returns true
         every { contact.namedUserId } returns namedUserId
 
-        val result = action
-            .perform(
+        val result = action.perform(
                 ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, ActionValue())
-            )
-            .value
-            ?.map
+            ).value.map
 
         assertEquals(channelId, result?.get(FetchDeviceInfoAction.CHANNEL_ID_KEY)?.string)
         assertEquals(true, result?.get(FetchDeviceInfoAction.PUSH_OPT_IN_KEY)?.getBoolean(false))
         assertNull(result?.get(FetchDeviceInfoAction.TAGS_KEY))
-        assertEquals(true, result?.get(FetchDeviceInfoAction.LOCATION_ENABLED_KEY)?.getBoolean(false))
         assertEquals(namedUserId, result?.get(FetchDeviceInfoAction.NAMED_USER_ID_KEY)?.string)
     }
 }

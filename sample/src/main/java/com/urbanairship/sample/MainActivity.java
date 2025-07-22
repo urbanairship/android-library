@@ -41,7 +41,6 @@ public class MainActivity extends AppCompatActivity {
         add(R.id.homeFragment);
         add(R.id.inbox);
         add(R.id.pref_center);
-        add(R.id.settings);
         add(R.id.debugFragment);
     }};
 

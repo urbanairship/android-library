@@ -36,7 +36,6 @@
             android:exported="true">
 
             <nav-graph android:value="@navigation/nav_inbox" />
-            <nav-graph android:value="@navigation/nav_settings" />
             <nav-graph android:value="@navigation/nav_home" />
 
             <intent-filter>

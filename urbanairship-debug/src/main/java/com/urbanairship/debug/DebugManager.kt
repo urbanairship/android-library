@@ -7,8 +7,10 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UAirship
+import com.urbanairship.analytics.Analytics
 import com.urbanairship.debug.ui.events.EventEntity
 import com.urbanairship.debug.ui.push.PushEntity
+import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.remotedata.RemoteData
 import kotlinx.coroutines.CoroutineDispatcher
@@ -26,6 +28,8 @@ internal class DebugManager(
     context: Context,
     preferenceDataStore: PreferenceDataStore,
     internal val remoteData: RemoteData,
+    internal val pushManager: PushManager,
+    internal val analytics: Analytics,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : AirshipComponent(context, preferenceDataStore) {
 
@@ -37,17 +41,16 @@ internal class DebugManager(
         }
     }
 
-    override fun onAirshipReady(airship: UAirship) {
-        super.onAirshipReady(airship)
+    override fun onAirshipReady() {
 
         scope.launch {
-            airship.pushManager.addPushListener { message: PushMessage, _: Boolean ->
+            pushManager.addPushListener { message: PushMessage, _: Boolean ->
                 ServiceLocator.shared(context)
                     .getPushDao()
                     .insertPush(PushEntity(message))
             }
 
-            airship.analytics.events.collect {
+            analytics.events.collect {
                 ServiceLocator.shared(context)
                     .getEventDao()
                     .insertEvent(EventEntity(it))

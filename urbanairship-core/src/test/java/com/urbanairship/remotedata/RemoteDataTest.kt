@@ -3,7 +3,6 @@
 package com.urbanairship.remotedata
 
 import androidx.test.core.app.ApplicationProvider
-import app.cash.turbine.test
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
@@ -21,6 +20,9 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import java.util.Locale
+import java.util.UUID
+import app.cash.turbine.test
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -28,9 +30,6 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
-import java.util.Locale
-import java.util.UUID
-import io.mockk.clearMocks
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -45,8 +44,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.mock
-import org.mockito.kotlin.reset
 import org.robolectric.RobolectricTestRunner
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -115,7 +112,7 @@ public class RemoteDataTest {
 
     @Before
     public fun verifyStartupTask() {
-        remoteData.onAirshipReady(mock())
+        remoteData.onAirshipReady()
         coVerify {
             mockRefreshManager.performRefresh(
                 any(), any(), any()

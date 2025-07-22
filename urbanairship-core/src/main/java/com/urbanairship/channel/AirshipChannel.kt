@@ -8,7 +8,6 @@ import android.util.Log
 import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 import com.urbanairship.AirshipComponent
-import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
@@ -34,7 +33,6 @@ import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.Clock
-import com.urbanairship.util.Network
 import com.urbanairship.util.UAStringUtil
 import java.util.TimeZone
 import java.util.concurrent.CopyOnWriteArrayList
@@ -202,8 +200,7 @@ public class AirshipChannel internal constructor(
         }
     }
 
-    override fun onAirshipReady(airship: UAirship) {
-        super.onAirshipReady(airship)
+    override fun onAirshipReady() {
         updateRegistration()
     }
 
@@ -264,13 +261,6 @@ public class AirshipChannel internal constructor(
             JobResult.SUCCESS
         }
     }
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @AirshipComponentGroups.Group
-    override fun getComponentGroup(): Int = AirshipComponentGroups.CHANNEL
 
     /**
      * Gets the channel identifier. This Id is created asynchronously, so initially it may be null.

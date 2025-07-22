@@ -4,7 +4,6 @@ package com.urbanairship.actions
 import com.urbanairship.UAirship
 import com.urbanairship.base.Supplier
 import com.urbanairship.json.JsonException
-import com.urbanairship.modules.location.AirshipLocationClient
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionsManager
 
@@ -33,12 +32,6 @@ public class EnableFeatureAction @JvmOverloads public constructor(
         override fun get(): PermissionsManager {
             return UAirship.shared().permissionsManager
         }
-    },
-    private val locationClientSupplier: Supplier<AirshipLocationClient?> = object :
-        Supplier<AirshipLocationClient?> {
-        override fun get(): AirshipLocationClient? {
-            return UAirship.shared().locationClient
-        }
     }
 ) : PromptPermissionAction(permissionsManagerSupplier) {
 
@@ -65,8 +58,6 @@ public class EnableFeatureAction @JvmOverloads public constructor(
         if (FEATURE_BACKGROUND_LOCATION.lowercase() != arguments.value.getString("").lowercase()) {
             return
         }
-
-        locationClientSupplier.get()?.isBackgroundLocationAllowed = true
     }
 
     public companion object {

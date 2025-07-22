@@ -13,8 +13,7 @@ internal class InAppAutomationComponent(
     internal val automation: InAppAutomation,
 ) : AirshipComponent(context, dataStore) {
 
-    override fun onAirshipReady(airship: UAirship) {
-        super.onAirshipReady(airship)
+    override fun onAirshipReady() {
         automation.airshipReady()
     }
 

@@ -215,8 +215,8 @@ public class RemoteData @VisibleForTesting internal constructor(
         }
     }
 
-    public override fun onAirshipReady(airship: UAirship) {
-        super.onAirshipReady(airship)
+    public override fun onAirshipReady() {
+        super.onAirshipReady()
         airshipReady.update { true }
     }
 

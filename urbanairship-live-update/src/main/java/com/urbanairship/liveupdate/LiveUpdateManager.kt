@@ -6,7 +6,6 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipComponent
-import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UAirship
@@ -146,9 +145,6 @@ internal constructor(
         registrar.cancel(name)
     }
 
-    /** @hide */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun getComponentGroup(): Int = AirshipComponentGroups.LIVE_UPDATE
 
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

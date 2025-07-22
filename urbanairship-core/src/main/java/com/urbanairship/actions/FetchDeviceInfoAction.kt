@@ -38,12 +38,10 @@ import com.urbanairship.json.JsonValue
 public class FetchDeviceInfoAction public constructor() : Action() {
 
     override fun perform(arguments: ActionArguments): ActionResult {
-        val locationClient = UAirship.shared().locationClient
 
         val properties = JsonMap.newBuilder()
             .put(CHANNEL_ID_KEY, UAirship.shared().channel.id)
             .put(PUSH_OPT_IN_KEY, UAirship.shared().pushManager.isOptIn)
-            .put(LOCATION_ENABLED_KEY, locationClient?.isLocationUpdatesEnabled ?: false)
             .putOpt(NAMED_USER_ID_KEY, UAirship.shared().contact.namedUserId)
 
         val tags = UAirship.shared().channel.tags
@@ -99,10 +97,5 @@ public class FetchDeviceInfoAction public constructor() : Action() {
          * Push opt-in response key.
          */
         public const val PUSH_OPT_IN_KEY: String = "push_opt_in"
-
-        /**
-         * Location enabled response key.
-         */
-        public const val LOCATION_ENABLED_KEY: String = "location_enabled"
     }
 }

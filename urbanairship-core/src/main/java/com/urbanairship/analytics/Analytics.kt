@@ -9,7 +9,6 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.urbanairship.AirshipComponent
-import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipExecutors
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
@@ -30,14 +29,12 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionsManager
-import com.urbanairship.push.PushManager
 import com.urbanairship.util.Clock
 import com.urbanairship.util.UAStringUtil
 import java.util.TimeZone
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.Executor
-import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -242,15 +239,6 @@ public constructor(
                 }
             }
         }
-    }
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @AirshipComponentGroups.Group
-    override fun getComponentGroup(): Int {
-        return AirshipComponentGroups.ANALYTICS
     }
 
     override fun tearDown() {

@@ -5,7 +5,6 @@ package com.urbanairship.experiment
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
-import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
@@ -42,10 +41,6 @@ public class ExperimentManager @JvmOverloads internal constructor(
     public companion object {
         internal const val PAYLOAD_TYPE = "experiments"
     }
-
-    /** @hide */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun getComponentGroup(): Int = AirshipComponentGroups.EXPERIMENT
 
     /**
      * Returns an optional Experiment with the given [id].

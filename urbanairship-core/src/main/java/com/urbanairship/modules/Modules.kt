@@ -24,11 +24,8 @@ import com.urbanairship.modules.automation.AutomationModuleFactory
 import com.urbanairship.modules.debug.DebugModuleFactory
 import com.urbanairship.modules.featureflag.FeatureFlagsModuleFactory
 import com.urbanairship.modules.liveupdate.LiveUpdateModuleFactory
-import com.urbanairship.modules.location.LocationModule
-import com.urbanairship.modules.location.LocationModuleFactory
 import com.urbanairship.modules.messagecenter.MessageCenterModuleFactory
 import com.urbanairship.modules.preferencecenter.PreferenceCenterModuleFactory
-import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.push.PushManager
 import com.urbanairship.remotedata.RemoteData
 
@@ -41,7 +38,6 @@ import com.urbanairship.remotedata.RemoteData
 public object Modules {
 
     private const val MESSAGE_CENTER_MODULE_FACTORY = "com.urbanairship.messagecenter.MessageCenterModuleFactoryImpl"
-    private const val LOCATION_MODULE_FACTORY = "com.urbanairship.location.LocationModuleFactoryImpl"
     private const val AUTOMATION_MODULE_FACTORY = "com.urbanairship.automation.AutomationModuleFactoryImpl"
     private const val DEBUG_MODULE_FACTORY = "com.urbanairship.debug.DebugModuleFactoryImpl"
     private const val AD_ID_FACTORY = "com.urbanairship.aaid.AdIdModuleFactoryImpl"
@@ -70,29 +66,6 @@ public object Modules {
                 pushManager = pushManager)
         } catch (e: Exception) {
             UALog.e(e, "Failed to build Message Center module")
-        }
-        return null
-    }
-
-    @JvmStatic
-    public fun location(
-        context: Context,
-        preferenceDataStore: PreferenceDataStore,
-        privacyManager: PrivacyManager,
-        channel: AirshipChannel,
-        permissionsManager: PermissionsManager
-    ): LocationModule? {
-        try {
-            return createFactory(
-                LOCATION_MODULE_FACTORY, LocationModuleFactory::class.java
-            )?.build(
-                context = context,
-                dataStore = preferenceDataStore,
-                privacyManager = privacyManager,
-                airshipChannel = channel,
-                permissionsManager = permissionsManager)
-        } catch (e: Exception) {
-            UALog.e(e, "Failed to build Location module")
         }
         return null
     }
@@ -143,7 +116,11 @@ public object Modules {
 
     @JvmStatic
     public fun debug(
-        context: Context, dataStore: PreferenceDataStore, remoteData: RemoteData
+        context: Context,
+        dataStore: PreferenceDataStore,
+        remoteData: RemoteData,
+        pushManager: PushManager,
+        analytics: Analytics
     ): Module? {
         try {
             return createFactory(
@@ -151,7 +128,9 @@ public object Modules {
             )?.build(
                 context = context,
                 dataStore = dataStore,
-                remoteData = remoteData
+                remoteData = remoteData,
+                pushManager = pushManager,
+                analytics = analytics
             )
         } catch (e: Exception) {
             UALog.e(e, "Failed to build Debug module")

@@ -10,7 +10,6 @@ import androidx.annotation.XmlRes
 import androidx.core.util.Consumer
 import androidx.core.util.ObjectsCompat
 import com.urbanairship.AirshipComponent
-import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipExecutors
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
@@ -40,7 +39,6 @@ import com.urbanairship.permission.PermissionPromptFallback
 import com.urbanairship.permission.PermissionRequestResult
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
-import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushProvider.PushProviderUnavailableException
 import com.urbanairship.push.PushProvider.RegistrationException
 import com.urbanairship.push.PushProviderType.Companion.from
@@ -229,8 +227,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         updateManagerEnablement()
     }
 
-    override fun onAirshipReady(airship: UAirship) {
-        super.onAirshipReady(airship)
+    override fun onAirshipReady() {
         isAirshipReady = true
 
         privacyManager.addListener { checkPermission() }
@@ -341,15 +338,6 @@ public open class PushManager @VisibleForTesting internal constructor(
         }
 
         return provider
-    }
-
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @AirshipComponentGroups.Group
-    override fun getComponentGroup(): Int {
-        return AirshipComponentGroups.PUSH
     }
 
     private val channelExtender: AirshipChannel.Extender =

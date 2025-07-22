@@ -2,7 +2,6 @@
 
 package com.urbanairship;
 
-import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.Context;
 import android.content.Intent;
@@ -39,8 +38,6 @@ import com.urbanairship.locale.LocaleManager;
 import com.urbanairship.meteredusage.AirshipMeteredUsage;
 import com.urbanairship.modules.Module;
 import com.urbanairship.modules.Modules;
-import com.urbanairship.modules.location.AirshipLocationClient;
-import com.urbanairship.modules.location.LocationModule;
 import com.urbanairship.permission.PermissionsManager;
 import com.urbanairship.push.PushManager;
 import com.urbanairship.remoteconfig.RemoteConfigManager;
@@ -146,7 +143,6 @@ public class UAirship {
     PreferenceDataStore preferenceDataStore;
     PushManager pushManager;
     AirshipChannel channel;
-    AirshipLocationClient locationClient;
     UrlAllowList urlAllowList;
     RemoteData remoteData;
     RemoteConfigManager remoteConfigManager;
@@ -439,7 +435,7 @@ public class UAirship {
 
             // Notify each component that airship is ready
             for (AirshipComponent component : sharedAirship.getComponents()) {
-                component.onAirshipReady(sharedAirship);
+                component.onAirshipReady();
             }
 
             // Fire any pendingAirshipRequests
@@ -766,17 +762,12 @@ public class UAirship {
         components.add(this.experimentManager);
 
         // Debug
-        Module debugModule = Modules.debug(application, preferenceDataStore, remoteData);
+        Module debugModule = Modules.debug(application, preferenceDataStore, remoteData, pushManager, analytics);
         processModule(debugModule);
 
         // Message Center
         Module messageCenterModule = Modules.messageCenter(application, preferenceDataStore, runtimeConfig, privacyManager, channel, pushManager);
         processModule(messageCenterModule);
-
-        // Location
-        LocationModule locationModule = Modules.location(application, preferenceDataStore, privacyManager, channel, permissionsManager);
-        processModule(locationModule);
-        this.locationClient = locationModule == null ? null : locationModule.locationClient;
 
         // Automation
         Module automationModule = Modules.automation(application, preferenceDataStore, runtimeConfig,
@@ -853,18 +844,6 @@ public class UAirship {
     @NonNull
     public AirshipChannel getChannel() {
         return channel;
-    }
-
-    /**
-     * Returns the {@link AirshipLocationClient} instance.
-     *
-     * @return The {@link AirshipLocationClient} instance.
-     * @hide
-     */
-    @Nullable
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public AirshipLocationClient getLocationClient() {
-        return locationClient;
     }
 
     /**

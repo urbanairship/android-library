@@ -81,12 +81,6 @@ dependencies {
     // Airship FCM
     implementation project(':urbanairship-fcm')
 
-    // Airship Advertising ID tracking
-    implementation project(':urbanairship-ads-identifier')
-
-    // Airship Preferences
-    implementation project(':urbanairship-preference')
-
     // Airship Message Center
     implementation project(':urbanairship-message-center')
 

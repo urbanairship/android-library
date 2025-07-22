@@ -22,10 +22,7 @@ import androidx.annotation.WorkerThread;
  */
 public abstract class AirshipComponent {
 
-    private static final String ENABLE_KEY_PREFIX = "airshipComponent.enable_";
-
     private final PreferenceDataStore dataStore;
-    private final String enableKey;
     private final Context context;
 
     /**
@@ -38,7 +35,6 @@ public abstract class AirshipComponent {
     public AirshipComponent(@NonNull Context context, @NonNull PreferenceDataStore dataStore) {
         this.context = context.getApplicationContext();
         this.dataStore = dataStore;
-        this.enableKey = ENABLE_KEY_PREFIX + getClass().getName();
     }
 
     /**
@@ -97,12 +93,11 @@ public abstract class AirshipComponent {
     /**
      * Called when airship instance is ready.
      *
-     * @param airship The airship instance.
      * @hide
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected void onAirshipReady(@NonNull UAirship airship) {
+    protected void onAirshipReady() {
     }
 
     /**
@@ -130,19 +125,6 @@ public abstract class AirshipComponent {
     }
 
     /**
-     * The component group.
-     *
-     * @return The component group.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @AirshipComponentGroups.Group
-    public int getComponentGroup() {
-        return AirshipComponentGroups.NONE;
-    }
-
-
-    /**
      * Called to handle `uairship://` deep links.
      *
      * @param uri The deep link.
@@ -150,7 +132,6 @@ public abstract class AirshipComponent {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @AirshipComponentGroups.Group
     public boolean onAirshipDeepLink(@NonNull Uri uri) {
         return false;
     }

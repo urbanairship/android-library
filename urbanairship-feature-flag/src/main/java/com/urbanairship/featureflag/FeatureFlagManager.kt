@@ -5,7 +5,6 @@ package com.urbanairship.featureflag
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
-import com.urbanairship.AirshipComponentGroups
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
@@ -18,7 +17,6 @@ import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.json.JsonMap
-import com.urbanairship.remotedata.RemoteData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
@@ -65,16 +63,6 @@ public class FeatureFlagManager internal constructor(
     }
 
     private val pendingResultScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
-
-    /** @hide */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun getComponentGroup(): Int = AirshipComponentGroups.FEATURE_FLAGS
-
-    /** @hide */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public override fun init() {
-        super.init()
-    }
 
     /**
      * Gets and evaluates a feature flag and returns it as a PendingResult. The [PrivacyManager.Feature.FEATURE_FLAGS]
