@@ -4,10 +4,13 @@ package com.urbanairship.android.layout.ui
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS
 import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
 import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RestrictTo
 import androidx.appcompat.app.AppCompatActivity
@@ -26,6 +29,7 @@ import com.urbanairship.android.layout.display.DisplayArgsLoader.LoadException
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment
 import com.urbanairship.android.layout.environment.ExternalReporter
 import com.urbanairship.android.layout.environment.LayoutEvent
+import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
@@ -58,6 +62,7 @@ public class ModalActivity : AppCompatActivity() {
     private lateinit var externalListener: ThomasListenerInterface
     private lateinit var reporter: Reporter
     private lateinit var displayTimer: DisplayTimer
+    private lateinit var modelEnvironment: ModelEnvironment
 
     private var disableBackButton = false
 
@@ -86,12 +91,19 @@ public class ModalActivity : AppCompatActivity() {
 
             disableBackButton = presentation.isDisableBackButton
 
+            onBackPressedDispatcher.addCallback(this) {
+                if (!disableBackButton) {
+                    reportDismissFromOutside()
+                    finishAfterTransition()
+                }
+            }
+
             val placement = presentation.getResolvedPlacement(this)
             setOrientationLock(placement)
 
             val shouldInsetLayout = handleIgnoreSafeAreas(placement.shouldIgnoreSafeArea())
 
-            val modelEnvironment = viewModel.getOrCreateEnvironment(
+            modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
                 actionRunner = args.actionRunner,
                 displayTimer = displayTimer
@@ -155,6 +167,17 @@ public class ModalActivity : AppCompatActivity() {
         }
     }
 
+    /** Override to optionally disable the back button. */
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        // If the back button is pressed and it's disabled, we ignore it.
+        if (keyCode == KeyEvent.KEYCODE_BACK && disableBackButton) {
+            UALog.v("Ignored back button press. Back button is disabled for this Scene.")
+            return true
+        }
+        // Otherwise, let the event through.
+        return super.onKeyDown(keyCode, event)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         if (isFinishing && ::loader.isInitialized) {
@@ -165,13 +188,6 @@ public class ModalActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putLong(KEY_DISPLAY_TIME, displayTimer.time)
-    }
-
-    override fun onBackPressed() {
-        if (!disableBackButton) {
-            super.onBackPressed()
-            reportDismissFromOutside()
-        }
     }
 
     private fun observeLayoutEvents(events: Flow<LayoutEvent>) = lifecycleScope.launch {
@@ -189,7 +205,7 @@ public class ModalActivity : AppCompatActivity() {
             }
     }
 
-    private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) =
+    private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) {
         reporter.report(
             event = ReportingEvent.Dismiss(
                 data = ReportingEvent.DismissData.UserDismissed,
@@ -197,6 +213,7 @@ public class ModalActivity : AppCompatActivity() {
                 context = state
             )
         )
+    }
 
     /**
      * Handles safe areas if necessary, and returns a boolean indicating whether insets should be

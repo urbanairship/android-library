@@ -36,6 +36,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -49,6 +50,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.runningFold
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -79,6 +81,10 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     private var lastForegroundDispatchTime: Long = 0
     private val changeTokenLock: Lock = ReentrantLock()
+
+    private var startUpRefreshJob: Job? = null
+
+    private var airshipReady: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     private val refreshStatusFlowMap = providers.associate {
         it.source to MutableStateFlow(RefreshStatus.NONE)
@@ -176,9 +182,10 @@ public class RemoteData @VisibleForTesting internal constructor(
         config.addConfigListener(configListener)
 
         scope.launch {
-            contact.contactIdUpdateFlow.mapNotNull { it?.contactId }.distinctUntilChanged().collect {
-                dispatchRefreshJob()
-            }
+            contact.contactIdUpdateFlow.mapNotNull { it?.contactId }.distinctUntilChanged()
+                .collect {
+                    dispatchRefreshJob()
+                }
         }
 
         scope.launch {
@@ -192,11 +199,25 @@ public class RemoteData @VisibleForTesting internal constructor(
             }
         }
 
-        refreshManager.dispatchRefreshJob()
-
         if (activityMonitor.isAppForegrounded) {
             applicationListener.onForeground(clock.currentTimeMillis())
         }
+
+        // For the first refresh bypass work manager since it can delay the job in
+        // attempt to speed up initial refresh
+        val changeToken = changeToken
+        val randomValue = randomValue
+        this.startUpRefreshJob = scope.launch {
+            airshipReady.first { it }
+            refreshManager.performRefresh(
+                changeToken = changeToken, locale = localeManager.locale, randomValue = randomValue
+            )
+        }
+    }
+
+    public override fun onAirshipReady(airship: UAirship) {
+        super.onAirshipReady(airship)
+        airshipReady.update { true }
     }
 
     public override fun tearDown() {
@@ -241,6 +262,9 @@ public class RemoteData @VisibleForTesting internal constructor(
     }
 
     private suspend fun dispatchRefreshJob() {
+        // Wait for startup job to finish
+        startUpRefreshJob?.join()
+        startUpRefreshJob = null
         refreshStatusFlowMap.values.forEach { it.emit(RefreshStatus.NONE) }
         refreshManager.dispatchRefreshJob()
     }

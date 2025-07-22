@@ -109,6 +109,10 @@ internal class LinearLayoutView(
                 marginStart = dpToPx(context, margin.start).toInt()
                 marginEnd = dpToPx(context, margin.end).toInt()
             }
+
+            itemInfo.position?.let {
+                gravity = it.gravity
+            }
         }
         return lp
     }

@@ -3,7 +3,9 @@
 package com.urbanairship.remotedata
 
 import com.urbanairship.AirshipDispatchers
+import com.urbanairship.AirshipLogHandler
 import com.urbanairship.PrivacyManager
+import com.urbanairship.UALog
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
@@ -34,9 +36,12 @@ internal class RemoteDataRefreshManager(
         locale: Locale,
         randomValue: Int,
     ): JobResult {
+        UALog.d { "Attempting to refresh remote data." }
+
         refreshPending.set(false)
         return withContext(AirshipDispatchers.IO) {
             if (!privacyManager.isAnyFeatureEnabled(ignoringRemoteConfig = true)) {
+                UALog.d { "Refresh skipped since privacy features are disabled." }
                 providers.forEach {
                     _refreshFlow.emit(Pair(it.source, RemoteDataProvider.RefreshResult.SKIPPED))
                 }
@@ -50,6 +55,8 @@ internal class RemoteDataRefreshManager(
                     result
                 }
             }.awaitAll()
+
+            UALog.d { "Remote data refresh result: $result" }
 
             if (result.contains(RemoteDataProvider.RefreshResult.FAILED)) {
                 JobResult.RETRY
