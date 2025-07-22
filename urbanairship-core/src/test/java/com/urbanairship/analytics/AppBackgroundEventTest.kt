@@ -17,10 +17,6 @@ public class AppBackgroundEventTest {
         val eventData = event.getEventData(conversionData)
 
         assertEquals(
-            eventData.require(Event.CONNECTION_TYPE_KEY).optString(),
-            event.connectionType
-        )
-        assertEquals(
             eventData.require(Event.PUSH_ID_KEY).optString(),
             conversionData.conversionSendId
         )

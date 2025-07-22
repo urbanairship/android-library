@@ -10,7 +10,6 @@ public enum class EventType(public val reportingName: String) {
     ASSOCIATE_IDENTIFIERS("associate_identifiers"),
     INSTALL_ATTRIBUTION("install_attribution"),
     INTERACTIVE_NOTIFICATION_ACTION("interactive_notification_action"),
-    PUSH_ARRIVED("push_arrived"),
     REGION_ENTER("region_event"),
     REGION_EXIT("region_event"),
     CUSTOM_EVENT("enhanced_custom_event"),

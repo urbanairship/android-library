@@ -1,15 +1,10 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
-import android.content.Context
-import android.net.ConnectivityManager
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.UALog
-import com.urbanairship.UAirship
 import com.urbanairship.json.JsonMap
 import com.urbanairship.util.Clock
-import com.urbanairship.util.Network
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -58,60 +53,6 @@ public abstract class Event @JvmOverloads public constructor(
     public abstract fun getEventData(conversionData: ConversionData): JsonMap
 
     /**
-     * Returns the connection type.
-     *
-     * @return The connection type as a String.
-     */
-    public val connectionType: String
-        get() {
-            var type = -1 //not connected
-
-            //determine network connectivity state
-            //each of these may return null if there is no connectivity, and this may change at any moment
-            //keep a reference, then do a null check before accessing
-            val cm = UAirship.getApplicationContext()
-                .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-            cm.activeNetworkInfo?.type?.let { type = it }
-            val typeString = when (type) {
-                ConnectivityManager.TYPE_MOBILE -> "cell"
-                ConnectivityManager.TYPE_WIFI -> "wifi"
-                0x00000006 -> "wimax"
-                else -> "none"
-            }
-
-            return typeString
-        }
-
-    /**
-     * Returns the connection subtype.
-     *
-     * @return The connection subtype as a String.
-     */
-    public val connectionSubType: String
-        get() {
-            try {
-                //determine network connectivity state
-                //each of these may return null if there is no connectivity, and this may change at any moment
-                //keep a reference, then do a null check before accessing
-                val cm = UAirship.getApplicationContext()
-                    .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-                return cm.activeNetworkInfo?.subtypeName ?: ""
-            } catch (e: ClassCastException) {
-                // https://github.com/urbanairship/android-library/issues/115
-                UALog.e("Connection subtype lookup failed", e)
-                return ""
-            }
-        }
-
-    /**
-     * Returns the current carrier.
-     *
-     * @return The carrier as a String.
-     */
-    public val carrier: String?
-        get() = Network.getCarrier()
-
-    /**
      * Returns the current time zone.
      *
      * @return The time zone as a long.
@@ -149,8 +90,6 @@ public abstract class Event @JvmOverloads public constructor(
 
         //event data fields
         public const val SESSION_ID_KEY: String = "session_id"
-        public const val CONNECTION_TYPE_KEY: String = "connection_type"
-        public const val CONNECTION_SUBTYPE_KEY: String = "connection_subtype"
         public const val CARRIER_KEY: String = "carrier"
         public const val PUSH_ID_KEY: String = "push_id"
         public const val METADATA_KEY: String = "metadata"

@@ -3,7 +3,6 @@ package com.urbanairship.channel
 
 import android.content.Context
 import android.os.Build
-import android.telephony.TelephonyManager
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
@@ -49,13 +48,12 @@ import org.robolectric.RobolectricTestRunner
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
-public class AirshipChannelTest {
+class AirshipChannelTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
 
     private val localeChangeListeners = mutableListOf<LocaleChangedListener>()
-    private val channelPayloadExtenders = mutableListOf<AirshipChannel.Extender>()
 
     private val channelIdFlow = MutableStateFlow<String?>(null)
 
@@ -121,7 +119,7 @@ public class AirshipChannelTest {
     )
 
     @Before
-    public fun setup() {
+    fun setup() {
         Dispatchers.setMain(testDispatcher)
 
         every { mockPermissionsManager.configuredPermissions } answers {
@@ -139,24 +137,24 @@ public class AirshipChannelTest {
     }
 
     @After
-    public fun tearDown() {
+    fun tearDown() {
         Dispatchers.resetMain()
     }
 
     @Test
-    public fun testForegroundUpdatesRegistration(): TestResult = runTest {
+    fun testForegroundUpdatesRegistration(): TestResult = runTest {
         testActivityMonitor.foreground()
         verify { mockJobDispatcher.dispatch(keepJob) }
     }
 
     @Test
-    public fun testLocaleChangeUpdatesRegistration(): TestResult = runTest {
+    fun testLocaleChangeUpdatesRegistration(): TestResult = runTest {
         localeChangeListeners.forEach { it.onLocaleChanged(Locale.ENGLISH) }
         verify { mockJobDispatcher.dispatch(keepJob) }
     }
 
     @Test
-    public fun testUrlConfigUpdatedUpdatesRegistration(): TestResult = runTest {
+    fun testUrlConfigUpdatedUpdatesRegistration(): TestResult = runTest {
         testConfig.updateRemoteConfig(RemoteConfig(airshipConfig = RemoteAirshipConfig(
             deviceApiUrl = "https://somethingelse.com"
         )))
@@ -164,20 +162,20 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testPrivacyManagerChangeUpdatesRegistration(): TestResult = runTest {
+    fun testPrivacyManagerChangeUpdatesRegistration(): TestResult = runTest {
         privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         verify { mockJobDispatcher.dispatch(keepJob) }
     }
 
     @Test
-    public fun testDisableTagsClearsPendingUpdates(): TestResult = runTest {
+    fun testDisableTagsClearsPendingUpdates(): TestResult = runTest {
         privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         verify { mockBatchUpdateManager.clearPending() }
         verify { mockJobDispatcher.dispatch(keepJob) }
     }
 
     @Test
-    public fun testChannelListener(): TestResult = runTest {
+    fun testChannelListener(): TestResult = runTest {
         val listener = mockk<AirshipChannelListener>(relaxed = true)
         channel.addChannelListener(listener)
 
@@ -187,7 +185,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testDisableTagsClearsTags(): TestResult = runTest {
+    fun testDisableTagsClearsTags(): TestResult = runTest {
         channel.editTags().addTag("foo").apply()
         assertEquals(channel.tags, setOf("foo"))
 
@@ -196,14 +194,14 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testSetTags(): TestResult = runTest {
+    fun testSetTags(): TestResult = runTest {
         channel.tags = setOf("foo")
         verify { mockJobDispatcher.dispatch(keepJob) }
         assertEquals(channel.tags, setOf("foo"))
     }
 
     @Test
-    public fun testNormalizeTags(): TestResult = runTest {
+    fun testNormalizeTags(): TestResult = runTest {
         channel.tags = setOf(
             // too long
             "128_chars_lkashdflsfghekjashdflkjhsdfkjhsadkfjhskdnvpeortoivnk84389349843982ij321" + "masdflkjahsdgkfjandsgkljhasdg'k./l'.][;l].k,/[1",
@@ -224,28 +222,28 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testSetTagsFeatureDisabled(): TestResult = runTest {
+    fun testSetTagsFeatureDisabled(): TestResult = runTest {
         privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         channel.tags = setOf("foo")
         assertEquals(channel.tags, emptySet<String>())
     }
 
     @Test
-    public fun testEditTags(): TestResult = runTest {
+    fun testEditTags(): TestResult = runTest {
         channel.editTags().addTag("foo").apply()
         verify { mockJobDispatcher.dispatch(keepJob) }
         assertEquals(channel.tags, setOf("foo"))
     }
 
     @Test
-    public fun testEditTagsFeatureDisabled(): TestResult = runTest {
+    fun testEditTagsFeatureDisabled(): TestResult = runTest {
         privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         channel.editTags().addTag("foo").apply()
         assertEquals(channel.tags, emptySet<String>())
     }
 
     @Test
-    public fun testEditTagGroups(): TestResult = runTest {
+    fun testEditTagGroups(): TestResult = runTest {
         channel.editTagGroups().addTags("some group", setOf("foo")).apply()
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
@@ -258,20 +256,20 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testEditTagGroupsFeatureDisabled(): TestResult = runTest {
+    fun testEditTagGroupsFeatureDisabled(): TestResult = runTest {
         privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         channel.editTagGroups().addTags("some group", setOf("foo")).apply()
         verify(exactly = 0) { mockBatchUpdateManager.addUpdate(tags = any()) }
     }
 
     @Test
-    public fun testEditTagGroupsEmpty(): TestResult = runTest {
+    fun testEditTagGroupsEmpty(): TestResult = runTest {
         channel.editTagGroups().apply()
         verify(exactly = 0) { mockBatchUpdateManager.addUpdate(tags = any()) }
     }
 
     @Test
-    public fun testEditSubscriptions(): TestResult = runTest {
+    fun testEditSubscriptions(): TestResult = runTest {
         channel.editSubscriptionLists().subscribe("some list").apply()
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
@@ -284,20 +282,20 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testEditSubscriptionsFeatureDisabled(): TestResult = runTest {
+    fun testEditSubscriptionsFeatureDisabled(): TestResult = runTest {
         privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         channel.editSubscriptionLists().subscribe("some list").apply()
         verify(exactly = 0) { mockBatchUpdateManager.addUpdate(subscriptions = any()) }
     }
 
     @Test
-    public fun testEditSubscriptionsEmpty(): TestResult = runTest {
+    fun testEditSubscriptionsEmpty(): TestResult = runTest {
         channel.editAttributes().apply()
         verify(exactly = 0) { mockBatchUpdateManager.addUpdate(subscriptions = any()) }
     }
 
     @Test
-    public fun testTrackLiveUpdate(): TestResult = runTest {
+    fun testTrackLiveUpdate(): TestResult = runTest {
         val liveUpdateMutation = LiveUpdateMutation.Remove("name", testClock.currentTimeMillis)
         channel.trackLiveUpdateMutation(liveUpdateMutation)
         verify { mockJobDispatcher.dispatch(keepJob) }
@@ -311,7 +309,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testEditAttributes(): TestResult = runTest {
+    fun testEditAttributes(): TestResult = runTest {
         channel.editAttributes().removeAttribute("some attribute").apply()
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
@@ -324,20 +322,20 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testEditAttributesFeatureDisabled(): TestResult = runTest {
+    fun testEditAttributesFeatureDisabled(): TestResult = runTest {
         privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         channel.editAttributes().removeAttribute("some attribute").apply()
         verify(exactly = 0) { mockBatchUpdateManager.addUpdate(attributes = any()) }
     }
 
     @Test
-    public fun testEditAttributesEmpty(): TestResult = runTest {
+    fun testEditAttributesEmpty(): TestResult = runTest {
         channel.editAttributes().apply()
         verify(exactly = 0) { mockBatchUpdateManager.addUpdate(attributes = any()) }
     }
 
     @Test
-    public fun testFetchSubscriptionLists(): TestResult = runTest {
+    fun testFetchSubscriptionLists(): TestResult = runTest {
         val result = Result.success(setOf("one", "two", "three"))
 
         coEvery {
@@ -351,7 +349,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testCraPayloadAndroid(): TestResult = runTest {
+    fun testCraPayloadAndroid(): TestResult = runTest {
         every {
             mockLocaleManager.locale
         } returns Locale("shyriiwook", "KASHYYYK")
@@ -363,7 +361,6 @@ public class AirshipChannelTest {
 
         channel.tags = setOf("cool_tag")
 
-        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         val expectedPayload = ChannelRegistrationPayload.Builder()
             .setLanguage("shyriiwook")
             .setCountry("KASHYYYK")
@@ -373,7 +370,6 @@ public class AirshipChannelTest {
             .setAppVersion(UAirship.getPackageInfo()!!.versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setCarrier(tm.networkOperatorName)
             .setSdkVersion(UAirship.getVersion())
             .setIsActive(false)
             .setPermissions(mapOf(
@@ -387,7 +383,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testCraPayloadAmazon(): TestResult = runTest {
+    fun testCraPayloadAmazon(): TestResult = runTest {
         testConfig.setPlatform(UAirship.AMAZON_PLATFORM)
 
         every {
@@ -396,7 +392,6 @@ public class AirshipChannelTest {
 
         channel.tags = setOf("cool_tag")
 
-        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         val expectedPayload = ChannelRegistrationPayload.Builder()
             .setLanguage("en")
             .setCountry("US")
@@ -406,7 +401,6 @@ public class AirshipChannelTest {
             .setAppVersion(UAirship.getPackageInfo()!!.versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setCarrier(tm.networkOperatorName)
             .setSdkVersion(UAirship.getVersion())
             .setIsActive(false)
             .build()
@@ -416,7 +410,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testCraPayloadAnalyticsDisabled(): TestResult = runTest {
+    fun testCraPayloadAnalyticsDisabled(): TestResult = runTest {
         privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
 
         every {
@@ -440,7 +434,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testCraPayloadAllFeaturesDisabled(): TestResult = runTest {
+    fun testCraPayloadAllFeaturesDisabled(): TestResult = runTest {
         privacyManager.disable(PrivacyManager.Feature.ALL)
 
         every {
@@ -458,7 +452,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testCraPayloadTagsDisabled(): TestResult = runTest {
+    fun testCraPayloadTagsDisabled(): TestResult = runTest {
         every {
             mockLocaleManager.locale
         } returns Locale("shyriiwook", "KASHYYYK")
@@ -471,7 +465,6 @@ public class AirshipChannelTest {
         privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         channel.tags = setOf("cool_tag")
 
-        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         val expectedPayload = ChannelRegistrationPayload.Builder()
             .setLanguage("shyriiwook")
             .setCountry("KASHYYYK")
@@ -481,7 +474,6 @@ public class AirshipChannelTest {
             .setAppVersion(UAirship.getPackageInfo()!!.versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setCarrier(tm.networkOperatorName)
             .setSdkVersion(UAirship.getVersion())
             .setIsActive(false)
             .build()
@@ -491,7 +483,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testCraPayloadActive(): TestResult = runTest {
+    fun testCraPayloadActive(): TestResult = runTest {
         testActivityMonitor.foreground()
 
         every {
@@ -500,7 +492,6 @@ public class AirshipChannelTest {
 
         channel.tags = setOf("cool_tag")
 
-        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         val expectedPayload = ChannelRegistrationPayload.Builder()
             .setLanguage("en")
             .setIsActive(true)
@@ -511,7 +502,6 @@ public class AirshipChannelTest {
             .setAppVersion(UAirship.getPackageInfo()!!.versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setCarrier(tm.networkOperatorName)
             .setSdkVersion(UAirship.getVersion())
             .build()
 
@@ -520,7 +510,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testCraPayloadMinify(): TestResult = runTest {
+    fun testCraPayloadMinify(): TestResult = runTest {
         every {
             mockLocaleManager.locale
         } returns Locale("shyriiwook", "KASHYYYK")
@@ -532,7 +522,6 @@ public class AirshipChannelTest {
 
         channel.tags = setOf("cool_tag")
 
-        val tm = context.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
         val expectedPayload = ChannelRegistrationPayload.Builder()
             .setLanguage("shyriiwook")
             .setCountry("KASHYYYK")
@@ -542,7 +531,6 @@ public class AirshipChannelTest {
             .setAppVersion(UAirship.getPackageInfo()!!.versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setCarrier(tm.networkOperatorName)
             .setSdkVersion(UAirship.getVersion())
             .setIsActive(false)
             .setPermissions(mapOf(
@@ -572,14 +560,14 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testDispatchDeviceUrlNull(): TestResult = runTest {
+    fun testDispatchDeviceUrlNull(): TestResult = runTest {
         testConfig.updateRemoteConfig(RemoteConfig())
         channel.updateRegistration()
         verify(exactly = 0) { mockJobDispatcher.dispatch(any()) }
     }
 
     @Test
-    public fun testPerformUpdate(): TestResult = runTest {
+    fun testPerformUpdate(): TestResult = runTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.SUCCESS
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns true
@@ -592,7 +580,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testPerformUpdateChannelNeedsUpdate(): TestResult = runTest {
+    fun testPerformUpdateChannelNeedsUpdate(): TestResult = runTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.NEEDS_UPDATE
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns true
@@ -607,7 +595,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testPerformUpdateHasPending(): TestResult = runTest {
+    fun testPerformUpdateHasPending(): TestResult = runTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.NEEDS_UPDATE
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns true
@@ -622,7 +610,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testPerformRegistrationFailed(): TestResult = runTest {
+    fun testPerformRegistrationFailed(): TestResult = runTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.FAILED
 
@@ -633,7 +621,7 @@ public class AirshipChannelTest {
     }
 
     @Test
-    public fun testPerformBatchUploadFailed(): TestResult = runTest {
+    fun testPerformBatchUploadFailed(): TestResult = runTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.SUCCESS
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns false

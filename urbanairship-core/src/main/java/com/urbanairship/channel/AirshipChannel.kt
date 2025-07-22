@@ -546,10 +546,10 @@ public class AirshipChannel internal constructor(
             UAirship.getPackageInfo()?.versionName?.let {
                 builder.setAppVersion(it)
             }
-            builder.setCarrier(Network.getCarrier())
             builder.setDeviceModel(Build.MODEL)
             builder.setApiVersion(Build.VERSION.SDK_INT)
         }
+
         if (privacyManager.isAnyFeatureEnabled) {
             builder.setTimezone(TimeZone.getDefault().id)
             val locale = localeManager.locale

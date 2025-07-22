@@ -47,20 +47,4 @@ public class Network {
 
         return info != null && info.isConnected();
     }
-
-    /**
-     * Returns the current carrier.
-     *
-     * @return The carrier as a String.
-     */
-    @Nullable
-    public static String getCarrier() {
-        try {
-            TelephonyManager tm = (TelephonyManager) UAirship.getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
-            return tm == null ? null : tm.getNetworkOperatorName();
-        } catch (Exception e) {
-            UALog.w("Unable to get network operator name", e);
-            return null;
-        }
-    }
 }

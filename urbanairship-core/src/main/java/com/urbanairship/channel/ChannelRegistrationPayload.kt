@@ -57,8 +57,6 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
     public val sdkVersion: String?
     public val deviceModel: String?
     public val apiVersion: Int?
-    public val carrier: String?
-    public val accengageDeviceId: String?
     public val deliveryType: String?
     public val contactId: String?
     public val isActive: Boolean
@@ -139,8 +137,6 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
             this.sdkVersion = payload.sdkVersion
             this.deviceModel = payload.deviceModel
             this.apiVersion = payload.apiVersion
-            this.carrier = payload.carrier
-            this.accengageDeviceId = payload.accengageDeviceId
             this.deliveryType = payload.deliveryType
             this.contactId = payload.contactId
             this.isActive = payload.isActive
@@ -314,16 +310,6 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
         }
 
         /**
-         * Set the carrier
-         *
-         * @param carrier The carrier
-         * @return The builder.
-         */
-        public fun setCarrier(carrier: String?): Builder {
-            return this.also { it.carrier = carrier }
-        }
-
-        /**
          * Set isActive flag.
          *
          * @param isActive `true` if active, otherwise `false`.
@@ -341,16 +327,6 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
          */
         public fun setPermissions(permissions: Map<String, String>?): Builder {
             return this.also { it.permissions = permissions }
-        }
-
-        /**
-         * Set the Accengage Device ID
-         *
-         * @param accengageDeviceId The Accengage Device ID
-         * @return The builder.
-         */
-        public fun setAccengageDeviceId(accengageDeviceId: String?): Builder {
-            return this.also { it.accengageDeviceId = accengageDeviceId }
         }
 
         /**
@@ -385,8 +361,6 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
         this.sdkVersion = builder.sdkVersion
         this.deviceModel = builder.deviceModel
         this.apiVersion = builder.apiVersion
-        this.carrier = builder.carrier
-        this.accengageDeviceId = builder.accengageDeviceId
         this.deliveryType = builder.deliveryType
         this.contactId = builder.contactId
         this.isActive = builder.isActive
@@ -400,7 +374,6 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
 
         val builder = Builder(this)
             .setUserId(null)
-            .setAccengageDeviceId(null)
 
         if (last.setTags && setTags) {
             last.tags?.let { tagsUpdate ->
@@ -446,10 +419,6 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
                 builder.setDeviceModel(null)
             }
 
-            if (last.carrier == carrier) {
-                builder.setCarrier(null)
-            }
-
             if (last.apiVersion == apiVersion) {
                 builder.setApiVersion(null)
             }
@@ -493,7 +462,6 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
             .put(APP_VERSION_KEY, appVersion)
             .put(SDK_VERSION_KEY, sdkVersion)
             .put(DEVICE_MODEL_KEY, deviceModel)
-            .put(CARRIER_KEY, carrier)
             .put(CONTACT_ID_KEY, contactId)
             .put(IS_ACTIVE, isActive)
 
@@ -523,7 +491,6 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
 
         val identityHits = jsonMapOf(
             USER_ID_KEY to userId,
-            ACCENGAGE_DEVICE_ID to accengageDeviceId
         )
 
         // Full payload
@@ -558,8 +525,6 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
                 && ObjectsCompat.equals(sdkVersion, payload.sdkVersion)
                 && ObjectsCompat.equals(deviceModel, payload.deviceModel)
                 && ObjectsCompat.equals(apiVersion, payload.apiVersion)
-                && ObjectsCompat.equals(carrier, payload.carrier)
-                && ObjectsCompat.equals(accengageDeviceId, payload.accengageDeviceId)
                 && ObjectsCompat.equals(deliveryType, payload.deliveryType)
                 && ObjectsCompat.equals(contactId, payload.contactId)
                 && ObjectsCompat.equals(permissions, payload.permissions)
@@ -590,8 +555,6 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
             sdkVersion,
             deviceModel,
             apiVersion,
-            carrier,
-            accengageDeviceId,
             deliveryType,
             contactId,
             permissions
@@ -604,7 +567,7 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
                 "tagChanges=$tagChanges, userId='$userId', timezone='$timezone', language='$language', " +
                 "country='$country', locationSettings=$locationSettings, appVersion='$appVersion', " +
                 "sdkVersion='$sdkVersion', deviceModel='$deviceModel', apiVersion=$apiVersion, " +
-                "carrier='$carrier', accengageDeviceId='$accengageDeviceId', deliveryType='$deliveryType', " +
+                "deliveryType='$deliveryType', " +
                 "contactId='$contactId', isActive=$isActive, permissions=$permissions}"
     }
 
@@ -630,8 +593,6 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
         const val SDK_VERSION_KEY: String = "sdk_version"
         const val DEVICE_MODEL_KEY: String = "device_model"
         const val API_VERSION_KEY: String = "android_api_version"
-        const val CARRIER_KEY: String = "carrier"
-        const val ACCENGAGE_DEVICE_ID: String = "accengage_device_id"
         const val CONTACT_ID_KEY: String = "contact_id"
         const val ANDROID_EXTRAS_KEY: String = "android"
         const val ANDROID_DELIVERY_TYPE: String = "delivery_type"
@@ -685,14 +646,11 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
                 .setTags(channelJson.opt(SET_TAGS_KEY).getBoolean(false), tags)
                 .setTagChanges(if (tagChanges.isEmpty) null else tagChanges)
                 .setUserId(identityHints?.optionalField(USER_ID_KEY))
-                .setAccengageDeviceId(identityHints?.optionalField(ACCENGAGE_DEVICE_ID))
                 .setLocationSettings(locationSettings)
                 .setAppVersion(channelJson.optionalField(APP_VERSION_KEY))
                 .setSdkVersion(channelJson.optionalField(SDK_VERSION_KEY))
                 .setDeviceModel(channelJson.optionalField(DEVICE_MODEL_KEY))
                 .setApiVersion(apiVersion)
-                .setCarrier(channelJson.optionalField(CARRIER_KEY))
-                .setDeliveryType(deliveryType)
                 .setContactId(channelJson.optionalField(CONTACT_ID_KEY))
                 .setIsActive(channelJson.opt(IS_ACTIVE).getBoolean(false))
                 .setPermissions(permissions)

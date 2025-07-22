@@ -14,23 +14,6 @@ public class AppForegroundEventTest {
     private val event = AppForegroundEvent(1000)
 
     @Test
-    public fun testConnectionType() {
-        EventTestUtils.validateEventValue(event, Event.CONNECTION_TYPE_KEY, event.connectionType)
-    }
-
-    @Test
-    public fun testConnectionSubType() {
-        EventTestUtils.validateEventValue(
-            event, Event.CONNECTION_SUBTYPE_KEY, event.connectionSubType
-        )
-    }
-
-    @Test
-    public fun testCarrier() {
-        EventTestUtils.validateEventValue(event, Event.CARRIER_KEY, event.carrier)
-    }
-
-    @Test
     public fun testTimezone() {
         EventTestUtils.validateEventValue(event, Event.TIME_ZONE_KEY, event.timezone)
     }

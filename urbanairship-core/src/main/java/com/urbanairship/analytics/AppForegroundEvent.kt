@@ -14,9 +14,6 @@ internal class AppForegroundEvent(
 
     @Throws(com.urbanairship.json.JsonException::class)
     override fun getEventData(conversionData: ConversionData): JsonMap = jsonMapOf(
-        CONNECTION_TYPE_KEY to connectionType,
-        CONNECTION_SUBTYPE_KEY to connectionSubType,
-        CARRIER_KEY to carrier,
         TIME_ZONE_KEY to timezone,
         DAYLIGHT_SAVINGS_KEY to isDaylightSavingsTime,
         OS_VERSION_KEY to Build.VERSION.RELEASE,

@@ -25,7 +25,6 @@ public class ChannelRegistrationPayloadTest {
     private val testDeviceType = ChannelRegistrationPayload.DeviceType.ANDROID
     private val testPushAddress = "gcmRegistrationId"
     private val testUserId = "fakeUserId"
-    private val testAccengageDeviceId = "accengage-device-id"
     private val testSetTags = true
     private var testTags = setOf("tagOne", "tagTwo")
     private val testLanguage = "test_language"
@@ -41,14 +40,12 @@ public class ChannelRegistrationPayloadTest {
     public fun testMinimizedPayloadIgnoresCreationSpecificData() {
         payload = ChannelRegistrationPayload.Builder()
             .setUserId(testUserId)
-            .setAccengageDeviceId(testAccengageDeviceId)
             .build()
 
         val newPayload = ChannelRegistrationPayload.Builder(payload).build()
         val minPayload = newPayload.minimizedPayload(payload)
 
         assertNull(minPayload.userId)
-        assertNull(minPayload.accengageDeviceId)
     }
 
     /**
@@ -66,7 +63,6 @@ public class ChannelRegistrationPayloadTest {
             .setApiVersion(123)
             .setSdkVersion("1.2.3")
             .setDeviceModel("Device model")
-            .setCarrier("Carrier")
             .build()
 
         val newPayload = ChannelRegistrationPayload.Builder(payload)
@@ -79,7 +75,6 @@ public class ChannelRegistrationPayloadTest {
             .setApiVersion(234)
             .setSdkVersion("2.3.4")
             .setDeviceModel("Other device model")
-            .setCarrier("Other carrier")
             .build()
 
         val minPayload = newPayload.minimizedPayload(payload)
@@ -100,7 +95,6 @@ public class ChannelRegistrationPayloadTest {
         assertEquals(234, minPayload.apiVersion as Any?)
         assertEquals("2.3.4", minPayload.sdkVersion)
         assertEquals("Other device model", minPayload.deviceModel)
-        assertEquals("Other carrier", minPayload.carrier)
     }
 
     /**
@@ -118,7 +112,6 @@ public class ChannelRegistrationPayloadTest {
             .setApiVersion(123)
             .setSdkVersion("1.2.3")
             .setDeviceModel("Device model")
-            .setCarrier("Carrier")
             .build()
 
         val newPayload = ChannelRegistrationPayload.Builder(payload).build()
@@ -135,7 +128,6 @@ public class ChannelRegistrationPayloadTest {
         assertNull(minPayload.sdkVersion)
         assertNull(minPayload.apiVersion)
         assertNull(minPayload.deviceModel)
-        assertNull(minPayload.carrier)
     }
 
     /**
@@ -174,7 +166,6 @@ public class ChannelRegistrationPayloadTest {
             .setPushAddress(testPushAddress)
             .setTags(testSetTags, testTags)
             .setUserId(testUserId)
-            .setAccengageDeviceId(testAccengageDeviceId)
             .setLanguage(testLanguage)
             .setTimezone(testTimezone)
             .setCountry(testCountry)
@@ -183,7 +174,6 @@ public class ChannelRegistrationPayloadTest {
             .setApiVersion(123)
             .setSdkVersion("1.2.3")
             .setDeviceModel("Device model")
-            .setCarrier("Carrier")
             .build()
 
         val minPayload = payload.minimizedPayload(null)
@@ -203,7 +193,6 @@ public class ChannelRegistrationPayloadTest {
             .setPushAddress(testPushAddress)
             .setTags(testSetTags, testTags)
             .setUserId(testUserId)
-            .setAccengageDeviceId(testAccengageDeviceId)
             .setLanguage(testLanguage)
             .setTimezone(testTimezone)
             .setCountry(testCountry)
@@ -212,7 +201,6 @@ public class ChannelRegistrationPayloadTest {
             .setApiVersion(123)
             .setSdkVersion("1.2.3")
             .setDeviceModel("Device model")
-            .setCarrier("Carrier")
             .build()
 
         val body = payload.toJsonValue().map
@@ -228,11 +216,6 @@ public class ChannelRegistrationPayloadTest {
             testUserId
         )
 
-        assertEquals(
-            "Accengage Device ID should match.",
-            identityHints?.get(ChannelRegistrationPayload.ACCENGAGE_DEVICE_ID)?.string,
-            testAccengageDeviceId
-        )
 
         // Channel specific items
         assertEquals(
@@ -304,11 +287,6 @@ public class ChannelRegistrationPayloadTest {
         assertEquals(
             "Device model",
             channel?.requireField<String>(ChannelRegistrationPayload.DEVICE_MODEL_KEY)
-        )
-
-        assertEquals(
-            "Carrier",
-            channel?.requireField<String>(ChannelRegistrationPayload.CARRIER_KEY)
         )
     }
 
@@ -470,7 +448,6 @@ public class ChannelRegistrationPayloadTest {
                 .setApiVersion(123)
                 .setSdkVersion("1.2.3")
                 .setDeviceModel("Device model")
-                .setCarrier("Carrier")
                 .build()
 
         assertEquals("Payload should be equal to itself.", payload, payload)
@@ -493,7 +470,6 @@ public class ChannelRegistrationPayloadTest {
                 .setApiVersion(123)
                 .setSdkVersion("1.2.3")
                 .setDeviceModel("Device model")
-                .setCarrier("Carrier")
                 .build()
 
         val payload2 = ChannelRegistrationPayload.Builder()
@@ -508,7 +484,6 @@ public class ChannelRegistrationPayloadTest {
                 .setApiVersion(123)
                 .setSdkVersion("1.2.3")
                 .setDeviceModel("Device model")
-                .setCarrier("Carrier")
                 .build()
 
         assertEquals("Payloads should match.", payload, payload2)
@@ -536,7 +511,6 @@ public class ChannelRegistrationPayloadTest {
             .setApiVersion(123)
             .setSdkVersion("1.2.3")
             .setDeviceModel("Device model")
-            .setCarrier("Carrier")
             .build()
 
         val emptyPayload = ChannelRegistrationPayload.Builder()
@@ -550,7 +524,6 @@ public class ChannelRegistrationPayloadTest {
             .setApiVersion(234)
             .setSdkVersion("2.3.4")
             .setDeviceModel("Other device model")
-            .setCarrier("Other carrier")
             .setBackgroundEnabled(!testBackgroundEnabled)
             .build()
 
@@ -588,13 +561,11 @@ public class ChannelRegistrationPayloadTest {
             .setPushAddress(testPushAddress)
             .setTags(testSetTags, testTags)
             .setUserId(testUserId)
-            .setAccengageDeviceId(testAccengageDeviceId)
             .setLocationSettings(true)
             .setAppVersion("123")
             .setApiVersion(123)
             .setSdkVersion("1.2.3")
             .setDeviceModel("Device model")
-            .setCarrier("Carrier")
             .build()
 
         val jsonPayload = ChannelRegistrationPayload.fromJson(payload.toJsonValue())
@@ -619,7 +590,6 @@ public class ChannelRegistrationPayloadTest {
             .setDeviceType(testDeviceType)
             .setPushAddress(testPushAddress)
             .setUserId(testUserId)
-            .setAccengageDeviceId(testAccengageDeviceId)
             .build()
 
         val jsonPayload = ChannelRegistrationPayload.fromJson(payload.toJsonValue())
@@ -636,7 +606,6 @@ public class ChannelRegistrationPayloadTest {
             .setDeviceType(testDeviceType)
             .setPushAddress(testPushAddress)
             .setUserId(testUserId)
-            .setAccengageDeviceId(testAccengageDeviceId)
             .build()
 
         val jsonPayload = ChannelRegistrationPayload.fromJson(payload.toJsonValue())
@@ -658,13 +627,11 @@ public class ChannelRegistrationPayloadTest {
             .setPushAddress(testPushAddress)
             .setTags(testSetTags, testTags)
             .setUserId(testUserId)
-            .setAccengageDeviceId(testAccengageDeviceId)
             .setLocationSettings(true)
             .setAppVersion("123")
             .setApiVersion(123)
             .setSdkVersion("1.2.3")
             .setDeviceModel("Device model")
-            .setCarrier("Carrier")
             .build()
 
         val newPayload = ChannelRegistrationPayload.Builder(payload)
@@ -677,7 +644,6 @@ public class ChannelRegistrationPayloadTest {
             .setApiVersion(234)
             .setSdkVersion("2.3.4")
             .setDeviceModel("Other device model")
-            .setCarrier("Other carrier")
             .build()
 
         val minPayload = newPayload.minimizedPayload(payload)
@@ -746,9 +712,7 @@ public class ChannelRegistrationPayloadTest {
             .setApiVersion(123)
             .setSdkVersion("1.2.3")
             .setDeviceModel("Device model")
-            .setCarrier("Carrier")
             .setContactId("contact id")
-            .setAccengageDeviceId("accengage ID")
             .build()
 
         val newPayload = ChannelRegistrationPayload.Builder(payload)
@@ -759,7 +723,6 @@ public class ChannelRegistrationPayloadTest {
 
         val expected = ChannelRegistrationPayload.Builder(payload)
             .setTags(false, null)
-            .setAccengageDeviceId(null)
             .setContactId("different contact id")
             .build()
 
@@ -781,7 +744,6 @@ public class ChannelRegistrationPayloadTest {
             .setApiVersion(123)
             .setSdkVersion("1.2.3")
             .setDeviceModel("Device model")
-            .setCarrier("Carrier")
             .setContactId("contact id")
             .setUserId("some-user")
             .build()
@@ -794,7 +756,6 @@ public class ChannelRegistrationPayloadTest {
 
         val expected = ChannelRegistrationPayload.Builder(payload)
             .setTags(false, null)
-            .setAccengageDeviceId(null)
             .setContactId(null)
             .setDeviceType(null)
             .setLanguage(null)
@@ -805,7 +766,6 @@ public class ChannelRegistrationPayloadTest {
             .setApiVersion(null)
             .setSdkVersion(null)
             .setDeviceModel(null)
-            .setCarrier(null)
             .setUserId(null)
             .build()
 

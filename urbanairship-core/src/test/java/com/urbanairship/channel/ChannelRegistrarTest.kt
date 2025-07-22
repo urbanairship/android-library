@@ -297,7 +297,6 @@ public class ChannelRegistrarTest {
 
     public fun testUpdateMinimizedPayload(): TestResult = runTest {
         val expectedPayload = ChannelRegistrationPayload.Builder()
-            .setCarrier("some thing")
             .setTimezone("neat time zone")
             .build()
 
@@ -326,7 +325,6 @@ public class ChannelRegistrarTest {
     @Test
     public fun testUpdateLocationChangeUsesFullPayload(): TestResult = runTest {
         val expectedPayload = ChannelRegistrationPayload.Builder()
-            .setCarrier("some thing")
             .setTimezone("neat time zone")
             .build()
 
