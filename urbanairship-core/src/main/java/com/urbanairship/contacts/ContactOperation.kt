@@ -158,7 +158,6 @@ internal sealed class ContactOperation(
     }
 
     internal companion object {
-        @JvmStatic
         fun fromJson(json: JsonValue): ContactOperation {
             val map = json.requireMap()
             val type = try {

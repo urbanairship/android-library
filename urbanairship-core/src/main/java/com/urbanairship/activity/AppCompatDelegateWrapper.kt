@@ -60,7 +60,6 @@ internal class AppCompatDelegateWrapper {
          * @param activity The activity.
          * @return Instance of `AppCompatDelegateWrapper`.
          */
-        @JvmStatic
         fun create(activity: Activity): AppCompatDelegateWrapper {
             val delegateWrapper = AppCompatDelegateWrapper()
             delegateWrapper.delegate = AppCompatDelegate.create(activity, null)

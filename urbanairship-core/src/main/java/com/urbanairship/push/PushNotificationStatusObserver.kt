@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 
 internal class PushNotificationStatusObserver @JvmOverloads constructor(
     initialValue: PushNotificationStatus,
-    listenerDispatcher: CoroutineDispatcher = Dispatchers.Main
+    listenerDispatcher: CoroutineDispatcher = Dispatchers.Main.immediate
 ) {
 
     private val listenerScope = CoroutineScope(listenerDispatcher + SupervisorJob())

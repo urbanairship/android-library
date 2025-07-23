@@ -8,8 +8,8 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import androidx.annotation.XmlRes
 import androidx.core.util.Consumer
-import androidx.core.util.ObjectsCompat
 import com.urbanairship.AirshipComponent
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.AirshipExecutors
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
@@ -19,7 +19,6 @@ import com.urbanairship.R
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
 import com.urbanairship.analytics.Analytics
-import com.urbanairship.analytics.Analytics.AnalyticsHeaderDelegate
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor.Companion.shared
 import com.urbanairship.app.SimpleApplicationListener
@@ -31,12 +30,10 @@ import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionDelegate
 import com.urbanairship.permission.PermissionPromptFallback
-import com.urbanairship.permission.PermissionRequestResult
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.push.PushProvider.PushProviderUnavailableException
@@ -49,9 +46,12 @@ import com.urbanairship.push.notifications.NotificationProvider
 import com.urbanairship.util.UAStringUtil
 import java.util.Calendar
 import java.util.Date
-import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.ExecutorService
 import kotlin.concurrent.Volatile
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -68,7 +68,8 @@ public open class PushManager @VisibleForTesting internal constructor(
     internal val permissionsManager: PermissionsManager,
     private val jobDispatcher: JobDispatcher,
     private val notificationManager: AirshipNotificationManager,
-    private val activityMonitor: ActivityMonitor
+    private val activityMonitor: ActivityMonitor,
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) : AirshipComponent(context, preferenceDataStore) {
 
     /**
@@ -82,24 +83,22 @@ public open class PushManager @VisibleForTesting internal constructor(
      * @see com.urbanairship.push.notifications.AirshipNotificationProvider
      * @see com.urbanairship.push.notifications.CustomLayoutNotificationProvider
      */
-    public var notificationProvider: NotificationProvider? =
+    public var notificationProvider: NotificationProvider =
         AirshipNotificationProvider(context, config.configOptions)
-    private val actionGroupMap: MutableMap<String, NotificationActionButtonGroup> = HashMap()
+    private val actionGroupMap = mutableMapOf<String, NotificationActionButtonGroup>()
     public var notificationChannelRegistry: NotificationChannelRegistry =
         NotificationChannelRegistry(context, config.configOptions)
     public var notificationListener: NotificationListener? = null
-    private val pushTokenListeners: MutableList<PushTokenListener> = CopyOnWriteArrayList()
-    private val pushListeners: MutableList<PushListener> = CopyOnWriteArrayList()
-    private val internalPushListeners: MutableList<PushListener> = CopyOnWriteArrayList()
-    private val internalNotificationListeners: MutableList<InternalNotificationListener> =
-        CopyOnWriteArrayList()
+    private val pushTokenListeners = mutableListOf<PushTokenListener>()
+    private val pushListeners = mutableListOf<PushListener>()
+    private val internalPushListeners = mutableListOf<PushListener>()
+    private val internalNotificationListeners = mutableListOf<InternalNotificationListener>()
 
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
     private val uniqueIdLock: Any = Any()
 
     /**
      * Gets the push provider.
-     *
-     * @return The available push provider.
      * @hide
      */
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -108,10 +107,10 @@ public open class PushManager @VisibleForTesting internal constructor(
     private var isPushManagerEnabled: Boolean? = null
 
     @Volatile
-    private var shouldDispatchUpdateTokenJob: Boolean = true
+    private var shouldDispatchUpdateTokenJob = true
 
     @Volatile
-    private var isAirshipReady: Boolean = false
+    private var isAirshipReady = false
 
     /**
      * Sets a predicate that determines if a notification should be presented in the foreground or not.
@@ -128,15 +127,12 @@ public open class PushManager @VisibleForTesting internal constructor(
      */
     init {
         actionGroupMap.putAll(
-            ActionButtonGroupsParser.fromXml(
-                context, R.xml.ua_notification_buttons
-            )
+            ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons)
         )
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             actionGroupMap.putAll(
-                ActionButtonGroupsParser.fromXml(
-                    context, R.xml.ua_notification_button_overrides
-                )
+                ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides)
             )
         }
 
@@ -157,6 +153,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      * @param permissionsManager The permissions manager.
      * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public constructor(
         context: Context,
         preferenceDataStore: PreferenceDataStore,
@@ -180,40 +177,39 @@ public open class PushManager @VisibleForTesting internal constructor(
         shared(context)
     )
 
-    override fun init() {
+    public override fun init() {
         super.init()
         airshipChannel.addChannelRegistrationPayloadExtender(channelExtender)
-        val headersDelegate = this.createAnalyticsHeaders()
-        analytics.addHeaderDelegate(object : AnalyticsHeaderDelegate {
-            override fun onCreateAnalyticsHeaders(): Map<String, String> {
-                return headersDelegate
-            }
-        })
+        analytics.addHeaderDelegate { this.createAnalyticsHeaders() }
         privacyManager.addListener {
             updateManagerEnablement()
             updateStatusObserver()
         }
 
-        permissionsManager.addAirshipEnabler { permission: Permission ->
-            if (permission == Permission.DISPLAY_NOTIFICATIONS) {
-                privacyManager.enable(PrivacyManager.Feature.PUSH)
-                preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
-                airshipChannel.updateRegistration()
-                updateStatusObserver()
+        permissionsManager.addAirshipEnabler { permission ->
+            when(permission) {
+                Permission.DISPLAY_NOTIFICATIONS -> {
+                    privacyManager.enable(PrivacyManager.Feature.PUSH)
+                    preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
+                    airshipChannel.updateRegistration()
+                    updateStatusObserver()
+                }
+                else -> {}
             }
         }
 
-        permissionsManager.addOnPermissionStatusChangedListener { permission: Permission, status: PermissionStatus? ->
-            if (permission == Permission.DISPLAY_NOTIFICATIONS) {
-                airshipChannel.updateRegistration()
-                updateStatusObserver()
+        permissionsManager.addOnPermissionStatusChangedListener { permission, _ ->
+            when(permission) {
+                Permission.DISPLAY_NOTIFICATIONS -> {
+                    airshipChannel.updateRegistration()
+                    updateStatusObserver()
+                }
+                else -> {}
             }
         }
 
-        var defaultChannelId: String? = config.configOptions.notificationChannel
-        if (defaultChannelId == null) {
-            defaultChannelId = AirshipNotificationProvider.DEFAULT_NOTIFICATION_CHANNEL
-        }
+        val defaultChannelId = config.configOptions.notificationChannel
+            ?: AirshipNotificationProvider.DEFAULT_NOTIFICATION_CHANNEL
 
         val delegate: PermissionDelegate = NotificationsPermissionDelegate(
             defaultChannelId,
@@ -227,7 +223,9 @@ public open class PushManager @VisibleForTesting internal constructor(
         updateManagerEnablement()
     }
 
-    override fun onAirshipReady() {
+    @VisibleForTesting
+    //TODO: il restore internal when AirshipComponent is converted to kotlin
+    public override fun onAirshipReady() {
         isAirshipReady = true
 
         privacyManager.addListener { checkPermission() }
@@ -241,52 +239,53 @@ public open class PushManager @VisibleForTesting internal constructor(
         checkPermission()
     }
 
-    private fun checkPermission(onCheckComplete: Runnable? = null) {
+    private fun checkPermission(onCheckComplete: Runnable? = null) = scope.launch {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
-            return
+            return@launch
         }
 
-        permissionsManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
-        { status: PermissionStatus? ->
-            if (status == PermissionStatus.GRANTED) {
+        val status =
+            permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+        when (status) {
+            PermissionStatus.GRANTED -> {
                 preferenceDataStore.put(REQUEST_PERMISSION_KEY, false)
                 onCheckComplete?.run()
-                return@checkPermissionStatus
             }
-            if (shouldRequestNotificationPermission()) {
-                permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS) {
-                    requestResult: PermissionRequestResult? ->
+
+            else -> {
+                if (shouldRequestNotificationPermission()) {
+                    preferenceDataStore.put(REQUEST_PERMISSION_KEY, false)
+                    permissionsManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS)
+                    onCheckComplete?.run()
+                } else {
                     onCheckComplete?.run()
                 }
-                preferenceDataStore.put(REQUEST_PERMISSION_KEY, false)
-            } else {
-                onCheckComplete?.run()
             }
         }
     }
 
     private fun shouldRequestNotificationPermission(): Boolean {
-        return privacyManager.isEnabled(PrivacyManager.Feature.PUSH) &&
-                activityMonitor.isAppForegrounded && isAirshipReady && userNotificationsEnabled
-                && preferenceDataStore.getBoolean(
-            REQUEST_PERMISSION_KEY, true
-        ) && config.configOptions.isPromptForPermissionOnUserNotificationsEnabled
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) return false
+        if (!activityMonitor.isAppForegrounded) return false
+        if (!isAirshipReady) return false
+        if (!userNotificationsEnabled) return false
+        if (!preferenceDataStore.getBoolean(REQUEST_PERMISSION_KEY, true)) return false
+        if (!config.configOptions.isPromptForPermissionOnUserNotificationsEnabled) return false
+
+        return true
     }
 
     private fun updateManagerEnablement() {
         if (privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
-            isPushManagerEnabled?.let {
-                if (isPushManagerEnabled == true) {
-                    return
-                }
+            if (isPushManagerEnabled == true) {
+                return
             }
 
             isPushManagerEnabled = true
             if (pushProvider == null) {
                 pushProvider = resolvePushProvider()
-                val pushDeliveryType: String? =
-                    preferenceDataStore.getString(PUSH_DELIVERY_TYPE, null)
-                if (pushProvider == null || pushProvider?.deliveryType != pushDeliveryType) {
+                val pushDeliveryType = preferenceDataStore.getString(PUSH_DELIVERY_TYPE, null)
+                if (pushProvider?.deliveryType != pushDeliveryType) {
                     clearPushToken()
                 }
             }
@@ -318,24 +317,18 @@ public open class PushManager @VisibleForTesting internal constructor(
 
     private fun resolvePushProvider(): PushProvider? {
         // Existing provider class
-        val existingProviderClass: String? = preferenceDataStore.getString(PROVIDER_CLASS_KEY, null)
-        val pushProviders: PushProviders = ObjectsCompat.requireNonNull(
-            pushProvidersSupplier.get()
-        )
+        val pushProviders = pushProvidersSupplier.get() ?: return null
+        val existingProviderClass = preferenceDataStore.getString(PROVIDER_CLASS_KEY, null)
+
         // Try to use the same provider
-        if (!UAStringUtil.isEmpty(existingProviderClass)) {
-            val provider: PushProvider? =
-                pushProviders.getProvider(config.platform, existingProviderClass!!)
-            if (provider != null) {
-                return provider
-            }
+        if (existingProviderClass?.isNotEmpty() == true) {
+            pushProviders.getProvider(config.platform, existingProviderClass)?.let { return it }
         }
 
+
         // Find the best provider for the platform
-        val provider: PushProvider? = pushProviders.getBestProvider(config.platform)
-        if (provider != null) {
-            preferenceDataStore.put(PROVIDER_CLASS_KEY, provider.javaClass.toString())
-        }
+        val provider = pushProviders.getBestProvider(config.platform)
+        provider?.let { preferenceDataStore.put(PROVIDER_CLASS_KEY, it.javaClass.toString()) }
 
         return provider
     }
@@ -351,11 +344,9 @@ public open class PushManager @VisibleForTesting internal constructor(
                     performPushRegistration(false)
                 }
 
-                val pushToken: String? = pushToken
                 builder.setPushAddress(pushToken)
-                val provider: PushProvider? = pushProvider
-
-                if (pushToken != null && provider != null && provider.platform == UAirship.ANDROID_PLATFORM) {
+                val provider = pushProvider
+                if (pushToken != null && provider?.platform == UAirship.ANDROID_PLATFORM) {
                     builder.setDeliveryType(provider.deliveryType)
                 }
 
@@ -377,25 +368,17 @@ public open class PushManager @VisibleForTesting internal constructor(
             ACTION_UPDATE_PUSH_REGISTRATION -> return performPushRegistration(true)
 
             ACTION_DISPLAY_NOTIFICATION -> {
-                val message: PushMessage =
-                    PushMessage.fromJsonValue(jobInfo.extras.opt(PushProviderBridge.EXTRA_PUSH))
-                val providerClass: String? =
-                    jobInfo.extras.opt(PushProviderBridge.EXTRA_PROVIDER_CLASS).string
+                val message = PushMessage.fromJsonValue(jobInfo.extras.opt(PushProviderBridge.EXTRA_PUSH))
+                val providerClass = jobInfo.extras.opt(PushProviderBridge.EXTRA_PROVIDER_CLASS).string
+                    ?: return JobResult.SUCCESS
 
-                if (providerClass == null) {
-                    return JobResult.SUCCESS
-                }
-
-                val pushRunnable: IncomingPushRunnable = IncomingPushRunnable.Builder(context)
+                IncomingPushRunnable.Builder(context)
                     .setLongRunning(true)
                     .setProcessed(true)
                     .setMessage(message)
                     .setProviderClass(providerClass)
                     .build()
-
-                pushRunnable.run()
-
-                return JobResult.SUCCESS
+                    .run()
             }
         }
 
@@ -404,9 +387,6 @@ public open class PushManager @VisibleForTesting internal constructor(
 
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val isPushEnabled: Boolean
-        /**
-         * @hide
-         */
         get() = privacyManager.isEnabled(PrivacyManager.Feature.PUSH)
 
     /**
@@ -416,7 +396,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      *
      * @param consumer A consumer that will be passed the success of the permission prompt.
      */
-    public fun enableUserNotifications(consumer: Consumer<Boolean?>) {
+    public fun enableUserNotifications(consumer: Consumer<Boolean>) {
         enableUserNotifications(PermissionPromptFallback.None, consumer)
     }
 
@@ -434,18 +414,20 @@ public open class PushManager @VisibleForTesting internal constructor(
             return preferenceDataStore.getBoolean(USER_NOTIFICATIONS_ENABLED_KEY, false)
         }
         set(enabled) {
-            if (userNotificationsEnabled != enabled) {
-                preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled)
-                if (enabled) {
-                    preferenceDataStore.put(REQUEST_PERMISSION_KEY, true)
-                    checkPermission { airshipChannel.updateRegistration() }
-                } else {
-                    airshipChannel.updateRegistration()
-                }
-                updateStatusObserver()
+            if (userNotificationsEnabled == enabled) {
+                return
             }
-        }
 
+            preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled)
+            if (enabled) {
+                preferenceDataStore.put(REQUEST_PERMISSION_KEY, true)
+                checkPermission { airshipChannel.updateRegistration() }
+            } else {
+                airshipChannel.updateRegistration()
+            }
+
+            updateStatusObserver()
+        }
 
     /**
      * Enables user notifications on Airship and tries to prompt for the notification permission.
@@ -456,14 +438,16 @@ public open class PushManager @VisibleForTesting internal constructor(
      * @param consumer A consumer that will be passed the success of the permission prompt.
      */
     public fun enableUserNotifications(
-        promptFallback: PermissionPromptFallback, consumer: Consumer<Boolean?>
+        promptFallback: PermissionPromptFallback,
+        consumer: Consumer<Boolean>
     ) {
-        preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
-        permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS,
-            false,
-            promptFallback
-        ) { result: PermissionRequestResult? ->
-            consumer.accept(result!!.permissionStatus == PermissionStatus.GRANTED)
+        scope.launch {
+            preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
+            val status = permissionsManager.suspendingRequestPermission(
+                permission = Permission.DISPLAY_NOTIFICATIONS,
+                fallback = promptFallback
+            )
+            consumer.accept(status.permissionStatus == PermissionStatus.GRANTED)
             updateStatusObserver()
         }
     }
@@ -520,17 +504,13 @@ public open class PushManager @VisibleForTesting internal constructor(
                 return false
             }
 
-            val quietTimeInterval: QuietTimeInterval
-
-            try {
-                quietTimeInterval =
-                    QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL))
+            return try {
+                QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL))
+                    .isInQuietTime(Calendar.getInstance())
             } catch (e: JsonException) {
                 UALog.e(e, "Failed to parse quiet time interval")
-                return false
+                false
             }
-
-            return quietTimeInterval.isInQuietTime(Calendar.getInstance())
         }
 
     /** The Quiet Time interval set by the user. */
@@ -540,17 +520,14 @@ public open class PushManager @VisibleForTesting internal constructor(
     )
     public val quietTimeInterval: Array<Date>?
         get() {
-            val quietTimeInterval: QuietTimeInterval
 
-            try {
-                quietTimeInterval =
-                    QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL))
+            return try {
+                QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL))
+                    .quietTimeIntervalDateArray
             } catch (e: JsonException) {
                 UALog.e(e, "Failed to parse quiet time interval")
-                return null
+                null
             }
-
-            return quietTimeInterval.quietTimeIntervalDateArray
         }
 
     /**
@@ -564,23 +541,19 @@ public open class PushManager @VisibleForTesting internal constructor(
       use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
     )
     public fun setQuietTimeInterval(startTime: Date, endTime: Date) {
-        val quietTimeInterval: QuietTimeInterval =
-            QuietTimeInterval.newBuilder().setQuietTimeInterval(startTime, endTime).build()
+        val quietTimeInterval = QuietTimeInterval.newBuilder()
+            .setQuietTimeInterval(startTime, endTime)
+            .build()
         preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue())
     }
 
     /** Whether the app is capable of receiving push (`true` if a push token is present). */
     public val isPushAvailable: Boolean
-        get() {
-            return privacyManager.isEnabled(PrivacyManager.Feature.PUSH) &&
-                    !UAStringUtil.isEmpty(pushToken)
-        }
+        get() = privacyManager.isEnabled(PrivacyManager.Feature.PUSH) && !UAStringUtil.isEmpty(pushToken)
 
     /** Whether the app is currently opted in for push. */
     public val isOptIn: Boolean
-        get() {
-            return isPushAvailable && areNotificationsOptedIn()
-        }
+        get() = isPushAvailable && areNotificationsOptedIn()
 
     /**
      * Checks if notifications are enabled for the app and in the push manager.
@@ -700,7 +673,7 @@ public open class PushManager @VisibleForTesting internal constructor(
             listener.onPushReceived(message, notificationPosted)
         }
 
-        val isInternal: Boolean = message.isRemoteDataUpdate || message.isPing
+        val isInternal = message.isRemoteDataUpdate || message.isPing
         if (!isInternal) {
             for (listener: PushListener in pushListeners) {
                 listener.onPushReceived(message, notificationPosted)
@@ -712,16 +685,15 @@ public open class PushManager @VisibleForTesting internal constructor(
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun onNotificationPosted(
-        message: PushMessage, notificationId: Int, notificationTag: String?
+        message: PushMessage,
+        notificationId: Int,
+        notificationTag: String?
     ) {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             return
         }
-        val listener: NotificationListener? = notificationListener
-        if (listener != null) {
-            val info: NotificationInfo = NotificationInfo(message, notificationId, notificationTag)
-            listener.onNotificationPosted(info)
-        }
+
+        notificationListener?.onNotificationPosted(NotificationInfo(message, notificationId, notificationTag))
     }
 
     /**
@@ -768,10 +740,9 @@ public open class PushManager @VisibleForTesting internal constructor(
      * @param resId The xml resource ID.
      */
     public fun addNotificationActionButtonGroups(context: Context, @XmlRes resId: Int) {
-        val groups: Map<String, NotificationActionButtonGroup> =
-            ActionButtonGroupsParser.fromXml(context, resId)
-        for (entry: Map.Entry<String, NotificationActionButtonGroup> in groups.entries) {
-            addNotificationActionButtonGroup(entry.key, entry.value)
+        val groups = ActionButtonGroupsParser.fromXml(context, resId)
+        groups.entries.forEach { (id, group) ->
+            addNotificationActionButtonGroup(id, group)
         }
     }
 
@@ -799,22 +770,14 @@ public open class PushManager @VisibleForTesting internal constructor(
      * @return The notification action group.
      */
     public fun getNotificationActionGroup(id: String?): NotificationActionButtonGroup? {
-        if (id == null) {
-            return null
-        }
-        return actionGroupMap[id]
+        return id?.let { actionGroupMap[it] }
     }
 
     /**
      * Gets the push token.
-     *
-     * @return The push token.
      */
     public val pushToken: String?
-
-        get() {
-            return preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
-        }
+        get() = preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
 
     /**
      * Clear the push token.
@@ -825,15 +788,11 @@ public open class PushManager @VisibleForTesting internal constructor(
         updateStatusObserver()
     }
 
+    /**
+     * Gets the [PushProviderType] corresponding to the current push provider.
+     */
     public val pushProviderType: PushProviderType
-        /**
-         * Gets the [PushProviderType] corresponding to the current push provider.
-         *
-         * @return The active [PushProviderType].
-         */
-        get() {
-            return from(pushProvider)
-        }
+        get() = from(pushProvider)
 
     /**
      * Check to see if we've seen this ID before. If we have,
@@ -848,21 +807,18 @@ public open class PushManager @VisibleForTesting internal constructor(
         }
 
         synchronized(uniqueIdLock) {
-            var jsonList: JsonList? = null
-            try {
-                jsonList = JsonValue.parseString(
-                    preferenceDataStore.getString(
-                        LAST_CANONICAL_IDS_KEY, null
-                    )
-                ).list
+            val jsonList = try {
+                val json = preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null)
+                JsonValue.parseString(json).list
             } catch (e: JsonException) {
                 UALog.d(e, "Unable to parse canonical Ids.")
+                null
             }
 
-            var canonicalIds: MutableList<JsonValue> = jsonList?.list?.toMutableList() ?: mutableListOf()
+            val canonicalIds = jsonList?.list?.toMutableList() ?: mutableListOf()
 
             // Wrap the canonicalId
-            val id: JsonValue = JsonValue.wrap(canonicalId)
+            val id = JsonValue.wrap(canonicalId)
 
             // Check if the list contains the canonicalId
             if (canonicalIds.contains(id)) {
@@ -872,8 +828,8 @@ public open class PushManager @VisibleForTesting internal constructor(
             // Add it
             canonicalIds.add(id)
             if (canonicalIds.size > MAX_CANONICAL_IDS) {
-                canonicalIds =
-                    canonicalIds.subList(canonicalIds.size - MAX_CANONICAL_IDS, canonicalIds.size)
+                val itemsToDrop = canonicalIds.size - MAX_CANONICAL_IDS
+                canonicalIds.drop(itemsToDrop)
             }
 
             // Store the new list
@@ -892,10 +848,9 @@ public open class PushManager @VisibleForTesting internal constructor(
      */
     public fun performPushRegistration(updateChannelOnChange: Boolean): JobResult {
         shouldDispatchUpdateTokenJob = false
-        val currentToken: String? = pushToken
-        val provider: PushProvider? = pushProvider
+//        val currentToken: String? = pushToken
 
-        if (provider == null) {
+        val provider = pushProvider ?: run {
             UALog.i("PushManager - Push registration failed. Missing push provider.")
             return JobResult.SUCCESS
         }
@@ -905,13 +860,11 @@ public open class PushManager @VisibleForTesting internal constructor(
             return JobResult.RETRY
         }
 
-        val token: String?
-        try {
-            token = provider.getRegistrationToken(context)
+        val token = try {
+            provider.getRegistrationToken(context)
         } catch (e: PushProviderUnavailableException) {
             UALog.d(
-                "Push registration failed, provider unavailable. Error: %s. Will retry.",
-                e.message,
+                "Push registration failed, provider unavailable. Error: ${e.message}. Will retry.",
                 e
             )
             return JobResult.RETRY
@@ -926,7 +879,7 @@ public open class PushManager @VisibleForTesting internal constructor(
             }
         }
 
-        if (token != null && !UAStringUtil.equals(token, currentToken)) {
+        if (token != null && token != pushToken) {
             UALog.i("PushManager - Push registration updated.")
 
             preferenceDataStore.put(PUSH_DELIVERY_TYPE, provider.deliveryType)
@@ -964,22 +917,25 @@ public open class PushManager @VisibleForTesting internal constructor(
     }
 
     public fun onTokenChanged(pushProviderClass: Class<out PushProvider?>?, token: String?) {
-        if (privacyManager.isEnabled(PrivacyManager.Feature.PUSH) && pushProvider != null) {
-            if (pushProviderClass != null && pushProvider?.javaClass == pushProviderClass) {
-                val oldToken: String? = preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
-                if (token != null && token != oldToken) {
-                    clearPushToken()
-                }
-            }
-            dispatchUpdateJob()
+        val provider = pushProvider ?: return
+        if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
+            return
         }
+
+        if (pushProviderClass != null && provider.javaClass == pushProviderClass) {
+            val oldToken = preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
+            if (token != null && token != oldToken) {
+                clearPushToken()
+            }
+        }
+        dispatchUpdateJob()
     }
 
+    /**
+     * Returns the current Airship push notification status.
+     * @return A status object.
+     */
     public val pushNotificationStatus: PushNotificationStatus
-        /**
-         * Returns the current Airship push notification status.
-         * @return A status object.
-         */
         get() {
             return PushNotificationStatus(
                 userNotificationsEnabled,
@@ -998,12 +954,11 @@ public open class PushManager @VisibleForTesting internal constructor(
         /**
          * Action sent as a broadcast when a notification is opened.
          *
-         *
          * Extras:
-         * [.EXTRA_NOTIFICATION_ID],
-         * [.EXTRA_PUSH_MESSAGE_BUNDLE],
-         * [.EXTRA_NOTIFICATION_BUTTON_ID],
-         * [.EXTRA_NOTIFICATION_BUTTON_FOREGROUND]
+         * [EXTRA_NOTIFICATION_ID],
+         * [EXTRA_PUSH_MESSAGE_BUNDLE],
+         * [EXTRA_NOTIFICATION_BUTTON_ID],
+         * [EXTRA_NOTIFICATION_BUTTON_FOREGROUND]
          *
          * @hide
          */
@@ -1016,8 +971,8 @@ public open class PushManager @VisibleForTesting internal constructor(
          *
          *
          * Extras:
-         * [.EXTRA_NOTIFICATION_ID],
-         * [.EXTRA_PUSH_MESSAGE_BUNDLE]
+         * [EXTRA_NOTIFICATION_ID],
+         * [EXTRA_PUSH_MESSAGE_BUNDLE]
          *
          * @hide
          */

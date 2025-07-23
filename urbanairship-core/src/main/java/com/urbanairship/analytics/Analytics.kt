@@ -73,7 +73,7 @@ public constructor(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public interface AnalyticsHeaderDelegate {
+    public fun interface AnalyticsHeaderDelegate {
         public fun onCreateAnalyticsHeaders(): Map<String, String>
     }
 

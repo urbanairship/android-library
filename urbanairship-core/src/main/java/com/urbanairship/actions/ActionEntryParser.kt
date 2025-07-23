@@ -37,7 +37,6 @@ internal object ActionEntryParser {
      * @param resource The xml resource.
      * @return A list of action entries.
      */
-    @JvmStatic
     fun fromXml(context: Context, @XmlRes resource: Int): List<ActionRegistry.Entry> {
         val parser = context.resources.getXml(resource)
 

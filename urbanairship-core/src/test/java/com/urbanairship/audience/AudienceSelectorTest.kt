@@ -149,7 +149,7 @@ public class AudienceSelectorTest {
     public fun testPermissionsPredicate(): TestResult = runTest {
         val predicate = JsonPredicate.newBuilder()
             .addMatcher(JsonMatcher.newBuilder()
-                .setKey(Permission.DISPLAY_NOTIFICATIONS.getValue())
+                .setKey(Permission.DISPLAY_NOTIFICATIONS.value)
                 .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrap("granted")))
                 .build())
             .build()

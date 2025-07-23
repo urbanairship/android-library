@@ -48,7 +48,6 @@ public object BatchedQueryHelper {
      * @param <T> The list type.
     </T> */
     @VisibleForTesting
-    @JvmStatic
     public fun <T> runBatched(
         @IntRange(from = 1) batchSize: Int, items: List<T>, callback: Consumer<List<T>>
     ) {

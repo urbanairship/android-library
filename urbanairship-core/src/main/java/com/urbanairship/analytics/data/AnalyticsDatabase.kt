@@ -28,15 +28,15 @@ import java.io.File
 @TypeConverters(JsonTypeConverters::class)
 internal abstract class AnalyticsDatabase : RoomDatabase() {
 
-    public abstract val eventDao: EventDao
+    abstract val eventDao: EventDao
 
-    public fun exists(context: Context): Boolean {
+    fun exists(context: Context): Boolean {
         val helper = openHelper
         // null databaseName means it is an in-memory database. Lets assume the database exists when in-memory.
         return helper.databaseName == null || context.getDatabasePath(helper.databaseName).exists()
     }
 
-    public companion object {
+    companion object {
 
         private const val DATABASE_DIR = "com.urbanairship.databases"
         private const val DATABASE_NAME = "ua_analytics.db"
@@ -79,7 +79,7 @@ internal abstract class AnalyticsDatabase : RoomDatabase() {
             }
         }
 
-        private val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+        internal val MIGRATION_2_3: Migration = object : Migration(2, 3) {
             private val TABLE_NAME = "events"
 
             private val ID = "id"
@@ -130,7 +130,7 @@ internal abstract class AnalyticsDatabase : RoomDatabase() {
             }
         }
 
-        public fun createDatabase(
+        fun createDatabase(
             context: Context, config: AirshipRuntimeConfig
         ): AnalyticsDatabase {
             // Attempt to migrate an existing analytics db by moving it to the new location. The 1 -> 2
@@ -166,7 +166,7 @@ internal abstract class AnalyticsDatabase : RoomDatabase() {
         }
 
         @VisibleForTesting
-        public fun createInMemoryDatabase(context: Context): AnalyticsDatabase {
+        fun createInMemoryDatabase(context: Context): AnalyticsDatabase {
             return inMemoryDatabaseBuilder(context, AnalyticsDatabase::class.java)
                 .allowMainThreadQueries()
                 .build()

@@ -3,20 +3,18 @@ package com.urbanairship.analytics.data
 
 import androidx.core.util.Consumer
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.analytics.data.BatchedQueryHelper.runBatched
-import java.util.Arrays
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class BatchedQueryHelperTest public constructor() {
+public class BatchedQueryHelperTest {
 
     private val callback = TestConsumer()
 
     @Test
     public fun runsMultipleBatches() {
-        runBatched(3, LIST, callback)
+        BatchedQueryHelper.runBatched(3, LIST, callback)
         Assert.assertEquals(4, callback.batches.size.toLong())
         val expected = listOf(
             listOf(0, 1, 2),
@@ -29,7 +27,7 @@ public class BatchedQueryHelperTest public constructor() {
 
     @Test
     public fun runsMultipleSingleItemBatches() {
-        runBatched(1, LIST, callback)
+        BatchedQueryHelper.runBatched(1, LIST, callback)
         Assert.assertEquals(11, callback.batches.size.toLong())
         val expected = LIST.map { listOf(it) }
         Assert.assertEquals(expected, callback.batches)
@@ -37,14 +35,14 @@ public class BatchedQueryHelperTest public constructor() {
 
     @Test
     public fun runsSingleBatch() {
-        runBatched(LIST.size, LIST, callback)
+        BatchedQueryHelper.runBatched(LIST.size, LIST, callback)
         Assert.assertEquals(1, callback.batches.size.toLong())
         Assert.assertEquals(LIST, callback.batches[0])
     }
 
     @Test(expected = IllegalArgumentException::class)
     public fun throwsOnZeroBatchSize() {
-        runBatched(0, LIST, callback)
+        BatchedQueryHelper.runBatched(0, LIST, callback)
     }
 
 

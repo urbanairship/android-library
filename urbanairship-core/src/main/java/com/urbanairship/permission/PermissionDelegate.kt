@@ -1,12 +1,9 @@
 /* Copyright Airship and Contributors */
+package com.urbanairship.permission
 
-package com.urbanairship.permission;
-
-import android.content.Context;
-
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.core.util.Consumer;
+import android.content.Context
+import androidx.annotation.MainThread
+import androidx.core.util.Consumer
 
 /**
  * Permission delegate to extend what permissions the Airship SDK can collect.
@@ -20,7 +17,7 @@ public interface PermissionDelegate {
      * @param callback The callback.
      */
     @MainThread
-    void checkPermissionStatus(@NonNull Context context, @NonNull Consumer<PermissionStatus> callback);
+    public fun checkPermissionStatus(context: Context, callback: Consumer<PermissionStatus>)
 
     /**
      * Called when the delegate should request permissions.
@@ -29,6 +26,5 @@ public interface PermissionDelegate {
      * @param callback The callback.
      */
     @MainThread
-    void requestPermission(@NonNull Context context, @NonNull Consumer<PermissionRequestResult> callback);
-
+    public fun requestPermission(context: Context, callback: Consumer<PermissionRequestResult>)
 }
