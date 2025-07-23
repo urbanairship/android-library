@@ -11,7 +11,9 @@ import com.urbanairship.analytics.AirshipEventData
 import com.urbanairship.analytics.Event
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
+import com.urbanairship.util.FormatterUtils.toSecondsString
 import java.nio.charset.StandardCharsets
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Representation of an [Event] for persistent storage via Room.
@@ -32,7 +34,7 @@ internal data class EventEntity constructor(
         0,
         event.type.reportingName,
         event.id,
-        Event.millisecondsToSecondsString(event.timeMs),
+        event.timeMs.milliseconds.toSecondsString(),
         event.fullEventPayload,
         event.sessionId,
         event.fullEventPayload.toString().toByteArray(StandardCharsets.UTF_8).size

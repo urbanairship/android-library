@@ -7,6 +7,8 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.extend
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.util.FormatterUtils.toSecondsString
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Airship event data.
@@ -72,7 +74,7 @@ public class AirshipEventData(
     public val fullEventPayload: JsonValue = jsonMapOf(
         Event.TYPE_KEY to type.reportingName,
         Event.EVENT_ID_KEY to id,
-        Event.TIME_KEY to Event.millisecondsToSecondsString(timeMs),
+        Event.TIME_KEY to timeMs.milliseconds.toSecondsString(),
         Event.DATA_KEY to body.optMap().extend(
             Event.SESSION_ID_KEY to sessionId
         )

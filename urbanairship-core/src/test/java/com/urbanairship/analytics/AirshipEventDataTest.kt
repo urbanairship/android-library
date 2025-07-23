@@ -4,7 +4,9 @@ package com.urbanairship.analytics
 import com.urbanairship.BaseTestCase
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.util.FormatterUtils.toSecondsString
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -24,7 +26,7 @@ public class AirshipEventDataTest : BaseTestCase() {
             {
                 "event_id": "${event.id}",
                 "type": "${event.type.reportingName}",
-                "time": "${Event.millisecondsToSecondsString(event.timeMs)}",
+                "time": "${event.timeMs.milliseconds.toSecondsString()}",
                 "data": {
                     "session_id": "${event.sessionId}",
                     "foo": "bar"

@@ -5,6 +5,8 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.util.FormatterUtils.toSecondsString
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * A screen tracking event allows users to track an activity by associating a
@@ -40,9 +42,9 @@ internal class ScreenTrackingEvent(
     override fun getEventData(conversionData: ConversionData): JsonMap = jsonMapOf(
         SCREEN_KEY to screen,
         PREVIOUS_SCREEN_KEY to previousScreen,
-        START_TIME_KEY to millisecondsToSecondsString(startTime),
-        STOP_TIME_KEY to millisecondsToSecondsString(stopTime),
-        DURATION_KEY to millisecondsToSecondsString(stopTime - startTime)
+        START_TIME_KEY to startTime.milliseconds.toSecondsString(),
+        STOP_TIME_KEY to stopTime.milliseconds.toSecondsString(),
+        DURATION_KEY to (stopTime - startTime).milliseconds.toSecondsString()
     )
 
     companion object {

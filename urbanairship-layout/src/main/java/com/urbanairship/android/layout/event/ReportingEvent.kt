@@ -9,7 +9,7 @@ import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import java.util.Locale
+import com.urbanairship.util.FormatterUtils.toSecondsString
 import kotlin.time.Duration
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -156,12 +156,10 @@ public sealed class ReportingEvent {
             }
 
             override fun toJsonValue(): JsonValue {
-                val displayMilliseconds = displayTime.inWholeMilliseconds / 1000.0
-
                 return jsonMapOf(
                     IDENTIFIER to identifier,
                     INDEX to index,
-                    DISPLAY_TIME to String.format(Locale.US, "%.2f", displayMilliseconds)
+                    DISPLAY_TIME to displayTime.toSecondsString()
                 ).toJsonValue()
             }
         }

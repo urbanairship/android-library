@@ -2,13 +2,13 @@
 package com.urbanairship.analytics
 
 import androidx.annotation.RestrictTo
-import androidx.annotation.VisibleForTesting
 import com.urbanairship.json.JsonMap
 import com.urbanairship.util.Clock
+import com.urbanairship.util.FormatterUtils.toSecondsString
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * This abstract class encapsulates analytics events.
@@ -37,7 +37,7 @@ public abstract class Event @JvmOverloads public constructor(
      * @return Seconds from the epoch, as a String.
      */
     public val time: String
-        get() = millisecondsToSecondsString(timeMilliseconds)
+        get() = timeMilliseconds.milliseconds.toSecondsString()
 
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public abstract val type: EventType
@@ -99,17 +99,5 @@ public abstract class Event @JvmOverloads public constructor(
         public const val LIB_VERSION_KEY: String = "lib_version"
         public const val PACKAGE_VERSION_KEY: String = "package_version"
         public const val LAST_METADATA_KEY: String = "last_metadata"
-
-        /**
-         * Helper method to convert milliseconds to a seconds string containing a double.
-         *
-         * @param milliseconds Milliseconds to convert.
-         * @return Seconds as a string containing a double.
-         * @hide
-         */
-        @VisibleForTesting
-        internal fun millisecondsToSecondsString(milliseconds: Long): String {
-            return String.format(Locale.US, "%.3f", milliseconds / 1000.0)
-        }
     }
 }

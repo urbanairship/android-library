@@ -17,13 +17,13 @@ public class ScreenTrackingEventTest {
      */
     @Test
     public fun testScreenTrackingEventData() {
-        val event = ScreenTrackingEvent("test_screen", "previous_screen", 0, 1)
+        val event = ScreenTrackingEvent("test_screen", "previous_screen", 0, 10)
 
         val expected = JsonValue.parseString("""
             {
-              "duration": "0.001",
-              "entered_time": "0.000",
-              "exited_time": "0.001",
+              "duration": "0.01",
+              "entered_time": "0.00",
+              "exited_time": "0.01",
               "previous_screen": "previous_screen",
               "screen": "test_screen"
             }
