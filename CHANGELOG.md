@@ -4,6 +4,17 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.10.0 - July 24, 2025
+A minor release with accessibility and layout improvements to Scenes, a key performance update, and several bug fixes.
+
+### Changes
+- Added support in Scenes for linking form inputs to a label for better accessibility.
+- Added container item alignment to Scenes to change the natural alignment within a container.
+- Updated the initial remote-data request (IAX, Config, Feature Flags, etc...) to bypass work manager to improve performance.
+- Fixed setting content-descriptions on a text/number/email input in Scenes to provide better accessibility.
+- Fixed potential automation dao crash when migrating from an older SDK version.
+- Fixed an issue where dismissing a Scene with a back gesture could prevent it from displaying again in the same session.
+
 ## Version 19.9.2 - July 11, 2025
 Patch release with several fixes and accessibility improvements for Scenes. 
 
