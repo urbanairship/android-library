@@ -61,9 +61,7 @@ internal class TextInputView(
         clipToOutline = true
 
         LayoutUtils.applyTextInputModel(input, model)
-
         model.contentDescription(context).ifNotEmpty { contentDescription = it }
-
         model.listener = object : TextInputModel.Listener {
             override fun restoreValue(value: String) {
                 if (input.text.isNullOrEmpty()) input.setText(value)
@@ -128,6 +126,7 @@ internal class TextInputView(
             it.movementMethod = ScrollingMovementMethod()
             it.background = null
             it.clipToOutline = true
+            it.id = model.editTextViewId
         }
     }
 

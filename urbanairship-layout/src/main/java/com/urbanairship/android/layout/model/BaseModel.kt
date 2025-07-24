@@ -16,6 +16,8 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.Accessible
 import com.urbanairship.android.layout.info.FormValidationMode
+import com.urbanairship.android.layout.info.Identifiable
+import com.urbanairship.android.layout.info.RecentlyIdentifiable
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.info.Validatable
 import com.urbanairship.android.layout.info.View
@@ -72,7 +74,13 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
     internal open var listener: L? = null
 
-    val viewId: Int = AndroidView.generateViewId()
+    open val viewId: Int = with(environment.viewIdResolver) {
+        when (viewInfo) {
+            is RecentlyIdentifiable -> viewId(viewInfo.identifier, viewInfo.type)
+            is Identifiable -> viewId(viewInfo.identifier, viewInfo.type)
+            else -> viewId()
+        }
+    }
 
     private var background: Background? = null
 
