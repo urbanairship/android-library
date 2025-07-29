@@ -14,13 +14,13 @@ public class PushProvidersTest extends BaseTestCase {
 
     @Test
     public void testValidPushProvider() {
-        verifyInvalidProvider(new TestPushProvider(UAirship.AMAZON_PLATFORM, PushProvider.FCM_DELIVERY_TYPE));
-        verifyInvalidProvider(new TestPushProvider(UAirship.AMAZON_PLATFORM, PushProvider.HMS_DELIVERY_TYPE));
-        verifyInvalidProvider(new TestPushProvider(UAirship.ANDROID_PLATFORM, PushProvider.ADM_DELIVERY_TYPE));
+        verifyInvalidProvider(new TestPushProvider(UAirship.AMAZON_PLATFORM, PushProvider.DeliveryType.FCM));
+        verifyInvalidProvider(new TestPushProvider(UAirship.AMAZON_PLATFORM, PushProvider.DeliveryType.HMS));
+        verifyInvalidProvider(new TestPushProvider(UAirship.ANDROID_PLATFORM, PushProvider.DeliveryType.ADM));
 
-        verifyValidProvider(new TestPushProvider(UAirship.AMAZON_PLATFORM, PushProvider.ADM_DELIVERY_TYPE));
-        verifyValidProvider(new TestPushProvider(UAirship.ANDROID_PLATFORM, PushProvider.HMS_DELIVERY_TYPE));
-        verifyValidProvider(new TestPushProvider(UAirship.ANDROID_PLATFORM, PushProvider.FCM_DELIVERY_TYPE));
+        verifyValidProvider(new TestPushProvider(UAirship.AMAZON_PLATFORM, PushProvider.DeliveryType.ADM));
+        verifyValidProvider(new TestPushProvider(UAirship.ANDROID_PLATFORM, PushProvider.DeliveryType.HMS));
+        verifyValidProvider(new TestPushProvider(UAirship.ANDROID_PLATFORM, PushProvider.DeliveryType.FCM));
     }
 
     public static void verifyValidProvider(@NonNull TestPushProvider provider) {

@@ -37,9 +37,9 @@ internal class DeferredPlatformProvider(
     @UAirship.Platform
     private fun determinePlatform(): Int {
         val platform: Int
-        val bestProvider = pushProviders.get()!!.getBestProvider()
+        val bestProvider = pushProviders.get()?.bestProvider
         if (bestProvider != null) {
-            platform = PlatformUtils.parsePlatform(bestProvider.getPlatform())
+            platform = PlatformUtils.parsePlatform(bestProvider.platform)
             i(
                 "Setting platform to %s for push provider: %s",
                 PlatformUtils.asString(platform),

@@ -14,7 +14,6 @@ import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.actions.LandingPageAction
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.push.PushMessage
-import com.urbanairship.push.PushMessage.EXTRA_SEND_ID
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
@@ -294,7 +293,7 @@ public class LandingPageActionTest {
 
         val metadata = Bundle().also {
             it.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, PushMessage(mapOf(
-                EXTRA_SEND_ID to "some-send-ID"
+                PushMessage.EXTRA_SEND_ID to "some-send-ID"
             )))
         }
 

@@ -25,7 +25,7 @@ public class RemoteDataUrlFactoryTest {
     private val availableProviders: MutableList<PushProvider> = mutableListOf()
 
     private val pushProviders: PushProviders = mockk {
-        every { this@mockk.availableProviders } returns this@RemoteDataUrlFactoryTest.availableProviders
+        every { getAvailableProviders() } returns availableProviders
     }
 
     private val factory: RemoteDataUrlFactory = RemoteDataUrlFactory(
@@ -49,9 +49,9 @@ public class RemoteDataUrlFactoryTest {
     @Test
     @Throws(RequestException::class)
     public fun testPushProviders() {
-        availableProviders.add(TestPushProvider(PushProvider.FCM_DELIVERY_TYPE))
-        availableProviders.add(TestPushProvider(PushProvider.FCM_DELIVERY_TYPE))
-        availableProviders.add(TestPushProvider(PushProvider.ADM_DELIVERY_TYPE))
+        availableProviders.add(TestPushProvider(PushProvider.DeliveryType.FCM))
+        availableProviders.add(TestPushProvider(PushProvider.DeliveryType.FCM))
+        availableProviders.add(TestPushProvider(PushProvider.DeliveryType.ADM))
         val uri = factory.createAppUrl(Locale("en"), 555)!!
         Assert.assertEquals(uri.getQueryParameter("push_providers"), "fcm,adm")
     }
@@ -145,15 +145,11 @@ public class RemoteDataUrlFactoryTest {
         )
     }
 
-    private class TestPushProvider(private val deliveryType: String) : PushProvider {
+    private class TestPushProvider(override val deliveryType: PushProvider.DeliveryType) : PushProvider {
 
-        override fun getPlatform(): Int {
-            throw RuntimeException("Not implemented")
-        }
+        override val platform: Int
+            get() = throw RuntimeException("Not implemented")
 
-        override fun getDeliveryType(): String {
-            return deliveryType
-        }
 
         override fun getRegistrationToken(context: Context): String? {
             throw RuntimeException("Not implemented")

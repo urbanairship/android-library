@@ -32,8 +32,8 @@ internal class RemoteDataUrlFactory(
     get() {
         val deliveryTypes: MutableSet<String> = HashSet()
         val providers: PushProviders = pushProvidersSupplier.get() ?: return null
-        for (provider in providers.availableProviders) {
-            deliveryTypes.add(provider.deliveryType)
+        for (provider in providers.getAvailableProviders()) {
+            deliveryTypes.add(provider.deliveryType.value)
         }
         if (deliveryTypes.isEmpty()) {
             return null

@@ -4,16 +4,16 @@ package com.urbanairship.push
 
 /** Types that indicate which Push Provider is currently in use by the Airship SDK. */
 public enum class PushProviderType(
-    private val deliveryType: String?
+    private val deliveryType: PushProvider.DeliveryType?
 ) {
     /** The Airship SDK is currently using the Amazon Device Messaging (ADM) push provider. */
-    ADM(PushProvider.ADM_DELIVERY_TYPE),
+    ADM(PushProvider.DeliveryType.ADM),
 
     /** The Airship SDK is currently using the Firebase Cloud Messaging (FCM) push provider. */
-    FCM(PushProvider.FCM_DELIVERY_TYPE),
+    FCM(PushProvider.DeliveryType.FCM),
 
     /** The Airship SDK is currently using the HUAWEI Mobile Services (HMS) push provider. */
-    HMS(PushProvider.HMS_DELIVERY_TYPE),
+    HMS(PushProvider.DeliveryType.HMS),
 
     /**
      * The Airship SDK is not currently using any push providers.
@@ -24,7 +24,7 @@ public enum class PushProviderType(
     NONE(null);
 
     internal companion object {
-        private val VALUES_BY_TYPE by lazy { values().associateBy(PushProviderType::deliveryType) }
+        private val VALUES_BY_TYPE by lazy { entries.associateBy(PushProviderType::deliveryType) }
 
         /** Returns the `PushProviderType` corresponding to the given [PushProvider]. */
         fun from(provider: PushProvider?): PushProviderType =

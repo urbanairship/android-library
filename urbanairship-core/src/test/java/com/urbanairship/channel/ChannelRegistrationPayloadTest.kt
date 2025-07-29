@@ -661,7 +661,7 @@ public class ChannelRegistrationPayloadTest {
     public fun testDeliveryTypeAndroid() {
         payload = ChannelRegistrationPayload.Builder()
             .setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
-            .setDeliveryType(PushProvider.HMS_DELIVERY_TYPE)
+            .setDeliveryType(PushProvider.DeliveryType.HMS)
             .build()
 
         val expected = jsonMapOf(
@@ -682,7 +682,7 @@ public class ChannelRegistrationPayloadTest {
     public fun testDeliveryTypeAmazon() {
         payload = ChannelRegistrationPayload.Builder()
             .setDeviceType(ChannelRegistrationPayload.DeviceType.AMAZON)
-            .setDeliveryType(PushProvider.ADM_DELIVERY_TYPE).build()
+            .setDeliveryType(PushProvider.DeliveryType.ADM).build()
 
         val expected = jsonMapOf(
             "channel" to jsonMapOf(

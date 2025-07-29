@@ -57,7 +57,7 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
     public val sdkVersion: String?
     public val deviceModel: String?
     public val apiVersion: Int?
-    public val deliveryType: String?
+    public val deliveryType: PushProvider.DeliveryType?
     public val contactId: String?
     public val isActive: Boolean
     public val permissions: Map<String, String>?
@@ -101,7 +101,7 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
             private set
         public var accengageDeviceId: String? = null
             private set
-        public var deliveryType: String? = null
+        public var deliveryType: PushProvider.DeliveryType? = null
             private set
         public var contactId: String? = null
             private set
@@ -335,7 +335,7 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
          * @param deliveryType The delivery type.
          * @return The builder.
          */
-        public fun setDeliveryType(@PushProvider.DeliveryType deliveryType: String?): Builder {
+        public fun setDeliveryType(deliveryType: PushProvider.DeliveryType?): Builder {
             return this.also { it.deliveryType = deliveryType }
         }
 

@@ -279,7 +279,7 @@ internal class LiveUpdateRegistrar(
             val contentIntent = Intent(context, NotificationProxyActivity::class.java)
                 .setAction(PushManager.ACTION_NOTIFICATION_RESPONSE)
                 .addCategory(UUID.randomUUID().toString())
-                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.pushBundle)
+                .putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, message.getPushBundle())
                 .addFlags(Intent.FLAG_RECEIVER_FOREGROUND)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_ID, NOTIFICATION_ID)
                 .putExtra(PushManager.EXTRA_NOTIFICATION_TAG, update.notificationTag)

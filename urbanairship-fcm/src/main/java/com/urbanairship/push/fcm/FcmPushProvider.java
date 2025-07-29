@@ -36,8 +36,8 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
 
     @NonNull
     @Override
-    public String getDeliveryType() {
-        return PushProvider.FCM_DELIVERY_TYPE;
+    public DeliveryType getDeliveryType() {
+        return DeliveryType.FCM;
     }
 
     @SuppressWarnings("deprecation")

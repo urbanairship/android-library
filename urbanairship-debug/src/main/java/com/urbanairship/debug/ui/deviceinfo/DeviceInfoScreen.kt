@@ -136,7 +136,7 @@ private fun PushContent(
 
             HorizontalDivider()
 
-            RowItem(title = "Push Provider", details = pushProvider?.uppercase())
+            RowItem(title = "Push Provider", details = pushProvider?.name?.uppercase())
 
             RowItem(
                 modifier = Modifier.clickable { onNavigate(DebugScreen.Pushes.route) },

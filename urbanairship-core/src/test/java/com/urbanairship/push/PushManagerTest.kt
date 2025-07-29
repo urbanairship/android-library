@@ -51,7 +51,7 @@ public class PushManagerTest {
     private val runtimeConfig = TestAirshipRuntimeConfig()
 
     private val mockPushProvider: PushProvider = mockk(relaxed = true) {
-        every { deliveryType } returns "some type"
+        every { deliveryType } returns PushProvider.DeliveryType.FCM
     }
     private val mockPushProviders: PushProviders = mockk {
         every { getBestProvider(any()) } returns mockPushProvider
@@ -132,10 +132,10 @@ public class PushManagerTest {
         Assert.assertEquals("token", pushManager.pushToken)
 
         // Change the delivery type, should clear the token on init
-        every { mockPushProvider.deliveryType } returns "some other type"
+        every { mockPushProvider.deliveryType } returns PushProvider.DeliveryType.ADM
         pushManager = PushManager(
             TestApplication.getApplication(),
-            preferenceDataStore!!,
+            preferenceDataStore,
             runtimeConfig,
             privacyManager,
             pushProvidersSupplier,
@@ -239,25 +239,27 @@ public class PushManagerTest {
     fun testGetPushProviderType() {
         pushManager.init()
 
-        var deliveryType = ""
+        var deliveryType = PushProvider.DeliveryType.FCM
         every { mockPushProvider.deliveryType } answers { deliveryType }
         // FCM
-        deliveryType = PushProvider.FCM_DELIVERY_TYPE
+        deliveryType = PushProvider.DeliveryType.FCM
         Assert.assertEquals(PushProviderType.FCM, pushManager.pushProviderType)
 
         // ADM
-        deliveryType = PushProvider.ADM_DELIVERY_TYPE
+        deliveryType = PushProvider.DeliveryType.ADM
         Assert.assertEquals(PushProviderType.ADM, pushManager.pushProviderType)
 
         // HMS
-        deliveryType = PushProvider.HMS_DELIVERY_TYPE
+        deliveryType = PushProvider.DeliveryType.HMS
         Assert.assertEquals(PushProviderType.HMS, pushManager.pushProviderType)
     }
 
     @Test
     fun testGetPushProviderTypeNoProvider() {
-        pushManager.init()
         every { mockPushProviders.getBestProvider(any()) } returns null
+
+        pushManager.init()
+
         Assert.assertEquals(PushProviderType.NONE, pushManager.pushProviderType)
     }
 
@@ -340,7 +342,7 @@ public class PushManagerTest {
             .setBackgroundEnabled(true)
             .setOptIn(true)
             .setPushAddress("token")
-            .setDeliveryType("some type")
+            .setDeliveryType(PushProvider.DeliveryType.FCM)
             .build()
 
         Assert.assertEquals(expected, payload)
@@ -387,7 +389,7 @@ public class PushManagerTest {
 
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.platform } returns ANDROID_PLATFORM
-        every { mockPushProvider.deliveryType } returns PushProvider.FCM_DELIVERY_TYPE
+        every { mockPushProvider.deliveryType } returns PushProvider.DeliveryType.FCM
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
 
         val builder = ChannelRegistrationPayload.Builder()
@@ -396,7 +398,7 @@ public class PushManagerTest {
 
         val expected = ChannelRegistrationPayload.Builder()
             .setPushAddress("token")
-            .setDeliveryType(PushProvider.FCM_DELIVERY_TYPE)
+            .setDeliveryType(PushProvider.DeliveryType.FCM)
             .setBackgroundEnabled(true)
             .build()
 

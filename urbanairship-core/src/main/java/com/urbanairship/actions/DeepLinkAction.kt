@@ -51,7 +51,7 @@ public class DeepLinkAction @VisibleForTesting internal constructor(
             .setPackage(UAirship.getPackageName())
 
         arguments.metadata.getParcelable<PushMessage>(ActionArguments.PUSH_MESSAGE_METADATA)?.let {
-            intent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, it.pushBundle)
+            intent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, it.getPushBundle())
         }
 
         UAirship.getApplicationContext().startActivity(intent)

@@ -13,7 +13,6 @@ import com.urbanairship.permission.PermissionDelegate
 import com.urbanairship.permission.PermissionRequestResult
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsActivity
-import com.urbanairship.push.AirshipNotificationManager.PromptSupport
 import com.urbanairship.push.notifications.NotificationChannelRegistry
 
 /**
@@ -29,7 +28,6 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
 ) : PermissionDelegate {
 
     internal fun interface PermissionRequestDelegate {
-
         fun requestPermissions(
             context: Context,
             permission: String,
@@ -49,25 +47,25 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
         notificationManager,
         channelRegistry,
         activityMonitor,
-        PermissionsActivity::requestPermission
-    )
+        PermissionRequestDelegate { context: Context, permission: String, consumer: Consumer<PermissionRequestResult> ->
+            PermissionsActivity.requestPermission(context, permission, consumer)
+        })
 
     override fun checkPermissionStatus(context: Context, callback: Consumer<PermissionStatus>) {
-        if (notificationManager.areNotificationsEnabled()) {
-            callback.accept(PermissionStatus.GRANTED)
-            return
-        }
-
-        val status = when (notificationManager.promptSupport) {
-            PromptSupport.COMPAT,
-            PromptSupport.SUPPORTED -> {
-                if (dataStore.getBoolean(PROMPTED_KEY, false)) {
-                    PermissionStatus.DENIED
-                } else {
-                    PermissionStatus.NOT_DETERMINED
+        val status = if (notificationManager.areNotificationsEnabled()) {
+            PermissionStatus.GRANTED
+        } else {
+            when (notificationManager.promptSupport) {
+                AirshipNotificationManager.PromptSupport.COMPAT,
+                AirshipNotificationManager.PromptSupport.SUPPORTED -> {
+                    if (dataStore.getBoolean(PROMPTED_KEY, false)) {
+                        PermissionStatus.DENIED
+                    } else {
+                        PermissionStatus.NOT_DETERMINED
+                    }
                 }
+                AirshipNotificationManager.PromptSupport.NOT_SUPPORTED -> PermissionStatus.DENIED
             }
-            PromptSupport.NOT_SUPPORTED -> PermissionStatus.DENIED
         }
 
         callback.accept(status)
@@ -81,12 +79,11 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
         }
 
         when (notificationManager.promptSupport) {
-            PromptSupport.NOT_SUPPORTED -> {
+            AirshipNotificationManager.PromptSupport.NOT_SUPPORTED -> {
                 callback.accept(PermissionRequestResult.denied(true))
                 return
             }
-
-            PromptSupport.COMPAT -> {
+            AirshipNotificationManager.PromptSupport.COMPAT -> {
                 dataStore.put(PROMPTED_KEY, true)
                 if (notificationManager.areChannelsCreated()) {
                     callback.accept(PermissionRequestResult.denied(true))
@@ -104,9 +101,10 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
                         activityMonitor.removeActivityListener(this)
                     }
                 })
+                return
             }
 
-            PromptSupport.SUPPORTED -> {
+            AirshipNotificationManager.PromptSupport.SUPPORTED -> {
                 dataStore.put(PROMPTED_KEY, true)
                 permissionRequestDelegate.requestPermissions(
                     context = context,
@@ -116,7 +114,7 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
         }
     }
 
-    private companion object {
+    companion object {
         private const val PROMPTED_KEY = "NotificationsPermissionDelegate.prompted"
         private const val POST_NOTIFICATION_PERMISSION = "android.permission.POST_NOTIFICATIONS"
     }

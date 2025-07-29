@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
 import com.urbanairship.UAirship
+import com.urbanairship.push.PushProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,7 +24,7 @@ internal interface DeviceInfoViewModel {
     val isPushEnabled: Flow<Boolean>
     val pushOptInt: Flow<Boolean>
     val pushToken: Flow<String?>
-    val pushProvider: Flow<String?>
+    val pushProvider: Flow<PushProvider.DeliveryType?>
 
     val namedUser: Flow<String?>
     val channelId: Flow<String?>
@@ -36,9 +37,7 @@ internal interface DeviceInfoViewModel {
     fun copyUserId(context: Context)
 }
 
-internal class DefaultDeviceInfoViewModel(
-
-): DeviceInfoViewModel, ViewModel() {
+internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
 
     private val _pushStatus = MutableStateFlow(false)
     override val isPushEnabled: Flow<Boolean> = _pushStatus.asStateFlow()
@@ -49,8 +48,8 @@ internal class DefaultDeviceInfoViewModel(
     private val _pushToken = MutableStateFlow<String?>(null)
     override val pushToken: Flow<String?> = _pushToken.asStateFlow()
 
-    private val _pushProvider = MutableStateFlow<String?>(null)
-    override val pushProvider: Flow<String?> = _pushProvider.asStateFlow()
+    private val _pushProvider = MutableStateFlow<PushProvider.DeliveryType?>(null)
+    override val pushProvider: Flow<PushProvider.DeliveryType?> = _pushProvider.asStateFlow()
     override val namedUser: Flow<String?>
         get() {
             return if (!UAirship.isFlying()) {

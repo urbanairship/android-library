@@ -5,12 +5,10 @@ import android.app.Activity
 import androidx.core.util.Consumer
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.permission.PermissionRequestResult
 import com.urbanairship.permission.PermissionStatus
-import com.urbanairship.push.AirshipNotificationManager.PromptSupport
 import com.urbanairship.push.NotificationsPermissionDelegate.PermissionRequestDelegate
 import com.urbanairship.push.notifications.NotificationChannelRegistry
 import java.util.UUID
@@ -28,10 +26,11 @@ class NotificationsPermissionDelegateTest {
     private val dataStore = PreferenceDataStore.inMemoryStore(
         ApplicationProvider.getApplicationContext()
     )
-    private val channelRegistry: NotificationChannelRegistry = mockk()
-    private val notificationManager: AirshipNotificationManager = mockk()
-    private val activityMonitor = TestActivityMonitor()
+    private val channelRegistry: NotificationChannelRegistry = mockk(relaxed = true)
+    private val notificationManager: AirshipNotificationManager = mockk(relaxed = true)
     private val permissionRequestDelegate: PermissionRequestDelegate = mockk()
+
+    private val activityMonitor = TestActivityMonitor()
 
     private val delegate = NotificationsPermissionDelegate(
         defaultChannelId,
@@ -46,32 +45,30 @@ class NotificationsPermissionDelegateTest {
 
     @Test
     fun testCheckStatusUnsupportedPrompt() {
+        every { notificationManager.promptSupport } returns AirshipNotificationManager.PromptSupport.NOT_SUPPORTED
+
         var areNotificationsEnabled = true
-        every { notificationManager.promptSupport } returns PromptSupport.NOT_SUPPORTED
         every { notificationManager.areNotificationsEnabled() } answers { areNotificationsEnabled }
 
         delegate.checkPermissionStatus(
-            context = ApplicationProvider.getApplicationContext(),
-            callback = testCheckConsumer
+            ApplicationProvider.getApplicationContext(), testCheckConsumer
         )
         Assert.assertEquals(PermissionStatus.GRANTED, testCheckConsumer.result)
 
         areNotificationsEnabled = false
         delegate.checkPermissionStatus(
-            context = ApplicationProvider.getApplicationContext(),
-            callback = testCheckConsumer
+            ApplicationProvider.getApplicationContext(), testCheckConsumer
         )
         Assert.assertEquals(PermissionStatus.DENIED, testCheckConsumer.result)
     }
 
     @Test
     fun testRequestUnsupportedPrompt() {
+        every { notificationManager.promptSupport } returns AirshipNotificationManager.PromptSupport.NOT_SUPPORTED
         var areNotificationsEnabled = true
-        every { notificationManager.promptSupport } returns PromptSupport.NOT_SUPPORTED
         every { notificationManager.areNotificationsEnabled() } answers { areNotificationsEnabled }
-
         delegate.requestPermission(ApplicationProvider.getApplicationContext(), testRequestConsumer)
-        Assert.assertEquals(PermissionStatus.GRANTED, testRequestConsumer.result!!.permissionStatus)
+        Assert.assertEquals(PermissionStatus.GRANTED, testRequestConsumer.result?.permissionStatus)
 
         areNotificationsEnabled = false
         delegate.requestPermission(ApplicationProvider.getApplicationContext(), testRequestConsumer)
@@ -81,50 +78,43 @@ class NotificationsPermissionDelegateTest {
 
     @Test
     fun testCheckCompatPrompt() {
+        every { notificationManager.promptSupport } returns AirshipNotificationManager.PromptSupport.COMPAT
         var areNotificationsEnabled = true
-        every { notificationManager.promptSupport } returns PromptSupport.COMPAT
         every { notificationManager.areNotificationsEnabled() } answers { areNotificationsEnabled }
         delegate.checkPermissionStatus(
-            context = ApplicationProvider.getApplicationContext(),
-            callback = testCheckConsumer
+            ApplicationProvider.getApplicationContext(), testCheckConsumer
         )
         Assert.assertEquals(PermissionStatus.GRANTED, testCheckConsumer.result)
 
         areNotificationsEnabled = false
         delegate.checkPermissionStatus(
-            context = ApplicationProvider.getApplicationContext(),
-            callback = testCheckConsumer
+            ApplicationProvider.getApplicationContext(), testCheckConsumer
         )
         Assert.assertEquals(PermissionStatus.NOT_DETERMINED, testCheckConsumer.result)
     }
 
     @Test
     fun testCheckCompatPromptAfterRequest() {
-        every { notificationManager.promptSupport } returns PromptSupport.COMPAT
+        every { notificationManager.promptSupport } returns AirshipNotificationManager.PromptSupport.COMPAT
         every { notificationManager.areNotificationsEnabled() } returns false
-        every { notificationManager.areChannelsCreated() } returns true
 
         delegate.requestPermission(
             context = ApplicationProvider.getApplicationContext(),
             callback = { _ -> }
         )
-
         activityMonitor.resumeActivity(Activity())
 
         delegate.checkPermissionStatus(
-            context = ApplicationProvider.getApplicationContext(),
-            callback = testCheckConsumer
+            ApplicationProvider.getApplicationContext(), testCheckConsumer
         )
         Assert.assertEquals(PermissionStatus.DENIED, testCheckConsumer.result)
     }
 
     @Test
     fun testRequestCompatPrompt() {
+        every { notificationManager.promptSupport } returns AirshipNotificationManager.PromptSupport.COMPAT
         var areNotificationsEnabled = true
-        every { notificationManager.promptSupport } returns PromptSupport.COMPAT
         every { notificationManager.areNotificationsEnabled() } answers { areNotificationsEnabled }
-        every { notificationManager.areChannelsCreated() } returns false
-        every { channelRegistry.getNotificationChannel(any()) } returns PendingResult()
 
         delegate.requestPermission(ApplicationProvider.getApplicationContext(), testRequestConsumer)
         Assert.assertEquals(PermissionStatus.GRANTED, testRequestConsumer.result?.permissionStatus)
@@ -143,7 +133,7 @@ class NotificationsPermissionDelegateTest {
 
     @Test
     fun testRequestCompatPromptChannelsCreated() {
-        every { notificationManager.promptSupport } returns PromptSupport.COMPAT
+        every { notificationManager.promptSupport } returns AirshipNotificationManager.PromptSupport.COMPAT
         every { notificationManager.areNotificationsEnabled() } returns false
         every { notificationManager.areChannelsCreated() } returns true
 
@@ -155,10 +145,9 @@ class NotificationsPermissionDelegateTest {
 
     @Test
     fun testRequestCompatPromptCreateChannel() {
-        every { notificationManager.promptSupport } returns PromptSupport.COMPAT
+        every { notificationManager.promptSupport } returns AirshipNotificationManager.PromptSupport.COMPAT
         every { notificationManager.areNotificationsEnabled() } returns false
         every { notificationManager.areChannelsCreated() } returns false
-        every { channelRegistry.getNotificationChannel(any()) } returns PendingResult()
 
         delegate.requestPermission(
             context = ApplicationProvider.getApplicationContext(),
@@ -170,20 +159,18 @@ class NotificationsPermissionDelegateTest {
 
     @Test
     fun testCheckSupportedPrompt() {
+        every { notificationManager.promptSupport } returns AirshipNotificationManager.PromptSupport.SUPPORTED
         var areNotificationsEnabled = true
-        every { notificationManager.promptSupport } returns PromptSupport.SUPPORTED
         every { notificationManager.areNotificationsEnabled() } answers { areNotificationsEnabled }
 
         delegate.checkPermissionStatus(
-            context = ApplicationProvider.getApplicationContext(),
-            callback = testCheckConsumer
+            ApplicationProvider.getApplicationContext(), testCheckConsumer
         )
         Assert.assertEquals(PermissionStatus.GRANTED, testCheckConsumer.result)
 
         areNotificationsEnabled = false
         delegate.checkPermissionStatus(
-            context = ApplicationProvider.getApplicationContext(),
-            callback = testCheckConsumer
+            ApplicationProvider.getApplicationContext(), testCheckConsumer
         )
         Assert.assertEquals(PermissionStatus.NOT_DETERMINED, testCheckConsumer.result)
     }
@@ -191,22 +178,21 @@ class NotificationsPermissionDelegateTest {
     @Test
     fun testCheckSupportedPromptAfterRequest() {
         every { permissionRequestDelegate.requestPermissions(any(), "android.permission.POST_NOTIFICATIONS", any()) } answers {
-            val consumer: Consumer<PermissionRequestResult> = thirdArg()
-            consumer.accept(PermissionRequestResult.denied(true))
+            val resultConsumer: Consumer<PermissionRequestResult> = thirdArg()
+            resultConsumer.accept(PermissionRequestResult.denied(true))
         }
 
-        every { notificationManager.promptSupport } returns PromptSupport.SUPPORTED
+        every { notificationManager.promptSupport } returns AirshipNotificationManager.PromptSupport.SUPPORTED
         every { notificationManager.areNotificationsEnabled() } returns false
 
         delegate.requestPermission(
             context = ApplicationProvider.getApplicationContext(),
-            callback = { _ -> }
+            callback = { _ ->}
         )
         activityMonitor.resumeActivity(Activity())
 
         delegate.checkPermissionStatus(
-            context = ApplicationProvider.getApplicationContext(),
-            callback = testCheckConsumer
+            ApplicationProvider.getApplicationContext(), testCheckConsumer
         )
         Assert.assertEquals(PermissionStatus.DENIED, testCheckConsumer.result)
     }
@@ -214,11 +200,12 @@ class NotificationsPermissionDelegateTest {
     @Test
     fun testRequestSupportedPromptGranted() {
         every { permissionRequestDelegate.requestPermissions(any(), "android.permission.POST_NOTIFICATIONS", any()) } answers {
-            val consumer: Consumer<PermissionRequestResult> = thirdArg()
-            consumer.accept(PermissionRequestResult.granted())
+            val resultConsumer: Consumer<PermissionRequestResult> = thirdArg()
+            resultConsumer.accept(PermissionRequestResult.granted())
+
         }
 
-        every { notificationManager.promptSupport } returns PromptSupport.SUPPORTED
+        every { notificationManager.promptSupport } returns AirshipNotificationManager.PromptSupport.SUPPORTED
         every { notificationManager.areNotificationsEnabled() } returns false
 
         delegate.requestPermission(ApplicationProvider.getApplicationContext(), testRequestConsumer)
@@ -228,11 +215,12 @@ class NotificationsPermissionDelegateTest {
     @Test
     fun testRequestSupportedPromptDenied() {
         every { permissionRequestDelegate.requestPermissions(any(), "android.permission.POST_NOTIFICATIONS", any()) } answers {
-            val consumer: Consumer<PermissionRequestResult> = thirdArg()
-            consumer.accept(PermissionRequestResult.denied(false))
+            val resultConsumer: Consumer<PermissionRequestResult> = thirdArg()
+            resultConsumer.accept(PermissionRequestResult.denied(false))
+
         }
 
-        every { notificationManager.promptSupport } returns PromptSupport.SUPPORTED
+        every { notificationManager.promptSupport } returns AirshipNotificationManager.PromptSupport.SUPPORTED
         every { notificationManager.areNotificationsEnabled() } returns false
 
         delegate.requestPermission(ApplicationProvider.getApplicationContext(), testRequestConsumer)
@@ -243,11 +231,11 @@ class NotificationsPermissionDelegateTest {
     @Test
     fun testRequestSupportedPromptSilentlyDenied() {
         every { permissionRequestDelegate.requestPermissions(any(), "android.permission.POST_NOTIFICATIONS", any()) } answers {
-            val consumer: Consumer<PermissionRequestResult> = thirdArg()
-            consumer.accept(PermissionRequestResult.denied(true))
+            val resultConsumer: Consumer<PermissionRequestResult> = thirdArg()
+            resultConsumer.accept(PermissionRequestResult.denied(true))
         }
 
-        every { notificationManager.promptSupport } returns PromptSupport.SUPPORTED
+        every { notificationManager.promptSupport } returns AirshipNotificationManager.PromptSupport.SUPPORTED
         every { notificationManager.areNotificationsEnabled() } returns false
 
         delegate.requestPermission(ApplicationProvider.getApplicationContext(), testRequestConsumer)

@@ -51,7 +51,7 @@ public class AirshipListener implements PushListener, NotificationListener, Push
 
     @Override
     public void onNotificationDismissed(@NonNull NotificationInfo notificationInfo) {
-        Log.i(TAG, "Notification dismissed. Alert: " + notificationInfo.getMessage().getAlert() + ". Notification ID: " + notificationInfo.getNotificationId());
+        Log.i(TAG, "Notification dismissed. Alert: " + notificationInfo.message.getAlert() + ". Notification ID: " + notificationInfo.notificationId);
     }
 
     @Override

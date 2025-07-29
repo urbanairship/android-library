@@ -8,6 +8,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import androidx.annotation.XmlRes
 import androidx.core.util.Consumer
+import androidx.core.util.ObjectsCompat
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.AirshipExecutors
@@ -209,7 +210,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         }
 
         val defaultChannelId = config.configOptions.notificationChannel
-            ?: AirshipNotificationProvider.DEFAULT_NOTIFICATION_CHANNEL
+            ?: NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL
 
         val delegate: PermissionDelegate = NotificationsPermissionDelegate(
             defaultChannelId,
@@ -285,7 +286,7 @@ public open class PushManager @VisibleForTesting internal constructor(
             if (pushProvider == null) {
                 pushProvider = resolvePushProvider()
                 val pushDeliveryType = preferenceDataStore.getString(PUSH_DELIVERY_TYPE, null)
-                if (pushProvider?.deliveryType != pushDeliveryType) {
+                if (pushProvider?.deliveryType?.value != pushDeliveryType) {
                     clearPushToken()
                 }
             }
@@ -882,7 +883,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         if (token != null && token != pushToken) {
             UALog.i("PushManager - Push registration updated.")
 
-            preferenceDataStore.put(PUSH_DELIVERY_TYPE, provider.deliveryType)
+            preferenceDataStore.put(PUSH_DELIVERY_TYPE, provider.deliveryType.value)
             preferenceDataStore.put(PUSH_TOKEN_KEY, token)
             updateStatusObserver()
 
