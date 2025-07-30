@@ -471,6 +471,24 @@ internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemI
         .let { if (randomizeChildren) it.shuffled() else it }
 
     override val children: List<LinearLayoutItemInfo> = items
+
+    val accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole(it) }
+
+    internal class AccessibilityRole(json: JsonMap) {
+        val type: Type = Type.fromJson(json.requireField("type"))
+        val hierarchical: Boolean? = json.optionalField<Boolean>("hierarchical")
+
+        internal enum class Type(val value: String) {
+            LIST_VIEW("list_view");
+
+            internal companion object {
+                @Throws(JsonException::class)
+                fun fromJson(value: String): Type = entries.firstOrNull {
+                    it.value.equals(value, ignoreCase = true)
+                }?: throw JsonException("Invalid LinearLayoutInfo.AccessibilityRole type: $value")
+            }
+        }
+    }
 }
 
 internal class LinearLayoutItemInfo(
@@ -481,6 +499,23 @@ internal class LinearLayoutItemInfo(
 
     val position: Position? = json.optionalMap("position")
         ?.let { Position.fromJson(it) }
+
+    val accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole(it) }
+
+    internal class AccessibilityRole(json: JsonMap) {
+        val type: Type = Type.fromJson(json.requireField("type"))
+
+        internal enum class Type(val value: String) {
+            LIST_ITEM("list_item");
+
+            internal companion object {
+                @Throws(JsonException::class)
+                fun fromJson(value: String): Type = entries.firstOrNull {
+                    it.value.equals(value, ignoreCase = true)
+                }?: throw JsonException("Invalid LinearLayoutItemInfo.AccessibilityRole type: $value")
+            }
+        }
+    }
 }
 
 internal class ContainerLayoutInfo(
