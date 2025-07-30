@@ -4,7 +4,7 @@ package com.urbanairship.actions
 /**
  * Extends an action run request.
  */
-public interface ActionRunRequestExtender {
+public fun interface ActionRunRequestExtender {
 
     /**
      * Extends an action run request.
