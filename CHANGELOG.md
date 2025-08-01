@@ -4,6 +4,13 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.10.1 - August 1, 2025
+A patch release that fixes an automation dao crash if an expected nonnull JSON field contains invalid JSON.
+
+### Changes
+- Fixed potential automation dao crash when an expected nonnull JSON field contains invalid JSON.
+
+
 ## Version 19.10.0 - July 24, 2025
 A minor release with accessibility and layout improvements to Scenes, a key performance update, and several bug fixes.
 

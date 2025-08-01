@@ -184,7 +184,25 @@ internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterfa
     }
 
     override suspend fun getSchedules(): List<AutomationScheduleData> {
-        return dao.getAllSchedules()?.mapNotNull { it.toScheduleData() } ?: listOf()
+        val allScheduleEntities = dao.getAllSchedules() ?: return listOf()
+        val validScheduleData = mutableListOf<AutomationScheduleData>()
+        val schedulesToDelete = mutableListOf<String>()
+
+        allScheduleEntities.forEach { entity ->
+            val scheduleData = entity.toScheduleData()
+            if (scheduleData != null) {
+                validScheduleData.add(scheduleData)
+            } else {
+                schedulesToDelete.add(entity.scheduleId)
+            }
+        }
+
+        if (schedulesToDelete.isNotEmpty()) {
+            UALog.e("Deleting schedules due to parse exceptions: $schedulesToDelete")
+            dao.deleteSchedules(schedulesToDelete)
+        }
+
+        return validScheduleData
     }
 
     override suspend fun getSchedules(group: String): List<AutomationScheduleData> {

@@ -23,7 +23,7 @@ public class JsonTypeConverters {
             return JsonValue.parseString(value);
         } catch (JsonException e) {
             UALog.e(e, "Unable to parse json value: " + value);
-            return null;
+            return JsonValue.NULL;
         }
     }
 
@@ -44,7 +44,7 @@ public class JsonTypeConverters {
             return JsonValue.parseString(value).optMap();
         } catch (JsonException e) {
             UALog.e(e, "Unable to parse json value: " + value);
-            return null;
+            return JsonMap.EMPTY_MAP;
         }
     }
 
