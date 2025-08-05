@@ -239,7 +239,7 @@ internal class MediaView(
                     }
                     .build()
 
-                UAirship.shared().imageLoader.load(context, iv, options)
+                UAirship.shared().getImageLoader().load(context, iv, options)
             }
 
             loadImage(url)

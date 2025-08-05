@@ -6,14 +6,12 @@ import com.urbanairship.BaseTestCase
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
-import com.urbanairship.UAirship.ANDROID_PLATFORM
-import com.urbanairship.UAirship.Platform
+import com.urbanairship.UAirship
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
-import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.every
 import io.mockk.mockk
@@ -24,8 +22,6 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
@@ -36,7 +32,9 @@ public class RemoteConfigManagerTest : BaseTestCase() {
     private val testDispatcher = StandardTestDispatcher()
 
     private val updates: MutableStateFlow<List<RemoteDataPayload>> = MutableStateFlow(emptyList())
-    private val config: AirshipRuntimeConfig = mockk(relaxed = true)
+    private val config: AirshipRuntimeConfig = mockk(relaxed = true) {
+        every { platform } returns UAirship.Platform.ANDROID
+    }
 
     private var remoteData: RemoteData = mockk(relaxed = true) {
         every { this@mockk.payloadFlow(listOf("app_config", "app_config:android")) } returns updates

@@ -44,6 +44,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import junit.framework.TestCase.assertEquals
@@ -646,7 +647,6 @@ public class AutomationPreparerTest {
         }
 
         mockkStatic(UAirship::class)
-        every { UAirship.getAppVersion() } returns 123
         every { UAirship.getVersion() } returns "1"
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
@@ -701,8 +701,7 @@ public class AutomationPreparerTest {
             )
         }
 
-        mockkStatic(UAirship::class)
-        every { UAirship.getAppVersion() } returns 123
+        mockkObject(UAirship)
         every { UAirship.getVersion() } returns "1"
 
         assertEquals(SchedulePrepareResult.Skip, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))

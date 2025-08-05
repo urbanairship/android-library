@@ -160,8 +160,8 @@ internal class InboxApiClient constructor(
     /** The payload channels key based on the platform. */
     private val payloadChannelsKey: String?
         get() = when (runtimeConfig.platform) {
-            UAirship.AMAZON_PLATFORM -> PAYLOAD_AMAZON_CHANNELS_KEY
-            UAirship.ANDROID_PLATFORM -> PAYLOAD_ANDROID_CHANNELS_KEY
+            UAirship.Platform.AMAZON -> PAYLOAD_AMAZON_CHANNELS_KEY
+            UAirship.Platform.ANDROID -> PAYLOAD_ANDROID_CHANNELS_KEY
             else -> null
         }
 

@@ -16,7 +16,7 @@ import com.urbanairship.util.PendingIntentCompat
  * On earlier versions, an alarm is set to dismiss the notification.
  */
 internal class NotificationTimeoutCompat(
-    private val context: Context = UAirship.getApplicationContext(),
+    private val context: Context = UAirship.applicationContext,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
 ) {
     private val alarmManager: AlarmManager by lazy {

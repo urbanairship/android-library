@@ -308,7 +308,7 @@ public constructor(
      * @return `true` if the URL is allowed, otherwise `false`.
      */
     protected fun isAllowed(url: String?): Boolean {
-        return UAirship.shared().urlAllowList.isAllowed(url, UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE)
+        return UAirship.shared().urlAllowList.isAllowed(url, UrlAllowList.Scope.JAVASCRIPT_INTERFACE)
     }
 
     @CallSuper

@@ -38,7 +38,7 @@ class NotificationChannelRegistryTest : BaseTestCase() {
         val result = channelRegistry.getNotificationChannel("test")
 
         verify { dataManager.getChannel(any()) }
-        Assert.assertEquals(channelCompat, result.result)
+        Assert.assertEquals(channelCompat, result.getResult())
     }
 
     @Test
@@ -47,7 +47,7 @@ class NotificationChannelRegistryTest : BaseTestCase() {
         val result = channelRegistry.getNotificationChannel("test")
 
         verify { notificationManager.getNotificationChannel(any()) }
-        Assert.assertEquals(channelCompat, result.result)
+        Assert.assertEquals(channelCompat, result.getResult())
     }
 
     @Test

@@ -35,7 +35,7 @@ public class DeferredApiClientTest {
 
     @Before
     public fun setup() {
-        every { runtimeConfig.platform } returns UAirship.ANDROID_PLATFORM
+        every { runtimeConfig.platform } returns UAirship.Platform.ANDROID
         apiClient = DeferredApiClient(runtimeConfig, requestSession.toSuspendingRequestSession())
     }
 

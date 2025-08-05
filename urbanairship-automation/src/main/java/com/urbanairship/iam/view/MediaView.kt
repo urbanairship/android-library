@@ -89,7 +89,7 @@ internal class MediaView @JvmOverloads constructor(
                 imageView.contentDescription = mediaInfo.description
                 val url = cachedMediaUrl ?: mediaInfo.url
                 imageView.doOnPreDraw {
-                    UAirship.shared().imageLoader.load(
+                    UAirship.shared().getImageLoader().load(
                         context,
                         imageView,
                         ImageRequestOptions.newBuilder(url).build()

@@ -51,7 +51,10 @@ public class RemoteConfigManager @JvmOverloads constructor(
     private fun updateSubscription() {
         if (privacyManager.isAnyFeatureEnabled) {
             if (subscription?.isActive != true) {
-                val platformConfig = if (runtimeConfig.platform == UAirship.AMAZON_PLATFORM) CONFIG_TYPE_AMAZON else CONFIG_TYPE_ANDROID
+                val platformConfig = when(runtimeConfig.platform) {
+                    UAirship.Platform.AMAZON -> CONFIG_TYPE_AMAZON
+                    else -> CONFIG_TYPE_ANDROID
+                }
 
                 subscription = scope.launch {
                     remoteData.payloadFlow(listOf(CONFIG_TYPE_COMMON, platformConfig))

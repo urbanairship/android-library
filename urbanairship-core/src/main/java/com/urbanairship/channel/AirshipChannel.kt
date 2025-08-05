@@ -15,6 +15,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.UALog.logLevel
 import com.urbanairship.UAirship
+import com.urbanairship.UAirship.Companion.applicationContext
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
@@ -144,7 +145,9 @@ public class AirshipChannel internal constructor(
     init {
         channelRegistrar.channelId?.let {
             if (logLevel < Log.ASSERT && it.isNotEmpty()) {
-                Log.d(UAirship.getAppName() + " Channel ID", it)
+                val appName = applicationContext.packageManager.getApplicationLabel(
+                    applicationContext.applicationInfo).toString()
+                Log.d(appName + " Channel ID", it)
             }
         }
 
@@ -181,10 +184,10 @@ public class AirshipChannel internal constructor(
                     // intent
                     if (runtimeConfig.configOptions.extendedBroadcastsEnabled) {
                         // Send ChannelCreated intent for other plugins that depend on Airship
-                        val channelCreatedIntent =
-                            Intent(ACTION_CHANNEL_CREATED).setPackage(UAirship.getPackageName())
-                                .addCategory(UAirship.getPackageName())
-                                .putExtra(UAirship.EXTRA_CHANNEL_ID_KEY, channelId)
+                        val channelCreatedIntent = Intent(ACTION_CHANNEL_CREATED)
+                            .setPackage(context.packageName)
+                            .addCategory(context.packageName)
+                            .putExtra(UAirship.EXTRA_CHANNEL_ID_KEY, channelId)
                         try {
                             context.sendBroadcast(channelCreatedIntent)
                         } catch (e: Exception) {
@@ -417,7 +420,7 @@ public class AirshipChannel internal constructor(
     public fun fetchSubscriptionListsPendingResult(): PendingResult<Set<String>> {
         val pendingResult = PendingResult<Set<String>>()
         scope.launch {
-            pendingResult.result = fetchSubscriptionLists().getOrNull()
+            pendingResult.setResult(fetchSubscriptionLists().getOrNull())
         }
         return pendingResult
     }
@@ -509,8 +512,8 @@ public class AirshipChannel internal constructor(
         var builder = ChannelRegistrationPayload.Builder()
 
         when (runtimeConfig.platform) {
-            UAirship.ANDROID_PLATFORM -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
-            UAirship.AMAZON_PLATFORM -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.AMAZON)
+            UAirship.Platform.ANDROID -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
+            UAirship.Platform.AMAZON -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.AMAZON)
             else -> throw IllegalStateException("Unable to get platform")
         }
 
@@ -533,9 +536,11 @@ public class AirshipChannel internal constructor(
         }
 
         if (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
-            UAirship.getPackageInfo()?.versionName?.let {
-                builder.setAppVersion(it)
-            }
+            UAirship
+                .applicationContext
+                .packageManager
+                .getPackageInfo(context.packageName, 0)
+                ?.versionName?.let { builder.setAppVersion(it) }
             builder.setDeviceModel(Build.MODEL)
             builder.setApiVersion(Build.VERSION.SDK_INT)
         }

@@ -62,7 +62,7 @@ public object FileUtils {
         var conn: URLConnection? = null
 
         try {
-            conn = openSecureConnection(UAirship.getApplicationContext(), url)
+            conn = openSecureConnection(UAirship.applicationContext, url)
             conn.connectTimeout = NETWORK_TIMEOUT_MS
             conn.useCaches = true
 

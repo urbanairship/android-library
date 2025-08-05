@@ -17,7 +17,7 @@ internal class DefaultAnalyticsViewModel: AnalyticsViewModel, ViewModel() {
 
     private val analytics: Analytics?
         get() {
-            return if (!UAirship.isFlying()) {
+            return if (!UAirship.isFlying) {
                 null
             } else {
                 UAirship.shared().analytics

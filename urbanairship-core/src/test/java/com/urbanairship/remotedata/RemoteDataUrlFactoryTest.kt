@@ -147,7 +147,7 @@ public class RemoteDataUrlFactoryTest {
 
     private class TestPushProvider(override val deliveryType: PushProvider.DeliveryType) : PushProvider {
 
-        override val platform: Int
+        override val platform: UAirship.Platform
             get() = throw RuntimeException("Not implemented")
 
 

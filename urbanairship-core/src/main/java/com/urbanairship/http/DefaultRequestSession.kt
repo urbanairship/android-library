@@ -7,7 +7,6 @@ import com.urbanairship.Provider
 import com.urbanairship.UAirship
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
-import com.urbanairship.util.PlatformUtils
 import com.urbanairship.util.UAStringUtil
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
@@ -23,17 +22,17 @@ public class DefaultRequestSession : RequestSession {
 
     private val configOptions: AirshipConfigOptions
     private val httpClient: HttpClient
-    private val platformProvider: Provider<Int>
+    private val platformProvider: Provider<UAirship.Platform>
     private val clock: Clock
     private val nonceTokenFactory: () -> String
 
-    public constructor(configOptions: AirshipConfigOptions, platformProvider: Provider<Int>) : this(
+    public constructor(configOptions: AirshipConfigOptions, platformProvider: Provider<UAirship.Platform>) : this(
         configOptions, platformProvider, DefaultHttpClient()
     )
 
     internal constructor(
         configOptions: AirshipConfigOptions,
-        platformProvider:  Provider<Int>,
+        platformProvider:  Provider<UAirship.Platform>,
         httpClient: HttpClient,
         clock: Clock = Clock.DEFAULT_CLOCK,
         nonceTokenFactory: () -> String = { UUID.randomUUID().toString() }
@@ -52,7 +51,7 @@ public class DefaultRequestSession : RequestSession {
         get() {
             return mapOf(
                 "X-UA-App-Key" to configOptions.appKey,
-                "User-Agent" to "(UrbanAirshipLib-${PlatformUtils.asString(platformProvider.get())}/${UAirship.getVersion()}; ${configOptions.appKey})"
+                "User-Agent" to "(UrbanAirshipLib-${platformProvider.get().stringValue}/${UAirship.getVersion()}; ${configOptions.appKey})"
             )
         }
 

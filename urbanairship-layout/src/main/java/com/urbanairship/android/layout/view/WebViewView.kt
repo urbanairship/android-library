@@ -164,7 +164,7 @@ internal class WebViewView(
 
         addView(frameLayout)
 
-        if (!UAirship.shared().urlAllowList.isAllowed(model.viewInfo.url, UrlAllowList.SCOPE_OPEN_URL)) {
+        if (!UAirship.shared().urlAllowList.isAllowed(model.viewInfo.url, UrlAllowList.Scope.OPEN_URL)) {
             UALog.e("URL not allowed. Unable to load: %s", model.viewInfo.url)
             return
         }

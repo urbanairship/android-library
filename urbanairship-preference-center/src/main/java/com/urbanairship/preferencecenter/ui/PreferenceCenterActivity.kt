@@ -39,7 +39,7 @@ public class PreferenceCenterActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         Autopilot.automaticTakeOff(application)
 
-        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+        if (!UAirship.isTakingOff && !UAirship.isFlying) {
             UALog.e("PreferenceCenterActivity - unable to create activity, takeOff not called.")
             finish()
             return

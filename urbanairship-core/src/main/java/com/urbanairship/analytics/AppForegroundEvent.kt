@@ -18,7 +18,8 @@ internal class AppForegroundEvent(
         DAYLIGHT_SAVINGS_KEY to isDaylightSavingsTime,
         OS_VERSION_KEY to Build.VERSION.RELEASE,
         LIB_VERSION_KEY to UAirship.getVersion(),
-        PACKAGE_VERSION_KEY to UAirship.getPackageInfo()?.versionName,
+        PACKAGE_VERSION_KEY to UAirship.applicationContext.packageManager
+            .getPackageInfo(UAirship.applicationContext.packageName, 0)?.versionName,
         PUSH_ID_KEY to conversionData.conversionSendId,
         METADATA_KEY to conversionData.conversionMetadata,
         LAST_METADATA_KEY to conversionData.lastReceivedMetadata

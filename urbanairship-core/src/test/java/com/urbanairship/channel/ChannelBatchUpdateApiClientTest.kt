@@ -172,7 +172,7 @@ public class ChannelBatchUpdateApiClientTest {
 
     @Test
     public fun testAndroidPlatform(): TestResult = runTest {
-        config.setPlatform(UAirship.ANDROID_PLATFORM)
+        config.setPlatform(UAirship.Platform.ANDROID)
         requestSession.addResponse(200)
         client.update("someChannelId", emptyList(), emptyList(), emptyList(), emptyList())
         assertEquals(
@@ -182,7 +182,7 @@ public class ChannelBatchUpdateApiClientTest {
 
     @Test
     public fun testAmazonPlatform(): TestResult = runTest {
-        config.setPlatform(UAirship.AMAZON_PLATFORM)
+        config.setPlatform(UAirship.Platform.AMAZON)
         requestSession.addResponse(200)
         client.update("someChannelId", emptyList(), emptyList(), emptyList(), emptyList())
         assertEquals(

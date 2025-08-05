@@ -51,8 +51,9 @@ public class ManifestUtils {
      * @return <code>true</code> if the permission is granted, otherwise <code>false</code>.
      */
     public static boolean isPermissionGranted(@NonNull String permission) {
-        return PackageManager.PERMISSION_GRANTED == UAirship.getPackageManager()
-                                                            .checkPermission(permission, UAirship.getPackageName());
+        return PackageManager.PERMISSION_GRANTED == UAirship.getApplicationContext()
+                                                            .getPackageManager()
+                                                            .checkPermission(permission, UAirship.getApplicationContext().getPackageName());
     }
 
     /**
@@ -68,12 +69,12 @@ public class ManifestUtils {
             return null;
         }
 
-        ComponentName componentName = new ComponentName(UAirship.getPackageName(),
+        ComponentName componentName = new ComponentName(UAirship.getApplicationContext().getPackageName(),
                 activity.getCanonicalName());
         try {
-            return UAirship.getPackageManager().getActivityInfo(componentName,
-                    PackageManager.GET_META_DATA);
-
+            return UAirship.getApplicationContext()
+                           .getPackageManager()
+                           .getActivityInfo(componentName, PackageManager.GET_META_DATA);
         } catch (Exception ex) {
             return null;
         }
@@ -87,8 +88,9 @@ public class ManifestUtils {
     @Nullable
     public static ApplicationInfo getApplicationInfo() {
         try {
-            return UAirship.getPackageManager().getApplicationInfo(UAirship.getPackageName(),
-                    PackageManager.GET_META_DATA);
+            return UAirship.getApplicationContext()
+                           .getPackageManager()
+                           .getApplicationInfo(UAirship.getApplicationContext().getPackageName(), PackageManager.GET_META_DATA);
         } catch (Exception ex) {
             return null;
         }

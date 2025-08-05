@@ -96,9 +96,9 @@ public class PagerModelTest {
 
         mockkStatic(UAirship::class)
         every { UAirship.shared() } returns mockk {
-            every { platformType } returns UAirship.ANDROID_PLATFORM
+            every { platformType } returns UAirship.Platform.ANDROID
         }
-        every { UAirship.getApplicationContext() } returns mockk()
+        every { UAirship.applicationContext } returns mockk()
 
         mockkStatic(PagerView::pagerScrolls)
         every { mockView.pagerScrolls() } returns scrollsFlow

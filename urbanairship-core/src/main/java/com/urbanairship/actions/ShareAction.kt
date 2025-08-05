@@ -39,7 +39,7 @@ public class ShareAction public constructor() : Action() {
     }
 
     override fun perform(arguments: ActionArguments): ActionResult {
-        val context = UAirship.getApplicationContext()
+        val context = UAirship.applicationContext
 
         val sharingIntent = Intent(Intent.ACTION_SEND)
             .setType("text/plain")

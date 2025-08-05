@@ -75,7 +75,7 @@ internal abstract class ButtonModel<T, I: Button>(
                     handleViewEvent(EventHandler.Type.TAP)
                 }
 
-                evaluateClickBehaviors(view.context ?: UAirship.getApplicationContext())
+                evaluateClickBehaviors(view.context ?: UAirship.applicationContext)
                 listener?.setEnabled(enabled = true)
             }
         }

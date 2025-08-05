@@ -11,6 +11,7 @@ import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.UAirship
+import com.urbanairship.UAirship.Companion.applicationContext
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
@@ -128,7 +129,7 @@ class AirshipChannelTest {
 
         coEvery { mockPermissionsManager.checkPermissionStatus(any()) } answers {
             val status = configuredPermissions[firstArg()] ?: PermissionStatus.NOT_DETERMINED
-            PendingResult<PermissionStatus?>().also { it.result = status }
+            PendingResult<PermissionStatus?>().also { it.setResult(status) }
         }
 
         coEvery { mockRegistrar.payloadBuilder } coAnswers {
@@ -348,6 +349,8 @@ class AirshipChannelTest {
         assertEquals(result, channel.fetchSubscriptionLists())
     }
 
+    private val versionName: String? = applicationContext.packageManager.getPackageInfo(context.packageName, 0)?.versionName
+
     @Test
     fun testCraPayloadAndroid(): TestResult = runTest {
         every {
@@ -367,7 +370,7 @@ class AirshipChannelTest {
             .setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
             .setTags(true, setOf("cool_tag"))
             .setTimezone(TimeZone.getDefault().id)
-            .setAppVersion(UAirship.getPackageInfo()!!.versionName)
+            .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
             .setSdkVersion(UAirship.getVersion())
@@ -384,7 +387,7 @@ class AirshipChannelTest {
 
     @Test
     fun testCraPayloadAmazon(): TestResult = runTest {
-        testConfig.setPlatform(UAirship.AMAZON_PLATFORM)
+        testConfig.setPlatform(UAirship.Platform.AMAZON)
 
         every {
             mockLocaleManager.locale
@@ -398,7 +401,7 @@ class AirshipChannelTest {
             .setDeviceType(ChannelRegistrationPayload.DeviceType.AMAZON)
             .setTags(true, setOf("cool_tag"))
             .setTimezone(TimeZone.getDefault().id)
-            .setAppVersion(UAirship.getPackageInfo()!!.versionName)
+            .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
             .setSdkVersion(UAirship.getVersion())
@@ -471,7 +474,7 @@ class AirshipChannelTest {
             .setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
             .setTags(true, emptySet())
             .setTimezone(TimeZone.getDefault().id)
-            .setAppVersion(UAirship.getPackageInfo()!!.versionName)
+            .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
             .setSdkVersion(UAirship.getVersion())
@@ -499,7 +502,7 @@ class AirshipChannelTest {
             .setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
             .setTags(true, setOf("cool_tag"))
             .setTimezone(TimeZone.getDefault().id)
-            .setAppVersion(UAirship.getPackageInfo()!!.versionName)
+            .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
             .setSdkVersion(UAirship.getVersion())
@@ -528,7 +531,7 @@ class AirshipChannelTest {
             .setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
             .setTags(true, setOf("cool_tag"))
             .setTimezone(TimeZone.getDefault().id)
-            .setAppVersion(UAirship.getPackageInfo()!!.versionName)
+            .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
             .setSdkVersion(UAirship.getVersion())

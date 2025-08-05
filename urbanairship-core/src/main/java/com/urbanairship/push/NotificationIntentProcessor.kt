@@ -49,13 +49,13 @@ internal class NotificationIntentProcessor(
 
         if (intent.action == null || notificationInfo == null) {
             UALog.e("NotificationIntentProcessor - invalid intent %s", intent)
-            pendingResult.result = false
+            pendingResult.setResult(false)
             return pendingResult
         }
 
         UALog.v("Processing intent: %s", intent.action)
         when (intent.action) {
-            PushManager.ACTION_NOTIFICATION_RESPONSE -> onNotificationResponse { pendingResult.result = true }
+            PushManager.ACTION_NOTIFICATION_RESPONSE -> onNotificationResponse { pendingResult.setResult(true) }
 
             PushManager.ACTION_NOTIFICATION_DISMISSED -> {
                 onNotificationDismissed()
@@ -150,7 +150,7 @@ internal class NotificationIntentProcessor(
             return
         }
 
-        val launchIntent = context.packageManager.getLaunchIntentForPackage(UAirship.getPackageName())
+        val launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
         if (launchIntent != null) {
             launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
             launchIntent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, notificationInfo?.message?.getPushBundle())

@@ -28,7 +28,7 @@ public final class AppStoreUtils {
 
     @NonNull
     public static Intent getAppStoreIntent(@NonNull Context context,
-                                           @UAirship.Platform int platform,
+                                           UAirship.Platform platform,
                                            @NonNull AirshipConfigOptions configOptions) {
 
         if (configOptions.appStoreUri != null) {
@@ -41,7 +41,7 @@ public final class AppStoreUtils {
         }
 
         String packageName = context.getPackageName();
-        if (platform == UAirship.AMAZON_PLATFORM) {
+        if (platform == UAirship.Platform.AMAZON) {
             return new Intent(Intent.ACTION_VIEW, Uri.parse(AMAZON_URL + packageName));
         } else {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(PLAY_STORE_APP_URL + packageName));

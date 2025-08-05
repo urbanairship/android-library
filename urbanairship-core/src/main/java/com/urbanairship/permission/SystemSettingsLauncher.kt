@@ -19,7 +19,7 @@ internal class SystemSettingsLauncher {
             try {
                 context.applicationContext.startActivity(
                     Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                        .putExtra(Settings.EXTRA_APP_PACKAGE, UAirship.getPackageName())
+                        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                         .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 )
                 return true
@@ -31,8 +31,8 @@ internal class SystemSettingsLauncher {
         try {
             context.applicationContext.startActivity(
                 Intent("android.settings.APP_NOTIFICATION_SETTINGS")
-                    .putExtra("app_package", UAirship.getPackageName())
-                    .putExtra("app_uid", UAirship.getAppInfo().uid)
+                    .putExtra("app_package", context.packageName)
+                    .putExtra("app_uid", UAirship.applicationContext.applicationInfo.uid)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
             return true
@@ -50,7 +50,7 @@ internal class SystemSettingsLauncher {
                 Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
                     .addCategory(Intent.CATEGORY_DEFAULT)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    .setData(Uri.parse("package:" + UAirship.getPackageName()))
+                    .setData(Uri.parse("package:" + context.packageName))
             )
             return true
         } catch (e: ActivityNotFoundException) {
@@ -62,7 +62,7 @@ internal class SystemSettingsLauncher {
                 Intent(Settings.ACTION_APPLICATION_SETTINGS)
                     .addCategory(Intent.CATEGORY_DEFAULT)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    .setData(Uri.parse("package:" + UAirship.getPackageName()))
+                    .setData(Uri.parse("package:" + context.packageName))
             )
             return true
         } catch (e: ActivityNotFoundException) {

@@ -197,7 +197,7 @@ public class PermissionsActivity public constructor(
 
             val startingIntent = Intent(context, PermissionsActivity::class.java)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                .setPackage(UAirship.getPackageName())
+                .setPackage(context.packageName)
                 .putExtra(PERMISSION_EXTRA, permission)
                 .putExtra(RESULT_RECEIVER_EXTRA, receiver)
 

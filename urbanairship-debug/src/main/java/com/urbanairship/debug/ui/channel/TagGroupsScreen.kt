@@ -137,7 +137,7 @@ internal class DefaultTagGroupViewModel: TagGroupViewModel, ViewModel() {
     override val action: MutableState<Action> = mutableStateOf(Action.ADD)
 
     override fun perform(editor: TagGroupsEditor?) {
-        if (!UAirship.isFlying() || editor == null || tag.value.isEmpty() || group.value.isEmpty()) {
+        if (!UAirship.isFlying || editor == null || tag.value.isEmpty() || group.value.isEmpty()) {
             return
         }
 

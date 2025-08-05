@@ -48,13 +48,13 @@ public class DeepLinkAction @VisibleForTesting internal constructor(
         // Fallback to intent launching
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            .setPackage(UAirship.getPackageName())
+            .setPackage(UAirship.applicationContext.packageName)
 
         arguments.metadata.getParcelable<PushMessage>(ActionArguments.PUSH_MESSAGE_METADATA)?.let {
             intent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, it.getPushBundle())
         }
 
-        UAirship.getApplicationContext().startActivity(intent)
+        UAirship.applicationContext.startActivity(intent)
 
         return newResult(arguments.value)
     }

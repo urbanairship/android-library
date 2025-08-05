@@ -32,7 +32,7 @@ internal class DefaultHttpClient : HttpClient {
 
         return try {
             conn = ConnectionUtils.openSecureConnection(
-                UAirship.getApplicationContext(), actualUrl
+                UAirship.applicationContext, actualUrl
             ) as HttpURLConnection
 
             conn.apply {

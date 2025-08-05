@@ -64,7 +64,7 @@ internal class ImageButtonView(
 
                     var isLoaded = false
 
-                    fun loadImage(url: String) = UAirship.shared().imageLoader.load(context,
+                    fun loadImage(url: String) = UAirship.shared().getImageLoader().load(context,
                         button,
                         ImageRequestOptions.newBuilder(url)
                             .setImageSizeResolver(ThomasImageSizeResolver(itemProperties?.size, cached?.size))

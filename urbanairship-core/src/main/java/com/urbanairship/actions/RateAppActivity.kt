@@ -28,7 +28,7 @@ public class RateAppActivity public constructor() : ThemedActivity() {
         super.onCreate(savedInstanceState)
         Autopilot.automaticTakeOff(application)
 
-        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+        if (!UAirship.isTakingOff && !UAirship.isFlying) {
             UALog.e("RateAppActivity - unable to create activity, takeOff not called.")
             finish()
         }
@@ -145,8 +145,8 @@ public class RateAppActivity public constructor() : ThemedActivity() {
 
     private val appName: String
         get() {
-            val packageName = UAirship.getApplicationContext().packageName
-            val packageManager = UAirship.getApplicationContext().packageManager
+            val packageName = UAirship.applicationContext.packageName
+            val packageManager = UAirship.applicationContext.packageManager
 
             try {
                 val info =

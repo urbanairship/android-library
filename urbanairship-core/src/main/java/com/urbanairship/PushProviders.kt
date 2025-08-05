@@ -58,14 +58,14 @@ public open class PushProviders @VisibleForTesting protected constructor(
 
         when (provider.deliveryType) {
             PushProvider.DeliveryType.ADM -> {
-                if (provider.platform != UAirship.AMAZON_PLATFORM) {
+                if (provider.platform != UAirship.Platform.AMAZON) {
                     UALog.e("Invalid Provider: $provider. ADM delivery is only available for Amazon platforms.")
                     return false
                 }
             }
             PushProvider.DeliveryType.FCM,
             PushProvider.DeliveryType.HMS -> {
-                if (provider.platform != UAirship.ANDROID_PLATFORM) {
+                if (provider.platform != UAirship.Platform.ANDROID) {
                     UALog.e(
                         "Invalid Provider: %s. %s delivery is only available for Android platforms.",
                         provider.deliveryType,
@@ -119,7 +119,7 @@ public open class PushProviders @VisibleForTesting protected constructor(
      * @param platform The specified platform.
      * @return The best provider for the platform, or `null` if no provider is found.
      */
-    public open fun getBestProvider(@UAirship.Platform platform: Int): PushProvider? {
+    public open fun getBestProvider(platform: UAirship.Platform): PushProvider? {
         return availableProviders.firstOrNull { it.platform == platform }
             ?: supportedProviders.firstOrNull { it.platform == platform }
     }
@@ -141,7 +141,7 @@ public open class PushProviders @VisibleForTesting protected constructor(
      * @return The provider or `null` if the specified provider is not available.
      */
     public open fun getProvider(
-        @UAirship.Platform platform: Int,
+        platform: UAirship.Platform,
         providerClass: String
     ): PushProvider? {
         return supportedProviders.firstOrNull {

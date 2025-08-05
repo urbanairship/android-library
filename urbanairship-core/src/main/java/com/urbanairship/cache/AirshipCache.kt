@@ -2,6 +2,7 @@ package com.urbanairship.cache
 
 import android.content.Context
 import androidx.annotation.RestrictTo
+import androidx.core.content.pm.PackageInfoCompat
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
@@ -23,7 +24,7 @@ public class AirshipCache @JvmOverloads constructor(
     context: Context,
     runtimeConfig: AirshipRuntimeConfig,
     isPersistent: Boolean = true,
-    private val appVersion: String = UAirship.getAppVersion().toString(),
+    appVersion: String? = null,
     private val sdkVersion: String = UAirship.getVersion(),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
@@ -31,6 +32,12 @@ public class AirshipCache @JvmOverloads constructor(
 
     private val store: CacheDao
     private val dbScope = CoroutineScope(dispatcher + SupervisorJob())
+    private val appVersion = appVersion ?: context
+        .packageManager
+        .getPackageInfo(context.packageName, 0)
+        ?.let { PackageInfoCompat.getLongVersionCode(it) }
+        ?.toString()
+        ?: "-1"
 
     init {
         store = if (isPersistent) {

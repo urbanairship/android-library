@@ -20,7 +20,7 @@ import com.urbanairship.sample.glance.SampleAppWidgetLiveUpdate
 class SampleAutopilot : Autopilot() {
 
     override fun onAirshipReady(airship: UAirship) {
-        val context = UAirship.getApplicationContext()
+        val context = UAirship.applicationContext
 
         val preferences = context.getSharedPreferences(NO_BACKUP_PREFERENCES, MODE_PRIVATE)
 
@@ -59,9 +59,9 @@ class SampleAutopilot : Autopilot() {
             }.toUri()
 
             val intent = Intent(Intent.ACTION_VIEW, uri)
-                .setPackage(UAirship.getPackageName())
+                .setPackage(context.packageName)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            UAirship.getApplicationContext().startActivity(intent)
+            UAirship.applicationContext.startActivity(intent)
             true
         }
 

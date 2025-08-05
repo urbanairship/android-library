@@ -41,7 +41,7 @@ public class DeferredResolverTest {
 
         val config: AirshipRuntimeConfig = mockk()
         every { config.requestSession } returns requestSession
-        every { config.platform } returns UAirship.ANDROID_PLATFORM
+        every { config.platform } returns UAirship.Platform.ANDROID
 
         resolver = DeferredResolver(config, AudienceOverridesProvider())
     }

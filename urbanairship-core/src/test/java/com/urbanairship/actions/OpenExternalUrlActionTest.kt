@@ -26,7 +26,7 @@ public class OpenExternalUrlActionTest {
      */
     @Test
     public fun testAcceptsArguments() {
-        every { urlAllowList.isAllowed(any(), UrlAllowList.SCOPE_OPEN_URL) } returns true
+        every { urlAllowList.isAllowed(any(), UrlAllowList.Scope.OPEN_URL) } returns true
 
         listOf(
             Action.Situation.MANUAL_INVOCATION,
@@ -48,7 +48,7 @@ public class OpenExternalUrlActionTest {
      */
     @Test
     public fun testUrlAllowList() {
-        every { urlAllowList.isAllowed(any(), UrlAllowList.SCOPE_OPEN_URL) } answers {
+        every { urlAllowList.isAllowed(any(), UrlAllowList.Scope.OPEN_URL) } answers {
             "https://yep.example.com" == firstArg()
         }
 
@@ -74,7 +74,7 @@ public class OpenExternalUrlActionTest {
      */
     @Test
     public fun testPerform() {
-        every { urlAllowList.isAllowed(any(), UrlAllowList.SCOPE_OPEN_URL) } returns true
+        every { urlAllowList.isAllowed(any(), UrlAllowList.Scope.OPEN_URL) } returns true
 
         var args =
             ActionTestUtils.createArgs(Action.Situation.WEB_VIEW_INVOCATION, "http://example.com")

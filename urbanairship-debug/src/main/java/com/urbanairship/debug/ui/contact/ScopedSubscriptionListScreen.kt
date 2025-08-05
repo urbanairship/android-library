@@ -185,7 +185,7 @@ internal class ScopedSubscriptionListsViewModel: ViewModel() {
     }
 
     fun perform() {
-        if (!UAirship.isFlying() || !isComplete) {
+        if (!UAirship.isFlying || !isComplete) {
             return
         }
 
@@ -201,7 +201,7 @@ internal class ScopedSubscriptionListsViewModel: ViewModel() {
     }
 
     private fun refresh() {
-        if (!UAirship.isFlying()) {
+        if (!UAirship.isFlying) {
             return
         }
 

@@ -22,14 +22,14 @@ public class AppStoreUtilsTest extends BaseTestCase {
 
     @Test
     public void testAmazonIntent() {
-        Intent intent = AppStoreUtils.getAppStoreIntent(context, UAirship.AMAZON_PLATFORM, emptyConfig);
+        Intent intent = AppStoreUtils.getAppStoreIntent(context, UAirship.Platform.AMAZON, emptyConfig);
         assertEquals("amzn://apps/android?p=com.urbanairship.test", intent.getData().toString());
         assertEquals(Intent.ACTION_VIEW, intent.getAction());
     }
 
     @Test
     public void testAndroidIntent() {
-        Intent intent = AppStoreUtils.getAppStoreIntent(context, UAirship.ANDROID_PLATFORM, emptyConfig);
+        Intent intent = AppStoreUtils.getAppStoreIntent(context,UAirship.Platform.ANDROID, emptyConfig);
         assertEquals("https://play.google.com/store/apps/details?id=com.urbanairship.test", intent.getData().toString());
         assertEquals(Intent.ACTION_VIEW, intent.getAction());
     }
@@ -40,7 +40,7 @@ public class AppStoreUtilsTest extends BaseTestCase {
                                                                  .setAppStoreUri(Uri.parse("https://neat"))
                                                                  .build();
 
-        Intent intent = AppStoreUtils.getAppStoreIntent(context, UAirship.ANDROID_PLATFORM, configOptions);
+        Intent intent = AppStoreUtils.getAppStoreIntent(context, UAirship.Platform.ANDROID, configOptions);
         assertEquals("https://neat", intent.getData().toString());
         assertEquals(Intent.ACTION_VIEW, intent.getAction());
     }

@@ -523,7 +523,7 @@ class PushMessageTest {
      */
     @Test
     fun testGetSound() {
-        val context = spyk(UAirship.getApplicationContext())
+        val context = spyk(UAirship.applicationContext)
         val resources: Resources = mockk {
             every { getIdentifier("test_sound", any(), any()) } returns 5
         }
@@ -544,7 +544,7 @@ class PushMessageTest {
      */
     @Test
     fun testGetSoundNull() {
-        val context = UAirship.getApplicationContext()
+        val context = UAirship.applicationContext
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_SOUND to "test_sound")
         )
@@ -559,7 +559,7 @@ class PushMessageTest {
      */
     @Test
     fun testGetIcon() {
-        val context = spyk(UAirship.getApplicationContext())
+        val context = spyk(UAirship.applicationContext)
         val resources: Resources = mockk {
             every { getIdentifier("icon", any(), any()) } returns 5
         }

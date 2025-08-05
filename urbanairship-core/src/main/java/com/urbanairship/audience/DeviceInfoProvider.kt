@@ -2,12 +2,14 @@
 
 package com.urbanairship.audience
 
+import android.content.pm.PackageInfo
 import androidx.annotation.RestrictTo
+import androidx.core.content.pm.PackageInfoCompat
 import com.urbanairship.UAirship
+import com.urbanairship.UAirship.Companion.applicationContext
 import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
-import com.urbanairship.util.PlatformUtils
 import java.util.Locale
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -58,8 +60,17 @@ public interface DeviceInfoProvider {
 
 internal class DeviceInfoProviderImpl(private val contactId: String? = null) : DeviceInfoProvider {
 
+    private val packageName = applicationContext.packageName
+    private val packageInfo: PackageInfo? = applicationContext.packageManager
+        .getPackageInfo(packageName, 0)
+    private val appVersion: Long = applicationContext
+        .packageManager
+        .getPackageInfo(packageName, 0)
+        ?.let { PackageInfoCompat.getLongVersionCode(it) }
+        ?: -1
+
     override val installDateMilliseconds: Long
-        get() = UAirship.getPackageInfo()?.firstInstallTime ?: 0
+        get() = packageInfo?.firstInstallTime ?: 0
 
     override val isNotificationsOptedIn: Boolean
         get() = UAirship.shared().pushManager.areNotificationsOptedIn()
@@ -67,12 +78,12 @@ internal class DeviceInfoProviderImpl(private val contactId: String? = null) : D
     override val channelTags: Set<String>
         get() = UAirship.shared().channel.tags
     override val appVersionName: String
-        get() = UAirship.getPackageInfo()?.versionName ?: ""
+        get() = packageInfo?.versionName ?: ""
     override val appVersionCode: Long
-        get() = UAirship.getAppVersion()
+        get() = appVersion
 
     override val platform: String
-        get() = PlatformUtils.asString(UAirship.shared().platformType)
+        get() = UAirship.shared().platformType.stringValue
 
     override val channelCreated: Boolean
         get() = UAirship.shared().channel.id != null
@@ -85,7 +96,7 @@ internal class DeviceInfoProviderImpl(private val contactId: String? = null) : D
     override suspend fun getPermissionStatuses(): Map<Permission, PermissionStatus> {
         val resolver: suspend (Permission) -> PermissionStatus = {
             suspendCoroutine { continuation ->
-                val result = UAirship.shared().permissionsManager.checkPermissionStatus(it).result
+                val result = UAirship.shared().permissionsManager.checkPermissionStatus(it).getResult()
                 continuation.resume(result ?: PermissionStatus.NOT_DETERMINED)
             }
         }

@@ -60,7 +60,7 @@ internal class DefaultPrivacyViewModel(
     }
 
     override fun toggle(feature: PrivacyFeature) {
-        if (!UAirship.isFlying()) {
+        if (!UAirship.isFlying) {
             return
         }
 

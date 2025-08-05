@@ -14,7 +14,6 @@ import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestApplication
 import com.urbanairship.UAirship
-import com.urbanairship.UAirship.ANDROID_PLATFORM
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.base.Supplier
 import com.urbanairship.channel.AirshipChannel
@@ -65,7 +64,7 @@ public class PushManagerTest {
     private val mockPermissionManager: PermissionsManager = mockk(relaxed = true) {
         coEvery { suspendingCheckPermissionStatus(any()) } answers { notificationStatus }
     }
-    private val pushProvidersSupplier = Supplier<PushProviders?> { mockPushProviders }
+    private val pushProvidersSupplier = Supplier<PushProviders> { mockPushProviders }
     private val mockNotificationManager: AirshipNotificationManager = mockk {
         every { areNotificationsEnabled() } returns false
     }
@@ -333,7 +332,7 @@ public class PushManagerTest {
         pushManager.userNotificationsEnabled = true
         every { mockNotificationManager.areNotificationsEnabled() } returns true
 
-        every { mockPushProvider.platform } returns ANDROID_PLATFORM
+        every { mockPushProvider.platform } returns UAirship.Platform.ANDROID
 
         val builder = ChannelRegistrationPayload.Builder()
         val payload = extender?.extend(builder)?.build()
@@ -388,7 +387,7 @@ public class PushManagerTest {
         Assert.assertNotNull(extender)
 
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.platform } returns ANDROID_PLATFORM
+        every { mockPushProvider.platform } returns UAirship.Platform.ANDROID
         every { mockPushProvider.deliveryType } returns PushProvider.DeliveryType.FCM
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
 

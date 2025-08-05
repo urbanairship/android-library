@@ -29,7 +29,7 @@ public object AirshipHmsIntegration {
             .processPush(HmsPushProvider::class.java, PushMessage(message.dataOfMap))
             .execute(context) { pendingResult.setResult(null) }
 
-        return pendingResult
+        return pendingResult as Future<Void>
     }
 
     /**

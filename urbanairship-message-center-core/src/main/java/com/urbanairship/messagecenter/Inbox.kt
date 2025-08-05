@@ -331,7 +331,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun getCountPendingResult(): PendingResult<Int> {
         val result = PendingResult<Int>()
         scope.launch {
-            result.result = messageDao.getMessageCount()
+            result.setResult(messageDao.getMessageCount())
         }
         return result
     }
@@ -344,7 +344,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun getMessageIdsPendingResult(): PendingResult<Set<String>> {
         val result = PendingResult<Set<String>>()
         scope.launch {
-            result.result = messageDao.getMessageIds().toSet()
+            result.setResult(messageDao.getMessageIds().toSet())
         }
         return result
     }
@@ -357,7 +357,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun getReadCountPendingResult(): PendingResult<Int> {
         val result = PendingResult<Int>()
         scope.launch {
-            result.result = messageDao.getReadMessageCount()
+            result.setResult(messageDao.getReadMessageCount())
         }
         return result
     }
@@ -370,7 +370,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun getUnreadCountPendingResult(): PendingResult<Int> {
         val result = PendingResult<Int>()
         scope.launch {
-            result.result = messageDao.getUnreadMessageCount()
+            result.setResult(messageDao.getUnreadMessageCount())
         }
         return result
     }
@@ -430,7 +430,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun getMessagesPendingResult(predicate: Predicate<Message>? = null): PendingResult<List<Message>?> {
         val result = PendingResult<List<Message>?>()
         scope.launch {
-            result.result = getMessages(predicate)
+            result.setResult(getMessages(predicate))
         }
         return result
     }
@@ -482,7 +482,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun getUnreadMessagesPendingResult(predicate: Predicate<Message>? = null): PendingResult<List<Message>?> {
         val result = PendingResult<List<Message>?>()
         scope.launch {
-            result.result = getUnreadMessages(predicate)
+            result.setResult(getUnreadMessages(predicate))
         }
         return result
     }
@@ -512,7 +512,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun getReadMessagesPendingResult(predicate: Predicate<Message>? = null): PendingResult<List<Message>?> {
         val result = PendingResult<List<Message>?>()
         scope.launch {
-            result.result = getReadMessages(predicate)
+            result.setResult(getReadMessages(predicate))
         }
         return result
     }
@@ -536,7 +536,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun getMessagePendingResult(messageId: String?): PendingResult<Message?> {
         val result = PendingResult<Message?>()
         scope.launch {
-            result.result = getMessage(messageId)
+            result.setResult(getMessage(messageId))
         }
         return result
     }
@@ -560,7 +560,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun getMessageByUrlPendingResult(messageUrl: String?): PendingResult<Message?> {
         val result = PendingResult<Message?>()
         scope.launch {
-            result.result = getMessageByUrl(messageUrl)
+            result.setResult(getMessageByUrl(messageUrl))
         }
         return result
     }

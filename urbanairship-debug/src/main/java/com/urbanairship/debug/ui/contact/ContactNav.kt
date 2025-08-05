@@ -36,7 +36,7 @@ internal fun NavGraphBuilder.contactsNav(navController: NavController) {
         composable(ContactScreens.TagGroups.route) {
             TagGroupsScreen(
                 editorProvider = {
-                    if (UAirship.isFlying()) {
+                    if (UAirship.isFlying) {
                         UAirship.shared().contact.editTagGroups()
                     } else {
                         null
@@ -49,7 +49,7 @@ internal fun NavGraphBuilder.contactsNav(navController: NavController) {
         composable(ContactScreens.Attributes.route) {
             AttributeEditScreen(
                 editorProvider = {
-                    if (UAirship.isFlying()) {
+                    if (UAirship.isFlying) {
                         UAirship.shared().contact.editAttributes()
                     } else {
                         null
@@ -63,7 +63,7 @@ internal fun NavGraphBuilder.contactsNav(navController: NavController) {
             ScopedSubscriptionListsScreen(
                 provider = object : ScopedSubscriptionListProvider {
                     override fun getEditor(): ScopedSubscriptionListEditor? {
-                        return if (UAirship.isFlying()) {
+                        return if (UAirship.isFlying) {
                             UAirship.shared().contact.editSubscriptionLists()
                         } else {
                             null

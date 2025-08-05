@@ -1,0 +1,67 @@
+package com.urbanairship
+
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.push.PushProvider
+import org.junit.Assert
+import org.junit.Test
+import org.junit.runner.RunWith
+
+@RunWith(AndroidJUnit4::class)
+class PushProvidersTest {
+
+    @Test
+    fun testValidPushProvider() {
+        verifyInvalidProvider(
+            TestPushProvider(
+                UAirship.Platform.AMAZON, PushProvider.DeliveryType.FCM
+            )
+        )
+        verifyInvalidProvider(
+            TestPushProvider(
+                UAirship.Platform.AMAZON, PushProvider.DeliveryType.HMS
+            )
+        )
+        verifyInvalidProvider(
+            TestPushProvider(
+                UAirship.Platform.ANDROID, PushProvider.DeliveryType.ADM
+            )
+        )
+
+        verifyValidProvider(
+            TestPushProvider(
+                UAirship.Platform.AMAZON, PushProvider.DeliveryType.ADM
+            )
+        )
+        verifyValidProvider(
+            TestPushProvider(
+                UAirship.Platform.ANDROID, PushProvider.DeliveryType.HMS
+            )
+        )
+        verifyValidProvider(
+            TestPushProvider(
+                UAirship.Platform.ANDROID, PushProvider.DeliveryType.FCM
+            )
+        )
+    }
+
+    companion object {
+
+        fun verifyValidProvider(provider: TestPushProvider) {
+            val configOptions =
+                AirshipConfigOptions.newBuilder().setCustomPushProvider(provider).build()
+
+            val providers = PushProviders.load(ApplicationProvider.getApplicationContext(), configOptions)
+            Assert.assertEquals(1, providers.getAvailableProviders().size.toLong())
+            Assert.assertEquals(provider, providers.getAvailableProviders()[0])
+        }
+
+        fun verifyInvalidProvider(provider: TestPushProvider) {
+            val configOptions =
+                AirshipConfigOptions.newBuilder().setCustomPushProvider(provider).build()
+
+            val providers = PushProviders.load(ApplicationProvider.getApplicationContext(), configOptions)
+            Assert.assertTrue(providers.getAvailableProviders().isEmpty())
+        }
+    }
+}

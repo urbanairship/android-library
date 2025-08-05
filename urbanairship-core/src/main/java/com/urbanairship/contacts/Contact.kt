@@ -549,7 +549,7 @@ public class Contact internal constructor(
     public fun fetchSubscriptionListsPendingResult(): PendingResult<Map<String, Set<Scope>>?> {
         val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
         subscriptionsScope.launch {
-            pendingResult.result = fetchSubscriptionLists().getOrNull()
+            pendingResult.setResult(fetchSubscriptionLists().getOrNull())
         }
         return pendingResult
     }
@@ -566,7 +566,7 @@ public class Contact internal constructor(
     public fun getSubscriptionLists(): PendingResult<Map<String, Set<Scope>>?> {
         val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
         subscriptionsScope.launch {
-            pendingResult.result = fetchSubscriptionLists().getOrNull()
+            pendingResult.setResult(fetchSubscriptionLists().getOrNull())
         }
         return pendingResult
     }

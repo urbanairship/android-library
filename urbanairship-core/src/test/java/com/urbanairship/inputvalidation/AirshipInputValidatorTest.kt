@@ -132,9 +132,9 @@ public class AirshipInputValidatorTest {
                     assertEquals(originalRequest, request)
 
                     return PendingResult<AirshipInputValidation.Override>().apply {
-                        result = AirshipInputValidation.Override.Replace(
+                        setResult(AirshipInputValidation.Override.Replace(
                             result = AirshipInputValidation.Result.Valid(overrideValue)
-                        )
+                        ))
                     }
                 }
             }
@@ -155,7 +155,7 @@ public class AirshipInputValidatorTest {
                 override fun getOverrides(request: AirshipInputValidation.Request): PendingResult<AirshipInputValidation.Override> {
                     assertEquals(request, originalRequest)
                     return PendingResult<AirshipInputValidation.Override>().apply {
-                        result = AirshipInputValidation.Override.UseDefault
+                        setResult(AirshipInputValidation.Override.UseDefault)
                     }
                 }
             }
@@ -338,9 +338,9 @@ public class AirshipInputValidatorTest {
             overrides = object : AirshipValidationOverride {
                 override fun getOverrides(request: AirshipInputValidation.Request): PendingResult<AirshipInputValidation.Override> {
                     return PendingResult<AirshipInputValidation.Override>().apply {
-                        result = AirshipInputValidation.Override.Replace(
+                        setResult(AirshipInputValidation.Override.Replace(
                             AirshipInputValidation.Result.Valid("some other result")
-                        )
+                        ))
                     }
                 }
 
@@ -362,7 +362,7 @@ public class AirshipInputValidatorTest {
             overrides = object : AirshipValidationOverride {
                 override fun getOverrides(request: AirshipInputValidation.Request): PendingResult<AirshipInputValidation.Override> {
                     return PendingResult<AirshipInputValidation.Override>().apply {
-                        result = AirshipInputValidation.Override.UseDefault
+                        setResult(AirshipInputValidation.Override.UseDefault)
                     }
                 }
             }

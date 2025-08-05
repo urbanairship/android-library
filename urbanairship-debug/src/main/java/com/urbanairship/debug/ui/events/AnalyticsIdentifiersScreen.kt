@@ -166,7 +166,7 @@ internal class DefaultAnalyticsIdentifierViewModel: AnalyticsIdentifierViewModel
     }
 
     override fun addIdentifier(item: Identifier) {
-        if (!UAirship.isFlying() || _identifiersFlow.value.contains(item)) {
+        if (!UAirship.isFlying || _identifiersFlow.value.contains(item)) {
             return
         }
 
@@ -179,7 +179,7 @@ internal class DefaultAnalyticsIdentifierViewModel: AnalyticsIdentifierViewModel
     }
 
     override fun remove(item: Identifier) {
-        if (!UAirship.isFlying() ||  !_identifiersFlow.value.contains(item)) {
+        if (!UAirship.isFlying ||  !_identifiersFlow.value.contains(item)) {
             return
         }
 
@@ -192,7 +192,7 @@ internal class DefaultAnalyticsIdentifierViewModel: AnalyticsIdentifierViewModel
     }
 
     private fun refresh() {
-        if (!UAirship.isFlying()) {
+        if (!UAirship.isFlying) {
             return
         }
 

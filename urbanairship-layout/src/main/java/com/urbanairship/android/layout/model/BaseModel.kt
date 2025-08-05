@@ -33,7 +33,6 @@ import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
-import com.urbanairship.util.PlatformUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -59,7 +58,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     val viewInfo: I,
     protected val environment: ModelEnvironment,
     protected val properties: ModelProperties,
-    private val platformProvider: Provider<Int> = Provider { UAirship.shared().platformType }
+    private val platformProvider: Provider<UAirship.Platform> = Provider { UAirship.shared().platformType }
 ) {
 
     internal interface Listener {
@@ -226,7 +225,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         actions: Map<String, JsonValue>?,
         state: LayoutData = layoutState.reportingContext()
     ) {
-        val platform = PlatformUtils.asString(platformProvider.get())
+        val platform = platformProvider.get().stringValue
         val mergedActions = actions.orEmpty().toMutableMap()
 
         mergedActions

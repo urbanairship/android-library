@@ -61,8 +61,7 @@ public interface PushProvider {
         }
     }
 
-    @get:UAirship.Platform
-    public val platform: Int
+    public val platform: UAirship.Platform
 
     public val deliveryType: DeliveryType
 

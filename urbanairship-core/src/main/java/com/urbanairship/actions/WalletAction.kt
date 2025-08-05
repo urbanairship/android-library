@@ -43,20 +43,20 @@ public class WalletAction : OpenExternalUrlAction {
     public override fun perform(arguments: ActionArguments): ActionResult {
         UALog.i("Processing Wallet adaptive link.")
 
-        val intent = Intent(UAirship.getApplicationContext(), WalletLoadingActivity::class.java)
+        val intent = Intent(UAirship.applicationContext, WalletLoadingActivity::class.java)
             .apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 setData(Uri.parse(arguments.value.string))
             }
 
-        UAirship.getApplicationContext().startActivity(intent)
+        UAirship.applicationContext.startActivity(intent)
 
         return newEmptyResult()
     }
 
     public override fun acceptsArguments(arguments: ActionArguments): Boolean {
         // Only support Android platform
-        if (UAirship.shared().platformType != UAirship.ANDROID_PLATFORM) {
+        if (UAirship.shared().platformType != UAirship.Platform.ANDROID) {
             return false
         }
 

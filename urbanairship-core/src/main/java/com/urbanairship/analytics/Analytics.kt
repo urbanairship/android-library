@@ -557,8 +557,7 @@ public constructor(
             headers["X-UA-Android-Version-Code"] = Build.VERSION.SDK_INT.toString()
 
             // Airship info
-            headers["X-UA-Device-Family"] =
-                if (runtimeConfig.platform == UAirship.AMAZON_PLATFORM) "amazon" else "android"
+            headers["X-UA-Device-Family"] = runtimeConfig.platform.stringValue
             headers["X-UA-Lib-Version"] = UAirship.getVersion()
             headers["X-UA-App-Key"] = runtimeConfig.configOptions.appKey
             headers["X-UA-In-Production"] = runtimeConfig.configOptions.inProduction.toString()

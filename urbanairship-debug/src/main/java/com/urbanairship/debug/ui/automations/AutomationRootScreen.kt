@@ -118,7 +118,7 @@ internal class DefaultAutomationRootScreenViewModel: AutomationRootScreenViewMod
     }
 
     override fun setDisplayInterval(value: Long) {
-        if (!UAirship.isFlying()) {
+        if (!UAirship.isFlying) {
             return
         }
 

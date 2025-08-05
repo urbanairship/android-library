@@ -36,7 +36,7 @@ public class InstallReceiver public constructor() : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
         Autopilot.automaticTakeOff(context)
-        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+        if (!UAirship.isTakingOff && !UAirship.isFlying) {
             UALog.e("InstallReceiver - unable to track install referrer, takeOff not called.")
             return
         }

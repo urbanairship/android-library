@@ -95,7 +95,7 @@ internal class CreateSmsChannelViewModel: ViewModel() {
         get() = msisdn.value.isNotEmpty() && senderId.value.isNotEmpty()
 
     fun perform() {
-        if (!UAirship.isFlying() || msisdn.value.isEmpty() || senderId.value.isEmpty()) {
+        if (!UAirship.isFlying || msisdn.value.isEmpty() || senderId.value.isEmpty()) {
             return
         }
 

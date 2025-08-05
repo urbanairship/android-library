@@ -51,18 +51,18 @@ public class NotificationChannelRegistry @VisibleForTesting internal constructor
 
         executor.execute {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                pendingResult.result = dataManager.getChannel(id) ?: getAndCreateDefaultChannel(id)
+                pendingResult.setResult(dataManager.getChannel(id) ?: getAndCreateDefaultChannel(id))
                 return@execute
             }
 
             notificationManager.getNotificationChannel(id)?.let {
-                pendingResult.result = NotificationChannelCompat(it)
+                pendingResult.setResult(NotificationChannelCompat(it))
                 return@execute
             }
 
             val result = dataManager.getChannel(id) ?: getAndCreateDefaultChannel(id)
             result?.let { notificationManager.createNotificationChannel(it.toNotificationChannel()) }
-            pendingResult.result = result
+            pendingResult.setResult(result)
         }
 
         return pendingResult

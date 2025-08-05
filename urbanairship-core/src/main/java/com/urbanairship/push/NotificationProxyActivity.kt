@@ -20,7 +20,7 @@ public class NotificationProxyActivity public constructor() : Activity() {
 
         Autopilot.automaticTakeOff(this)
 
-        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+        if (!UAirship.isTakingOff && !UAirship.isFlying) {
             UALog.e("NotificationProxyActivity - unable to receive intent, takeOff not called.")
             finish()
             return

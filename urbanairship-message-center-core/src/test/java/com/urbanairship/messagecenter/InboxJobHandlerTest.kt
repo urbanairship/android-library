@@ -424,7 +424,7 @@ public class InboxJobHandlerTest {
     public fun testCreateUserWithAmazonChannel(): TestResult = runTest {
         every { user.userCredentials } returns null
 
-        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM)
+        runtimeConfig.setPlatform(UAirship.Platform.AMAZON)
 
         val responseBody = "{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }"
 
@@ -450,7 +450,7 @@ public class InboxJobHandlerTest {
     public fun testCreateUserWithAndroidChannel(): TestResult = runTest {
         every { user.userCredentials } returns null
 
-        runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM)
+        runtimeConfig.setPlatform(UAirship.Platform.ANDROID)
 
         val responseBody = "{ \"user_id\": \"someUserId\", \"password\": \"someUserToken\" }"
         val newCredentials = UserCredentials("someUserId", "someUserToken")
@@ -491,7 +491,7 @@ public class InboxJobHandlerTest {
     public fun testUpdateUserAmazon(): TestResult = runTest {
         every { user.userCredentials } returns userCredentials
 
-        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM)
+        runtimeConfig.setPlatform(UAirship.Platform.AMAZON)
 
         // Set a successful response
         coEvery {
@@ -516,7 +516,7 @@ public class InboxJobHandlerTest {
     public fun testUpdateUserAndroid(): TestResult = runTest {
         every { user.userCredentials } returns userCredentials
 
-        runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM)
+        runtimeConfig.setPlatform(UAirship.Platform.ANDROID)
 
         // Set a user
         user.setUser(UserCredentials("someUserId", "someUserToken"))

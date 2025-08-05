@@ -11,7 +11,6 @@ import com.urbanairship.http.ResponseParser
 import com.urbanairship.http.SuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.util.PlatformUtils
 import com.urbanairship.util.UAHttpStatusUtil
 
 internal class DeferredApiClient(
@@ -33,7 +32,7 @@ internal class DeferredApiClient(
             auth = RequestAuth.ChannelTokenAuth(channelId),
             headers = mapOf("Accept" to "application/vnd.urbanairship+json; version=3;"),
             body = RequestBody.Json(jsonMapOf(
-                KEY_PLATFORM to PlatformUtils.asString(config.platform),
+                KEY_PLATFORM to config.platform.stringValue,
                 KEY_CHANNEL_ID to channelId,
                 KEY_CONTACT_ID to contactId,
                 KEY_STATE_OVERRIDES to stateOverrides,

@@ -37,7 +37,7 @@ public class VersionUtils {
     @NonNull
     public static JsonSerializable createVersionObject(long appVersion) {
         // Get the version code
-        String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? VersionUtils.AMAZON_VERSION_KEY : VersionUtils.ANDROID_VERSION_KEY;
+        String platform = UAirship.shared().getPlatformType() == UAirship.Platform.AMAZON ? VersionUtils.AMAZON_VERSION_KEY : VersionUtils.ANDROID_VERSION_KEY;
 
         return JsonMap.newBuilder()
                       .put(platform, JsonMap.newBuilder()
@@ -55,7 +55,7 @@ public class VersionUtils {
      */
     @NonNull
     public static JsonPredicate createVersionPredicate(@NonNull ValueMatcher versionMatcher) {
-        String platform = UAirship.shared().getPlatformType() == UAirship.AMAZON_PLATFORM ? VersionUtils.AMAZON_VERSION_KEY : VersionUtils.ANDROID_VERSION_KEY;
+        String platform = UAirship.shared().getPlatformType() == UAirship.Platform.AMAZON ? VersionUtils.AMAZON_VERSION_KEY : VersionUtils.ANDROID_VERSION_KEY;
 
         return JsonPredicate.newBuilder()
                             .addMatcher(JsonMatcher.newBuilder()

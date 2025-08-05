@@ -38,7 +38,7 @@ public class AppForegroundEventTest {
     @Test
     public fun testPackageVersion() {
         EventTestUtils.validateEventValue(
-            event, Event.PACKAGE_VERSION_KEY, UAirship.getPackageInfo()!!.versionName
+            event, Event.PACKAGE_VERSION_KEY, UAirship.applicationContext.packageManager.getPackageInfo(UAirship.applicationContext.packageName, 0)?.versionName
         )
     }
 

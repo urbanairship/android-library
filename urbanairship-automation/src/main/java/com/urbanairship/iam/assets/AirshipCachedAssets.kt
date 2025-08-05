@@ -246,7 +246,7 @@ internal class DefaultAirshipCachedAssets(
 
             val result = DefaultAirshipCachedAssets(
                 directory = directory,
-                fileManager = DefaultAssetFileManager(UAirship.getApplicationContext())
+                fileManager = DefaultAssetFileManager(UAirship.applicationContext)
             )
             result.metadataCache.putAll(metadata.map)
 

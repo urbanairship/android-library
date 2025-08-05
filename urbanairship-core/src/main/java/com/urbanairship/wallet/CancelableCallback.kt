@@ -43,7 +43,7 @@ internal class CancelableCallback
      * @param pass The parsed response [Pass].
      */
     fun setResult(status: Int, pass: Pass?) {
-        if (isCancelled) {
+        if (isCancelled()) {
             return
         }
 

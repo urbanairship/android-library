@@ -22,7 +22,10 @@ internal class RemoteDataUrlFactory(
 
     private val platform: String
     get() {
-        return if (runtimeConfig.platform == UAirship.AMAZON_PLATFORM) AMAZON else ANDROID
+        return when(runtimeConfig.platform) {
+            UAirship.Platform.AMAZON -> AMAZON
+            else -> ANDROID
+        }
     }
 
     private val manufacturer: String

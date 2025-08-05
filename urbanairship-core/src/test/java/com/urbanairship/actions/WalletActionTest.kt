@@ -21,13 +21,13 @@ public class WalletActionTest {
         situation = Action.Situation.MANUAL_INVOCATION,
         value = "https://some.example.com")
 
-    private val urlAllowList: UrlAllowList = mockk()
+    private val urlAllowList: UrlAllowList = mockk(relaxed = true)
     private val action = WalletAction { urlAllowList }
 
     @Before
     public fun setup() {
         // Default the platform to Android
-        TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM)
+        TestApplication.getApplication().setPlatform(UAirship.Platform.ANDROID)
     }
 
     /**
@@ -35,7 +35,7 @@ public class WalletActionTest {
      */
     @Test
     public fun testAcceptsKitKat() {
-        every { urlAllowList.isAllowed(any(), UrlAllowList.SCOPE_OPEN_URL) } returns true
+        every { urlAllowList.isAllowed(any(), UrlAllowList.Scope.OPEN_URL) } returns true
         assertTrue(action.acceptsArguments(testArgs))
     }
 
@@ -44,7 +44,7 @@ public class WalletActionTest {
      */
     @Test
     public fun testRejectsAdmPlatform() {
-        TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM)
+        TestApplication.getApplication().setPlatform(UAirship.Platform.ANDROID)
         assertFalse(action.acceptsArguments(testArgs))
     }
 
@@ -54,7 +54,7 @@ public class WalletActionTest {
     @Test
     public fun testUrlAllowList() {
         every {
-            urlAllowList.isAllowed("https://some.example.com", UrlAllowList.SCOPE_OPEN_URL)
+            urlAllowList.isAllowed("https://some.example.com", UrlAllowList.Scope.OPEN_URL)
         } returns false
 
         assertFalse(action.acceptsArguments(testArgs))

@@ -418,8 +418,14 @@ public class AnalyticsTest {
 
         val expectedHeaders = mapOf(
             "X-UA-Device-Family" to "android",
-            "X-UA-Package-Name" to UAirship.getPackageName(),
-            "X-UA-Package-Version" to (UAirship.getPackageInfo()?.versionName ?: ""),
+            "X-UA-Package-Name" to context.packageName,
+            "X-UA-Package-Version" to (UAirship
+                .applicationContext
+                .packageManager
+                .getPackageInfo(context.packageName, 0)
+                ?.versionName
+                ?: ""
+            ),
             "X-UA-App-Key" to  runtimeConfig.configOptions.appKey,
             "X-UA-In-Production" to  runtimeConfig.configOptions.inProduction.toString(),
             "X-UA-Device-Model" to  Build.MODEL,
@@ -449,7 +455,7 @@ public class AnalyticsTest {
     @Test
     public fun testAmazonDeviceFamily() {
         every { mockChannel.id } returns "channel"
-        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM)
+        runtimeConfig.setPlatform(UAirship.Platform.AMAZON)
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         analytics.onPerformJob(mockk(), jobInfo)
@@ -557,11 +563,11 @@ public class AnalyticsTest {
 
         every { mockPermissionsManager.configuredPermissions } returns setOf(Permission.LOCATION, Permission.DISPLAY_NOTIFICATIONS)
         every { mockPermissionsManager.checkPermissionStatus(Permission.LOCATION) } returns PendingResult<PermissionStatus?>().apply {
-            this.result = PermissionStatus.NOT_DETERMINED
+            setResult(PermissionStatus.NOT_DETERMINED)
         }
 
         every { mockPermissionsManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) } returns PendingResult<PermissionStatus?>().apply {
-            this.result = PermissionStatus.GRANTED
+            setResult(PermissionStatus.GRANTED)
         }
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()

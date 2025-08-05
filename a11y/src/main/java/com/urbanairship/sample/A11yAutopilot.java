@@ -62,7 +62,7 @@ public class A11yAutopilot extends Autopilot {
             }
 
             Intent intent = new Intent(Intent.ACTION_VIEW, uri)
-                    .setPackage(UAirship.getPackageName())
+                    .setPackage(context.getPackageName())
                     .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
             UAirship.getApplicationContext().startActivity(intent);

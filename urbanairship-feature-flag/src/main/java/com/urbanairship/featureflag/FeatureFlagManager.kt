@@ -77,7 +77,7 @@ public class FeatureFlagManager internal constructor(
     public fun flagAsPendingResult(name: String, useResultCache: Boolean = true): PendingResult<FeatureFlag> {
         val result = PendingResult<FeatureFlag>()
         pendingResultScope.launch {
-            result.result = flag(name, useResultCache).getOrNull()
+            result.setResult(flag(name, useResultCache).getOrNull())
         }
         return result
     }

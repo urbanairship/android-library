@@ -47,7 +47,7 @@ public open class OpenExternalUrlAction @VisibleForTesting internal constructor(
         val intent = Intent(Intent.ACTION_VIEW, uri)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        UAirship.getApplicationContext().startActivity(intent)
+        UAirship.applicationContext.startActivity(intent)
         return newResult(arguments.value)
     }
 
@@ -70,7 +70,7 @@ public open class OpenExternalUrlAction @VisibleForTesting internal constructor(
                 }
 
                 return allowListSupplier.get()
-                    .isAllowed(arguments.value.string, UrlAllowList.SCOPE_OPEN_URL)
+                    .isAllowed(arguments.value.string, UrlAllowList.Scope.OPEN_URL)
             }
 
             else -> return false

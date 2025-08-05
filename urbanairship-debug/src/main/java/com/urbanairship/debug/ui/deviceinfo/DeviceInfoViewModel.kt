@@ -52,7 +52,7 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
     override val pushProvider: Flow<PushProvider.DeliveryType?> = _pushProvider.asStateFlow()
     override val namedUser: Flow<String?>
         get() {
-            return if (!UAirship.isFlying()) {
+            return if (!UAirship.isFlying) {
                 emptyFlow()
             } else {
                 UAirship.shared().contact.namedUserIdFlow
@@ -61,7 +61,7 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
 
     override val channelTags: Flow<Set<String>>
         get() {
-            return if (!UAirship.isFlying()) {
+            return if (!UAirship.isFlying) {
                 emptyFlow()
             } else {
                 flowOf(UAirship.shared().channel.tags)
@@ -70,7 +70,7 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
 
     override val channelId: Flow<String?>
         get() {
-            return if (!UAirship.isFlying()) {
+            return if (!UAirship.isFlying) {
                 emptyFlow()
             } else {
                 UAirship.shared().channel.channelIdFlow
@@ -79,7 +79,7 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
 
     override val contactId: Flow<String?>
         get() {
-            return if (!UAirship.isFlying()) {
+            return if (!UAirship.isFlying) {
                 emptyFlow()
             } else {
                 flowOf(UAirship.shared().contact.lastContactId)
@@ -88,7 +88,7 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
 
 
     init {
-        if (!UAirship.isFlying()) {
+        if (!UAirship.isFlying) {
             UAirship.shared { refresh() }
         } else {
             refresh()
@@ -96,7 +96,7 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
     }
 
     override fun togglePushEnabled() {
-        if (!UAirship.isFlying()) {
+        if (!UAirship.isFlying) {
             _pushStatus.update { false }
             return
         }
@@ -128,7 +128,7 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
     }
 
     private fun refresh() {
-        if (!UAirship.isFlying()) {
+        if (!UAirship.isFlying) {
             return
         }
 

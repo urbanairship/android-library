@@ -7,6 +7,7 @@ import androidx.annotation.LayoutRes
 import androidx.core.app.NotificationCompat
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.UAirship
+import com.urbanairship.UAirship.Companion.applicationContext
 
 /**
  * A notification provider that allows the use of layout XML. The default binding will
@@ -45,7 +46,8 @@ public class CustomLayoutNotificationProvider public constructor(
     protected fun onBindContentView(contentView: RemoteViews, arguments: NotificationArguments) {
         val message = arguments.message
         contentView.setTextViewText(
-            R.id.title, message.title ?: UAirship.getAppName()
+            R.id.title, message.title ?: applicationContext.packageManager.getApplicationLabel(
+                applicationContext.applicationInfo).toString()
         )
         contentView.setTextViewText(R.id.message, message.alert)
         contentView.setTextViewText(R.id.summary, message.summary)

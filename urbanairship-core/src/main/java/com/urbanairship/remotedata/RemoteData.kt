@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
+import androidx.core.content.pm.PackageInfoCompat
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
@@ -12,6 +13,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
+import com.urbanairship.UAirship.Companion.applicationContext
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.GlobalActivityMonitor
@@ -129,7 +131,11 @@ public class RemoteData @VisibleForTesting internal constructor(
         pushManager = pushManager,
         contact = contact,
         providers = providers,
-        appVersion = UAirship.getAppVersion(),
+        appVersion = context
+            .packageManager
+            .getPackageInfo(context.packageName, 0)
+            ?.let { PackageInfoCompat.getLongVersionCode(it) }
+            ?: -1,
         refreshManager = RemoteDataRefreshManager(
             JobDispatcher.shared(context),
             privacyManager,

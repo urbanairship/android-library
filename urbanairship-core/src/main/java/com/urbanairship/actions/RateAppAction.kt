@@ -47,23 +47,23 @@ public class RateAppAction public constructor() : Action() {
             val airship = UAirship.shared()
             val openLinkIntent = AppStoreUtils
                 .getAppStoreIntent(
-                    UAirship.getApplicationContext(), airship.platformType, airship.airshipConfigOptions
+                    UAirship.applicationContext, airship.platformType, airship.airshipConfigOptions
                 )
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-            UAirship.getApplicationContext().startActivity(openLinkIntent)
+            UAirship.applicationContext.startActivity(openLinkIntent)
         }
 
         return newEmptyResult()
     }
 
     private fun startRateAppActivity(arguments: ActionArguments) {
-        val context = UAirship.getApplicationContext()
+        val context = UAirship.applicationContext
         val argMap = arguments.value.toJsonValue().optMap()
 
         val intent = Intent(SHOW_RATE_APP_INTENT_ACTION)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            .setPackage(UAirship.getPackageName())
+            .setPackage(UAirship.applicationContext.packageName)
 
         argMap.optionalField<String>(TITLE_KEY)?.let {
             intent.putExtra(TITLE_KEY, it)

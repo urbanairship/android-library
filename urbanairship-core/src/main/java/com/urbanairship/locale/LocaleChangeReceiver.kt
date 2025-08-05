@@ -21,7 +21,7 @@ public class LocaleChangeReceiver public constructor() : BroadcastReceiver() {
             return
         }
 
-        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+        if (!UAirship.isTakingOff && !UAirship.isFlying) {
             UALog.e("LocaleChangedReceiver - unable to receive intent, takeOff not called.")
             return
         }

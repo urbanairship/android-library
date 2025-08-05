@@ -5,7 +5,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
 import com.urbanairship.TestRequestSession
-import com.urbanairship.UAirship.ANDROID_PLATFORM
+import com.urbanairship.UAirship
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.liveupdate.data.LiveUpdateDao
@@ -24,7 +24,7 @@ public class LiveUpdateManagerTest {
 
     private val config: AirshipRuntimeConfig = mockk {
         every { configOptions } returns mockk()
-        every { platform } returns ANDROID_PLATFORM
+        every { platform } returns UAirship.Platform.ANDROID
         every { requestSession } returns TestRequestSession()
     }
     private val pushManager: PushManager = mockk(relaxUnitFun = true)

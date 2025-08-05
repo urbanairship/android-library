@@ -30,7 +30,7 @@ class AirshipNotificationProviderTest {
         .setNotificationChannel("test_channel")
         .build()
 
-    private val context = UAirship.getApplicationContext()
+    private val context = UAirship.applicationContext
     private var provider = AirshipNotificationProvider(context, configOptions)
 
     private var defaultPushMessage = PushMessage(

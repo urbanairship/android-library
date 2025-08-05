@@ -60,7 +60,7 @@ public class LandingPageAction(
         scheduleExtender: ScheduleExtender? = null) :
             this(
                 allowListChecker = { url: String ->
-                    UAirship.shared().urlAllowList.isAllowed(url, UrlAllowList.SCOPE_OPEN_URL)
+                    UAirship.shared().urlAllowList.isAllowed(url, UrlAllowList.Scope.OPEN_URL)
                 },
                 scheduler = { schedule: AutomationSchedule ->
                     InAppAutomation.shared().upsertSchedules(listOf(schedule))

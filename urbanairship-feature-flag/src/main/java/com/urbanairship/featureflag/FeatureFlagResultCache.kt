@@ -71,7 +71,7 @@ public class FeatureFlagResultCache @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) 
     public fun flagAsync(name: String): PendingResult<FeatureFlag> {
         val pendingResult = PendingResult<FeatureFlag>()
         pendingResultScope.launch {
-            pendingResult.result = flag(name)
+            pendingResult.setResult(flag(name))
         }
         return pendingResult
     }

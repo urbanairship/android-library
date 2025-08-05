@@ -59,11 +59,11 @@ import kotlinx.coroutines.launch
  * of incoming push notifications.
  */
 public open class PushManager @VisibleForTesting internal constructor(
-    private val context: Context,
+    context: Context,
     internal val preferenceDataStore: PreferenceDataStore,
     private val config: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
-    private val pushProvidersSupplier: Supplier<PushProviders?>,
+    private val pushProvidersSupplier: Supplier<PushProviders>,
     private val airshipChannel: AirshipChannel,
     private val analytics: Analytics,
     internal val permissionsManager: PermissionsManager,
@@ -160,7 +160,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         preferenceDataStore: PreferenceDataStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
-        pushProvidersSupplier: Supplier<PushProviders?>,
+        pushProvidersSupplier: Supplier<PushProviders>,
         airshipChannel: AirshipChannel,
         analytics: Analytics,
         permissionsManager: PermissionsManager
@@ -224,8 +224,8 @@ public open class PushManager @VisibleForTesting internal constructor(
         updateManagerEnablement()
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @VisibleForTesting
-    //TODO: il restore internal when AirshipComponent is converted to kotlin
     public override fun onAirshipReady() {
         isAirshipReady = true
 
@@ -347,7 +347,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
                 builder.setPushAddress(pushToken)
                 val provider = pushProvider
-                if (pushToken != null && provider?.platform == UAirship.ANDROID_PLATFORM) {
+                if (pushToken != null && provider?.platform == UAirship.Platform.ANDROID) {
                     builder.setDeliveryType(provider.deliveryType)
                 }
 

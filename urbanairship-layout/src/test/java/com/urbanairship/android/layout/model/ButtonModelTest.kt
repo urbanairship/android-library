@@ -13,6 +13,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
@@ -57,11 +58,11 @@ public class ButtonModelTest {
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
 
-        mockkStatic(UAirship::class)
+        mockkObject(UAirship)
         every { UAirship.shared() } returns mockk {
-            every { platformType } returns UAirship.ANDROID_PLATFORM
+            every { platformType } returns UAirship.Platform.ANDROID
         }
-        every { UAirship.getApplicationContext() } returns mockk()
+        every { UAirship.applicationContext } returns mockk()
 
         buttonModel = makeButton()
         every { mockView.taps() } returns taps

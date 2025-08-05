@@ -24,7 +24,7 @@ public class AirshipRuntimeConfig internal constructor (
     private val configOptionsProvider: Provider<AirshipConfigOptions>,
     public val requestSession: RequestSession,
     internal val configObserver: RemoteConfigObserver,
-    private val platformProvider: Provider<Int>
+    private val platformProvider: Provider<UAirship.Platform>
 ) {
 
     /**
@@ -35,7 +35,7 @@ public class AirshipRuntimeConfig internal constructor (
         configOptionsProvider: Provider<AirshipConfigOptions>,
         requestSession: RequestSession,
         dataStore: PreferenceDataStore,
-        platformProvider: Provider<Int>
+        platformProvider: Provider<UAirship.Platform>
     ): this(
         configOptionsProvider, requestSession, RemoteConfigObserver(dataStore), platformProvider
     )
@@ -46,8 +46,7 @@ public class AirshipRuntimeConfig internal constructor (
 
     private val allowUrlFallback: Boolean = determineUrlFallback(configOptionsProvider.get())
 
-    @get:UAirship.Platform
-    public val platform: Int
+    public val platform: UAirship.Platform
         get() = platformProvider.get()
 
     public val remoteConfig: RemoteConfig

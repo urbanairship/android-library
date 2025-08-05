@@ -70,7 +70,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
         handler = Handler(Looper.getMainLooper())
         url = messageContent.url
 
-        if (!UAirship.shared().urlAllowList.isAllowed(url, UrlAllowList.SCOPE_OPEN_URL)) {
+        if (!UAirship.shared().urlAllowList.isAllowed(url, UrlAllowList.Scope.OPEN_URL)) {
             UALog.e("HTML in-app message URL is not allowed. Unable to display message.")
             finish()
             return

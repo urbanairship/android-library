@@ -244,7 +244,7 @@ internal class AttributeEditViewModel: ViewModel() {
     }
 
     fun perform() {
-        if (!UAirship.isFlying() || !isComplete) {
+        if (!UAirship.isFlying || !isComplete) {
             return
         }
 

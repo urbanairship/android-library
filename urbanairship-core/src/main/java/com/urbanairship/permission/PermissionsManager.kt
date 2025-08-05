@@ -167,7 +167,7 @@ public class PermissionsManager internal constructor(
     public fun checkPermissionStatus(permission: Permission): PendingResult<PermissionStatus?> {
         val pendingResult = PendingResult<PermissionStatus?>()
         permissionsScope.launch {
-            pendingResult.result = suspendingCheckPermissionStatus(permission)
+            pendingResult.setResult(suspendingCheckPermissionStatus(permission))
         }
         return pendingResult
     }
@@ -227,8 +227,10 @@ public class PermissionsManager internal constructor(
     ): PendingResult<PermissionRequestResult?> {
         val pendingResult = PendingResult<PermissionRequestResult?>()
         permissionsScope.launch {
-            pendingResult.result =
-                suspendingRequestPermission(permission, enableAirshipUsageOnGrant, fallback)
+            pendingResult.setResult(
+                result = suspendingRequestPermission(permission, enableAirshipUsageOnGrant, fallback)
+            )
+
         }
         return pendingResult
     }

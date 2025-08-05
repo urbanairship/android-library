@@ -89,7 +89,7 @@ internal class NamedUserViewModel: ViewModel() {
     }
 
     fun save() {
-        if (!UAirship.isFlying()) {
+        if (!UAirship.isFlying) {
             return
         }
 

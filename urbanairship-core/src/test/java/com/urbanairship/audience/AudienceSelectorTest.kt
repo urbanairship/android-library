@@ -57,7 +57,7 @@ public class AudienceSelectorTest {
 
     @Test
     public fun testAndroidVersionMatcher() {
-        TestApplication.getApplication().setPlatform(UAirship.ANDROID_PLATFORM)
+        TestApplication.getApplication().setPlatform(UAirship.Platform.ANDROID)
         val audience = AudienceSelector.newBuilder()
                 .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
                 .build()
@@ -75,7 +75,7 @@ public class AudienceSelectorTest {
 
     @Test
     public fun testAmazonVersionMatcher() {
-        TestApplication.getApplication().setPlatform(UAirship.AMAZON_PLATFORM)
+        TestApplication.getApplication().setPlatform(UAirship.Platform.AMAZON)
         val audience = AudienceSelector.newBuilder()
             .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
             .build()

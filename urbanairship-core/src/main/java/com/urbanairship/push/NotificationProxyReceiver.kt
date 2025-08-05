@@ -23,7 +23,7 @@ public class NotificationProxyReceiver public constructor() : BroadcastReceiver(
     override fun onReceive(context: Context, intent: Intent?) {
         Autopilot.automaticTakeOff(context)
 
-        if (!UAirship.isTakingOff() && !UAirship.isFlying()) {
+        if (!UAirship.isTakingOff && !UAirship.isFlying) {
             UALog.e("NotificationProxyReceiver - unable to receive intent, takeOff not called.")
             return
         }

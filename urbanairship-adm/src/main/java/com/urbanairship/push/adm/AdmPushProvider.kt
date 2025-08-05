@@ -23,7 +23,7 @@ import com.amazon.device.messaging.ADMConstants
  */
 public class AdmPushProvider public constructor() : PushProvider, AirshipVersionInfo {
 
-    override val platform: Int = UAirship.AMAZON_PLATFORM
+    override val platform: UAirship.Platform = UAirship.Platform.AMAZON
     override val deliveryType: PushProvider.DeliveryType = PushProvider.DeliveryType.ADM
     override fun isAvailable(context: Context): Boolean = true
     override val airshipVersion: String = BuildConfig.AIRSHIP_VERSION

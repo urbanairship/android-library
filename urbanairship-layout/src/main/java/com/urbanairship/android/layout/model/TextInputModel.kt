@@ -46,7 +46,7 @@ internal class TextInputModel(
 
     private val inputValidator: AirshipInputValidation.Validator?
         get() {
-            if (!UAirship.isFlying()) {
+            if (!UAirship.isFlying) {
                 return null
             }
 

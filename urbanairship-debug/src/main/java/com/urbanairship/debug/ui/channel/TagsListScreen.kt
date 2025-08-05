@@ -169,7 +169,7 @@ internal class DefaultTagsScreenViewModel: TagsScreenViewModel, ViewModel() {
     }
 
     private fun refresh() {
-        if (!UAirship.isFlying()) {
+        if (!UAirship.isFlying) {
             return
         }
 
@@ -177,7 +177,7 @@ internal class DefaultTagsScreenViewModel: TagsScreenViewModel, ViewModel() {
     }
 
     override fun add(tag: String) {
-        if (!UAirship.isFlying()) {
+        if (!UAirship.isFlying) {
             return
         }
 
@@ -190,7 +190,7 @@ internal class DefaultTagsScreenViewModel: TagsScreenViewModel, ViewModel() {
     }
 
     override fun remove(tag: String) {
-        if (!UAirship.isFlying()) {
+        if (!UAirship.isFlying) {
             return
         }
 

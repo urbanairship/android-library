@@ -23,7 +23,7 @@ public class AirshipRuntimeConfigTest {
     )
 
     private var configOptions = AirshipConfigOptions.newBuilder().build()
-    private var platform = 0
+    private var platform = UAirship.Platform.UNKNOWN
     private var runtimeConfig = AirshipRuntimeConfig(
         configOptionsProvider = { configOptions },
         requestSession = TestRequestSession(),
@@ -33,14 +33,14 @@ public class AirshipRuntimeConfigTest {
 
     @Test
     public fun testAndroidPlatform() {
-        platform = UAirship.ANDROID_PLATFORM
-        Assert.assertEquals(UAirship.ANDROID_PLATFORM.toLong(), runtimeConfig.platform.toLong())
+        platform = UAirship.Platform.ANDROID
+        Assert.assertEquals(UAirship.Platform.ANDROID, runtimeConfig.platform)
     }
 
     @Test
     public fun testAmazonPlatform() {
-        platform = UAirship.AMAZON_PLATFORM
-        Assert.assertEquals(UAirship.AMAZON_PLATFORM.toLong(), runtimeConfig.platform.toLong())
+        platform = UAirship.Platform.AMAZON
+        Assert.assertEquals(UAirship.Platform.AMAZON, runtimeConfig.platform)
     }
 
     @Test

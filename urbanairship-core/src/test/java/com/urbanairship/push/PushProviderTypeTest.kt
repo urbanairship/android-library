@@ -28,8 +28,8 @@ public class PushProviderTypeTest {
     }
 
     private companion object {
-        private val PROVIDER_ADM = TestPushProvider(UAirship.AMAZON_PLATFORM, PushProvider.DeliveryType.ADM)
-        private val PROVIDER_FCM = TestPushProvider(UAirship.ANDROID_PLATFORM, PushProvider.DeliveryType.FCM)
-        private val PROVIDER_HMS = TestPushProvider(UAirship.ANDROID_PLATFORM, PushProvider.DeliveryType.HMS)
+        private val PROVIDER_ADM = TestPushProvider(UAirship.Platform.AMAZON, PushProvider.DeliveryType.ADM)
+        private val PROVIDER_FCM = TestPushProvider(UAirship.Platform.ANDROID, PushProvider.DeliveryType.FCM)
+        private val PROVIDER_HMS = TestPushProvider(UAirship.Platform.ANDROID, PushProvider.DeliveryType.HMS)
     }
 }

@@ -205,7 +205,7 @@ internal class CreateOpenChannelViewModel: ViewModel() {
         get() = platform.value.isNotEmpty() && address.value.isNotEmpty()
 
     fun perform() {
-        if (!UAirship.isFlying() || platform.value.isEmpty() || address.value.isEmpty()) {
+        if (!UAirship.isFlying || platform.value.isEmpty() || address.value.isEmpty()) {
             return
         }
 

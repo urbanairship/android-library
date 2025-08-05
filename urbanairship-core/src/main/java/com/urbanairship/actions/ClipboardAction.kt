@@ -60,7 +60,7 @@ public class ClipboardAction public constructor() : Action() {
             label = null
         }
 
-        val clipboardManager = UAirship.getApplicationContext()
+        val clipboardManager = UAirship.applicationContext
             .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText(label, text)
         clipboardManager.setPrimaryClip(clip)

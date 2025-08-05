@@ -4,10 +4,8 @@ package com.urbanairship
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RestrictTo
-import com.urbanairship.UALog.i
 import com.urbanairship.base.Supplier
 import com.urbanairship.google.PlayServicesUtils
-import com.urbanairship.util.PlatformUtils
 
 /**
  * @hide
@@ -18,53 +16,49 @@ internal class DeferredPlatformProvider(
     private val dataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,
     private val pushProviders: Supplier<PushProviders>
-): Provider<Int> {
-    override fun get(): Int {
-        val existingPlatform = PlatformUtils.parsePlatform(
-            dataStore.getInt(PLATFORM_KEY, UAirship.UNKNOWN_PLATFORM)
+): Provider<UAirship.Platform> {
+    override fun get(): UAirship.Platform {
+        val existingPlatform = UAirship.Platform.fromRawValue(
+            rawValue = dataStore.getInt(PLATFORM_KEY, UAirship.Platform.UNKNOWN.rawValue)
         )
-        return if (existingPlatform != UAirship.UNKNOWN_PLATFORM) {
+        return if (existingPlatform != UAirship.Platform.UNKNOWN) {
             existingPlatform
         } else if (privacyManager.isAnyFeatureEnabled) {
             val platform = determinePlatform()
-            dataStore.put(PLATFORM_KEY, platform)
+            dataStore.put(PLATFORM_KEY, platform.rawValue)
             platform
         } else {
-            UAirship.UNKNOWN_PLATFORM
+            UAirship.Platform.UNKNOWN
         }
     }
 
-    @UAirship.Platform
-    private fun determinePlatform(): Int {
-        val platform: Int
+    private fun determinePlatform(): UAirship.Platform {
+        val platform: UAirship.Platform
         val bestProvider = pushProviders.get()?.bestProvider
         if (bestProvider != null) {
-            platform = PlatformUtils.parsePlatform(bestProvider.platform)
-            i(
+            platform = bestProvider.platform
+            UALog.i(
                 "Setting platform to %s for push provider: %s",
-                PlatformUtils.asString(platform),
+                platform.stringValue,
                 bestProvider
             )
         } else if (PlayServicesUtils.isGooglePlayStoreAvailable(context)) {
-            i("Google Play Store available. Setting platform to Android.")
-            platform = UAirship.ANDROID_PLATFORM
+            UALog.i("Google Play Store available. Setting platform to Android.")
+            platform = UAirship.Platform.ANDROID
         } else if ("amazon".equals(Build.MANUFACTURER, ignoreCase = true)) {
-            i("Build.MANUFACTURER is AMAZON. Setting platform to Amazon.")
-            platform = UAirship.AMAZON_PLATFORM
+            UALog.i("Build.MANUFACTURER is AMAZON. Setting platform to Amazon.")
+            platform = UAirship.Platform.AMAZON
         } else {
-            i("Defaulting platform to Android.")
-            platform = UAirship.ANDROID_PLATFORM
+            UALog.i("Defaulting platform to Android.")
+            platform = UAirship.Platform.ANDROID
         }
         return platform
     }
 
     companion object {
-
         /**
          * Push provider class preference key.
          */
         private const val PLATFORM_KEY = "com.urbanairship.application.device.PLATFORM"
     }
-
-
 }

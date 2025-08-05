@@ -30,8 +30,8 @@ import androidx.annotation.RestrictTo;
 public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
 
     @Override
-    public int getPlatform() {
-        return UAirship.ANDROID_PLATFORM;
+    public UAirship.Platform getPlatform() {
+        return UAirship.Platform.ANDROID;
     }
 
     @NonNull

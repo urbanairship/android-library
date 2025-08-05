@@ -28,8 +28,8 @@ internal class AdditionalAudienceCheckApiClient(
     @Throws(InvalidParameterException::class)
     suspend fun resolve(info: Info): RequestResult<Result> {
         val platform = when (config.platform) {
-            UAirship.ANDROID_PLATFORM -> "android"
-            UAirship.AMAZON_PLATFORM -> "amazon"
+            UAirship.Platform.ANDROID -> "android"
+            UAirship.Platform.AMAZON -> "amazon"
             else -> null
         } ?: return RequestResult(exception = InvalidParameterException("Invalid platform"))
 

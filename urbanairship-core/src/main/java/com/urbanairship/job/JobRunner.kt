@@ -57,7 +57,7 @@ public interface JobRunner {
                 return null
             }
 
-            return airship.components.firstOrNull { it.javaClass.name == componentClassName }
+            return airship.getComponentsList().firstOrNull { it.javaClass.name == componentClassName }
         }
 
         private companion object {

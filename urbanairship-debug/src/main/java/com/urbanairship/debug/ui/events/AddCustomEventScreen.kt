@@ -185,7 +185,7 @@ internal class AddEventViewModel(): ViewModel() {
     }
 
     fun save() {
-        if (!UAirship.isFlying() || !isComplete) {
+        if (!UAirship.isFlying || !isComplete) {
             return
         }
 

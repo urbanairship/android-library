@@ -27,10 +27,10 @@ internal class MeteredUsageApiClient(
                 ?: throw InvalidParameterException("Missing metered usage URL")
 
         val platform = when (config.platform) {
-            UAirship.ANDROID_PLATFORM -> "android"
-            UAirship.AMAZON_PLATFORM -> "amazon"
-            else -> null
-        } ?: throw InvalidParameterException("Invalid platform")
+            UAirship.Platform.ANDROID -> "android"
+            UAirship.Platform.AMAZON -> "amazon"
+            else -> throw InvalidParameterException("Invalid platform")
+        }
 
         val headers = mutableMapOf(
             "X-UA-Lib-Version" to UAirship.getVersion(),

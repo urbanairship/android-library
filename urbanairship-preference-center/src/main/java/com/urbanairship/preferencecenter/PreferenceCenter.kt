@@ -119,7 +119,7 @@ public class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) intern
     public fun getConfigPendingResult(preferenceCenterId: String): PendingResult<PreferenceCenterConfig> {
         val pendingResult = PendingResult<PreferenceCenterConfig>()
         pendingResultScope.launch {
-            pendingResult.result = getConfig(preferenceCenterId)
+            pendingResult.setResult(getConfig(preferenceCenterId))
         }
         return pendingResult
     }
@@ -162,7 +162,7 @@ public class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) intern
     public fun getJsonConfigPendingResult(preferenceCenterId: String): PendingResult<JsonValue> {
         val pendingResult = PendingResult<JsonValue>()
         pendingResultScope.launch {
-            pendingResult.result = getJsonConfig(preferenceCenterId)
+            pendingResult.setResult(getJsonConfig(preferenceCenterId))
         }
         return pendingResult
     }

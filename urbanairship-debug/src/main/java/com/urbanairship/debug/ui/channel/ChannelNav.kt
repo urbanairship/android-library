@@ -32,7 +32,7 @@ internal fun NavGraphBuilder.channelNav(navController: NavController) {
         composable(ChannelInfoScreens.TagGroups.route) {
             TagGroupsScreen(
                 editorProvider = {
-                    if (UAirship.isFlying()) {
+                    if (UAirship.isFlying) {
                         UAirship.shared().channel.editTagGroups()
                     } else {
                         null
@@ -45,7 +45,7 @@ internal fun NavGraphBuilder.channelNav(navController: NavController) {
         composable(ChannelInfoScreens.Attributes.route) {
             AttributeEditScreen(
                 editorProvider = {
-                    if (UAirship.isFlying()) {
+                    if (UAirship.isFlying) {
                         UAirship.shared().channel.editAttributes()
                     } else {
                         null
@@ -59,7 +59,7 @@ internal fun NavGraphBuilder.channelNav(navController: NavController) {
             SubscriptionListsScreen(
                 provider = object : SubscriptionListProvider {
                     override fun getEditor(): SubscriptionListEditor? {
-                        return if (UAirship.isFlying()) {
+                        return if (UAirship.isFlying) {
                             UAirship.shared().channel.editSubscriptionLists()
                         } else {
                             null

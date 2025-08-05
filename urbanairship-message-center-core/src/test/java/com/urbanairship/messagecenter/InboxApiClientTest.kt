@@ -178,7 +178,7 @@ public class InboxApiClientTest {
             200,
             """{ "user_id": "someUserId", "password": "someUserToken" }"""
         )
-        runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM)
+        runtimeConfig.setPlatform(UAirship.Platform.ANDROID)
 
         val (status, userCredentials) = inboxApiClient.createUser("channelId")
         requireNotNull(userCredentials)
@@ -199,7 +199,7 @@ public class InboxApiClientTest {
             200,
             """{ "user_id": "someUserId", "password": "someUserToken" }"""
         )
-        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM)
+        runtimeConfig.setPlatform(UAirship.Platform.AMAZON)
 
         val (status, userCredentials) = inboxApiClient.createUser("channelId")
         requireNotNull(userCredentials)
@@ -216,7 +216,7 @@ public class InboxApiClientTest {
     @Test
     public fun testNullUrlCreateUser(): TestResult = runTest {
         runtimeConfig.updateRemoteConfig(RemoteConfig())
-        runtimeConfig.setPlatform(0)
+        runtimeConfig.setPlatform(UAirship.Platform.UNKNOWN)
         val result = inboxApiClient.createUser("channelId")
         assertNotNull(result.exception)
     }
@@ -224,7 +224,7 @@ public class InboxApiClientTest {
     @Test
     public fun testUpdateUserAndroidChannelsSucceeds(): TestResult = runTest {
         requestSession.addResponse(200)
-        runtimeConfig.setPlatform(UAirship.ANDROID_PLATFORM)
+        runtimeConfig.setPlatform(UAirship.Platform.ANDROID)
 
         val (status) = inboxApiClient.updateUser(userCredentials, "channelId")
 
@@ -238,7 +238,7 @@ public class InboxApiClientTest {
     @Test
     public fun testUpdateUserAmazonChannelsSucceeds(): TestResult = runTest {
         requestSession.addResponse(200)
-        runtimeConfig.setPlatform(UAirship.AMAZON_PLATFORM)
+        runtimeConfig.setPlatform(UAirship.Platform.AMAZON)
 
         val (status) = inboxApiClient.updateUser(userCredentials, "channelId")
 
@@ -252,7 +252,7 @@ public class InboxApiClientTest {
     @Test
     public fun testNullUrlUpdateUser(): TestResult = runTest {
         runtimeConfig.updateRemoteConfig(RemoteConfig())
-        runtimeConfig.setPlatform(0)
+        runtimeConfig.setPlatform(UAirship.Platform.UNKNOWN)
         val result = inboxApiClient.updateUser(userCredentials, "channelId")
         assertNotNull(result.exception)
     }

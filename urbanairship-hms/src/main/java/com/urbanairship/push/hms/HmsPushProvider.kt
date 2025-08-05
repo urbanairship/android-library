@@ -22,7 +22,7 @@ import com.huawei.hms.api.HuaweiApiAvailability
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class HmsPushProvider public constructor() : PushProvider, AirshipVersionInfo {
 
-    override val platform: Int = UAirship.ANDROID_PLATFORM
+    override val platform: UAirship.Platform = UAirship.Platform.ANDROID
     override val deliveryType: PushProvider.DeliveryType = PushProvider.DeliveryType.HMS
     override val airshipVersion: String = BuildConfig.AIRSHIP_VERSION
     override val packageVersion: String = BuildConfig.SDK_VERSION

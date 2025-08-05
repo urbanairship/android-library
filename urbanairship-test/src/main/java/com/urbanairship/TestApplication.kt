@@ -18,7 +18,6 @@ import com.urbanairship.job.JobDispatcher.Companion.setInstance
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.push.PushManager
-import com.urbanairship.util.PlatformUtils
 import java.lang.reflect.Method
 import org.robolectric.TestLifecycleApplication
 
@@ -27,20 +26,19 @@ public class TestApplication public constructor() : Application(), TestLifecycle
 
     public var callback: ActivityLifecycleCallbacks? = null
 
-    internal lateinit var preferenceDataStore: PreferenceDataStore
+    private lateinit var preferenceDataStore: PreferenceDataStore
 
     public fun getPreferenceDataStore(): PreferenceDataStore {
         return this.preferenceDataStore
     }
 
-    @JvmField
-    public var testRuntimeConfig: TestAirshipRuntimeConfig? = null
+    public lateinit var testRuntimeConfig: TestAirshipRuntimeConfig
 
     override fun onCreate() {
         super.onCreate()
 
         testRuntimeConfig = TestAirshipRuntimeConfig()
-        val airshipConfigOptions = testRuntimeConfig!!.configOptions
+        val airshipConfigOptions = testRuntimeConfig.configOptions
 
         this.preferenceDataStore = PreferenceDataStore.inMemoryStore(
             applicationContext
@@ -51,65 +49,67 @@ public class TestApplication public constructor() : Application(), TestLifecycle
 
         val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL)
         val pushProviders =
-            Supplier<PushProviders?> { TestPushProviders(testRuntimeConfig!!.configOptions) }
+            Supplier<PushProviders> { TestPushProviders(testRuntimeConfig.configOptions) }
 
         UAirship.application = this
         UAirship.isFlying = true
         UAirship.isTakingOff = true
 
         val audienceOverridesProvider = AudienceOverridesProvider()
-        UAirship.sharedAirship = UAirship(airshipConfigOptions)
-        UAirship.sharedAirship.preferenceDataStore = preferenceDataStore
-        UAirship.sharedAirship.localeManager = LocaleManager(this, preferenceDataStore)
-        UAirship.sharedAirship.runtimeConfig = testRuntimeConfig
-        UAirship.sharedAirship.permissionsManager = PermissionsManager(this)
+        val airship = UAirship(airshipConfigOptions)
+        airship.preferenceDataStore = preferenceDataStore
+        airship.localeManager = LocaleManager(this, preferenceDataStore)
+        airship.runtimeConfig = testRuntimeConfig
+        airship.permissionsManager = PermissionsManager(this)
+
         val channelRegistrar = ChannelRegistrar(
-            applicationContext, preferenceDataStore, testRuntimeConfig!!, privacyManager
+            applicationContext, preferenceDataStore, testRuntimeConfig, privacyManager
         )
-        UAirship.sharedAirship.channel = AirshipChannel(
+        airship.channel = AirshipChannel(
             this,
             preferenceDataStore,
-            UAirship.sharedAirship.runtimeConfig,
+            airship.runtimeConfig,
             privacyManager,
-            UAirship.sharedAirship.permissionsManager,
-            UAirship.sharedAirship.localeManager,
+            airship.permissionsManager,
+            airship.localeManager,
             audienceOverridesProvider,
             channelRegistrar
         )
 
-        UAirship.sharedAirship.analytics = Analytics(
+        airship.analytics = Analytics(
             this,
             preferenceDataStore,
-            testRuntimeConfig!!,
+            testRuntimeConfig,
             privacyManager,
-            UAirship.sharedAirship.channel,
-            UAirship.sharedAirship.localeManager,
-            UAirship.sharedAirship.permissionsManager,
+            airship.channel,
+            airship.localeManager,
+            airship.permissionsManager,
             AirshipEventFeed(privacyManager, true)
         )
-        UAirship.sharedAirship.applicationMetrics =
+        airship.applicationMetrics =
             ApplicationMetrics(this, preferenceDataStore, privacyManager, TestActivityMonitor())
-        UAirship.sharedAirship.pushManager = PushManager(
+        airship.pushManager = PushManager(
             this,
             preferenceDataStore,
-            testRuntimeConfig!!,
+            testRuntimeConfig,
             privacyManager,
             pushProviders,
-            UAirship.sharedAirship.channel,
-            UAirship.sharedAirship.analytics,
-            UAirship.sharedAirship.permissionsManager
+            airship.channel,
+            airship.analytics,
+            airship.permissionsManager
         )
-        UAirship.sharedAirship.channelCapture = ChannelCapture(
+        airship.channelCapture = ChannelCapture(
             this,
             airshipConfigOptions,
-            UAirship.sharedAirship.channel,
+            airship.channel,
             preferenceDataStore,
             TestActivityMonitor()
         )
-        UAirship.sharedAirship.urlAllowList =
-            UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions)
-        UAirship.sharedAirship.actionRegistry = ActionRegistry()
-        UAirship.sharedAirship.actionRegistry.registerDefaultActions(this)
+        airship.urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions)
+        airship.actionRegistry = ActionRegistry()
+        airship.actionRegistry.registerDefaultActions(this)
+
+        UAirship.sharedAirship = airship
     }
 
     override fun onTerminate() {
@@ -117,27 +117,27 @@ public class TestApplication public constructor() : Application(), TestLifecycle
         preferenceDataStore.tearDown()
     }
 
-    public fun setPlatform(platform: Int) {
-        testRuntimeConfig!!.setPlatform(PlatformUtils.parsePlatform(platform))
+    public fun setPlatform(platform: UAirship.Platform) {
+        testRuntimeConfig.setPlatform(platform)
     }
 
-    public fun setPrivacyManager(privacyManager: PrivacyManager?) {
+    public fun setPrivacyManager(privacyManager: PrivacyManager) {
         UAirship.shared().privacyManager = privacyManager
     }
 
-    public fun setApplicationMetrics(metrics: ApplicationMetrics?) {
+    public fun setApplicationMetrics(metrics: ApplicationMetrics) {
         UAirship.shared().applicationMetrics = metrics
     }
 
-    public fun setContact(contact: Contact?) {
+    public fun setContact(contact: Contact) {
         UAirship.shared().contact = contact
     }
 
-    public fun setAnalytics(analytics: Analytics?) {
+    public fun setAnalytics(analytics: Analytics) {
         UAirship.shared().analytics = analytics
     }
 
-    public fun setOptions(options: AirshipConfigOptions?) {
+    public fun setOptions(options: AirshipConfigOptions) {
         UAirship.shared().airshipConfigOptions = options
     }
 
@@ -157,15 +157,15 @@ public class TestApplication public constructor() : Application(), TestLifecycle
         this.callback = callback
     }
 
-    public fun setChannel(channel: AirshipChannel?) {
+    public fun setChannel(channel: AirshipChannel) {
         UAirship.shared().channel = channel
     }
 
-    public fun setPushManager(pushManager: PushManager?) {
+    public fun setPushManager(pushManager: PushManager) {
         UAirship.shared().pushManager = pushManager
     }
 
-    public fun setChannelCapture(channelCapture: ChannelCapture?) {
+    public fun setChannelCapture(channelCapture: ChannelCapture) {
         UAirship.shared().channelCapture = channelCapture
     }
 

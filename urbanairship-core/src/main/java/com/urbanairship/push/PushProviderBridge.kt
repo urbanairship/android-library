@@ -35,7 +35,7 @@ public object PushProviderBridge {
         newToken: String?
     ) {
         Autopilot.automaticTakeOff(context)
-        if (UAirship.isFlying() || UAirship.isTakingOff()) {
+        if (UAirship.isFlying || UAirship.isTakingOff) {
             UAirship.shared { airship ->
                 airship.pushManager.onTokenChanged(
                     pushProviderClass, newToken

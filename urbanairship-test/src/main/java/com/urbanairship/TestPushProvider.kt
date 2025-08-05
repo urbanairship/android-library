@@ -6,7 +6,7 @@ import com.urbanairship.push.PushProvider
 import com.urbanairship.push.PushProvider.RegistrationException
 
 public class TestPushProvider @JvmOverloads public constructor(
-    @param:UAirship.Platform override val platform: Int = UAirship.ANDROID_PLATFORM,
+    override val platform: UAirship.Platform = UAirship.Platform.ANDROID,
     override val deliveryType: PushProvider.DeliveryType = PushProvider.DeliveryType.FCM
 ) : PushProvider {
 

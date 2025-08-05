@@ -22,7 +22,6 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
-import com.urbanairship.util.PlatformUtils
 import com.urbanairship.util.UAHttpStatusUtil
 import java.util.Locale
 import java.util.TimeZone
@@ -293,11 +292,8 @@ internal class ContactApiClient (
         val url = runtimeConfig.deviceUrl.appendEncodedPath(IDENTIFY_PATH).build()
 
         val payload = jsonMapOf(
-            DEVICE_INFO to jsonMapOf(
-                DEVICE_TYPE to PlatformUtils.getDeviceType(
-                    runtimeConfig.platform
-                )
-            ), ACTION_KEY to requestAction
+            DEVICE_INFO to jsonMapOf(DEVICE_TYPE to runtimeConfig.platform.deviceType),
+            ACTION_KEY to requestAction
         )
 
         val headers = mapOf(
