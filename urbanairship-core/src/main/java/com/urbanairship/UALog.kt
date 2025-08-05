@@ -257,25 +257,26 @@ public object UALog {
      */
     @JvmStatic
     @Throws(IllegalArgumentException::class)
-    public fun parseLogLevel(value: String?, defaultValue: Int): Int {
+    public fun parseLogLevel(value: String?, defaultValue: AirshipConfigOptions.LogLevel): AirshipConfigOptions.LogLevel {
         if (value.isNullOrEmpty()) {
             return defaultValue
         }
 
         when (value.uppercase()) {
-            "ASSERT", "NONE" -> return Log.ASSERT
-            "DEBUG" -> return Log.DEBUG
-            "ERROR" -> return Log.ERROR
-            "INFO" -> return Log.INFO
-            "VERBOSE" -> return Log.VERBOSE
-            "WARN" -> return Log.WARN
+            "ASSERT", "NONE" -> return AirshipConfigOptions.LogLevel.ASSERT
+            "DEBUG" -> return AirshipConfigOptions.LogLevel.DEBUG
+            "ERROR" -> return AirshipConfigOptions.LogLevel.ERROR
+            "INFO" -> return AirshipConfigOptions.LogLevel.INFO
+            "VERBOSE" -> return AirshipConfigOptions.LogLevel.VERBOSE
+            "WARN" -> return AirshipConfigOptions.LogLevel.WARN
         }
+
         return try {
             val intValue = value.toInt()
-            if (intValue <= Log.ASSERT && intValue >= Log.VERBOSE) {
-                return intValue
+            val result = AirshipConfigOptions.LogLevel.entries.find { it.level == intValue }
+            if (result == null) {
+                w("%s is not a valid log level. Falling back to %s.", intValue, defaultValue)
             }
-            w("%s is not a valid log level. Falling back to %s.", intValue, defaultValue)
             defaultValue
         } catch (nfe: NumberFormatException) {
             throw IllegalArgumentException("Invalid log level: $value")

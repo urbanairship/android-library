@@ -66,7 +66,7 @@ internal class NotificationChannelRegistryDataManager(
      */
     @WorkerThread
     public fun createChannel(channelCompat: NotificationChannelCompat): Boolean {
-        val db = writableDatabase ?: run {
+        val db = getWritableDatabase() ?: run {
             UALog.e("NotificationChannelRegistryDataManager - Unable to save notification channel.")
             return false
         }

@@ -20,7 +20,7 @@ internal class VersionMatcher (
     override fun toJsonValue(): JsonValue = jsonMapOf(VERSION_KEY to versionMatcher).toJsonValue()
 
     override fun apply(value: JsonValue, ignoreCase: Boolean): Boolean {
-        return value.isString && versionMatcher.apply(value.string)
+        return value.string?.let { versionMatcher.apply(it) } == true
     }
 
     override fun equals(o: Any?): Boolean {

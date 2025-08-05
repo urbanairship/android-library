@@ -951,7 +951,7 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
 
             resolved.validate()
 
-            UALog.logLevel = resolved.logLevel
+            UALog.logLevel = resolved.logLevel.level
             UALog.logPrivacyLevel = resolved.logPrivacyLevel
             val appName = applicationContext.packageManager.getApplicationLabel(applicationContext.applicationInfo).toString()
             UALog.tag = appName + " - " + UALog.DEFAULT_TAG
