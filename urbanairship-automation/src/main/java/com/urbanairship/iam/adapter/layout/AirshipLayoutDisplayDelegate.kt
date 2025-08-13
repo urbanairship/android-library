@@ -82,7 +82,14 @@ internal class AirshipLayoutDisplayDelegate(
             suspendCancellableCoroutine {
                 continuation = it
                 request.display(context)
-                displayListener.onVisibilityChanged(true, activityMonitor.isAppForegrounded)
+
+                // If the display is not embedded, we notify the listener that it is visible.
+                // If it is embedded, the above request to display will place the embedded layout
+                // into the display queue, so we'll need to wait for the content to be displayed
+                // before notifying the listener.
+                if (!displayContent.layout.isEmbedded()) {
+                    displayListener.onVisibilityChanged(true, activityMonitor.isAppForegrounded)
+                }
             }
         }
     }
