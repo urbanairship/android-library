@@ -4,12 +4,19 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.10.2 - August 13, 2025
+Patch release that fixes embedded display reporting and a potential crash in Scenes. 
+Apps that use Scenes or Embedded Content should update to this version or later.
+
+### Changes
+- Fixed an issue that could cause embedded content displays to be reported too early.
+- Fixed a potential crash that can occur when a Scene is dismissed.
+
 ## Version 19.10.1 - August 1, 2025
 A patch release that fixes an automation dao crash if an expected nonnull JSON field contains invalid JSON.
 
 ### Changes
 - Fixed potential automation dao crash when an expected nonnull JSON field contains invalid JSON.
-
 
 ## Version 19.10.0 - July 24, 2025
 A minor release with accessibility and layout improvements to Scenes, a key performance update, and several bug fixes.
