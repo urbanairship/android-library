@@ -47,7 +47,11 @@ internal class AirshipLayoutDisplayDelegate(
         val displayListener = LayoutListener(
             analytics = analytics,
             onDismiss = {
-                continuation?.resumeWith(Result.success(it))
+                continuation?.let { continuation ->
+                    if (continuation.isActive) {
+                        continuation.resumeWith(Result.success(it))
+                    }
+                }
             }
         )
 
