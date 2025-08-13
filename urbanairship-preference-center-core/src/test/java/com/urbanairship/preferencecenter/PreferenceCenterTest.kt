@@ -6,8 +6,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
-import com.urbanairship.TestApplication
-import com.urbanairship.json.JsonException
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.preferencecenter.PreferenceCenter.Companion.KEY_PREFERENCE_FORMS
@@ -37,8 +35,10 @@ public class PreferenceCenterTest {
         private const val ID_1 = "id-1"
         private const val ID_2 = "id-2"
 
-        private val PREFERENCE_FORM_1 = PreferenceCenterConfig(ID_1, emptyList(), CommonDisplay.EMPTY)
-        private val PREFERENCE_FORM_2 = PreferenceCenterConfig(ID_2, emptyList(), CommonDisplay.EMPTY)
+        private val PREFERENCE_FORM_1 =
+            PreferenceCenterConfig(ID_1, emptyList(), CommonDisplay.EMPTY)
+        private val PREFERENCE_FORM_2 =
+            PreferenceCenterConfig(ID_2, emptyList(), CommonDisplay.EMPTY)
 
         private val FORM_1_PAYLOAD = PreferenceCenterPayload(PREFERENCE_FORM_1)
         private val FORM_2_PAYLOAD = PreferenceCenterPayload(PREFERENCE_FORM_2)
@@ -64,9 +64,10 @@ public class PreferenceCenterTest {
 
     private val onOpenListener: PreferenceCenter.OnOpenListener = mockk(relaxed = true)
 
-    private val prefCenter: PreferenceCenter = PreferenceCenter(
-        context, dataStore, privacyManager, remoteData, mockk()
-    )
+    private val prefCenter: PreferenceCenter =
+        PreferenceCenter(
+            context, dataStore, privacyManager, remoteData, mockk()
+        )
 
     @Test
     public fun testOnOpenListener(): TestResult = runTest {

@@ -1,6 +1,7 @@
 package com.urbanairship.preferencecenter.data
 
 import android.os.Parcelable
+import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -10,7 +11,7 @@ import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status.OPT_I
 import com.urbanairship.preferencecenter.data.Condition.OptInStatus.Status.OPT_OUT
 import kotlinx.parcelize.Parcelize
 
-internal typealias Conditions = List<Condition>
+public typealias Conditions = List<Condition>
 
 /**
  * Evaluates this list of conditions against the given [state].
@@ -19,7 +20,8 @@ internal typealias Conditions = List<Condition>
  * - Any condition evaluates to `true`.
  * - The conditions list is empty.
  */
-internal fun Conditions.evaluate(state: Condition.State): Boolean =
+@RestrictTo(RestrictTo.Scope.LIBRARY)
+public fun Conditions.evaluate(state: Condition.State): Boolean =
     isEmpty() || any { it.evaluate(state) }
 
 /** Base condition, used to determine visibility of preference sections and items. */

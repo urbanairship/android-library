@@ -187,8 +187,16 @@ public sealed class Item(
                     id = json.requireField(KEY_ID),
                     platform = json.requireField<String>(KEY_PLATFORM).let {
                         when(it) {
-                            PLATFORM_SMS -> Platform.Sms(RegistrationOptions.Sms.fromJson(json.requireField(KEY_REGISTRATION_OPTIONS)))
-                            PLATFORM_EMAIL -> Platform.Email(RegistrationOptions.Email.fromJson(json.requireField(KEY_REGISTRATION_OPTIONS)))
+                            PLATFORM_SMS -> Platform.Sms(
+                                RegistrationOptions.Sms.fromJson(json.requireField(
+                                    KEY_REGISTRATION_OPTIONS
+                                ))
+                            )
+                            PLATFORM_EMAIL -> Platform.Email(
+                                RegistrationOptions.Email.fromJson(json.requireField(
+                                    KEY_REGISTRATION_OPTIONS
+                                ))
+                            )
                             else -> throw JsonException("Invalid registration type: $it")
                         }
                     },
@@ -205,7 +213,7 @@ public sealed class Item(
             public data class Sms(public val registrationOptions: RegistrationOptions.Sms): Platform(ChannelType.SMS)
             public data class Email(public val registrationOptions: RegistrationOptions.Email): Platform(ChannelType.EMAIL)
 
-            internal val resendOptions: ResendOptions
+            public val resendOptions: ResendOptions
                 get() {
                     return when (this) {
                         is Sms -> this.registrationOptions.resendOptions
@@ -213,7 +221,7 @@ public sealed class Item(
                     }
                 }
 
-            internal val errorMessages: ErrorMessages
+            public val errorMessages: ErrorMessages
                 get() {
                     return when (this) {
                         is Sms -> this.registrationOptions.errorMessages

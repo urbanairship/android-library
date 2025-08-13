@@ -9,8 +9,8 @@ import androidx.annotation.LayoutRes
 import androidx.core.view.isVisible
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.R
-import com.urbanairship.preferencecenter.data.Conditions
 import com.urbanairship.preferencecenter.data.Item
+import com.urbanairship.preferencecenter.data.Conditions
 import com.urbanairship.preferencecenter.ui.CommonViewHolder
 import com.urbanairship.preferencecenter.util.loadImageOrHide
 import com.urbanairship.preferencecenter.util.setTextOrHide

@@ -5,6 +5,7 @@ import android.content.Intent
 import androidx.lifecycle.ViewModel
 import com.urbanairship.UALog
 import com.urbanairship.debug.DebugManager
+import com.urbanairship.preferencecenter.PreferenceCenter
 import com.urbanairship.preferencecenter.ui.PreferenceCenterActivity
 import com.urbanairship.remotedata.RemoteData
 import kotlinx.coroutines.flow.Flow
@@ -40,7 +41,7 @@ internal class DefaultPreferenceCenterViewModel(
     override fun openPreferenceCenter(context: Context, id: String) {
         val intent = Intent(context, PreferenceCenterActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            .putExtra(PreferenceCenterActivity.EXTRA_ID, id)
+            .putExtra(PreferenceCenter.EXTRA_PREFERENCE_CENTER_ID, id)
 
         context.startActivity(intent)
     }

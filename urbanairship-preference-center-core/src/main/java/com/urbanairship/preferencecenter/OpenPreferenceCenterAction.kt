@@ -10,7 +10,8 @@ import java.util.concurrent.Callable
  * Opens a Preference Center.
  */
 public class OpenPreferenceCenterAction(
-    private val preferenceCenterCallable: Callable<PreferenceCenter> = AirshipComponentUtils.callableForComponent(PreferenceCenter::class.java)
+    private val preferenceCenterCallable: Callable<PreferenceCenter> = AirshipComponentUtils.callableForComponent(
+        PreferenceCenter::class.java)
 ) : Action() {
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean =

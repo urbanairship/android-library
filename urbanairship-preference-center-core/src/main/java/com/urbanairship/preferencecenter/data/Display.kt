@@ -1,6 +1,7 @@
 package com.urbanairship.preferencecenter.data
 
 import android.os.Parcelable
+import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -16,8 +17,8 @@ public data class CommonDisplay(
     val name: String? = null,
     val description: String? = null
 ) {
-    internal companion object {
-        @JvmStatic val EMPTY = CommonDisplay(null, null)
+    public companion object {
+        @JvmStatic public val EMPTY = CommonDisplay(null, null)
 
         private const val KEY_NAME = "name"
         private const val KEY_DESCRIPTION = "description"
@@ -46,7 +47,7 @@ public data class CommonDisplay(
             json?.map?.let { parse(it) } ?: EMPTY
     }
 
-    internal fun isEmpty(): Boolean =
+    public fun isEmpty(): Boolean =
         name.isNullOrEmpty() && description.isNullOrEmpty()
 
     @Throws(JsonException::class)

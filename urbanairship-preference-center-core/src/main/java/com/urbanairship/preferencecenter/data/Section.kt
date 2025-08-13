@@ -1,6 +1,7 @@
 package com.urbanairship.preferencecenter.data
 
 import android.os.Parcelable
+import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.requireField
@@ -18,7 +19,8 @@ public sealed class Section(private val type: String) {
     public abstract val display: CommonDisplay
     public abstract val conditions: Conditions
 
-    internal fun filterItems(predicate: (Item) -> Boolean): Section =
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public fun filterItems(predicate: (Item) -> Boolean): Section =
         when (this) {
             is Common -> copy(items = items.filter(predicate))
             is SectionBreak -> this

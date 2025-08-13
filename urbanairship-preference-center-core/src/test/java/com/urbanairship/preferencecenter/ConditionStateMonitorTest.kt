@@ -1,9 +1,9 @@
 package com.urbanairship.preferencecenter
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.preferencecenter.data.Condition
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
-import com.urbanairship.preferencecenter.data.Condition
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushNotificationStatus
 import com.urbanairship.push.pushNotificationStatusFlow
@@ -45,7 +45,8 @@ public class ConditionStateMonitorTest {
     @Before
     public fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        conditionStateMonitor = ConditionStateMonitor(mockPushManager)
+        conditionStateMonitor =
+            ConditionStateMonitor(mockPushManager)
     }
 
     @After

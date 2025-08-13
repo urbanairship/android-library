@@ -13,11 +13,9 @@ import android.widget.AutoCompleteTextView
 import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.view.isVisible
-import com.urbanairship.UALog
 import com.urbanairship.preferencecenter.R
-import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.PromptDisplay
-import com.urbanairship.preferencecenter.data.Item.ContactManagement.RegistrationOptions
+import com.urbanairship.preferencecenter.data.Item.ContactManagement.Platform
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.SmsSenderInfo
 import com.urbanairship.preferencecenter.util.markdownToHtml
 import com.urbanairship.preferencecenter.util.setHtml
@@ -41,17 +39,17 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
         ArrayAdapter(context, android.R.layout.simple_dropdown_item_1line)
     }
 
-    private var platform: Item.ContactManagement.Platform? = null
+    private var platform: Platform? = null
     private var selectedSender: SmsSenderInfo? = null
 
     private var isValid = false
 
     private val validator: (input: String?) -> Boolean = { input ->
         when (platform) {
-            is  Item.ContactManagement.Platform.Email -> {
+            is  Platform.Email -> {
                 !input.isNullOrBlank()
             }
-            is Item.ContactManagement.Platform.Sms  -> {
+            is Platform.Sms  -> {
                 !input.isNullOrBlank()
             }
             else -> false
@@ -103,16 +101,16 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
         }
     }
 
-    fun setPlatform(platform: Item.ContactManagement.Platform, display: PromptDisplay) {
+    fun setPlatform(platform: Platform, display: PromptDisplay) {
         this.platform = platform
 
         when (platform) {
-            is Item.ContactManagement.Platform.Email -> {
+            is Platform.Email -> {
                 setAddressLabel(platform.registrationOptions.addressLabel)
                 platform.registrationOptions.placeholder?.let(::setAddressPlaceholder)
                 textInputView.editText?.inputType = InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
             }
-            is Item.ContactManagement.Platform.Sms -> {
+            is Platform.Sms -> {
                 setAddressLabel(platform.registrationOptions.phoneLabel)
                 setCountryPickerLabel(platform.registrationOptions.countryLabel)
                 setCountryCodes(platform.registrationOptions.senders)
@@ -139,8 +137,8 @@ internal class ContactChannelDialogInputView@JvmOverloads constructor(
         val address = getFormattedAddress() ?: return null
 
         return when (platform) {
-            is Item.ContactManagement.Platform.Email -> DialogResult.Email(address = address)
-            is Item.ContactManagement.Platform.Sms -> selectedSender?.let { sender ->
+            is Platform.Email -> DialogResult.Email(address = address)
+            is Platform.Sms -> selectedSender?.let { sender ->
                 DialogResult.Sms(
                     address = address,
                     senderId = sender.senderId,

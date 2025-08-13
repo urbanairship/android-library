@@ -4,7 +4,7 @@ plugins {
     id("kotlin-parcelize")
 }
 
-description = "Airship Preference Center extension."
+description = "Airship Preference Center Core."
 
 airshipModule {
     published = true
@@ -19,7 +19,7 @@ android {
         unitTests.includeAndroidResources = true
     }
 
-    namespace 'com.urbanairship.preferencecenter'
+    namespace 'com.urbanairship.preferencecenter.core'
 }
 
 allOpen {
@@ -28,7 +28,6 @@ allOpen {
 
 dependencies {
     api project(':urbanairship-core')
-    api project(':urbanairship-preference-center-core')
 
     // Kotlin
     implementation(libs.kotlinx.coroutines.core)

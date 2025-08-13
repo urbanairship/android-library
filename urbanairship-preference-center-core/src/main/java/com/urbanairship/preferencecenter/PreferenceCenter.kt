@@ -15,7 +15,6 @@ import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.PreferenceCenterPayload
-import com.urbanairship.preferencecenter.ui.PreferenceCenterActivity
 import com.urbanairship.remotedata.RemoteData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -24,12 +23,13 @@ import kotlinx.coroutines.launch
 /**
  * Airship Preference Center.
  */
-public class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) internal constructor(
+public class PreferenceCenter internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,
     private val remoteData: RemoteData,
-    internal val inputValidator: AirshipInputValidation.Validator
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public val inputValidator: AirshipInputValidation.Validator
 ) : AirshipComponent(context, dataStore) {
 
     private val pendingResultScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
@@ -44,9 +44,29 @@ public class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) intern
         public fun shared(): PreferenceCenter =
             UAirship.shared().requireComponent(PreferenceCenter::class.java)
 
+        /**
+         * Parses the Preference Center ID from the given [Intent].
+         *
+         * @param intent The intent to parse.
+         * @return The ID of the Preference Center, or null if not found.
+         */
+        public fun parsePreferenceCenterId(intent: Intent?): String? {
+            return intent?.getStringExtra(EXTRA_PREFERENCE_CENTER_ID)
+        }
+
         internal const val PAYLOAD_TYPE = "preference_forms"
         internal const val KEY_PREFERENCE_FORMS = "preference_forms"
         internal const val DEEP_LINK_HOST = "preferences"
+
+        /**
+         * Intent action to view the preference center.
+         */
+        public const val VIEW_PREFERENCE_CENTER_INTENT_ACTION: String = "com.urbanairship.VIEW_PREFERENCE_CENTERX"
+
+        /**
+         * Required `String` extra specifying the ID of the Preference Center to be displayed.
+         */
+        public const val EXTRA_PREFERENCE_CENTER_ID: String = "com.urbanairship.preferencecenter.PREF_CENTER_ID"
     }
 
     /**
@@ -82,14 +102,30 @@ public class PreferenceCenter @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) intern
             UALog.w("Unable to open Preference Center! FEATURE_TAGS_AND_ATTRIBUTES not enabled.")
             return
         }
-        if (openListener?.onOpenPreferenceCenter(preferenceCenterId) != true) {
-            UALog.v("Launching PreferenceCenterActivity with id = $preferenceCenterId")
 
-            val intent = Intent(context, PreferenceCenterActivity::class.java)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                .putExtra(PreferenceCenterActivity.EXTRA_ID, preferenceCenterId)
+        if (openListener?.onOpenPreferenceCenter(preferenceCenterId) == true) {
+            return
+        }
 
+        UALog.v("Launching PreferenceCenterActivity with id = $preferenceCenterId")
+
+        val intent = Intent(VIEW_PREFERENCE_CENTER_INTENT_ACTION)
+            .setPackage(context.packageName)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            .putExtra(EXTRA_PREFERENCE_CENTER_ID, preferenceCenterId)
+
+        if (intent.resolveActivity(context.packageManager) != null) {
             context.startActivity(intent)
+            return
+        }
+
+        // Fallback to the message center activity, if available
+        try {
+            val clazz = Class.forName("com.urbanairship.preferencecenter.ui.PreferenceCenterActivity")
+            intent.setClass(context, clazz)
+            context.startActivity(intent)
+        } catch (e: ClassNotFoundException) {
+            UALog.w { "Unable to start PreferenceCenterActivity, the preference-center module is not available"}
         }
     }
 

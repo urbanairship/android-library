@@ -97,8 +97,7 @@ public class PreferenceCenterViewModelTest {
                             subscriptionId = SUBSCRIPTION_ID_1,
                             display = CommonDisplay("item-1-title", "item-1-subtitle"),
                             conditions = emptyList()
-                        ),
-                        Item.ChannelSubscription(
+                        ), Item.ChannelSubscription(
                             id = "item-2-id",
                             subscriptionId = SUBSCRIPTION_ID_2,
                             display = CommonDisplay("item-2-title"),
@@ -106,8 +105,7 @@ public class PreferenceCenterViewModelTest {
                         )
                     ),
                     conditions = emptyList()
-                ),
-                Section.Common(
+                ), Section.Common(
                     id = "section-2-id",
                     display = CommonDisplay("section-2-title", "section-2-subtitle"),
                     items = listOf(
@@ -116,8 +114,7 @@ public class PreferenceCenterViewModelTest {
                             subscriptionId = SUBSCRIPTION_ID_3,
                             display = CommonDisplay("item-3-title", "item-3-subtitle"),
                             conditions = emptyList()
-                        ),
-                        Item.ChannelSubscription(
+                        ), Item.ChannelSubscription(
                             id = "item-4-id",
                             subscriptionId = SUBSCRIPTION_ID_4,
                             display = CommonDisplay("item-4-title", "item-4-subtitle"),
@@ -184,7 +181,10 @@ public class PreferenceCenterViewModelTest {
                 Section.Common(
                     id = "section-2-id",
                     display = CommonDisplay("section-2-title", "section-2-subtitle"),
-                    items = listOf(CONTACT_SUBSCRIPTION_GROUP_ITEM_3, CONTACT_SUBSCRIPTION_GROUP_ITEM_4),
+                    items = listOf(
+                        CONTACT_SUBSCRIPTION_GROUP_ITEM_3,
+                        CONTACT_SUBSCRIPTION_GROUP_ITEM_4
+                    ),
                     conditions = emptyList()
                 ),
             )
@@ -195,17 +195,18 @@ public class PreferenceCenterViewModelTest {
             display = CommonDisplay(PREF_CENTER_TITLE, PREF_CENTER_SUBTITLE),
             sections = listOf(
                 Section.Common(
-                    id = "section-1",
-                    display = CommonDisplay.EMPTY,
-                    items = listOf(
+                    id = "section-1", display = CommonDisplay.EMPTY, items = listOf(
                         Item.Alert(
                             id = "alert",
                             iconDisplay = IconDisplay("icon-uri", "name", "description"),
-                            button = Button("button", null, mapOf("foo" to JsonValue.wrap("bar"))),
+                            button = Button(
+                                "button",
+                                null,
+                                mapOf("foo" to JsonValue.wrap("bar"))
+                            ),
                             conditions = emptyList()
                         )
-                    ),
-                    conditions = listOf(Condition.OptInStatus(status = Status.OPT_OUT))
+                    ), conditions = listOf(Condition.OptInStatus(status = Status.OPT_OUT))
                 ),
                 Section.Common(
                     id = "section-2",
@@ -219,10 +220,10 @@ public class PreferenceCenterViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
 
-    private lateinit var preferenceCenter: PreferenceCenter
+    private lateinit var preferenceCenter: com.urbanairship.preferencecenter.PreferenceCenter
     private lateinit var channel: AirshipChannel
     private lateinit var contact: Contact
-    private lateinit var conditionMonitor: ConditionStateMonitor
+    private lateinit var conditionMonitor: com.urbanairship.preferencecenter.ConditionStateMonitor
     private lateinit var savedStateHandle: SavedStateHandle
 
     private val actionRunner: ActionRunner = mockk {
@@ -1255,10 +1256,10 @@ public class PreferenceCenterViewModelTest {
         preferenceCenterId: String = config.id,
         ioDispatcher: CoroutineDispatcher = testDispatcher,
         dispatcher: CoroutineDispatcher = testDispatcher,
-        mockPreferenceCenter: (PreferenceCenter.() -> Unit)? = {},
+        mockPreferenceCenter: (com.urbanairship.preferencecenter.PreferenceCenter.() -> Unit)? = {},
         mockChannel: (AirshipChannel.() -> Unit)? = {},
         mockContact: (Contact.() -> Unit)? = {},
-        mockConditionStateMonitor: (ConditionStateMonitor.() -> Unit)? = {},
+        mockConditionStateMonitor: (com.urbanairship.preferencecenter.ConditionStateMonitor.() -> Unit)? = {},
         conditionState: Condition.State = Condition.State(isOptedIn = true),
         namedUserIdFlow: StateFlow<String?> = MutableStateFlow(null),
         mockSavedStateHandle: (SavedStateHandle.() -> Unit)? = {}
@@ -1266,7 +1267,7 @@ public class PreferenceCenterViewModelTest {
         preferenceCenter = if (mockPreferenceCenter == null) {
             mockk(relaxUnitFun = true)
         } else {
-            mockk<PreferenceCenter> {
+            mockk<com.urbanairship.preferencecenter.PreferenceCenter> {
                 coEvery { getConfig(preferenceCenterId) } returns config
             }.also(mockPreferenceCenter::invoke)
         }
@@ -1298,7 +1299,7 @@ public class PreferenceCenterViewModelTest {
                 every { states } returns MutableStateFlow(conditionState).asStateFlow()
             }
         } else {
-            mockk<ConditionStateMonitor> {
+            mockk<com.urbanairship.preferencecenter.ConditionStateMonitor> {
                 every { currentState } returns conditionState
                 every { states } returns MutableStateFlow(conditionState).asStateFlow()
             }.also(mockConditionStateMonitor::invoke)

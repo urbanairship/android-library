@@ -9,6 +9,7 @@ import androidx.fragment.app.FragmentContainerView
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.UAirship
+import com.urbanairship.preferencecenter.PreferenceCenter
 import com.urbanairship.preferencecenter.R
 import com.google.android.material.appbar.MaterialToolbar
 
@@ -18,11 +19,6 @@ import com.google.android.material.appbar.MaterialToolbar
 public class PreferenceCenterActivity : FragmentActivity() {
 
     public companion object {
-        /**
-         * Required `String` extra specifying the ID of the Preference Center to be displayed.
-         */
-        public const val EXTRA_ID: String = "com.urbanairship.preferencecenter.PREF_CENTER_ID"
-
         private const val FRAGMENT_TAG = "PREF_CENTER_FRAGMENT"
     }
 
@@ -62,7 +58,7 @@ public class PreferenceCenterActivity : FragmentActivity() {
 
         // Otherwise, create and add the fragment
         if (!this::fragment.isInitialized) {
-            val id = intent.getStringExtra(EXTRA_ID)
+            val id = PreferenceCenter.parsePreferenceCenterId(intent)
                 ?: throw IllegalArgumentException("Missing required extra: EXTRA_ID")
 
             fragment = PreferenceCenterFragment.create(preferenceCenterId = id)

@@ -8,6 +8,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.preferencecenter.PreferenceCenterModuleFactory
+import com.urbanairship.preferencecenter.core.R
 import com.urbanairship.remotedata.RemoteData
 
 /**

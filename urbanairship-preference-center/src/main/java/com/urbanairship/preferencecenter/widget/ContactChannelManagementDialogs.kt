@@ -3,7 +3,6 @@ package com.urbanairship.preferencecenter.widget
 import android.content.Context
 import android.view.ContextThemeWrapper
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat.getString
 import androidx.lifecycle.lifecycleScope
 import com.urbanairship.R
 import com.urbanairship.UALog

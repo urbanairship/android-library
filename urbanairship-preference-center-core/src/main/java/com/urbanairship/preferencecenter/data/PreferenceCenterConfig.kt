@@ -1,6 +1,7 @@
 package com.urbanairship.preferencecenter.data
 
 import android.os.Parcel
+import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -76,7 +77,8 @@ public data class PreferenceCenterConfig(
     )
 }
 
-internal object PreferenceCenterConfigParceler : Parceler<PreferenceCenterConfig> {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public object PreferenceCenterConfigParceler : Parceler<PreferenceCenterConfig> {
     @Throws(JsonException::class)
     override fun create(parcel: Parcel): PreferenceCenterConfig {
         val config = JsonValue.parseString(parcel.readString()).requireMap()
