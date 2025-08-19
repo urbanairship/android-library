@@ -3,6 +3,14 @@
 [Migration Guides](https://github.com/urbanairship/android-library/tree/main/documentation/migration)
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 18.7.2 August 18, 2025
+Patch release that fixes embedded display reporting and a potential crash in Scenes.
+Apps that use Scenes or Embedded Content should update to this version or later.
+
+### Changes
+- Fixed an issue that could cause embedded content displays to be reported too early.
+- Fixed a potential crash that can occur when a Scene is dismissed.
+
 ## Version 18.7.1 February 25, 2025
 Patch release to fix a casting exception with Embedded Content.
 
