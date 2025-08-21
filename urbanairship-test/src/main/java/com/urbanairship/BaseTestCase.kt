@@ -23,10 +23,6 @@ public abstract class BaseTestCase public constructor() {
         return Shadows.shadowOf(Looper.getMainLooper())
     }
 
-    public fun shadowBackgroundLooper(): ShadowLooper {
-        return Shadows.shadowOf(AirshipLoopers.backgroundLooper)
-    }
-
     public fun shadowThreadPoolExecutor(): ExecutorService {
         return AirshipExecutors.threadPoolExecutor()
     }

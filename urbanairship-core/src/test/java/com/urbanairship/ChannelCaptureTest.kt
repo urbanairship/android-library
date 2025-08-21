@@ -6,17 +6,23 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.channel.AirshipChannel
 import java.util.Calendar
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
+import org.junit.runner.RunWith
 
 @SuppressLint("NewApi")
-class ChannelCaptureTest : BaseTestCase() {
+@RunWith(AndroidJUnit4::class)
+class ChannelCaptureTest {
 
     private val mockChannel: AirshipChannel = mockk()
     private var configOptions = AirshipConfigOptions.Builder()
@@ -28,13 +34,17 @@ class ChannelCaptureTest : BaseTestCase() {
         .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
     private val dataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext())
     private val activityMonitor = TestActivityMonitor()
+    private val dispatcher = StandardTestDispatcher()
 
-    private var capture = ChannelCapture(
-        ApplicationProvider.getApplicationContext(),
-        configOptions,
-        mockChannel,
-        dataStore,
-        activityMonitor
+    private var capture = makeChannelCapture()
+
+    private fun makeChannelCapture(): ChannelCapture = ChannelCapture(
+        context = ApplicationProvider.getApplicationContext(),
+        configOptions = configOptions,
+        airshipChannel = mockChannel,
+        preferenceDataStore = dataStore,
+        activityMonitor = activityMonitor,
+        dispatcher = dispatcher
     )
 
     @Before
@@ -62,13 +72,7 @@ class ChannelCaptureTest : BaseTestCase() {
 
         // Reinitialize it
         capture.tearDown()
-        capture = ChannelCapture(
-            ApplicationProvider.getApplicationContext(),
-            configOptions,
-            mockChannel,
-            dataStore,
-            activityMonitor
-        )
+        capture = makeChannelCapture()
 
         capture.init()
 
@@ -96,13 +100,7 @@ class ChannelCaptureTest : BaseTestCase() {
 
         // Reinitialize it
         capture.tearDown()
-        capture = ChannelCapture(
-            ApplicationProvider.getApplicationContext(),
-            configOptions,
-            mockChannel,
-            dataStore,
-            activityMonitor
-        )
+        capture = makeChannelCapture()
 
         capture.init()
 
@@ -131,13 +129,7 @@ class ChannelCaptureTest : BaseTestCase() {
 
         // Reinitialize it
         capture.tearDown()
-        capture = ChannelCapture(
-            ApplicationProvider.getApplicationContext(),
-            configOptions,
-            mockChannel,
-            dataStore,
-            activityMonitor
-        )
+        capture = makeChannelCapture()
 
         capture.init()
 
@@ -166,13 +158,7 @@ class ChannelCaptureTest : BaseTestCase() {
 
         // Reinitialize it
         capture.tearDown()
-        capture = ChannelCapture(
-            ApplicationProvider.getApplicationContext(),
-            configOptions,
-            mockChannel,
-            dataStore,
-            activityMonitor
-        )
+        capture = makeChannelCapture()
 
         capture.init()
 
@@ -201,13 +187,7 @@ class ChannelCaptureTest : BaseTestCase() {
 
         // Reinitialize it
         capture.tearDown()
-        capture = ChannelCapture(
-            ApplicationProvider.getApplicationContext(),
-            configOptions,
-            mockChannel,
-            dataStore,
-            activityMonitor
-        )
+        capture = makeChannelCapture()
 
         capture.init()
 
@@ -267,7 +247,8 @@ class ChannelCaptureTest : BaseTestCase() {
         for (i in 0..<repeat) {
             activityMonitor.foreground(Calendar.getInstance().timeInMillis)
         }
-        shadowBackgroundLooper().idle()
+
+        dispatcher.scheduler.advanceUntilIdle()
     }
 
     private fun clearClipboard() {

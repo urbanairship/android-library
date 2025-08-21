@@ -4,15 +4,17 @@ package com.urbanairship
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.os.Handler
 import androidx.annotation.RestrictTo
-import com.urbanairship.AirshipLoopers.backgroundLooper
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.channel.AirshipChannel
 import java.util.Calendar
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * ChannelCapture detects a knock when the application is foregrounded 6 times in 30 seconds.
@@ -23,7 +25,8 @@ public class ChannelCapture @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public c
     private val configOptions: AirshipConfigOptions,
     private val airshipChannel: AirshipChannel,
     preferenceDataStore: PreferenceDataStore,
-    private val activityMonitor: ActivityMonitor
+    private val activityMonitor: ActivityMonitor,
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) : AirshipComponent(context, preferenceDataStore) {
 
     private var clipboardManager: ClipboardManager? = null
@@ -31,6 +34,7 @@ public class ChannelCapture @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public c
 
     private var indexOfKnocks = 0
     private var knockTimes = LongArray(KNOCKS_TO_TRIGGER_CHANNEL_CAPTURE)
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     /**
      * Returns `true` if channel capture is enabled, [com.urbanairship.AirshipConfigOptions.channelCaptureEnabled]
@@ -111,14 +115,14 @@ public class ChannelCapture @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public c
         val channel = airshipChannel.id
         val channelIdForClipboard = if (channel.isNullOrEmpty()) "ua:" else "ua:$channel"
 
-        try {
-            Handler(backgroundLooper).post {
+        scope.launch {
+            try {
                 val clipData = ClipData.newPlainText("UA Channel ID", channelIdForClipboard)
                 clipboardManager?.setPrimaryClip(clipData)
                 UALog.d("Channel ID copied to clipboard")
+            } catch (e: Exception) {
+                UALog.w(e, "Channel capture failed! Unable to copy Channel ID to clipboard.")
             }
-        } catch (e: Exception) {
-            UALog.w(e, "Channel capture failed! Unable to copy Channel ID to clipboard.")
         }
     }
 
