@@ -12,6 +12,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.urbanairship.UALog;
+import com.urbanairship.UAirship;
 import com.urbanairship.actions.ActionValue;
 import com.urbanairship.json.JsonException;
 import com.urbanairship.json.JsonMap;
@@ -238,6 +239,12 @@ public class PushMessage implements Parcelable, JsonSerializable {
      */
     @NonNull
     public static final String EXTRA_DELIVERY_PRIORITY = "com.urbanairship.priority";
+
+    /**
+     * The extra key for the channel ID.
+     */
+    @NonNull
+    protected static final String EXTRA_APID = "com.urbanairship.push.APID";
 
     /**
      * Constant for the extra {@link #EXTRA_DELIVERY_PRIORITY} that indicates the push is high priority.
@@ -757,6 +764,20 @@ public class PushMessage implements Parcelable, JsonSerializable {
             return defaultChannel;
         }
         return channel;
+    }
+
+    /**
+     * Returns the channel ID (APID) if present
+     *
+     * @return Either the APID or {@code null} if not available.
+     */
+    protected boolean isChannelIdNullOrMatching() {
+        String apid = data.get(EXTRA_APID);
+        if (apid != null) {
+            return apid.equals(UAirship.shared().getChannel().getId());
+        } else {
+            return true;
+        }
     }
 
     @Override

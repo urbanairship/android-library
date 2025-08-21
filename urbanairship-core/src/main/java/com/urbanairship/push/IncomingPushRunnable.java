@@ -129,6 +129,11 @@ class IncomingPushRunnable implements Runnable {
             return;
         }
 
+        if (!message.isChannelIdNullOrMatching()) {
+            UALog.d("Received push message for another channel ID, ignoring.");
+            return;
+        }
+
         // Run the push actions
         runActions();
 
