@@ -18,7 +18,7 @@ import com.urbanairship.util.DateUtils
 /**
  * API client for fetching remote data.
  */
-internal class RemoteDataApiClient @JvmOverloads constructor(
+internal class RemoteDataApiClient(
     private val config: AirshipRuntimeConfig,
     private val session: SuspendingRequestSession = config.requestSession.toSuspendingRequestSession()
 ) {

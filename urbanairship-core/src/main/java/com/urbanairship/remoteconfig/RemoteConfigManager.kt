@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @OpenForTesting
-public class RemoteConfigManager @JvmOverloads constructor(
+public class RemoteConfigManager(
     context: Context,
     dataStore: PreferenceDataStore,
     private val runtimeConfig: AirshipRuntimeConfig,

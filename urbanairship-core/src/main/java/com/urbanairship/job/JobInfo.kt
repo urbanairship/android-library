@@ -235,7 +235,6 @@ public class JobInfo private constructor(builder: Builder) {
          *
          * @return A job builder.
          */
-        @JvmStatic
         public fun newBuilder(): Builder {
             return Builder()
         }

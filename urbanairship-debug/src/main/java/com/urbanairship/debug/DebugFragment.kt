@@ -63,7 +63,6 @@ public class DebugFragment : Fragment() {
         public const val ARG_IGNORE_BOTTOM_PADDING: String = "ignoreBottomPadding"
         public const val ARG_SHOW_NAV_ICON_ON_DEBUG_HOME_SCREEN: String = "showNavIconOnDebugHomeScreen"
 
-        @JvmStatic
         public fun newInstance(
             ignoreBottomPadding: Boolean = false,
             showNavIconOnDebugHomeScreen: Boolean = false

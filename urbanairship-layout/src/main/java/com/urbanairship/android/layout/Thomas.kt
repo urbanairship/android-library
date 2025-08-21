@@ -39,7 +39,6 @@ public object Thomas {
      * @param payload The payload.
      * @return `true` if valid, otherwise `false`.
      */
-    @JvmStatic
     public fun isValid(payload: LayoutInfo): Boolean {
         if (payload.version !in MIN_SUPPORTED_VERSION..MAX_SUPPORTED_VERSION) {
             return false
@@ -52,7 +51,6 @@ public object Thomas {
         }
     }
 
-    @JvmStatic
     @Throws(DisplayException::class)
     public fun prepareDisplay(
         payload: LayoutInfo,

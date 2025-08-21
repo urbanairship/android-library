@@ -45,7 +45,6 @@ public object Modules {
     private const val PREFERENCE_CENTER_FACTORY = "com.urbanairship.preferencecenter.PreferenceCenterModuleFactoryImpl"
     private const val FEATURE_FLAGS_FACTORY = "com.urbanairship.featureflag.FeatureFlagsModuleFactoryImpl"
 
-    @JvmStatic
     public fun messageCenter(
         context: Context,
         preferenceDataStore: PreferenceDataStore,
@@ -70,7 +69,6 @@ public object Modules {
         return null
     }
 
-    @JvmStatic
     public fun automation(
         context: Context,
         dataStore: PreferenceDataStore,
@@ -114,7 +112,6 @@ public object Modules {
         return null
     }
 
-    @JvmStatic
     public fun debug(
         context: Context,
         dataStore: PreferenceDataStore,
@@ -138,7 +135,6 @@ public object Modules {
         return null
     }
 
-    @JvmStatic
     public fun adId(
         context: Context,
         dataStore: PreferenceDataStore,
@@ -162,7 +158,6 @@ public object Modules {
         return null
     }
 
-    @JvmStatic
     public fun preferenceCenter(
         context: Context,
         dataStore: PreferenceDataStore,
@@ -186,7 +181,6 @@ public object Modules {
         return null
     }
 
-    @JvmStatic
     public fun liveUpdateManager(
         context: Context,
         dataStore: PreferenceDataStore,
@@ -212,7 +206,6 @@ public object Modules {
         return null
     }
 
-    @JvmStatic
     public fun featureFlags(
         context: Context,
         dataStore: PreferenceDataStore,

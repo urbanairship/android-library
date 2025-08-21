@@ -10,7 +10,6 @@ import com.urbanairship.app.GlobalActivityMonitor
  */
 internal object AirshipAppBootstrap {
 
-    @JvmStatic
     fun init(context: Context) {
         // Call it to create instance
         GlobalActivityMonitor.shared(context)

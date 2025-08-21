@@ -463,7 +463,6 @@ public class PreferenceDataStore internal constructor(
 
         /** @hide
          */
-        @JvmStatic
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun loadDataStore(
             context: Context, configOptions: AirshipConfigOptions

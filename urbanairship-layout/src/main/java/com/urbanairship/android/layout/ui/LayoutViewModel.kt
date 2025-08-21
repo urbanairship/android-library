@@ -22,7 +22,6 @@ internal class LayoutViewModel : ViewModel() {
 
     val rootViewId = View.generateViewId()
 
-    @JvmOverloads
     fun getOrCreateEnvironment(
         reporter: Reporter,
         displayTimer: DisplayTimer,
@@ -38,7 +37,6 @@ internal class LayoutViewModel : ViewModel() {
             environment = it
         }
 
-    @JvmOverloads
     @Throws(ModelFactoryException::class)
     fun getOrCreateModel(
         viewInfo: ViewInfo,

@@ -58,7 +58,6 @@ public abstract class PreferenceDataDatabase public constructor() : RoomDatabase
             }
         }
 
-        @JvmStatic
         public fun createDatabase(
             context: Context,
             config: AirshipConfigOptions
@@ -73,7 +72,6 @@ public abstract class PreferenceDataDatabase public constructor() : RoomDatabase
                 .build()
         }
 
-        @JvmStatic
         @VisibleForTesting
         public fun createInMemoryDatabase(context: Context): PreferenceDataDatabase {
             return inMemoryDatabaseBuilder(context, PreferenceDataDatabase::class.java)

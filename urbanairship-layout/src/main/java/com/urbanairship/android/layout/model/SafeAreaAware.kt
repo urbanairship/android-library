@@ -25,7 +25,6 @@ internal interface SafeAreaAware {
     fun shouldIgnoreSafeArea(): Boolean
 
     companion object {
-        @JvmStatic
         fun ignoreSafeAreaFromJson(json: JsonMap): Boolean =
             json.opt("ignore_safe_area").getBoolean(false)
     }

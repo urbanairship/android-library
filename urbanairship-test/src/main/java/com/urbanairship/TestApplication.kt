@@ -170,8 +170,6 @@ public class TestApplication public constructor() : Application(), TestLifecycle
     }
 
     public companion object {
-
-        @JvmStatic
         public fun getApplication(): TestApplication {
             return ApplicationProvider.getApplicationContext<Context>() as TestApplication
         }

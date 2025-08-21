@@ -25,7 +25,7 @@ import com.urbanairship.iam.info.InAppMessageButtonLayoutType
  * the view, used only if defStyle is 0 or cannot be found in the theme. Can be 0 to not
  * look for defaults.
  */
-internal class InAppButtonLayout @JvmOverloads constructor (
+internal class InAppButtonLayout(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0,

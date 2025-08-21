@@ -14,7 +14,7 @@ import com.urbanairship.actions.ActionRegistry
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public open class Module protected constructor(
-    @JvmField public val components: Set<AirshipComponent>,
+    public val components: Set<AirshipComponent>,
     @field:XmlRes private val actionsXmlId: Int = 0
 ) {
 
@@ -39,7 +39,6 @@ public open class Module protected constructor(
          * @param actionsXmlId The actions XML resource ID, or 0 if not available.
          * @return The module.
          */
-        @JvmStatic
         public fun singleComponent(
             component: AirshipComponent,
             @XmlRes actionsXmlId: Int

@@ -30,7 +30,7 @@ import kotlinx.coroutines.runBlocking
  */
 @OpenForTesting
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class AirshipMeteredUsage @JvmOverloads internal constructor(
+public class AirshipMeteredUsage internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     private val config: AirshipRuntimeConfig,

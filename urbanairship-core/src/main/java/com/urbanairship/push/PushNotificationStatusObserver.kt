@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-internal class PushNotificationStatusObserver @JvmOverloads constructor(
+internal class PushNotificationStatusObserver(
     initialValue: PushNotificationStatus,
     listenerDispatcher: CoroutineDispatcher = Dispatchers.Main.immediate
 ) {

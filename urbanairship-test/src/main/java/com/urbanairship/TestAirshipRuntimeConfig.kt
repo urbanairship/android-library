@@ -21,7 +21,6 @@ public class TestAirshipRuntimeConfig private constructor(
     configProvider, session ?: TestRequestSession(), dataStore, platformProvider
 ) {
 
-    @JvmOverloads
     public constructor(remoteConfig: RemoteConfig? = null, session: RequestSession? = null) : this(
         SettableProvider(
             AirshipConfigOptions.Builder().setAppKey("appKey").setAppSecret("appSecret").build()

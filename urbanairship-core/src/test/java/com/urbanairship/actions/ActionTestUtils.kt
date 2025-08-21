@@ -36,7 +36,6 @@ public object ActionTestUtils {
      * @param value The action value.
      * @return ActionArguments that contain the situation and value.
      */
-    @JvmOverloads
     public fun createArgs(
         situation: Situation,
         value: Any,
@@ -76,7 +75,6 @@ public object ActionTestUtils {
      * @param status The ActionResult status.
      * @return ActionResult that contains the value, exception, and status.
      */
-    @JvmStatic
     public fun createResult(
         value: Any?, exception: Exception?, status: ActionResult.Status
     ): ActionResult {

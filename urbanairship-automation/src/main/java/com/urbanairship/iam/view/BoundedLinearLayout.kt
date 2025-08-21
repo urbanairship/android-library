@@ -9,7 +9,7 @@ import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
 
 /** LinearLayout that supports max width. */
-internal open class BoundedLinearLayout @JvmOverloads constructor(
+internal open class BoundedLinearLayout(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0,

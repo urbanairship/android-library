@@ -363,7 +363,6 @@ public class MessageListItem @JvmOverloads constructor(
     private companion object {
         private val dateFormatter = DateFormat.getDateInstance(DateFormat.LONG)
 
-        @JvmStatic
         private val STATE_HIGHLIGHTED: IntArray = intArrayOf(coreR.attr.ua_state_highlighted)
     }
 }

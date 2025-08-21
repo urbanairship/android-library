@@ -62,7 +62,6 @@ internal class LayoutState(
 
 
     companion object {
-        @JvmField
         val EMPTY = LayoutState(null, null, null,
             layout = SharedState(State.Layout.DEFAULT),
             thomasState = makeThomasState(null, null),

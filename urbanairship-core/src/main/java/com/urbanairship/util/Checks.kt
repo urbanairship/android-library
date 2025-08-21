@@ -17,7 +17,6 @@ public object Checks {
      * @param message The exception message if the value is null.
      * @throws IllegalArgumentException if the value is null.
      */
-    @JvmStatic
     public fun checkNotNull(value: Any?, message: String) {
         requireNotNull(value) { message }
     }

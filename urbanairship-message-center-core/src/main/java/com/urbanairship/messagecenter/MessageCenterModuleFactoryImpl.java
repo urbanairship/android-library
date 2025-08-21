@@ -33,7 +33,7 @@ public class MessageCenterModuleFactoryImpl implements MessageCenterModuleFactor
             @NonNull AirshipChannel airshipChannel,
             @NonNull PushManager pushManager) {
         MessageCenter messageCenter = new MessageCenter(context, dataStore, config, privacyManager, airshipChannel, pushManager);
-        return Module.singleComponent(messageCenter, R.xml.ua_message_center_actions);
+        return Module.Companion.singleComponent(messageCenter, R.xml.ua_message_center_actions);
     }
 
     @NonNull

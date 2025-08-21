@@ -31,7 +31,6 @@ public class ModalPlacement(
 
     public companion object {
 
-        @JvmStatic
         @Throws(JsonException::class)
         public fun fromJson(json: JsonMap): ModalPlacement {
             val size = ConstrainedSize.fromJson(json.requireField("size"))

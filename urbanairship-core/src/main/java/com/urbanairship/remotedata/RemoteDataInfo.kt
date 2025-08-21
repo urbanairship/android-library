@@ -15,7 +15,7 @@ import com.urbanairship.json.requireField
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class RemoteDataInfo @JvmOverloads public constructor(
+public data class RemoteDataInfo(
     val url: String,
     val lastModified: String?,
     val source: RemoteDataSource,

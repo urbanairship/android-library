@@ -25,7 +25,6 @@ public object PendingIntentCompat {
      */
     public const val FLAG_MUTABLE: Int = 0x02000000
 
-    @JvmStatic
     public fun getActivity(
         context: Context?, requestCode: Int, intent: Intent?, flags: Int
     ): PendingIntent {
@@ -42,7 +41,6 @@ public object PendingIntentCompat {
         )
     }
 
-    @JvmStatic
     public fun getBroadcast(
         context: Context?, requestCode: Int, intent: Intent, flags: Int
     ): PendingIntent {

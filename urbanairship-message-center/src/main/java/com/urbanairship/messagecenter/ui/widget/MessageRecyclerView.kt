@@ -18,7 +18,7 @@ import com.urbanairship.messagecenter.ui.widget.MessageRecyclerAdapter.Accessibi
 import com.google.android.material.divider.MaterialDividerItemDecoration
 
 /** Base Message Center `RecyclerView` that displays a list of messages. */
-internal class MessageRecyclerView @JvmOverloads constructor(
+internal class MessageRecyclerView(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,

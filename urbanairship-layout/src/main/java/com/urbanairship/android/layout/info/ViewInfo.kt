@@ -91,7 +91,6 @@ public sealed class ViewInfo : View {
     /** @hide */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
-        @JvmStatic
         @Throws(JsonException::class)
         public fun viewInfoFromJson(json: JsonMap): ViewInfo {
             val type = json.requireField<String>("type")

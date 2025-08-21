@@ -22,7 +22,6 @@ public object AirshipExecutors {
     /**
      * The shared thread pool executor.
      */
-    @JvmStatic
     public fun threadPoolExecutor(): ExecutorService {
         return THREAD_POOL_EXECUTOR
     }
@@ -32,7 +31,6 @@ public object AirshipExecutors {
      *
      * @return A new serial executor.
      */
-    @JvmStatic
     public fun newSerialExecutor(): Executor {
         return SerialExecutor(THREAD_POOL_EXECUTOR)
     }

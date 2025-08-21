@@ -34,7 +34,7 @@ import kotlin.concurrent.withLock
  * - Push provider (HMS, FCM, ADM)
  * - Manufacturer (if Huawei)
  */
-public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOverloads constructor(
+public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) constructor(
     private val dataStore: PreferenceDataStore,
     private val defaultEnabledFeatures: Feature,
     private val configObserver: RemoteConfigObserver = RemoteConfigObserver(dataStore),
@@ -470,7 +470,6 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
             )
 
             /** @hide */
-            @JvmStatic
             @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
             public fun fromJson(value: JsonValue): Feature? {
                 try {
@@ -486,7 +485,6 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @JvmOver
             }
 
             /** @hide */
-            @JvmStatic
             @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
             public fun combined(vararg value: Feature): Feature {
                 return NONE.combining(value.toList())

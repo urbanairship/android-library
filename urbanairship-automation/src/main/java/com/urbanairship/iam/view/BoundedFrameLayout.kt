@@ -9,7 +9,7 @@ import androidx.annotation.MainThread
 import androidx.annotation.RequiresApi
 
 /** FrameLayout that supports max width. */
-internal class BoundedFrameLayout @JvmOverloads constructor(
+internal class BoundedFrameLayout(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0,

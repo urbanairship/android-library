@@ -83,7 +83,6 @@ public object PushProviderBridge {
          * @param context The application context.
          * @param callback The callback.
          */
-        @JvmOverloads
         public fun execute(context: Context, callback: Runnable? = null) {
             val pushRunnableBuilder = IncomingPushRunnable.Builder(context)
                 .setMessage(pushMessage)

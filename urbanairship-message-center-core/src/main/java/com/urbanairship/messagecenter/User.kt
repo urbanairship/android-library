@@ -139,7 +139,6 @@ public class User internal constructor(
          * A flag indicating whether the user has been created.
          * @hide
          */
-        @JvmStatic
         @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public val isCreated: Boolean
             get() = MessageCenter.shared().user.isUserCreated

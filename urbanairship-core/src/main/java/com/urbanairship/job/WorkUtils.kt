@@ -29,7 +29,6 @@ internal object WorkUtils {
             .build()
     }
 
-    @JvmStatic
     @Throws(JsonException::class)
     fun convertToJobInfo(data: Data): JobInfo {
         val builder = newBuilder()

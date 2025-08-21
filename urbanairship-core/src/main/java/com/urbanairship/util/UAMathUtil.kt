@@ -20,7 +20,6 @@ public object UAMathUtil {
      * @param max The ceiling of the value.
      * @return The value constrained between the min and max.
      */
-    @JvmStatic
     public fun constrain(value: Int, min: Int, max: Int): Int {
         return value.coerceIn(min, max)
     }

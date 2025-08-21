@@ -44,14 +44,12 @@ public interface DeviceInfoProvider {
     public companion object {
         /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        @JvmStatic
         public fun newProvider(contactId: String? = null): DeviceInfoProvider {
             return DeviceInfoProviderImpl(contactId)
         }
 
         /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        @JvmStatic
         public fun newCachingProvider(contactId: String? = null): DeviceInfoProvider {
             return CachingDeviceInfoProvider(DeviceInfoProviderImpl(contactId))
         }

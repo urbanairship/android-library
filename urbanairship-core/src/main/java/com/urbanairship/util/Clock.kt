@@ -19,7 +19,6 @@ public open class Clock public constructor() {
     }
 
     public companion object {
-        @JvmField
         public val DEFAULT_CLOCK: Clock = Clock()
     }
 }

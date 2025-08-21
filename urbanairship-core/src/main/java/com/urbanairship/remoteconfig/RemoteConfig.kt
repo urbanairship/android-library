@@ -16,7 +16,7 @@ import kotlin.time.Duration.Companion.milliseconds
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class RemoteConfig @JvmOverloads constructor(
+public data class RemoteConfig(
     public val airshipConfig: RemoteAirshipConfig? = null,
     public val meteredUsageConfig: MeteredUsageConfig? = null,
     public val fetchContactRemoteData: Boolean? = null,
@@ -47,7 +47,6 @@ public data class RemoteConfig @JvmOverloads constructor(
         private const val REMOTE_DATA_REFRESH_INTERVAL_KEY = "remote_data_refresh_interval"
         private const val IAA_CONFIG = "in_app_config"
 
-        @JvmStatic
         public fun fromJson(json: JsonMap): RemoteConfig {
             return RemoteConfig(
                 airshipConfig = json.optionalField<JsonValue>(AIRSHIP_CONFIG_KEY)?.let {
@@ -66,7 +65,6 @@ public data class RemoteConfig @JvmOverloads constructor(
             )
         }
 
-        @JvmStatic
         public fun fromJson(json: JsonValue): RemoteConfig = fromJson(json.optMap())
     }
 }
@@ -77,7 +75,7 @@ public data class RemoteConfig @JvmOverloads constructor(
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class RemoteAirshipConfig @JvmOverloads constructor(
+public data class RemoteAirshipConfig(
     public val remoteDataUrl: String? = null,
     public val deviceApiUrl: String? = null,
     public val walletUrl: String? = null,
@@ -112,14 +110,13 @@ public data class RemoteAirshipConfig @JvmOverloads constructor(
 
         /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        @JvmStatic
         public fun fromJson(json: JsonValue): RemoteAirshipConfig = RemoteAirshipConfig(json)
     }
 }
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class ContactConfig @JvmOverloads constructor(
+public data class ContactConfig(
     public val foregroundIntervalMs: Long? = null,
     public val channelRegistrationMaxResolveAgeMs: Long? = null
 ) : JsonSerializable {
@@ -137,7 +134,6 @@ public data class ContactConfig @JvmOverloads constructor(
 
         /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        @JvmStatic
         public fun fromJson(json: JsonValue): ContactConfig = ContactConfig(
             foregroundIntervalMs = json.optMap().optionalField(FOREGROUND_INTERVAL_MS_KEY),
             channelRegistrationMaxResolveAgeMs = json.optMap().optionalField(CHANNEL_REGISTRATION_MAX_RESOLVE_AGE_MS_KEY)
@@ -169,17 +165,14 @@ public data class MeteredUsageConfig internal constructor(
         private val DEFAULT_INITIAL_DELAY = 15.milliseconds
         private val DEFAULT_INTERVAL = 30.milliseconds
 
-        @JvmStatic
         public fun fromJson(json: JsonMap): MeteredUsageConfig = MeteredUsageConfig(
             isEnabled = json.optionalField(IS_ENABLED_KEY) ?: false,
             initialDelay = json.optionalField<Long>(INITIAL_DELAY_MS_KEY)?.milliseconds ?: DEFAULT_INITIAL_DELAY,
             interval = json.optionalField<Long>(INTERVAL_MS_KEY)?.milliseconds ?: DEFAULT_INTERVAL,
         )
 
-        @JvmStatic
         public fun fromJson(json: JsonValue): MeteredUsageConfig = fromJson(json.optMap())
 
-        @JvmStatic
         public val DEFAULT: MeteredUsageConfig =
             MeteredUsageConfig(false, DEFAULT_INITIAL_DELAY, DEFAULT_INTERVAL)
     }

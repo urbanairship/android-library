@@ -51,7 +51,6 @@ public object UriUtils {
      * @return A Uri representation of the value, or `null` if the value
      * is not able to be parsed to a Uri.
      */
-    @JvmStatic
     public fun parse(value: Any?): Uri? {
         return when (value) {
             is String, is Uri, is URL -> Uri.parse(value.toString())

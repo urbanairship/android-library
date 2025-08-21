@@ -16,7 +16,6 @@ public class PreferenceData public constructor(
     @field:PrimaryKey
     public var key: String,
 
-    @JvmField
     @field:ColumnInfo(name = "value")
     public var value: String?
 )

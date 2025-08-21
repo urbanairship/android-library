@@ -26,7 +26,7 @@ import kotlinx.coroutines.SupervisorJob
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @OpenForTesting
-public class ExperimentManager @JvmOverloads internal constructor(
+public class ExperimentManager internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
     private val remoteData: RemoteData,

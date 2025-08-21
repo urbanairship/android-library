@@ -69,8 +69,6 @@ public class JavaScriptEnvironment private constructor(builder: Builder) {
     }
 
     public companion object {
-
-        @JvmStatic
         public fun newBuilder(): Builder {
             return Builder()
         }

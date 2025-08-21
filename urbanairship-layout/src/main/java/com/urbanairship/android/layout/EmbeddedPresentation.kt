@@ -43,7 +43,6 @@ public class EmbeddedPresentation(
     }
 
     internal companion object {
-        @JvmStatic
         @Throws(JsonException::class)
         fun fromJson(json: JsonMap): EmbeddedPresentation {
             val embeddedId = json.opt("embedded_id").string ?: throw JsonException(

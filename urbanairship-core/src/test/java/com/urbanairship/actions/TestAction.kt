@@ -6,7 +6,7 @@ import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 /**
  * Test action that tracks what methods were called
  */
-public open class TestAction @JvmOverloads public constructor(
+public open class TestAction public constructor(
     private val acceptsArguments: Boolean = true,
     private val result: ActionResult = newEmptyResult()
 ) : Action() {

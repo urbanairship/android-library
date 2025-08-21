@@ -219,7 +219,6 @@ internal class QuietTimeInterval private constructor(builder: Builder) : JsonSer
          * @param value The JSON value.
          * @return The deserialized QuietTimeInterval instance.
          */
-        @JvmStatic
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): QuietTimeInterval {
             val jsonMap = value.requireMap()
@@ -240,7 +239,6 @@ internal class QuietTimeInterval private constructor(builder: Builder) : JsonSer
          *
          * @return A new builder instance.
          */
-        @JvmStatic
         fun newBuilder(): Builder {
             return Builder()
         }

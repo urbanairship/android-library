@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class AirshipCache @JvmOverloads constructor(
+public class AirshipCache(
     context: Context,
     runtimeConfig: AirshipRuntimeConfig,
     isPersistent: Boolean = true,

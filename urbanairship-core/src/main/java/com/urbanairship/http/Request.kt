@@ -10,7 +10,7 @@ import androidx.annotation.RestrictTo
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class Request @JvmOverloads constructor(
+public data class Request(
     val url: Uri?,
     val method: String,
     val auth: RequestAuth? = null,

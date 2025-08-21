@@ -19,7 +19,6 @@ internal object AppStoreUtils {
 
     private const val AMAZON_URL = "amzn://apps/android?p="
 
-    @JvmStatic
     fun getAppStoreIntent(
         context: Context,
         platform: UAirship.Platform,

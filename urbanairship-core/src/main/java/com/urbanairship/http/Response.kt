@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public data class Response<T> @JvmOverloads constructor(
+public data class Response<T>(
     val status: Int,
     val result: T,
     val body: String? = null,

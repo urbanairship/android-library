@@ -16,7 +16,6 @@ internal sealed class FeatureFlagEvaluationException(override val message: Strin
     ) : FeatureFlagEvaluationException(makeMessage(statusCode, errorDescription)) {
 
         private companion object {
-            @JvmStatic
             private fun makeMessage(statusCode: Int? = null, errorDescription: String? = null): String {
                 var msg = "Unable to fetch data"
 

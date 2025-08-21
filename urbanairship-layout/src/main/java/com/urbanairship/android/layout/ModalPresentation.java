@@ -49,7 +49,7 @@ public class ModalPresentation extends BasePresentation {
             throw new JsonException("Failed to parse ModalPresentation! Field 'default_placement' is required.");
         }
         JsonList placementSelectorsJson = json.opt("placement_selectors").optList();
-        ModalPlacement defaultPlacement = ModalPlacement.fromJson(defaultPlacementJson);
+        ModalPlacement defaultPlacement = ModalPlacement.Companion.fromJson(defaultPlacementJson);
         List<ModalPlacementSelector> placementSelectors =
             placementSelectorsJson.isEmpty() ? null : ModalPlacementSelector.fromJsonList(placementSelectorsJson);
         boolean dismissOnTouchOutside = json.opt("dismiss_on_touch_outside").getBoolean(false);

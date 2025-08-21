@@ -79,7 +79,7 @@ import kotlinx.parcelize.RawValue
 import kotlinx.parcelize.TypeParceler
 
 @OpenForTesting
-internal class PreferenceCenterViewModel @JvmOverloads constructor(
+internal class PreferenceCenterViewModel(
     private val preferenceCenterId: String,
     private val savedStateHandle: SavedStateHandle,
     private val preferenceCenter: PreferenceCenter = PreferenceCenter.shared(),

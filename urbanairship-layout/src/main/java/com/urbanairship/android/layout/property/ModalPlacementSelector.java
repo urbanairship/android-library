@@ -35,7 +35,7 @@ public class ModalPlacementSelector {
         String windowSizeString = json.opt("window_size").optString();
         String orientationString = json.opt("orientation").optString();
 
-        ModalPlacement placement = ModalPlacement.fromJson(placementJson);
+        ModalPlacement placement = ModalPlacement.Companion.fromJson(placementJson);
         WindowSize windowSize = windowSizeString.isEmpty() ? null : WindowSize.from(windowSizeString);
         Orientation orientation = orientationString.isEmpty() ? null : Orientation.from(orientationString);
 

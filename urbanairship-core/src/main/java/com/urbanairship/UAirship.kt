@@ -763,7 +763,6 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
          * is not ready by the specified wait time.
          * @hide
          */
-        @JvmStatic
         public fun waitForTakeOff(millis: Long): UAirship? {
             synchronized(airshipLock) {
                 if (isFlying) {
@@ -1021,7 +1020,6 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
          *
          * @hide
          */
-        @JvmStatic
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         internal fun land() {
             synchronized(airshipLock) {

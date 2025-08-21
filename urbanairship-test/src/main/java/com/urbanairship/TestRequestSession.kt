@@ -25,7 +25,6 @@ public class TestRequestSession : RequestSession {
 
     private var responses: MutableList<HttpResponse> = mutableListOf()
 
-    @JvmOverloads
     public fun addResponse(
         statusCode: Int,
         body: String? = null,

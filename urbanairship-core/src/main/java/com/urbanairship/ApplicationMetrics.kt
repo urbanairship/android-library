@@ -15,7 +15,7 @@ import com.urbanairship.app.SimpleApplicationListener
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class ApplicationMetrics @JvmOverloads public constructor(
+public class ApplicationMetrics(
     context: Context,
     preferenceDataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,

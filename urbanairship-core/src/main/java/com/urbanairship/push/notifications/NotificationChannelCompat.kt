@@ -312,7 +312,6 @@ public class NotificationChannelCompat : JsonSerializable {
          * @return A list of notification channels.
          * @hide
          */
-        @JvmStatic
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun fromXml(
             context: Context,

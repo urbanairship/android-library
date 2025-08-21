@@ -105,7 +105,6 @@ public class RemoteData @VisibleForTesting internal constructor(
         return config.remoteConfig.remoteDataRefreshInterval ?: DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS
     }
 
-    @JvmOverloads
     internal constructor(
         context: Context,
         config: AirshipRuntimeConfig,

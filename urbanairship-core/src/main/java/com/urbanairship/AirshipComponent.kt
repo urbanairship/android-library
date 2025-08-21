@@ -19,7 +19,7 @@ public abstract class AirshipComponent @RestrictTo(RestrictTo.Scope.LIBRARY_GROU
      * @property dataStore The preference data store.
      * @hide
      */
-    @JvmField @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected val dataStore: PreferenceDataStore
 ) {
 

@@ -31,7 +31,6 @@ class SampleInAppMessageContentExtender : InAppMessageContentExtender {
     companion object {
         private const val DEFAULT_SIZE = 350L
 
-        @JvmStatic
         fun register() {
             InAppAutomation.shared().inAppMessaging.messageContentExtender = SampleInAppMessageContentExtender()
         }

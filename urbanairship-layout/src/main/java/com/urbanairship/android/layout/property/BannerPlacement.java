@@ -9,8 +9,6 @@ import com.urbanairship.json.JsonMap;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import static com.urbanairship.android.layout.model.SafeAreaAware.ignoreSafeAreaFromJson;
-
 public class BannerPlacement implements SafeAreaAware {
     @NonNull
     private final ConstrainedSize size;
@@ -59,7 +57,7 @@ public class BannerPlacement implements SafeAreaAware {
         VerticalPosition verticalPosition = VerticalPosition.from(positionJson);
         Position position = new Position(HorizontalPosition.CENTER, verticalPosition);
 
-        boolean ignoreSafeArea = ignoreSafeAreaFromJson(json);
+        boolean ignoreSafeArea = SafeAreaAware.Companion.ignoreSafeAreaFromJson(json);
 
         Border border = borderJson.isEmpty() ? null : Border.fromJson(borderJson);
         Color backgroundColor = backgroundJson.isEmpty() ? null : Color.fromJson(backgroundJson);

@@ -35,7 +35,7 @@ import androidx.core.view.ViewCompat
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public open class NestedScrollAirshipWebView @JvmOverloads public constructor(
+public open class NestedScrollAirshipWebView public constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = android.R.attr.webViewStyle,

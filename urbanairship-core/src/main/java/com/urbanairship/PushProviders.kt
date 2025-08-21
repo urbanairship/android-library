@@ -196,14 +196,12 @@ public open class PushProviders @VisibleForTesting protected constructor(
          * @param config The airship config.
          * @return A PushProviders class with the loaded providers.
          */
-        @JvmStatic
         public fun load(context: Context, config: AirshipConfigOptions): PushProviders {
             val providers = PushProviders(config)
             providers.init(context)
             return providers
         }
 
-        @JvmStatic
         public fun lazyLoader(
             context: Context, config: AirshipConfigOptions
         ): Supplier<PushProviders> {

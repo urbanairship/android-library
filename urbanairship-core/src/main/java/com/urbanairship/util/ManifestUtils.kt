@@ -92,7 +92,6 @@ public object ManifestUtils {
      *
      * @return `true` if local storage should be used, otherwise `false`.
      */
-    @JvmStatic
     public fun shouldEnableLocalStorage(): Boolean {
         val info = getApplicationInfo()
         return info?.metaData?.getBoolean(ENABLE_LOCAL_STORAGE, false) == true
@@ -115,7 +114,6 @@ public object ManifestUtils {
      * @return `true` if safe browsing is not disabled via the manifest, otherwise `false`.
      * @hide
      */
-    @JvmStatic
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun isWebViewSafeBrowsingEnabled(): Boolean {
         val metadata = getApplicationInfo()?.metaData ?: return true

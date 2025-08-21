@@ -21,7 +21,6 @@ public data class RemoteDataPayload(
     public companion object {
         /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        @JvmStatic
         public fun emptyPayload(type: String): RemoteDataPayload {
             return RemoteDataPayload(type, 0, JsonMap.EMPTY_MAP, null)
         }

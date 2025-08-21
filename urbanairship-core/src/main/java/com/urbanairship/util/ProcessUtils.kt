@@ -30,8 +30,7 @@ import com.urbanairship.UALog
  */
 internal object ProcessUtils {
 
-    @JvmStatic
-    public fun isMainProcess(application: Application): Boolean {
+    fun isMainProcess(application: Application): Boolean {
         val mainProcessName = application.applicationInfo.processName ?: application.packageName
         return getProcessName(application) == mainProcessName
     }
@@ -40,7 +39,7 @@ internal object ProcessUtils {
      * @return The name of the active process.
      */
     @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
-    public fun getProcessName(context: Context): String? {
+    fun getProcessName(context: Context): String? {
         if (Build.VERSION.SDK_INT >= 28) {
             return Application.getProcessName()
         }

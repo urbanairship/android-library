@@ -25,7 +25,7 @@ public abstract class BasePresentation {
             case MODAL:
                 return ModalPresentation.fromJson(json);
             case EMBEDDED:
-                return EmbeddedPresentation.fromJson(json);
+                return EmbeddedPresentation.Companion.fromJson(json);
         }
         throw new JsonException("Failed to parse presentation! Unknown type: " + typeString);
     }

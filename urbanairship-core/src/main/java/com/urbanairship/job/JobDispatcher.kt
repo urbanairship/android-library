@@ -167,7 +167,6 @@ public class JobDispatcher public constructor(
          * @param context The application context.
          * @return The [JobDispatcher].
          */
-        @JvmStatic //TODO: il remove when push module is migrated
         public fun shared(context: Context): JobDispatcher {
             return instance ?: synchronized(JobDispatcher::class.java) {
                 instance ?: JobDispatcher(context).also { instance = it }

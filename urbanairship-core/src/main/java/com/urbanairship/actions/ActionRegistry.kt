@@ -170,7 +170,7 @@ public class ActionRegistry {
     /**
      * An entry in the action registry.
      */
-    public class Entry @JvmOverloads internal constructor(
+    public class Entry internal constructor(
         private var defaultAction: Action? = null,
         names: List<String>,
         private var defaultActionClass: Class<*>? = null
