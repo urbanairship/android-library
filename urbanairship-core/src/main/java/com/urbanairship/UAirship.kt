@@ -161,9 +161,10 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
     /**
      * The [com.urbanairship.channel.AirshipChannel] instance.
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @VisibleForTesting
     public lateinit var channel: AirshipChannel
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        @VisibleForTesting
+        public set
 
     /**
      * The URL allow list is used to determine if a URL is allowed to be used for various features, including:

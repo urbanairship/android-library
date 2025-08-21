@@ -48,7 +48,7 @@ import com.urbanairship.UAirship.OnReadyCallback
  * <pre>`<meta-data android:name="com.urbanairship.autopilot"
  * android:value="com.urbanairship.push.sample.SampleAutopilot" /> `</pre>
  */
-public open class Autopilot public constructor() : OnReadyCallback {
+public open class Autopilot public constructor() {
 
     /**
      * Implement this method to provide [com.urbanairship.AirshipConfigOptions] for takeOff. This method
@@ -75,7 +75,7 @@ public open class Autopilot public constructor() : OnReadyCallback {
      * @param context The application context.
      * @return `true` to allow early takeOff, otherwise `false`.
      */
-    public fun allowEarlyTakeOff(context: Context): Boolean {
+    public open fun allowEarlyTakeOff(context: Context): Boolean {
         return true
     }
 
@@ -89,7 +89,7 @@ public open class Autopilot public constructor() : OnReadyCallback {
      * @param context The application context.
      * @return `true` to allow takeOff, otherwise `false`.
      */
-    public fun isReady(context: Context): Boolean {
+    public open fun isReady(context: Context): Boolean {
         return true
     }
 
@@ -100,8 +100,23 @@ public open class Autopilot public constructor() : OnReadyCallback {
      *
      * @param airship The UAirship instance.
      */
-    override fun onAirshipReady(airship: UAirship) {
+    @Deprecated("Use onAirshipReady(airship: UAirship, context: Context) instead.", ReplaceWith("onAirshipReady(airship, context)"))
+    public open fun onAirshipReady(airship: UAirship) {
         UALog.d("Airship ready!")
+    }
+
+    /**
+     * Called before the airship instance is returned in [UAirship.shared]. Use this method
+     * to perform any Airship customizations. This method is called on a background thread, but if airship
+     * takes longer than 5 seconds to be ready it could cause ANRs within the application.y.
+     *
+     * @param airship The UAirship instance.
+     * @param context The application context.
+     */
+    public open fun onAirshipReady(airship: UAirship, context: Context) {
+        // For backward compatibility, call the old method.
+        @Suppress("DEPRECATION")
+        onAirshipReady(airship)
     }
 
     public companion object {
@@ -195,7 +210,10 @@ public open class Autopilot public constructor() : OnReadyCallback {
                 )
             }
 
-            UAirship.takeOff(application, options, instance)
+            val callbackInstance = instance
+            UAirship.takeOff(application, options) { airship ->
+                callbackInstance?.onAirshipReady(airship, application)
+            }
             instance = null
         }
 
