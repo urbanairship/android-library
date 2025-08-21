@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.11.0 - August 21, 2025
+Minor release that enforces that incoming pushes are for the current channel ID and adds a manifest 
+metadata entry to control handling of insets for IAM banners for edge-to-edge mode.
+
+### Changes
+- Added Activity metadata entry (`com.urbanairship.iam.banner.BANNER_INSET_EDGE_TO_EDGE`) to force handling of insets for IAM banners in edge-to-edge mode.
+- Channel ID is now enforced for incoming pushes, ensuring that only pushes for the current channel ID are processed.
+
 ## Version 19.10.2 - August 13, 2025
 Patch release that fixes embedded display reporting and a potential crash in Scenes. 
 Apps that use Scenes or Embedded Content should update to this version or later.
