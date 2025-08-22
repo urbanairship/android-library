@@ -13,7 +13,7 @@ import com.urbanairship.messagecenter.ui.widget.EditableRecyclerView.Payload
 import kotlinx.parcelize.Parcelize
 
 /** Base class for a `RecyclerView` that supports editing. */
-internal abstract class EditableRecyclerView<T : Parcelable, VH : EditableViewHolder<T, *>, A>(
+internal abstract class EditableRecyclerView<T : Parcelable, VH : EditableViewHolder<T, *>, A> @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0

@@ -22,7 +22,7 @@ import com.urbanairship.preferencecenter.util.setHtml
 import com.urbanairship.util.airshipEmojiFlag
 import com.google.android.material.textfield.TextInputLayout
 
-internal class ContactChannelDialogInputView(
+internal class ContactChannelDialogInputView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
