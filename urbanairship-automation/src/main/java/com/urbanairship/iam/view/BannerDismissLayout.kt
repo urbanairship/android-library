@@ -22,7 +22,7 @@ import kotlin.math.roundToInt
 /**
  * The BannerDismissLayout allows dismissing a banner with a vertical swipe gesture.
  */
-internal class BannerDismissLayout (
+internal class BannerDismissLayout @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet?,
     defStyleAttr: Int = 0

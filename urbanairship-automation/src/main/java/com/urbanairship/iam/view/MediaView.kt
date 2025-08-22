@@ -27,7 +27,7 @@ import java.util.Locale
 /**
  * Media View
  */
-internal class MediaView(
+internal class MediaView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyle: Int = 0,
