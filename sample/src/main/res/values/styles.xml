@@ -40,20 +40,4 @@
     <style name="AppTheme.BottomNav.Indicator" parent="@style/Widget.Material3.BottomNavigationView.ActiveIndicator">
         <item name="android:color">?colorSecondary</item>
     </style>
-
-    <!-- Custom Preference Center style -->
-    <!-- Uses AppTheme colors and overrides the colorAccent. -->
-    <style name="UrbanAirship.PreferenceCenter" parent="AppTheme">
-        <item name="colorAccent">?colorSecondary</item>
-    </style>
-
-    <!-- Custom Message Center style -->
-    <!-- Uses AppTheme colors and overrides default styling to show thumbnails and a custom title. -->
-    <style name="UrbanAirship.MessageCenter" parent="AppTheme">
-        <!-- Set custom toolbar title "Inbox" -->
-        <item name="messageCenterToolbarTitle">@string/inbox</item>
-
-        <!-- Show message thumbnails in the message list -->
-        <item name="messageCenterIconsEnabled">true</item>
-    </style>
 </resources>
