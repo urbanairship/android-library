@@ -8,8 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.urbanairship.UAirship;
-
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.sample.R;
 import com.urbanairship.sample.databinding.FragmentHomeBinding;

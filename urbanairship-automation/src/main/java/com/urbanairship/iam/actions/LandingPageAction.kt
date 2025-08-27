@@ -4,7 +4,7 @@ package com.urbanairship.iam.actions
 
 import android.net.Uri
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.UrlAllowList
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
@@ -60,7 +60,7 @@ public class LandingPageAction(
         scheduleExtender: ScheduleExtender? = null) :
             this(
                 allowListChecker = { url: String ->
-                    UAirship.shared().urlAllowList.isAllowed(url, UrlAllowList.Scope.OPEN_URL)
+                    Airship.shared().urlAllowList.isAllowed(url, UrlAllowList.Scope.OPEN_URL)
                 },
                 scheduler = { schedule: AutomationSchedule ->
                     InAppAutomation.shared().upsertSchedules(listOf(schedule))

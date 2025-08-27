@@ -5,7 +5,7 @@ package com.urbanairship.android.layout.model
 import android.content.Context
 import android.view.View
 import androidx.annotation.CallSuper
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
@@ -75,7 +75,7 @@ internal abstract class ButtonModel<T, I: Button>(
                     handleViewEvent(EventHandler.Type.TAP)
                 }
 
-                evaluateClickBehaviors(view.context ?: UAirship.applicationContext)
+                evaluateClickBehaviors(view.context ?: Airship.applicationContext)
                 listener?.setEnabled(enabled = true)
             }
         }

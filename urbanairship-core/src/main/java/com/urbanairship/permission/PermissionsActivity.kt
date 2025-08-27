@@ -18,7 +18,6 @@ import androidx.core.os.bundleOf
 import androidx.core.util.Consumer
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
 import com.urbanairship.util.Clock
 
 /**

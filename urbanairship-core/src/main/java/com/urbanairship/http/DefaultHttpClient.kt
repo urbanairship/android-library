@@ -2,7 +2,7 @@ package com.urbanairship.http
 
 import android.net.Uri
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.ConnectionUtils
 import java.io.IOException
@@ -32,7 +32,7 @@ internal class DefaultHttpClient : HttpClient {
 
         return try {
             conn = ConnectionUtils.openSecureConnection(
-                UAirship.applicationContext, actualUrl
+                Airship.applicationContext, actualUrl
             ) as HttpURLConnection
 
             conn.apply {

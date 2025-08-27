@@ -2,11 +2,9 @@
 package com.urbanairship.push
 
 import android.content.Context
-import androidx.annotation.StringDef
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
-import com.urbanairship.push.PushProvider.RegistrationException
 
 /**
  * Defines a push provider.
@@ -61,7 +59,7 @@ public interface PushProvider {
         }
     }
 
-    public val platform: UAirship.Platform
+    public val platform: Airship.Platform
 
     public val deliveryType: DeliveryType
 

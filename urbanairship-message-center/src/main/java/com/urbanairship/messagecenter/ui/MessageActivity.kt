@@ -15,7 +15,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.commitNow
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.core.R
 import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment.OnMessageDeletedListener
@@ -35,7 +35,7 @@ public open class MessageActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         Autopilot.automaticTakeOff(application)
 
-        if (!UAirship.isTakingOff && !UAirship.isFlying) {
+        if (!Airship.isTakingOff && !Airship.isFlying) {
             UALog.e("MessageActivity - unable to create Activity, takeOff not called.")
             finish()
             return

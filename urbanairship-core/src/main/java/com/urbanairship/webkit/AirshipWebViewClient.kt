@@ -17,19 +17,17 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.Cancelable
 import com.urbanairship.R
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.UrlAllowList
 import com.urbanairship.actions.ActionCompletionCallback
 import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ActionRunRequestExtender
 import com.urbanairship.javascript.JavaScriptEnvironment
-import com.urbanairship.javascript.JavaScriptExecutor
 import com.urbanairship.javascript.NativeBridge
 import com.urbanairship.javascript.NativeBridge.CommandDelegate
 import java.io.BufferedInputStream
 import java.util.Locale
 import java.util.WeakHashMap
-import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * A web view client that enables the Airship Native Bridge on allowed URLs.
@@ -99,9 +97,9 @@ public constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected open fun extendJavascriptEnvironment(builder: JavaScriptEnvironment.Builder, webView: WebView): JavaScriptEnvironment.Builder {
         return builder.addGetter("getDeviceModel", Build.MODEL)
-            .addGetter("getChannelId", UAirship.shared().channel.id)
-            .addGetter("getAppKey", UAirship.shared().airshipConfigOptions.appKey)
-            .addGetter("getNamedUser", UAirship.shared().contact.namedUserId)
+            .addGetter("getChannelId", Airship.shared().channel.id)
+            .addGetter("getAppKey", Airship.shared().airshipConfigOptions.appKey)
+            .addGetter("getNamedUser", Airship.shared().contact.namedUserId)
     }
 
     /**
@@ -116,7 +114,7 @@ public constructor(
     public open fun onAirshipCommand(webView: WebView, command: String, uri: Uri) { }
 
     /**
-     * Called when UAirship.close() is triggered from the Airship Javascript interface.
+     * Called when Airship.close() is triggered from the Airship Javascript interface.
      *
      * The default behavior simulates a back key press.
      *
@@ -308,7 +306,7 @@ public constructor(
      * @return `true` if the URL is allowed, otherwise `false`.
      */
     protected fun isAllowed(url: String?): Boolean {
-        return UAirship.shared().urlAllowList.isAllowed(url, UrlAllowList.Scope.JAVASCRIPT_INTERFACE)
+        return Airship.shared().urlAllowList.isAllowed(url, UrlAllowList.Scope.JAVASCRIPT_INTERFACE)
     }
 
     @CallSuper

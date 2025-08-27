@@ -6,7 +6,7 @@ import androidx.core.util.Consumer
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipExecutors
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import java.util.concurrent.Executor
 import kotlin.time.Duration.Companion.seconds
 
@@ -22,8 +22,8 @@ public interface JobRunner {
 
         override fun run(jobInfo: JobInfo, resultConsumer: Consumer<JobResult>) {
             executor.execute {
-                val airship = UAirship.waitForTakeOff(AIRSHIP_WAIT_TIME.inWholeMilliseconds) ?: run {
-                    UALog.e("UAirship not ready. Rescheduling job: $jobInfo")
+                val airship = Airship.waitForTakeOff(AIRSHIP_WAIT_TIME.inWholeMilliseconds) ?: run {
+                    UALog.e("Airship not ready. Rescheduling job: $jobInfo")
                     resultConsumer.accept(JobResult.RETRY)
                     return@execute
                 }
@@ -50,7 +50,7 @@ public interface JobRunner {
          * @return The airship component.
          */
         private fun findAirshipComponent(
-            airship: UAirship,
+            airship: Airship,
             componentClassName: String
         ): AirshipComponent? {
             if (componentClassName.isEmpty()) {

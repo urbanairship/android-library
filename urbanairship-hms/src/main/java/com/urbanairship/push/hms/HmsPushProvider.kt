@@ -6,10 +6,9 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipVersionInfo
 import com.urbanairship.BuildConfig
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.push.PushProvider
 import com.urbanairship.push.PushProvider.RegistrationException
-import com.urbanairship.util.UAStringUtil
 import com.huawei.agconnect.config.AGConnectServicesConfig
 import com.huawei.hms.aaid.HmsInstanceId
 import com.huawei.hms.api.HuaweiApiAvailability
@@ -22,7 +21,7 @@ import com.huawei.hms.api.HuaweiApiAvailability
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class HmsPushProvider public constructor() : PushProvider, AirshipVersionInfo {
 
-    override val platform: UAirship.Platform = UAirship.Platform.ANDROID
+    override val platform: Airship.Platform = Airship.Platform.ANDROID
     override val deliveryType: PushProvider.DeliveryType = PushProvider.DeliveryType.HMS
     override val airshipVersion: String = BuildConfig.AIRSHIP_VERSION
     override val packageVersion: String = BuildConfig.SDK_VERSION

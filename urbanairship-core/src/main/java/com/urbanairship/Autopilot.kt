@@ -7,11 +7,11 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.util.Log
 import com.urbanairship.Autopilot.Companion.automaticTakeOff
-import com.urbanairship.UAirship.OnReadyCallback
+import com.urbanairship.Airship.OnReadyCallback
 
 /**
- * Autopilot allows UAirship.takeOff to be called without overriding the Application class. Typically,
- * UAirship.takeOff must be called in Application.onCreate() so that the Airship library is ready to
+ * Autopilot allows Airship.takeOff to be called without overriding the Application class. Typically,
+ * Airship.takeOff must be called in Application.onCreate() so that the Airship library is ready to
  * handle incoming events before intents are delivered to any application components. Calling takeOff
  * directly is the simplest integration, however some application frameworks do not provide a way to
  * extend the Application class. Autopilot allows you to provide your bootstrapping code in a way
@@ -83,7 +83,7 @@ public open class Autopilot public constructor() {
      * Called before [automaticTakeOff] to make sure Autopilot is ready to takeOff.
      *
      *
-     * Warning: If `false`, takeOff will not be called. Any synchronous access to UAirship
+     * Warning: If `false`, takeOff will not be called. Any synchronous access to Airship
      * will throw an exception.
      *
      * @param context The application context.
@@ -94,14 +94,14 @@ public open class Autopilot public constructor() {
     }
 
     /**
-     * Called before the airship instance is returned in [UAirship.shared]. Use this method
+     * Called before the airship instance is returned in [Airship.shared]. Use this method
      * to perform any Airship customizations. This method is called on a background thread, but if airship
      * takes longer than 5 seconds to be ready it could cause ANRs within the application.
      *
-     * @param airship The UAirship instance.
+     * @param airship The Airship instance.
      */
-    @Deprecated("Use onAirshipReady(airship: UAirship, context: Context) instead.", ReplaceWith("onAirshipReady(airship, context)"))
-    public open fun onAirshipReady(airship: UAirship) {
+    @Deprecated("Use onAirshipReady(airship: Airship, context: Context) instead.", ReplaceWith("onAirshipReady(airship, context)"))
+    public open fun onAirshipReady(airship: Airship) {
         UALog.d("Airship ready!")
     }
 
@@ -113,7 +113,7 @@ public open class Autopilot public constructor() {
      * @param airship The UAirship instance.
      * @param context The application context.
      */
-    public open fun onAirshipReady(airship: UAirship, context: Context) {
+    public open fun onAirshipReady(airship: Airship, context: Context) {
         // For backward compatibility, call the old method.
         @Suppress("DEPRECATION")
         onAirshipReady(airship)
@@ -163,7 +163,7 @@ public open class Autopilot public constructor() {
          */
         @Synchronized
         public fun automaticTakeOff(application: Application, earlyTakeoff: Boolean) {
-            if (UAirship.isFlying || UAirship.isTakingOff) {
+            if (Airship.isFlying || Airship.isTakingOff) {
                 return
             }
 
@@ -203,7 +203,7 @@ public open class Autopilot public constructor() {
 
             val options = instance?.createAirshipConfigOptions(application)
 
-            if (UAirship.isFlying || UAirship.isTakingOff) {
+            if (Airship.isFlying || Airship.isTakingOff) {
                 Log.e(
                     TAG,
                     "Airship is flying before autopilot is able to take off. Make sure" + "Autopilot.onCreateAirshipConfig is not calling takeOff directly."
@@ -211,7 +211,7 @@ public open class Autopilot public constructor() {
             }
 
             val callbackInstance = instance
-            UAirship.takeOff(application, options) { airship ->
+            Airship.takeOff(application, options) { airship ->
                 callbackInstance?.onAirshipReady(airship, application)
             }
             instance = null

@@ -6,7 +6,7 @@ import com.urbanairship.BaseTestCase
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
@@ -33,7 +33,7 @@ public class RemoteConfigManagerTest : BaseTestCase() {
 
     private val updates: MutableStateFlow<List<RemoteDataPayload>> = MutableStateFlow(emptyList())
     private val config: AirshipRuntimeConfig = mockk(relaxed = true) {
-        every { platform } returns UAirship.Platform.ANDROID
+        every { platform } returns Airship.Platform.ANDROID
     }
 
     private var remoteData: RemoteData = mockk(relaxed = true) {

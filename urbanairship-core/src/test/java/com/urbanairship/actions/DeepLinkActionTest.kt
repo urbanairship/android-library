@@ -5,8 +5,7 @@ import android.content.Intent
 import androidx.core.os.bundleOf
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.UAirship
-import com.urbanairship.base.Supplier
+import com.urbanairship.Airship
 import com.urbanairship.push.PushMessage
 import io.mockk.every
 import io.mockk.mockk
@@ -21,7 +20,7 @@ import org.robolectric.Shadows
 @RunWith(AndroidJUnit4::class)
 public class DeepLinkActionTest {
 
-    private val mockShip: UAirship = mockk()
+    private val mockShip: Airship = mockk()
     private val action = DeepLinkAction(airshipSupplier = { mockShip })
 
     @Test

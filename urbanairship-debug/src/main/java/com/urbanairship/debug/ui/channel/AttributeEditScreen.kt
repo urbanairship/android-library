@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.Provider
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.Section
@@ -244,7 +244,7 @@ internal class AttributeEditViewModel: ViewModel() {
     }
 
     fun perform() {
-        if (!UAirship.isFlying || !isComplete) {
+        if (!Airship.isFlying || !isComplete) {
             return
         }
 

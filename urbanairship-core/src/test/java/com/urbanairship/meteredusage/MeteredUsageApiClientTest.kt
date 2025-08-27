@@ -3,7 +3,7 @@ package com.urbanairship.meteredusage
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
@@ -77,7 +77,7 @@ public class MeteredUsageApiClientTest {
         assertEquals("POST", request.method)
         assertEquals(RequestAuth.GeneratedAppToken, request.auth)
         assertEquals(mapOf(
-            "X-UA-Lib-Version" to UAirship.getVersion(),
+            "X-UA-Lib-Version" to Airship.getVersion(),
             "X-UA-Device-Family" to "android",
             "Content-Type" to "application/json",
             "X-UA-Channel-ID" to channelId,

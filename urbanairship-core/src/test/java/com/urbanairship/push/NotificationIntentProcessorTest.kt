@@ -7,7 +7,7 @@ import android.content.Intent
 import androidx.core.os.bundleOf
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestApplication
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.InteractiveNotificationEvent
 import java.util.concurrent.Executor
@@ -223,7 +223,7 @@ class NotificationIntentProcessorTest {
     }
 
     private fun processIntent(intent: Intent): Boolean? {
-        return NotificationIntentProcessor(UAirship.shared(), context, intent, executor)
+        return NotificationIntentProcessor(Airship.shared(), context, intent, executor)
             .process()
             .get()
     }

@@ -12,7 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.TopBarNavigation
@@ -38,7 +38,7 @@ private fun ScreenContent(onNavigate: (String) -> Unit = {}) {
         RowItem(
             modifier = Modifier.clickable { onNavigate(ContactScreens.NamedUser.route) },
             title = "Named User",
-            details = if (UAirship.isFlying) { UAirship.shared().contact.namedUserId } else { null },
+            details = if (Airship.isFlying) { Airship.shared().contact.namedUserId } else { null },
             accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
         )
 

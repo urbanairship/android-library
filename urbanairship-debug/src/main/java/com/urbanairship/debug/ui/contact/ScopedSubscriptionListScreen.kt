@@ -31,7 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListEditor
 import com.urbanairship.debug.ui.components.DebugScreen
@@ -185,7 +185,7 @@ internal class ScopedSubscriptionListsViewModel: ViewModel() {
     }
 
     fun perform() {
-        if (!UAirship.isFlying || !isComplete) {
+        if (!Airship.isFlying || !isComplete) {
             return
         }
 
@@ -201,7 +201,7 @@ internal class ScopedSubscriptionListsViewModel: ViewModel() {
     }
 
     private fun refresh() {
-        if (!UAirship.isFlying) {
+        if (!Airship.isFlying) {
             return
         }
 

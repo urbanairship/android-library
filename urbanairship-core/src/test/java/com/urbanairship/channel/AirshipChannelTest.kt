@@ -10,8 +10,8 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
-import com.urbanairship.UAirship
-import com.urbanairship.UAirship.Companion.applicationContext
+import com.urbanairship.Airship
+import com.urbanairship.Airship.Companion.applicationContext
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
@@ -373,7 +373,7 @@ class AirshipChannelTest {
             .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setSdkVersion(UAirship.getVersion())
+            .setSdkVersion(Airship.getVersion())
             .setIsActive(false)
             .setPermissions(mapOf(
                 "location" to "granted",
@@ -387,7 +387,7 @@ class AirshipChannelTest {
 
     @Test
     fun testCraPayloadAmazon(): TestResult = runTest {
-        testConfig.setPlatform(UAirship.Platform.AMAZON)
+        testConfig.setPlatform(Airship.Platform.AMAZON)
 
         every {
             mockLocaleManager.locale
@@ -404,7 +404,7 @@ class AirshipChannelTest {
             .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setSdkVersion(UAirship.getVersion())
+            .setSdkVersion(Airship.getVersion())
             .setIsActive(false)
             .build()
 
@@ -428,7 +428,7 @@ class AirshipChannelTest {
             .setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
             .setTags(true, setOf("cool_tag"))
             .setTimezone(TimeZone.getDefault().id)
-            .setSdkVersion(UAirship.getVersion())
+            .setSdkVersion(Airship.getVersion())
             .setIsActive(false)
             .build()
 
@@ -477,7 +477,7 @@ class AirshipChannelTest {
             .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setSdkVersion(UAirship.getVersion())
+            .setSdkVersion(Airship.getVersion())
             .setIsActive(false)
             .build()
 
@@ -505,7 +505,7 @@ class AirshipChannelTest {
             .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setSdkVersion(UAirship.getVersion())
+            .setSdkVersion(Airship.getVersion())
             .build()
 
         val payload = channel.buildCraPayload()
@@ -534,7 +534,7 @@ class AirshipChannelTest {
             .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setSdkVersion(UAirship.getVersion())
+            .setSdkVersion(Airship.getVersion())
             .setIsActive(false)
             .setPermissions(mapOf(
                 "location" to "granted",

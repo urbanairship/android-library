@@ -2,7 +2,7 @@ package com.urbanairship.util
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import java.util.concurrent.Callable
 
 /**
@@ -20,6 +20,6 @@ public object AirshipComponentUtils {
      * @return A callable that returns the Airship Component when called.
      */
     public fun <T : AirshipComponent> callableForComponent(clazz: Class<T>): Callable<T> {
-        return Callable<T> { UAirship.shared().requireComponent(clazz) }
+        return Callable<T> { Airship.shared().requireComponent(clazz) }
     }
 }

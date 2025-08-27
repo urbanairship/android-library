@@ -6,7 +6,7 @@ import android.os.Bundle
 import androidx.annotation.RestrictTo
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 
 /**
  * An activity that handles notification intents.
@@ -20,7 +20,7 @@ public class NotificationProxyActivity public constructor() : Activity() {
 
         Autopilot.automaticTakeOff(this)
 
-        if (!UAirship.isTakingOff && !UAirship.isFlying) {
+        if (!Airship.isTakingOff && !Airship.isFlying) {
             UALog.e("NotificationProxyActivity - unable to receive intent, takeOff not called.")
             finish()
             return

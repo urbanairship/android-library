@@ -7,9 +7,8 @@ import android.view.KeyEvent
 import android.view.View
 import android.webkit.WebView
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.BaseTestCase
 import com.urbanairship.TestApplication
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.contacts.Contact
 import com.urbanairship.javascript.JavaScriptExecutor
 import com.urbanairship.javascript.NativeBridge
@@ -43,7 +42,7 @@ class AirshipWebViewClientTest {
     @Before
     fun setup() {
         TestApplication.getApplication().setContact(mockContact)
-        UAirship.shared().urlAllowList.addEntry("http://test-client")
+        Airship.shared().urlAllowList.addEntry("http://test-client")
         client = AirshipWebViewClient(nativeBridge)
     }
 

@@ -1,7 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newResult
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -40,11 +40,11 @@ public class FetchDeviceInfoAction public constructor() : Action() {
     override fun perform(arguments: ActionArguments): ActionResult {
 
         val properties = JsonMap.newBuilder()
-            .put(CHANNEL_ID_KEY, UAirship.shared().channel.id)
-            .put(PUSH_OPT_IN_KEY, UAirship.shared().pushManager.isOptIn)
-            .putOpt(NAMED_USER_ID_KEY, UAirship.shared().contact.namedUserId)
+            .put(CHANNEL_ID_KEY, Airship.shared().channel.id)
+            .put(PUSH_OPT_IN_KEY, Airship.shared().pushManager.isOptIn)
+            .putOpt(NAMED_USER_ID_KEY, Airship.shared().contact.namedUserId)
 
-        val tags = UAirship.shared().channel.tags
+        val tags = Airship.shared().channel.tags
         if (tags.isNotEmpty()) {
             properties.put(TAGS_KEY, JsonValue.wrapOpt(tags))
         }

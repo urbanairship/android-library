@@ -9,7 +9,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.net.toUri
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.Autopilot
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.liveupdate.LiveUpdateManager
 import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.sample.glance.SampleAppWidgetLiveUpdate
@@ -19,8 +19,8 @@ import com.urbanairship.sample.glance.SampleAppWidgetLiveUpdate
  */
 class SampleAutopilot : Autopilot() {
 
-    override fun onAirshipReady(airship: UAirship) {
-        val context = UAirship.applicationContext
+    override fun onAirshipReady(airship: Airship) {
+        val context = Airship.applicationContext
 
         val preferences = context.getSharedPreferences(NO_BACKUP_PREFERENCES, MODE_PRIVATE)
 
@@ -61,7 +61,7 @@ class SampleAutopilot : Autopilot() {
             val intent = Intent(Intent.ACTION_VIEW, uri)
                 .setPackage(context.packageName)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            UAirship.applicationContext.startActivity(intent)
+            Airship.applicationContext.startActivity(intent)
             true
         }
 

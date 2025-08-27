@@ -18,7 +18,7 @@ class JavaScriptEnvironmentTest {
             .build()
 
         val javaScript = environment.getJavaScript(ApplicationProvider.getApplicationContext())
-        val expected = "_UAirship.cool = function(){return \"neat\";};"
+        val expected = "_Airship.cool = function(){return \"neat\";};"
         Assert.assertTrue(javaScript.contains(expected))
     }
 
@@ -29,7 +29,7 @@ class JavaScriptEnvironmentTest {
             .build()
 
         val javaScript = environment.getJavaScript(ApplicationProvider.getApplicationContext())
-        val expected = "_UAirship.rad = function(){return 100;};"
+        val expected = "_Airship.rad = function(){return 100;};"
         Assert.assertTrue(javaScript.contains(expected))
     }
 
@@ -42,7 +42,7 @@ class JavaScriptEnvironmentTest {
             .build()
 
         val javaScript = environment.getJavaScript(ApplicationProvider.getApplicationContext())
-        val expected = "_UAirship.jsonMap = function(){return {\"cool\":\"story\"};};"
+        val expected = "_Airship.jsonMap = function(){return {\"cool\":\"story\"};};"
         Assert.assertTrue(javaScript.contains(expected))
     }
 
@@ -55,7 +55,7 @@ class JavaScriptEnvironmentTest {
             .build()
 
         val javaScript = environment.getJavaScript(ApplicationProvider.getApplicationContext())
-        val expected = "_UAirship.jsonArray = function(){return [\"foo\",\"bar\"];};"
+        val expected = "_Airship.jsonArray = function(){return [\"foo\",\"bar\"];};"
         Assert.assertTrue(javaScript.contains(expected))
     }
 }

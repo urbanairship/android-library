@@ -5,7 +5,6 @@ package com.urbanairship.automation
 import android.content.Context
 import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
-import com.urbanairship.UAirship
 
 internal class InAppAutomationComponent(
     context: Context,

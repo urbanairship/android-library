@@ -3,7 +3,7 @@ package com.urbanairship.analytics
 
 import android.os.Build
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,13 +32,13 @@ public class AppForegroundEventTest {
 
     @Test
     public fun testLibVersion() {
-        EventTestUtils.validateEventValue(event, Event.LIB_VERSION_KEY, UAirship.getVersion())
+        EventTestUtils.validateEventValue(event, Event.LIB_VERSION_KEY, Airship.getVersion())
     }
 
     @Test
     public fun testPackageVersion() {
         EventTestUtils.validateEventValue(
-            event, Event.PACKAGE_VERSION_KEY, UAirship.applicationContext.packageManager.getPackageInfo(UAirship.applicationContext.packageName, 0)?.versionName
+            event, Event.PACKAGE_VERSION_KEY, Airship.applicationContext.packageManager.getPackageInfo(Airship.applicationContext.packageName, 0)?.versionName
         )
     }
 

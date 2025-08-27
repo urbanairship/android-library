@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.TopBarNavigation
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
@@ -83,22 +83,22 @@ internal class NamedUserViewModel: ViewModel() {
     val userId = mutableStateOf("")
 
     init {
-        UAirship.shared {
+        Airship.shared {
             userId.value = it.contact.namedUserId ?: ""
         }
     }
 
     fun save() {
-        if (!UAirship.isFlying) {
+        if (!Airship.isFlying) {
             return
         }
 
         val update = userId.value.trim()
 
         if (update.isEmpty()) {
-            UAirship.shared().contact.reset()
+            Airship.shared().contact.reset()
         } else {
-            UAirship.shared().contact.identify(update)
+            Airship.shared().contact.identify(update)
         }
     }
 }

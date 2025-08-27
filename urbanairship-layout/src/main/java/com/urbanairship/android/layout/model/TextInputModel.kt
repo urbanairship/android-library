@@ -2,7 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -46,11 +46,11 @@ internal class TextInputModel(
 
     private val inputValidator: AirshipInputValidation.Validator?
         get() {
-            if (!UAirship.isFlying) {
+            if (!Airship.isFlying) {
                 return null
             }
 
-            return UAirship.shared().inputValidator
+            return Airship.shared().inputValidator
         }
 
     init {

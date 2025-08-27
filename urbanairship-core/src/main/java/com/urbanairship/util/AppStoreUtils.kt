@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import com.urbanairship.AirshipConfigOptions
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.google.PlayServicesUtils
 
 /**
@@ -21,7 +21,7 @@ internal object AppStoreUtils {
 
     fun getAppStoreIntent(
         context: Context,
-        platform: UAirship.Platform,
+        platform: Airship.Platform,
         configOptions: AirshipConfigOptions
     ): Intent {
         if (configOptions.appStoreUri != null) {
@@ -36,7 +36,7 @@ internal object AppStoreUtils {
 
         val packageName = context.packageName
         return when(platform) {
-            UAirship.Platform.AMAZON -> {
+            Airship.Platform.AMAZON -> {
                 Intent(Intent.ACTION_VIEW, Uri.parse(AMAZON_URL + packageName))
             }
             else -> {

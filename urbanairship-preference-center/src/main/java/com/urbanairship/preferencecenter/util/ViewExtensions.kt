@@ -5,7 +5,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.text.parseAsHtml
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.images.ImageRequestOptions
 
 internal fun TextView.setTextOrHide(text: String?) {
@@ -14,7 +14,7 @@ internal fun TextView.setTextOrHide(text: String?) {
 }
 
 internal fun ImageView.loadImage(url: String, options: ImageRequestOptions.Builder.() -> Unit = {}) {
-    UAirship.shared { airship ->
+    Airship.shared { airship ->
         val requestOptions = ImageRequestOptions.newBuilder(url).apply(options).build()
         airship.getImageLoader().load(context, this, requestOptions)
     }

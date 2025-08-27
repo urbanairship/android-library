@@ -2,7 +2,7 @@
 package com.urbanairship.analytics
 
 import android.os.Build
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 
@@ -17,9 +17,9 @@ internal class AppForegroundEvent(
         TIME_ZONE_KEY to timezone,
         DAYLIGHT_SAVINGS_KEY to isDaylightSavingsTime,
         OS_VERSION_KEY to Build.VERSION.RELEASE,
-        LIB_VERSION_KEY to UAirship.getVersion(),
-        PACKAGE_VERSION_KEY to UAirship.applicationContext.packageManager
-            .getPackageInfo(UAirship.applicationContext.packageName, 0)?.versionName,
+        LIB_VERSION_KEY to Airship.getVersion(),
+        PACKAGE_VERSION_KEY to Airship.applicationContext.packageManager
+            .getPackageInfo(Airship.applicationContext.packageName, 0)?.versionName,
         PUSH_ID_KEY to conversionData.conversionSendId,
         METADATA_KEY to conversionData.conversionMetadata,
         LAST_METADATA_KEY to conversionData.lastReceivedMetadata

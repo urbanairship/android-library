@@ -2,9 +2,8 @@
 package com.urbanairship.actions
 
 import androidx.annotation.VisibleForTesting
-import androidx.core.util.ObjectsCompat
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newErrorResult
 import com.urbanairship.actions.ActionResult.Companion.newResult
 import com.urbanairship.base.Supplier
@@ -58,8 +57,8 @@ public class SubscriptionListAction @VisibleForTesting internal constructor(
      * Default constructor.
      */
     public constructor() : this(
-        channelEditorSupplier = Supplier<SubscriptionListEditor?> { UAirship.shared().channel.editSubscriptionLists() },
-        contactEditorSupplier = Supplier<ScopedSubscriptionListEditor?> { UAirship.shared().contact.editSubscriptionLists() }
+        channelEditorSupplier = Supplier<SubscriptionListEditor?> { Airship.shared().channel.editSubscriptionLists() },
+        contactEditorSupplier = Supplier<ScopedSubscriptionListEditor?> { Airship.shared().contact.editSubscriptionLists() }
     )
 
     override fun perform(arguments: ActionArguments): ActionResult {

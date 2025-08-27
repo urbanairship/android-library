@@ -5,7 +5,7 @@ import android.app.Notification
 import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationManagerCompat
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 
 /**
  * Notification channel utils.
@@ -31,7 +31,7 @@ internal object NotificationChannelUtils {
             return channelId
         }
 
-        val registered = UAirship.shared().pushManager.notificationChannelRegistry.getNotificationChannelSync(channelId)
+        val registered = Airship.shared().pushManager.notificationChannelRegistry.getNotificationChannelSync(channelId)
 
         if (registered == null) {
             UALog.e(

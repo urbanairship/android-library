@@ -4,7 +4,7 @@
 }
 
 ## Descriptor classes
--keep public class com.urbanairship.UAirship
+-keep public class com.urbanairship.Airship
 -keep public class com.urbanairship.AirshipConfigOptions
 -keep public class com.urbanairship.push.PushMessage
 

@@ -10,7 +10,7 @@ import com.urbanairship.AirshipExecutors.newSerialExecutor
 import com.urbanairship.Cancelable
 import com.urbanairship.PendingResult
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionCompletionCallback
 import com.urbanairship.actions.ActionResult
@@ -266,7 +266,7 @@ public class NativeBridge @VisibleForTesting public constructor(
         // Create the result value
         val resultValueString = resultValue.toString()
 
-        // Create the javascript call for UAirship.finishAction(error, value, callback)
+        // Create the javascript call for Airship.finishAction(error, value, callback)
         val finishAction = String.format(
             Locale.US,
             "UAirship.finishAction(%s, %s, %s);",
@@ -318,9 +318,9 @@ public class NativeBridge @VisibleForTesting public constructor(
     private fun setNamedUserCommand(namedUser: String?) {
         val trimmedName = namedUser?.trim { it <= ' ' }
         if (trimmedName.isNullOrEmpty()) {
-            UAirship.shared().contact.reset()
+            Airship.shared().contact.reset()
         } else {
-            UAirship.shared().contact.identify(trimmedName)
+            Airship.shared().contact.identify(trimmedName)
         }
     }
 

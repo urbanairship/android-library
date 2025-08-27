@@ -29,7 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.analytics.CustomEvent
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
@@ -185,7 +185,7 @@ internal class AddEventViewModel(): ViewModel() {
     }
 
     fun save() {
-        if (!UAirship.isFlying || !isComplete) {
+        if (!Airship.isFlying || !isComplete) {
             return
         }
 

@@ -28,7 +28,7 @@ import androidx.core.text.TextUtilsCompat
 import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.core.text.toSpannable
 import androidx.core.view.descendants
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.android.layout.view.ScoreView
@@ -206,7 +206,7 @@ internal val View.localBounds: RectF
     get() = RectF(0f, 0f, width.toFloat(), height.toFloat())
 
 internal val View.isLayoutRtl: Boolean
-    get() = TextUtilsCompat.getLayoutDirectionFromLocale(UAirship.shared().locale) == View.LAYOUT_DIRECTION_RTL
+    get() = TextUtilsCompat.getLayoutDirectionFromLocale(Airship.shared().locale) == View.LAYOUT_DIRECTION_RTL
 
 
 internal fun MotionEvent.findTargetDescendant(

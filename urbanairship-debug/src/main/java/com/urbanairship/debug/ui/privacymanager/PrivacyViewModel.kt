@@ -4,7 +4,7 @@ package com.urbanairship.debug.ui.privacymanager
 
 import androidx.lifecycle.ViewModel
 import com.urbanairship.PrivacyManager
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
@@ -42,7 +42,7 @@ internal interface PrivacyViewModel {
 }
 
 internal class DefaultPrivacyViewModel(
-    private val privacyManager: PrivacyManager = UAirship.shared().privacyManager
+    private val privacyManager: PrivacyManager = Airship.shared().privacyManager
 ): PrivacyViewModel, ViewModel() {
 
     override val features: Flow<List<PrivacyFeature>> = callbackFlow {
@@ -60,7 +60,7 @@ internal class DefaultPrivacyViewModel(
     }
 
     override fun toggle(feature: PrivacyFeature) {
-        if (!UAirship.isFlying) {
+        if (!Airship.isFlying) {
             return
         }
 

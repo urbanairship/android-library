@@ -8,7 +8,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import androidx.annotation.XmlRes
 import androidx.core.util.Consumer
-import androidx.core.util.ObjectsCompat
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.AirshipExecutors
@@ -18,7 +17,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.R
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor.Companion.shared
@@ -143,7 +142,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
-     * can be accessed from [com.urbanairship.UAirship.getPushManager].
+     * can be accessed from [com.urbanairship.Airship.getPushManager].
      *
      * @param context Application context
      * @param preferenceDataStore The preferences data store.
@@ -347,7 +346,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
                 builder.setPushAddress(pushToken)
                 val provider = pushProvider
-                if (pushToken != null && provider?.platform == UAirship.Platform.ANDROID) {
+                if (pushToken != null && provider?.platform == Airship.Platform.ANDROID) {
                     builder.setDeliveryType(provider.deliveryType)
                 }
 
@@ -360,7 +359,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             return JobResult.SUCCESS
         }

@@ -9,7 +9,7 @@ import android.net.Uri;
 
 import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.Autopilot;
-import com.urbanairship.UAirship;
+import com.urbanairship.Airship;
 import com.urbanairship.messagecenter.MessageCenter;
 
 import androidx.annotation.NonNull;
@@ -29,8 +29,8 @@ public class A11yAutopilot extends Autopilot {
     private static final String FIRST_RUN_KEY = "first_run";
 
     @Override
-    public void onAirshipReady(@NonNull UAirship airship) {
-        SharedPreferences preferences = UAirship.getApplicationContext().getSharedPreferences(NO_BACKUP_PREFERENCES, Context.MODE_PRIVATE);
+    public void onAirshipReady(@NonNull Airship airship) {
+        SharedPreferences preferences = Airship.getApplicationContext().getSharedPreferences(NO_BACKUP_PREFERENCES, Context.MODE_PRIVATE);
 
         boolean isFirstRun = preferences.getBoolean(FIRST_RUN_KEY, true);
         if (isFirstRun) {
@@ -48,7 +48,7 @@ public class A11yAutopilot extends Autopilot {
                         .setVibrationEnabled(false)
                         .build();
 
-        Context context = UAirship.getApplicationContext();
+        Context context = Airship.getApplicationContext();
         NotificationManagerCompat.from(context).createNotificationChannel(sportsChannel);
 
         MessageCenter.shared().setOnShowMessageCenterListener(messageId -> {
@@ -65,7 +65,7 @@ public class A11yAutopilot extends Autopilot {
                     .setPackage(context.getPackageName())
                     .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-            UAirship.getApplicationContext().startActivity(intent);
+            Airship.getApplicationContext().startActivity(intent);
             return true;
         });
 

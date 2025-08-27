@@ -51,12 +51,12 @@ public class TestApplication public constructor() : Application(), TestLifecycle
         val pushProviders =
             Supplier<PushProviders> { TestPushProviders(testRuntimeConfig.configOptions) }
 
-        UAirship.application = this
-        UAirship.isFlying = true
-        UAirship.isTakingOff = true
+        Airship.application = this
+        Airship.isFlying = true
+        Airship.isTakingOff = true
 
         val audienceOverridesProvider = AudienceOverridesProvider()
-        val airship = UAirship(airshipConfigOptions)
+        val airship = Airship(airshipConfigOptions)
         airship.preferenceDataStore = preferenceDataStore
         airship.localeManager = LocaleManager(this, preferenceDataStore)
         airship.runtimeConfig = testRuntimeConfig
@@ -109,7 +109,7 @@ public class TestApplication public constructor() : Application(), TestLifecycle
         airship.actionRegistry = ActionRegistry()
         airship.actionRegistry.registerDefaultActions(this)
 
-        UAirship.sharedAirship = airship
+        Airship.sharedAirship = airship
     }
 
     override fun onTerminate() {
@@ -117,28 +117,28 @@ public class TestApplication public constructor() : Application(), TestLifecycle
         preferenceDataStore.tearDown()
     }
 
-    public fun setPlatform(platform: UAirship.Platform) {
+    public fun setPlatform(platform: Airship.Platform) {
         testRuntimeConfig.setPlatform(platform)
     }
 
     public fun setPrivacyManager(privacyManager: PrivacyManager) {
-        UAirship.shared().privacyManager = privacyManager
+        Airship.shared().privacyManager = privacyManager
     }
 
     public fun setApplicationMetrics(metrics: ApplicationMetrics) {
-        UAirship.shared().applicationMetrics = metrics
+        Airship.shared().applicationMetrics = metrics
     }
 
     public fun setContact(contact: Contact) {
-        UAirship.shared().contact = contact
+        Airship.shared().contact = contact
     }
 
     public fun setAnalytics(analytics: Analytics) {
-        UAirship.shared().analytics = analytics
+        Airship.shared().analytics = analytics
     }
 
     public fun setOptions(options: AirshipConfigOptions) {
-        UAirship.shared().airshipConfigOptions = options
+        Airship.shared().airshipConfigOptions = options
     }
 
     override fun afterTest(method: Method) {
@@ -158,15 +158,15 @@ public class TestApplication public constructor() : Application(), TestLifecycle
     }
 
     public fun setChannel(channel: AirshipChannel) {
-        UAirship.shared().channel = channel
+        Airship.shared().channel = channel
     }
 
     public fun setPushManager(pushManager: PushManager) {
-        UAirship.shared().pushManager = pushManager
+        Airship.shared().pushManager = pushManager
     }
 
     public fun setChannelCapture(channelCapture: ChannelCapture) {
-        UAirship.shared().channelCapture = channelCapture
+        Airship.shared().channelCapture = channelCapture
     }
 
     public companion object {

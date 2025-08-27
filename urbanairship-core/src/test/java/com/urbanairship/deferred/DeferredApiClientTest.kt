@@ -3,7 +3,7 @@ package com.urbanairship.deferred
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestRequestSession
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.TagGroupsMutation
@@ -35,7 +35,7 @@ public class DeferredApiClientTest {
 
     @Before
     public fun setup() {
-        every { runtimeConfig.platform } returns UAirship.Platform.ANDROID
+        every { runtimeConfig.platform } returns Airship.Platform.ANDROID
         apiClient = DeferredApiClient(runtimeConfig, requestSession.toSuspendingRequestSession())
     }
 

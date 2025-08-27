@@ -3,10 +3,8 @@
 package com.urbanairship.debug.ui.automations
 
 import android.content.res.Configuration
-import android.inputmethodservice.Keyboard.Row
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -26,10 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.debug.ui.components.DebugScreen
-import com.urbanairship.debug.ui.components.DebugSettingItem
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.Section
 import com.urbanairship.debug.ui.components.TopBarNavigation
@@ -112,13 +109,13 @@ internal class DefaultAutomationRootScreenViewModel: AutomationRootScreenViewMod
     override val displayInterval: State<Long> = mutableState
 
     init {
-        UAirship.shared {
+        Airship.shared {
             mutableState.value = InAppAutomation.shared().inAppMessaging.displayInterval
         }
     }
 
     override fun setDisplayInterval(value: Long) {
-        if (!UAirship.isFlying) {
+        if (!Airship.isFlying) {
             return
         }
 

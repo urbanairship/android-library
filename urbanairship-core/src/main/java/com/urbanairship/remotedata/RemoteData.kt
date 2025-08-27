@@ -12,8 +12,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
-import com.urbanairship.UAirship.Companion.applicationContext
+import com.urbanairship.Airship
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.GlobalActivityMonitor
@@ -236,7 +235,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     /** @hide */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
         if (ACTION_REFRESH == jobInfo.action) {
             return runBlocking {
                 refreshManager.performRefresh(

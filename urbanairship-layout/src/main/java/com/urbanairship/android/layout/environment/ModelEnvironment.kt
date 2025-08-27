@@ -1,7 +1,7 @@
 package com.urbanairship.android.layout.environment
 
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.model.PagerNextFallback
 import com.urbanairship.android.layout.property.AttributeValue
@@ -95,9 +95,9 @@ internal sealed class LayoutEvent {
 
 internal class AttributeHandler(
     private val contactEditorFactory: () -> AttributeEditor =
-        { UAirship.shared().contact.editAttributes() },
+        { Airship.shared().contact.editAttributes() },
     private val channelEditorFactory: () -> AttributeEditor =
-        { UAirship.shared().channel.editAttributes() }
+        { Airship.shared().channel.editAttributes() }
 ) {
 
     fun update(attributes: Map<AttributeName, AttributeValue>) {

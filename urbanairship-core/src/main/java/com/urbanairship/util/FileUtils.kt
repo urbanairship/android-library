@@ -3,7 +3,7 @@ package com.urbanairship.util
 
 import androidx.annotation.WorkerThread
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.util.ConnectionUtils.openSecureConnection
 import java.io.Closeable
 import java.io.File
@@ -62,7 +62,7 @@ public object FileUtils {
         var conn: URLConnection? = null
 
         try {
-            conn = openSecureConnection(UAirship.applicationContext, url)
+            conn = openSecureConnection(Airship.applicationContext, url)
             conn.connectTimeout = NETWORK_TIMEOUT_MS
             conn.useCaches = true
 

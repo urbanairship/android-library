@@ -2,9 +2,8 @@
 package com.urbanairship.actions
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.BaseTestCase
 import com.urbanairship.TestApplication
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.UrlAllowList
 import io.mockk.every
 import io.mockk.mockk
@@ -27,7 +26,7 @@ public class WalletActionTest {
     @Before
     public fun setup() {
         // Default the platform to Android
-        TestApplication.getApplication().setPlatform(UAirship.Platform.ANDROID)
+        TestApplication.getApplication().setPlatform(Airship.Platform.ANDROID)
     }
 
     /**
@@ -44,7 +43,7 @@ public class WalletActionTest {
      */
     @Test
     public fun testRejectsAdmPlatform() {
-        TestApplication.getApplication().setPlatform(UAirship.Platform.ANDROID)
+        TestApplication.getApplication().setPlatform(Airship.Platform.ANDROID)
         assertFalse(action.acceptsArguments(testArgs))
     }
 

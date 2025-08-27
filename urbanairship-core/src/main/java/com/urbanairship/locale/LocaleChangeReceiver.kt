@@ -6,7 +6,7 @@ import android.content.Intent
 import androidx.annotation.RestrictTo
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 
 /**
  * Broadcast receiver that listens for [Intent.ACTION_LOCALE_CHANGED].
@@ -21,12 +21,12 @@ public class LocaleChangeReceiver public constructor() : BroadcastReceiver() {
             return
         }
 
-        if (!UAirship.isTakingOff && !UAirship.isFlying) {
+        if (!Airship.isTakingOff && !Airship.isFlying) {
             UALog.e("LocaleChangedReceiver - unable to receive intent, takeOff not called.")
             return
         }
 
         Autopilot.automaticTakeOff(context)
-        UAirship.shared().localeManager.onDeviceLocaleChanged()
+        Airship.shared().localeManager.onDeviceLocaleChanged()
     }
 }

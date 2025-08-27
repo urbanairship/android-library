@@ -2,8 +2,7 @@
 package com.urbanairship.util
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.UAirship
-import com.urbanairship.json.JsonMap
+import com.urbanairship.Airship
 import com.urbanairship.json.JsonMatcher
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonSerializable
@@ -26,8 +25,8 @@ public object VersionUtils {
     private const val IVY_PATTERN_GREATER_THAN_OR_EQUAL_TO = "[%s,)"
 
     private fun getPlatformName(): String {
-        return when(UAirship.shared().platformType) {
-            UAirship.Platform.AMAZON -> AMAZON_VERSION_KEY
+        return when(Airship.shared().platformType) {
+            Airship.Platform.AMAZON -> AMAZON_VERSION_KEY
             else -> ANDROID_VERSION_KEY
         }
     }

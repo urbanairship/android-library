@@ -5,7 +5,7 @@ import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import androidx.core.util.Supplier
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.UrlAllowList
 import com.urbanairship.actions.ActionResult.Companion.newResult
 import com.urbanairship.util.UriUtils
@@ -37,7 +37,7 @@ public open class OpenExternalUrlAction @VisibleForTesting internal constructor(
     /**
      * Default constructor.
      */
-    public constructor() : this(Supplier<UrlAllowList> { UAirship.shared().urlAllowList })
+    public constructor() : this(Supplier<UrlAllowList> { Airship.shared().urlAllowList })
 
     override fun perform(arguments: ActionArguments): ActionResult {
         val uri = UriUtils.parse(arguments.value.string) ?: throw IllegalArgumentException("Invalid URL")
@@ -47,7 +47,7 @@ public open class OpenExternalUrlAction @VisibleForTesting internal constructor(
         val intent = Intent(Intent.ACTION_VIEW, uri)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        UAirship.applicationContext.startActivity(intent)
+        Airship.applicationContext.startActivity(intent)
         return newResult(arguments.value)
     }
 

@@ -14,33 +14,33 @@ class PushProvidersTest {
     fun testValidPushProvider() {
         verifyInvalidProvider(
             TestPushProvider(
-                UAirship.Platform.AMAZON, PushProvider.DeliveryType.FCM
+                Airship.Platform.AMAZON, PushProvider.DeliveryType.FCM
             )
         )
         verifyInvalidProvider(
             TestPushProvider(
-                UAirship.Platform.AMAZON, PushProvider.DeliveryType.HMS
+                Airship.Platform.AMAZON, PushProvider.DeliveryType.HMS
             )
         )
         verifyInvalidProvider(
             TestPushProvider(
-                UAirship.Platform.ANDROID, PushProvider.DeliveryType.ADM
+                Airship.Platform.ANDROID, PushProvider.DeliveryType.ADM
             )
         )
 
         verifyValidProvider(
             TestPushProvider(
-                UAirship.Platform.AMAZON, PushProvider.DeliveryType.ADM
+                Airship.Platform.AMAZON, PushProvider.DeliveryType.ADM
             )
         )
         verifyValidProvider(
             TestPushProvider(
-                UAirship.Platform.ANDROID, PushProvider.DeliveryType.HMS
+                Airship.Platform.ANDROID, PushProvider.DeliveryType.HMS
             )
         )
         verifyValidProvider(
             TestPushProvider(
-                UAirship.Platform.ANDROID, PushProvider.DeliveryType.FCM
+                Airship.Platform.ANDROID, PushProvider.DeliveryType.FCM
             )
         )
     }

@@ -9,7 +9,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.urbanairship.AirshipExecutors
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.Action.Situation
 import java.util.concurrent.Executor
 import java.util.concurrent.Semaphore
@@ -48,7 +48,7 @@ public open class ActionRunRequest {
      * Creates a new action RunRequest.
      *
      * @param actionName The action name in the registry.
-     * @param registry Optional - The action registry to look up the action. Defaults to [com.urbanairship.UAirship.getActionRegistry]
+     * @param registry Optional - The action registry to look up the action. Defaults to [com.urbanairship.Airship.getActionRegistry]
      */
     private constructor(actionName: String, registry: ActionRegistry?) {
         this.actionName = actionName
@@ -240,7 +240,7 @@ public open class ActionRunRequest {
      */
     private fun lookUpAction(actionName: String): ActionRegistry.Entry? {
         return registry?.getEntry(actionName)
-            ?: UAirship.shared().actionRegistry.getEntry(actionName)
+            ?: Airship.shared().actionRegistry.getEntry(actionName)
     }
 
     /**
@@ -315,7 +315,7 @@ public open class ActionRunRequest {
          *
          * @param actionName The action name in the registry.
          * @param registry Optional - The action registry to look up the action. If null, the registry
-         * from [com.urbanairship.UAirship.getActionRegistry] will be used.
+         * from [com.urbanairship.Airship.getActionRegistry] will be used.
          * @return An action run request.
          */
         @JvmStatic

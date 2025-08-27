@@ -5,7 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestApplication
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.cache.AirshipCache
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMatcher
@@ -57,7 +57,7 @@ public class AudienceSelectorTest {
 
     @Test
     public fun testAndroidVersionMatcher() {
-        TestApplication.getApplication().setPlatform(UAirship.Platform.ANDROID)
+        TestApplication.getApplication().setPlatform(Airship.Platform.ANDROID)
         val audience = AudienceSelector.newBuilder()
                 .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
                 .build()
@@ -75,7 +75,7 @@ public class AudienceSelectorTest {
 
     @Test
     public fun testAmazonVersionMatcher() {
-        TestApplication.getApplication().setPlatform(UAirship.Platform.AMAZON)
+        TestApplication.getApplication().setPlatform(Airship.Platform.AMAZON)
         val audience = AudienceSelector.newBuilder()
             .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
             .build()

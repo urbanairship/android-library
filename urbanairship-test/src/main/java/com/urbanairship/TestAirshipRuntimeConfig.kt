@@ -5,16 +5,14 @@ import android.annotation.SuppressLint
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.config.AirshipRuntimeConfig
-import com.urbanairship.config.RemoteConfigObserver
 import com.urbanairship.http.RequestSession
-import com.urbanairship.http.SuspendingRequestSession
 import com.urbanairship.remoteconfig.RemoteConfig
 
 @SuppressLint("VisibleForTests")
 public class TestAirshipRuntimeConfig private constructor(
     private val configProvider: SettableProvider<AirshipConfigOptions>,
     dataStore: PreferenceDataStore,
-    private val platformProvider: SettableProvider<UAirship.Platform>,
+    private val platformProvider: SettableProvider<Airship.Platform>,
     remoteConfig: RemoteConfig?,
     session: RequestSession? = null
 ) : AirshipRuntimeConfig(
@@ -26,7 +24,7 @@ public class TestAirshipRuntimeConfig private constructor(
             AirshipConfigOptions.Builder().setAppKey("appKey").setAppSecret("appSecret").build()
         ),
         PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext<Context>()),
-        SettableProvider(UAirship.Platform.ANDROID),
+        SettableProvider(Airship.Platform.ANDROID),
         remoteConfig,
         session
     )
@@ -35,7 +33,7 @@ public class TestAirshipRuntimeConfig private constructor(
         remoteConfig?.let { updateRemoteConfig(it) }
     }
 
-    fun setPlatform(platform: UAirship.Platform) {
+    fun setPlatform(platform: Airship.Platform) {
         platformProvider.value = platform
     }
 

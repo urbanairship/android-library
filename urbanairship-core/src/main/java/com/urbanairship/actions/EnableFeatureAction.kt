@@ -1,7 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.base.Supplier
 import com.urbanairship.json.JsonException
 import com.urbanairship.permission.Permission
@@ -30,7 +30,7 @@ public class EnableFeatureAction @JvmOverloads public constructor(
     permissionsManagerSupplier: Supplier<PermissionsManager> = object :
         Supplier<PermissionsManager> {
         override fun get(): PermissionsManager {
-            return UAirship.shared().permissionsManager
+            return Airship.shared().permissionsManager
         }
     }
 ) : PromptPermissionAction(permissionsManagerSupplier) {

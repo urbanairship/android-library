@@ -6,7 +6,7 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.debug.ui.events.EventEntity
 import com.urbanairship.debug.ui.push.PushEntity
@@ -20,7 +20,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 
 /**
- * Debug manager. Initialized by UAirship instance during takeOff.
+ * Debug manager. Initialized by Airship instance during takeOff.
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -37,7 +37,7 @@ internal class DebugManager(
 
     companion object {
         fun shared(): DebugManager {
-            return UAirship.shared().requireComponent(DebugManager::class.java)
+            return Airship.shared().requireComponent(DebugManager::class.java)
         }
     }
 

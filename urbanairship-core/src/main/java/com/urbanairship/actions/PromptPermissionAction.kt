@@ -2,13 +2,10 @@
 package com.urbanairship.actions
 
 import android.app.Activity
-import android.os.Bundle
 import android.os.ResultReceiver
 import androidx.annotation.Keep
 import androidx.core.os.bundleOf
-import androidx.core.util.Consumer
-import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 import com.urbanairship.actions.ActionResult.Companion.newErrorResult
 import com.urbanairship.base.Supplier
@@ -16,10 +13,8 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionPromptFallback
-import com.urbanairship.permission.PermissionRequestResult
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
-import java.util.Objects
 import java.util.concurrent.ExecutionException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -54,7 +49,7 @@ public open class PromptPermissionAction public constructor(
     private val scope = CoroutineScope(Dispatchers.Main.immediate)
 
     @Keep
-    public constructor() : this(Supplier<PermissionsManager> { UAirship.shared().permissionsManager })
+    public constructor() : this(Supplier<PermissionsManager> { Airship.shared().permissionsManager })
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
         // Validate situation

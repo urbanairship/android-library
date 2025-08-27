@@ -13,7 +13,7 @@ import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.job.JobDispatcher
@@ -150,7 +150,7 @@ public constructor(
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
         return if (privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
             runBlocking {
                 inbox.performUpdate().fold(onSuccess = { result ->
@@ -292,7 +292,7 @@ public constructor(
          */
         @JvmStatic
         public fun shared(): MessageCenter =
-            UAirship.shared().requireComponent(MessageCenter::class.java)
+            Airship.shared().requireComponent(MessageCenter::class.java)
 
         /**
          * Parses the message Id from a message center intent.

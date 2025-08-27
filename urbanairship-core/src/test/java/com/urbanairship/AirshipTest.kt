@@ -6,7 +6,7 @@ import android.net.Uri
 import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.UAirship.OnReadyCallback
+import com.urbanairship.Airship.OnReadyCallback
 import com.urbanairship.actions.DeepLinkListener
 import kotlin.concurrent.Volatile
 import io.mockk.Called
@@ -23,7 +23,7 @@ import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowApplication
 
 @RunWith(AndroidJUnit4::class)
-class UAirshipTest {
+class AirshipTest {
 
     private var configOptions = AirshipConfigOptions.Builder()
         .setProductionAppKey("0000000000000000000000")
@@ -37,12 +37,12 @@ class UAirshipTest {
     @Before
     fun setup() {
         // TestApplication automatically sets up airship for other tests, clean it up with land.
-        UAirship.land()
+        Airship.land()
     }
 
     @After
     fun cleanup() {
-        UAirship.land()
+        Airship.land()
     }
 
     /**
@@ -51,14 +51,14 @@ class UAirshipTest {
     @Test
     fun testAsyncTakeOff() {
         val testCallback = TestCallback()
-        UAirship.shared(testCallback)
+        Airship.shared(testCallback)
 
         val cancelCallback = TestCallback()
-        val cancelable = UAirship.shared(cancelCallback)
+        val cancelable = Airship.shared(cancelCallback)
         cancelable.cancel()
 
         val takeOffCallback: TestCallback = object : TestCallback() {
-            override fun onAirshipReady(airship: UAirship) {
+            override fun onAirshipReady(airship: Airship) {
                 super.onAirshipReady(airship)
                 Assert.assertFalse(
                     "Take off callback should be called first", testCallback.onReadyCalled
@@ -66,10 +66,10 @@ class UAirshipTest {
             }
         }
 
-        UAirship.takeOff(application, configOptions, takeOffCallback)
+        Airship.takeOff(application, configOptions, takeOffCallback)
 
         // Block until its ready
-        UAirship.shared()
+        Airship.shared()
         Shadows.shadowOf(looper).runToEndOfTasks()
 
         Assert.assertTrue(testCallback.onReadyCalled)
@@ -79,7 +79,7 @@ class UAirshipTest {
         // Verify the airship ready intent was fired
         val intents = getApplicationShadow().broadcastIntents
         Assert.assertEquals(intents.size, 1)
-        Assert.assertEquals(intents[0].action, UAirship.ACTION_AIRSHIP_READY)
+        Assert.assertEquals(intents[0].action, Airship.ACTION_AIRSHIP_READY)
         Assert.assertNull(intents[0].extras)
     }
 
@@ -90,14 +90,14 @@ class UAirshipTest {
     @Test
     fun testAsyncTakeOffWithExtendedBroadcasts() {
         val testCallback = TestCallback()
-        UAirship.shared(testCallback)
+        Airship.shared(testCallback)
 
         val cancelCallback = TestCallback()
-        val cancelable = UAirship.shared(cancelCallback)
+        val cancelable = Airship.shared(cancelCallback)
         cancelable.cancel()
 
         val takeOffCallback: TestCallback = object : TestCallback() {
-            override fun onAirshipReady(airship: UAirship) {
+            override fun onAirshipReady(airship: Airship) {
                 super.onAirshipReady(airship)
                 Assert.assertFalse(
                     "Take off callback should be called first", testCallback.onReadyCalled
@@ -112,10 +112,10 @@ class UAirshipTest {
             .setExtendedBroadcastsEnabled(true)
             .build()
 
-        UAirship.takeOff(application, configOptions, takeOffCallback)
+        Airship.takeOff(application, configOptions, takeOffCallback)
 
         // Block until its ready
-        UAirship.shared()
+        Airship.shared()
         Shadows.shadowOf(looper).runToEndOfTasks()
 
         Assert.assertTrue(testCallback.onReadyCalled)
@@ -125,7 +125,7 @@ class UAirshipTest {
         // Verify the airship ready intent was fired
         val intents = getApplicationShadow().broadcastIntents
         Assert.assertEquals(intents.size, 1)
-        Assert.assertEquals(intents[0].action, UAirship.ACTION_AIRSHIP_READY)
+        Assert.assertEquals(intents[0].action, Airship.ACTION_AIRSHIP_READY)
         val extras = intents[0].extras
         Assert.assertNotNull(extras)
         Assert.assertEquals(extras?.getInt("payload_version"), 1)
@@ -140,14 +140,14 @@ class UAirshipTest {
      */
     @Test(expected = IllegalStateException::class)
     fun testSharedBeforeTakeOff() {
-        UAirship.shared()
+        Airship.shared()
     }
 
     @Test
     fun testDeepLinkListener() {
-        UAirship.takeOff(application, configOptions)
+        Airship.takeOff(application, configOptions)
 
-        val airship = UAirship.shared()
+        val airship = Airship.shared()
 
         val mockListener: DeepLinkListener = mockk()
         airship.deepLinkListener = mockListener
@@ -172,9 +172,9 @@ class UAirshipTest {
 
     @Test
     fun testDeepLinkNotHandledByListener() {
-        UAirship.takeOff(application, configOptions)
+        Airship.takeOff(application, configOptions)
 
-        val airship = UAirship.shared()
+        val airship = Airship.shared()
 
         val mockListener: DeepLinkListener = mockk()
         airship.deepLinkListener = mockListener
@@ -187,9 +187,9 @@ class UAirshipTest {
     @Test
     fun testAirshipDeepLinks() {
         // App Settings deeplink
-        UAirship.takeOff(application, configOptions)
+        Airship.takeOff(application, configOptions)
 
-        val airship = UAirship.shared()
+        val airship = Airship.shared()
 
         var deepLink = "uairship://app_settings"
         var uri = Uri.parse(deepLink)
@@ -220,9 +220,9 @@ class UAirshipTest {
 
     @Test
     fun testAirshipComponentsDeepLinks() {
-        UAirship.takeOff(application, configOptions)
+        Airship.takeOff(application, configOptions)
 
-        val airship = UAirship.shared()
+        val airship = Airship.shared()
 
         val deepLink = "uairship://neat"
         val uri = Uri.parse(deepLink)
@@ -253,9 +253,9 @@ class UAirshipTest {
 
     @Test
     fun testAirshipComponentsDeepLinksFallbackDeepLinkListener() {
-        UAirship.takeOff(application, configOptions)
+        Airship.takeOff(application, configOptions)
 
-        val airship = UAirship.shared()
+        val airship = Airship.shared()
 
         val deepLink = "uairship://neat"
         val uri = Uri.parse(deepLink)
@@ -276,9 +276,9 @@ class UAirshipTest {
 
     @Test
     fun testAirshipComponentsDeepLinksNotHandled() {
-        UAirship.takeOff(application, configOptions)
+        Airship.takeOff(application, configOptions)
 
-        val airship = UAirship.shared()
+        val airship = Airship.shared()
 
         val deepLink = "uairship://neat"
         val uri = Uri.parse(deepLink)
@@ -309,7 +309,7 @@ class UAirshipTest {
         @Volatile
         var onReadyCalled: Boolean = false
 
-        override fun onAirshipReady(airship: UAirship) {
+        override fun onAirshipReady(airship: Airship) {
             onReadyCalled = true
         }
     }

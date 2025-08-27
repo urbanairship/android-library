@@ -13,7 +13,7 @@ import com.urbanairship.AirshipExecutors
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.analytics.data.EventManager
 import com.urbanairship.analytics.location.RegionEvent
 import com.urbanairship.app.ActivityMonitor
@@ -249,7 +249,7 @@ public constructor(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
         return when(jobInfo.action) {
             EventManager.ACTION_SEND -> {
                 if (!isEnabled) {
@@ -558,7 +558,7 @@ public constructor(
 
             // Airship info
             headers["X-UA-Device-Family"] = runtimeConfig.platform.stringValue
-            headers["X-UA-Lib-Version"] = UAirship.getVersion()
+            headers["X-UA-Lib-Version"] = Airship.getVersion()
             headers["X-UA-App-Key"] = runtimeConfig.configOptions.appKey
             headers["X-UA-In-Production"] = runtimeConfig.configOptions.inProduction.toString()
             headers["X-UA-Channel-ID"] = airshipChannel.id ?: ""

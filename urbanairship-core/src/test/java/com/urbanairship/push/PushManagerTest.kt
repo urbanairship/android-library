@@ -13,7 +13,7 @@ import com.urbanairship.R
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestApplication
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.base.Supplier
 import com.urbanairship.channel.AirshipChannel
@@ -332,7 +332,7 @@ public class PushManagerTest {
         pushManager.userNotificationsEnabled = true
         every { mockNotificationManager.areNotificationsEnabled() } returns true
 
-        every { mockPushProvider.platform } returns UAirship.Platform.ANDROID
+        every { mockPushProvider.platform } returns Airship.Platform.ANDROID
 
         val builder = ChannelRegistrationPayload.Builder()
         val payload = extender?.extend(builder)?.build()
@@ -387,7 +387,7 @@ public class PushManagerTest {
         Assert.assertNotNull(extender)
 
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.platform } returns UAirship.Platform.ANDROID
+        every { mockPushProvider.platform } returns Airship.Platform.ANDROID
         every { mockPushProvider.deliveryType } returns PushProvider.DeliveryType.FCM
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
 

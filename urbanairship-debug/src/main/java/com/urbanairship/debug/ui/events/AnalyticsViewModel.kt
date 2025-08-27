@@ -3,7 +3,7 @@
 package com.urbanairship.debug.ui.events
 
 import androidx.lifecycle.ViewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.analytics.Analytics
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emptyFlow
@@ -17,10 +17,10 @@ internal class DefaultAnalyticsViewModel: AnalyticsViewModel, ViewModel() {
 
     private val analytics: Analytics?
         get() {
-            return if (!UAirship.isFlying) {
+            return if (!Airship.isFlying) {
                 null
             } else {
-                UAirship.shared().analytics
+                Airship.shared().analytics
             }
         }
 

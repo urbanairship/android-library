@@ -9,7 +9,7 @@ import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.contacts.Contact
@@ -105,7 +105,7 @@ public class AirshipMeteredUsage internal constructor(
         scheduleUpload(delay = 0.seconds)
     }
 
-    override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
         if (!usageConfig.get().isEnabled) {
             UALog.v { "Config disabled, skipping upload." }
             return JobResult.SUCCESS

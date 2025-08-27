@@ -5,7 +5,7 @@ package com.urbanairship.sample.preference;
 import android.content.Context;
 import android.util.AttributeSet;
 
-import com.urbanairship.UAirship;
+import com.urbanairship.Airship;
 import com.urbanairship.util.UAStringUtil;
 
 import androidx.preference.EditTextPreference;
@@ -23,9 +23,9 @@ public class NamedUserPreference extends EditTextPreference {
     public void setText(String text) {
         String namedUser = UAStringUtil.isEmpty(text) ? null : text;
         if (UAStringUtil.isEmpty(text)) {
-            UAirship.shared().getContact().reset();
+            Airship.shared().getContact().reset();
         } else {
-            UAirship.shared().getContact().identify(text);
+            Airship.shared().getContact().identify(text);
         }
 
         notifyChanged();
@@ -33,12 +33,12 @@ public class NamedUserPreference extends EditTextPreference {
 
     @Override
     public String getText() {
-        return UAirship.shared().getContact().getNamedUserId();
+        return Airship.shared().getContact().getNamedUserId();
     }
 
     @Override
     public String getSummary() {
-        return UAirship.shared().getContact().getNamedUserId();
+        return Airship.shared().getContact().getNamedUserId();
     }
 
     @Override

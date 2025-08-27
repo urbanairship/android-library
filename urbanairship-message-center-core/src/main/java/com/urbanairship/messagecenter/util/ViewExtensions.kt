@@ -3,7 +3,7 @@ package com.urbanairship.messagecenter.util
 import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.images.ImageRequestOptions
 
 public fun TextView.setTextOrHide(text: String?) {
@@ -12,7 +12,7 @@ public fun TextView.setTextOrHide(text: String?) {
 }
 
 public fun ImageView.loadImage(url: String, options: ImageRequestOptions.Builder.() -> Unit = {}) {
-    UAirship.shared { airship ->
+    Airship.shared { airship ->
         val requestOptions = ImageRequestOptions.newBuilder(url).apply(options).build()
         airship.getImageLoader().load(context, this, requestOptions)
     }

@@ -14,8 +14,8 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.UALog.logLevel
-import com.urbanairship.UAirship
-import com.urbanairship.UAirship.Companion.applicationContext
+import com.urbanairship.Airship
+import com.urbanairship.Airship.Companion.applicationContext
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
@@ -187,7 +187,7 @@ public class AirshipChannel internal constructor(
                         val channelCreatedIntent = Intent(ACTION_CHANNEL_CREATED)
                             .setPackage(context.packageName)
                             .addCategory(context.packageName)
-                            .putExtra(UAirship.EXTRA_CHANNEL_ID_KEY, channelId)
+                            .putExtra(Airship.EXTRA_CHANNEL_ID_KEY, channelId)
                         try {
                             context.sendBroadcast(channelCreatedIntent)
                         } catch (e: Exception) {
@@ -238,7 +238,7 @@ public class AirshipChannel internal constructor(
      * @hide
      */
     @WorkerThread
-    override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
         if (!isRegistrationAllowed) {
             UALog.d { "Channel registration is currently disabled." }
             return JobResult.SUCCESS
@@ -512,8 +512,8 @@ public class AirshipChannel internal constructor(
         var builder = ChannelRegistrationPayload.Builder()
 
         when (runtimeConfig.platform) {
-            UAirship.Platform.ANDROID -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
-            UAirship.Platform.AMAZON -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.AMAZON)
+            Airship.Platform.ANDROID -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
+            Airship.Platform.AMAZON -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.AMAZON)
             else -> throw IllegalStateException("Unable to get platform")
         }
 
@@ -536,7 +536,7 @@ public class AirshipChannel internal constructor(
         }
 
         if (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
-            UAirship
+            Airship
                 .applicationContext
                 .packageManager
                 .getPackageInfo(context.packageName, 0)
@@ -554,7 +554,7 @@ public class AirshipChannel internal constructor(
             if (!UAStringUtil.isEmpty(locale.language)) {
                 builder.setLanguage(locale.language)
             }
-            builder.setSdkVersion(UAirship.getVersion())
+            builder.setSdkVersion(Airship.getVersion())
         }
 
         if (privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {

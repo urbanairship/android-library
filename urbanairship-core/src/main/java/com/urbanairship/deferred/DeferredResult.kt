@@ -2,10 +2,7 @@ package com.urbanairship.deferred
 
 import android.net.Uri
 import androidx.annotation.RestrictTo
-import com.urbanairship.AirshipDispatchers
-import com.urbanairship.PendingResult
-import com.urbanairship.UAirship
-import com.urbanairship.audience.DeviceInfoProvider
+import com.urbanairship.Airship
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -13,9 +10,6 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import java.util.Locale
 import kotlin.jvm.Throws
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
 
 /**
  * @hide
@@ -82,5 +76,5 @@ public data class DeferredRequest(
     val locale: Locale,
     val notificationOptIn: Boolean,
     val appVersionName: String,
-    val sdkVersion: String = UAirship.getVersion()
+    val sdkVersion: String = Airship.getVersion()
 )

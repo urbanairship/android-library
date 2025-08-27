@@ -7,7 +7,7 @@ import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.Provider
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.http.RequestSession
 import com.urbanairship.remoteconfig.RemoteConfig
@@ -24,7 +24,7 @@ public class AirshipRuntimeConfig internal constructor (
     private val configOptionsProvider: Provider<AirshipConfigOptions>,
     public val requestSession: RequestSession,
     internal val configObserver: RemoteConfigObserver,
-    private val platformProvider: Provider<UAirship.Platform>
+    private val platformProvider: Provider<Airship.Platform>
 ) {
 
     /**
@@ -35,7 +35,7 @@ public class AirshipRuntimeConfig internal constructor (
         configOptionsProvider: Provider<AirshipConfigOptions>,
         requestSession: RequestSession,
         dataStore: PreferenceDataStore,
-        platformProvider: Provider<UAirship.Platform>
+        platformProvider: Provider<Airship.Platform>
     ): this(
         configOptionsProvider, requestSession, RemoteConfigObserver(dataStore), platformProvider
     )
@@ -46,7 +46,7 @@ public class AirshipRuntimeConfig internal constructor (
 
     private val allowUrlFallback: Boolean = determineUrlFallback(configOptionsProvider.get())
 
-    public val platform: UAirship.Platform
+    public val platform: Airship.Platform
         get() = platformProvider.get()
 
     public val remoteConfig: RemoteConfig

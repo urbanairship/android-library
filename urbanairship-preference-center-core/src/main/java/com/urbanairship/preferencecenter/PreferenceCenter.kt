@@ -10,7 +10,7 @@ import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
@@ -42,7 +42,7 @@ public class PreferenceCenter internal constructor(
          */
         @JvmStatic
         public fun shared(): PreferenceCenter =
-            UAirship.shared().requireComponent(PreferenceCenter::class.java)
+            Airship.shared().requireComponent(PreferenceCenter::class.java)
 
         /**
          * Parses the Preference Center ID from the given [Intent].

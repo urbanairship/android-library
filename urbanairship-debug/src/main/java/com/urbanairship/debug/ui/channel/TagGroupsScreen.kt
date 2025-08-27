@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.Provider
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.channel.TagGroupsEditor
 import com.urbanairship.debug.ui.channel.TagGroupViewModel.Action
 import com.urbanairship.debug.ui.components.DebugScreen
@@ -137,7 +137,7 @@ internal class DefaultTagGroupViewModel: TagGroupViewModel, ViewModel() {
     override val action: MutableState<Action> = mutableStateOf(Action.ADD)
 
     override fun perform(editor: TagGroupsEditor?) {
-        if (!UAirship.isFlying || editor == null || tag.value.isEmpty() || group.value.isEmpty()) {
+        if (!Airship.isFlying || editor == null || tag.value.isEmpty() || group.value.isEmpty()) {
             return
         }
 

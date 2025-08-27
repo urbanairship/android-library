@@ -4,7 +4,7 @@ package com.urbanairship.actions.tags
 import androidx.annotation.CallSuper
 import androidx.annotation.OpenForTesting
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.channel.TagEditor
@@ -50,9 +50,9 @@ public class AddTagsAction internal constructor(
 ) : BaseTagsAction() {
 
     public constructor() : this(
-        channelTagEditor = { UAirship.shared().channel.editTags() },
-        channelTagGroupEditor = { UAirship.shared().channel.editTagGroups() },
-        contactTagGroupEditor = { UAirship.shared().contact.editTagGroups() },
+        channelTagEditor = { Airship.shared().channel.editTags() },
+        channelTagGroupEditor = { Airship.shared().channel.editTagGroups() },
+        contactTagGroupEditor = { Airship.shared().contact.editTagGroups() },
     )
 
     @CallSuper

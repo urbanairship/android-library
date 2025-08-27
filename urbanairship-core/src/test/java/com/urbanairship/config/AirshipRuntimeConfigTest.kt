@@ -5,7 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestRequestSession
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.config.AirshipRuntimeConfig.ConfigChangeListener
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
@@ -23,7 +23,7 @@ public class AirshipRuntimeConfigTest {
     )
 
     private var configOptions = AirshipConfigOptions.newBuilder().build()
-    private var platform = UAirship.Platform.UNKNOWN
+    private var platform = Airship.Platform.UNKNOWN
     private var runtimeConfig = AirshipRuntimeConfig(
         configOptionsProvider = { configOptions },
         requestSession = TestRequestSession(),
@@ -33,14 +33,14 @@ public class AirshipRuntimeConfigTest {
 
     @Test
     public fun testAndroidPlatform() {
-        platform = UAirship.Platform.ANDROID
-        Assert.assertEquals(UAirship.Platform.ANDROID, runtimeConfig.platform)
+        platform = Airship.Platform.ANDROID
+        Assert.assertEquals(Airship.Platform.ANDROID, runtimeConfig.platform)
     }
 
     @Test
     public fun testAmazonPlatform() {
-        platform = UAirship.Platform.AMAZON
-        Assert.assertEquals(UAirship.Platform.AMAZON, runtimeConfig.platform)
+        platform = Airship.Platform.AMAZON
+        Assert.assertEquals(Airship.Platform.AMAZON, runtimeConfig.platform)
     }
 
     @Test

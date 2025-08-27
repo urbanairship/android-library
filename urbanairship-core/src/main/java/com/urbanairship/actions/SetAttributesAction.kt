@@ -2,7 +2,7 @@
 package com.urbanairship.actions
 
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.json.JsonValue
@@ -35,14 +35,14 @@ public class SetAttributesAction public constructor() : Action() {
 
         // Channel Attribute
         args[CHANNEL_KEY]?.optMap()?.let { channel ->
-            val channelAttributeEditor = UAirship.shared().channel.editAttributes()
+            val channelAttributeEditor = Airship.shared().channel.editAttributes()
             channel.map.entries.forEach { handleAttributeActions(channelAttributeEditor, it)}
             channelAttributeEditor.apply()
         }
 
         // Contact Attribute
         args[NAMED_USER_KEY]?.optMap()?.let { user ->
-            val contactAttributeEditor = UAirship.shared().contact.editAttributes()
+            val contactAttributeEditor = Airship.shared().contact.editAttributes()
             user.map.entries.forEach { handleAttributeActions(contactAttributeEditor, it)}
             contactAttributeEditor.apply()
         }

@@ -12,7 +12,7 @@ import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
@@ -520,7 +520,7 @@ public class Contact internal constructor(
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
         return if (ACTION_UPDATE_CONTACT == jobInfo.action) {
             val result = runBlocking { contactManager.performNextOperation() }
             return if (result) JobResult.SUCCESS else JobResult.FAILURE

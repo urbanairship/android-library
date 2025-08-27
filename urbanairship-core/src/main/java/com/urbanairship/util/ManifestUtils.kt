@@ -6,7 +6,7 @@ import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.annotation.RestrictTo
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 
 /**
  * Utility methods for validating the AndroidManifest.xml file.
@@ -44,8 +44,8 @@ public object ManifestUtils {
      * @return `true` if the permission is granted, otherwise `false`.
      */
     public fun isPermissionGranted(permission: String): Boolean {
-        return PackageManager.PERMISSION_GRANTED == UAirship.applicationContext.packageManager
-            .checkPermission(permission, UAirship.applicationContext.packageName)
+        return PackageManager.PERMISSION_GRANTED == Airship.applicationContext.packageManager
+            .checkPermission(permission, Airship.applicationContext.packageName)
     }
 
     /**
@@ -60,9 +60,9 @@ public object ManifestUtils {
             return null
         }
 
-        val componentName = ComponentName(UAirship.applicationContext.packageName, activity.canonicalName)
+        val componentName = ComponentName(Airship.applicationContext.packageName, activity.canonicalName)
         return try {
-            UAirship
+            Airship
                 .applicationContext
                 .packageManager
                 .getActivityInfo(componentName, PackageManager.GET_META_DATA)
@@ -78,10 +78,10 @@ public object ManifestUtils {
      */
     public fun getApplicationInfo(): ApplicationInfo? {
         return try {
-            UAirship
+            Airship
                 .applicationContext
                 .packageManager
-                .getApplicationInfo(UAirship.applicationContext.packageName, PackageManager.GET_META_DATA)
+                .getApplicationInfo(Airship.applicationContext.packageName, PackageManager.GET_META_DATA)
         } catch (ex: Exception) {
             null
         }

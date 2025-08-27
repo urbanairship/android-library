@@ -5,8 +5,8 @@ package com.urbanairship.audience
 import android.content.pm.PackageInfo
 import androidx.annotation.RestrictTo
 import androidx.core.content.pm.PackageInfoCompat
-import com.urbanairship.UAirship
-import com.urbanairship.UAirship.Companion.applicationContext
+import com.urbanairship.Airship
+import com.urbanairship.Airship.Companion.applicationContext
 import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
@@ -71,39 +71,39 @@ internal class DeviceInfoProviderImpl(private val contactId: String? = null) : D
         get() = packageInfo?.firstInstallTime ?: 0
 
     override val isNotificationsOptedIn: Boolean
-        get() = UAirship.shared().pushManager.areNotificationsOptedIn()
+        get() = Airship.shared().pushManager.areNotificationsOptedIn()
 
     override val channelTags: Set<String>
-        get() = UAirship.shared().channel.tags
+        get() = Airship.shared().channel.tags
     override val appVersionName: String
         get() = packageInfo?.versionName ?: ""
     override val appVersionCode: Long
         get() = appVersion
 
     override val platform: String
-        get() = UAirship.shared().platformType.stringValue
+        get() = Airship.shared().platformType.stringValue
 
     override val channelCreated: Boolean
-        get() = UAirship.shared().channel.id != null
+        get() = Airship.shared().channel.id != null
     override val analyticsEnabled: Boolean
-        get() = UAirship.shared().analytics.isEnabled
+        get() = Airship.shared().analytics.isEnabled
 
     override val locale: Locale
-        get() = UAirship.shared().localeManager.locale
+        get() = Airship.shared().localeManager.locale
 
     override suspend fun getPermissionStatuses(): Map<Permission, PermissionStatus> {
         val resolver: suspend (Permission) -> PermissionStatus = {
             suspendCoroutine { continuation ->
-                val result = UAirship.shared().permissionsManager.checkPermissionStatus(it).getResult()
+                val result = Airship.shared().permissionsManager.checkPermissionStatus(it).getResult()
                 continuation.resume(result ?: PermissionStatus.NOT_DETERMINED)
             }
         }
 
-        return UAirship.shared().permissionsManager.configuredPermissions.associateWith { resolver(it) }
+        return Airship.shared().permissionsManager.configuredPermissions.associateWith { resolver(it) }
     }
 
     override suspend fun getStableContactInfo(): StableContactInfo {
-        return UAirship.shared().contact.stableContactInfo().let {
+        return Airship.shared().contact.stableContactInfo().let {
             if (contactId != null && it.contactId != contactId) {
                 StableContactInfo(contactId, null)
             } else {
@@ -113,7 +113,7 @@ internal class DeviceInfoProviderImpl(private val contactId: String? = null) : D
     }
 
     override suspend fun getChannelId(): String {
-        return UAirship.shared().channel.channelIdFlow.filterNotNull().first()
+        return Airship.shared().channel.channelIdFlow.filterNotNull().first()
     }
 }
 

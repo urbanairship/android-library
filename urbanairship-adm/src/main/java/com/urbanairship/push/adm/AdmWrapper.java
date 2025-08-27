@@ -6,7 +6,7 @@ import android.content.Context;
 
 import com.amazon.device.messaging.ADM;
 import com.urbanairship.UALog;
-import com.urbanairship.UAirship;
+import com.urbanairship.Airship;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -23,7 +23,7 @@ class AdmWrapper {
      */
     static boolean isSupported() {
         try {
-            return new ADM(UAirship.getApplicationContext()).isSupported();
+            return new ADM(Airship.getApplicationContext()).isSupported();
         } catch (RuntimeException ex) {
             UALog.w("Failed to call ADM. Make sure ADM jar is not bundled with the APK.");
             return false;

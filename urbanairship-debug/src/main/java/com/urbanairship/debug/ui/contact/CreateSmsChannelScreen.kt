@@ -19,7 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.contacts.SmsRegistrationOptions
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.Section
@@ -95,11 +95,11 @@ internal class CreateSmsChannelViewModel: ViewModel() {
         get() = msisdn.value.isNotEmpty() && senderId.value.isNotEmpty()
 
     fun perform() {
-        if (!UAirship.isFlying || msisdn.value.isEmpty() || senderId.value.isEmpty()) {
+        if (!Airship.isFlying || msisdn.value.isEmpty() || senderId.value.isEmpty()) {
             return
         }
 
-        UAirship.shared().contact.registerSms(msisdn.value, SmsRegistrationOptions.options(senderId.value))
+        Airship.shared().contact.registerSms(msisdn.value, SmsRegistrationOptions.options(senderId.value))
     }
 }
 

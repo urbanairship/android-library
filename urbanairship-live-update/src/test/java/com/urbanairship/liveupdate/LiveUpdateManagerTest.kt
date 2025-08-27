@@ -5,7 +5,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestApplication
 import com.urbanairship.TestRequestSession
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.liveupdate.data.LiveUpdateDao
@@ -14,7 +14,6 @@ import com.urbanairship.push.PushManager
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import junit.framework.TestCase.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,7 +23,7 @@ public class LiveUpdateManagerTest {
 
     private val config: AirshipRuntimeConfig = mockk {
         every { configOptions } returns mockk()
-        every { platform } returns UAirship.Platform.ANDROID
+        every { platform } returns Airship.Platform.ANDROID
         every { requestSession } returns TestRequestSession()
     }
     private val pushManager: PushManager = mockk(relaxUnitFun = true)

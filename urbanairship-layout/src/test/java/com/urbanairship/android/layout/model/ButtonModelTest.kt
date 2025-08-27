@@ -2,7 +2,7 @@
 
 package com.urbanairship.android.layout.model
 
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ThomasActionRunner
@@ -14,7 +14,6 @@ import com.urbanairship.json.jsonMapOf
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
-import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
@@ -58,11 +57,11 @@ public class ButtonModelTest {
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
 
-        mockkObject(UAirship)
-        every { UAirship.shared() } returns mockk {
-            every { platformType } returns UAirship.Platform.ANDROID
+        mockkObject(Airship)
+        every { Airship.shared() } returns mockk {
+            every { platformType } returns Airship.Platform.ANDROID
         }
-        every { UAirship.applicationContext } returns mockk()
+        every { Airship.applicationContext } returns mockk()
 
         buttonModel = makeButton()
         every { mockView.taps() } returns taps
@@ -72,7 +71,7 @@ public class ButtonModelTest {
     public fun tearDown() {
         Dispatchers.resetMain()
 
-        unmockkStatic(UAirship::class)
+        unmockkStatic(Airship::class)
     }
 
     @Test

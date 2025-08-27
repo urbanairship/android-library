@@ -15,7 +15,7 @@ import android.app.Application
 import android.content.Intent
 import android.net.Uri
 import com.urbanairship.PrivacyManager
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.messagecenter.MessageCenter.OnShowMessageCenterListener
@@ -201,7 +201,7 @@ public class MessageCenterTest {
 
     @Test
     public fun testPerformJobWhenEnabled() {
-        val (airship, jobInfo) = mockk<UAirship>() to mockk<JobInfo>()
+        val (airship, jobInfo) = mockk<Airship>() to mockk<JobInfo>()
         coEvery { inbox.performUpdate() } returns Result.success(true)
         every { privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns true
 
@@ -215,7 +215,7 @@ public class MessageCenterTest {
     public fun testPerformJobWhenDisabled() {
         every { privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns false
 
-        val result = messageCenter.onPerformJob(mockk<UAirship>(), mockk<JobInfo>())
+        val result = messageCenter.onPerformJob(mockk<Airship>(), mockk<JobInfo>())
 
         assertEquals(JobResult.SUCCESS, result)
         coVerify(exactly = 0) { inbox.performUpdate() }

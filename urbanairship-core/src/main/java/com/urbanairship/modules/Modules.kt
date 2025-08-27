@@ -8,7 +8,7 @@ import com.urbanairship.ApplicationMetrics
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.audience.AudienceEvaluator
@@ -30,7 +30,7 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.remotedata.RemoteData
 
 /**
- * Creates module used by [com.urbanairship.UAirship].
+ * Creates module used by [com.urbanairship.Airship].
  *
  * @hide
  */
@@ -247,10 +247,10 @@ public object Modules {
         try {
             val clazz = Class.forName(className).asSubclass(factoryClass)
             val instance = clazz.getDeclaredConstructor().newInstance()
-            if (UAirship.getVersion() != instance?.airshipVersion) {
+            if (Airship.getVersion() != instance?.airshipVersion) {
                 UALog.e(
                     "Unable to load module with factory $factoryClass, versions do not match. " +
-                            "Core Version: ${UAirship.getVersion()}, Module Version: ${instance?.airshipVersion}.",
+                            "Core Version: ${Airship.getVersion()}, Module Version: ${instance?.airshipVersion}.",
                 )
                 return null
             }

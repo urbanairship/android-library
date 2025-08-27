@@ -5,7 +5,7 @@ package com.urbanairship.automation.remotedata
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.InAppAutomationRemoteDataStatus
 import com.urbanairship.automation.engine.AutomationEngineInterface
@@ -26,7 +26,7 @@ internal class AutomationRemoteDataSubscriber (
     private val remoteDataAccess: AutomationRemoteDataAccessInterface,
     private val engine: AutomationEngineInterface,
     private val frequencyLimitManager: FrequencyLimitManager,
-    private val airshipSDKVersion: String = UAirship.getVersion(),
+    private val airshipSDKVersion: String = Airship.getVersion(),
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 )  {
 

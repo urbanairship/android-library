@@ -15,14 +15,12 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.annotation.StyleRes
 import androidx.core.content.withStyledAttributes
-import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
-import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.accessibility.AccessibilityViewCommand.CommandArguments
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.core.widget.TextViewCompat
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.images.ImageLoader
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.messagecenter.Message
@@ -115,7 +113,7 @@ public class MessageListItem @JvmOverloads constructor(
     private val views = Views(this)
 
     private val imageLoader: ImageLoader
-        get() = UAirship.shared().getImageLoader()
+        get() = Airship.shared().getImageLoader()
 
     private val messageListItemAnimator = MessageListItemAnimator(
         context = context,

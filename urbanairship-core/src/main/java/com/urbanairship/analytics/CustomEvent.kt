@@ -4,7 +4,7 @@ package com.urbanairship.analytics
 import androidx.annotation.RestrictTo
 import androidx.annotation.Size
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.analytics.templates.AccountEventTemplate
 import com.urbanairship.analytics.templates.MediaEventTemplate
 import com.urbanairship.analytics.templates.RetailEventTemplate
@@ -161,7 +161,7 @@ public class CustomEvent private constructor(
      * @return The tracked custom event.
      */
     public fun track(): CustomEvent {
-        UAirship.shared().analytics.recordCustomEvent(this)
+        Airship.shared().analytics.recordCustomEvent(this)
         return this
     }
 

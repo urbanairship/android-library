@@ -22,7 +22,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,20 +31,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.debug.ui.DebugScreen
 import com.urbanairship.debug.ui.channel.ChannelInfoScreens
-import com.urbanairship.debug.ui.components.DebugCategoryHeader
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.DebugSettingItem
-import com.urbanairship.debug.ui.components.DebugSwitchItem
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.Section
 import com.urbanairship.debug.ui.components.TopBarNavigation
 import com.urbanairship.debug.ui.contact.ContactScreens
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import java.util.Locale
-import java.util.UUID
 
 @Composable
 internal fun DeviceInfoScreen(
@@ -223,7 +219,7 @@ private fun DeviceInfoSection(
 
         RowItem(
             title = "Airship SDK Version",
-            details = UAirship.getVersion())
+            details = Airship.getVersion())
 
         RowItem(
             title = "Current Locale",

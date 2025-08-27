@@ -29,7 +29,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.LoadingView
 import com.urbanairship.debug.ui.components.RowItem
@@ -162,26 +162,26 @@ internal class DefaultTagsScreenViewModel: TagsScreenViewModel, ViewModel() {
     override val isLoaded: Flow<Boolean> = isLoadedState
 
     init {
-        UAirship.shared { airship ->
+        Airship.shared { airship ->
             isLoadedState.update { true }
             refresh()
         }
     }
 
     private fun refresh() {
-        if (!UAirship.isFlying) {
+        if (!Airship.isFlying) {
             return
         }
 
-        tagsState.update { UAirship.shared().channel.tags.sorted() }
+        tagsState.update { Airship.shared().channel.tags.sorted() }
     }
 
     override fun add(tag: String) {
-        if (!UAirship.isFlying) {
+        if (!Airship.isFlying) {
             return
         }
 
-        UAirship.shared().channel
+        Airship.shared().channel
             .editTags()
             .addTag(tag)
             .apply()
@@ -190,11 +190,11 @@ internal class DefaultTagsScreenViewModel: TagsScreenViewModel, ViewModel() {
     }
 
     override fun remove(tag: String) {
-        if (!UAirship.isFlying) {
+        if (!Airship.isFlying) {
             return
         }
 
-        UAirship.shared().channel
+        Airship.shared().channel
             .editTags()
             .removeTag(tag)
             .apply()

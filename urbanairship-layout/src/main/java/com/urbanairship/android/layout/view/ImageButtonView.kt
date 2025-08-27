@@ -10,7 +10,7 @@ import android.widget.ImageView.ScaleType.FIT_CENTER
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnAttach
 import androidx.core.view.isVisible
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
@@ -64,7 +64,7 @@ internal class ImageButtonView(
 
                     var isLoaded = false
 
-                    fun loadImage(url: String) = UAirship.shared().getImageLoader().load(context,
+                    fun loadImage(url: String) = Airship.shared().getImageLoader().load(context,
                         button,
                         ImageRequestOptions.newBuilder(url)
                             .setImageSizeResolver(ThomasImageSizeResolver(itemProperties?.size, cached?.size))

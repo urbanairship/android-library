@@ -8,7 +8,7 @@ import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -189,6 +189,6 @@ internal constructor(
          */
         @JvmStatic
         public fun shared(): LiveUpdateManager =
-            UAirship.shared().requireComponent(LiveUpdateManager::class.java)
+            Airship.shared().requireComponent(LiveUpdateManager::class.java)
     }
 }

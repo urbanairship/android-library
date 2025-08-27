@@ -3,14 +3,13 @@
 package com.urbanairship.featureflag
 
 import android.content.Context
-import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.audience.CompoundAudienceSelector
@@ -59,7 +58,7 @@ public class FeatureFlagManager internal constructor(
          */
         @JvmStatic
         public fun shared(): FeatureFlagManager =
-            UAirship.shared().requireComponent(FeatureFlagManager::class.java)
+            Airship.shared().requireComponent(FeatureFlagManager::class.java)
     }
 
     private val pendingResultScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())

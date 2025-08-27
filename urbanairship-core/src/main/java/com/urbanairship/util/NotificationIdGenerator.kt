@@ -5,7 +5,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.IntRange
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 
 /**
  * An auto-incrementing notification ID generator.
@@ -21,7 +21,7 @@ public object NotificationIdGenerator {
     private var range = 40 //Android allows a maximum of 50 notifications per package (undocumented)
 
     private val preferences: SharedPreferences
-        get() = UAirship
+        get() = Airship
             .applicationContext
             .getSharedPreferences(SHARED_PREFERENCES_FILE, Context.MODE_PRIVATE)
 

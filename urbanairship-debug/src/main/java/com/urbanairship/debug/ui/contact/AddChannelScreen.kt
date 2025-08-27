@@ -22,7 +22,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.contacts.ContactChannel
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
@@ -104,7 +104,7 @@ internal class CreateChannelViewModel: ViewModel() {
     var subscribedChannels: Flow<List<ContactChannel>> = flowOf(emptyList())
 
     init {
-        UAirship.shared { airship ->
+        Airship.shared { airship ->
             subscribedChannels = airship.contact.channelContacts.mapNotNull { it.getOrNull() }
         }
     }

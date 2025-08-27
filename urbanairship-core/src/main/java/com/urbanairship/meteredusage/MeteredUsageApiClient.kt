@@ -1,6 +1,6 @@
 package com.urbanairship.meteredusage
 
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
@@ -27,13 +27,13 @@ internal class MeteredUsageApiClient(
                 ?: throw InvalidParameterException("Missing metered usage URL")
 
         val platform = when (config.platform) {
-            UAirship.Platform.ANDROID -> "android"
-            UAirship.Platform.AMAZON -> "amazon"
+            Airship.Platform.ANDROID -> "android"
+            Airship.Platform.AMAZON -> "amazon"
             else -> throw InvalidParameterException("Invalid platform")
         }
 
         val headers = mutableMapOf(
-            "X-UA-Lib-Version" to UAirship.getVersion(),
+            "X-UA-Lib-Version" to Airship.getVersion(),
             "X-UA-Device-Family" to platform,
             "Content-Type" to "application/json",
             "Accept" to "application/vnd.urbanairship+json; version=3;",

@@ -8,7 +8,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipExecutors
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -23,7 +23,7 @@ public class NotificationProxyReceiver public constructor() : BroadcastReceiver(
     override fun onReceive(context: Context, intent: Intent?) {
         Autopilot.automaticTakeOff(context)
 
-        if (!UAirship.isTakingOff && !UAirship.isFlying) {
+        if (!Airship.isTakingOff && !Airship.isFlying) {
             UALog.e("NotificationProxyReceiver - unable to receive intent, takeOff not called.")
             return
         }

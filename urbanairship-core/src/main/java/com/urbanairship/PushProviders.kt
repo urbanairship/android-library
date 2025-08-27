@@ -4,10 +4,8 @@ package com.urbanairship
 import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.UALog
 import com.urbanairship.base.Supplier
 import com.urbanairship.push.PushProvider
-import java.util.Collections
 
 /**
  * Loads push providers.
@@ -45,12 +43,12 @@ public open class PushProviders @VisibleForTesting protected constructor(
 
     private fun isValid(provider: PushProvider): Boolean {
         if (provider is AirshipVersionInfo) {
-            if (UAirship.getVersion() != provider.airshipVersion) {
+            if (Airship.getVersion() != provider.airshipVersion) {
                 UALog.e(
                     "Provider: %s version %s does not match the SDK version %s. Make sure all Airship dependencies are the same version.",
                     provider,
                     provider.airshipVersion,
-                    UAirship.getVersion()
+                    Airship.getVersion()
                 )
                 return false
             }
@@ -58,14 +56,14 @@ public open class PushProviders @VisibleForTesting protected constructor(
 
         when (provider.deliveryType) {
             PushProvider.DeliveryType.ADM -> {
-                if (provider.platform != UAirship.Platform.AMAZON) {
+                if (provider.platform != Airship.Platform.AMAZON) {
                     UALog.e("Invalid Provider: $provider. ADM delivery is only available for Amazon platforms.")
                     return false
                 }
             }
             PushProvider.DeliveryType.FCM,
             PushProvider.DeliveryType.HMS -> {
-                if (provider.platform != UAirship.Platform.ANDROID) {
+                if (provider.platform != Airship.Platform.ANDROID) {
                     UALog.e(
                         "Invalid Provider: %s. %s delivery is only available for Android platforms.",
                         provider.deliveryType,
@@ -119,7 +117,7 @@ public open class PushProviders @VisibleForTesting protected constructor(
      * @param platform The specified platform.
      * @return The best provider for the platform, or `null` if no provider is found.
      */
-    public open fun getBestProvider(platform: UAirship.Platform): PushProvider? {
+    public open fun getBestProvider(platform: Airship.Platform): PushProvider? {
         return availableProviders.firstOrNull { it.platform == platform }
             ?: supportedProviders.firstOrNull { it.platform == platform }
     }
@@ -141,7 +139,7 @@ public open class PushProviders @VisibleForTesting protected constructor(
      * @return The provider or `null` if the specified provider is not available.
      */
     public open fun getProvider(
-        platform: UAirship.Platform,
+        platform: Airship.Platform,
         providerClass: String
     ): PushProvider? {
         return supportedProviders.firstOrNull {

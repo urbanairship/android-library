@@ -16,8 +16,7 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.core.view.doOnPreDraw
-import com.urbanairship.UAirship
-import com.urbanairship.android.layout.util.ResourceUtils
+import com.urbanairship.Airship
 import com.urbanairship.iam.info.InAppMessageMediaInfo
 import com.urbanairship.images.ImageRequestOptions
 import com.urbanairship.util.ManifestUtils
@@ -89,7 +88,7 @@ internal class MediaView @JvmOverloads constructor(
                 imageView.contentDescription = mediaInfo.description
                 val url = cachedMediaUrl ?: mediaInfo.url
                 imageView.doOnPreDraw {
-                    UAirship.shared().getImageLoader().load(
+                    Airship.shared().getImageLoader().load(
                         context,
                         imageView,
                         ImageRequestOptions.newBuilder(url).build()

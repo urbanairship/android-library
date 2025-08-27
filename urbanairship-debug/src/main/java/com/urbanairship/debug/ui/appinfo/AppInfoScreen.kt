@@ -11,7 +11,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.os.ConfigurationCompat
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.debug.ui.components.DebugCategoryHeader
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.DebugSettingItem
@@ -46,7 +46,7 @@ internal fun AppInfoScreenContent(
 
     val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
 
-    val sdkVersion = UAirship.getVersion()
+    val sdkVersion = Airship.getVersion()
     val appVersionName = packageInfo.versionName
     val appVersionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
 

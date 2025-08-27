@@ -9,7 +9,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentActivity
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.google.GooglePlayServicesUtilWrapper.isGooglePlayServicesAvailable
 import com.urbanairship.google.GooglePlayServicesUtilWrapper.isUserRecoverableError
 import com.google.android.gms.common.ConnectionResult
@@ -74,9 +74,9 @@ public class PlayServicesErrorActivity public constructor() : FragmentActivity()
         if (isFinishing) {
             // Check if we still have an error
             val error = isGooglePlayServicesAvailable(this)
-            if (error == ConnectionResult.SUCCESS && UAirship.shared().pushManager.isPushEnabled) {
+            if (error == ConnectionResult.SUCCESS && Airship.shared().pushManager.isPushEnabled) {
                 // Resolved the error, make sure the service is started
-                UAirship.shared().channel.updateRegistration()
+                Airship.shared().channel.updateRegistration()
             }
         }
     }

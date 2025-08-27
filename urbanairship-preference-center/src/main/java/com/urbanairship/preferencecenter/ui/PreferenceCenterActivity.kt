@@ -8,7 +8,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.preferencecenter.PreferenceCenter
 import com.urbanairship.preferencecenter.R
 import com.google.android.material.appbar.MaterialToolbar
@@ -35,7 +35,7 @@ public class PreferenceCenterActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         Autopilot.automaticTakeOff(application)
 
-        if (!UAirship.isTakingOff && !UAirship.isFlying) {
+        if (!Airship.isTakingOff && !Airship.isFlying) {
             UALog.e("PreferenceCenterActivity - unable to create activity, takeOff not called.")
             finish()
             return

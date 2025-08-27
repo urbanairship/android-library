@@ -7,7 +7,7 @@ import android.os.Looper
 import androidx.annotation.Size
 import com.urbanairship.AirshipExecutors.newSerialExecutor
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.config.UrlBuilder
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth.BasicAuth
@@ -28,7 +28,7 @@ public class PassRequest internal constructor(
     private val apiKey: String,
     private val templateId: String,
     builder: Builder,
-    private val session: RequestSession = UAirship.shared().runtimeConfig.requestSession,
+    private val session: RequestSession = Airship.shared().runtimeConfig.requestSession,
     private val requestExecutor: Executor = DEFAULT_REQUEST_EXECUTOR
 ) {
 
@@ -133,7 +133,7 @@ public class PassRequest internal constructor(
      * Gets the pass request URL.
      */
     public fun getPassUrl(): Uri? {
-        val urlBuilder: UrlBuilder = UAirship.shared().runtimeConfig.walletUrl
+        val urlBuilder: UrlBuilder = Airship.shared().runtimeConfig.walletUrl
             .appendEncodedPath(PASS_PATH)
             .appendEncodedPath(templateId)
 

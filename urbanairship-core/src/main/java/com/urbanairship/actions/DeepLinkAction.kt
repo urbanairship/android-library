@@ -5,7 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newResult
 import com.urbanairship.base.Supplier
 import com.urbanairship.push.PushManager
@@ -31,10 +31,10 @@ import com.urbanairship.push.PushMessage
  * Default Registration Predicate: none
  */
 public class DeepLinkAction @VisibleForTesting internal constructor(
-    private val airshipSupplier: Supplier<UAirship>
+    private val airshipSupplier: Supplier<Airship>
 ): Action() {
 
-    public constructor() : this(Supplier<UAirship> { UAirship.shared() })
+    public constructor() : this(Supplier<Airship> { Airship.shared() })
 
     override fun perform(arguments: ActionArguments): ActionResult {
         val deepLink = arguments.value.string ?: throw IllegalArgumentException("Missing deep link.")
@@ -48,13 +48,13 @@ public class DeepLinkAction @VisibleForTesting internal constructor(
         // Fallback to intent launching
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            .setPackage(UAirship.applicationContext.packageName)
+            .setPackage(Airship.applicationContext.packageName)
 
         arguments.metadata.getParcelable<PushMessage>(ActionArguments.PUSH_MESSAGE_METADATA)?.let {
             intent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, it.getPushBundle())
         }
 
-        UAirship.applicationContext.startActivity(intent)
+        Airship.applicationContext.startActivity(intent)
 
         return newResult(arguments.value)
     }

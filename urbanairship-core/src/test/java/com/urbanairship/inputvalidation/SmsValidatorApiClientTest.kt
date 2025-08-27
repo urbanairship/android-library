@@ -5,7 +5,7 @@ package com.urbanairship.inputvalidation
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.toSuspendingRequestSession
@@ -75,7 +75,7 @@ public class SmsValidatorApiClientTest {
         assertEquals(mapOf(
             "Accept" to  "application/vnd.urbanairship+json; version=3;",
             "Content-Type" to "application/json",
-            "X-UA-Lib-Version" to UAirship.getVersion(),
+            "X-UA-Lib-Version" to Airship.getVersion(),
             "X-UA-Device-Family" to "android"
         ), request.headers)
         assertEquals("POST", request.method)
@@ -100,7 +100,7 @@ public class SmsValidatorApiClientTest {
         assertEquals(mapOf(
             "Accept" to  "application/vnd.urbanairship+json; version=3;",
             "Content-Type" to "application/json",
-            "X-UA-Lib-Version" to UAirship.getVersion(),
+            "X-UA-Lib-Version" to Airship.getVersion(),
             "X-UA-Device-Family" to "android"
         ), request.headers)
         assertEquals("POST", request.method)

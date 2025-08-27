@@ -23,13 +23,13 @@ public class JavaScriptEnvironment private constructor(builder: Builder) {
     private val getters: List<String> = builder.getters.toList()
 
     /*
-     * The native bridge will prototype _UAirship, so inject any additional
-     * functionality under _UAirship and the final UAirship object will have
+     * The native bridge will prototype _Airship, so inject any additional
+     * functionality under _Airship and the final Airship object will have
      * access to it.
      */
     @WorkerThread
     public fun getJavaScript(context: Context): String {
-        val sb = StringBuilder().append("var _UAirship = {};")
+        val sb = StringBuilder().append("var _Airship = {};")
         getters.forEach(sb::append)
 
         try {
@@ -57,7 +57,7 @@ public class JavaScriptEnvironment private constructor(builder: Builder) {
         public fun addGetter(functionName: String, value: JsonSerializable): Builder {
             val json = value.toJsonValue()
             val getter = String.format(
-                Locale.ROOT, "_UAirship.%s = function(){return %s;};", functionName, json.toString()
+                Locale.ROOT, "_Airship.%s = function(){return %s;};", functionName, json.toString()
             )
             getters.add(getter)
             return this

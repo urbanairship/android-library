@@ -4,7 +4,7 @@ package com.urbanairship.channel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.toSuspendingRequestSession
@@ -172,7 +172,7 @@ public class ChannelBatchUpdateApiClientTest {
 
     @Test
     public fun testAndroidPlatform(): TestResult = runTest {
-        config.setPlatform(UAirship.Platform.ANDROID)
+        config.setPlatform(Airship.Platform.ANDROID)
         requestSession.addResponse(200)
         client.update("someChannelId", emptyList(), emptyList(), emptyList(), emptyList())
         assertEquals(
@@ -182,7 +182,7 @@ public class ChannelBatchUpdateApiClientTest {
 
     @Test
     public fun testAmazonPlatform(): TestResult = runTest {
-        config.setPlatform(UAirship.Platform.AMAZON)
+        config.setPlatform(Airship.Platform.AMAZON)
         requestSession.addResponse(200)
         client.update("someChannelId", emptyList(), emptyList(), emptyList(), emptyList())
         assertEquals(

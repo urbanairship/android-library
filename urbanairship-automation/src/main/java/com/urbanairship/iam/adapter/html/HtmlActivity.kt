@@ -16,7 +16,7 @@ import android.widget.ImageButton
 import android.widget.ProgressBar
 import androidx.core.graphics.drawable.DrawableCompat
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.UrlAllowList
 import com.urbanairship.automation.R
 import com.urbanairship.iam.InAppMessageActivity
@@ -70,7 +70,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
         handler = Handler(Looper.getMainLooper())
         url = messageContent.url
 
-        if (!UAirship.shared().urlAllowList.isAllowed(url, UrlAllowList.Scope.OPEN_URL)) {
+        if (!Airship.shared().urlAllowList.isAllowed(url, UrlAllowList.Scope.OPEN_URL)) {
             UALog.e("HTML in-app message URL is not allowed. Unable to display message.")
             finish()
             return

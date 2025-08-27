@@ -9,7 +9,7 @@ import com.urbanairship.AirshipExecutors
 import com.urbanairship.Autopilot
 import com.urbanairship.R
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.activity.ThemedActivity
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestException
@@ -50,7 +50,7 @@ public class WalletLoadingActivity public constructor() : ThemedActivity() {
             try {
                 UALog.d("Runner starting")
 
-                val session = UAirship.shared().runtimeConfig.requestSession
+                val session = Airship.shared().runtimeConfig.requestSession
 
                 val request = Request(url, "GET", false)
 

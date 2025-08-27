@@ -6,7 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.contacts.Contact
 import com.urbanairship.http.RequestResult
@@ -16,7 +16,6 @@ import com.urbanairship.job.JobResult
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.MeteredUsageConfig
 import com.urbanairship.remoteconfig.RemoteConfig
-import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.coEvery
@@ -262,7 +261,7 @@ public class AirshipMeteredUsageTest {
 
         eventsStore.addEvent(event)
 
-        val airship: UAirship = mockk()
+        val airship: Airship = mockk()
         val channel: AirshipChannel = mockk()
         every { airship.channel } returns channel
         every { channel.id } returns "test-channel-id"
@@ -296,7 +295,7 @@ public class AirshipMeteredUsageTest {
 
         eventsStore.addEvent(event)
 
-        val airship: UAirship = mockk()
+        val airship: Airship = mockk()
         val channel: AirshipChannel = mockk()
         every { airship.channel } returns channel
         every { channel.id } returns "test-channel-id"
@@ -330,7 +329,7 @@ public class AirshipMeteredUsageTest {
 
         eventsStore.addEvent(event)
 
-        val airship: UAirship = mockk()
+        val airship: Airship = mockk()
         val channel: AirshipChannel = mockk()
         every { airship.channel } returns channel
         every { channel.id } returns "test-channel-id"

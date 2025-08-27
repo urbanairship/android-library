@@ -2,7 +2,7 @@
 
 package com.urbanairship.android.layout.environment
 
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.info.ThomasEmailRegistrationOptions
 import com.urbanairship.android.layout.property.SmsLocale
@@ -13,10 +13,10 @@ import java.util.Date
 internal class ThomasChannelRegistrar(
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val registerEmail: (String, com.urbanairship.contacts.EmailRegistrationOptions) -> Unit = { address, options ->
-        UAirship.shared().contact.registerEmail(address, options)
+        Airship.shared().contact.registerEmail(address, options)
     },
     private val registerSms: (String, SmsRegistrationOptions) -> Unit = { msisdn, options ->
-        UAirship.shared().contact.registerSms(msisdn, options)
+        Airship.shared().contact.registerSms(msisdn, options)
     }
 ) {
     fun register(channels: List<ThomasChannelRegistration>) {

@@ -4,18 +4,13 @@ package com.urbanairship
 import android.app.Application
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ApplicationInfo
-import android.content.pm.PackageInfo
-import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Looper
 import android.os.SystemClock
 import android.provider.Settings
 import androidx.annotation.MainThread
-import androidx.annotation.OpenForTesting
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import androidx.core.content.pm.PackageInfoCompat
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.DeepLinkListener
 import com.urbanairship.analytics.AirshipEventFeed
@@ -46,7 +41,6 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.remoteconfig.RemoteConfigManager
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.util.AppStoreUtils
-import com.urbanairship.util.Clock
 import com.urbanairship.util.ProcessUtils
 import java.util.Locale
 import kotlin.concurrent.Volatile
@@ -55,13 +49,13 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
 /**
- * UAirship manages the shared state for all Airship
- * services. UAirship.takeOff() should be called to initialize
+ * Airship manages the shared state for all Airship
+ * services. Airship.takeOff() should be called to initialize
  * the class during `Application.onCreate()` or
  * by using [Autopilot].
  *
  */
-public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTesting public constructor(
+public class Airship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTesting public constructor(
     airshipConfigOptions: AirshipConfigOptions
 ) {
 
@@ -132,7 +126,7 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
         public set
 
     /**
-     * The UAirship [com.urbanairship.analytics.Analytics] instance.
+     * The Airship [com.urbanairship.analytics.Analytics] instance.
      */
     public lateinit var analytics: Analytics
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -223,7 +217,7 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
         public set
 
     /**
-     * The UAirship [com.urbanairship.permission.PermissionsManager] instance.
+     * The Airship [com.urbanairship.permission.PermissionsManager] instance.
      */
     public lateinit var permissionsManager: PermissionsManager
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTesting
@@ -246,7 +240,7 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
     }
 
     /**
-     * Initializes UAirship instance.
+     * Initializes Airship instance.
      */
     private fun init() {
         // Create and init the preference data store first
@@ -265,7 +259,7 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
             resetEnabledFeatures = airshipConfigOptions.resetEnabledFeatures
         )
 
-        val application = application ?: throw IllegalStateException("UAirship not initialized")
+        val application = application ?: throw IllegalStateException("Airship not initialized")
         this.permissionsManager = PermissionsManager(application)
 
         this.localeManager = LocaleManager(
@@ -519,7 +513,7 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
     }
 
     /**
-     * Tears down the UAirship instance.
+     * Tears down the Airship instance.
      */
     private fun tearDown() {
         components.value.forEach { it.tearDown() }
@@ -637,7 +631,7 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
     }
 
     /**
-     * Sets a locale to be stored in UAirship.
+     * Sets a locale to be stored in Airship.
      *
      * @param locale The new locale to use.
      */
@@ -646,28 +640,28 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
     }
 
     /**
-     * Get the locale stored in UAirship.
+     * Get the locale stored in Airship.
      */
     public val locale: Locale
         get() = localeManager.locale
 
     /**
-     * Callback interface used to notify app when UAirship is ready.
+     * Callback interface used to notify app when Airship is ready.
      */
     public fun interface OnReadyCallback {
 
         /**
-         * Called when UAirship is ready.
+         * Called when Airship is ready.
          *
-         * @param airship The UAirship instance.
+         * @param airship The Airship instance.
          */
-        public fun onAirshipReady(airship: UAirship)
+        public fun onAirshipReady(airship: Airship)
     }
 
     public companion object {
 
         /**
-         * Broadcast that is sent when UAirship is finished taking off.
+         * Broadcast that is sent when Airship is finished taking off.
          */
         public const val ACTION_AIRSHIP_READY: String = "com.urbanairship.AIRSHIP_READY"
 
@@ -686,14 +680,14 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
         private val airshipLock = Any()
 
         /**
-         * Tests if UAirship has been initialized and is ready for use.
+         * Tests if Airship has been initialized and is ready for use.
          */
         @JvmField
         @Volatile
         public var isFlying: Boolean = false
 
         /**
-         * Tests if UAirship is currently taking off.
+         * Tests if Airship is currently taking off.
          */
         @JvmField
         @Volatile
@@ -711,7 +705,7 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
 
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @VisibleForTesting
-        public var sharedAirship: UAirship? = null
+        public var sharedAirship: Airship? = null
 
         /**
          * Flag to enable printing take off's stacktrace. Useful when debugging exceptions related
@@ -724,18 +718,18 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
         private var queuePendingAirshipRequests = true
 
         /**
-         * Returns the shared UAirship singleton instance. This method will block
+         * Returns the shared Airship singleton instance. This method will block
          * until airship is ready.
          *
-         * @return The UAirship singleton.
+         * @return The Airship singleton.
          * @throws IllegalStateException if takeoff is not called prior to this method.
          */
         @JvmStatic
         @Throws(IllegalStateException::class)
-        public fun shared(): UAirship {
+        public fun shared(): Airship {
             synchronized(airshipLock) {
                 check(!(!isTakingOff && !isFlying)) { "Take off must be called before shared()" }
-                val result = waitForTakeOff(0) ?: throw IllegalStateException("UAirship not ready")
+                val result = waitForTakeOff(0) ?: throw IllegalStateException("Airship not ready")
                 return result
             }
         }
@@ -756,15 +750,16 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
         }
 
         /**
-         * Waits for UAirship to takeOff and be ready.
+         * Waits for Airship to takeOff and be ready.
          *
-         * @param millis Time to wait for UAirship to be ready in milliseconds or `0` to wait
+         * @param millis Time to wait for Airship to be ready in milliseconds or `0` to wait
          * forever.
-         * @return The ready UAirship instance, or `null` if UAirship
+         * @return The ready Airship instance, or `null` if Airship
          * is not ready by the specified wait time.
          * @hide
          */
-        public fun waitForTakeOff(millis: Long): UAirship? {
+        @JvmStatic
+        public fun waitForTakeOff(millis: Long): Airship? {
             synchronized(airshipLock) {
                 if (isFlying) {
                     return sharedAirship
@@ -848,7 +843,7 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
 
         /**
          * Take off with a callback to perform airship configuration after
-         * takeoff. The ready callback will be executed before the UAirship instance is returned by any
+         * takeoff. The ready callback will be executed before the Airship instance is returned by any
          * of the shared methods. The config will be loaded from `airshipconfig.properties` file in the
          * assets directory. See [com.urbanairship.AirshipConfigOptions.Builder.applyDefaultProperties].
          *
@@ -878,7 +873,7 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
 
         /**
          * Take off with a callback to perform airship configuration after takeoff. The
-         * ready callback will be executed before the UAirship instance is returned by any of the shared
+         * ready callback will be executed before the Airship instance is returned by any of the shared
          * methods.
          *
          * @param application The application (required)
@@ -966,7 +961,7 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
             )
             UALog.v(BuildConfig.SDK_VERSION)
 
-            val airshipApp = UAirship(resolved)
+            val airshipApp = Airship(resolved)
             sharedAirship = airshipApp
 
             synchronized(airshipLock) {
@@ -1021,6 +1016,7 @@ public class UAirship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTes
          *
          * @hide
          */
+        @JvmStatic
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         internal fun land() {
             synchronized(airshipLock) {

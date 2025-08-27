@@ -16,24 +16,24 @@ internal class DeferredPlatformProvider(
     private val dataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,
     private val pushProviders: Supplier<PushProviders>
-): Provider<UAirship.Platform> {
-    override fun get(): UAirship.Platform {
-        val existingPlatform = UAirship.Platform.fromRawValue(
-            rawValue = dataStore.getInt(PLATFORM_KEY, UAirship.Platform.UNKNOWN.rawValue)
+): Provider<Airship.Platform> {
+    override fun get(): Airship.Platform {
+        val existingPlatform = Airship.Platform.fromRawValue(
+            rawValue = dataStore.getInt(PLATFORM_KEY, Airship.Platform.UNKNOWN.rawValue)
         )
-        return if (existingPlatform != UAirship.Platform.UNKNOWN) {
+        return if (existingPlatform != Airship.Platform.UNKNOWN) {
             existingPlatform
         } else if (privacyManager.isAnyFeatureEnabled) {
             val platform = determinePlatform()
             dataStore.put(PLATFORM_KEY, platform.rawValue)
             platform
         } else {
-            UAirship.Platform.UNKNOWN
+            Airship.Platform.UNKNOWN
         }
     }
 
-    private fun determinePlatform(): UAirship.Platform {
-        val platform: UAirship.Platform
+    private fun determinePlatform(): Airship.Platform {
+        val platform: Airship.Platform
         val bestProvider = pushProviders.get()?.bestProvider
         if (bestProvider != null) {
             platform = bestProvider.platform
@@ -44,13 +44,13 @@ internal class DeferredPlatformProvider(
             )
         } else if (PlayServicesUtils.isGooglePlayStoreAvailable(context)) {
             UALog.i("Google Play Store available. Setting platform to Android.")
-            platform = UAirship.Platform.ANDROID
+            platform = Airship.Platform.ANDROID
         } else if ("amazon".equals(Build.MANUFACTURER, ignoreCase = true)) {
             UALog.i("Build.MANUFACTURER is AMAZON. Setting platform to Amazon.")
-            platform = UAirship.Platform.AMAZON
+            platform = Airship.Platform.AMAZON
         } else {
             UALog.i("Defaulting platform to Android.")
-            platform = UAirship.Platform.ANDROID
+            platform = Airship.Platform.ANDROID
         }
         return platform
     }

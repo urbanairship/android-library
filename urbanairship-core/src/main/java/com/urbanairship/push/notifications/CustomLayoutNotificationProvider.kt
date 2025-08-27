@@ -6,8 +6,7 @@ import android.widget.RemoteViews
 import androidx.annotation.LayoutRes
 import androidx.core.app.NotificationCompat
 import com.urbanairship.AirshipConfigOptions
-import com.urbanairship.UAirship
-import com.urbanairship.UAirship.Companion.applicationContext
+import com.urbanairship.Airship.Companion.applicationContext
 
 /**
  * A notification provider that allows the use of layout XML. The default binding will

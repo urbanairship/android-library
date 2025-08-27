@@ -6,7 +6,7 @@ import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.core.util.Supplier
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.UrlAllowList
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 
@@ -43,20 +43,20 @@ public class WalletAction : OpenExternalUrlAction {
     public override fun perform(arguments: ActionArguments): ActionResult {
         UALog.i("Processing Wallet adaptive link.")
 
-        val intent = Intent(UAirship.applicationContext, WalletLoadingActivity::class.java)
+        val intent = Intent(Airship.applicationContext, WalletLoadingActivity::class.java)
             .apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 setData(Uri.parse(arguments.value.string))
             }
 
-        UAirship.applicationContext.startActivity(intent)
+        Airship.applicationContext.startActivity(intent)
 
         return newEmptyResult()
     }
 
     public override fun acceptsArguments(arguments: ActionArguments): Boolean {
         // Only support Android platform
-        if (UAirship.shared().platformType != UAirship.Platform.ANDROID) {
+        if (Airship.shared().platformType != Airship.Platform.ANDROID) {
             return false
         }
 

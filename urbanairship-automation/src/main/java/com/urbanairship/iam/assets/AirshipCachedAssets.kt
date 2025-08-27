@@ -10,7 +10,7 @@ import android.util.Size
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -246,7 +246,7 @@ internal class DefaultAirshipCachedAssets(
 
             val result = DefaultAirshipCachedAssets(
                 directory = directory,
-                fileManager = DefaultAssetFileManager(UAirship.applicationContext)
+                fileManager = DefaultAssetFileManager(Airship.applicationContext)
             )
             result.metadataCache.putAll(metadata.map)
 

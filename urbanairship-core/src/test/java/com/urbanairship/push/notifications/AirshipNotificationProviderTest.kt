@@ -8,7 +8,7 @@ import androidx.core.os.bundleOf
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.TestApplication
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.push.PushMessage
 import io.mockk.every
 import io.mockk.mockk
@@ -30,7 +30,7 @@ class AirshipNotificationProviderTest {
         .setNotificationChannel("test_channel")
         .build()
 
-    private val context = UAirship.applicationContext
+    private val context = Airship.applicationContext
     private var provider = AirshipNotificationProvider(context, configOptions)
 
     private var defaultPushMessage = PushMessage(

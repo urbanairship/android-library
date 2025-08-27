@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -26,17 +25,14 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.contacts.OpenChannelRegistrationOptions
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
@@ -205,12 +201,12 @@ internal class CreateOpenChannelViewModel: ViewModel() {
         get() = platform.value.isNotEmpty() && address.value.isNotEmpty()
 
     fun perform() {
-        if (!UAirship.isFlying || platform.value.isEmpty() || address.value.isEmpty()) {
+        if (!Airship.isFlying || platform.value.isEmpty() || address.value.isEmpty()) {
             return
         }
 
         val options = OpenChannelRegistrationOptions.options(platform.value, identifiers.value)
-        UAirship.shared().contact.registerOpenChannel(address.value, options)
+        Airship.shared().contact.registerOpenChannel(address.value, options)
     }
 
     fun addIdentifier(key: String, value: String) {

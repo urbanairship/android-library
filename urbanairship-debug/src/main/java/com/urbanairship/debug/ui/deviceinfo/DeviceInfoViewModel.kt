@@ -6,18 +6,15 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.runtime.collectAsState
 import androidx.lifecycle.ViewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.push.PushProvider
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.suspendCancellableCoroutine
 
 internal interface DeviceInfoViewModel {
 
@@ -52,56 +49,56 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
     override val pushProvider: Flow<PushProvider.DeliveryType?> = _pushProvider.asStateFlow()
     override val namedUser: Flow<String?>
         get() {
-            return if (!UAirship.isFlying) {
+            return if (!Airship.isFlying) {
                 emptyFlow()
             } else {
-                UAirship.shared().contact.namedUserIdFlow
+                Airship.shared().contact.namedUserIdFlow
             }
         }
 
     override val channelTags: Flow<Set<String>>
         get() {
-            return if (!UAirship.isFlying) {
+            return if (!Airship.isFlying) {
                 emptyFlow()
             } else {
-                flowOf(UAirship.shared().channel.tags)
+                flowOf(Airship.shared().channel.tags)
             }
         }
 
     override val channelId: Flow<String?>
         get() {
-            return if (!UAirship.isFlying) {
+            return if (!Airship.isFlying) {
                 emptyFlow()
             } else {
-                UAirship.shared().channel.channelIdFlow
+                Airship.shared().channel.channelIdFlow
             }
         }
 
     override val contactId: Flow<String?>
         get() {
-            return if (!UAirship.isFlying) {
+            return if (!Airship.isFlying) {
                 emptyFlow()
             } else {
-                flowOf(UAirship.shared().contact.lastContactId)
+                flowOf(Airship.shared().contact.lastContactId)
             }
         }
 
 
     init {
-        if (!UAirship.isFlying) {
-            UAirship.shared { refresh() }
+        if (!Airship.isFlying) {
+            Airship.shared { refresh() }
         } else {
             refresh()
         }
     }
 
     override fun togglePushEnabled() {
-        if (!UAirship.isFlying) {
+        if (!Airship.isFlying) {
             _pushStatus.update { false }
             return
         }
 
-        UAirship.shared().pushManager.userNotificationsEnabled = !_pushStatus.value
+        Airship.shared().pushManager.userNotificationsEnabled = !_pushStatus.value
         refresh()
     }
 
@@ -111,12 +108,12 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
     }
 
     override fun copyChannelId(context: Context) {
-        val id = UAirship.shared().channel.id ?: return
+        val id = Airship.shared().channel.id ?: return
         copyToClipboard(context, id, "Channel Id")
     }
 
     override fun copyUserId(context: Context) {
-        val id = UAirship.shared().contact.lastContactId ?: return
+        val id = Airship.shared().contact.lastContactId ?: return
         copyToClipboard(context, id, "User Id")
     }
 
@@ -128,13 +125,13 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
     }
 
     private fun refresh() {
-        if (!UAirship.isFlying) {
+        if (!Airship.isFlying) {
             return
         }
 
-        _pushStatus.update { UAirship.shared().pushManager.userNotificationsEnabled }
-        _optInStatus.update { UAirship.shared().pushManager.isOptIn }
-        _pushToken.update { UAirship.shared().pushManager.pushToken }
-        _pushProvider.update { UAirship.shared().pushManager.pushProvider?.deliveryType }
+        _pushStatus.update { Airship.shared().pushManager.userNotificationsEnabled }
+        _optInStatus.update { Airship.shared().pushManager.isOptIn }
+        _pushToken.update { Airship.shared().pushManager.pushToken }
+        _pushProvider.update { Airship.shared().pushManager.pushProvider?.deliveryType }
     }
 }

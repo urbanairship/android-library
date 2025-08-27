@@ -2,7 +2,7 @@
 package com.urbanairship.actions
 
 import android.content.Intent
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 import com.urbanairship.json.optionalField
 import com.urbanairship.util.AppStoreUtils
@@ -44,26 +44,26 @@ public class RateAppAction public constructor() : Action() {
         if (shouldShowLinkPrompt) {
             startRateAppActivity(arguments)
         } else {
-            val airship = UAirship.shared()
+            val airship = Airship.shared()
             val openLinkIntent = AppStoreUtils
                 .getAppStoreIntent(
-                    UAirship.applicationContext, airship.platformType, airship.airshipConfigOptions
+                    Airship.applicationContext, airship.platformType, airship.airshipConfigOptions
                 )
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-            UAirship.applicationContext.startActivity(openLinkIntent)
+            Airship.applicationContext.startActivity(openLinkIntent)
         }
 
         return newEmptyResult()
     }
 
     private fun startRateAppActivity(arguments: ActionArguments) {
-        val context = UAirship.applicationContext
+        val context = Airship.applicationContext
         val argMap = arguments.value.toJsonValue().optMap()
 
         val intent = Intent(SHOW_RATE_APP_INTENT_ACTION)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            .setPackage(UAirship.applicationContext.packageName)
+            .setPackage(Airship.applicationContext.packageName)
 
         argMap.optionalField<String>(TITLE_KEY)?.let {
             intent.putExtra(TITLE_KEY, it)

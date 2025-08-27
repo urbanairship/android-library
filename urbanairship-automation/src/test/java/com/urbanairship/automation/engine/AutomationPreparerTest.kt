@@ -4,7 +4,7 @@ import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.Event
 import com.urbanairship.audience.AudienceEvaluator
@@ -21,7 +21,6 @@ import com.urbanairship.automation.deferred.DeferredScheduleResult
 import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.cache.AirshipCache
-import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.deferred.DeferredRequest
 import com.urbanairship.deferred.DeferredResolver
@@ -646,8 +645,8 @@ public class AutomationPreparerTest {
             return@answers Result.success(preparedMessageData)
         }
 
-        mockkStatic(UAirship::class)
-        every { UAirship.getVersion() } returns "1"
+        mockkStatic(Airship::class)
+        every { Airship.getVersion() } returns "1"
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
         if (result is SchedulePrepareResult.Prepared) {
@@ -701,8 +700,8 @@ public class AutomationPreparerTest {
             )
         }
 
-        mockkObject(UAirship)
-        every { UAirship.getVersion() } returns "1"
+        mockkObject(Airship)
+        every { Airship.getVersion() } returns "1"
 
         assertEquals(SchedulePrepareResult.Skip, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
     }

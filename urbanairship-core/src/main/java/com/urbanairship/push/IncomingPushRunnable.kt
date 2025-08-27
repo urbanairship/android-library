@@ -9,7 +9,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionRunRequest
@@ -18,7 +18,6 @@ import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.push.PushManager
 import com.urbanairship.push.notifications.NotificationArguments
 import com.urbanairship.push.notifications.NotificationChannelCompat
 import com.urbanairship.push.notifications.NotificationChannelUtils
@@ -52,7 +51,7 @@ internal class IncomingPushRunnable private constructor(
         Autopilot.automaticTakeOff(context)
 
         val airshipWaitTime = if (isLongRunning) LONG_AIRSHIP_WAIT_TIME else AIRSHIP_WAIT_TIME
-        val airship = UAirship.waitForTakeOff(airshipWaitTime.inWholeMilliseconds)
+        val airship = Airship.waitForTakeOff(airshipWaitTime.inWholeMilliseconds)
 
         if (airship == null) {
             UALog.e("Unable to process push, Airship is not ready. Make sure takeOff " +
@@ -80,7 +79,7 @@ internal class IncomingPushRunnable private constructor(
      *
      * @param airship The airship instance.
      */
-    private fun processPush(airship: UAirship) {
+    private fun processPush(airship: Airship) {
         UALog.i("Processing push: $message")
 
         if (!airship.pushManager.isPushEnabled) {
@@ -121,7 +120,7 @@ internal class IncomingPushRunnable private constructor(
      * @param airship The airship instance.
      */
     @Throws(IllegalArgumentException::class)
-    private fun postProcessPush(airship: UAirship) {
+    private fun postProcessPush(airship: Airship) {
         if (!airship.pushManager.isOptIn) {
             UALog.i(
                 "User notifications opted out. Unable to display notification for message: $message",
@@ -223,12 +222,12 @@ internal class IncomingPushRunnable private constructor(
     }
 
     private fun postProcessPushFinished(
-        airship: UAirship,
+        airship: Airship,
         message: PushMessage,
         notificationPosted: Boolean
     ) = airship.pushManager.onPushReceived(message, notificationPosted)
 
-    private fun getNotificationProvider(airship: UAirship): NotificationProvider? {
+    private fun getNotificationProvider(airship: Airship): NotificationProvider? {
         if (message.isAirshipPush) {
             return airship.pushManager.notificationProvider
         }
@@ -243,7 +242,7 @@ internal class IncomingPushRunnable private constructor(
      * @param notification The notification.
      */
     @Suppress("deprecation")
-    private fun applyDeprecatedSettings(airship: UAirship, notification: Notification) {
+    private fun applyDeprecatedSettings(airship: Airship, notification: Notification) {
         if (!airship.pushManager.isVibrateEnabled || airship.pushManager.isInQuietTime) {
             // Remove both the vibrate and the DEFAULT_VIBRATE flag
             notification.vibrate = null
@@ -258,7 +257,7 @@ internal class IncomingPushRunnable private constructor(
     }
 
     private fun getNotificationChannel(
-        airship: UAirship,
+        airship: Airship,
         notification: Notification,
         arguments: NotificationArguments
     ): NotificationChannelCompat? {
@@ -345,7 +344,7 @@ internal class IncomingPushRunnable private constructor(
      * @param providerClass The provider class.
      * @return `true` if the message should be processed, otherwise `false`.
      */
-    private fun checkProvider(airship: UAirship, providerClass: String?): Boolean {
+    private fun checkProvider(airship: Airship, providerClass: String?): Boolean {
         val provider = airship.pushManager.pushProvider
 
         if (provider == null || provider.javaClass.toString() != providerClass) {

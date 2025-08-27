@@ -6,7 +6,7 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
@@ -35,8 +35,8 @@ public object PushProviderBridge {
         newToken: String?
     ) {
         Autopilot.automaticTakeOff(context)
-        if (UAirship.isFlying || UAirship.isTakingOff) {
-            UAirship.shared { airship ->
+        if (Airship.isFlying || Airship.isTakingOff) {
+            Airship.shared { airship ->
                 airship.pushManager.onTokenChanged(
                     pushProviderClass, newToken
                 )

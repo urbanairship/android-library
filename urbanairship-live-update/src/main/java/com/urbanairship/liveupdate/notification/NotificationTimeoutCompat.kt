@@ -5,7 +5,7 @@ import android.content.Context
 import android.os.Build
 import androidx.core.app.AlarmManagerCompat
 import androidx.core.app.NotificationCompat
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.util.Clock
 import com.urbanairship.util.PendingIntentCompat
 
@@ -16,7 +16,7 @@ import com.urbanairship.util.PendingIntentCompat
  * On earlier versions, an alarm is set to dismiss the notification.
  */
 internal class NotificationTimeoutCompat(
-    private val context: Context = UAirship.applicationContext,
+    private val context: Context = Airship.applicationContext,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
 ) {
     private val alarmManager: AlarmManager by lazy {

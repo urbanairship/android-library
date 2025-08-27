@@ -24,7 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.TopBarNavigation
@@ -108,7 +108,7 @@ internal interface ChannelViewModel {
 }
 
 internal class DefaultChannelViewModel: ChannelViewModel, ViewModel() {
-    override var channelId = UAirship.shared()
+    override var channelId = Airship.shared()
         .channel
         .channelIdFlow
         .map { it?.uppercase() }

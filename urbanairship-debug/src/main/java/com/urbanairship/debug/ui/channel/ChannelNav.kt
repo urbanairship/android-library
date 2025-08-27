@@ -6,7 +6,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.navigation.navigation
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.channel.SubscriptionListEditor
 import com.urbanairship.debug.ui.DebugScreen
 
@@ -32,8 +32,8 @@ internal fun NavGraphBuilder.channelNav(navController: NavController) {
         composable(ChannelInfoScreens.TagGroups.route) {
             TagGroupsScreen(
                 editorProvider = {
-                    if (UAirship.isFlying) {
-                        UAirship.shared().channel.editTagGroups()
+                    if (Airship.isFlying) {
+                        Airship.shared().channel.editTagGroups()
                     } else {
                         null
                     }
@@ -45,8 +45,8 @@ internal fun NavGraphBuilder.channelNav(navController: NavController) {
         composable(ChannelInfoScreens.Attributes.route) {
             AttributeEditScreen(
                 editorProvider = {
-                    if (UAirship.isFlying) {
-                        UAirship.shared().channel.editAttributes()
+                    if (Airship.isFlying) {
+                        Airship.shared().channel.editAttributes()
                     } else {
                         null
                     }
@@ -59,15 +59,15 @@ internal fun NavGraphBuilder.channelNav(navController: NavController) {
             SubscriptionListsScreen(
                 provider = object : SubscriptionListProvider {
                     override fun getEditor(): SubscriptionListEditor? {
-                        return if (UAirship.isFlying) {
-                            UAirship.shared().channel.editSubscriptionLists()
+                        return if (Airship.isFlying) {
+                            Airship.shared().channel.editSubscriptionLists()
                         } else {
                             null
                         }
                     }
 
                     override suspend fun fetch(): Result<Set<String>> {
-                        return UAirship.shared().channel.fetchSubscriptionLists()
+                        return Airship.shared().channel.fetchSubscriptionLists()
                     }
                 },
                 onNavigateUp = { navController.popBackStack() }

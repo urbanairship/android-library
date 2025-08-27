@@ -19,7 +19,7 @@ import android.widget.ProgressBar
 import androidx.core.view.doOnAttach
 import androidx.core.view.isVisible
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ItemProperties
@@ -239,7 +239,7 @@ internal class MediaView(
                     }
                     .build()
 
-                UAirship.shared().getImageLoader().load(context, iv, options)
+                Airship.shared().getImageLoader().load(context, iv, options)
             }
 
             loadImage(url)

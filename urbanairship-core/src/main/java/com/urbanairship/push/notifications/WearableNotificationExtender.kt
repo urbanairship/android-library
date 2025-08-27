@@ -4,7 +4,7 @@ package com.urbanairship.push.notifications
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 
@@ -37,7 +37,7 @@ public class WearableNotificationExtender public constructor(
         }
 
         if (!actionGroupId.isNullOrEmpty()) {
-            UAirship.shared().pushManager
+            Airship.shared().pushManager
                 .getNotificationActionGroup(actionGroupId)
                 ?.let {
                     extender.addActions(it.createAndroidActions(context, arguments, actionsPayload))

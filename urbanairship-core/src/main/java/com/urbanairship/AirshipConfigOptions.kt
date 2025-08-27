@@ -24,7 +24,7 @@ import kotlin.time.Duration.Companion.minutes
 
 /**
  * This class holds the set of options necessary to properly initialize
- * [com.urbanairship.UAirship].
+ * [com.urbanairship.Airship].
  */
 public class AirshipConfigOptions private constructor(builder: Builder) {
 
@@ -635,10 +635,10 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
 
         /**
          * The flag indicating whether data collection needs to be opted in with
-         * [UAirship.setDataCollectionEnabled].
+         * [Airship.setDataCollectionEnabled].
          *
          * This flag will only take affect on first run. If previously not enabled, the device
-         * will still have data collection enabled until disabled with [UAirship.setDataCollectionEnabled].
+         * will still have data collection enabled until disabled with [Airship.setDataCollectionEnabled].
          */
         @Deprecated(message = "Use {@link #enabledFeatures} instead.")
         public var dataCollectionOptInEnabled: Boolean = false
@@ -1502,10 +1502,10 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
 
         /**
          * Set the flag indicating whether data collection needs to be opted in with
-         * [UAirship.setDataCollectionEnabled].
+         * [Airship.setDataCollectionEnabled].
          *
          * This flag will only take affect on first run. If previously not enabled, the device
-         * will still have data collection enabled until disabled with [UAirship.setDataCollectionEnabled].
+         * will still have data collection enabled until disabled with [Airship.setDataCollectionEnabled].
          *
          * @param dataCollectionOptInEnabled The flag indicating whether data collection needs to be opted in.
          * @return The config options builder.

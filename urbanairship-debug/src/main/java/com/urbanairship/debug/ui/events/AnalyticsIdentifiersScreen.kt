@@ -26,7 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.Section
@@ -160,17 +160,17 @@ internal class DefaultAnalyticsIdentifierViewModel: AnalyticsIdentifierViewModel
     override val identifiers: Flow<List<Identifier>> = _identifiersFlow.asStateFlow()
 
     init {
-        UAirship.shared {
+        Airship.shared {
             refresh()
         }
     }
 
     override fun addIdentifier(item: Identifier) {
-        if (!UAirship.isFlying || _identifiersFlow.value.contains(item)) {
+        if (!Airship.isFlying || _identifiersFlow.value.contains(item)) {
             return
         }
 
-        UAirship.shared().analytics
+        Airship.shared().analytics
             .editAssociatedIdentifiers()
             .addIdentifier(item.name, item.value)
             .apply()
@@ -179,11 +179,11 @@ internal class DefaultAnalyticsIdentifierViewModel: AnalyticsIdentifierViewModel
     }
 
     override fun remove(item: Identifier) {
-        if (!UAirship.isFlying ||  !_identifiersFlow.value.contains(item)) {
+        if (!Airship.isFlying ||  !_identifiersFlow.value.contains(item)) {
             return
         }
 
-        UAirship.shared().analytics
+        Airship.shared().analytics
             .editAssociatedIdentifiers()
             .removeIdentifier(item.name)
             .apply()
@@ -192,11 +192,11 @@ internal class DefaultAnalyticsIdentifierViewModel: AnalyticsIdentifierViewModel
     }
 
     private fun refresh() {
-        if (!UAirship.isFlying) {
+        if (!Airship.isFlying) {
             return
         }
 
-        val analytics = UAirship.shared().analytics
+        val analytics = Airship.shared().analytics
         _identifiersFlow.update { analytics.associatedIdentifiers.ids.map { Identifier(it.key, it.value) } }
     }
 }

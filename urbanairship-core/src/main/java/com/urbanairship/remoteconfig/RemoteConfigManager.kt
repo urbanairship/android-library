@@ -8,7 +8,7 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonMap
@@ -52,7 +52,7 @@ public class RemoteConfigManager(
         if (privacyManager.isAnyFeatureEnabled) {
             if (subscription?.isActive != true) {
                 val platformConfig = when(runtimeConfig.platform) {
-                    UAirship.Platform.AMAZON -> CONFIG_TYPE_AMAZON
+                    Airship.Platform.AMAZON -> CONFIG_TYPE_AMAZON
                     else -> CONFIG_TYPE_ANDROID
                 }
 

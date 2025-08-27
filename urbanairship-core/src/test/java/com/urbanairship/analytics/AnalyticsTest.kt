@@ -11,7 +11,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestApplication
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.analytics.Analytics.AnalyticsHeaderDelegate
 import com.urbanairship.analytics.data.EventManager
 import com.urbanairship.analytics.location.RegionEvent
@@ -419,7 +419,7 @@ public class AnalyticsTest {
         val expectedHeaders = mapOf(
             "X-UA-Device-Family" to "android",
             "X-UA-Package-Name" to context.packageName,
-            "X-UA-Package-Version" to (UAirship
+            "X-UA-Package-Version" to (Airship
                 .applicationContext
                 .packageManager
                 .getPackageInfo(context.packageName, 0)
@@ -430,7 +430,7 @@ public class AnalyticsTest {
             "X-UA-In-Production" to  runtimeConfig.configOptions.inProduction.toString(),
             "X-UA-Device-Model" to  Build.MODEL,
             "X-UA-Android-Version-Code" to  Build.VERSION.SDK_INT.toString(),
-            "X-UA-Lib-Version" to UAirship.getVersion(),
+            "X-UA-Lib-Version" to Airship.getVersion(),
             "X-UA-Timezone" to TimeZone.getDefault().id,
             "X-UA-Locale-Language" to "en",
             "X-UA-Locale-Country" to "US",
@@ -455,7 +455,7 @@ public class AnalyticsTest {
     @Test
     public fun testAmazonDeviceFamily() {
         every { mockChannel.id } returns "channel"
-        runtimeConfig.setPlatform(UAirship.Platform.AMAZON)
+        runtimeConfig.setPlatform(Airship.Platform.AMAZON)
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         analytics.onPerformJob(mockk(), jobInfo)

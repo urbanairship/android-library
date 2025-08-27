@@ -1,7 +1,7 @@
 package com.urbanairship.preferencecenter
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.preferencecenter.data.Condition
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.pushNotificationStatusFlow
@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ConditionStateMonitor(
-    private val pushManager: PushManager = UAirship.shared().pushManager,
+    private val pushManager: PushManager = Airship.shared().pushManager,
 ) {
 
     public val states: Flow<Condition.State> = pushManager.pushNotificationStatusFlow

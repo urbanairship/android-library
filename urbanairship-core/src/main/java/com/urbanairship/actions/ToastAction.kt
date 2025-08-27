@@ -2,7 +2,7 @@
 package com.urbanairship.actions
 
 import android.widget.Toast
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newResult
 
 /**
@@ -52,9 +52,9 @@ public class ToastAction public constructor() : Action() {
             ?: arguments.value.string
 
         if (length == Toast.LENGTH_LONG) {
-            Toast.makeText(UAirship.applicationContext, text, Toast.LENGTH_LONG).show()
+            Toast.makeText(Airship.applicationContext, text, Toast.LENGTH_LONG).show()
         } else {
-            Toast.makeText(UAirship.applicationContext, text, Toast.LENGTH_SHORT).show()
+            Toast.makeText(Airship.applicationContext, text, Toast.LENGTH_SHORT).show()
         }
 
         return newResult(arguments.value)

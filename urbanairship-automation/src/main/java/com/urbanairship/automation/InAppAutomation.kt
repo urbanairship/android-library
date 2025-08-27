@@ -5,7 +5,7 @@ package com.urbanairship.automation
 import androidx.annotation.RestrictTo
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.automation.engine.AutomationEngine
 import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -150,7 +150,7 @@ internal constructor(
          */
         @JvmStatic
         public fun shared(): InAppAutomation {
-            return UAirship.shared().requireComponent(InAppAutomationComponent::class.java).automation
+            return Airship.shared().requireComponent(InAppAutomationComponent::class.java).automation
         }
     }
 }

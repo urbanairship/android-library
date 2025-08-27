@@ -6,8 +6,7 @@ import android.content.Context
 import android.content.Intent
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
-import com.urbanairship.util.UAStringUtil
+import com.urbanairship.Airship
 
 /**
  * Tracks Google Play Store install referrals. The receiver needs to be added
@@ -36,7 +35,7 @@ public class InstallReceiver public constructor() : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
         Autopilot.automaticTakeOff(context)
-        if (!UAirship.isTakingOff && !UAirship.isFlying) {
+        if (!Airship.isTakingOff && !Airship.isFlying) {
             UALog.e("InstallReceiver - unable to track install referrer, takeOff not called.")
             return
         }
@@ -52,7 +51,7 @@ public class InstallReceiver public constructor() : BroadcastReceiver() {
         }
 
         val event = InstallAttributionEvent(referrer)
-        UAirship.shared().analytics.addEvent(event)
+        Airship.shared().analytics.addEvent(event)
     }
 
     private companion object {

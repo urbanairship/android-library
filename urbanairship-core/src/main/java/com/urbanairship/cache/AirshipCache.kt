@@ -5,7 +5,7 @@ import androidx.annotation.RestrictTo
 import androidx.core.content.pm.PackageInfoCompat
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -25,7 +25,7 @@ public class AirshipCache(
     runtimeConfig: AirshipRuntimeConfig,
     isPersistent: Boolean = true,
     appVersion: String? = null,
-    private val sdkVersion: String = UAirship.getVersion(),
+    private val sdkVersion: String = Airship.getVersion(),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) {

@@ -6,7 +6,7 @@ import android.app.Application;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.urbanairship.UAirship;
+import com.urbanairship.Airship;
 import com.urbanairship.channel.AirshipChannelListener;
 
 import androidx.annotation.NonNull;
@@ -31,18 +31,18 @@ public class HomeViewModel extends AndroidViewModel {
     public HomeViewModel(Application application) {
         super(application);
 
-        UAirship.shared().getChannel().addChannelListener(channelListener);
+        Airship.shared().getChannel().addChannelListener(channelListener);
         refreshChannel();
     }
 
     private void refreshChannel() {
-        channelId.setValue(UAirship.shared().getChannel().getId());
+        channelId.setValue(Airship.shared().getChannel().getId());
     }
 
     @Override
     protected void onCleared() {
         super.onCleared();
-        UAirship.shared().getChannel().removeChannelListener(channelListener);
+        Airship.shared().getChannel().removeChannelListener(channelListener);
     }
 
     /**

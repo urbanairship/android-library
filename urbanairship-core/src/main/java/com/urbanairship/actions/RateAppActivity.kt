@@ -12,7 +12,7 @@ import android.view.View
 import com.urbanairship.Autopilot
 import com.urbanairship.R
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.activity.ThemedActivity
 import com.urbanairship.util.AppStoreUtils
 
@@ -28,7 +28,7 @@ public class RateAppActivity public constructor() : ThemedActivity() {
         super.onCreate(savedInstanceState)
         Autopilot.automaticTakeOff(application)
 
-        if (!UAirship.isTakingOff && !UAirship.isFlying) {
+        if (!Airship.isTakingOff && !Airship.isFlying) {
             UALog.e("RateAppActivity - unable to create activity, takeOff not called.")
             finish()
         }
@@ -93,7 +93,7 @@ public class RateAppActivity public constructor() : ThemedActivity() {
             context.getString(R.string.ua_rate_app_action_default_rate_positive_button)
         ) { dialog, _ ->
             try {
-                val airship = UAirship.shared()
+                val airship = Airship.shared()
                 val openLinkIntent = AppStoreUtils.getAppStoreIntent(
                     context, airship.platformType, airship.airshipConfigOptions
                 )
@@ -145,8 +145,8 @@ public class RateAppActivity public constructor() : ThemedActivity() {
 
     private val appName: String
         get() {
-            val packageName = UAirship.applicationContext.packageName
-            val packageManager = UAirship.applicationContext.packageManager
+            val packageName = Airship.applicationContext.packageName
+            val packageManager = Airship.applicationContext.packageManager
 
             try {
                 val info =

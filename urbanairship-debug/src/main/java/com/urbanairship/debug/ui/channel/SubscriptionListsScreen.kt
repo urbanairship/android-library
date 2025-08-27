@@ -30,7 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.channel.SubscriptionListEditor
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
@@ -156,7 +156,7 @@ internal class SubscriptionListsViewModel: ViewModel() {
     }
 
     fun perform() {
-        if (!UAirship.isFlying || !isComplete) {
+        if (!Airship.isFlying || !isComplete) {
             return
         }
 
@@ -172,7 +172,7 @@ internal class SubscriptionListsViewModel: ViewModel() {
     }
 
     private fun refresh() {
-        if (!UAirship.isFlying) {
+        if (!Airship.isFlying) {
             return
         }
 

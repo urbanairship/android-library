@@ -4,7 +4,7 @@ import android.net.Uri
 import android.util.Base64
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.UAStringUtil
 import io.mockk.coEvery
@@ -26,7 +26,7 @@ import org.robolectric.RobolectricTestRunner
 public class DefaultRequestSessionTest {
 
     private val appConfig = TestAirshipRuntimeConfig().configOptions
-    private val platform = UAirship.Platform.ANDROID
+    private val platform = Airship.Platform.ANDROID
     private val mockClient = mockk<HttpClient>()
     private val mockAuthProvider = mockk<AuthTokenProvider>()
     private val testClock = TestClock()
@@ -44,7 +44,7 @@ public class DefaultRequestSessionTest {
 
     private val expectedDefaultHeaders = mapOf(
         "X-UA-App-Key" to appConfig.appKey,
-        "User-Agent" to "(UrbanAirshipLib-${platform.stringValue}/${UAirship.getVersion()}; ${appConfig.appKey})"
+        "User-Agent" to "(UrbanAirshipLib-${platform.stringValue}/${Airship.getVersion()}; ${appConfig.appKey})"
     )
 
     private var nonce = "noncesense"

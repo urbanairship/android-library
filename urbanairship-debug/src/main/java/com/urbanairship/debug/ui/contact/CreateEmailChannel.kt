@@ -34,13 +34,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.contacts.EmailRegistrationOptions
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.Section
 import com.urbanairship.debug.ui.components.TopBarNavigation
-import com.urbanairship.debug.ui.events.EventPropertiesViewModel
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -189,7 +188,7 @@ internal class CreateEmailChannelViewModel: ViewModel() {
     }
 
     fun perform() {
-        if (!UAirship.isFlying || !isComplete) {
+        if (!Airship.isFlying || !isComplete) {
             return
         }
 
@@ -217,7 +216,7 @@ internal class CreateEmailChannelViewModel: ViewModel() {
             }
         }
 
-        UAirship.shared().contact.registerEmail(email.value, options)
+        Airship.shared().contact.registerEmail(email.value, options)
     }
 
     sealed class PropertyValue(val key: String): Serializable {

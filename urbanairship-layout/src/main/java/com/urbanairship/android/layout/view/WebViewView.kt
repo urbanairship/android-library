@@ -18,7 +18,7 @@ import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
 import android.widget.ProgressBar
 import androidx.core.view.isVisible
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.UrlAllowList
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
@@ -164,7 +164,7 @@ internal class WebViewView(
 
         addView(frameLayout)
 
-        if (!UAirship.shared().urlAllowList.isAllowed(model.viewInfo.url, UrlAllowList.Scope.OPEN_URL)) {
+        if (!Airship.shared().urlAllowList.isAllowed(model.viewInfo.url, UrlAllowList.Scope.OPEN_URL)) {
             UALog.e("URL not allowed. Unable to load: %s", model.viewInfo.url)
             return
         }

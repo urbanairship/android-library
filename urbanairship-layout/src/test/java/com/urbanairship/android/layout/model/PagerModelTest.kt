@@ -2,7 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.SharedState
@@ -94,11 +94,11 @@ public class PagerModelTest {
             listener = mockViewListener
         }
 
-        mockkStatic(UAirship::class)
-        every { UAirship.shared() } returns mockk {
-            every { platformType } returns UAirship.Platform.ANDROID
+        mockkStatic(Airship::class)
+        every { Airship.shared() } returns mockk {
+            every { platformType } returns Airship.Platform.ANDROID
         }
-        every { UAirship.applicationContext } returns mockk()
+        every { Airship.applicationContext } returns mockk()
 
         mockkStatic(PagerView::pagerScrolls)
         every { mockView.pagerScrolls() } returns scrollsFlow
@@ -109,7 +109,7 @@ public class PagerModelTest {
         Dispatchers.resetMain()
 
         unmockkStatic(PagerView::pagerScrolls)
-        unmockkStatic(UAirship::class)
+        unmockkStatic(Airship::class)
     }
 
     @Test

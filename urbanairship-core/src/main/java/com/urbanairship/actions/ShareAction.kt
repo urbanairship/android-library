@@ -3,7 +3,7 @@ package com.urbanairship.actions
 
 import android.content.Intent
 import com.urbanairship.R
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 
 /**
@@ -39,7 +39,7 @@ public class ShareAction public constructor() : Action() {
     }
 
     override fun perform(arguments: ActionArguments): ActionResult {
-        val context = UAirship.applicationContext
+        val context = Airship.applicationContext
 
         val sharingIntent = Intent(Intent.ACTION_SEND)
             .setType("text/plain")

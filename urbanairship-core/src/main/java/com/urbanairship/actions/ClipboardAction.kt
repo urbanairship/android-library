@@ -4,7 +4,7 @@ package com.urbanairship.actions
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newResult
 import com.urbanairship.json.optionalField
 
@@ -60,7 +60,7 @@ public class ClipboardAction public constructor() : Action() {
             label = null
         }
 
-        val clipboardManager = UAirship.applicationContext
+        val clipboardManager = Airship.applicationContext
             .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText(label, text)
         clipboardManager.setPrimaryClip(clip)

@@ -12,7 +12,7 @@ import com.urbanairship.AirshipConfigOptions;
 import com.urbanairship.AirshipVersionInfo;
 import com.urbanairship.BuildConfig;
 import com.urbanairship.UALog;
-import com.urbanairship.UAirship;
+import com.urbanairship.Airship;
 import com.urbanairship.google.PlayServicesUtils;
 import com.urbanairship.push.PushProvider;
 import com.urbanairship.util.UAStringUtil;
@@ -30,8 +30,8 @@ import androidx.annotation.RestrictTo;
 public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
 
     @Override
-    public UAirship.Platform getPlatform() {
-        return UAirship.Platform.ANDROID;
+    public Airship.Platform getPlatform() {
+        return Airship.Platform.ANDROID;
     }
 
     @NonNull
@@ -98,7 +98,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
 
     @NonNull
     private static FirebaseMessaging getFirebaseMessaging() throws IllegalStateException {
-        AirshipConfigOptions configOptions = UAirship.shared().getAirshipConfigOptions();
+        AirshipConfigOptions configOptions = Airship.shared().getAirshipConfigOptions();
         if (UAStringUtil.isEmpty(configOptions.fcmFirebaseAppName)) {
             // This will throw an IllegalStateException if firebase is not configured
             return FirebaseMessaging.getInstance();

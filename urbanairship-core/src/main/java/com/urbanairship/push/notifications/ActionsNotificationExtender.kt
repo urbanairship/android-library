@@ -3,7 +3,7 @@ package com.urbanairship.push.notifications
 
 import android.content.Context
 import androidx.core.app.NotificationCompat
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 
 /**
  * Notification builder extender to add UA notification action buttons to a
@@ -19,7 +19,7 @@ public class ActionsNotificationExtender public constructor(
     override fun extend(builder: NotificationCompat.Builder): NotificationCompat.Builder {
         val group = arguments.message.interactiveNotificationType
 
-        val actionGroup = UAirship.shared().pushManager.getNotificationActionGroup(group)
+        val actionGroup = Airship.shared().pushManager.getNotificationActionGroup(group)
             ?: return builder
 
         actionGroup

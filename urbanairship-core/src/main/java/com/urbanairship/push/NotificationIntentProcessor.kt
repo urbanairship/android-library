@@ -11,7 +11,7 @@ import androidx.core.os.bundleOf
 import com.urbanairship.AirshipExecutors
 import com.urbanairship.PendingResult
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
+import com.urbanairship.Airship
 import com.urbanairship.actions.Action.Situation
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionCompletionCallback
@@ -28,7 +28,7 @@ import java.util.concurrent.Executor
  * Processes notification intents.
  */
 internal class NotificationIntentProcessor(
-    private val airship: UAirship = UAirship.shared(),
+    private val airship: Airship = Airship.shared(),
     private val context: Context,
     private val intent: Intent,
     private val executor: Executor = AirshipExecutors.threadPoolExecutor()

@@ -37,7 +37,7 @@ public abstract class AirshipComponent @RestrictTo(RestrictTo.Scope.LIBRARY_GROU
 
     /**
      * Initialize the manager.
-     * Called in [UAirship] during takeoff.
+     * Called in [Airship] during takeoff.
      *
      * @hide
      */
@@ -47,7 +47,7 @@ public abstract class AirshipComponent @RestrictTo(RestrictTo.Scope.LIBRARY_GROU
 
     /**
      * Tear down the manager.
-     * Called in [UAirship] during land.
+     * Called in [Airship] during land.
      *
      * @hide
      */
@@ -76,7 +76,7 @@ public abstract class AirshipComponent @RestrictTo(RestrictTo.Scope.LIBRARY_GROU
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public open fun onPerformJob(airship: UAirship, jobInfo: JobInfo): JobResult {
+    public open fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
         return JobResult.SUCCESS
     }
 
