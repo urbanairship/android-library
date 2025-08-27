@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             style="@style/TextAppearance.Compat.Notification.Info"
-            android:text="Foxes" />
+            android:text="@string/live_update_team_foxes" />
     </LinearLayout>
 
     <LinearLayout
@@ -60,7 +60,7 @@
                 android:layout_gravity="center"
                 android:gravity="center"
                 style="@style/TextAppearance.Compat.Notification.Info"
-                android:text="VS" />
+                android:text="@string/live_update_vs" />
 
             <TextView
                 android:layout_width="0dp"
@@ -107,7 +107,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             style="@style/TextAppearance.Compat.Notification.Info"
-            android:text="Tigers" />
+            android:text="@string/live_update_team_tigers" />
     </LinearLayout>
 
 </LinearLayout>
