@@ -19,7 +19,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * Representation of an [Event] for persistent storage via Room.
  */
 @Entity(tableName = "events", indices = [Index(value = ["eventId"], unique = true)])
-internal data class EventEntity constructor(
+internal data class EventEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val type: String,

@@ -37,12 +37,10 @@ public abstract class BaseTagsAction : Action() {
     }
 
     override fun perform(arguments: ActionArguments): ActionResult {
-        if (arguments.value.string != null) {
-            arguments.value.string?.let {
-                val tags = setOf(it)
-                applyChannelTags(tags)
-                mutableMutations.tryEmit(TagActionMutation.ChannelTags(tags))
-            }
+        arguments.value.string?.let {
+            val tags = setOf(it)
+            applyChannelTags(tags)
+            mutableMutations.tryEmit(TagActionMutation.ChannelTags(tags))
         }
 
         if (arguments.value.list != null) {
