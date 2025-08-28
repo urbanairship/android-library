@@ -30,7 +30,7 @@ public class AttributeMutationTest {
             "timestamp" to DateUtils.createIso8601TimeStamp(100)
         )
 
-        assertEquals(expected, mutation.toJsonValue())
+        assertEquals(expected, mutation.toJsonValue().map)
     }
 
     @Test
@@ -43,7 +43,7 @@ public class AttributeMutationTest {
             "timestamp" to DateUtils.createIso8601TimeStamp(100)
         )
 
-        assertEquals(expected, mutation.toJsonValue())
+        assertEquals(expected, mutation.toJsonValue().map)
     }
 
     @Test

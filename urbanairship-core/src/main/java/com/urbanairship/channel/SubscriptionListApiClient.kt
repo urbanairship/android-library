@@ -17,7 +17,7 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.util.UAHttpStatusUtil
 
 @OpenForTesting
-internal class SubscriptionListApiClient constructor(
+internal class SubscriptionListApiClient(
     private val runtimeConfig: AirshipRuntimeConfig,
     private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
 ) {
