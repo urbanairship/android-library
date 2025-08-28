@@ -241,21 +241,21 @@ internal data class ContactManagementItem(
 
         private fun statusDescription(isOptedIn: Boolean): String? {
             return if (!isOptedIn) {
-                context.getString(R.string.ua_preference_center_contact_management_pending)
+                context.getString(com.urbanairship.preferencecenter.core.R.string.ua_preference_center_contact_management_pending)
             } else {
                 null
             }
         }
 
         private fun platformDescription(platform: Platform): String = when (platform) {
-            is Platform.Email -> context.getString(R.string.ua_preference_center_contact_management_email_description)
-            is Platform.Sms -> context.getString(R.string.ua_preference_center_contact_management_sms_description)
+            is Platform.Email -> context.getString(com.urbanairship.preferencecenter.core.R.string.ua_preference_center_contact_management_email_description)
+            is Platform.Sms -> context.getString(com.urbanairship.preferencecenter.core.R.string.ua_preference_center_contact_management_sms_description)
         }
 
         private fun addressDescription(maskedAddress: String) =
             maskedAddress.replace(
                 regex = contentDescriptionRedactedPattern,
-                replacement = context.getString(R.string.ua_preference_center_contact_management_redacted_description)
+                replacement = context.getString(com.urbanairship.preferencecenter.core.R.string.ua_preference_center_contact_management_redacted_description)
             )
 
         @DrawableRes

@@ -24,7 +24,7 @@ internal class SectionDividerDecoration(
             ?: throw Resources.NotFoundException("Failed to resolve attr 'dividerHorizontal' from theme!")
     }
 
-    private val unlabeledSectionPadding = context.resources.getDimensionPixelSize(R.dimen.ua_preference_center_unlabeled_section_item_top_padding)
+    private val unlabeledSectionPadding = context.resources.getDimensionPixelSize(com.urbanairship.preferencecenter.core.R.dimen.ua_preference_center_unlabeled_section_item_top_padding)
 
     private val dividerHeight: Int = drawable.intrinsicHeight
 

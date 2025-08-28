@@ -8,7 +8,7 @@ buildscript {
 
         // Android SDK Versions
         minSdkVersion = 23
-        compileSdkVersion = 35
+        compileSdkVersion = 36
         targetSdkVersion = 35
 
         // Looking for dependency versions?
@@ -43,6 +43,8 @@ dependencies {
     dokka(project(':urbanairship-message-center'))
     dokka(project(':urbanairship-message-center-core'))
     dokka(project(":urbanairship-preference-center"))
+    dokka(project(":urbanairship-preference-center-core"))
+    dokka(project(":urbanairship-preference-center-compose"))
     dokka(project(":urbanairship-feature-flag"))
 }
 

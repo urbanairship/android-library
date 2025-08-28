@@ -1,5 +1,7 @@
 package com.urbanairship.preferencecenter.util
 
+import androidx.annotation.RestrictTo
+
 /**
  * Converts basic markdown to HTML.
  *
@@ -11,7 +13,8 @@ package com.urbanairship.preferencecenter.util
  *
  * All other markdown syntax will be ignored.
  */
-internal fun String.markdownToHtml(): String = basicMarkdownToHtml(this)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public fun String.airshipMarkdownToHtml(): String = basicMarkdownToHtml(this)
 
 private val linkRegex = "\\[(.*?)\\]\\((.*?)\\)".toRegex()
 private val boldRegex = "\\*\\*(.*?)\\*\\*".toRegex()

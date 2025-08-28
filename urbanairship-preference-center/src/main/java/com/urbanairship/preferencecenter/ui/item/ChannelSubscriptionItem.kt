@@ -106,21 +106,21 @@ internal data class ChannelSubscriptionItem(val item: Item.ChannelSubscription) 
             context: Context, item: ChannelSubscriptionItem, isChecked: Boolean
         ) {
             itemView.contentDescription = context.getString(
-                com.urbanairship.preferencecenter.R.string.ua_preference_center_subscription_item_description,
+                com.urbanairship.preferencecenter.core.R.string.ua_preference_center_subscription_item_description,
                 item.title,
                 item.subtitle,
                 if (isChecked) {
-                    com.urbanairship.preferencecenter.R.string.ua_preference_center_subscribed_description
+                    com.urbanairship.preferencecenter.core.R.string.ua_preference_center_subscribed_description
                 } else {
-                    com.urbanairship.preferencecenter.R.string.ua_preference_center_unsubscribed_description
+                    com.urbanairship.preferencecenter.core.R.string.ua_preference_center_unsubscribed_description
                 }.let(context::getString)
             )
 
             AccessibilityUtils.setClickActionLabel(
                 itemView, if (isChecked) {
-                    com.urbanairship.preferencecenter.R.string.ua_preference_center_action_unsubscribe
+                    com.urbanairship.preferencecenter.core.R.string.ua_preference_center_action_unsubscribe
                 } else {
-                    com.urbanairship.preferencecenter.R.string.ua_preference_center_action_subscribe
+                    com.urbanairship.preferencecenter.core.R.string.ua_preference_center_action_subscribe
                 }
             )
         }

@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import com.urbanairship.UALog
 import com.urbanairship.debug.DebugManager
 import com.urbanairship.preferencecenter.PreferenceCenter
-import com.urbanairship.preferencecenter.ui.PreferenceCenterActivity
+import com.urbanairship.preferencecenter.compose.ui.PreferenceCenterActivity
 import com.urbanairship.remotedata.RemoteData
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow

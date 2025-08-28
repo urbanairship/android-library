@@ -27,7 +27,7 @@ dependencies {
     api project(':urbanairship-core')
     implementation project(':urbanairship-automation')
     implementation project(':urbanairship-message-center')
-    implementation project(':urbanairship-preference-center')
+    implementation project(':urbanairship-preference-center-compose')
     implementation project(':urbanairship-feature-flag')
 
     // Kotlin

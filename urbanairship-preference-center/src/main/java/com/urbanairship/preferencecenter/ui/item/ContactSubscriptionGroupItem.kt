@@ -87,9 +87,9 @@ internal data class ContactSubscriptionGroupItem(val item: Item.ContactSubscript
 
                     setOnFocusChangeListener { _, focused ->
                         if (focused) {
-                            this.setChipStrokeWidthResource(R.dimen.ua_preference_center_subscription_type_chip_stroke_focused_width)
+                            this.setChipStrokeWidthResource(com.urbanairship.preferencecenter.core.R.dimen.ua_preference_center_subscription_type_chip_stroke_focused_width)
                         } else {
-                            this.setChipStrokeWidthResource(R.dimen.ua_preference_center_subscription_type_chip_stroke_width)
+                            this.setChipStrokeWidthResource(com.urbanairship.preferencecenter.core.R.dimen.ua_preference_center_subscription_type_chip_stroke_width)
                         }
                     }
 

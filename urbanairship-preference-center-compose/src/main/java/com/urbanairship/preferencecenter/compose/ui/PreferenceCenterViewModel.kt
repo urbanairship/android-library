@@ -1,17 +1,12 @@
-package com.urbanairship.preferencecenter.ui
+package com.urbanairship.preferencecenter.compose.ui
 
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.VisibleForTesting
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.viewmodel.viewModelFactory
 import com.urbanairship.UALog
-import com.urbanairship.Airship
+import com.urbanairship.UAirship
 import com.urbanairship.actions.ActionRunner
 import com.urbanairship.actions.DefaultActionRunner
 import com.urbanairship.actions.run
@@ -27,29 +22,26 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.preferencecenter.ConditionStateMonitor
 import com.urbanairship.preferencecenter.PreferenceCenter
+import com.urbanairship.preferencecenter.compose.ui.item.AlertItem
+import com.urbanairship.preferencecenter.compose.ui.item.BasePrefCenterItem
+import com.urbanairship.preferencecenter.compose.ui.item.ChannelSubscriptionItem
+import com.urbanairship.preferencecenter.compose.ui.item.ContactManagementItem
+import com.urbanairship.preferencecenter.compose.ui.item.ContactSubscriptionGroupItem
+import com.urbanairship.preferencecenter.compose.ui.item.ContactSubscriptionItem
+import com.urbanairship.preferencecenter.compose.ui.item.SectionBreakItem
+import com.urbanairship.preferencecenter.compose.ui.item.SectionItem
 import com.urbanairship.preferencecenter.data.Condition
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfigParceler
 import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.data.evaluate
-import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State.Content.ContactChannelState
-import com.urbanairship.preferencecenter.ui.item.AlertItem
-import com.urbanairship.preferencecenter.ui.item.ChannelSubscriptionItem
-import com.urbanairship.preferencecenter.ui.item.ContactManagementItem
-import com.urbanairship.preferencecenter.ui.item.ContactSubscriptionGroupItem
-import com.urbanairship.preferencecenter.ui.item.ContactSubscriptionItem
-import com.urbanairship.preferencecenter.ui.item.PrefCenterItem
-import com.urbanairship.preferencecenter.ui.item.SectionBreakItem
-import com.urbanairship.preferencecenter.ui.item.SectionItem
 import com.urbanairship.preferencecenter.util.airshipScanConcat
-import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -70,7 +62,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parceler
@@ -78,39 +70,45 @@ import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.RawValue
 import kotlinx.parcelize.TypeParceler
 
+internal interface PreferenceCenterViewModel {
+    val states: StateFlow<ViewState>
+    val displayDialog: StateFlow<ContactManagerDialog?>
+    val errors: Flow<String?>
+    fun handle(action: Action)
+}
+
+internal sealed class ContactManagerDialog {
+    data class Add(val item: Item.ContactManagement) : ContactManagerDialog()
+    data class ConfirmAdd(val message: Item.ContactManagement.ActionableMessage) : ContactManagerDialog()
+    data class ResendConfirmation(val message: Item.ContactManagement.ActionableMessage) : ContactManagerDialog()
+    data class Remove(val item: Item.ContactManagement, val channel: ContactChannel) : ContactManagerDialog()
+}
+
 @OpenForTesting
-internal class PreferenceCenterViewModel(
+internal class DefaultPreferenceCenterViewModel(
     private val preferenceCenterId: String,
-    private val savedStateHandle: SavedStateHandle,
     private val preferenceCenter: PreferenceCenter = PreferenceCenter.shared(),
-    private val channel: AirshipChannel = Airship.shared().channel,
-    private val contact: Contact = Airship.shared().contact,
+    private val channel: AirshipChannel = UAirship.shared().channel,
+    private val contact: Contact = UAirship.shared().contact,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val actionRunner: ActionRunner = DefaultActionRunner,
     private val conditionMonitor: ConditionStateMonitor = ConditionStateMonitor(),
     private val dispatcher: CoroutineDispatcher = Dispatchers.Main.immediate,
-) : ViewModel() {
+) : PreferenceCenterViewModel, ViewModel() {
     internal companion object {
         private val defaultPendingLabelHideDelay = 30.seconds
         private val defaultResendLabelHideDelay = 15.seconds
-
-        internal fun factory(preferenceCenterId: String): ViewModelProvider.Factory = viewModelFactory {
-            initializer {
-                val savedStateHandle = createSavedStateHandle()
-                PreferenceCenterViewModel(preferenceCenterId, savedStateHandle = savedStateHandle)
-            }
-        }
     }
 
-    private val restoredState: State.Content? = savedStateHandle.get<State.Content>("state")
-
-    private val stateFlow: MutableStateFlow<State> = MutableStateFlow(restoredState ?: State.Loading)
+    private val stateFlow: MutableStateFlow<ViewState> = MutableStateFlow(ViewState.Loading)
     private val actions: MutableSharedFlow<Action> = MutableSharedFlow()
-    private val effectsChannel = Channel<Effect>()
+    override val states: StateFlow<ViewState> = stateFlow.asStateFlow()
 
-    val states: StateFlow<State> = stateFlow.asStateFlow()
-    val effects: Flow<Effect> = effectsChannel.receiveAsFlow()
-        .onEach { UALog.v("! $it")}
+    private val dialogFlow: MutableStateFlow<ContactManagerDialog?> = MutableStateFlow(null)
+    override val displayDialog: StateFlow<ContactManagerDialog?> = dialogFlow.asStateFlow()
+
+    private val errorsFlow: MutableStateFlow<String?> = MutableStateFlow(null)
+    override val errors: Flow<String?> = errorsFlow.asStateFlow()
 
     init {
         viewModelScope.launch(dispatcher) {
@@ -121,14 +119,12 @@ internal class PreferenceCenterViewModel(
                     changes(action)
                         .airshipScanConcat(states.value, ::states)
                         .collect { state ->
-                            (state as? State.Content)?.let { savedStateHandle["state"] = it }
                             stateFlow.value = state
                         }
                 }
 
                 launch {
-                    effects(action)
-                        .collect(effectsChannel::send)
+                    perform(action)
                 }
             }
         }
@@ -142,7 +138,7 @@ internal class PreferenceCenterViewModel(
         }
 
         viewModelScope.launch(dispatcher) {
-            states.collect { state -> UALog.v("> $state") }
+            states.collect { state -> UALog.v("!!!test > $state") }
         }
 
         // Collect updates from the condition monitor and repost them on the actions flow.
@@ -153,7 +149,7 @@ internal class PreferenceCenterViewModel(
             .launchIn(viewModelScope)
     }
 
-    fun handle(action: Action) {
+    override fun handle(action: Action) {
         viewModelScope.launch(dispatcher) { actions.emit(action) }
     }
 
@@ -177,70 +173,77 @@ internal class PreferenceCenterViewModel(
                 )
             is Action.ConditionStateChanged -> flowOf(Change.UpdateConditionState(action.state))
             is Action.UpdateContactChannel -> flowOf(
-                Change.UpdateContactChannel(action.channel, action.channelState)
+                Change.UpdateContactChannel(
+                    channel = action.channel,
+                    action.channelState
+                )
             )
             else -> emptyFlow()
         }
 
-    /**
-     * Flow that maps an [Action] to one or more side [Effect]s that do not impact viewmodel state.
-     */
-    private suspend fun effects(action: Action): Flow<Effect> =
+    private suspend fun perform(action: Action) {
         when (action) {
             // Airship Actions
-            is Action.ButtonActions -> emptyFlow<Effect>().also {
-                actionRunner.run(action.actions)
-            }
+            is Action.ButtonActions -> actionRunner.run(action.actions)
 
             // Contact Management
-            is Action.RequestAddChannel -> flowOf(
-                Effect.ShowContactManagementAddDialog(action.item)
-            )
-            is Action.ValidateEmailChannel -> flowOf(
+            is Action.RequestAddChannel -> dialogFlow.update { ContactManagerDialog.Add(action.item) }
+
+            is Action.ValidateEmailChannel -> {
+                errorsFlow.emit(null)
+
                 when(val result = validateEmailAction(action)) {
                     is AirshipInputValidation.Result.Valid -> {
-                        Effect.DismissContactManagementAddDialog.also {
-                            handle(
-                                Action.RegisterChannel.Email(action.item, result.address)
-                            )
-                        }
+                        dialogFlow.emit(null)
+
+                        handle(
+                            Action.RegisterChannel.Email(action.item, result.address)
+                        )
                     }
                     AirshipInputValidation.Result.Invalid -> {
                         val message = action.item.platform.errorMessages.invalidMessage
-                        Effect.ShowContactManagementAddDialogError(message)
-
+                        errorsFlow.emit(message)
                     }
                 }
-            )
-            is Action.ValidateSmsChannel -> flowOf(
+            }
+
+            is Action.ValidateSmsChannel -> {
+                errorsFlow.emit(null)
+
                 when(val result = validateSmsAction(action)) {
                     is AirshipInputValidation.Result.Valid -> {
-                        Effect.DismissContactManagementAddDialog.also {
-                            handle(
-                                Action.RegisterChannel.Sms(action.item, result.address, action.senderId)
-                            )
-                        }
+                        dialogFlow.update { null }
+
+                        handle(
+                            Action.RegisterChannel.Sms(action.item, result.address, action.senderId)
+                        )
                     }
                     AirshipInputValidation.Result.Invalid -> {
                         val message = action.item.platform.errorMessages.invalidMessage
-                        Effect.ShowContactManagementAddDialogError(message)
+                        errorsFlow.emit(message)
                     }
                 }
-            )
-            is Action.ConfirmAddChannel -> flowOf(
-                Effect.ShowContactManagementAddConfirmDialog(action.item)
-            )
-            is Action.RequestRemoveChannel -> flowOf(
-                Effect.ShowContactManagementRemoveDialog(action.item, action.channel)
-            )
+            }
+
+            is Action.ConfirmAddChannel -> {
+                action.item.addPrompt.prompt.onSubmit?.let { message ->
+                    dialogFlow.update { ContactManagerDialog.ConfirmAdd(message) }
+                }
+            }
+
+            is Action.RequestRemoveChannel -> {
+                dialogFlow.emit(ContactManagerDialog.Remove(action.item, action.channel))
+            }
+
             is Action.RegisterChannel.Sms -> {
                 contact.registerSms(action.address, SmsRegistrationOptions.options(action.senderId))
 
                 // Show the onSubmit dialog if we have one
-                action.item.addPrompt.prompt.onSubmit?.let {
-                    flowOf(Effect.ShowContactManagementAddConfirmDialog(action.item))
-                } ?: emptyFlow()
+                action.item.addPrompt.prompt.onSubmit?.let { message ->
+                    dialogFlow.update { ContactManagerDialog.ConfirmAdd(message) }
+                }
             }
+
             is Action.RegisterChannel.Email -> {
                 val emailPlatform = action.item.platform as? Item.ContactManagement.Platform.Email
 
@@ -254,18 +257,24 @@ internal class PreferenceCenterViewModel(
                 )
 
                 // Show the onSubmit dialog if we have one
-                action.item.addPrompt.prompt.onSubmit?.let {
-                    flowOf(Effect.ShowContactManagementAddConfirmDialog(action.item))
-                } ?: emptyFlow()
+                action.item.addPrompt.prompt.onSubmit?.let { message ->
+                    dialogFlow.update { ContactManagerDialog.ConfirmAdd(message) }
+                }
             }
-            is Action.UnregisterChannel -> emptyFlow<Effect>().also {
+
+            is Action.UnregisterChannel -> {
                 contact.disassociateChannel(action.channel)
+                dialogFlow.update { null }
             }
+
             is Action.ResendChannelVerification -> {
                 viewModelScope.launch(dispatcher) {
                     handle(Action.UpdateContactChannel(
                         action.channel,
-                        ContactChannelState(showPendingButton = true, showResendButton = false)
+                        ViewState.Content.ContactChannelState(
+                            showPendingButton = true,
+                            showResendButton = false
+                        )
                     ))
 
                     val resendInterval = action.item.platform.resendOptions.interval.seconds
@@ -274,17 +283,28 @@ internal class PreferenceCenterViewModel(
 
                     handle(Action.UpdateContactChannel(
                         action.channel,
-                        ContactChannelState(showPendingButton = true, showResendButton = true)
+                        ViewState.Content.ContactChannelState(
+                            showPendingButton = true,
+                            showResendButton = true
+                        )
                     ))
                 }
 
                 contact.resendDoubleOptIn(action.channel)
-
-                flowOf(Effect.ShowChannelVerificationResentDialog(action.item))
+                action.item.platform.resendOptions.onSuccess?.let { message ->
+                    dialogFlow.update { ContactManagerDialog.ResendConfirmation(message) }
+                }
             }
 
-            else -> emptyFlow()
+            is Action.DismissDialog -> {
+                errorsFlow.emit(null)
+                dialogFlow.emit(null)
+            }
+
+            else -> {}
         }
+    }
+
 
     private suspend fun validateEmailAction(
         action: Action.ValidateEmailChannel
@@ -308,12 +328,12 @@ internal class PreferenceCenterViewModel(
         )
     )
 
-    /** Flow that reduces the current [State] and incoming [Change] to a new [State]. */
-    private suspend fun states(state: State, change: Change): Flow<State> =
+    /** Flow that reduces the current [ViewState] and incoming [Change] to a new [ViewState]. */
+    private suspend fun states(state: ViewState, change: Change): Flow<ViewState> =
         when (change) {
-            is Change.ShowLoading -> State.Loading
+            is Change.ShowLoading -> ViewState.Loading
             is Change.ShowContent -> when (state) {
-                is State.Content -> state.merge(
+                is ViewState.Content -> state.merge(
                     change.state,
                     onNewChannel = { channel ->
                         val isPending = !channel.isOptedIn
@@ -322,8 +342,9 @@ internal class PreferenceCenterViewModel(
                         } else {
                             cancelPendingResendVisibilityChanges(channel)
                         }
-                        ContactChannelState(
-                            showResendButton = false, showPendingButton = isPending
+                        ViewState.Content.ContactChannelState(
+                            showResendButton = false,
+                            showPendingButton = isPending
                         )
                     },
                     onExistingChannel = { channel, channelState ->
@@ -338,10 +359,10 @@ internal class PreferenceCenterViewModel(
                 )
                 else -> change.state
             }
-            is Change.ShowError -> State.Error(error = change.error)
+            is Change.ShowError -> ViewState.Error(error = change.error)
 
             is Change.UpdateSubscriptions -> when (state) {
-                is State.Content -> {
+                is ViewState.Content -> {
                     val updatedSubscriptions = if (change.isSubscribed) {
                         state.channelSubscriptions + change.subscriptionId
                     } else {
@@ -352,7 +373,7 @@ internal class PreferenceCenterViewModel(
                 else -> state
             }
             is Change.UpdateScopedSubscriptions -> when (state) {
-                is State.Content -> {
+                is ViewState.Content -> {
                     val currentScopes = state.contactSubscriptions[change.subscriptionId] ?: emptySet()
                     val updatedScopes = if (change.isSubscribed) {
                          currentScopes + change.scopes
@@ -367,7 +388,7 @@ internal class PreferenceCenterViewModel(
                 else -> state
             }
             is Change.UpdateConditionState -> when (state) {
-                is State.Content -> {
+                is ViewState.Content -> {
                     val conditions = change.state
                     state.copy(
                         listItems = state.config.filterByConditions(conditions).asPrefCenterItems(),
@@ -377,7 +398,7 @@ internal class PreferenceCenterViewModel(
                 else -> state
             }
             is Change.UpdateContactChannel -> when (state) {
-                is State.Content -> state.copy(
+                is ViewState.Content -> state.copy(
                     contactChannelState = state.contactChannelState.map { (channel, state) ->
                         val updated = change.state
 
@@ -405,7 +426,7 @@ internal class PreferenceCenterViewModel(
                 val filteredItems = config.filterByConditions(conditionState).asPrefCenterItems()
                 val display = config.display
                 Change.ShowContent(
-                    State.Content(
+                    ViewState.Content(
                         config = config,
                         listItems = filteredItems,
                         title = display.name,
@@ -414,7 +435,7 @@ internal class PreferenceCenterViewModel(
                         contactSubscriptions = contactSubscriptions,
                         contactChannels = contactChannels,
                         contactChannelState = contactChannels.associateWith {
-                            ContactChannelState(
+                            ViewState.Content.ContactChannelState(
                                 showResendButton = !it.isOptedIn,
                                 showPendingButton = !it.isOptedIn
                             )
@@ -429,12 +450,17 @@ internal class PreferenceCenterViewModel(
         )
     }
 
-    private fun mergeSubscriptions(channelSubscriptions: Set<String>, contactSubscriptions: Map<String, Set<Scope>>): Map<String, Set<Scope>> {
+    private fun mergeSubscriptions(
+        channelSubscriptions: Set<String>,
+        contactSubscriptions: Map<String, Set<Scope>>
+    ): Map<String, Set<Scope>> {
         val map = contactSubscriptions.toMutableMap()
         channelSubscriptions.forEach {
-            map[it] = map[it]?.toMutableSet()?.apply {
-                add(Scope.APP)
-            } ?: setOf(Scope.APP)
+            val updated = map
+                .getOrPut(it) { emptySet() }
+                .toMutableSet()
+                .apply { add(Scope.APP) }
+            map[it] = updated
         }
         return map.toMap()
     }
@@ -497,7 +523,11 @@ internal class PreferenceCenterViewModel(
             showResendButtonJobs[channel] = viewModelScope.launch(dispatcher) {
                 delay(defaultResendLabelHideDelay)
                 handle(Action.UpdateContactChannel(
-                    channel, ContactChannelState(showResendButton = true, showPendingButton = true)
+                    channel,
+                    ViewState.Content.ContactChannelState(
+                        showResendButton = true,
+                        showPendingButton = true
+                    )
                 ))
             }
         }
@@ -506,7 +536,11 @@ internal class PreferenceCenterViewModel(
         hidePendingLabelJobs[channel] = viewModelScope.launch(dispatcher) {
             delay(defaultPendingLabelHideDelay)
             handle(Action.UpdateContactChannel(
-                channel, ContactChannelState(showPendingButton = false, showResendButton = false)
+                channel,
+                ViewState.Content.ContactChannelState(
+                    showPendingButton = false,
+                    showResendButton = false
+                )
             ))
         }
     }
@@ -545,162 +579,39 @@ internal class PreferenceCenterViewModel(
             .distinctUntilChanged()
 
     private fun getConfig(preferenceCenterId: String): Flow<PreferenceCenterConfig> = flow {
-        emit(preferenceCenter.getConfig(preferenceCenterId) ?: throw IllegalStateException("Null preference center for id: $preferenceCenterId"))
+        emit(preferenceCenter.getConfig(preferenceCenterId)
+            ?: throw IllegalStateException("Null preference center for id: $preferenceCenterId"))
     }
 
     private fun getChannelSubscriptions(): Flow<Result<Set<String>>> = channel.subscriptions
 
     private fun getChannelSubscriptionsAsSet(subscriptionsResult: Result<Set<String>>): Set<String> {
-        return subscriptionsResult.getOrNull()?.let { it } ?: emptySet()
+        return subscriptionsResult.getOrNull() ?: emptySet()
     }
 
     private fun getContactSubscriptions(): Flow<Result<Map<String, Set<Scope>>>> = contact.subscriptions
 
     private fun getContactSubscriptionsAsMap(subscriptionsResult: Result<Map<String, Set<Scope>>>): Map<String, Set<Scope>> {
-        return subscriptionsResult.getOrNull()?.let { it } ?: emptyMap()
+        return subscriptionsResult.getOrNull() ?: emptyMap()
     }
 
     private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = contact.channelContacts.mapNotNull {
         it.getOrThrow().toSet()
     }
 
-    @Parcelize
-    internal sealed class State : Parcelable {
-        @Parcelize
-        data object Loading : State()
-
-        @Parcelize
-        data class Error(val message: String? = null, val error: Throwable? = null) : State()
-
-        @Parcelize
-        @TypeParceler<PreferenceCenterConfig, PreferenceCenterConfigParceler>
-        @TypeParceler<ContactChannel, ContactChannelParceler>
-        data class Content(
-            val config: PreferenceCenterConfig,
-            val conditionState: Condition.State,
-            @IgnoredOnParcel
-            val listItems: List<PrefCenterItem> = config.filterByConditions(conditionState).asPrefCenterItems(),
-            val title: String?,
-            val subtitle: String?,
-            val channelSubscriptions: Set<String>,
-            val contactSubscriptions: Map<String, Set<Scope>>,
-            val contactChannels: Set<ContactChannel>,
-            val contactChannelState: @RawValue Map<ContactChannel, ContactChannelState>,
-        ) : State() {
-
-            fun merge(
-                update: Content,
-                onNewChannel: (ContactChannel) -> ContactChannelState,
-                onExistingChannel: (ContactChannel, ContactChannelState) -> ContactChannelState
-            ): Content {
-                return copy(
-                    config = update.config,
-                    listItems = update.listItems,
-                    title = update.title,
-                    subtitle = update.subtitle,
-                    channelSubscriptions = update.channelSubscriptions,
-                    contactSubscriptions = update.contactSubscriptions,
-                    contactChannels = update.contactChannels,
-                    contactChannelState = contactChannelState.filter {
-                        // Drop any state that doesn't match the updated channels
-                        it.key in update.contactChannels
-                    }.mapValues {
-                        onExistingChannel(it.key, it.value)
-                    } + (
-                        update.contactChannelState.filter {
-                            // Add any new channels that weren't in the existing state
-                            it.key !in contactChannelState
-                        }.map { it.key to onNewChannel(it.key) }
-                    )
-                )
-            }
-
-            @Parcelize
-            data class ContactChannelState(
-                val showResendButton: Boolean = false,
-                val showPendingButton: Boolean = false
-            ) : Parcelable
-        }
-    }
-
-    internal sealed class Action {
-        data object Refresh : Action()
-        data class PreferenceItemChanged(val item: Item, val isEnabled: Boolean) : Action()
-        data class ScopedPreferenceItemChanged(
-            val item: Item,
-            val scopes: Set<Scope>,
-            val isEnabled: Boolean
-        ) : Action()
-
-        data class ButtonActions(val actions: Map<String, JsonValue>) : Action()
-        data class ConditionStateChanged(val state: Condition.State) : Action()
-
-        // Contact Management
-        data class RequestAddChannel(val item: Item.ContactManagement) : Action()
-        data class RequestRemoveChannel(val item: Item.ContactManagement, val channel: ContactChannel) : Action()
-
-        data class ConfirmAddChannel(
-            val item: Item.ContactManagement,
-            val result: ContactChannelDialogInputView.DialogResult
-        ): Action()
-
-        sealed class RegisterChannel : Action() {
-            abstract val address: String
-            abstract val item: Item.ContactManagement
-
-            data class Email(
-                override val item: Item.ContactManagement,
-                override val address: String
-            ) : RegisterChannel()
-
-            data class Sms(
-                override val item: Item.ContactManagement,
-                override val address: String,
-                val senderId: String
-            ) : RegisterChannel()
-        }
-
-        data class UnregisterChannel(val channel: ContactChannel) : Action()
-
-        data class ResendChannelVerification(val item: Item.ContactManagement, val channel: ContactChannel) : Action()
-
-        data class ValidateSmsChannel(
-            val item: Item.ContactManagement,
-            val address: String,
-            val senderId: String,
-            val prefix: String? = null
-        ) : Action()
-
-        data class ValidateEmailChannel(
-            val item: Item.ContactManagement,
-            val address: String,
-        ) : Action()
-
-        data class UpdateContactChannel(
-            val channel: ContactChannel,
-            val channelState: ContactChannelState
-        ) : Action()
-    }
-
     internal sealed class Change {
         data object ShowLoading : Change()
         data class ShowError(val message: String? = null, val error: Throwable? = null) : Change()
-        data class ShowContent(val state: State.Content) : Change()
+        data class ShowContent(val state: ViewState.Content) : Change()
         data class UpdateSubscriptions(val subscriptionId: String, val isSubscribed: Boolean) : Change()
         data class UpdateScopedSubscriptions(val subscriptionId: String, val scopes: Set<Scope>, val isSubscribed: Boolean) : Change()
         data class UpdateConditionState(val state: Condition.State) : Change()
 
         // Contact Management
-        data class UpdateContactChannel(val channel: ContactChannel, val state: ContactChannelState) : Change()
-    }
-
-    internal sealed class Effect {
-        data class ShowContactManagementAddDialog(val item: Item.ContactManagement) : Effect()
-        data class ShowContactManagementAddConfirmDialog(val item: Item.ContactManagement) : Effect()
-        data class ShowContactManagementRemoveDialog(val item: Item.ContactManagement, val channel: ContactChannel) : Effect()
-        data class ShowChannelVerificationResentDialog(val item: Item.ContactManagement) : Effect()
-        data class ShowContactManagementAddDialogError(val message: String) : Effect()
-        data object DismissContactManagementAddDialog : Effect()
+        data class UpdateContactChannel(
+            val channel: ContactChannel,
+            val state: ViewState.Content.ContactChannelState
+        ) : Change()
     }
 }
 
@@ -727,28 +638,33 @@ internal fun PreferenceCenterConfig.filterByConditions(
  *
  * @hide
  */
-@VisibleForTesting
-internal fun PreferenceCenterConfig.asPrefCenterItems(): List<PrefCenterItem> =
+internal fun PreferenceCenterConfig.asPrefCenterItems(): List<BasePrefCenterItem> =
     sections.flatMap { section ->
         when (section) {
             is Section.SectionBreak -> listOf(SectionBreakItem(section))
             is Section.Common -> {
-                if (section.display.isEmpty()) {
-                    // Ignore sections with no title and subtitle to avoid unwanted whitespace in
-                    // the list if a section has no title/description and is being used as a
-                    // container for an alert.
-                    emptyList<PrefCenterItem>()
-                } else {
-                    listOf(SectionItem(section))
-                } + section.items.map { item ->
+
+                val sectionItems = section.items.mapNotNull { item ->
                     when (item) {
                         is Item.ChannelSubscription -> ChannelSubscriptionItem(item)
                         is Item.ContactSubscription -> ContactSubscriptionItem(item)
                         is Item.ContactSubscriptionGroup -> ContactSubscriptionGroupItem(item)
                         is Item.Alert -> AlertItem(item)
                         is Item.ContactManagement -> ContactManagementItem(item)
+                        else -> null
                     }
                 }
+
+                val base = if (section.display.isEmpty()) {
+                    // Ignore sections with no title and subtitle to avoid unwanted whitespace in
+                    // the list if a section has no title/description and is being used as a
+                    // container for an alert.
+                    emptyList<BasePrefCenterItem>()
+                } else {
+                    listOf(SectionItem(section))
+                }
+
+                base + sectionItems
             }
         }
     }
@@ -758,7 +674,6 @@ internal fun PreferenceCenterConfig.asPrefCenterItems(): List<PrefCenterItem> =
  *
  * @hide
  */
-@VisibleForTesting
 internal val ContactChannel.isOptedIn: Boolean
     get() {
         return when (this) {
@@ -800,4 +715,126 @@ internal object ContactChannelParceler : Parceler<ContactChannel> {
     override fun ContactChannel.write(parcel: Parcel, flags: Int) {
         parcel.writeString(this.toJsonValue().toString())
     }
+}
+
+/**
+ * All possible states of the view.
+ */
+@Parcelize
+internal sealed class ViewState : Parcelable {
+    @Parcelize
+    data object Loading : ViewState()
+
+    @Parcelize
+    data class Error(val message: String? = null, val error: Throwable? = null) : ViewState()
+
+    @Parcelize
+    @TypeParceler<PreferenceCenterConfig, PreferenceCenterConfigParceler>
+    @TypeParceler<ContactChannel, ContactChannelParceler>
+    data class Content(
+        val config: PreferenceCenterConfig,
+        val conditionState: Condition.State,
+        @IgnoredOnParcel
+        val listItems: List<BasePrefCenterItem> = config.filterByConditions(conditionState).asPrefCenterItems(),
+        val title: String?,
+        val subtitle: String?,
+        val channelSubscriptions: Set<String>,
+        val contactSubscriptions: Map<String, Set<Scope>>,
+        val contactChannels: Set<ContactChannel>,
+        val contactChannelState: @RawValue Map<ContactChannel, ContactChannelState>,
+    ) : ViewState() {
+
+            fun merge(
+                update: Content,
+                onNewChannel: (ContactChannel) -> ContactChannelState,
+                onExistingChannel: (ContactChannel, ContactChannelState) -> ContactChannelState
+            ): Content {
+                return copy(
+                    config = update.config,
+                    listItems = update.listItems,
+                    title = update.title,
+                    subtitle = update.subtitle,
+                    channelSubscriptions = update.channelSubscriptions,
+                    contactSubscriptions = update.contactSubscriptions,
+                    contactChannels = update.contactChannels,
+                    contactChannelState = contactChannelState.filter {
+                        // Drop any state that doesn't match the updated channels
+                        it.key in update.contactChannels
+                    }.mapValues {
+                        onExistingChannel(it.key, it.value)
+                    } + (
+                        update.contactChannelState.filter {
+                            // Add any new channels that weren't in the existing state
+                            it.key !in contactChannelState
+                        }.map { it.key to onNewChannel(it.key) }
+                    )
+                )
+            }
+
+            @Parcelize
+            data class ContactChannelState(
+                val showResendButton: Boolean = false,
+                val showPendingButton: Boolean = false
+            ) : Parcelable
+    }
+}
+
+internal sealed class Action {
+    data object Refresh : Action()
+    data object DismissDialog: Action()
+    data class PreferenceItemChanged(val item: Item, val isEnabled: Boolean) : Action()
+    data class ScopedPreferenceItemChanged(
+        val item: Item,
+        val scopes: Set<Scope>,
+        val isEnabled: Boolean
+    ) : Action()
+
+    data class ButtonActions(val actions: Map<String, JsonValue>) : Action()
+    data class ConditionStateChanged(val state: Condition.State) : Action()
+
+    // Contact Management
+    data class RequestAddChannel(val item: Item.ContactManagement) : Action()
+    data class RequestRemoveChannel(val item: Item.ContactManagement, val channel: ContactChannel) : Action()
+
+    data class ConfirmAddChannel(
+        val item: Item.ContactManagement,
+        val result: DialogResult
+    ): Action()
+
+    sealed class RegisterChannel : Action() {
+        abstract val address: String
+        abstract val item: Item.ContactManagement
+
+        data class Email(
+            override val item: Item.ContactManagement,
+            override val address: String
+        ) : RegisterChannel()
+
+        data class Sms(
+            override val item: Item.ContactManagement,
+            override val address: String,
+            val senderId: String
+        ) : RegisterChannel()
+    }
+
+    data class UnregisterChannel(val channel: ContactChannel) : Action()
+
+    data class ResendChannelVerification(val item: Item.ContactManagement, val channel: ContactChannel) : Action()
+
+    data class ValidateSmsChannel(
+        val item: Item.ContactManagement,
+        val address: String,
+        val senderId: String,
+        val prefix: String? = null
+    ) : Action()
+
+    data class ValidateEmailChannel(
+        val item: Item.ContactManagement,
+        val address: String,
+    ) : Action()
+
+    data class UpdateContactChannel(
+        val channel: ContactChannel,
+        val channelState: ViewState.Content.ContactChannelState
+    ) : Action()
 }
