@@ -2,7 +2,6 @@
 package com.urbanairship.util
 
 import androidx.annotation.RestrictTo
-import kotlin.math.max
 
 /**
  * A class containing basic math operations.

@@ -547,7 +547,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         digest = Arrays.copyOf(digest, 16)
         for (testDevice in testDevices) {
             val decoded = UAStringUtil.base64Decode(testDevice)
-            if (Arrays.equals(digest, decoded)) {
+            if (digest.contentEquals(decoded)) {
                 return true
             }
         }

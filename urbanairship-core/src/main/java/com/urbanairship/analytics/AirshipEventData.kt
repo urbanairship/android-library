@@ -3,7 +3,6 @@
 package com.urbanairship.analytics
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.extend
 import com.urbanairship.json.jsonMapOf

@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.res.XmlResourceParser
 import android.util.AttributeSet
 import android.util.Xml
-import androidx.annotation.RestrictTo
 import java.io.Closeable
 import java.io.IOException
 import org.xmlpull.v1.XmlPullParser
@@ -29,7 +28,7 @@ internal class XmlConfigParser private constructor(
         parser?.close()
     }
 
-    public companion object {
+    companion object {
 
         /**
          * Parses an element from a Xml config file.
@@ -42,7 +41,7 @@ internal class XmlConfigParser private constructor(
          * @throws XmlPullParserException
          */
         @Throws(IOException::class, XmlPullParserException::class)
-        public fun parseElement(context: Context, resId: Int, tag: String): XmlConfigParser {
+        fun parseElement(context: Context, resId: Int, tag: String): XmlConfigParser {
             val parser = context.resources.getXml(resId)
             var attributeSet: AttributeSet? = null
 

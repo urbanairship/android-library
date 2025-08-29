@@ -85,11 +85,7 @@ public class SetAttributesAction public constructor() : Action() {
         }
 
         val remove = attributeMutations.optMap().opt(REMOVE_KEY)
-        if (remove !== JsonValue.NULL && !isRemoveAttributeMutationValid(remove)) {
-            return false
-        }
-
-        return true
+        return !(remove !== JsonValue.NULL && !isRemoveAttributeMutationValid(remove))
     }
 
     private fun isSetAttributeMutationValid(setAttributeMutation: JsonValue): Boolean {

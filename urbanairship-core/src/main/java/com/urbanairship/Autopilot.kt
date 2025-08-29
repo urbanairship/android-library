@@ -7,7 +7,6 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.util.Log
 import com.urbanairship.Autopilot.Companion.automaticTakeOff
-import com.urbanairship.Airship.OnReadyCallback
 
 /**
  * Autopilot allows Airship.takeOff to be called without overriding the Application class. Typically,

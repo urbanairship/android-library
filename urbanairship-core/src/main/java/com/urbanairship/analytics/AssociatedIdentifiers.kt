@@ -6,7 +6,6 @@ import androidx.annotation.Size
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
-import java.util.Collections
 
 /**
  * Creates a map of associated identifier. Used to associate identifiers with

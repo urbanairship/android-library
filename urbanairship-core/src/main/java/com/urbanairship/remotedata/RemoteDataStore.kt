@@ -54,7 +54,7 @@ internal class RemoteDataStore (
      * @param payloads The payloads.
      * @return A boolean indicating success.
      */
-    public fun savePayloads(payloads: Set<RemoteDataPayload>): Boolean {
+    fun savePayloads(payloads: Set<RemoteDataPayload>): Boolean {
         if (payloads.isEmpty()) {
             return true
         }
@@ -102,7 +102,7 @@ internal class RemoteDataStore (
     /**
      * Gets all payloads.
      */
-    public val payloads: Set<RemoteDataPayload>
+    val payloads: Set<RemoteDataPayload>
         get() = getPayloads(null)
 
     /**
@@ -111,7 +111,7 @@ internal class RemoteDataStore (
      * @param types The specified types.
      * @return A List of RemoteDataPayload.
      */
-    public fun getPayloads(types: Collection<String>?): Set<RemoteDataPayload> {
+    fun getPayloads(types: Collection<String>?): Set<RemoteDataPayload> {
         var cursor: Cursor? = null
 
         try {
@@ -141,7 +141,7 @@ internal class RemoteDataStore (
      *
      * @return Number of payloads deleted.
      */
-    public fun deletePayloads(): Int {
+    fun deletePayloads(): Int {
         return delete(TABLE_NAME, null, null)
     }
 

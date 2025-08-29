@@ -18,49 +18,49 @@ import com.urbanairship.util.UAStringUtil
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Dao
-internal abstract class EventDao public constructor() {
+internal abstract class EventDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    public abstract fun insert(event: EventEntity)
+    abstract fun insert(event: EventEntity)
 
     @Transaction
     @Query("SELECT * FROM events ORDER BY id ASC")
-    public abstract fun get(): List<EventEntity>
+    abstract fun get(): List<EventEntity>
 
     @Transaction
     @Query("SELECT id, eventId, data FROM events ORDER BY id ASC LIMIT :limit")
-    public abstract fun getBatch(limit: Int): List<EventIdAndData>
+    abstract fun getBatch(limit: Int): List<EventIdAndData>
 
     @Transaction
-    public open fun deleteBatch(events: List<EventIdAndData>) {
+    open fun deleteBatch(events: List<EventIdAndData>) {
         for (event in events) {
             delete(event.eventId)
         }
     }
 
     @Query("DELETE FROM events WHERE eventId = :eventId")
-    public abstract fun delete(eventId: String)
+    abstract fun delete(eventId: String)
 
     @Delete
-    public abstract fun delete(vararg events: EventEntity)
+    abstract fun delete(vararg events: EventEntity)
 
     @Query("DELETE FROM events")
-    public abstract fun deleteAll()
+    abstract fun deleteAll()
 
     @Query("SELECT COUNT(*) FROM events")
-    public abstract fun count(): Int
+    abstract fun count(): Int
 
     @Query("SELECT SUM(eventSize) FROM events")
-    public abstract fun databaseSize(): Int
+    abstract fun databaseSize(): Int
 
     @Query("SELECT sessionId FROM events ORDER BY id ASC LIMIT 1")
-    public abstract fun oldestSessionId(): String?
+    abstract fun oldestSessionId(): String?
 
     @Query("DELETE FROM events WHERE sessionId = :sessionId")
-    public abstract fun deleteSession(sessionId: String): Int
+    abstract fun deleteSession(sessionId: String): Int
 
     @Transaction
-    public open fun trimDatabase(maxDatabaseSize: Int) {
+    open fun trimDatabase(maxDatabaseSize: Int) {
         while (databaseSize() > maxDatabaseSize) {
             val sessionId = oldestSessionId() ?: return
 

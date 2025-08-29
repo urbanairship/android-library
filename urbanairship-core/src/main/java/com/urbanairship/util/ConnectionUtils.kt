@@ -30,7 +30,7 @@ internal object ConnectionUtils {
      */
     @WorkerThread
     @Throws(IOException::class)
-    public fun openSecureConnection(context: Context, url: URL): URLConnection {
+    fun openSecureConnection(context: Context, url: URL): URLConnection {
         installProvider(context)
         return url.openConnection()
     }

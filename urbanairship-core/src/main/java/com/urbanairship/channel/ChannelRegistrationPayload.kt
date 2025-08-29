@@ -619,8 +619,8 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
             val tags = channelJson.opt(TAGS_KEY).optList().map { it.requireString() }.toSet()
             val tagChanges = channelJson.opt(TAG_CHANGES_KEY).optMap()
 
-            val locationSettings = channelJson.get(LOCATION_SETTINGS_KEY)?.getBoolean(false)
-            val apiVersion = channelJson.get(API_VERSION_KEY)?.getInt(-1)
+            val locationSettings = channelJson[LOCATION_SETTINGS_KEY]?.getBoolean(false)
+            val apiVersion = channelJson[API_VERSION_KEY]?.getInt(-1)
 
 
             val deliveryType = channelJson
@@ -638,7 +638,7 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
             return Builder()
                 .setOptIn(channelJson.opt(OPT_IN_KEY).getBoolean(false))
                 .setBackgroundEnabled(channelJson.opt(BACKGROUND_ENABLED_KEY).getBoolean(false))
-                .setDeviceType(channelJson.get(DEVICE_TYPE_KEY)?.let(DeviceType::fromJson))
+                .setDeviceType(channelJson[DEVICE_TYPE_KEY]?.let(DeviceType::fromJson))
                 .setPushAddress(channelJson.optionalField(PUSH_ADDRESS_KEY))
                 .setLanguage(channelJson.optionalField(LANGUAGE_KEY))
                 .setCountry(channelJson.optionalField(COUNTRY_KEY))

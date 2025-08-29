@@ -1,7 +1,6 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
-import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 
