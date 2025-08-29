@@ -44,7 +44,7 @@ internal class SubscriptionListApiClient(
                 JsonValue.parseString(responseBody).requireMap()
                     .optionalField<JsonList>("list_ids")
                     ?.map { value -> value.requireString() }
-                    ?.toSet() ?: emptySet<String>()
+                    ?.toSet() ?: emptySet()
             } else {
                 null
             }

@@ -79,7 +79,7 @@ internal class IvyVersionMatcher private constructor(
         return Objects.hashCode(constraint)
     }
 
-    public companion object {
+    companion object {
 
         private const val START_INCLUSIVE = "["
         private const val START_EXCLUSIVE = "]"
@@ -126,7 +126,7 @@ internal class IvyVersionMatcher private constructor(
          * @throws IllegalArgumentException If the constraint is invalid.
          */
         @Throws(IllegalArgumentException::class)
-        public fun newMatcher(constraint: String): IvyVersionMatcher {
+        fun newMatcher(constraint: String): IvyVersionMatcher {
             var constraint = constraint
             constraint = constraint.replace(WHITESPACE.toRegex(), "")
 

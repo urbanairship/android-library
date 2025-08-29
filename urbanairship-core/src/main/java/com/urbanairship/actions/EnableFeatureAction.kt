@@ -42,11 +42,13 @@ public class EnableFeatureAction @JvmOverloads public constructor(
         return when (feature) {
             FEATURE_BACKGROUND_LOCATION,
             FEATURE_LOCATION -> {
-                Args(Permission.LOCATION, true, true)
+                Args(Permission.LOCATION, enableAirshipUsage = true, fallbackSystemSettings = true)
             }
 
             FEATURE_USER_NOTIFICATIONS -> {
-                Args(Permission.DISPLAY_NOTIFICATIONS, true, true)
+                Args(Permission.DISPLAY_NOTIFICATIONS,
+                    enableAirshipUsage = true, fallbackSystemSettings = true
+                )
             }
             else -> super.parseArg(arguments)
         }

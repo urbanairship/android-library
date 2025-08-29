@@ -1,15 +1,11 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.job
 
-import androidx.annotation.IntDef
 import androidx.annotation.RestrictTo
 import androidx.core.util.ObjectsCompat
 import com.urbanairship.AirshipComponent
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.util.Checks
-import java.util.concurrent.TimeUnit
-import kotlin.math.max
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 

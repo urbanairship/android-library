@@ -1,7 +1,6 @@
 package com.urbanairship.push.notifications
 
 import android.app.Notification
-import androidx.annotation.IntDef
 
 /**
  * Results for [NotificationProvider.onCreateNotification].

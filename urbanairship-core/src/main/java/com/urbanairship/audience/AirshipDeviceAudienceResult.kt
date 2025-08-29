@@ -31,7 +31,7 @@ public data class AirshipDeviceAudienceResult(
 
             return AirshipDeviceAudienceResult(
                 isMatch = content.requireField(IS_MATCH),
-                reportingMetadata = content.get(REPORTING_METADATA)?.requireList()?.list
+                reportingMetadata = content[REPORTING_METADATA]?.requireList()?.list
             )
         }
 

@@ -9,8 +9,6 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
-import com.urbanairship.channel.AirshipChannel.Extender.Blocking
-import com.urbanairship.channel.AirshipChannel.Extender.Suspending
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.JsonMap
@@ -22,7 +20,6 @@ import com.urbanairship.json.requireField
 import com.urbanairship.json.tryParse
 import com.urbanairship.util.Clock
 import java.util.UUID
-import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
