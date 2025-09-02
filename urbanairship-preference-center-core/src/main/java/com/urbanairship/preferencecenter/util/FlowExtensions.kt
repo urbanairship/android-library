@@ -2,7 +2,6 @@ package com.urbanairship.preferencecenter.util
 
 import androidx.annotation.RestrictTo
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 
 /**

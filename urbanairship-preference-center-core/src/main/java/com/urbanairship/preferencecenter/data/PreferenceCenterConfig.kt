@@ -38,8 +38,8 @@ public data class PreferenceCenterConfig(
         internal fun parse(json: JsonMap): PreferenceCenterConfig = PreferenceCenterConfig(
             id = json.requireField(KEY_ID),
             sections = json.opt(KEY_SECTIONS).optList().map { Section.parse(it.optMap()) },
-            display = json.get(KEY_DISPLAY)?.map?.let { CommonDisplay.parse(it) } ?: CommonDisplay.EMPTY,
-            options = json.get(KEY_OPTIONS)?.map?.let { Options.parse(it) }
+            display = json[KEY_DISPLAY]?.map?.let { CommonDisplay.parse(it) } ?: CommonDisplay.EMPTY,
+            options = json[KEY_OPTIONS]?.map?.let { Options.parse(it) }
         )
     }
 
