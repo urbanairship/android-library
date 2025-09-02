@@ -8,7 +8,6 @@ import android.util.TypedValue
 import android.view.View
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.RecyclerView
-import com.urbanairship.preferencecenter.R
 import com.urbanairship.preferencecenter.ui.item.AlertItem
 import com.urbanairship.preferencecenter.ui.item.SectionBreakItem
 import com.urbanairship.preferencecenter.ui.item.SectionItem

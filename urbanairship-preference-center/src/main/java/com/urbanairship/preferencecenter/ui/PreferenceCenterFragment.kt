@@ -9,8 +9,6 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
@@ -91,7 +89,7 @@ public class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference
     }
 
     @VisibleForTesting
-    protected val viewModelScopeProvider: () -> CoroutineScope = { viewModel.viewModelScope }
+    private val viewModelScopeProvider: () -> CoroutineScope = { viewModel.viewModelScope }
 
     private val adapter: PreferenceCenterAdapter by lazy {
         PreferenceCenterAdapter(scopeProvider = viewModelScopeProvider)

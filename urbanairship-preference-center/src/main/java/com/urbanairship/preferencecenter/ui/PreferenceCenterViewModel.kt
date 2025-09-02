@@ -551,13 +551,13 @@ internal class PreferenceCenterViewModel(
     private fun getChannelSubscriptions(): Flow<Result<Set<String>>> = channel.subscriptions
 
     private fun getChannelSubscriptionsAsSet(subscriptionsResult: Result<Set<String>>): Set<String> {
-        return subscriptionsResult.getOrNull()?.let { it } ?: emptySet()
+        return subscriptionsResult.getOrNull() ?: emptySet()
     }
 
     private fun getContactSubscriptions(): Flow<Result<Map<String, Set<Scope>>>> = contact.subscriptions
 
     private fun getContactSubscriptionsAsMap(subscriptionsResult: Result<Map<String, Set<Scope>>>): Map<String, Set<Scope>> {
-        return subscriptionsResult.getOrNull()?.let { it } ?: emptyMap()
+        return subscriptionsResult.getOrNull() ?: emptyMap()
     }
 
     private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = contact.channelContacts.mapNotNull {
