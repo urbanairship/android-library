@@ -26,7 +26,7 @@ public open class MessageFragment @JvmOverloads constructor(
 ) : Fragment(contentLayoutId) {
 
     /** The current [Message] ID. */
-    public val messageId: String? by lazy { arguments?.getString(com.urbanairship.messagecenter.ui.MessageFragment.Companion.ARG_MESSAGE_ID) }
+    public val messageId: String? by lazy { arguments?.getString(ARG_MESSAGE_ID) }
 
     /** The currently displayed message, if a message is loaded. */
     public val currentMessage: Message?
@@ -43,7 +43,7 @@ public open class MessageFragment @JvmOverloads constructor(
     }
 
     /** Listener for `MessageFragment` events. */
-    public var listener: com.urbanairship.messagecenter.ui.MessageFragment.Listener? = null
+    public var listener: Listener? = null
 
     /** The message ViewModel. */
     protected val viewModel: MessageViewModel by viewModels { MessageViewModel.factory() }
@@ -174,9 +174,9 @@ public open class MessageFragment @JvmOverloads constructor(
          * @return messageFragment new MessageFragment
          */
         @JvmStatic
-        public fun newInstance(messageId: String): com.urbanairship.messagecenter.ui.MessageFragment = com.urbanairship.messagecenter.ui.MessageFragment()
+        public fun newInstance(messageId: String): MessageFragment = MessageFragment()
             .apply {
-            arguments = bundleOf(com.urbanairship.messagecenter.ui.MessageFragment.Companion.ARG_MESSAGE_ID to messageId)
+            arguments = bundleOf(ARG_MESSAGE_ID to messageId)
         }
     }
 }

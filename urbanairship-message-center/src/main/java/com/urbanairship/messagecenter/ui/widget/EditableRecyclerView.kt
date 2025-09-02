@@ -22,13 +22,13 @@ internal abstract class EditableRecyclerView<T : Parcelable, VH : EditableViewHo
     /** Listener interface for `EditableRecyclerView`. */
     interface Listener<T, A> {
         /** Called when the edit mode is changed. */
-        public fun onEditModeChanged(isEditing: Boolean)
+        fun onEditModeChanged(isEditing: Boolean)
         /** Called when the selection is changed. */
-        public fun onSelectionChanged(selectedItems: List<T>, isAllSelected: Boolean)
+        fun onSelectionChanged(selectedItems: List<T>, isAllSelected: Boolean)
         /** Called when an item is clicked. */
-        public fun onItemClicked(item: T)
+        fun onItemClicked(item: T)
         /** Called when an item action is triggered. */
-        public fun onAction(action: A, item: T)
+        fun onAction(action: A, item: T)
     }
 
     /** Listener for `EditableRecyclerView` events. */
@@ -161,9 +161,9 @@ internal abstract class EditableListAdapter<T, VH : EditableViewHolder<T, *>>(
 
     /** Listener interface for `EditableListAdapter`. */
     interface Listener<T> {
-        public fun onItemClicked(item: T)
-        public fun onItemLongClicked(item: T)
-        public fun onSelectionChanged(selectedItems: List<T>, isAllSelected: Boolean)
+        fun onItemClicked(item: T)
+        fun onItemLongClicked(item: T)
+        fun onSelectionChanged(selectedItems: List<T>, isAllSelected: Boolean)
     }
 
     /** Returns `true` if all items are selected. */
@@ -306,11 +306,11 @@ internal abstract class EditableViewHolder<T, V: View>(itemView: V) : RecyclerVi
     }
 
     /** Updates the editing state of this `item`. */
-    public abstract fun updateEditing(isEditing: Boolean)
+    abstract fun updateEditing(isEditing: Boolean)
 
     /** Updates the selected state of this `item`. */
-    public abstract fun updateSelected(isSelected: Boolean)
+    abstract fun updateSelected(isSelected: Boolean)
 
     /** Updates the highlighted state of this `item`. */
-    public abstract fun updateHighlighted(isHighlighted: Boolean)
+    abstract fun updateHighlighted(isHighlighted: Boolean)
 }
