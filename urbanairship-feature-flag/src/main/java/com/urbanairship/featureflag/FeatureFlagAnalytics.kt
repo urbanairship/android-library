@@ -1,7 +1,6 @@
 package com.urbanairship.featureflag
 
 import com.urbanairship.UALog
-import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 
 /** Analytics helper that handles tracking of feature flag interactions. */

@@ -3,11 +3,9 @@
 package com.urbanairship.featureflag
 
 import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
@@ -148,7 +146,7 @@ public class FeatureFlag private constructor(
                 name = json.requireMap().requireField(KEY_NAME),
                 isEligible = json.requireMap().requireField(KEY_IS_ELIGIBLE),
                 exists = json.requireMap().requireField(KEY_EXISTS),
-                reportingInfo = json.requireMap().get(KEY_REPORTING_INFO)?.let {
+                reportingInfo = json.requireMap()[KEY_REPORTING_INFO]?.let {
                         ReportingInfo.fromJson(it)
                 },
                 variables = json.requireMap().optionalField(KEY_VARIABLES),
