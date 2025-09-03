@@ -253,6 +253,25 @@ public class AnalyticsTest {
         assertThat(analytics.associatedIdentifiers.ids).isEqualTo(mapOf("customKey" to "customValue"))
     }
 
+    @Test
+    public fun testEditAssociatedIdentifiersClosure() {
+        analytics.editAssociatedIdentifiers {
+            addIdentifier("customKey", "customValue")
+        }
+
+        verify {
+            mockEventManager.addEvent(
+                match {
+                    it.type == EventType.ASSOCIATE_IDENTIFIERS
+                },
+                eq(Event.Priority.NORMAL),
+            )
+        }
+
+        // Verify identifiers are stored
+        assertThat(analytics.associatedIdentifiers.ids).isEqualTo(mapOf("customKey" to "customValue"))
+    }
+
     /**
      * Test editAssociatedIdentifiers doesn't dispatch a job when adding a duplicate associate_identifier.
      */

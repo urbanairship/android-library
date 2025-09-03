@@ -181,10 +181,7 @@ internal class DefaultTagsScreenViewModel: TagsScreenViewModel, ViewModel() {
             return
         }
 
-        Airship.shared().channel
-            .editTags()
-            .addTag(tag)
-            .apply()
+        Airship.shared().channel.editTags { addTag(tag) }
 
         refresh()
     }
@@ -194,10 +191,7 @@ internal class DefaultTagsScreenViewModel: TagsScreenViewModel, ViewModel() {
             return
         }
 
-        Airship.shared().channel
-            .editTags()
-            .removeTag(tag)
-            .apply()
+        Airship.shared().channel.editTags { removeTag(tag) }
 
         refresh()
     }

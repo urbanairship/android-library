@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
+import com.google.android.gms.common.internal.Objects
+
 /**
  * An interface for callbacks signaling the completion of an
  * [com.urbanairship.actions.Action].

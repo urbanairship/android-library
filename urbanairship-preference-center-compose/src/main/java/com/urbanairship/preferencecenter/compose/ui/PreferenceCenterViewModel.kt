@@ -5,8 +5,8 @@ import android.os.Parcelable
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.urbanairship.Airship
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
 import com.urbanairship.actions.ActionRunner
 import com.urbanairship.actions.DefaultActionRunner
 import com.urbanairship.actions.run
@@ -88,8 +88,8 @@ internal sealed class ContactManagerDialog {
 internal class DefaultPreferenceCenterViewModel(
     private val preferenceCenterId: String,
     private val preferenceCenter: PreferenceCenter = PreferenceCenter.shared(),
-    private val channel: AirshipChannel = UAirship.shared().channel,
-    private val contact: Contact = UAirship.shared().contact,
+    private val channel: AirshipChannel = Airship.shared().channel,
+    private val contact: Contact = Airship.shared().contact,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val actionRunner: ActionRunner = DefaultActionRunner,
     private val conditionMonitor: ConditionStateMonitor = ConditionStateMonitor(),
@@ -475,23 +475,22 @@ internal class DefaultPreferenceCenterViewModel(
 
         when (item) {
             is Item.ChannelSubscription -> with(item) {
-                channel.editSubscriptionLists()
-                    .mutate(subscriptionId, isEnabled)
-                    .apply()
-
+                channel.editSubscriptionLists {
+                    it.mutate(subscriptionId, isEnabled)
+                }
                 emit(Change.UpdateSubscriptions(subscriptionId, isEnabled))
             }
             is Item.ContactSubscription -> with(item) {
-                contact.editSubscriptionLists()
-                    .mutate(subscriptionId, scopes, isEnabled)
-                    .apply()
+                contact.editSubscriptionLists {
+                    mutate(subscriptionId, scopes, isEnabled)
+                }
 
                 emit(Change.UpdateScopedSubscriptions(subscriptionId, scopes, isEnabled))
             }
             is Item.ContactSubscriptionGroup -> with(item) {
-                contact.editSubscriptionLists()
-                    .mutate(subscriptionId, scopes, isEnabled)
-                    .apply()
+                contact.editSubscriptionLists {
+                    mutate(subscriptionId, scopes, isEnabled)
+                }
 
                 emit(Change.UpdateScopedSubscriptions(subscriptionId, scopes, isEnabled))
             }

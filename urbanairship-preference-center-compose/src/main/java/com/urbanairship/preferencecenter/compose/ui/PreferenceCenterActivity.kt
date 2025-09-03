@@ -1,13 +1,11 @@
 package com.urbanairship.preferencecenter.compose.ui
 
-import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.lifecycle.createSavedStateHandle
+import com.urbanairship.Airship
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.UAirship
 import com.urbanairship.preferencecenter.PreferenceCenter
 
 /** `Activity` that displays a Preference Center composable UI. */
@@ -17,7 +15,7 @@ public class PreferenceCenterActivity: ComponentActivity() {
         super.onCreate(savedInstanceState)
         Autopilot.automaticTakeOff(application)
 
-        if (!UAirship.isTakingOff && !UAirship.isFlying) {
+        if (!Airship.isTakingOff && !Airship.isFlying) {
             UALog.e("PreferenceCenterActivity - unable to create activity, takeOff not called.")
             finish()
             return

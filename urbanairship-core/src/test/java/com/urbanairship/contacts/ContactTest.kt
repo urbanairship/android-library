@@ -459,6 +459,19 @@ public class ContactTest {
     }
 
     @Test
+    public fun testEditTagsClosure(): TestResult = runTest {
+        contact.editTagGroups { setTag("some group", "some tag") }
+
+        val expectedMutations = listOf(
+            TagGroupsMutation.newSetTagsMutation("some group", setOf("some tag"))
+        )
+
+        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(tags = expectedMutations)) }
+        verify { mockAudienceOverridesProvider.notifyPendingChanged() }
+    }
+
+
+    @Test
     public fun testEditTagsContactDisabled(): TestResult = runTest {
         privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         contact.editTagGroups().setTag("some group", "some tag").apply()
@@ -485,6 +498,20 @@ public class ContactTest {
     @Test
     public fun testEditAttributes(): TestResult = runTest {
         contact.editAttributes().setAttribute("some attribute", "some value").apply()
+
+        val expectedMutations = listOf(
+            AttributeMutation.newSetAttributeMutation(
+                "some attribute", JsonValue.wrapOpt("some value"), testClock.currentTimeMillis()
+            )
+        )
+
+        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(attributes = expectedMutations)) }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
+    }
+
+    @Test
+    public fun testEditAttributesClosure(): TestResult = runTest {
+        contact.editAttributes { setAttribute("some attribute", "some value") }
 
         val expectedMutations = listOf(
             AttributeMutation.newSetAttributeMutation(
@@ -539,6 +566,20 @@ public class ContactTest {
         verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(subscriptions = expectedMutations)) }
         verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
 
+    }
+
+    @Test
+    public fun testEditSubscriptionsClosure(): TestResult = runTest {
+        contact.editSubscriptionLists { subscribe("some list", Scope.APP) }
+
+        val expectedMutations = listOf(
+            ScopedSubscriptionListMutation.newSubscribeMutation(
+                "some list", Scope.APP, testClock.currentTimeMillis()
+            )
+        )
+
+        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(subscriptions = expectedMutations)) }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test
