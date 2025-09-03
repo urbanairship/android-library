@@ -144,7 +144,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
 
     private fun reportButtonTap(json: JsonValue) {
         try {
-            json.optMap().get("button_info")
+            json.optMap()["button_info"]
                 ?.let(InAppMessageButtonInfo::fromJson)
                 ?.let { displayListener?.onButtonDismissed(it) }
         } catch (ex: JsonException) {
@@ -165,13 +165,13 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
         }
     }
 
-    public override fun onResume() {
+    override fun onResume() {
         super.onResume()
         webView?.onResume()
         load()
     }
 
-    public override fun onPause() {
+    override fun onPause() {
         super.onPause()
         webView?.onPause()
 

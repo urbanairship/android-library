@@ -103,8 +103,8 @@ constructor(
                 }
 
                 val cancelAll = value.string?.let { it.lowercase() == ALL } ?: false
-                val cancelIDs = value.optMap().get(IDS)?.let { getSingleOrList(it) }
-                val cancelGroups = value.optMap().get(GROUPS)?.let { getSingleOrList(it) }
+                val cancelIDs = value.optMap()[IDS]?.let { getSingleOrList(it) }
+                val cancelGroups = value.optMap()[GROUPS]?.let { getSingleOrList(it) }
 
                 if (!cancelAll && cancelIDs == null && cancelGroups == null) {
                     throw IllegalArgumentException()

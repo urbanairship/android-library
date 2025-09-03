@@ -110,7 +110,7 @@ internal class MediaView @JvmOverloads constructor(
         val webView = WebView(context)
         val frameLayout = FrameLayout(context)
         val webViewLayoutParams = LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+            LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT
         )
         webViewLayoutParams.gravity = Gravity.CENTER
         frameLayout.addView(webView, webViewLayoutParams)
@@ -118,7 +118,7 @@ internal class MediaView @JvmOverloads constructor(
         progressBar.isIndeterminate = true
         progressBar.id = R.id.progress
         val progressBarLayoutParams = LayoutParams(
-            ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT
+            LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT
         )
         progressBarLayoutParams.gravity = Gravity.CENTER
         frameLayout.addView(progressBar, progressBarLayoutParams)

@@ -197,10 +197,6 @@ public class InAppMessage internal constructor(
     }
 
     internal companion object {
-        /**
-         * Max message name length.
-         */
-        private const val MAX_NAME_LENGTH = 1024;
 
         private const val DISPLAY_TYPE_KEY = "display_type"
         private const val DISPLAY_CONTENT_KEY = "display"
@@ -229,17 +225,17 @@ public class InAppMessage internal constructor(
 
             val name: String = content.optionalField<String>(NAME_KEY) ?: ""
 
-            val renderLocale = content.get(RENDERED_LOCALE_KEY)
+            val renderLocale = content[RENDERED_LOCALE_KEY]
 
             return InAppMessage(
                 name = name,
                 displayContent = InAppMessageDisplayContent.fromJson(content.require(
                     DISPLAY_CONTENT_KEY
                 ), type),
-                source = content.get(SOURCE_KEY)?.let(Source::fromJson),
+                source = content[SOURCE_KEY]?.let(Source::fromJson),
                 extras = content.optionalField(EXTRA_KEY),
                 actions = content.optionalField(ACTIONS_KEY),
-                displayBehavior = content.get(DISPLAY_BEHAVIOR_KEY)?.let(DisplayBehavior::fromJson),
+                displayBehavior = content[DISPLAY_BEHAVIOR_KEY]?.let(DisplayBehavior::fromJson),
                 isReportingEnabled = content.optionalField(REPORTING_ENABLED_KEY),
                 renderedLocale = renderLocale,
             )

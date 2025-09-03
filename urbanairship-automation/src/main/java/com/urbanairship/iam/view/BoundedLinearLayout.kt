@@ -33,7 +33,7 @@ internal open class BoundedLinearLayout @JvmOverloads constructor(
      */
     @MainThread
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public fun setClipPathBorderRadius(borderRadius: Float) {
+    fun setClipPathBorderRadius(borderRadius: Float) {
         clippableViewDelegate.setClipPathBorderRadius(this, borderRadius)
     }
 }

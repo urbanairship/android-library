@@ -58,7 +58,7 @@ public class InAppMessageMediaInfo(
         /**
          * Parses a [InAppMessageMediaInfo] from a [JsonValue].
          *
-         * @param value The json value.
+         * @param source The json value.
          * @return The parsed media info.
          * @throws JsonException If the media info was unable to be parsed.
          */

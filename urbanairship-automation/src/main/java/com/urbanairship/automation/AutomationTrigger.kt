@@ -8,7 +8,6 @@ import com.urbanairship.automation.engine.triggerprocessor.MatchResult
 import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -329,7 +328,7 @@ public class EventAutomationTrigger internal constructor(
                 ?: throw JsonException("invalid compound trigger type $json")
 
             val goal = json.requireField<Double>(KEY_GOAL)
-            val predicate =  json.get(KEY_PREDICATE)?.let(JsonPredicate::parse)
+            val predicate =  json[KEY_PREDICATE]?.let(JsonPredicate::parse)
 
             return EventAutomationTrigger(
                 id = json.optionalField(KEY_ID) ?: AutomationTrigger.generateStableId(type.value, goal, predicate, executionType),

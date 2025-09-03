@@ -20,7 +20,7 @@ public class AirshipEmbeddedObserver
 @VisibleForTesting
 internal constructor(
     public val filter: (AirshipEmbeddedInfo) -> Boolean,
-    private val manager: AirshipEmbeddedViewManager,
+    manager: AirshipEmbeddedViewManager,
     dispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     /** Construct an observer for all embedded views matching the given filter. */

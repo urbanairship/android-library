@@ -123,14 +123,14 @@ internal class InAppButtonLayout @JvmOverloads constructor(
                 LayoutInflater.from(context).inflate(buttonLayoutResourceId, this, false) as Button
             InAppViewUtils.applyButtonInfo(button, buttonInfo, radiusFlag)
             if (layout == InAppMessageButtonLayoutType.STACKED) {
-                val params = LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, 0)
+                val params = LayoutParams(LayoutParams.MATCH_PARENT, 0)
                 params.weight = 1f
                 button.layoutParams = params
                 if (i > 0) {
                     params.setMargins(0, stackedSpaceHeight, 0, 0)
                 }
             } else {
-                val params = LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT)
+                val params = LayoutParams(0, LayoutParams.MATCH_PARENT)
                 params.weight = 1f
                 button.layoutParams = params
                 if (layout != InAppMessageButtonLayoutType.JOINED && i > 0) {

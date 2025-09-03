@@ -103,10 +103,10 @@ public class HTML @VisibleForTesting internal constructor(
                 height = content.optionalField(HEIGHT_KEY) ?: 0L,
                 aspectLock = content.optionalField(ASPECT_LOCK_KEY),
                 requiresConnectivity = content.optionalField(REQUIRE_CONNECTIVITY),
-                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                backgroundColor = content[BACKGROUND_COLOR_KEY]?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.WHITE),
                 borderRadius = content.opt(BORDER_RADIUS_KEY).getFloat(0F),
-                dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                dismissButtonColor = content[DISMISS_BUTTON_COLOR_KEY]?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.BLACK),
                 allowFullscreenDisplay = content.optionalField(ALLOW_FULLSCREEN_DISPLAY_KEY) ?: false
             )

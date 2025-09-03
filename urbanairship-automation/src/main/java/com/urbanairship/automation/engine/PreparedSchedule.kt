@@ -60,10 +60,10 @@ public data class PreparedScheduleInfo(
             return PreparedScheduleInfo(
                 scheduleId = content.requireField(SCHEDULE_ID),
                 productId = content.optionalField(PRODUCT_ID),
-                campaigns = content.get(CAMPAIGNS),
+                campaigns = content[CAMPAIGNS],
                 contactId = content.optionalField(CONTACT_ID),
-                experimentResult = content.get(EXPERIMENT_RESULT)?.let { ExperimentResult.fromJson(it.requireMap()) },
-                reportingContext = content.get(REPORTING_CONTEXT),
+                experimentResult = content[EXPERIMENT_RESULT]?.let { ExperimentResult.fromJson(it.requireMap()) },
+                reportingContext = content[REPORTING_CONTEXT],
                 // Default to a UUID for backwards compatibility
                 triggerSessionId = content.optionalField(TRIGGER_SESSION_ID) ?: UUID.randomUUID().toString(),
                 additionalAudienceCheckResult = content.optionalField(ADDITIONAL_AUDIENCE_CHECK_RESULT) ?: true,

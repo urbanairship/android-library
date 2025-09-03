@@ -24,7 +24,7 @@ internal data class TriggeringInfo(
         fun fromJson(value: JsonValue): TriggeringInfo {
             val content = value.requireMap()
             return TriggeringInfo(
-                context = content.get(CONTEXT)?.let(DeferredTriggerContext::fromJson),
+                context = content[CONTEXT]?.let(DeferredTriggerContext::fromJson),
                 date = content.requireField(DATE)
             )
         }

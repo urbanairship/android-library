@@ -47,7 +47,7 @@ public class InAppMessageTextInfo(
             fun fromJson(value: JsonValue): Style {
                 val jsonString = value.requireString().lowercase(Locale.ROOT)
                 return entries.firstOrNull { it.json == jsonString }
-                    ?: throw JsonException("Invalid style: $value");
+                    ?: throw JsonException("Invalid style: $value")
             }
         }
 
@@ -94,7 +94,7 @@ public class InAppMessageTextInfo(
         /**
          * Parses a [InAppMessageTextInfo] from a [JsonValue].
          *
-         * @param value The json value.
+         * @param source The json value.
          * @return The parsed text info.
          * @throws JsonException If the text info was unable to be parsed.
          */
@@ -103,19 +103,19 @@ public class InAppMessageTextInfo(
             val content = source.optMap()
 
             if (content.containsKey(STYLE_KEY) && !content.opt(STYLE_KEY).isJsonList) {
-                throw JsonException("Style must be an array: " + content.opt(STYLE_KEY));
+                throw JsonException("Style must be an array: " + content.opt(STYLE_KEY))
             }
 
             if (content.containsKey(FONT_FAMILY_KEY) && !content.opt(FONT_FAMILY_KEY).isJsonList) {
-                throw JsonException("Fonts must be an array: " + content.opt(STYLE_KEY));
+                throw JsonException("Fonts must be an array: " + content.opt(STYLE_KEY))
             }
 
             return InAppMessageTextInfo(
                 text = content.requireField(TEXT_KEY),
-                color = content.get(COLOR_KEY)?.let(InAppMessageColor.Companion::fromJson),
+                color = content[COLOR_KEY]?.let(InAppMessageColor.Companion::fromJson),
                 size = content.optionalField(SIZE_KEY),
                 alignment = content.optionalField<String>(ALIGNMENT_KEY)?.let(Alignment.Companion::fromJson),
-                style = content.get(STYLE_KEY)?.requireList()?.map(Style.Companion::fromJson),
+                style = content[STYLE_KEY]?.requireList()?.map(Style.Companion::fromJson),
                 fontFamilies = content.opt(FONT_FAMILY_KEY).optList().map { it.requireString() },
                 drawableName = content.optionalField(ANDROID_DRAWABLE_RES_NAME_KEY)
             )

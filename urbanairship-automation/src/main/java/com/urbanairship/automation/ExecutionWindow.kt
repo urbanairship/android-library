@@ -33,8 +33,8 @@ public class ExecutionWindow(
         fun fromJson(value: JsonValue): ExecutionWindow {
             val content = value.requireMap()
             return ExecutionWindow(
-                includes = content.get(INCLUDES)?.requireList()?.mapNotNull(Rule::fromJson),
-                excludes = content.get(EXCLUDES)?.requireList()?.mapNotNull(Rule::fromJson)
+                includes = content[INCLUDES]?.requireList()?.mapNotNull(Rule::fromJson),
+                excludes = content[EXCLUDES]?.requireList()?.mapNotNull(Rule::fromJson)
             )
         }
     }
@@ -138,7 +138,7 @@ public sealed class Rule(
 
                 return Daily(
                     timeRange = TimeRange.fromJson(content.require(TIME_RANGE)),
-                    timeZone = content.get(TIME_ZONE)?.let(TimeZone::fromJson)
+                    timeZone = content[TIME_ZONE]?.let(TimeZone::fromJson)
                 )
             }
         }
@@ -188,8 +188,8 @@ public sealed class Rule(
                             .require(DAYS_OF_WEEK)
                             .requireList()
                             .mapNotNull { it.integer },
-                        timeRange = content.get(TIME_RANGE)?.let(TimeRange::fromJson),
-                        timeZone = content.get(TIME_ZONE)?.let(TimeZone::fromJson)
+                        timeRange = content[TIME_RANGE]?.let(TimeRange::fromJson),
+                        timeZone = content[TIME_ZONE]?.let(TimeZone::fromJson)
                     )
                 } catch (ex: IllegalArgumentException) {
                     throw JsonException("Invalid parameter", ex)
@@ -271,13 +271,13 @@ public sealed class Rule(
                 val content = value.requireMap()
                 return try {
                     Monthly(
-                        months = content.get(MONTHS)
+                        months = content[MONTHS]
                             ?.requireList()
                             ?.mapNotNull { it.integer }
                             ?.map { it },
-                        daysOfMonth = content.get(DAYS_OF_MONTH)?.requireList()?.mapNotNull { it.integer },
-                        timeRange = content.get(TIME_RANGE)?.let(TimeRange::fromJson),
-                        timeZone = content.get(TIME_ZONE)?.let(TimeZone::fromJson)
+                        daysOfMonth = content[DAYS_OF_MONTH]?.requireList()?.mapNotNull { it.integer },
+                        timeRange = content[TIME_RANGE]?.let(TimeRange::fromJson),
+                        timeZone = content[TIME_ZONE]?.let(TimeZone::fromJson)
                     )
                 } catch (ex: IllegalArgumentException) {
                     throw JsonException("Invalid parameter", ex)
@@ -521,7 +521,7 @@ public sealed class Rule(
 
                     return Identifiers(
                         ids = content.require(IDENTIFIERS).requireList().map { it.requireString() },
-                        secondsFromUtc = content.get(FALLBACK_SECONDS_FROM_UTC)?.getInt(0)?.seconds,
+                        secondsFromUtc = content[FALLBACK_SECONDS_FROM_UTC]?.getInt(0)?.seconds,
                         onFailure = FailureMode.fromJson(content.require(ON_FAILURE))
                     )
                 }
