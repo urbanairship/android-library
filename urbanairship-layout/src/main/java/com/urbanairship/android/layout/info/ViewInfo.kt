@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.info
 import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.environment.ThomasStateTrigger
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
-import com.urbanairship.android.layout.info.LabelInfo.ViewOverrides
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.AutomatedAction
@@ -175,8 +174,8 @@ internal data class ViewPropertyOverride<T>(
     constructor(
         json: JsonValue, valueParser: (JsonValue) -> T
     ): this(
-        whenStateMatcher = json.requireMap().get("when_state_matches")?.let { JsonPredicate.parse(it) },
-        value = json.requireMap().get("value")?.let(valueParser)
+        whenStateMatcher = json.requireMap()["when_state_matches"]?.let { JsonPredicate.parse(it) },
+        value = json.requireMap()["value"]?.let(valueParser)
     )
 }
 
@@ -283,9 +282,9 @@ internal data class ValidatableInfo(
 private fun validatable(json: JsonMap) =
     ValidatableInfo(
         isRequired = json.optionalField("required") ?: false,
-        onError = json.get("on_error")?.let { ValidationAction(it) },
-        onValid = json.get("on_valid")?.let { ValidationAction(it) },
-        onEdit = json.get("on_edit")?.let { ValidationAction(it) },
+        onError = json["on_error"]?.let { ValidationAction(it) },
+        onValid = json["on_valid"]?.let { ValidationAction(it) },
+        onEdit = json["on_edit"]?.let { ValidationAction(it) },
     )
 
 // ------ Base Component Interfaces ------
@@ -430,13 +429,11 @@ internal class IconViewInfo(json: JsonMap) : ViewInfo(), View by view(json), Acc
     }
 }
 
-internal interface BaseCheckable: View, Accessible {
-}
+internal interface BaseCheckable: View, Accessible
 
 internal open class BaseCheckableInfo(
     json: JsonMap
-) : ViewInfo(), BaseCheckable, View by view(json), Accessible by accessible(json) {
-}
+) : ViewInfo(), BaseCheckable, View by view(json), Accessible by accessible(json)
 
 internal interface Checkable : BaseCheckable, View, Accessible {
     val style: ToggleStyle
@@ -637,7 +634,7 @@ internal class TextInputInfo(
     }
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
 
-    val emailRegistrationOptions: ThomasEmailRegistrationOptions? = json.get("email_registration")?.let {
+    val emailRegistrationOptions: ThomasEmailRegistrationOptions? = json["email_registration"]?.let {
         if (inputType == FormInputType.EMAIL) {
             ThomasEmailRegistrationOptions.fromJson(it)
         } else {
@@ -819,7 +816,7 @@ internal class PagerItemInfo(
     val accessibilityActions = json.optionalList("accessibility_actions")
         ?.let { AccessibilityAction.fromList(it) }
     val stateActions = json.optionalList("state_actions")?.map(StateAction::fromJson)
-    val branching = json.get("branching")?.let(PageBranching::from)
+    val branching = json["branching"]?.let(PageBranching::from)
 }
 
 internal class PagerIndicatorInfo(
@@ -874,7 +871,7 @@ internal class PagerControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(
     override val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 
-    val branching = json.get("branching")?.let(PagerControllerBranching::from)
+    val branching = json["branching"]?.let(PagerControllerBranching::from)
 }
 
 internal open class BaseToggleLayoutInfo(json: JsonMap) :  ViewGroupInfo<ViewItemInfo>(), Identifiable by identifiable(json), View by view(json) {

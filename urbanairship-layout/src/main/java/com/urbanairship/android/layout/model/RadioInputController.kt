@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import android.view.View
-import android.view.ViewGroup
 import android.widget.RadioGroup
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
@@ -18,7 +17,6 @@ import com.urbanairship.android.layout.info.RadioInputControllerInfo
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField
-import com.urbanairship.android.layout.view.RadioInputView
 import com.urbanairship.json.JsonValue
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch

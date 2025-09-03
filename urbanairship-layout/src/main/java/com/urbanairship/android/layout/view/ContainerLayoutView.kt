@@ -74,7 +74,7 @@ internal class ContainerLayoutView(
     private fun addItem(constraintBuilder: ConstraintSetBuilder, item: Item) {
         val itemView = item.model.createView(context, viewEnvironment, ItemProperties(item.info.size))
 
-        val frameId = View.generateViewId()
+        val frameId = generateViewId()
         val frame: ViewGroup = FrameLayout(context).apply {
             id = frameId
             addView(itemView, MATCH_PARENT, MATCH_PARENT)

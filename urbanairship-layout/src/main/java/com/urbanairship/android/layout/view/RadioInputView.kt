@@ -2,7 +2,6 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
-import android.view.View
 import android.widget.RadioButton
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.isVisible
@@ -20,7 +19,7 @@ internal class RadioInputView(
     model: RadioInputModel
 ) : CheckableView<RadioInputModel>(context, model) {
 
-    override val accessibilityNodeClassName = RadioButton::class.java.name
+    override val accessibilityNodeClassName: String = RadioButton::class.java.name
 
     init {
         val baseBackground = this.background

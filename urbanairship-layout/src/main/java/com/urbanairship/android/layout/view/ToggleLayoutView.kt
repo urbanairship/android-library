@@ -46,7 +46,7 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
 
         addView(view, MATCH_PARENT, MATCH_PARENT)
 
-        view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        view.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
         model.contentDescription(context)?.ifNotEmpty { contentDescription = it }
 
         ViewCompat.setAccessibilityDelegate(this, object : AccessibilityDelegateCompat() {

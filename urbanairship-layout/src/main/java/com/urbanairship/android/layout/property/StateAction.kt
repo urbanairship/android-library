@@ -50,8 +50,8 @@ internal sealed class StateAction(val type: Type) {
                 Type.CLEAR_STATE -> ClearState
                 Type.SET_STATE -> SetState(
                     key = json.requireField("key"),
-                    value = json.get("value"),
-                    ttl = json.get("ttl_seconds")?.getLong(0)?.seconds
+                    value = json["value"],
+                    ttl = json["ttl_seconds"]?.getLong(0)?.seconds
                 )
                 Type.SET_FORM_VALUE_STATE -> SetFormValue(
                     key = json.requireField("key")

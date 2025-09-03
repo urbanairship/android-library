@@ -39,7 +39,7 @@ internal class StoryIndicatorView(
         if (model.announcePage) {
             isFocusable = true
             isFocusableInTouchMode = true
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
         }
 
         model.listener = object : StoryIndicatorModel.Listener {
@@ -93,7 +93,7 @@ internal class StoryIndicatorView(
                         // Ensure individual indicators are not focusable for accessibility
                         isFocusable = false
                         isFocusableInTouchMode = false
-                        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
                     }
 
                     val lp = LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {
@@ -114,7 +114,7 @@ internal class StoryIndicatorView(
                                 durations[i]?.let {
                                     weight = it.toFloat()
                                 } ?: run {
-                                    progressIndicator.visibility = View.GONE
+                                    progressIndicator.visibility = GONE
                                 }
                             }
                         }
@@ -142,13 +142,13 @@ internal class StoryIndicatorView(
             (progressIndicators[i] as? LinearProgressIndicator)?.let { indicator ->
                 if (i == pageIndex) {
                     if (model.viewInfo.source == StoryIndicatorSource.CURRENT_PAGE) {
-                        indicator.visibility = View.VISIBLE
+                        indicator.visibility = VISIBLE
                     }
                     indicator.trackThickness = storyHeight
                     indicator.setProgressCompat(progress, animated)
                 } else {
                     if (model.viewInfo.source == StoryIndicatorSource.CURRENT_PAGE) {
-                        indicator.visibility = View.GONE
+                        indicator.visibility = GONE
                     }
                     if (i > pageIndex) {
                         indicator.trackThickness = (storyHeight * 0.5).toInt()

@@ -38,7 +38,7 @@ internal data class DisableSwipeSelector(
             val content = value.requireMap()
 
             return DisableSwipeSelector(
-                predicate = content.get(PREDICATE)?.let(JsonPredicate::parse),
+                predicate = content[PREDICATE]?.let(JsonPredicate::parse),
                 direction = content.requireMap(DIRECTIONS).require(TYPE).let(Direction::fromJson)
             )
         }

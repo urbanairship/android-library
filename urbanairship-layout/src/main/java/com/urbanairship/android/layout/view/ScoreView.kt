@@ -17,10 +17,8 @@ import com.urbanairship.android.layout.property.ScoreStyle.WrappingNumberRange
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ifNotEmpty
-import com.urbanairship.android.layout.widget.ScoreItemView
 import com.urbanairship.android.layout.widget.ShapeButton
 import com.urbanairship.android.layout.widget.TappableView
-import WrappingViewGroup
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -80,7 +78,7 @@ internal class ScoreView(
         val start = style.start
         val end = style.end
         val viewIds = (start..end).map { i ->
-            val viewId = View.generateViewId()
+            val viewId = generateViewId()
             val button = createShapeButton(i, bindings, viewId, constraints, 16, 16)
             scoreToViewIds.append(i, viewId)
             addView(button, LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT))
@@ -96,7 +94,7 @@ internal class ScoreView(
 
     /** Configures the view to display the wrapping number range style. */
     private fun configureWrappingNumberRange(style: WrappingNumberRange) {
-        val wrappingViewGroupId = View.generateViewId()
+        val wrappingViewGroupId = generateViewId()
         val wrappingViewGroup = WrappingViewGroup(context).apply {
             id = wrappingViewGroupId
             itemSpacing = LayoutUtils.dpToPx(context, style.spacing)
@@ -174,7 +172,7 @@ internal class ScoreView(
             updateCheckedState(this, viewId)
         } else {
             /// No id is supplied uncheck all
-            updateCheckedState(this);
+            updateCheckedState(this)
         }
     }
 

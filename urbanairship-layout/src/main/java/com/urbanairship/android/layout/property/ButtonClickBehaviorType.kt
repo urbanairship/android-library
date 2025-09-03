@@ -27,7 +27,7 @@ internal enum class ButtonClickBehaviorType(
     companion object {
         @Throws(JsonException::class)
         fun from(value: String): ButtonClickBehaviorType {
-            for (type in values()) {
+            for (type in entries) {
                 if (type.value == value.lowercase()) {
                     return type
                 }

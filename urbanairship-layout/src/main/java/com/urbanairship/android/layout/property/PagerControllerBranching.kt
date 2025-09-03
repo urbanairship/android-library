@@ -65,7 +65,7 @@ internal data class PagerControllerBranching(
                 val content = json.requireMap()
 
                 return Completion(
-                    predicate = content.get(WHEN_STATE_MATCHES)?.let(JsonPredicate::parse),
+                    predicate = content[WHEN_STATE_MATCHES]?.let(JsonPredicate::parse),
                     stateActions = content.optionalList(STATE_ACTIONS)?.map(StateAction::fromJson)
                 )
             }
@@ -132,7 +132,7 @@ internal data class PageBranching(
                 val content = json.requireMap()
 
                 return PageSelector(
-                    predicate = content.get(WHEN_STATE_MATCHES)?.let(JsonPredicate::parse),
+                    predicate = content[WHEN_STATE_MATCHES]?.let(JsonPredicate::parse),
                     pageId = content.requireField(PAGE_ID)
                 )
             }

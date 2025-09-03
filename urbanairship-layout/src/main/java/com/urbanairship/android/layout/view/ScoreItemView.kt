@@ -1,4 +1,4 @@
-package com.urbanairship.android.layout.widget
+package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.graphics.drawable.Drawable
@@ -96,7 +96,7 @@ internal class ScoreItemView(
         setChecked(!isChecked)
     }
 
-    public override fun onCreateDrawableState(extraSpace: Int): IntArray {
+    override fun onCreateDrawableState(extraSpace: Int): IntArray {
         val drawableState = super.onCreateDrawableState(extraSpace + 1)
         if (isChecked()) {
             mergeDrawableStates(drawableState, CHECKED_STATE_SET)

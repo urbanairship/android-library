@@ -26,7 +26,7 @@ internal sealed class StoryIndicatorStyle(val type: StoryIndicatorStyleType) {
             companion object {
                 @Throws(IllegalArgumentException::class)
                 fun from(value: String): SizingType {
-                    for (type in values()) {
+                    for (type in entries) {
                         if (type.value == value.lowercase()) {
                             return type
                         }

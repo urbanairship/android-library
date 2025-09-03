@@ -28,7 +28,7 @@ internal class PagerIndicatorView(
         if (model.announcePage) {
             isFocusable = true
             isFocusableInTouchMode = true
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
         }
 
         model.listener = object : PagerIndicatorModel.Listener {
@@ -77,7 +77,7 @@ internal class PagerIndicatorView(
                         adjustViewBounds = true
                         isFocusable = false
                         isFocusableInTouchMode = false
-                        importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+                        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
                     }
 
             val lp = LayoutParams(WRAP_CONTENT, MATCH_PARENT).apply {

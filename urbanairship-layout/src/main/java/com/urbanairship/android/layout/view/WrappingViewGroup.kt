@@ -1,10 +1,10 @@
 /* Copyright Airship and Contributors */
+package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.view.ViewGroup
-import com.urbanairship.android.layout.util.LayoutUtils
 
 public class WrappingViewGroup @JvmOverloads constructor(
     context: Context,
@@ -15,9 +15,6 @@ public class WrappingViewGroup @JvmOverloads constructor(
     public var itemSpacing: Int = 0
     public var lineSpacing: Int = 0
     public var maxItemsPerLine: Int = Int.MAX_VALUE
-
-    private val minTappableWidth = LayoutUtils.dpToPx(context,44)
-    private val minTappableHeight = LayoutUtils.dpToPx(context,44)
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val parentWidth = MeasureSpec.getSize(widthMeasureSpec)
