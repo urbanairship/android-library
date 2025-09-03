@@ -7,8 +7,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.urbanairship.analytics.AirshipEventData
 import com.urbanairship.analytics.EventType
-import com.urbanairship.json.JsonMap
-import com.urbanairship.json.JsonSerializable
 
 /**
  * Entities stored in the event database.\
@@ -35,15 +33,4 @@ internal data class EventEntity(
         type = event.type
     )
 
-    internal fun toJson() : JsonSerializable {
-        return JsonMap.newBuilder()
-            .put("id", this.id)
-            .put("eventId", this.eventId)
-            .put("session", this.session)
-            .put("payload", this.payload)
-            .put("time", this.time)
-            .put("type", this.type.toString())
-            .build()
-            .toJsonValue()
-    }
 }

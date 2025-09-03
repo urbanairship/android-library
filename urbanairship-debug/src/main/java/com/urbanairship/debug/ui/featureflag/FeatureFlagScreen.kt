@@ -1,3 +1,5 @@
+package com.urbanairship.debug.ui.featureflag
+
 import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
@@ -26,8 +28,6 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.debug.DebugManager
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.TopBarNavigation
-import com.urbanairship.debug.ui.featureflag.FeatureFlagScreens
-import com.urbanairship.debug.ui.featureflag.toFormattedJsonString
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import com.urbanairship.featureflag.FeatureFlag
 import com.urbanairship.featureflag.FeatureFlagManager

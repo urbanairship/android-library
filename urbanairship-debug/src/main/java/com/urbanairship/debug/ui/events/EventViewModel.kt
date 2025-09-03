@@ -3,9 +3,6 @@
 package com.urbanairship.debug.ui.events
 
 import androidx.annotation.RestrictTo
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.CoroutineScope
