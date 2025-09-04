@@ -65,7 +65,7 @@ internal class NotificationChannelRegistryDataManager(
      * @param channelCompat A NotificationChannelCompat.
      */
     @WorkerThread
-    fun createChannel(channelCompat: NotificationChannelCompat): Boolean {
+    public fun createChannel(channelCompat: NotificationChannelCompat): Boolean {
         val db = getWritableDatabase() ?: run {
             UALog.e("NotificationChannelRegistryDataManager - Unable to save notification channel.")
             return false
@@ -79,7 +79,7 @@ internal class NotificationChannelRegistryDataManager(
      * Gets all the saved notification channels.
      */
     @get:WorkerThread
-    val channels: Set<NotificationChannelCompat?>
+    public val channels: Set<NotificationChannelCompat?>
         get() {
             val cursor = query(
                 TABLE_NAME, null, null, null, null
@@ -105,7 +105,7 @@ internal class NotificationChannelRegistryDataManager(
      * @return A NotificationChannelCompat instance, or `null` if one could not be found.
      */
     @WorkerThread
-    fun getChannel(channelId: String): NotificationChannelCompat? {
+    public fun getChannel(channelId: String): NotificationChannelCompat? {
         val where = "$COLUMN_NAME_CHANNEL_ID = ?"
         val cursor = query(TABLE_NAME, null, where, arrayOf(channelId), null)
             ?: return null
@@ -128,7 +128,7 @@ internal class NotificationChannelRegistryDataManager(
      * @param channelId
      */
     @WorkerThread
-    fun deleteChannel(channelId: String): Boolean {
+    public fun deleteChannel(channelId: String): Boolean {
         val where = "$COLUMN_NAME_CHANNEL_ID = ?"
         val result = delete(TABLE_NAME, where, arrayOf(channelId))
 
@@ -146,7 +146,7 @@ internal class NotificationChannelRegistryDataManager(
      * @return A boolean indicating success.
      */
     @WorkerThread
-    fun deleteChannels(): Boolean {
+    public fun deleteChannels(): Boolean {
         val success = delete(TABLE_NAME, null, null) >= 0
         if (!success) {
             UALog.e("NotificationChannelRegistryDatamanager - failed to delete channels")
@@ -181,17 +181,17 @@ internal class NotificationChannelRegistryDataManager(
         database.insertWithOnConflict(TABLE_NAME, null, value, SQLiteDatabase.CONFLICT_REPLACE)
     }
 
-    companion object {
+    public companion object {
 
-        const val TABLE_NAME: String = "notification_channels"
+        public const val TABLE_NAME: String = "notification_channels"
 
-        const val COLUMN_NAME_ID: String = "id"
+        public const val COLUMN_NAME_ID: String = "id"
 
         // The channel ID
-        const val COLUMN_NAME_CHANNEL_ID: String = "channel_id"
+        public const val COLUMN_NAME_CHANNEL_ID: String = "channel_id"
 
         // JSON-serialized channel data
-        const val COLUMN_NAME_DATA: String = "data"
+        public const val COLUMN_NAME_DATA: String = "data"
 
         /**
          * The database version.
