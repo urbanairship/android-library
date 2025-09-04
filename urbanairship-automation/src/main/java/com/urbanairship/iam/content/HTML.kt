@@ -49,7 +49,11 @@ public class HTML @VisibleForTesting internal constructor(
     /**
      * A flag indicating whether the dialog is allowed to be displayed as fullscreen.
      */
-    public val allowFullscreenDisplay: Boolean
+    public val allowFullscreenDisplay: Boolean,
+    /**
+     * A flag that forces fullscreen display.
+     */
+    public val forceFullScreenDisplay: Boolean = false
 ) : JsonSerializable {
 
     /** Returns a copy of the HTML display content with the provided changes. */
@@ -63,7 +67,8 @@ public class HTML @VisibleForTesting internal constructor(
         backgroundColor: InAppMessageColor = this.backgroundColor,
         dismissButtonColor: InAppMessageColor = this.dismissButtonColor,
         borderRadius: Float = this.borderRadius,
-        allowFullscreenDisplay: Boolean = this.allowFullscreenDisplay
+        allowFullscreenDisplay: Boolean = this.allowFullscreenDisplay,
+        forceFullScreenDisplay: Boolean = this.forceFullScreenDisplay
     ): HTML = HTML(
         url = url,
         height = height,
@@ -73,7 +78,8 @@ public class HTML @VisibleForTesting internal constructor(
         backgroundColor = backgroundColor,
         dismissButtonColor = dismissButtonColor,
         borderRadius = borderRadius,
-        allowFullscreenDisplay = allowFullscreenDisplay
+        allowFullscreenDisplay = allowFullscreenDisplay,
+        forceFullScreenDisplay = forceFullScreenDisplay
     )
 
     public companion object {
@@ -86,6 +92,7 @@ public class HTML @VisibleForTesting internal constructor(
         private const val BORDER_RADIUS_KEY = "border_radius"
         private const val DISMISS_BUTTON_COLOR_KEY = "dismiss_button_color"
         private const val ALLOW_FULLSCREEN_DISPLAY_KEY = "allow_fullscreen_display"
+        private const val FORCE_FULLSCREEN_DISPLAY_KEY = "force_fullscreen_display"
 
         /**
          * Parses HTML display JSON.
@@ -108,7 +115,8 @@ public class HTML @VisibleForTesting internal constructor(
                 borderRadius = content.opt(BORDER_RADIUS_KEY).getFloat(0F),
                 dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.BLACK),
-                allowFullscreenDisplay = content.optionalField(ALLOW_FULLSCREEN_DISPLAY_KEY) ?: false
+                allowFullscreenDisplay = content.optionalField(ALLOW_FULLSCREEN_DISPLAY_KEY) ?: false,
+                forceFullScreenDisplay = content.optionalField(FORCE_FULLSCREEN_DISPLAY_KEY) ?: false,
             )
         }
     }
@@ -125,7 +133,8 @@ public class HTML @VisibleForTesting internal constructor(
         BACKGROUND_COLOR_KEY to backgroundColor,
         BORDER_RADIUS_KEY to borderRadius,
         DISMISS_BUTTON_COLOR_KEY to dismissButtonColor,
-        ALLOW_FULLSCREEN_DISPLAY_KEY to allowFullscreenDisplay
+        ALLOW_FULLSCREEN_DISPLAY_KEY to allowFullscreenDisplay,
+        FORCE_FULLSCREEN_DISPLAY_KEY to forceFullScreenDisplay
     ).toJsonValue()
 
 
@@ -143,6 +152,7 @@ public class HTML @VisibleForTesting internal constructor(
         if (backgroundColor != other.backgroundColor) return false
         if (dismissButtonColor != other.dismissButtonColor) return false
         if (borderRadius != other.borderRadius) return false
+        if (forceFullScreenDisplay != other.forceFullScreenDisplay) return false
         return allowFullscreenDisplay == other.allowFullscreenDisplay
     }
 
@@ -156,10 +166,12 @@ public class HTML @VisibleForTesting internal constructor(
         result = 31 * result + dismissButtonColor.hashCode()
         result = 31 * result + borderRadius.hashCode()
         result = 31 * result + allowFullscreenDisplay.hashCode()
+        result = 31 * result + forceFullScreenDisplay.hashCode()
+
         return result
     }
 
     override fun toString(): String {
-        return "HTML(url='$url', height=$height, width=$width, aspectLock=$aspectLock, requiresConnectivity=$requiresConnectivity, backgroundColor=$backgroundColor, dismissButtonColor=$dismissButtonColor, borderRadius=$borderRadius, allowFullscreenDisplay=$allowFullscreenDisplay)"
+        return "HTML(url='$url', height=$height, width=$width, aspectLock=$aspectLock, requiresConnectivity=$requiresConnectivity, backgroundColor=$backgroundColor, dismissButtonColor=$dismissButtonColor, borderRadius=$borderRadius, allowFullscreenDisplay=$allowFullscreenDisplay, forceFullScreenDisplay=$forceFullScreenDisplay)"
     }
 }
