@@ -8,7 +8,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.urbanairship.UAirship;
 
 import com.urbanairship.analytics.CustomEvent;
 import com.urbanairship.sample.R;
@@ -33,6 +32,9 @@ public class HomeFragment extends Fragment {
         FragmentHomeBinding binding = FragmentHomeBinding.inflate(inflater, container, false);
         bindThomasButtons(binding);
         bindIAAButtons(binding);
+
+        // Wire up embedded view to use the parent height of the scroll view.
+        binding.embeddedViewContainer.setParentHeightProvider(binding.scrollView::getHeight);
 
         return binding.getRoot();
     }
