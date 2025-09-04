@@ -216,6 +216,25 @@ internal class BannerDisplayDelegate(
         }
         lastActivity = WeakReference(activity)
         currentView = WeakReference(view)
+
+        handleBannerInsetsIfNeeded(activity, view)
+    }
+
+    private fun handleBannerInsetsIfNeeded(activity: Activity, view: BannerView) {
+        val insetEdgeToEdge = ManifestUtils.getActivityInfo(activity.javaClass)?.metaData
+            ?.getBoolean(BANNER_INSET_EDGE_TO_EDGE, false) ?: false
+
+        if (insetEdgeToEdge) {
+            val resources = activity.resources
+            val top = resources.getIdentifier("status_bar_height", "dimen", "android").let {
+                if (it > 0) { resources.getDimensionPixelSize(it) } else { 0 }
+            }
+            val bottom = resources.getIdentifier("navigation_bar_height", "dimen", "android").let {
+                if (it > 0) { resources.getDimensionPixelSize(it) } else { 0 }
+            }
+
+            view.setPaddingRelative(0, top, 0, bottom)
+        }
     }
 
     /**
@@ -287,6 +306,15 @@ internal class BannerDisplayDelegate(
          * Metadata an app can use to specify the banner's container ID per activity.
          */
         const val BANNER_CONTAINER_ID = "com.urbanairship.iam.banner.BANNER_CONTAINER_ID"
+
+        /**
+         * Metadata an app can use to specify that the banner should be inset for edge-to-edge mode.
+         *
+         * The default value is false. In most cases, this flag will not be necessary, but can be
+         * used if banners are not being inset properly without this flag being set.
+         */
+        const val BANNER_INSET_EDGE_TO_EDGE = "com.urbanairship.iam.banner.BANNER_INSET_EDGE_TO_EDGE"
+
         private val cachedContainerIds: MutableMap<Class<*>, Int> = HashMap()
     }
 }

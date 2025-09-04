@@ -4,6 +4,39 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.11.0 - August 21, 2025
+Minor release that enforces that incoming pushes are for the current channel ID and adds a manifest 
+metadata entry to control handling of insets for IAM banners for edge-to-edge mode.
+
+### Changes
+- Added Activity metadata entry (`com.urbanairship.iam.banner.BANNER_INSET_EDGE_TO_EDGE`) to force handling of insets for IAM banners in edge-to-edge mode.
+- Channel ID is now enforced for incoming pushes, ensuring that only pushes for the current channel ID are processed.
+
+## Version 19.10.2 - August 13, 2025
+Patch release that fixes embedded display reporting and a potential crash in Scenes. 
+Apps that use Scenes or Embedded Content should update to this version or later.
+
+### Changes
+- Fixed an issue that could cause embedded content displays to be reported too early.
+- Fixed a potential crash that can occur when a Scene is dismissed.
+
+## Version 19.10.1 - August 1, 2025
+A patch release that fixes an automation dao crash if an expected nonnull JSON field contains invalid JSON.
+
+### Changes
+- Fixed potential automation dao crash when an expected nonnull JSON field contains invalid JSON.
+
+## Version 19.10.0 - July 24, 2025
+A minor release with accessibility and layout improvements to Scenes, a key performance update, and several bug fixes.
+
+### Changes
+- Added support in Scenes for linking form inputs to a label for better accessibility.
+- Added container item alignment to Scenes to change the natural alignment within a container.
+- Updated the initial remote-data request (IAX, Config, Feature Flags, etc...) to bypass work manager to improve performance.
+- Fixed setting content-descriptions on a text/number/email input in Scenes to provide better accessibility.
+- Fixed potential automation dao crash when migrating from an older SDK version.
+- Fixed an issue where dismissing a Scene with a back gesture could prevent it from displaying again in the same session.
+
 ## Version 19.9.2 - July 11, 2025
 Patch release with several fixes and accessibility improvements for Scenes. 
 

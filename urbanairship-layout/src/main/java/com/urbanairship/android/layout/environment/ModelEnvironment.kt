@@ -7,6 +7,7 @@ import com.urbanairship.android.layout.model.PagerNextFallback
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.DisplayTimer
+import com.urbanairship.android.layout.util.ThomasViewIdResolver
 import com.urbanairship.channel.AttributeEditor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -30,7 +31,8 @@ internal class ModelEnvironment(
     val attributeHandler: AttributeHandler = AttributeHandler(),
     val channelRegistrar: ThomasChannelRegistrar = ThomasChannelRegistrar(),
     val eventHandler: LayoutEventHandler = LayoutEventHandler(modelScope),
-    val pagerTracker: PagersViewTracker = PagersViewTracker()
+    val pagerTracker: PagersViewTracker = PagersViewTracker(),
+    val viewIdResolver: ThomasViewIdResolver = ThomasViewIdResolver()
 ) {
     val layoutEvents: Flow<LayoutEvent> = eventHandler.layoutEvents
 
@@ -52,7 +54,9 @@ internal class ModelEnvironment(
             modelScope = modelScope,
             attributeHandler = attributeHandler,
             eventHandler = this.eventHandler,
-            pagerTracker = this.pagerTracker
+            pagerTracker = this.pagerTracker,
+            channelRegistrar = this.channelRegistrar,
+            viewIdResolver = this.viewIdResolver
         )
 }
 
