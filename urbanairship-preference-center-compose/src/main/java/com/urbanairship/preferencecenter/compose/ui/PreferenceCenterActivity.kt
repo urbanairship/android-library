@@ -6,7 +6,6 @@ import androidx.activity.compose.setContent
 import com.urbanairship.Airship
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.Airship
 import com.urbanairship.preferencecenter.PreferenceCenter
 
 /** `Activity` that displays a Preference Center composable UI. */

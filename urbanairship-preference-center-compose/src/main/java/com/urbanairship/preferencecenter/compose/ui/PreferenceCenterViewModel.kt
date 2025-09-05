@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.urbanairship.Airship
 import com.urbanairship.UALog
-import com.urbanairship.Airship
 import com.urbanairship.actions.ActionRunner
 import com.urbanairship.actions.DefaultActionRunner
 import com.urbanairship.actions.run
