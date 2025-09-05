@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.drawable.Drawable
 import android.text.Spannable
 import android.text.SpannableString
-import android.view.View
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
@@ -35,7 +34,7 @@ internal class LabelView(
         model.contentDescription(context).ifNotEmpty { contentDescription = it }
 
         if (model.viewInfo.accessibilityHidden == true) {
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
         }
 
         ViewCompat.setAccessibilityHeading(this, model.viewInfo.accessibilityRole?.type == LabelInfo.AccessibilityRoleType.HEADING)

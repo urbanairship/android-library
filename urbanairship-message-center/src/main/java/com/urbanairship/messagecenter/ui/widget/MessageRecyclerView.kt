@@ -94,9 +94,9 @@ internal class MessageRecyclerView @JvmOverloads constructor(
         }
     }
 
-    public fun submitList(messages: List<Message>): Unit = adapter.submitList(messages)
+    fun submitList(messages: List<Message>): Unit = adapter.submitList(messages)
 
-    public fun setHighlightedMessageId(messageId: String?) {
+    fun setHighlightedMessageId(messageId: String?) {
         adapter.setHighlightedItemId(messageId)
     }
 
@@ -213,7 +213,7 @@ internal class MessageRecyclerAdapter(
         highlightedItemId == itemId
 
     /** `ViewHolder` for message items displayed in [MessageRecyclerView]. */
-    public class ViewHolder(
+    class ViewHolder(
         parent: ViewGroup,
         view: View = LayoutInflater.from(parent.context).inflate(R.layout.ua_view_message_list_item, parent, false),
         private val isSelected: (Message) -> Boolean,

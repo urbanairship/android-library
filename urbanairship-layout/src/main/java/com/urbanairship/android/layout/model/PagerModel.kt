@@ -386,7 +386,7 @@ internal class PagerModel(
         // TODO: Report the accessibility action
     }
 
-    private suspend fun handlePageActions(
+    private fun handlePageActions(
         displayActions: Map<String, JsonValue>?,
         automatedActions: List<AutomatedAction>?
     ) {

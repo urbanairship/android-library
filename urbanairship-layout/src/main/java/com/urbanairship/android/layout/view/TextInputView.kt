@@ -6,7 +6,6 @@ import android.text.Editable
 import android.text.method.ScrollingMovementMethod
 import android.view.MotionEvent
 import android.view.View
-import android.view.View.OnTouchListener
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.inputmethod.EditorInfo
@@ -27,7 +26,6 @@ import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.util.isLayoutRtl
-import com.urbanairship.android.layout.util.onEditing
 import com.urbanairship.android.layout.util.textChanges
 import com.urbanairship.android.layout.widget.TappableView
 import kotlinx.coroutines.channels.Channel
@@ -122,7 +120,6 @@ internal class TextInputView(
     }
 
     internal fun textChanges() = input.textChanges()
-    internal fun onEditing() = input.onEditing()
     internal val text: Editable?
         get() = input.text
 

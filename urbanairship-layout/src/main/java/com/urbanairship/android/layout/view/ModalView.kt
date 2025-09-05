@@ -49,7 +49,7 @@ internal class ModalView(
         @ColorInt val shadeColor = placement.shadeColor?.resolve(context)
 
         modalFrame = ConstrainedFrameLayout(context, size).apply {
-            id = View.generateViewId()
+            id = generateViewId()
             layoutParams = LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT).apply {
                 margin?.let {
                     setMargins(

@@ -14,7 +14,7 @@ public data class Shadow(
         @Throws(JsonException::class)
         public fun fromJson(json: JsonValue): Shadow {
             return Shadow(
-                androidShadow = json.requireMap().get("android_shadow")?.let { ElevationShadow.fromJson(it) }
+                androidShadow = json.requireMap()["android_shadow"]?.let { ElevationShadow.fromJson(it) }
             )
         }
     }

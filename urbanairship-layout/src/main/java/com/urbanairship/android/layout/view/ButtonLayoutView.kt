@@ -58,12 +58,12 @@ internal class ButtonLayoutView(
         addView(view, MATCH_PARENT, MATCH_PARENT)
 
         if (isButtonForAccessibility) {
-            view.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            view.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
             model.contentDescription(context)?.ifNotEmpty {
                 contentDescription = it
             }
         }  else {
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
         }
 
         val baseBackground = this.background
@@ -140,7 +140,6 @@ internal class ButtonLayoutView(
 
 internal val Context.isTouchExplorationEnabled: Boolean
     get() {
-        return ContextCompat.getSystemService(this, AccessibilityManager::class.java)?.let {
-            it.isTouchExplorationEnabled
-        } ?: false
+        return ContextCompat.getSystemService(this, AccessibilityManager::class.java)?.isTouchExplorationEnabled
+            ?: false
     }

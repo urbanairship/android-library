@@ -74,7 +74,7 @@ public sealed class Condition(private val type: String) {
 
         @Throws(JsonException::class)
         internal fun parse(json: JsonMap): Condition {
-            return when (val type = json.get(KEY_TYPE)?.string) {
+            return when (val type = json[KEY_TYPE]?.string) {
                 TYPE_NOTIFICATION_OPT_IN -> OptInStatus(
                     status = json.requireField<String>(KEY_STATUS).let { Status.parse(it) }
                 )

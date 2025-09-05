@@ -107,7 +107,7 @@ public sealed class Item(
                 internal fun parse(json: JsonMap): Component {
                     return Component(
                         scopes = json.opt(KEY_SCOPES).optList().map(Scope::fromJson).toSet(),
-                        display = CommonDisplay.parse(json.get(KEY_DISPLAY))
+                        display = CommonDisplay.parse(json[KEY_DISPLAY])
                     )
                 }
             }
@@ -648,19 +648,19 @@ public sealed class Item(
         internal fun parse(json: JsonMap): Item {
             val id = json.requireField<String>(KEY_ID)
 
-            return when (val type = json.get(KEY_TYPE)?.string) {
+            return when (val type = json[KEY_TYPE]?.string) {
                 TYPE_CHANNEL_SUBSCRIPTION -> ChannelSubscription(
                     id = id,
                     subscriptionId = json.requireField(KEY_SUBSCRIPTION_ID),
-                    display = CommonDisplay.parse(json.get(KEY_DISPLAY)),
-                    conditions = Condition.parse(json.get(KEY_CONDITIONS))
+                    display = CommonDisplay.parse(json[KEY_DISPLAY]),
+                    conditions = Condition.parse(json[KEY_CONDITIONS])
                 )
                 TYPE_CONTACT_SUBSCRIPTION -> ContactSubscription(
                     id = id,
                     subscriptionId = json.requireField(KEY_SUBSCRIPTION_ID),
-                    display = CommonDisplay.parse(json.get(KEY_DISPLAY)),
+                    display = CommonDisplay.parse(json[KEY_DISPLAY]),
                     scopes = json.opt(KEY_SCOPES).optList().map(Scope::fromJson).toSet(),
-                    conditions = Condition.parse(json.get(KEY_CONDITIONS))
+                    conditions = Condition.parse(json[KEY_CONDITIONS])
                 )
                 TYPE_CONTACT_SUBSCRIPTION_GROUP -> {
                     val components = json.opt(KEY_COMPONENTS).list?.map {
@@ -669,16 +669,16 @@ public sealed class Item(
                     ContactSubscriptionGroup(
                         id = id,
                         subscriptionId = json.requireField(KEY_SUBSCRIPTION_ID),
-                        display = CommonDisplay.parse(json.get(KEY_DISPLAY)),
+                        display = CommonDisplay.parse(json[KEY_DISPLAY]),
                         components = components,
-                        conditions = Condition.parse(json.get(KEY_CONDITIONS))
+                        conditions = Condition.parse(json[KEY_CONDITIONS])
                     )
                 }
                 TYPE_ALERT -> Alert(
                     id = id,
                     iconDisplay = IconDisplay.parse(json.requireField(KEY_DISPLAY)),
                     button = Button.parse(json.optionalField(KEY_BUTTON)),
-                    conditions = Condition.parse(json.get(KEY_CONDITIONS))
+                    conditions = Condition.parse(json[KEY_CONDITIONS])
                 )
                 TYPE_CONTACT_MANAGEMENT -> ContactManagement.fromJson(json)
                 else -> throw JsonException("Unknown Preference Center Item type: '$type'")

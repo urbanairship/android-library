@@ -2,7 +2,6 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
-import android.view.View
 import android.widget.RadioButton
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.isVisible

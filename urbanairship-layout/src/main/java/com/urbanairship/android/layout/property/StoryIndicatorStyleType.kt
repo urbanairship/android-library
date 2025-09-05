@@ -8,7 +8,7 @@ internal enum class StoryIndicatorStyleType(private val value: String) {
     companion object {
         @Throws(IllegalArgumentException::class)
         fun from(value: String): StoryIndicatorStyleType {
-            for (type in values()) {
+            for (type in entries) {
                 if (type.value == value.lowercase()) {
                     return type
                 }

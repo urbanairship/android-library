@@ -145,7 +145,7 @@ internal fun PreferenceCenterFragment.showContactManagementResentDialog(
 ) {
     val context = requireContext().themed()
 
-    MaterialAlertDialogBuilder(context,)
+    MaterialAlertDialogBuilder(context)
         .setTitle(message.title)
         .setMessage(message.description)
         .setPositiveButton(message.button.text) { _, _ -> }

@@ -95,9 +95,7 @@ internal class PagerGestureMapper(
     }
 
     private companion object {
-        // TODO: take screen density into account? could use a percentage of the view w/h?
         private const val SWIPE_MIN_DISTANCE = 120
-        private const val SWIPE_MIN_VELOCITY = 200
 
         private const val UP_ANGLE = 90.0
         private const val DOWN_ANGLE = 270.0

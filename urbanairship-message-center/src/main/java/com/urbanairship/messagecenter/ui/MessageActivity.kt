@@ -25,7 +25,7 @@ public open class MessageActivity : FragmentActivity() {
 
     private var currentMessageId: String? = null
 
-    protected override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?) {
         // Enable edge to edge
         enableEdgeToEdge()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -69,7 +69,7 @@ public open class MessageActivity : FragmentActivity() {
         outState.putString(MESSAGE_ID_KEY, currentMessageId)
     }
 
-    protected override fun onNewIntent(intent: Intent) {
+    override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         MessageCenter.parseMessageId(intent)?.let { showMessage(it) }
     }

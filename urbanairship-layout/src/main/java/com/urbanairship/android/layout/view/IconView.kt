@@ -1,10 +1,8 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
-import android.view.View
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.view.isVisible
-import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
@@ -21,7 +19,7 @@ internal class IconView(
         model.contentDescription(context).ifNotEmpty { contentDescription = it }
 
         if (model.viewInfo.accessibilityHidden == true) {
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
         }
 
         isClickable = false

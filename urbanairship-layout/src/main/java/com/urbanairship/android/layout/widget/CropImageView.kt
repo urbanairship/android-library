@@ -5,10 +5,8 @@ import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.ViewGroup
 import androidx.annotation.AttrRes
-import androidx.appcompat.widget.AppCompatImageView
 import com.urbanairship.android.layout.property.Position
 import com.google.android.material.imageview.ShapeableImageView
-import com.google.android.material.shape.Shapeable
 
 /** Base `AppCompatImageView` with support for "fit_crop" and image positioning. */
 internal class CropImageView(

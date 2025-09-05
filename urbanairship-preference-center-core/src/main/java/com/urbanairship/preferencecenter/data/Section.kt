@@ -1,13 +1,10 @@
 package com.urbanairship.preferencecenter.data
 
-import android.os.Parcelable
 import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonList
-import kotlinx.parcelize.IgnoredOnParcel
-import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.RawValue
 
 /**
@@ -86,22 +83,22 @@ public sealed class Section(private val type: String) {
         @Throws(JsonException::class)
         internal fun parse(json: JsonMap): Section {
             val id = json.requireField<String>(KEY_ID)
-            val display = CommonDisplay.parse(json.get(KEY_DISPLAY))
+            val display = CommonDisplay.parse(json[KEY_DISPLAY])
 
-            return when (val type = json.get(KEY_TYPE)?.string) {
+            return when (val type = json[KEY_TYPE]?.string) {
                 TYPE_SECTION -> {
                     val items = json.opt(KEY_ITEMS).optList().map { Item.parse(it.optMap()) }
                     return Common(
                         id = id,
                         display = display,
                         items = items,
-                        conditions = Condition.parse(json.get(KEY_CONDITIONS))
+                        conditions = Condition.parse(json[KEY_CONDITIONS])
                     )
                 }
                 TYPE_SECTION_BREAK -> SectionBreak(
                     id = id,
                     display = display,
-                    conditions = Condition.parse(json.get(KEY_CONDITIONS))
+                    conditions = Condition.parse(json[KEY_CONDITIONS])
                 )
                 else -> throw JsonException("Unknown Preference Center Section type: '$type'")
             }

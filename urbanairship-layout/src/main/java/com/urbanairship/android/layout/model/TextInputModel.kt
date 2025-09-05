@@ -49,7 +49,7 @@ internal class TextInputModel(
         fun restoreValue(value: String)
     }
 
-    private val currentInput = MutableStateFlow<String>("")
+    private val currentInput = MutableStateFlow("")
 
     private val inputValidator: AirshipInputValidation.Validator?
         get() {

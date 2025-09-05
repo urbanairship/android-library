@@ -118,7 +118,7 @@ internal sealed class ScoreStyle(val type: ScoreType) {
         }
     }
 
-    data class Binding constructor(
+    data class Binding(
         val shapes: List<Shape>,
         val textAppearance: TextAppearance
     ) {

@@ -230,7 +230,7 @@ internal class MediaView(
                             // once they are made visible (and have a measured size).
                             visibilityChangeListener = object : BaseView.VisibilityChangeListener {
                                 override fun onVisibilityChanged(visibility: Int) {
-                                    if (visibility == View.VISIBLE && !isLoaded) {
+                                    if (visibility == VISIBLE && !isLoaded) {
                                         loadImage(url)
                                     }
                                 }
@@ -441,7 +441,7 @@ internal class MediaView(
             MediaFit.CENTER_INSIDE -> "object-fit: contain;"
             MediaFit.CENTER_CROP -> "object-fit: cover;"
             MediaFit.FIT_CROP -> {
-                val isRtl = View.LAYOUT_DIRECTION_RTL == layoutDirection
+                val isRtl = LAYOUT_DIRECTION_RTL == layoutDirection
                 val horizontal = when (viewInfo.position.horizontal) {
                     HorizontalPosition.START -> if (isRtl) "right" else "left"
                     HorizontalPosition.END -> if (isRtl) "left" else "right"
