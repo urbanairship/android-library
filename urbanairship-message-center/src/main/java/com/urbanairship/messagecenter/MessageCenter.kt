@@ -254,11 +254,14 @@ internal constructor(
     override fun onAirshipDeepLink(uri: Uri): Boolean {
         if (DEEP_LINK_HOST == uri.encodedAuthority) {
             val paths = uri.pathSegments
-            if (paths.size == 0) {
+            if (paths.isEmpty()) {
                 showMessageCenter()
                 return true
             } else if (paths.size == 1) {
                 showMessageCenter(paths[0])
+                return true
+            } else if (paths.size == 2 && "message" == paths[0]) {
+                showMessageCenter(paths[1])
                 return true
             }
         }

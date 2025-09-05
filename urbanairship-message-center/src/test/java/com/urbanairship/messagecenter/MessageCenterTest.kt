@@ -296,7 +296,29 @@ public class MessageCenterTest {
     }
 
     @Test
-    public fun testDeepLinkMessage() {
+    public fun testDeepLinkMessageFull() {
+        every { onShowMessageCenterListener.onShowMessageCenter("cool-message") } returns false
+
+        messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener)
+
+        val deepLink = Uri.parse("uairship://message_center/message/cool-message")
+        assertTrue(messageCenter.onAirshipDeepLink(deepLink))
+        verify { onShowMessageCenterListener.onShowMessageCenter("cool-message") }
+    }
+
+    @Test
+    public fun testDeepLinkMessageTrailingSlashFull() {
+        every { onShowMessageCenterListener.onShowMessageCenter("cool-message") } returns false
+
+        messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener)
+
+        val deepLink = Uri.parse("uairship://message_center/message/cool-message/")
+        assertTrue(messageCenter.onAirshipDeepLink(deepLink))
+        verify { onShowMessageCenterListener.onShowMessageCenter("cool-message") }
+    }
+
+    @Test
+    public fun testDeepLinkMessageShort() {
         every { onShowMessageCenterListener.onShowMessageCenter("cool-message") } returns false
 
         messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener)
@@ -307,7 +329,7 @@ public class MessageCenterTest {
     }
 
     @Test
-    public fun testDeepLinkMessageTrailingSlash() {
+    public fun testDeepLinkMessageTrailingSlashShort() {
         every { onShowMessageCenterListener.onShowMessageCenter("cool-message") } returns false
 
         messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener)
