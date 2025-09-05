@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.core.util.Consumer
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.SimpleActivityListener
@@ -14,6 +15,8 @@ import com.urbanairship.permission.PermissionRequestResult
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsActivity
 import com.urbanairship.push.notifications.NotificationChannelRegistry
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * The default permission delegate for notifications.
@@ -90,7 +93,11 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
                     return
                 }
 
-                channelRegistry.getNotificationChannel(defaultChannelId)
+                val scope = CoroutineScope(AirshipDispatchers.IO)
+                scope.launch {
+                    channelRegistry.getNotificationChannel(defaultChannelId)
+                }
+
                 activityMonitor.addActivityListener(object : SimpleActivityListener() {
                     override fun onActivityResumed(activity: Activity) {
                         if (notificationManager.areNotificationsEnabled()) {

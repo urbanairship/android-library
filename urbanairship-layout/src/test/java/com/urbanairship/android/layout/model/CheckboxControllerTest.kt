@@ -41,7 +41,7 @@ public class CheckboxControllerTest {
     private val testDispatcher = StandardTestDispatcher()
     private val testScope = TestScope(testDispatcher)
 
-    private val mockEnv: ModelEnvironment = mockk {
+    private val mockEnv: ModelEnvironment = mockk(relaxed = true) {
         every { modelScope } returns testScope
         every { layoutState } returns LayoutState.EMPTY
     }

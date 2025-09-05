@@ -10,10 +10,19 @@ import androidx.annotation.WorkerThread
 import com.urbanairship.AirshipExecutors
 import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.actions.Action.Situation
+import com.urbanairship.contacts.Scope
 import java.util.concurrent.Executor
 import java.util.concurrent.Semaphore
 import kotlin.concurrent.Volatile
+import com.google.android.gms.common.internal.Objects
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * ActionRunRequests provides a fluent API for running Actions.
@@ -41,7 +50,7 @@ public open class ActionRunRequest {
     private var action: Action? = null
     private var actionValue: ActionValue? = null
     private var metadata: Bundle? = null
-    private var executor: Executor = AirshipExecutors.threadPoolExecutor()
+    private var scope: CoroutineScope
     private var situation = Situation.MANUAL_INVOCATION
 
     /**
@@ -50,9 +59,14 @@ public open class ActionRunRequest {
      * @param actionName The action name in the registry.
      * @param registry Optional - The action registry to look up the action. Defaults to [com.urbanairship.Airship.getActionRegistry]
      */
-    private constructor(actionName: String, registry: ActionRegistry?) {
+    private constructor(
+        actionName: String,
+        registry: ActionRegistry?,
+        dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
+    ) {
         this.actionName = actionName
         this.registry = registry
+        this.scope = CoroutineScope(dispatcher)
     }
 
     /**
@@ -63,8 +77,9 @@ public open class ActionRunRequest {
      */
     @VisibleForTesting
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public constructor(action: Action) {
+    public constructor(action: Action, dispatcher: CoroutineDispatcher = AirshipDispatchers.IO) {
         this.action = action
+        this.scope = CoroutineScope(dispatcher)
     }
 
     /**
@@ -105,6 +120,20 @@ public open class ActionRunRequest {
     }
 
     /**
+     * Sets the coroutine dispatcher.
+     *
+     * @param dispatcher The coroutine dispatcher.
+     * @return The request object.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun setDispatcher(dispatcher: CoroutineDispatcher): ActionRunRequest {
+        return apply { this.scope = CoroutineScope(dispatcher) }
+    }
+
+
+
+    /**
      * Sets the situation.
      *
      * @param situation The action argument's situation.
@@ -115,48 +144,19 @@ public open class ActionRunRequest {
     }
 
     /**
-     * Sets the executor.
-     *
-     * @param executor The executor.
-     * @return The request object.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun setExecutor(executor: Executor): ActionRunRequest {
-        return apply { this.executor = executor }
-    }
-
-    /**
      * Executes the action synchronously.
      *
      * @return The action's result.
      */
     @WorkerThread
     public open fun runSync(): ActionResult {
-        val arguments = createActionArguments()
-        val semaphore = Semaphore(0)
 
-        val runnable = object : ActionRunnable(arguments) {
-            override fun onFinish(arguments: ActionArguments, result: ActionResult) {
-                semaphore.release()
-            }
-        }
-
-        if (shouldRunOnMain(arguments)) {
-            Handler(Looper.getMainLooper()).post(runnable)
-        } else {
-            executor.execute(runnable)
-        }
-
-        try {
-            semaphore.acquire()
+        return try {
+            runBlocking { runSuspending().result }
         } catch (ex: InterruptedException) {
-            UALog.e("Failed to run action with arguments $arguments")
-            Thread.currentThread().interrupt()
-            return ActionResult.newErrorResult(ex)
+            UALog.e("Failed to run action with arguments ${createActionArguments()}")
+            ActionResult.newErrorResult(ex)
         }
-
-        return runnable.result ?: ActionResult.newEmptyResult()
     }
 
     /**
@@ -179,38 +179,34 @@ public open class ActionRunRequest {
      * Executes the action asynchronously with a callback.
      *
      * @param callback The action completion callback.
+     */
+    public open suspend fun runSuspending(): ActionRunResult {
+        val arguments = createActionArguments()
+        val executionScope = getExecutionScope(arguments)
+
+        val result = executeAction(executionScope, arguments)
+        return ActionRunResult(
+            arguments = arguments,
+            result = result
+        )
+    }
+
+    /**
+     * Executes the action asynchronously with a callback.
+     *
+     * @param callback The action completion callback.
      * @param looper A Looper object whose message queue will be used for the callback,
      * or null to make callbacks on the calling thread or main thread if the current thread
      * does not have a looper associated with it.
      */
     public open fun run(looper: Looper?, callback: ActionCompletionCallback?) {
         val runLooper = looper ?: Looper.myLooper() ?: Looper.getMainLooper()
-
-        val arguments = createActionArguments()
         val handler = Handler(runLooper)
 
-        val runnable = object : ActionRunnable(arguments) {
-            override fun onFinish(arguments: ActionArguments, result: ActionResult) {
-                if (callback == null) {
-                    return
-                }
+        scope.launch {
+            val result = runSuspending()
 
-                if (handler.looper == Looper.myLooper()) {
-                    callback.onFinish(arguments, result)
-                } else {
-                    handler.post { callback.onFinish(arguments, result) }
-                }
-            }
-        }
-
-        if (shouldRunOnMain(arguments)) {
-            if (Looper.myLooper() == Looper.getMainLooper()) {
-                runnable.run()
-            } else {
-                Handler(Looper.getMainLooper()).post(runnable)
-            }
-        } else {
-            executor.execute(runnable)
+            handler.post { callback?.onFinish(result.arguments, result.result) }
         }
     }
 
@@ -243,6 +239,14 @@ public open class ActionRunRequest {
             ?: Airship.shared().actionRegistry.getEntry(actionName)
     }
 
+    private fun getExecutionScope(arguments: ActionArguments): CoroutineScope {
+        return if (shouldRunOnMain(arguments)) {
+            CoroutineScope(Dispatchers.Main)
+        } else {
+            scope
+        }
+    }
+
     /**
      * Helper method to check if the request should run on the main thread.
      *
@@ -265,46 +269,46 @@ public open class ActionRunRequest {
      * @param arguments The action arguments.
      * @return The action's result.
      */
-    private fun executeAction(arguments: ActionArguments): ActionResult {
-
-        actionName?.let { name ->
-            val entry = lookUpAction(name)
-            if (entry == null) {
-                return ActionResult.newEmptyResultWithStatus(ActionResult.Status.ACTION_NOT_FOUND)
-            } else if (entry.predicate?.apply(arguments) == false) {
-                UALog.i( "Action $name will not be run. Registry predicate rejected the arguments: $arguments")
-                return ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS)
-            } else {
-                return entry.getActionForSituation(situation).run(arguments)
+    private suspend fun executeAction(scope: CoroutineScope, arguments: ActionArguments): ActionResult {
+        return scope.async {
+            actionName?.let { name ->
+                val entry = lookUpAction(name)
+                if (entry == null) {
+                    return@async ActionResult.newEmptyResultWithStatus(ActionResult.Status.ACTION_NOT_FOUND)
+                } else if (entry.predicate?.apply(arguments) == false) {
+                    UALog.i( "Action $name will not be run. Registry predicate rejected the arguments: $arguments")
+                    return@async  ActionResult.newEmptyResultWithStatus(ActionResult.Status.REJECTED_ARGUMENTS)
+                } else {
+                    return@async  entry.getActionForSituation(situation).run(arguments)
+                }
             }
-        }
 
-        action?.let { return it.run(arguments) }
+            action?.let { return@async  it.run(arguments) }
 
-        return ActionResult.newEmptyResultWithStatus(ActionResult.Status.ACTION_NOT_FOUND)
+            ActionResult.newEmptyResultWithStatus(ActionResult.Status.ACTION_NOT_FOUND)
+        }.await()
     }
 
-    /**
-     * Helper runnable for running the action request and retaining the result.
-     */
-    private abstract inner class ActionRunnable(private val arguments: ActionArguments) : Runnable {
+    public class ActionRunResult(
+        public val arguments: ActionArguments,
+        public val result: ActionResult
+    ) {
 
-        @Volatile
-        var result: ActionResult? = null
+        override fun equals(other: Any?): Boolean {
+            if (this === other) return true
+            if (javaClass != other?.javaClass) return false
 
-        override fun run() {
-            val executionResult = executeAction(arguments)
-            result = executionResult
-            onFinish(arguments, executionResult)
+            other as ActionRunResult
+
+            if (arguments != other.arguments) return false
+            if (result != other.result) return false
+
+            return true
         }
 
-        /**
-         * Called when the action is finished.
-         *
-         * @param arguments The arguments.
-         * @param result The action result.
-         */
-        abstract fun onFinish(arguments: ActionArguments, result: ActionResult)
+        override fun hashCode(): Int {
+            return Objects.hashCode(arguments, result)
+        }
     }
 
     public companion object {
@@ -333,6 +337,7 @@ public open class ActionRunRequest {
          * @throws java.lang.IllegalArgumentException if the action is null.
          */
         @JvmStatic
+        @JvmOverloads
         public fun createRequest(action: Action): ActionRunRequest = ActionRunRequest(action)
     }
 }

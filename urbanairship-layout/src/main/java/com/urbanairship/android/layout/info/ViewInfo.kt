@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.info
 import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.environment.ThomasStateTrigger
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
-import com.urbanairship.android.layout.info.LabelInfo.ViewOverrides
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.AutomatedAction
@@ -244,6 +243,20 @@ internal interface Identifiable {
     val identifier: String
 }
 
+/**
+ * Recently identifiable are for view types that originally did not have an ID but now they do.
+ * We can't assume they will have it since we might have an old definition cached.
+ */
+internal interface RecentlyIdentifiable {
+    val identifier: String?
+}
+
+internal class RecentlyIdentifiableInfo(override val identifier: String?) : RecentlyIdentifiable
+
+private fun recentlyIdentifiable(json: JsonMap): RecentlyIdentifiable =
+    RecentlyIdentifiableInfo(identifier = json.optionalField("identifier"))
+
+
 internal class IdentifiableInfo(override val identifier: String) : Identifiable
 
 private fun identifiable(json: JsonMap): Identifiable =
@@ -457,6 +470,24 @@ internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemI
         .let { if (randomizeChildren) it.shuffled() else it }
 
     override val children: List<LinearLayoutItemInfo> = items
+
+    val accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole(it) }
+
+    internal class AccessibilityRole(json: JsonMap) {
+        val type: Type = Type.fromJson(json.requireField("type"))
+        val hierarchical: Boolean? = json.optionalField<Boolean>("hierarchical")
+
+        internal enum class Type(val value: String) {
+            LIST_VIEW("list_view");
+
+            internal companion object {
+                @Throws(JsonException::class)
+                fun fromJson(value: String): Type = entries.firstOrNull {
+                    it.value.equals(value, ignoreCase = true)
+                }?: throw JsonException("Invalid LinearLayoutInfo.AccessibilityRole type: $value")
+            }
+        }
+    }
 }
 
 internal class LinearLayoutItemInfo(
@@ -467,6 +498,23 @@ internal class LinearLayoutItemInfo(
 
     val position: Position? = json.optionalMap("position")
         ?.let { Position.fromJson(it) }
+
+    val accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole(it) }
+
+    internal class AccessibilityRole(json: JsonMap) {
+        val type: Type = Type.fromJson(json.requireField("type"))
+
+        internal enum class Type(val value: String) {
+            LIST_ITEM("list_item");
+
+            internal companion object {
+                @Throws(JsonException::class)
+                fun fromJson(value: String): Type = entries.firstOrNull {
+                    it.value.equals(value, ignoreCase = true)
+                }?: throw JsonException("Invalid LinearLayoutItemInfo.AccessibilityRole type: $value")
+            }
+        }
+    }
 }
 
 internal class ContainerLayoutInfo(
@@ -516,7 +564,25 @@ internal class LabelInfo(
     val markdownOptions: MarkdownOptions? = json.optionalMap("markdown")?.let { MarkdownOptions(it) }
     var accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole.fromJson(it) }
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
+    val labels: AssociatedLabel? = json.optionalMap("labels")?.let { AssociatedLabel(it) }
 
+    internal class AssociatedLabel(json: JsonMap) {
+        val type: Type = Type.fromJson(json.requireField("type"))
+        val viewId: String = json.requireField("view_id")
+        val viewType: ViewType = ViewType.from(json.requireField<String>("view_type"))
+
+        internal enum class Type(val value: String) {
+            LABELS("labels"),
+            DESCRIBES("describes");
+
+            internal companion object {
+                @Throws(JsonException::class)
+                fun fromJson(value: String): Type = entries.firstOrNull {
+                    it.value.equals(value, ignoreCase = true)
+                }?: throw JsonException("Invalid AssociatedLabel type: $value")
+            }
+        }
+    }
     internal sealed class IconStart(
         val type: Type
     ) {
@@ -606,7 +672,7 @@ internal class ImageButtonInfo(json: JsonMap) : ButtonInfo(json) {
     val image: Image = Image.fromJson(json.requireField("image"))
 }
 
-internal class CheckboxInfo(json: JsonMap) : CheckableInfo(json) {
+internal class CheckboxInfo(json: JsonMap) : CheckableInfo(json), RecentlyIdentifiable by recentlyIdentifiable(json) {
     val reportingValue: JsonValue = json.requireField("reporting_value")
 }
 
@@ -618,7 +684,7 @@ internal class ToggleInfo(
     val attributeValue: AttributeValue? = json.optionalField("attribute_value")
 }
 
-internal class RadioInputInfo(json: JsonMap) : CheckableInfo(json) {
+internal class RadioInputInfo(json: JsonMap) : CheckableInfo(json), RecentlyIdentifiable by recentlyIdentifiable(json) {
     val reportingValue: JsonValue = json.requireField("reporting_value")
     val attributeValue: AttributeValue? = json.optionalField("attribute_value")
 }

@@ -1,0 +1,1531 @@
+---
+version: 1
+presentation:
+  type: modal
+  placement_selectors: []
+  android:
+    disable_back_button: false
+  dismiss_on_touch_outside: false
+  default_placement:
+    ignore_safe_area: false
+    size:
+      width: 80%
+      height: 80%
+    position:
+      horizontal: center
+      vertical: top
+    shade_color:
+      default:
+        type: hex
+        hex: "#BCBDC2"
+        alpha: 1
+      selectors:
+        - platform: ios
+          dark_mode: false
+          color:
+            type: hex
+            hex: "#BCBDC2"
+            alpha: 1
+        - platform: ios
+          dark_mode: true
+          color:
+            type: hex
+            hex: "#FFFFFF"
+            alpha: 0.5
+        - platform: android
+          dark_mode: false
+          color:
+            type: hex
+            hex: "#BCBDC2"
+            alpha: 1
+        - platform: android
+          dark_mode: true
+          color:
+            type: hex
+            hex: "#FFFFFF"
+            alpha: 0.5
+        - platform: web
+          dark_mode: false
+          color:
+            type: hex
+            hex: "#BCBDC2"
+            alpha: 1
+        - platform: web
+          dark_mode: true
+          color:
+            type: hex
+            hex: "#FFFFFF"
+            alpha: 0.5
+    web:
+      ignore_shade: true
+    border:
+      radius: 0
+view:
+  type: pager_controller
+  identifier: 0af42910-1714-46c6-a111-43cd5c9b124f
+  view:
+    type: linear_layout
+    direction: vertical
+    items:
+      - size:
+          width: 100%
+          height: 100%
+        view:
+          type: container
+          items:
+            - position:
+                horizontal: center
+                vertical: center
+              size:
+                width: 100%
+                height: 100%
+              view:
+                type: pager
+                disable_swipe: false
+                items:
+                  - identifier: 165d75ca-6427-4c93-9710-804afb94d888
+                    type: pager_item
+                    view:
+                      type: container
+                      items:
+                        - size:
+                            width: 100%
+                            height: 100%
+                          position:
+                            horizontal: center
+                            vertical: center
+                          ignore_safe_area: false
+                          view:
+                            type: container
+                            items:
+                              - margin:
+                                  bottom: 0
+                                  top: 0
+                                  end: 0
+                                  start: 0
+                                position:
+                                  horizontal: center
+                                  vertical: center
+                                size:
+                                  width: 100%
+                                  height: 100%
+                                view:
+                                  type: linear_layout
+                                  direction: vertical
+                                  items:
+                                    - identifier: scroll_container
+                                      size:
+                                        width: 100%
+                                        height: 100%
+                                      view:
+                                        type: scroll_layout
+                                        direction: vertical
+                                        view:
+                                          type: linear_layout
+                                          direction: vertical
+                                          items:
+                                            - identifier: aefc2faf-3aad-4c66-b995-d187edbedbd6
+                                              size:
+                                                width: 100%
+                                                height: auto
+                                              margin:
+                                                top: 48
+                                                bottom: 8
+                                                start: 16
+                                                end: 16
+                                              view:
+                                                type: label
+                                                text: Thank you for being a valued customer!
+                                                content_description: Thank you for being a valued
+                                                  customer!
+                                                text_appearance:
+                                                  font_size: 24
+                                                  color:
+                                                    default:
+                                                      type: hex
+                                                      hex: "#000000"
+                                                      alpha: 1
+                                                    selectors:
+                                                      - platform: ios
+                                                        dark_mode: false
+                                                        color:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                      - platform: ios
+                                                        dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                      - platform: android
+                                                        dark_mode: false
+                                                        color:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                      - platform: android
+                                                        dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                      - platform: web
+                                                        dark_mode: false
+                                                        color:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                      - platform: web
+                                                        dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                  alignment: start
+                                                  styles:
+                                                    - bold
+                                                  font_families:
+                                                    - sans-serif
+                                                accessibility_role:
+                                                  type: heading
+                                                  level: 1
+                                            - size:
+                                                width: 100%
+                                                height: auto
+                                              view:
+                                                type: media
+                                                media_fit: center_inside
+                                                url: https://hangar-dl.urbanairship.com/binary/public/l0aB1JPARamruq09LDP91Q/845989d0-c0da-42fa-8df3-7f22416bd92e
+                                                media_type: image
+                                                content_description: 'A black dog holds a thank
+                                    you card in their mouth '
+                                              identifier: 4fa7eb5b-bfe5-4064-bba9-804f237fed09
+                                              margin:
+                                                top: 0
+                                                bottom: 0
+                                                start: 0
+                                                end: 0
+                                            - size:
+                                                width: 100%
+                                                height: 100%
+                                              view:
+                                                type: linear_layout
+                                                direction: horizontal
+                                                items: []
+                      background_color:
+                        default:
+                          type: hex
+                          hex: "#63AFF1"
+                          alpha: 1
+                        selectors:
+                          - platform: ios
+                            dark_mode: false
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: ios
+                            dark_mode: true
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: android
+                            dark_mode: false
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: android
+                            dark_mode: true
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: web
+                            dark_mode: false
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: web
+                            dark_mode: true
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                  - identifier: 83a92726-6c25-4b00-a2ec-8d9ad138458f
+                    type: pager_item
+                    view:
+                      type: container
+                      items:
+                        - size:
+                            width: 100%
+                            height: 100%
+                          position:
+                            horizontal: center
+                            vertical: center
+                          ignore_safe_area: false
+                          view:
+                            type: container
+                            items:
+                              - margin:
+                                  bottom: 0
+                                  top: 0
+                                  end: 0
+                                  start: 0
+                                position:
+                                  horizontal: center
+                                  vertical: center
+                                size:
+                                  width: 100%
+                                  height: 100%
+                                view:
+                                  type: linear_layout
+                                  direction: vertical
+                                  items:
+                                    - identifier: scroll_container
+                                      size:
+                                        width: 100%
+                                        height: 100%
+                                      view:
+                                        type: scroll_layout
+                                        direction: vertical
+                                        view:
+                                          type: linear_layout
+                                          direction: vertical
+                                          items:
+                                            - identifier: b2df04c0-08c9-4e5d-8ad9-fe8a6b89aab3
+                                              size:
+                                                width: 100%
+                                                height: auto
+                                              margin:
+                                                top: 48
+                                                bottom: 8
+                                                start: 16
+                                                end: 16
+                                              view:
+                                                type: label
+                                                text: We wanted to let you know your subscription
+                                                  is over at the end of the month
+                                                content_description: We wanted to let you know your
+                                                  subscription is over at the end of the month
+                                                text_appearance:
+                                                  font_size: 24
+                                                  color:
+                                                    default:
+                                                      type: hex
+                                                      hex: "#000000"
+                                                      alpha: 1
+                                                    selectors:
+                                                      - platform: ios
+                                                        dark_mode: false
+                                                        color:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                      - platform: ios
+                                                        dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                      - platform: android
+                                                        dark_mode: false
+                                                        color:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                      - platform: android
+                                                        dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                      - platform: web
+                                                        dark_mode: false
+                                                        color:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                      - platform: web
+                                                        dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                  alignment: start
+                                                  styles:
+                                                    - bold
+                                                  font_families:
+                                                    - sans-serif
+                                                accessibility_role:
+                                                  type: heading
+                                                  level: 1
+                                            - size:
+                                                width: 100%
+                                                height: auto
+                                              view:
+                                                type: media
+                                                media_fit: center_inside
+                                                url: https://hangar-dl.urbanairship.com/binary/public/l0aB1JPARamruq09LDP91Q/18831d35-13d6-4047-8057-c8baf8256532
+                                                media_type: image
+                                                content_description: 'A box featuring a variety
+                                    of sweet and salty snacks '
+                                              identifier: 5c3ba4fb-024c-49d3-b339-8622880fe328
+                                              margin:
+                                                top: 0
+                                                bottom: 0
+                                                start: 0
+                                                end: 0
+                                            - identifier: ef542372-fbce-40c2-b2c2-ccfc07718c80
+                                              size:
+                                                width: 100%
+                                                height: auto
+                                              margin:
+                                                top: 8
+                                                bottom: 8
+                                                start: 16
+                                                end: 16
+                                              view:
+                                                type: label
+                                                text: Renew today to keep enjoying delicious treats
+                                                  every month!
+                                                content_description: Renew today to keep enjoying
+                                                  delicious treats every month!
+                                                text_appearance:
+                                                  font_size: 24
+                                                  color:
+                                                    default:
+                                                      type: hex
+                                                      hex: "#000000"
+                                                      alpha: 1
+                                                    selectors:
+                                                      - platform: ios
+                                                        dark_mode: false
+                                                        color:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                      - platform: ios
+                                                        dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                      - platform: android
+                                                        dark_mode: false
+                                                        color:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                      - platform: android
+                                                        dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                      - platform: web
+                                                        dark_mode: false
+                                                        color:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                      - platform: web
+                                                        dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                  alignment: start
+                                                  styles:
+                                                    - bold
+                                                  font_families:
+                                                    - sans-serif
+                                            - size:
+                                                width: 100%
+                                                height: 100%
+                                              view:
+                                                type: linear_layout
+                                                direction: horizontal
+                                                items: []
+                      background_color:
+                        default:
+                          type: hex
+                          hex: "#63AFF1"
+                          alpha: 1
+                        selectors:
+                          - platform: ios
+                            dark_mode: false
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: ios
+                            dark_mode: true
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: android
+                            dark_mode: false
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: android
+                            dark_mode: true
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: web
+                            dark_mode: false
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: web
+                            dark_mode: true
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                  - identifier: 8acdaa29-3873-4a0b-a84f-59da18b4e290
+                    type: pager_item
+                    view:
+                      type: container
+                      items:
+                        - size:
+                            width: 100%
+                            height: 100%
+                          position:
+                            horizontal: center
+                            vertical: center
+                          ignore_safe_area: false
+                          view:
+                            type: container
+                            items:
+                              - margin:
+                                  bottom: 0
+                                  top: 0
+                                  end: 0
+                                  start: 0
+                                position:
+                                  horizontal: center
+                                  vertical: center
+                                size:
+                                  width: 100%
+                                  height: 100%
+                                view:
+                                  type: linear_layout
+                                  direction: vertical
+                                  items:
+                                    - identifier: scroll_container
+                                      size:
+                                        width: 100%
+                                        height: 100%
+                                      view:
+                                        type: scroll_layout
+                                        direction: vertical
+                                        view:
+                                          type: linear_layout
+                                          direction: vertical
+                                          items:
+                                            - identifier: a5a6ecff-2031-4cc0-a0e3-797f7d98eb46
+                                              size:
+                                                width: 100%
+                                                height: auto
+                                              margin:
+                                                top: 40
+                                                bottom: 8
+                                                start: 16
+                                                end: 16
+                                              view:
+                                                type: label
+                                                text: 'Why Renew? '
+                                                content_description: 'Why Renew? '
+                                                text_appearance:
+                                                  font_size: 24
+                                                  color:
+                                                    default:
+                                                      type: hex
+                                                      hex: "#000000"
+                                                      alpha: 1
+                                                    selectors:
+                                                      - platform: ios
+                                                        dark_mode: false
+                                                        color:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                      - platform: ios
+                                                        dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                      - platform: android
+                                                        dark_mode: false
+                                                        color:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                      - platform: android
+                                                        dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                      - platform: web
+                                                        dark_mode: false
+                                                        color:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                      - platform: web
+                                                        dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                  alignment: start
+                                                  styles:
+                                                    - bold
+                                                  font_families:
+                                                    - sans-serif
+                                                accessibility_role:
+                                                  type: heading
+                                                  level: 1
+                                            - identifier: aef32509-abe0-40d1-885b-d3c7abc2405f
+                                              size:
+                                                height: auto
+                                                width: 100%
+                                              margin:
+                                                top: 16
+                                                bottom: 0
+                                                start: 16
+                                                end: 16
+                                              view:
+                                                type: linear_layout
+                                                direction: vertical
+                                                accessibility_role:
+                                                  type: list_view
+                                                items:
+                                                  - margin:
+                                                      top: 8
+                                                      bottom: 8
+                                                    size:
+                                                      height: auto
+                                                      width: 100%
+                                                    accessibility_role:
+                                                      type: list_item
+                                                    view:
+                                                      type: linear_layout
+                                                      direction: horizontal
+                                                      items:
+                                                        - size:
+                                                            height: 60
+                                                            width: 60
+                                                          margin:
+                                                            top: 0
+                                                            end: 16
+                                                            bottom: 0
+                                                          view:
+                                                            type: media
+                                                            media_fit: center_inside
+                                                            url: https://hangar-dl.urbanairship.com/binary/public/l0aB1JPARamruq09LDP91Q/d44475b1-3bdd-4835-a44f-1e74d782fdfd
+                                                            media_type: image
+                                                        - size:
+                                                            width: 100%
+                                                            height: auto
+                                                          view:
+                                                            type: label
+                                                            text: Variety! Sweet & savory snacks
+                                                            content_description: Variety! Sweet & savory
+                                                              snacks
+                                                            text_appearance:
+                                                              font_size: 24
+                                                              color:
+                                                                default:
+                                                                  type: hex
+                                                                  hex: "#000000"
+                                                                  alpha: 1
+                                                                selectors:
+                                                                  - platform: ios
+                                                                    dark_mode: false
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#000000"
+                                                                      alpha: 1
+                                                                  - platform: ios
+                                                                    dark_mode: true
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#FFFFFF"
+                                                                      alpha: 1
+                                                                  - platform: android
+                                                                    dark_mode: false
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#000000"
+                                                                      alpha: 1
+                                                                  - platform: android
+                                                                    dark_mode: true
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#FFFFFF"
+                                                                      alpha: 1
+                                                                  - platform: web
+                                                                    dark_mode: false
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#000000"
+                                                                      alpha: 1
+                                                                  - platform: web
+                                                                    dark_mode: true
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#FFFFFF"
+                                                                      alpha: 1
+                                                              alignment: start
+                                                              styles:
+                                                                - bold
+                                                              font_families:
+                                                                - sans-serif
+                                                  - margin:
+                                                      top: 8
+                                                      bottom: 8
+                                                    size:
+                                                      height: auto
+                                                      width: 100%
+                                                    view:
+                                                      type: linear_layout
+                                                      direction: horizontal
+                                                      items:
+                                                        - size:
+                                                            height: 60
+                                                            width: 60
+                                                          margin:
+                                                            top: 0
+                                                            end: 16
+                                                            bottom: 0
+                                                          view:
+                                                            type: media
+                                                            media_fit: center_inside
+                                                            url: https://hangar-dl.urbanairship.com/binary/public/l0aB1JPARamruq09LDP91Q/d44475b1-3bdd-4835-a44f-1e74d782fdfd
+                                                            media_type: image
+                                                        - size:
+                                                            width: 100%
+                                                            height: auto
+                                                          view:
+                                                            type: label
+                                                            text: Snacks delivered straight to your
+                                                              door
+                                                            content_description: Snacks delivered straight
+                                                              to your door
+                                                            text_appearance:
+                                                              font_size: 24
+                                                              color:
+                                                                default:
+                                                                  type: hex
+                                                                  hex: "#000000"
+                                                                  alpha: 1
+                                                                selectors:
+                                                                  - platform: ios
+                                                                    dark_mode: false
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#000000"
+                                                                      alpha: 1
+                                                                  - platform: ios
+                                                                    dark_mode: true
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#FFFFFF"
+                                                                      alpha: 1
+                                                                  - platform: android
+                                                                    dark_mode: false
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#000000"
+                                                                      alpha: 1
+                                                                  - platform: android
+                                                                    dark_mode: true
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#FFFFFF"
+                                                                      alpha: 1
+                                                                  - platform: web
+                                                                    dark_mode: false
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#000000"
+                                                                      alpha: 1
+                                                                  - platform: web
+                                                                    dark_mode: true
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#FFFFFF"
+                                                                      alpha: 1
+                                                              alignment: start
+                                                              styles:
+                                                                - bold
+                                                              font_families:
+                                                                - sans-serif
+                                                  - margin:
+                                                      top: 8
+                                                      bottom: 8
+                                                    size:
+                                                      height: auto
+                                                      width: 100%
+                                                    accessibility_role:
+                                                      type: list_item
+                                                    view:
+                                                      type: linear_layout
+                                                      direction: horizontal
+                                                      items:
+                                                        - size:
+                                                            height: 60
+                                                            width: 60
+                                                          margin:
+                                                            top: 0
+                                                            end: 16
+                                                            bottom: 0
+                                                          view:
+                                                            type: media
+                                                            media_fit: center_inside
+                                                            url: https://hangar-dl.urbanairship.com/binary/public/l0aB1JPARamruq09LDP91Q/d44475b1-3bdd-4835-a44f-1e74d782fdfd
+                                                            media_type: image
+                                                        - size:
+                                                            width: 100%
+                                                            height: auto
+                                                          view:
+                                                            type: label
+                                                            text: Customize order based on your preferences
+                                                            content_description: Customize order based
+                                                              on your preferences
+                                                            text_appearance:
+                                                              font_size: 24
+                                                              color:
+                                                                default:
+                                                                  type: hex
+                                                                  hex: "#000000"
+                                                                  alpha: 1
+                                                                selectors:
+                                                                  - platform: ios
+                                                                    dark_mode: false
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#000000"
+                                                                      alpha: 1
+                                                                  - platform: ios
+                                                                    dark_mode: true
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#FFFFFF"
+                                                                      alpha: 1
+                                                                  - platform: android
+                                                                    dark_mode: false
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#000000"
+                                                                      alpha: 1
+                                                                  - platform: android
+                                                                    dark_mode: true
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#FFFFFF"
+                                                                      alpha: 1
+                                                                  - platform: web
+                                                                    dark_mode: false
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#000000"
+                                                                      alpha: 1
+                                                                  - platform: web
+                                                                    dark_mode: true
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#FFFFFF"
+                                                                      alpha: 1
+                                                              alignment: start
+                                                              styles:
+                                                                - bold
+                                                              font_families:
+                                                                - sans-serif
+                                                  - margin:
+                                                      top: 8
+                                                      bottom: 8
+                                                    size:
+                                                      height: auto
+                                                      width: 100%
+                                                    view:
+                                                      type: linear_layout
+                                                      direction: horizontal
+                                                      items:
+                                                        - size:
+                                                            height: 60
+                                                            width: 60
+                                                          margin:
+                                                            top: 0
+                                                            end: 16
+                                                            bottom: 0
+                                                          view:
+                                                            type: media
+                                                            media_fit: center_inside
+                                                            url: https://hangar-dl.urbanairship.com/binary/public/l0aB1JPARamruq09LDP91Q/d44475b1-3bdd-4835-a44f-1e74d782fdfd
+                                                            media_type: image
+                                                        - size:
+                                                            width: 100%
+                                                            height: auto
+                                                          view:
+                                                            type: label
+                                                            text: Enjoy 20% off for a limited time!
+                                                            content_description: Enjoy 20% off for a
+                                                              limited time!
+                                                            text_appearance:
+                                                              font_size: 24
+                                                              color:
+                                                                default:
+                                                                  type: hex
+                                                                  hex: "#000000"
+                                                                  alpha: 1
+                                                                selectors:
+                                                                  - platform: ios
+                                                                    dark_mode: false
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#000000"
+                                                                      alpha: 1
+                                                                  - platform: ios
+                                                                    dark_mode: true
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#FFFFFF"
+                                                                      alpha: 1
+                                                                  - platform: android
+                                                                    dark_mode: false
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#000000"
+                                                                      alpha: 1
+                                                                  - platform: android
+                                                                    dark_mode: true
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#FFFFFF"
+                                                                      alpha: 1
+                                                                  - platform: web
+                                                                    dark_mode: false
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#000000"
+                                                                      alpha: 1
+                                                                  - platform: web
+                                                                    dark_mode: true
+                                                                    color:
+                                                                      type: hex
+                                                                      hex: "#FFFFFF"
+                                                                      alpha: 1
+                                                              alignment: start
+                                                              styles:
+                                                                - bold
+                                                              font_families:
+                                                                - sans-serif
+                                            - identifier: 795ff2b6-5087-45d4-bdf6-599588fe197b
+                                              margin:
+                                                top: 8
+                                                bottom: 16
+                                                start: 16
+                                                end: 16
+                                              size:
+                                                width: 100%
+                                                height: auto
+                                              view:
+                                                type: linear_layout
+                                                direction: vertical
+                                                items:
+                                                  - margin:
+                                                      top: 4
+                                                      bottom: 4
+                                                      start: 0
+                                                      end: 0
+                                                    size:
+                                                      width: 100%
+                                                      height: auto
+                                                    view:
+                                                      type: label_button
+                                                      identifier: url--Renew now!
+                                                      reporting_metadata:
+                                                        trigger_link_id: c10e6f29-7af0-4407-a9d5-559caeb06af0
+                                                      label:
+                                                        type: label
+                                                        text: Renew now!
+                                                        content_description: Visit brand website to
+                                                          renew
+                                                        text_appearance:
+                                                          font_size: 16
+                                                          color:
+                                                            default:
+                                                              type: hex
+                                                              hex: "#000000"
+                                                              alpha: 1
+                                                            selectors:
+                                                              - platform: ios
+                                                                dark_mode: false
+                                                                color:
+                                                                  type: hex
+                                                                  hex: "#000000"
+                                                                  alpha: 1
+                                                              - platform: ios
+                                                                dark_mode: true
+                                                                color:
+                                                                  type: hex
+                                                                  hex: "#FFFFFF"
+                                                                  alpha: 1
+                                                              - platform: android
+                                                                dark_mode: false
+                                                                color:
+                                                                  type: hex
+                                                                  hex: "#000000"
+                                                                  alpha: 1
+                                                              - platform: android
+                                                                dark_mode: true
+                                                                color:
+                                                                  type: hex
+                                                                  hex: "#FFFFFF"
+                                                                  alpha: 1
+                                                              - platform: web
+                                                                dark_mode: false
+                                                                color:
+                                                                  type: hex
+                                                                  hex: "#000000"
+                                                                  alpha: 1
+                                                              - platform: web
+                                                                dark_mode: true
+                                                                color:
+                                                                  type: hex
+                                                                  hex: "#FFFFFF"
+                                                                  alpha: 1
+                                                          alignment: center
+                                                          styles: []
+                                                          font_families:
+                                                            - sans-serif
+                                                      actions:
+                                                        open_external_url_action: https://www.airship.com
+                                                      enabled: []
+                                                      button_click: []
+                                                      background_color:
+                                                        default:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                        selectors:
+                                                          - platform: ios
+                                                            dark_mode: false
+                                                            color:
+                                                              type: hex
+                                                              hex: "#FFFFFF"
+                                                              alpha: 1
+                                                          - platform: ios
+                                                            dark_mode: true
+                                                            color:
+                                                              type: hex
+                                                              hex: "#000000"
+                                                              alpha: 1
+                                                          - platform: android
+                                                            dark_mode: false
+                                                            color:
+                                                              type: hex
+                                                              hex: "#FFFFFF"
+                                                              alpha: 1
+                                                          - platform: android
+                                                            dark_mode: true
+                                                            color:
+                                                              type: hex
+                                                              hex: "#000000"
+                                                              alpha: 1
+                                                          - platform: web
+                                                            dark_mode: false
+                                                            color:
+                                                              type: hex
+                                                              hex: "#FFFFFF"
+                                                              alpha: 1
+                                                          - platform: web
+                                                            dark_mode: true
+                                                            color:
+                                                              type: hex
+                                                              hex: "#000000"
+                                                              alpha: 1
+                                                      border:
+                                                        radius: 3
+                                                        stroke_width: 0
+                                                        stroke_color:
+                                                          default:
+                                                            type: hex
+                                                            hex: "#264653"
+                                                            alpha: 1
+                                                          selectors:
+                                                            - platform: ios
+                                                              dark_mode: false
+                                                              color:
+                                                                type: hex
+                                                                hex: "#264653"
+                                                                alpha: 1
+                                                            - platform: ios
+                                                              dark_mode: true
+                                                              color:
+                                                                type: hex
+                                                                hex: "#264653"
+                                                                alpha: 1
+                                                            - platform: android
+                                                              dark_mode: false
+                                                              color:
+                                                                type: hex
+                                                                hex: "#264653"
+                                                                alpha: 1
+                                                            - platform: android
+                                                              dark_mode: true
+                                                              color:
+                                                                type: hex
+                                                                hex: "#264653"
+                                                                alpha: 1
+                                                            - platform: web
+                                                              dark_mode: false
+                                                              color:
+                                                                type: hex
+                                                                hex: "#264653"
+                                                                alpha: 1
+                                                            - platform: web
+                                                              dark_mode: true
+                                                              color:
+                                                                type: hex
+                                                                hex: "#264653"
+                                                                alpha: 1
+                                                      content_description: Visit brand website to
+                                                        renew
+                                                  - margin:
+                                                      top: 4
+                                                      bottom: 16
+                                                      start: 0
+                                                      end: 0
+                                                    size:
+                                                      width: 100%
+                                                      height: auto
+                                                    view:
+                                                      type: label_button
+                                                      identifier: dismiss--Remind me later
+                                                      reporting_metadata:
+                                                        trigger_link_id: 037ce598-e3df-4767-bc03-2e9736d8c158
+                                                      label:
+                                                        type: label
+                                                        text: Remind me later
+                                                        content_description: Dismiss the message
+                                                        text_appearance:
+                                                          font_size: 16
+                                                          color:
+                                                            default:
+                                                              type: hex
+                                                              hex: "#000000"
+                                                              alpha: 1
+                                                            selectors:
+                                                              - platform: ios
+                                                                dark_mode: false
+                                                                color:
+                                                                  type: hex
+                                                                  hex: "#000000"
+                                                                  alpha: 1
+                                                              - platform: ios
+                                                                dark_mode: true
+                                                                color:
+                                                                  type: hex
+                                                                  hex: "#FFFFFF"
+                                                                  alpha: 1
+                                                              - platform: android
+                                                                dark_mode: false
+                                                                color:
+                                                                  type: hex
+                                                                  hex: "#000000"
+                                                                  alpha: 1
+                                                              - platform: android
+                                                                dark_mode: true
+                                                                color:
+                                                                  type: hex
+                                                                  hex: "#FFFFFF"
+                                                                  alpha: 1
+                                                              - platform: web
+                                                                dark_mode: false
+                                                                color:
+                                                                  type: hex
+                                                                  hex: "#000000"
+                                                                  alpha: 1
+                                                              - platform: web
+                                                                dark_mode: true
+                                                                color:
+                                                                  type: hex
+                                                                  hex: "#FFFFFF"
+                                                                  alpha: 1
+                                                          alignment: center
+                                                          styles: []
+                                                          font_families:
+                                                            - sans-serif
+                                                      actions: {}
+                                                      enabled: []
+                                                      button_click:
+                                                        - dismiss
+                                                      localized_content_description:
+                                                        fallback: Dismiss
+                                                        ref: ua_dismiss
+                                                      background_color:
+                                                        default:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                        selectors:
+                                                          - platform: ios
+                                                            dark_mode: false
+                                                            color:
+                                                              type: hex
+                                                              hex: "#FFFFFF"
+                                                              alpha: 1
+                                                          - platform: ios
+                                                            dark_mode: true
+                                                            color:
+                                                              type: hex
+                                                              hex: "#000000"
+                                                              alpha: 1
+                                                          - platform: android
+                                                            dark_mode: false
+                                                            color:
+                                                              type: hex
+                                                              hex: "#FFFFFF"
+                                                              alpha: 1
+                                                          - platform: android
+                                                            dark_mode: true
+                                                            color:
+                                                              type: hex
+                                                              hex: "#000000"
+                                                              alpha: 1
+                                                          - platform: web
+                                                            dark_mode: false
+                                                            color:
+                                                              type: hex
+                                                              hex: "#FFFFFF"
+                                                              alpha: 1
+                                                          - platform: web
+                                                            dark_mode: true
+                                                            color:
+                                                              type: hex
+                                                              hex: "#000000"
+                                                              alpha: 1
+                                                      border:
+                                                        radius: 3
+                                                        stroke_width: 0
+                                                        stroke_color:
+                                                          default:
+                                                            type: hex
+                                                            hex: "#FFFFFF"
+                                                            alpha: 1
+                                                          selectors:
+                                                            - platform: ios
+                                                              dark_mode: false
+                                                              color:
+                                                                type: hex
+                                                                hex: "#FFFFFF"
+                                                                alpha: 1
+                                                            - platform: ios
+                                                              dark_mode: true
+                                                              color:
+                                                                type: hex
+                                                                hex: "#000000"
+                                                                alpha: 1
+                                                            - platform: android
+                                                              dark_mode: false
+                                                              color:
+                                                                type: hex
+                                                                hex: "#FFFFFF"
+                                                                alpha: 1
+                                                            - platform: android
+                                                              dark_mode: true
+                                                              color:
+                                                                type: hex
+                                                                hex: "#000000"
+                                                                alpha: 1
+                                                            - platform: web
+                                                              dark_mode: false
+                                                              color:
+                                                                type: hex
+                                                                hex: "#FFFFFF"
+                                                                alpha: 1
+                                                            - platform: web
+                                                              dark_mode: true
+                                                              color:
+                                                                type: hex
+                                                                hex: "#000000"
+                                                                alpha: 1
+                                                      content_description: Dismiss the message
+                                                background_color:
+                                                  default:
+                                                    type: hex
+                                                    hex: "#63AFF1"
+                                                    alpha: 1
+                                                  selectors:
+                                                    - platform: ios
+                                                      dark_mode: false
+                                                      color:
+                                                        type: hex
+                                                        hex: "#63AFF1"
+                                                        alpha: 1
+                                                    - platform: ios
+                                                      dark_mode: true
+                                                      color:
+                                                        type: hex
+                                                        hex: "#63AFF1"
+                                                        alpha: 1
+                                                    - platform: android
+                                                      dark_mode: false
+                                                      color:
+                                                        type: hex
+                                                        hex: "#63AFF1"
+                                                        alpha: 1
+                                                    - platform: android
+                                                      dark_mode: true
+                                                      color:
+                                                        type: hex
+                                                        hex: "#63AFF1"
+                                                        alpha: 1
+                                                    - platform: web
+                                                      dark_mode: false
+                                                      color:
+                                                        type: hex
+                                                        hex: "#63AFF1"
+                                                        alpha: 1
+                                                    - platform: web
+                                                      dark_mode: true
+                                                      color:
+                                                        type: hex
+                                                        hex: "#63AFF1"
+                                                        alpha: 1
+                                            - size:
+                                                width: 100%
+                                                height: 100%
+                                              view:
+                                                type: linear_layout
+                                                direction: horizontal
+                                                items: []
+                      background_color:
+                        default:
+                          type: hex
+                          hex: "#63AFF1"
+                          alpha: 1
+                        selectors:
+                          - platform: ios
+                            dark_mode: false
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: ios
+                            dark_mode: true
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: android
+                            dark_mode: false
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: android
+                            dark_mode: true
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: web
+                            dark_mode: false
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+                          - platform: web
+                            dark_mode: true
+                            color:
+                              type: hex
+                              hex: "#63AFF1"
+                              alpha: 1
+              ignore_safe_area: false
+            - position:
+                horizontal: end
+                vertical: top
+              size:
+                width: 48
+                height: 48
+              view:
+                type: image_button
+                image:
+                  scale: 0.4
+                  type: icon
+                  icon: close
+                  color:
+                    default:
+                      type: hex
+                      hex: "#000000"
+                      alpha: 1
+                    selectors:
+                      - platform: ios
+                        dark_mode: false
+                        color:
+                          type: hex
+                          hex: "#000000"
+                          alpha: 1
+                      - platform: ios
+                        dark_mode: true
+                        color:
+                          type: hex
+                          hex: "#FFFFFF"
+                          alpha: 1
+                      - platform: android
+                        dark_mode: false
+                        color:
+                          type: hex
+                          hex: "#000000"
+                          alpha: 1
+                      - platform: android
+                        dark_mode: true
+                        color:
+                          type: hex
+                          hex: "#FFFFFF"
+                          alpha: 1
+                      - platform: web
+                        dark_mode: false
+                        color:
+                          type: hex
+                          hex: "#000000"
+                          alpha: 1
+                      - platform: web
+                        dark_mode: true
+                        color:
+                          type: hex
+                          hex: "#FFFFFF"
+                          alpha: 1
+                identifier: dismiss_button
+                button_click:
+                  - dismiss
+                localized_content_description:
+                  ref: ua_dismiss
+                  fallback: Dismiss
+            - margin:
+                top: 4
+                bottom: 4
+                end: 0
+                start: 0
+              position:
+                horizontal: center
+                vertical: bottom
+              size:
+                height: 7
+                width: 100%
+              view:
+                type: pager_indicator
+                spacing: 6
+                bindings:
+                  selected:
+                    shapes:
+                      - type: ellipse
+                        scale: 1
+                        aspect_ratio: 1
+                        color:
+                          default:
+                            type: hex
+                            hex: "#000000"
+                            alpha: 1
+                          selectors:
+                            - platform: ios
+                              dark_mode: false
+                              color:
+                                type: hex
+                                hex: "#000000"
+                                alpha: 1
+                            - platform: ios
+                              dark_mode: true
+                              color:
+                                type: hex
+                                hex: "#FFFFFF"
+                                alpha: 1
+                            - platform: android
+                              dark_mode: false
+                              color:
+                                type: hex
+                                hex: "#000000"
+                                alpha: 1
+                            - platform: android
+                              dark_mode: true
+                              color:
+                                type: hex
+                                hex: "#FFFFFF"
+                                alpha: 1
+                            - platform: web
+                              dark_mode: false
+                              color:
+                                type: hex
+                                hex: "#000000"
+                                alpha: 1
+                            - platform: web
+                              dark_mode: true
+                              color:
+                                type: hex
+                                hex: "#FFFFFF"
+                                alpha: 1
+                  unselected:
+                    shapes:
+                      - type: ellipse
+                        aspect_ratio: 1
+                        scale: 1
+                        color:
+                          default:
+                            type: hex
+                            hex: "#BCBDC2"
+                            alpha: 1
+                          selectors:
+                            - platform: ios
+                              dark_mode: false
+                              color:
+                                type: hex
+                                hex: "#BCBDC2"
+                                alpha: 1
+                            - platform: ios
+                              dark_mode: true
+                              color:
+                                type: hex
+                                hex: "#FFFFFF"
+                                alpha: 0.5
+                            - platform: android
+                              dark_mode: false
+                              color:
+                                type: hex
+                                hex: "#BCBDC2"
+                                alpha: 1
+                            - platform: android
+                              dark_mode: true
+                              color:
+                                type: hex
+                                hex: "#FFFFFF"
+                                alpha: 0.5
+                            - platform: web
+                              dark_mode: false
+                              color:
+                                type: hex
+                                hex: "#BCBDC2"
+                                alpha: 1
+                            - platform: web
+                              dark_mode: true
+                              color:
+                                type: hex
+                                hex: "#FFFFFF"
+                                alpha: 0.5
+                automated_accessibility_actions:
+                  - type: announce

@@ -65,6 +65,7 @@ public class ModalActivity : AppCompatActivity() {
     private lateinit var modelEnvironment: ModelEnvironment
 
     private var disableBackButton = false
+    private var dismissReported = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -206,6 +207,11 @@ public class ModalActivity : AppCompatActivity() {
     }
 
     private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) {
+        if (dismissReported) {
+            UALog.e { "Dismissed already called! not reporting dismiss again." }
+            return
+        }
+
         reporter.report(
             event = ReportingEvent.Dismiss(
                 data = ReportingEvent.DismissData.UserDismissed,
@@ -213,6 +219,7 @@ public class ModalActivity : AppCompatActivity() {
                 context = state
             )
         )
+        dismissReported = true
     }
 
     /**
