@@ -8,21 +8,23 @@ import android.os.Bundle
 import androidx.annotation.MainThread
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
-import com.urbanairship.AirshipExecutors
+import com.urbanairship.Airship
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.UALog
-import com.urbanairship.Airship
 import com.urbanairship.actions.Action.Situation
 import com.urbanairship.actions.ActionArguments
-import com.urbanairship.actions.ActionCompletionCallback
-import com.urbanairship.actions.ActionResult
 import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ActionValue
 import com.urbanairship.analytics.InteractiveNotificationEvent
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.Executor
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * Processes notification intents.
@@ -31,9 +33,10 @@ internal class NotificationIntentProcessor(
     private val airship: Airship = Airship.shared(),
     private val context: Context,
     private val intent: Intent,
-    private val executor: Executor = AirshipExecutors.threadPoolExecutor()
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) {
 
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
     private val actionButtonInfo = NotificationActionButtonInfo.fromIntent(intent)
     private val notificationInfo = NotificationInfo.fromIntent(intent)
 
@@ -47,35 +50,52 @@ internal class NotificationIntentProcessor(
     fun process(): PendingResult<Boolean> {
         val pendingResult = PendingResult<Boolean>()
 
-        if (intent.action == null || notificationInfo == null) {
-            UALog.e("NotificationIntentProcessor - invalid intent %s", intent)
-            pendingResult.setResult(false)
-            return pendingResult
-        }
-
-        UALog.v("Processing intent: %s", intent.action)
-        when (intent.action) {
-            PushManager.ACTION_NOTIFICATION_RESPONSE -> onNotificationResponse { pendingResult.setResult(true) }
-
-            PushManager.ACTION_NOTIFICATION_DISMISSED -> {
-                onNotificationDismissed()
-                pendingResult.setResult(true)
-            }
-
-            else -> {
-                UALog.e("NotificationIntentProcessor - Invalid intent action: %s", intent.action)
-                pendingResult.setResult(false)
-            }
+        scope.launch {
+            pendingResult.setResult(processSuspending())
         }
 
         return pendingResult
     }
 
     /**
+     * Processes the intent asynchroniously.
+     *
+     * @return `true` if the intent was processed, otherwise `false`.
+     */
+    @MainThread
+    suspend fun processSuspending(): Boolean {
+        if (intent.action == null || notificationInfo == null) {
+            UALog.e("NotificationIntentProcessor - invalid intent %s", intent)
+            return false
+        }
+
+        val result: Boolean
+        UALog.v("Processing intent: %s", intent.action)
+        when (intent.action) {
+            PushManager.ACTION_NOTIFICATION_RESPONSE -> {
+                onNotificationResponse()
+                result = true
+            }
+
+            PushManager.ACTION_NOTIFICATION_DISMISSED -> {
+                onNotificationDismissed()
+                result = true
+            }
+
+            else -> {
+                UALog.e("NotificationIntentProcessor - Invalid intent action: %s", intent.action)
+                result = false
+            }
+        }
+
+        return result
+    }
+
+    /**
      * Handles the opened notification without an action.
      * @param completionHandler The completion handler.
      */
-    private fun onNotificationResponse(completionHandler: Runnable) {
+    private suspend fun onNotificationResponse() {
         UALog.i("Notification response: $notificationInfo, $actionButtonInfo")
         if (notificationInfo == null) { return }
 
@@ -113,7 +133,7 @@ internal class NotificationIntentProcessor(
             internalNotificationListener.onNotificationResponse(notificationInfo, actionButtonInfo)
         }
 
-        runNotificationResponseActions(completionHandler)
+        runNotificationResponseActions()
     }
     /**
      * Handles notification dismissed intent.
@@ -167,7 +187,7 @@ internal class NotificationIntentProcessor(
      *
      * @param completionHandler Callback when finished.
      */
-    private fun runNotificationResponseActions(completionHandler: Runnable) {
+    private suspend fun runNotificationResponseActions() {
         var actions: Map<String, ActionValue>? = null
         var situation = Situation.MANUAL_INVOCATION
         val metadata = bundleOf(ActionArguments.PUSH_MESSAGE_METADATA to notificationInfo?.message)
@@ -192,11 +212,10 @@ internal class NotificationIntentProcessor(
         }
 
         if (actions.isNullOrEmpty()) {
-            completionHandler.run()
             return
         }
 
-        runActions(actions, situation, metadata, completionHandler)
+        runActions(actions, situation, metadata)
     }
 
     /**
@@ -207,36 +226,24 @@ internal class NotificationIntentProcessor(
      * @param metadata The metadata.
      * @param completionHandler The completion handler.
      */
-    private fun runActions(
+    private suspend fun runActions(
         actions: Map<String, ActionValue>,
         situation: Situation,
-        metadata: Bundle,
-        completionHandler: Runnable
+        metadata: Bundle
     ) {
-        executor.execute {
-            val countDownLatch = CountDownLatch(actions.size)
-
+        try {
             actions
                 .map { (key, value) ->
                     ActionRunRequest.createRequest(key)
                         .setMetadata(metadata)
                         .setSituation(situation)
                         .setValue(value) }
-                .forEach { request ->
-                    request.run(object : ActionCompletionCallback {
-                        override fun onFinish(arguments: ActionArguments, result: ActionResult) {
-                            countDownLatch.countDown()
-                        }
-                    })
+                .map { request ->
+                    scope.launch { request.runSuspending() }
                 }
-
-            try {
-                countDownLatch.await()
-            } catch (e: InterruptedException) {
-                UALog.e(e, "Failed to wait for actions")
-                Thread.currentThread().interrupt()
-            }
-            completionHandler.run()
+                .joinAll()
+        } catch (ex: Exception) {
+            UALog.e(ex, "Failed to run actions")
         }
     }
 

@@ -43,6 +43,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -94,7 +95,7 @@ public class ContactTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
-    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL)
+    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL, dispatcher = UnconfinedTestDispatcher())
     private val pushListeners = mutableListOf<PushListener>()
     private val mockPushManager: PushManager = mockk {
         every { this@mockk.addInternalPushListener(capture(pushListeners)) } just runs
@@ -459,6 +460,19 @@ public class ContactTest {
     }
 
     @Test
+    public fun testEditTagsClosure(): TestResult = runTest {
+        contact.editTagGroups { setTag("some group", "some tag") }
+
+        val expectedMutations = listOf(
+            TagGroupsMutation.newSetTagsMutation("some group", setOf("some tag"))
+        )
+
+        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(tags = expectedMutations)) }
+        verify { mockAudienceOverridesProvider.notifyPendingChanged() }
+    }
+
+
+    @Test
     public fun testEditTagsContactDisabled(): TestResult = runTest {
         privacyManager.setEnabledFeatures(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         contact.editTagGroups().setTag("some group", "some tag").apply()
@@ -485,6 +499,20 @@ public class ContactTest {
     @Test
     public fun testEditAttributes(): TestResult = runTest {
         contact.editAttributes().setAttribute("some attribute", "some value").apply()
+
+        val expectedMutations = listOf(
+            AttributeMutation.newSetAttributeMutation(
+                "some attribute", JsonValue.wrapOpt("some value"), testClock.currentTimeMillis()
+            )
+        )
+
+        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(attributes = expectedMutations)) }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
+    }
+
+    @Test
+    public fun testEditAttributesClosure(): TestResult = runTest {
+        contact.editAttributes { setAttribute("some attribute", "some value") }
 
         val expectedMutations = listOf(
             AttributeMutation.newSetAttributeMutation(
@@ -539,6 +567,20 @@ public class ContactTest {
         verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(subscriptions = expectedMutations)) }
         verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
 
+    }
+
+    @Test
+    public fun testEditSubscriptionsClosure(): TestResult = runTest {
+        contact.editSubscriptionLists { subscribe("some list", Scope.APP) }
+
+        val expectedMutations = listOf(
+            ScopedSubscriptionListMutation.newSubscribeMutation(
+                "some list", Scope.APP, testClock.currentTimeMillis()
+            )
+        )
+
+        verify(exactly = 1) { mockContactManager.addOperation(ContactOperation.Update(subscriptions = expectedMutations)) }
+        verify(exactly = 1) { mockAudienceOverridesProvider.notifyPendingChanged() }
     }
 
     @Test

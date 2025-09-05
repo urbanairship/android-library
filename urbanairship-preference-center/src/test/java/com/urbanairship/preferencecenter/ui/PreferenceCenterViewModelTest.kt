@@ -419,7 +419,12 @@ public class PreferenceCenterViewModelTest {
         }
 
         viewModel(
-            mockChannel = { every { editSubscriptionLists() } returns editor }
+            mockChannel = {
+                every { editSubscriptionLists(any()) } answers {
+                    firstArg<(SubscriptionListEditor) -> Unit>().invoke(editor)
+                    editor.apply()
+                }
+            }
         ).run {
             val item = Item.ChannelSubscription("id", SUBSCRIPTION_ID_1, CommonDisplay.EMPTY, emptyList())
 
@@ -442,7 +447,7 @@ public class PreferenceCenterViewModelTest {
                 contact.namedUserIdFlow
                 channel.subscriptions
 
-                channel.editSubscriptionLists()
+                channel.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, true)
                 editor.apply()
             }
@@ -459,7 +464,12 @@ public class PreferenceCenterViewModelTest {
 
         viewModel(
             channelSubscriptions = setOf(SUBSCRIPTION_ID_1, SUBSCRIPTION_ID_2),
-            mockChannel = { every { editSubscriptionLists() } returns editor }
+            mockChannel = {
+                every { editSubscriptionLists(any()) } answers {
+                    firstArg<(SubscriptionListEditor) -> Unit>().invoke(editor)
+                    editor.apply()
+                }
+            }
         ).run {
             val item = Item.ChannelSubscription("id", SUBSCRIPTION_ID_2, CommonDisplay.EMPTY, emptyList())
 
@@ -483,7 +493,7 @@ public class PreferenceCenterViewModelTest {
 
             coVerifyOrder {
                 channel.subscriptions
-                channel.editSubscriptionLists()
+                channel.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, false)
                 editor.apply()
             }
@@ -508,7 +518,12 @@ public class PreferenceCenterViewModelTest {
 
         viewModel(
             config = CONTACT_SUBSCRIPTION_CONFIG,
-            mockContact = { every { editSubscriptionLists() } returns editor }
+            mockContact = {
+                every { editSubscriptionLists(any()) } answers {
+                    firstArg<(ScopedSubscriptionListEditor) -> Unit>().invoke(editor)
+                    editor.apply()
+                }
+            }
         ).run {
             val item = CONTACT_SUBSCRIPTION_ITEM_1
 
@@ -531,13 +546,14 @@ public class PreferenceCenterViewModelTest {
                 contact.namedUserIdFlow
                 contact.subscriptions
 
-                contact.editSubscriptionLists()
+                contact.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, item.scopes, true)
                 editor.apply()
             }
             coVerify(exactly = 0) {
                 channel.subscriptions
                 channel.editSubscriptionLists()
+                channel.editSubscriptionLists(any())
             }
             confirmVerified(channel, contact, editor)
         }
@@ -563,7 +579,12 @@ public class PreferenceCenterViewModelTest {
         viewModel(
             config = CONTACT_SUBSCRIPTION_CONFIG,
             contactSubscriptions = initialSubscriptions,
-            mockContact = { every { editSubscriptionLists() } returns editor }
+            mockContact = {
+                every { editSubscriptionLists(any()) } answers {
+                    firstArg<(ScopedSubscriptionListEditor) -> Unit>().invoke(editor)
+                    editor.apply()
+                }
+            }
         ).run {
             val item = CONTACT_SUBSCRIPTION_ITEM_1
 
@@ -590,13 +611,14 @@ public class PreferenceCenterViewModelTest {
                 contact.namedUserIdFlow
                 contact.subscriptions
 
-                contact.editSubscriptionLists()
+                contact.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, item.scopes, false)
                 editor.apply()
             }
             coVerify(exactly = 0) {
                 channel.subscriptions
                 channel.editSubscriptionLists()
+                channel.editSubscriptionLists(any())
             }
             confirmVerified(channel, contact, editor)
         }
@@ -622,7 +644,12 @@ public class PreferenceCenterViewModelTest {
 
         viewModel(
             config = CONTACT_SUBSCRIPTION_CONFIG,
-            mockContact = { every { editSubscriptionLists() } returns editor }
+            mockContact = {
+                every { editSubscriptionLists(any()) } answers {
+                    firstArg<(ScopedSubscriptionListEditor) -> Unit>().invoke(editor)
+                    editor.apply()
+                }
+            }
         ).run {
             states.test {
                 assertThat(awaitItem()).isEqualTo(State.Loading)
@@ -643,13 +670,14 @@ public class PreferenceCenterViewModelTest {
                 contact.namedUserIdFlow
                 contact.subscriptions
 
-                contact.editSubscriptionLists()
+                contact.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, component.scopes, true)
                 editor.apply()
             }
             coVerify(exactly = 0) {
                 channel.subscriptions
                 channel.editSubscriptionLists()
+                channel.editSubscriptionLists(any())
             }
             confirmVerified(channel, contact, editor)
         }
@@ -679,7 +707,12 @@ public class PreferenceCenterViewModelTest {
         viewModel(
             config = CONTACT_SUBSCRIPTION_CONFIG,
             contactSubscriptions = initialSubscriptions,
-            mockContact = { every { editSubscriptionLists() } returns editor }
+            mockContact = {
+                every { editSubscriptionLists(any()) } answers {
+                    firstArg<(ScopedSubscriptionListEditor) -> Unit>().invoke(editor)
+                    editor.apply()
+                }
+            }
         ).run {
             val item = CONTACT_SUBSCRIPTION_GROUP_ITEM_4
 
@@ -706,13 +739,14 @@ public class PreferenceCenterViewModelTest {
                 contact.namedUserIdFlow
                 contact.subscriptions
 
-                contact.editSubscriptionLists()
+                contact.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, unsubscribeScopes, false)
                 editor.apply()
             }
             coVerify(exactly = 0) {
                 channel.subscriptions
                 channel.editSubscriptionLists()
+                channel.editSubscriptionLists(any())
             }
             confirmVerified(channel, contact, editor)
         }

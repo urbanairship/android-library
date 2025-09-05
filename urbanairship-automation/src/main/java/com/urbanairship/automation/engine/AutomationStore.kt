@@ -103,7 +103,7 @@ internal class SerialAccessAutomationStore(private val store: AutomationStoreInt
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities = [ScheduleEntity::class, TriggerEntity::class], version = 3)
+@Database(entities = [ScheduleEntity::class, TriggerEntity::class], version = 4)
 internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterface {
     internal abstract val dao: AutomationDao
 
@@ -123,11 +123,55 @@ internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterfa
             }
         }
 
+        /**
+         * This migration cleans up any schedules that may have been created with an empty
+         * or null fields that shouldn't be nullable and ensures that we have the desired schema,
+         * regardless of migration path.
+         */
+        private val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                val newTable = "schedules_new"
+                val oldTable = "schedules"
+
+                // Create new schedules table (no schema changes from v3).
+                db.execSQL("""
+                    CREATE TABLE IF NOT EXISTS `$newTable` (
+                    `scheduleId` TEXT NOT NULL,
+                    `group` TEXT,
+                    `executionCount` INTEGER NOT NULL,
+                    `preparedScheduleInfo` TEXT,
+                    `schedule` TEXT NOT NULL,
+                    `scheduleState` TEXT NOT NULL,
+                    `scheduleStateChangeDate` INTEGER NOT NULL,
+                    `triggerInfo` TEXT,
+                    `triggerSessionId` TEXT,
+                    `associatedData` TEXT,
+                    PRIMARY KEY(`scheduleId`))
+                """.trimIndent())
+
+                // Copy existing rows to the new table, where we have values for all non-null fields.
+                db.execSQL("""
+                    INSERT INTO `$newTable` (scheduleId, `group`, executionCount, preparedScheduleInfo, schedule, scheduleState, scheduleStateChangeDate, triggerInfo, triggerSessionId, associatedData)
+                    SELECT scheduleId, `group`, executionCount, preparedScheduleInfo, schedule, scheduleState, scheduleStateChangeDate, triggerInfo, triggerSessionId, associatedData
+                    FROM `$oldTable`
+                    WHERE scheduleId IS NOT NULL AND scheduleId != ''
+                    AND executionCount IS NOT NULL
+                    AND schedule IS NOT NULL AND schedule != ''
+                    AND scheduleState IS NOT NULL AND scheduleState != ''
+                    AND scheduleStateChangeDate IS NOT NULL
+                """.trimIndent())
+
+                // Drop the old schedules table and rename the new one in its place.
+                db.execSQL("DROP TABLE IF EXISTS `$oldTable`")
+                db.execSQL("ALTER TABLE `$newTable` RENAME TO `$oldTable`")
+            }
+        }
+
         fun createDatabase(context: Context, config: AirshipRuntimeConfig): AutomationStore {
             val name = config.configOptions.appKey + "_automation_store"
             val path = File(ContextCompat.getNoBackupFilesDir(context), name).absolutePath
             return databaseBuilder(context, AutomationStore::class.java, path)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .fallbackToDestructiveMigrationOnDowngrade()
                 .build()
         }
@@ -140,7 +184,25 @@ internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterfa
     }
 
     override suspend fun getSchedules(): List<AutomationScheduleData> {
-        return dao.getAllSchedules()?.mapNotNull { it.toScheduleData() } ?: listOf()
+        val allScheduleEntities = dao.getAllSchedules() ?: return listOf()
+        val validScheduleData = mutableListOf<AutomationScheduleData>()
+        val schedulesToDelete = mutableListOf<String>()
+
+        allScheduleEntities.forEach { entity ->
+            val scheduleData = entity.toScheduleData()
+            if (scheduleData != null) {
+                validScheduleData.add(scheduleData)
+            } else {
+                schedulesToDelete.add(entity.scheduleId)
+            }
+        }
+
+        if (schedulesToDelete.isNotEmpty()) {
+            UALog.e("Deleting schedules due to parse exceptions: $schedulesToDelete")
+            dao.deleteSchedules(schedulesToDelete)
+        }
+
+        return validScheduleData
     }
 
     override suspend fun getSchedules(group: String): List<AutomationScheduleData> {

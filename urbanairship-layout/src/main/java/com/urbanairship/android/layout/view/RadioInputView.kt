@@ -20,7 +20,7 @@ internal class RadioInputView(
     model: RadioInputModel
 ) : CheckableView<RadioInputModel>(context, model) {
 
-    override val accessibilityNodeClassName = RadioButton::class.java.name
+    override val accessibilityNodeClassName: String = RadioButton::class.java.name
 
     init {
         val baseBackground = this.background

@@ -10,6 +10,7 @@ import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.DrawableRes
+import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionValue
 import com.urbanairship.json.JsonException
@@ -409,6 +410,16 @@ public class PushMessage : Parcelable, JsonSerializable {
         return data[EXTRA_NOTIFICATION_CHANNEL] ?: defaultChannel
     }
 
+    /** Returns the channel ID (APID) if present. */
+    internal fun isChannelIdNullOrMatching(): Boolean {
+        val apid = data[EXTRA_APID]
+        return if (apid != null) {
+            apid == Airship.shared().channel.id
+        } else {
+            true
+        }
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) { return true }
         if (other == null || javaClass != other.javaClass) {
@@ -632,6 +643,9 @@ public class PushMessage : Parcelable, JsonSerializable {
          * The extra key for the delivery priority.
          */
         public const val EXTRA_DELIVERY_PRIORITY: String = "com.urbanairship.priority"
+
+        /** The extra key for the channel ID. */
+        public const val EXTRA_APID: String = "com.urbanairship.push.APID"
 
         /**
          * Constant for the extra [.EXTRA_DELIVERY_PRIORITY] that indicates the push is high priority.

@@ -9,12 +9,19 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import androidx.annotation.XmlRes
 import com.urbanairship.AirshipConfigOptions
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.AirshipExecutors
 import com.urbanairship.PendingResult
 import com.urbanairship.R
 import com.urbanairship.UALog
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.Executor
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * Compatibility class for registering notification channels.
@@ -22,8 +29,10 @@ import java.util.concurrent.Executor
 public class NotificationChannelRegistry @VisibleForTesting internal constructor(
     private val context: Context,
     @VisibleForTesting private val dataManager: NotificationChannelRegistryDataManager,
-    private val executor: Executor = AirshipExecutors.newSerialExecutor()
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) {
+
+    private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -44,25 +53,37 @@ public class NotificationChannelRegistry @VisibleForTesting internal constructor
      * Gets a notification channel by identifier.
      *
      * @param id The notification channel identifier.
-     * @return A [PendingResult] of [NotificationChannelCompat].
+     * @return An optional [NotificationChannelCompat].
      */
-    public fun getNotificationChannel(id: String): PendingResult<NotificationChannelCompat> {
-        val pendingResult = PendingResult<NotificationChannelCompat>()
-
-        executor.execute {
+    public suspend fun getNotificationChannel(id: String): NotificationChannelCompat? {
+        return scope.async {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                pendingResult.setResult(dataManager.getChannel(id) ?: getAndCreateDefaultChannel(id))
-                return@execute
+                return@async dataManager.getChannel(id) ?: getAndCreateDefaultChannel(id)
             }
 
             notificationManager.getNotificationChannel(id)?.let {
-                pendingResult.setResult(NotificationChannelCompat(it))
-                return@execute
+                return@async NotificationChannelCompat(it)
             }
 
             val result = dataManager.getChannel(id) ?: getAndCreateDefaultChannel(id)
             result?.let { notificationManager.createNotificationChannel(it.toNotificationChannel()) }
-            pendingResult.setResult(result)
+
+            return@async result
+        }
+        .await()
+    }
+
+    /**
+     * Gets a notification channel by identifier.
+     *
+     * @param id The notification channel identifier.
+     * @return A [PendingResult] of [NotificationChannelCompat].
+     */
+    public fun getNotificationChannelAsPending(id: String): PendingResult<NotificationChannelCompat> {
+        val pendingResult = PendingResult<NotificationChannelCompat>()
+
+        scope.launch {
+            pendingResult.setResult(getNotificationChannel(id))
         }
 
         return pendingResult
@@ -77,7 +98,7 @@ public class NotificationChannelRegistry @VisibleForTesting internal constructor
     @WorkerThread
     public fun getNotificationChannelSync(id: String): NotificationChannelCompat? {
         try {
-            return getNotificationChannel(id).get()
+            return runBlocking { getNotificationChannel(id) }
         } catch (e: InterruptedException) {
             UALog.e(e, "Failed to get notification channel.")
             Thread.currentThread().interrupt()
@@ -95,7 +116,7 @@ public class NotificationChannelRegistry @VisibleForTesting internal constructor
      * @param id The notification channel identifier.
      */
     public fun deleteNotificationChannel(id: String) {
-        executor.execute {
+        scope.launch {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 notificationManager.deleteNotificationChannel(id)
             }
@@ -111,7 +132,7 @@ public class NotificationChannelRegistry @VisibleForTesting internal constructor
      * @param channelCompat A NotificationChannelCompat.
      */
     public fun createNotificationChannel(channelCompat: NotificationChannelCompat) {
-        executor.execute {
+        scope.launch {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 notificationManager.createNotificationChannel(channelCompat.toNotificationChannel())
             }
@@ -127,7 +148,9 @@ public class NotificationChannelRegistry @VisibleForTesting internal constructor
      * @param channelCompat A [NotificationChannelCompat].
      */
     public fun createDeferredNotificationChannel(channelCompat: NotificationChannelCompat) {
-        executor.execute { dataManager.createChannel(channelCompat) }
+        scope.launch {
+            dataManager.createChannel(channelCompat)
+        }
     }
 
     /**
@@ -158,7 +181,7 @@ public class NotificationChannelRegistry @VisibleForTesting internal constructor
      * @hide
      */
     public fun createNotificationChannels(@XmlRes resourceId: Int) {
-        executor.execute {
+        scope.launch {
             val channelCompats = NotificationChannelCompat.fromXml(context, resourceId)
 
             for (channelCompat in channelCompats) {

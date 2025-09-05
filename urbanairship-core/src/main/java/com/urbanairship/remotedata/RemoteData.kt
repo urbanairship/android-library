@@ -39,6 +39,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -152,7 +153,6 @@ public class RemoteData @VisibleForTesting internal constructor(
         }
     }
 
-    private val localeChangedListener = LocaleChangedListener { dispatchRefreshJobAsync() }
     private val pushListener = PushListener { message: PushMessage, _ ->
         if (message.isRemoteDataUpdate) {
             updateChangeToken()
@@ -181,9 +181,12 @@ public class RemoteData @VisibleForTesting internal constructor(
     init {
         activityMonitor.addApplicationListener(applicationListener)
         pushManager.addInternalPushListener(pushListener)
-        localeManager.addListener(localeChangedListener)
         privacyManager.addListener(privacyListener)
         config.addConfigListener(configListener)
+
+        scope.launch {
+            localeManager.localeUpdates.collect { dispatchRefreshJob() }
+        }
 
         scope.launch {
             contact.contactIdUpdateFlow.mapNotNull { it?.contactId }.distinctUntilChanged()
@@ -227,7 +230,6 @@ public class RemoteData @VisibleForTesting internal constructor(
     public override fun tearDown() {
         pushManager.removePushListener(pushListener)
         activityMonitor.removeApplicationListener(applicationListener)
-        localeManager.removeListener(localeChangedListener)
         privacyManager.removeListener(privacyListener)
         config.removeRemoteConfigListener(configListener)
     }

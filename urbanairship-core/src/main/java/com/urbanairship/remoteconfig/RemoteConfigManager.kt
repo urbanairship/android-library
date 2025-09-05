@@ -37,15 +37,16 @@ public class RemoteConfigManager(
 
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
-    private val privacyManagerListener = object : PrivacyManager.Listener {
-        override fun onEnabledFeaturesChanged() = updateSubscription()
-    }
-
     private var subscription: Job? = null
 
     init {
         updateSubscription()
-        privacyManager.addListener(privacyManagerListener)
+
+        scope.launch {
+            privacyManager.featureUpdates.collect {
+                updateSubscription()
+            }
+        }
     }
 
     private fun updateSubscription() {
@@ -91,7 +92,6 @@ public class RemoteConfigManager(
     override fun tearDown() {
         super.tearDown()
         subscription?.cancel()
-        privacyManager.removeListener(privacyManagerListener)
     }
 
     private companion object {
