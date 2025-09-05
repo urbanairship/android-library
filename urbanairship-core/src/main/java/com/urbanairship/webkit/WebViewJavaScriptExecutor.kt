@@ -2,7 +2,6 @@
 package com.urbanairship.webkit
 
 import android.webkit.WebView
-import androidx.annotation.RestrictTo
 import com.urbanairship.javascript.JavaScriptExecutor
 import java.lang.ref.WeakReference
 

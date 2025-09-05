@@ -2,8 +2,6 @@ package com.urbanairship.push
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.annotation.RestrictTo
-import androidx.annotation.VisibleForTesting
 import androidx.core.app.RemoteInput
 
 /**

@@ -354,6 +354,15 @@ public class Contact internal constructor(
     }
 
     /**
+     * Edit the tags associated with this Contact. Automatically calls [TagGroupsEditor.apply].
+     */
+    public fun editTagGroups(block: TagGroupsEditor.() -> Unit) {
+        val editor = editTagGroups()
+        block(editor)
+        editor.apply()
+    }
+
+    /**
      * Registers an Email channel.
      *
      * @param address The Email address to register.
@@ -493,6 +502,15 @@ public class Contact internal constructor(
     }
 
     /**
+     * Edits the attributes associated with this channel. Automatically calls [AttributeEditor.apply].
+     */
+    public fun editAttributes(block: AttributeEditor.() -> Unit) {
+        val editor = editAttributes()
+        block.invoke(editor)
+        editor.apply()
+    }
+
+    /**
      * Edits the subscription lists associated with this Contact.
      *
      * @return An [ScopedSubscriptionListEditor].
@@ -513,6 +531,15 @@ public class Contact internal constructor(
                 audienceOverridesProvider.notifyPendingChanged()
             }
         }
+    }
+
+    /**
+     * Edits the subscription lists associated with this Contact. Automatically calls [ScopedSubscriptionListEditor.apply].
+     */
+    public fun editSubscriptionLists(block: ScopedSubscriptionListEditor.() -> Unit) {
+        val editor = editSubscriptionLists()
+        block(editor)
+        editor.apply()
     }
 
     /**

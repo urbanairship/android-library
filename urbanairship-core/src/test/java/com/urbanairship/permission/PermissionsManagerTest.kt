@@ -498,6 +498,37 @@ public class PermissionsManagerTest {
         }
     }
 
+    @Test
+    public fun testPermissionStatusUpdatesFlow(): TestResult = runTest {
+        mockDelegateStatus = PermissionRequestResult.denied(false)
+        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
+
+        permissionsManager.permissionStatusUpdates.test {
+            permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+            assertEquals(
+                Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.DENIED,
+                awaitItem()
+            )
+
+            mockDelegateStatus = PermissionRequestResult.granted()
+            permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+            assertEquals(
+                Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.GRANTED,
+                awaitItem()
+            )
+
+            mockDelegateStatus = PermissionRequestResult.notDetermined()
+            permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+            assertEquals(
+                Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.NOT_DETERMINED,
+                awaitItem()
+            )
+
+            permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+            ensureAllEventsConsumed()
+        }
+    }
+
     /**
      * Test that the permissions manager can handle a broken
      * delegate that calls the callbacks multiple times

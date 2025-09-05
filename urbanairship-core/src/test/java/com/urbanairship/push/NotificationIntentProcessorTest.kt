@@ -14,6 +14,9 @@ import java.util.concurrent.Executor
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -29,7 +32,7 @@ class NotificationIntentProcessorTest {
     private var notificationManager: NotificationManager = mockk(relaxed = true)
     private var analytics: Analytics = mockk(relaxed = true)
     private var notificationListener: NotificationListener = mockk(relaxed = true)
-    private val executor: Executor = Executor { command -> command.run() }
+    private val dispatcher = StandardTestDispatcher()
 
     private lateinit var responseIntent: Intent
     private lateinit var dismissIntent: Intent
@@ -81,6 +84,29 @@ class NotificationIntentProcessorTest {
 
         val result = processIntent(responseIntent)
         Assert.assertTrue(result == true)
+
+        // Verify the conversion id and metadata was set
+        verify { analytics.conversionSendId = message.sendId }
+        verify { analytics.conversionMetadata = message.metadata }
+
+        // Verify the application was launched
+        verifyApplicationLaunched()
+
+        // Verify the listener was called
+        verify { notificationListener.onNotificationOpened(any()) }
+    }
+
+    /**
+     * Test notification response.
+     */
+    @Test
+    fun testNotificationResponseSuspending(): TestResult = runTest {
+        every { notificationListener.onNotificationOpened(any()) } returns false
+
+        val result = NotificationIntentProcessor(Airship.shared(), context, responseIntent, dispatcher)
+            .processSuspending()
+
+        Assert.assertTrue(result)
 
         // Verify the conversion id and metadata was set
         verify { analytics.conversionSendId = message.sendId }
@@ -223,8 +249,9 @@ class NotificationIntentProcessorTest {
     }
 
     private fun processIntent(intent: Intent): Boolean? {
-        return NotificationIntentProcessor(Airship.shared(), context, intent, executor)
+        return NotificationIntentProcessor(Airship.shared(), context, intent, dispatcher)
             .process()
+            .also { dispatcher.scheduler.advanceUntilIdle() }
             .get()
     }
 }

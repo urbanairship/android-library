@@ -36,7 +36,7 @@ internal object ImageUtils {
      * @throws IOException if file fails to be created.
      */
     @Throws(IOException::class)
-    public fun fetchScaledDrawable(
+    fun fetchScaledDrawable(
         context: Context,
         url: URL,
         reqWidth: Int,
@@ -96,7 +96,7 @@ internal object ImageUtils {
      * @throws IOException if file fails to be created.
      */
     @Throws(IOException::class)
-    public fun fetchScaledBitmap(
+    fun fetchScaledBitmap(
         context: Context,
         url: URL,
         reqWidth: Int,
@@ -178,7 +178,7 @@ internal object ImageUtils {
      * @param reqHeight The requested height of the image.
      * @return The calculated inSampleSize.
      */
-    public fun calculateInSampleSize(width: Int, height: Int, reqWidth: Int, reqHeight: Int): Int {
+    fun calculateInSampleSize(width: Int, height: Int, reqWidth: Int, reqHeight: Int): Int {
         var inSampleSize = 1
 
         if (height > reqHeight || width > reqWidth) {
@@ -205,7 +205,7 @@ internal object ImageUtils {
      * @param reqHeight The requested height of the image.
      * @return The target Size.
      */
-    public fun calculateTargetSize(
+    fun calculateTargetSize(
         width: Int,
         height: Int,
         reqWidth: Int,
@@ -283,15 +283,15 @@ internal object ImageUtils {
     /**
      * Drawable result.
      */
-    public class DrawableResult(
+    class DrawableResult(
         /**
          * The drawable.
          */
-        public val drawable: Drawable,
+        val drawable: Drawable,
         /**
          * The size in bytes.
          */
-        public val bytes: Long
+        val bytes: Long
     )
 
     /**
@@ -317,7 +317,7 @@ internal object ImageUtils {
      * Immutable wrapper for a width and height, used as a stand-in for android.util.Size which is
      * only supported on API 21+.
      */
-    public class Size public constructor(public val width: Int, public val height: Int) {
+    class Size(val width: Int, val height: Int) {
 
         override fun equals(other: Any?): Boolean {
             if (this === other) return true

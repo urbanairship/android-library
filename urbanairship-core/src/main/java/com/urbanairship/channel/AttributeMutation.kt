@@ -96,7 +96,7 @@ public class AttributeMutation internal constructor(
         fun fromJsonValue(jsonValue: JsonValue): AttributeMutation {
             val mutation = jsonValue.requireMap()
 
-            val value = mutation.get(ATTRIBUTE_VALUE_KEY)
+            val value = mutation[ATTRIBUTE_VALUE_KEY]
             value?.let {
                 if (!isValidValue(it)) {
                     throw JsonException("Invalid attribute mutation value: $it")

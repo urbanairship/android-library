@@ -49,7 +49,7 @@ public class ThomasTest {
     private val mockDisplayTimer: DisplayTimer = mockk {
         every { time } returns System.currentTimeMillis()
     }
-    private val mockEnv: ModelEnvironment = mockk {
+    private val mockEnv: ModelEnvironment = mockk(relaxed = true) {
         every { reporter } returns mockReporter
         every { actionsRunner } returns mockActionsRunner
         every { attributeHandler } returns mockAttributeHandler
@@ -62,7 +62,6 @@ public class ThomasTest {
             every { generateSummaryEvents() } returns emptyList()
             every { viewedPages(any()) } returns emptyList()
         }
-
         every { withState(any()) } returns this
     }
 

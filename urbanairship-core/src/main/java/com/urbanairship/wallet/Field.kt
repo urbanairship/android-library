@@ -1,9 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.wallet
 
-import android.text.TextUtils
 import androidx.annotation.Size
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf

@@ -51,7 +51,7 @@ public class PagerControllerTest {
         every { generateSummaryEvents() } returns emptyList()
         every { viewedPages(any()) } returns emptyList()
     }
-    private val mockEnv: ModelEnvironment = mockk() {
+    private val mockEnv: ModelEnvironment = mockk(relaxed = true) {
         every { reporter } returns mockReporter
         every { actionsRunner } returns mockActionsRunner
         every { displayTimer } returns mockDisplayTimer

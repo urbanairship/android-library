@@ -1,13 +1,10 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
-import androidx.annotation.IntDef
-import com.urbanairship.json.JsonValue
-
 /**
  * Stores the results of running an [com.urbanairship.actions.Action].
  */
-public sealed class ActionResult private constructor(
+public sealed class ActionResult(
     public val value: ActionValue = ActionValue(),
     public val status: Status
 ) {

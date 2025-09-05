@@ -21,17 +21,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -62,6 +63,11 @@ public class PermissionsManager internal constructor(
     private val pendingRequestResults: MutableMap<Permission, Flow<PermissionRequestResult>> = mutableMapOf()
     private val pendingCheckResults: MutableMap<Permission, Flow<PermissionStatus>> = mutableMapOf()
 
+    private val permissionsUpdatesFlow = MutableSharedFlow<Pair<Permission, PermissionStatus>>()
+    public val permissionStatusUpdates: Flow<Pair<Permission, PermissionStatus>> = permissionsUpdatesFlow
+        .asSharedFlow()
+        .distinctUntilChanged()
+
     /**
      * @hide
      */
@@ -76,20 +82,27 @@ public class PermissionsManager internal constructor(
                 }
             }
         }
+
+        permissionsScope.launch {
+            permissionStatusUpdates
+                .collect { (permission, status) ->
+                    onPermissionStatusChangedListeners.forEach {
+                        it.onPermissionStatusChanged(permission, status)
+                    }
+                }
+        }
     }
 
 
     @MainThread
-    private fun updatePermissionStatus(permission: Permission, status: PermissionStatus) {
-        val previous = permissionStatusMap.getAndUpdate {
-            it.toMutableMap().apply { put(permission, status) }
+    private suspend fun updatePermissionStatus(permission: Permission, status: PermissionStatus) {
+        permissionStatusMap.update {
+            it
+                .toMutableMap()
+                .apply { put(permission, status) }
         }
 
-        if (previous[permission] != null && previous[permission] != status) {
-            for (listener in this.onPermissionStatusChangedListeners) {
-                listener.onPermissionStatusChanged(permission, status)
-            }
-        }
+        permissionsUpdatesFlow.emit(permission to status)
     }
 
     /**
@@ -397,7 +410,7 @@ private fun PermissionDelegate.checkPermissionFlow(context: Context, scope: Coro
     return stateFlow.mapNotNull { it }
 }
 
-private suspend fun ActivityMonitor.resumedActivities() = callbackFlow<Activity> {
+private fun ActivityMonitor.resumedActivities() = callbackFlow {
     val listener = object : SimpleActivityListener() {
         override fun onActivityResumed(activity: Activity) {
             this@callbackFlow.trySend(activity)

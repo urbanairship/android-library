@@ -58,12 +58,12 @@ public class RemoteDataTest {
     )
 
     private val privacyManager: PrivacyManager = PrivacyManager(
-        dataStore, PrivacyManager.Feature.ALL
+        dataStore, PrivacyManager.Feature.ALL, dispatcher = UnconfinedTestDispatcher()
     )
 
-    private val localListener = mutableListOf<LocaleChangedListener>()
+    private val localeFlow = MutableSharedFlow<Locale>()
     private val mockLocaleManager: LocaleManager = mockk {
-        every { this@mockk.addListener(capture(localListener)) } just runs
+        every { localeUpdates } returns localeFlow
         every { this@mockk.locale } returns Locale.CANADA_FRENCH
     }
 
@@ -161,7 +161,7 @@ public class RemoteDataTest {
     @Test
     public fun testLocalChangeDispatchesUpdate(): TestResult = runTest {
         verify(exactly = 0) { mockRefreshManager.dispatchRefreshJob() }
-        localListener.forEach { it.onLocaleChanged(Locale.CANADA_FRENCH) }
+        localeFlow.emit(Locale.CANADA_FRENCH)
         testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
     }

@@ -17,6 +17,11 @@ import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -32,7 +37,7 @@ import org.robolectric.annotation.LooperMode
 public class ActionRunRequestTest {
 
     private var actionRegistry = ActionRegistry()
-    private val executor = Executor { command -> command.run() }
+    private val dispatcher = StandardTestDispatcher()
 
     /**
      * Test running an action
@@ -44,9 +49,29 @@ public class ActionRunRequestTest {
 
         // Run the action without a callback
         createRequest(action)
+            .setDispatcher(dispatcher)
             .setValue("val")
-            .setExecutor(executor)
             .run()
+            .also { dispatcher.scheduler.advanceUntilIdle() }
+
+        assertTrue("Action failed to run", action.performCalled)
+        assertNull(
+            "Action name should be null",
+            action.runArgs?.metadata?.getString(ActionArguments.REGISTRY_ACTION_NAME_METADATA)
+        )
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    public fun testRunSuspendingAction(): TestResult = runTest {
+        val result = newResult(wrap("result"))
+        val action = TestAction(true, result)
+
+        // Run the action without a callback
+        createRequest(action)
+            .setDispatcher(UnconfinedTestDispatcher())
+            .setValue("val")
+            .runSuspending()
 
         assertTrue("Action failed to run", action.performCalled)
         assertNull(
@@ -66,9 +91,10 @@ public class ActionRunRequestTest {
 
         // Run the action with a callback
         createRequest(action)
+            .setDispatcher(dispatcher)
             .setValue("val")
-            .setExecutor(executor)
             .run(callback)
+            .also { dispatcher.scheduler.advanceUntilIdle() }
 
         assertTrue("Action failed to run", action.performCalled)
         assertEquals(
@@ -96,9 +122,10 @@ public class ActionRunRequestTest {
 
         // Run the action without a callback
         createRequest("action!", actionRegistry)
+            .setDispatcher(dispatcher)
             .setValue("val")
-            .setExecutor(executor)
             .run()
+            .also { dispatcher.scheduler.advanceUntilIdle() }
 
         assertTrue("Action failed to run", action.performCalled)
         assertEquals(
@@ -123,8 +150,9 @@ public class ActionRunRequestTest {
         // Run the action with a callback
         createRequest("action!", actionRegistry)
             .setValue("val")
-            .setExecutor(executor)
+            .setDispatcher(dispatcher)
             .run(callback)
+            .also { dispatcher.scheduler.advanceUntilIdle() }
 
         assertTrue("Action failed to run", action.performCalled)
         assertEquals(
@@ -208,8 +236,9 @@ public class ActionRunRequestTest {
 
         createRequest("action!", actionRegistry)
             .setValue("val")
-            .setExecutor(executor)
+            .setDispatcher(dispatcher)
             .run(callback)
+            .also { dispatcher.scheduler.advanceUntilIdle() }
 
         val result = callback.lastResult
 
@@ -230,11 +259,14 @@ public class ActionRunRequestTest {
     /**
      * Test running an action without setting the situation defaults to Action.SITUATION_MANUAL_INVOCATION
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     public fun testRunDefaultSituation() {
         val action = TestAction(true)
 
-        createRequest(action).setExecutor(executor).runSync()
+        createRequest(action)
+            .setDispatcher(UnconfinedTestDispatcher())
+            .runSync()
 
         assertTrue("Action failed to run", action.performCalled)
         assertEquals(
@@ -247,11 +279,13 @@ public class ActionRunRequestTest {
     /**
      * Test running an action that does not exist in the registry
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     public fun testRunActionNoEntry() {
         val result = createRequest("action", actionRegistry)
-            .setExecutor(executor)
+            .setDispatcher(UnconfinedTestDispatcher())
             .runSync()
+
 
         assertTrue(
             "Running an action that does not exist should return a 'null' result",
@@ -280,14 +314,13 @@ public class ActionRunRequestTest {
         val testAction: Action = TestAction()
         val callback = TestActionCompletionCallback()
 
-        // Assign a single thread executor to the ActionRunRequests
-        val executorService = Executors.newSingleThreadExecutor()
-
-        createRequest(testAction).setExecutor(executorService).run(callback)
-
-        // Wait for the action to finish running
-        executorService.shutdown()
-        executorService.awaitTermination(1, TimeUnit.SECONDS)
+        createRequest(testAction)
+            .setDispatcher(dispatcher)
+            .run(callback)
+            .also {
+                looper.pause()
+                dispatcher.scheduler.advanceUntilIdle()
+            }
 
         // Check that we have a message in the looper's queue
         assertEquals(1, looper.scheduler.size())
@@ -302,6 +335,7 @@ public class ActionRunRequestTest {
     /**
      * Test setting metadata will be combined with the registry name.
      */
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     public fun testMetadata() {
         val action = TestAction()
@@ -314,7 +348,7 @@ public class ActionRunRequestTest {
         // Run the action by name
         createRequest("action!", actionRegistry)
             .setMetadata(metadata)
-            .setExecutor(executor)
+            .setDispatcher(UnconfinedTestDispatcher())
             .runSync()
 
         assertTrue("Action failed to run", action.performCalled)

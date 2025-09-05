@@ -9,11 +9,7 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.core.util.Consumer
 import com.urbanairship.UALog
-import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobRunner.DefaultRunner
-import com.urbanairship.job.SchedulerException
-import java.util.concurrent.TimeUnit
-import kotlin.math.max
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds

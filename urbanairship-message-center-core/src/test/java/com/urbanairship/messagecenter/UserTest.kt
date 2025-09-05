@@ -6,8 +6,11 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.channel.AirshipChannel
+import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
@@ -101,7 +104,7 @@ public class UserTest {
 
     /** Tests update user starts the rich push service and notifies the listener on success */
     @Test
-    public fun testRichPushUpdateSuccess() {
+    public fun testRichPushUpdateSuccess(): TestResult = runTest  {
         user.onUserUpdated(true)
 
         // Verify the listener received a success callback
@@ -109,9 +112,23 @@ public class UserTest {
         assertTrue("Listener should be notified of user update success.", result)
     }
 
+    @Test
+    public fun testUserUpdatedFlow(): TestResult = runTest  {
+        user.userUpdated.test {
+            user.onUserUpdated(true)
+            assertEquals(true, awaitItem())
+
+            user.onUserUpdated(false)
+            assertEquals(false, awaitItem())
+
+            user.onUserUpdated(false)
+            ensureAllEventsConsumed()
+        }
+    }
+
     /** Tests update user starts the rich push service and notifies the listener on error */
     @Test
-    public fun testRichPushUpdateError() {
+    public fun testRichPushUpdateError(): TestResult = runTest {
         user.onUserUpdated(false)
 
         // Verify the listener received a success callback

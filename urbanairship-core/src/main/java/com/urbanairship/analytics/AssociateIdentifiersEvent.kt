@@ -5,7 +5,6 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.jsonMapOf
 
 /**
  * Event to set the associated identifiers.

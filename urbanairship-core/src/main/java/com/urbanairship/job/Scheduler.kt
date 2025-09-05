@@ -3,7 +3,6 @@ package com.urbanairship.job
 
 import android.content.Context
 import androidx.annotation.RestrictTo
-import com.urbanairship.job.SchedulerException
 import kotlin.time.Duration
 
 /**

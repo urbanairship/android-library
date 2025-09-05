@@ -275,7 +275,7 @@ public class JsonValueTest {
         """.trimIndent()
         )
 
-        Assert.assertEquals(expected.map, JsonValue.wrap(map))
+        Assert.assertEquals(expected, JsonValue.wrap(map))
 
         // List
         val list = primitiveList.toMutableList().apply { add(primitiveList) }

@@ -55,7 +55,7 @@ public class PagerModelTest {
     private val mockActionsRunner: ThomasActionRunner = mockk(relaxUnitFun = true) {
         every { run(any(), any()) } answers { nothing }
     }
-    private val mockEnv: ModelEnvironment = mockk(relaxUnitFun = true) {
+    private val mockEnv: ModelEnvironment = mockk(relaxed = true, relaxUnitFun = true) {
         every { reporter } returns mockReporter
         every { actionsRunner } returns mockActionsRunner
         every { modelScope } returns testScope

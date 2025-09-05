@@ -51,8 +51,7 @@ internal class RadioInputModel(
     }
 
     override fun onViewAttached(view: RadioInputView) {
-        // Update accessibility when view is attached (handles recycled views)
-        view.updateAccessibility()
+        super.onViewAttached(view)
 
         // Update checked state whenever the selected radio state changes.
         viewScope.launch {

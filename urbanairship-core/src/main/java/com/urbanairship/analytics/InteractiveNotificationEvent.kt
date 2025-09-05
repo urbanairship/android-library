@@ -3,7 +3,6 @@ package com.urbanairship.analytics
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonMap
-import com.urbanairship.json.JsonValue
 import com.urbanairship.push.NotificationActionButtonInfo
 import com.urbanairship.push.NotificationInfo
 
