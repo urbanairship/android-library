@@ -27,6 +27,7 @@ import com.urbanairship.permission.PermissionRequestResult
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.push.notifications.NotificationActionButtonGroup
+import app.cash.turbine.test
 import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -34,7 +35,15 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -69,8 +78,8 @@ public class PushManagerTest {
         every { areNotificationsEnabled() } returns false
     }
     private val activityMonitor = TestActivityMonitor()
-    private val pushManagerDispatcher = StandardTestDispatcher()
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private var pushManager = PushManager(
         TestApplication.getApplication(),
         preferenceDataStore,
@@ -83,7 +92,7 @@ public class PushManagerTest {
         mockDispatcher,
         mockNotificationManager,
         activityMonitor,
-        dispatcher = pushManagerDispatcher
+        dispatcher = UnconfinedTestDispatcher()
     )
 
     /**
@@ -562,7 +571,6 @@ public class PushManagerTest {
         pushManager.userNotificationsEnabled = true
 
         activityMonitor.foreground()
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         coVerify { mockPermissionManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) }
     }
 
@@ -572,7 +580,6 @@ public class PushManagerTest {
 
         this.notificationStatus = PermissionStatus.NOT_DETERMINED
         pushManager.userNotificationsEnabled = true
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         coVerify { mockPermissionManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) }
     }
 
@@ -587,7 +594,6 @@ public class PushManagerTest {
         ) } returns PermissionRequestResult.granted()
 
         pushManager.enableUserNotifications(consumer)
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
 
         Assert.assertTrue(consumer.lastResult == true)
         Assert.assertTrue(pushManager.userNotificationsEnabled)
@@ -604,7 +610,6 @@ public class PushManagerTest {
         ) } returns PermissionRequestResult.denied(false)
 
         pushManager.enableUserNotifications(consumer)
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
 
         Assert.assertFalse(consumer.lastResult == true)
         Assert.assertTrue(pushManager.userNotificationsEnabled)
@@ -621,7 +626,6 @@ public class PushManagerTest {
         ) } returns PermissionRequestResult.granted()
 
         pushManager.enableUserNotifications(PermissionPromptFallback.SystemSettings, consumer)
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
 
         Assert.assertTrue(consumer.lastResult == true)
         Assert.assertTrue(pushManager.userNotificationsEnabled)
@@ -639,29 +643,22 @@ public class PushManagerTest {
         pushManager.userNotificationsEnabled = true
 
         privacyManager.enable(PrivacyManager.Feature.PUSH)
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         coVerify { mockPermissionManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) }
     }
 
     @Test
-    fun testPermissionStatusChangesUpdatesChannelRegistration() {
-        var listener: OnPermissionStatusChangedListener? = null
-        every { mockPermissionManager.addOnPermissionStatusChangedListener(any()) } answers {
-            listener = firstArg()
-        }
-        pushManager.init()
-        Assert.assertNotNull(listener)
-        listener?.onPermissionStatusChanged(
-            Permission.DISPLAY_NOTIFICATIONS, PermissionStatus.DENIED
-        )
-        listener?.onPermissionStatusChanged(
-            Permission.DISPLAY_NOTIFICATIONS, PermissionStatus.GRANTED
-        )
-        listener?.onPermissionStatusChanged(
-            Permission.DISPLAY_NOTIFICATIONS, PermissionStatus.NOT_DETERMINED
-        )
+    fun testPermissionStatusChangesUpdatesChannelRegistration(): TestResult = runTest {
 
-        listener?.onPermissionStatusChanged(Permission.LOCATION, PermissionStatus.GRANTED)
+        val statusUpdates = MutableSharedFlow<Pair<Permission, PermissionStatus>>()
+        every { mockPermissionManager.permissionStatusUpdates } returns statusUpdates
+
+        pushManager.init()
+
+        statusUpdates.emit(Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.DENIED)
+
+        statusUpdates.emit(Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.GRANTED)
+        statusUpdates.emit(Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.NOT_DETERMINED)
+        statusUpdates.emit(Permission.LOCATION to PermissionStatus.GRANTED)
 
         verify(exactly = 3) { mockAirshipChannel.updateRegistration() }
     }
@@ -677,14 +674,11 @@ public class PushManagerTest {
         activityMonitor.foreground()
         pushManager.userNotificationsEnabled = true
 
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         clearMocks(mockPermissionManager, answers = false)
 
         pushManager.userNotificationsEnabled = true
         pushManager.userNotificationsEnabled = false
         pushManager.userNotificationsEnabled = true
-
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
 
         coVerify {
             mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS)
@@ -708,12 +702,10 @@ public class PushManagerTest {
         pushManager.init()
         privacyManager.enable(PrivacyManager.Feature.PUSH)
         activityMonitor.foreground()
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
 
         clearMocks(mockAirshipChannel)
 
         pushManager.userNotificationsEnabled = true
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         verify { mockAirshipChannel.updateRegistration() }
     }
 
@@ -724,14 +716,11 @@ public class PushManagerTest {
         privacyManager.enable(PrivacyManager.Feature.PUSH)
         activityMonitor.foreground()
         pushManager.userNotificationsEnabled = true
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         clearMocks(mockPermissionManager, answers = false)
 
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         coVerify(exactly = 0) { mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
 
         pushManager.onAirshipReady()
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
 
         coVerify(exactly = 1) { mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
     }
@@ -744,23 +733,19 @@ public class PushManagerTest {
         activityMonitor.foreground()
         pushManager.onAirshipReady()
 
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         coVerify(exactly = 0) { mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
 
         pushManager.userNotificationsEnabled = true
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         coVerify(exactly = 1) { mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
 
         activityMonitor.background()
         activityMonitor.foreground()
 
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         coVerify(exactly = 1) { mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
 
         pushManager.userNotificationsEnabled = false
         pushManager.userNotificationsEnabled = true
 
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         coVerify(exactly = 2) { mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
     }
 
@@ -841,7 +826,6 @@ public class PushManagerTest {
 
         pushManager.enableUserNotifications(consumer)
 
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         Assert.assertTrue(consumer.lastResult == true)
         Assert.assertTrue(pushManager.userNotificationsEnabled)
 
@@ -849,7 +833,6 @@ public class PushManagerTest {
             Assert.assertTrue(condition == true)
         }
 
-        pushManagerDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 1) { listener.onChange(any()) }
     }
 

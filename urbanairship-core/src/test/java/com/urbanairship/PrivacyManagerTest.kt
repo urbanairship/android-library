@@ -5,12 +5,20 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.base.Supplier
 import com.urbanairship.config.RemoteConfigObserver
 import com.urbanairship.remoteconfig.RemoteConfig
+import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -325,13 +333,30 @@ public class PrivacyManagerTest {
         verify(exactly = 3) { listener.onEnabledFeaturesChanged() }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    public fun testUpdatesFlow(): TestResult = runTest {
+        privacyManager.featureUpdates.test {
+            privacyManager.enable(PrivacyManager.Feature.PUSH)
+            assertEquals(PrivacyManager.Feature.PUSH, awaitItem())
+
+            privacyManager.disable(PrivacyManager.Feature.PUSH)
+            assertEquals(PrivacyManager.Feature.NONE, awaitItem())
+
+            privacyManager.enabledFeatures = PrivacyManager.Feature.ALL
+            assertEquals(PrivacyManager.Feature.ALL, awaitItem())
+
+            ensureAllEventsConsumed()
+        }
+    }
+
     @Test
     public fun testListenerOnlyCalledOnChange() {
         val listener: PrivacyManager.Listener = mockk(relaxed = true)
 
+        privacyManager.disable(PrivacyManager.Feature.ALL)
         privacyManager.addListener(listener)
 
-        privacyManager.disable(PrivacyManager.Feature.ALL)
         privacyManager.disable(PrivacyManager.Feature.IN_APP_AUTOMATION)
         verify(exactly = 0) { listener.onEnabledFeaturesChanged() }
 
@@ -351,6 +376,7 @@ public class PrivacyManagerTest {
         assertFalse(privacyManager.isAnyFeatureEnabled(ignoringRemoteConfig = false))
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     private fun configurePrivacyManager(
         defaultFeatures: PrivacyManager.Feature = PrivacyManager.Feature.NONE,
         resetEnabled: Boolean = false) {
@@ -363,7 +389,8 @@ public class PrivacyManagerTest {
             dataStore = dataStore,
             defaultEnabledFeatures = defaultFeatures,
             configObserver = remoteConfigObserver,
-            resetEnabledFeatures = resetEnabled
+            resetEnabledFeatures = resetEnabled,
+            dispatcher = UnconfinedTestDispatcher()
         )
     }
 }

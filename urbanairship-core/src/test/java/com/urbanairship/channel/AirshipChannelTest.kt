@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -54,7 +55,7 @@ class AirshipChannelTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
 
-    private val localeChangeListeners = mutableListOf<LocaleChangedListener>()
+    private val localeChange = MutableSharedFlow<Locale>()
 
     private val channelIdFlow = MutableStateFlow<String?>(null)
 
@@ -65,10 +66,10 @@ class AirshipChannelTest {
             )
         )
     )
-    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL)
+    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL, dispatcher = UnconfinedTestDispatcher())
     private val testDispatcher = StandardTestDispatcher()
     private val mockLocaleManager = mockk<LocaleManager>() {
-        every { this@mockk.addListener(capture(localeChangeListeners)) } just runs
+        every { localeUpdates } returns localeChange
     }
 
     private val mockRegistrar = mockk<ChannelRegistrar>(relaxed = true) {
@@ -150,7 +151,7 @@ class AirshipChannelTest {
 
     @Test
     fun testLocaleChangeUpdatesRegistration(): TestResult = runTest {
-        localeChangeListeners.forEach { it.onLocaleChanged(Locale.ENGLISH) }
+        localeChange.emit(Locale.ENGLISH)
         verify { mockJobDispatcher.dispatch(keepJob) }
     }
 
@@ -357,7 +358,7 @@ class AirshipChannelTest {
 
     @Test
     fun testEditAttributesClosure(): TestResult = runTest {
-        channel.editAttributes { it.removeAttribute("some attribute") }
+        channel.editAttributes { removeAttribute("some attribute") }
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
             mockBatchUpdateManager.addUpdate(

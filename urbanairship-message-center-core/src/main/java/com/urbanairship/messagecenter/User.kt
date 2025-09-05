@@ -6,6 +6,10 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import java.io.UnsupportedEncodingException
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 
 /** The Airship rich push user. */
 public class User internal constructor(
@@ -35,6 +39,11 @@ public class User internal constructor(
 
     private val listeners: MutableList<Listener> = CopyOnWriteArrayList()
 
+    private val userUpdatedFlow = MutableSharedFlow<Boolean>()
+    public val userUpdated: Flow<Boolean> = userUpdatedFlow
+        .asSharedFlow()
+        .distinctUntilChanged()
+
     /**
      * Subscribe a listener for user update events.
      *
@@ -53,7 +62,9 @@ public class User internal constructor(
         listeners.remove(listener)
     }
 
-    internal fun onUserUpdated(success: Boolean) {
+    internal suspend fun onUserUpdated(success: Boolean) {
+        userUpdatedFlow.emit(success)
+
         for (listener in listeners) {
             listener.onUserUpdated(success)
         }

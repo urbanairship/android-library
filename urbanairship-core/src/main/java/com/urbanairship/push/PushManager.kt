@@ -198,13 +198,15 @@ public open class PushManager @VisibleForTesting internal constructor(
             }
         }
 
-        permissionsManager.addOnPermissionStatusChangedListener { permission, _ ->
-            when(permission) {
-                Permission.DISPLAY_NOTIFICATIONS -> {
-                    airshipChannel.updateRegistration()
-                    updateStatusObserver()
+        scope.launch {
+            permissionsManager.permissionStatusUpdates.collect { (permission, _) ->
+                when(permission) {
+                    Permission.DISPLAY_NOTIFICATIONS -> {
+                        airshipChannel.updateRegistration()
+                        updateStatusObserver()
+                    }
+                    else -> {}
                 }
-                else -> {}
             }
         }
 

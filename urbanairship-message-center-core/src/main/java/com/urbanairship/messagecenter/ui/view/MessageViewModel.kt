@@ -106,19 +106,15 @@ public class MessageViewModel(
     }
 
     public fun subscribeForMessageUpdates(): SubscriptionCancellation {
-        val listener = object : InboxListener {
-            override fun onInboxUpdated() {
-                val messageId = currentMessage?.id ?: return
-
-                viewModelScope.launch {
-                    _states.value = getOrFetchMessage(messageId)
-                }
+        val job = viewModelScope.launch {
+            inbox.inboxUpdated.collect {
+                val messageId = currentMessage?.id ?: return@collect
+                _states.value = getOrFetchMessage(messageId)
             }
         }
-        inbox.addListener(listener)
 
         return object : SubscriptionCancellation {
-            override fun cancel() = inbox.removeListener(listener)
+            override fun cancel() = job.cancel()
         }
     }
 

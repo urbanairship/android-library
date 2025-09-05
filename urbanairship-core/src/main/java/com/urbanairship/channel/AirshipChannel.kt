@@ -172,7 +172,9 @@ public class AirshipChannel internal constructor(
             }
         })
 
-        localeManager.addListener { updateRegistration() }
+        scope.launch {
+            localeManager.localeUpdates.collect { updateRegistration() }
+        }
 
         val startedId = channelRegistrar.channelId
         // Channel created
@@ -390,7 +392,7 @@ public class AirshipChannel internal constructor(
     /**
      * Edits the attributes associated with this channel. Automatically calls [AttributeEditor.apply].
      */
-    public fun editAttributes(block: (AttributeEditor) -> Unit) {
+    public fun editAttributes(block: AttributeEditor.() -> Unit) {
         val editor = editAttributes()
         block.invoke(editor)
         editor.apply()
