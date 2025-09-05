@@ -3,6 +3,7 @@ package com.urbanairship.json
 import androidx.annotation.RestrictTo
 import androidx.room.TypeConverter
 import com.urbanairship.UALog
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate.Companion.parse
 
 /**
@@ -22,7 +23,7 @@ public class JsonTypeConverters public constructor() {
             return JsonValue.parseString(value)
         } catch (e: JsonException) {
             UALog.e(e, "Unable to parse json value: $value")
-            return null
+            return JsonValue.NULL
         }
     }
 
@@ -41,7 +42,7 @@ public class JsonTypeConverters public constructor() {
             return JsonValue.parseString(value).optMap()
         } catch (e: JsonException) {
             UALog.e(e, "Unable to parse json value: $value")
-            return null
+            return JsonMap.EMPTY_MAP
         }
     }
 

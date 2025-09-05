@@ -38,7 +38,7 @@ internal data class AudienceSticky(
             val content = value.requireMap()
             return AudienceSticky(
                 id = content.requireField(ID),
-                reportingMetadata = content.get(REPORTING_METADATA),
+                reportingMetadata = content[REPORTING_METADATA],
                 lastAccessTtl = content.requireField<Long>(LAST_ACCESS_TTL).milliseconds
             )
         }

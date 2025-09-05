@@ -11,7 +11,6 @@ import com.urbanairship.util.DateUtils
 import java.util.Date
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Interface used for modifying attributes.

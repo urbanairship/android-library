@@ -5,9 +5,7 @@ import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
-import com.urbanairship.util.UAStringUtil
 
 /**
  * Model object encapsulating the data relevant to a notification action button group.

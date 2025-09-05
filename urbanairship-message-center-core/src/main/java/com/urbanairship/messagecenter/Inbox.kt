@@ -31,6 +31,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
@@ -115,6 +116,9 @@ public class Inbox @VisibleForTesting internal constructor(
     private var refreshOnMessageExpiresJob: Job? = null
     private val isEnabled = AtomicBoolean(false)
 
+    private val updatesFlow = MutableSharedFlow<Unit>()
+    public val inboxUpdated: Flow<Unit> = updatesFlow.asSharedFlow()
+
     private val applicationListener = object : ApplicationListener {
         override fun onForeground(time: Long) = scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         override fun onBackground(time: Long) = scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
@@ -145,6 +149,16 @@ public class Inbox @VisibleForTesting internal constructor(
                 notifyInboxUpdated()
                 if (status == RefreshResult.REMOTE_SUCCESS) {
                     setupRefreshOnMessageExpiresJob()
+                }
+            }
+        }
+
+        scope.launch {
+            inboxUpdated.collect {
+                listeners.forEach { listener ->
+                    withContext(Dispatchers.Main) {
+                        listener.onInboxUpdated()
+                    }
                 }
             }
         }
@@ -674,11 +688,7 @@ public class Inbox @VisibleForTesting internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     internal fun notifyInboxUpdated() {
         scope.launch {
-            for (listener in listeners) {
-                withContext(Dispatchers.Main) {
-                    listener.onInboxUpdated()
-                }
-            }
+            updatesFlow.emit(Unit)
         }
     }
 

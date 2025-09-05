@@ -12,6 +12,7 @@ import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.push.NotificationsPermissionDelegate.PermissionRequestDelegate
 import com.urbanairship.push.notifications.NotificationChannelRegistry
 import java.util.UUID
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -154,7 +155,7 @@ class NotificationsPermissionDelegateTest {
             callback = { _ -> }
         )
 
-        verify { channelRegistry.getNotificationChannel(defaultChannelId) }
+        coVerify { channelRegistry.getNotificationChannel(defaultChannelId) }
     }
 
     @Test

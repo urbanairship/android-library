@@ -59,9 +59,9 @@ public data class RemoteConfig(
                 contactConfig = json.optionalField<JsonValue>(CONTACT_CONFIG_KEY)?.let {
                     ContactConfig.fromJson(it)
                 },
-                disabledFeatures = json.get(DISABLED_FEATURES_KEY)?.let(PrivacyManager.Feature::fromJson),
+                disabledFeatures = json[DISABLED_FEATURES_KEY]?.let(PrivacyManager.Feature::fromJson),
                 remoteDataRefreshInterval = json.optionalField(REMOTE_DATA_REFRESH_INTERVAL_KEY),
-                iaaConfig = json.get(IAA_CONFIG)?.let(IAAConfig::fromJson)
+                iaaConfig = json[IAA_CONFIG]?.let(IAAConfig::fromJson)
             )
         }
 
@@ -194,9 +194,9 @@ public data class IAAConfig (
             val content = value.requireMap()
 
             return IAAConfig(
-                retryingQueue = content.get(RETRYING_QUEUE)
+                retryingQueue = content[RETRYING_QUEUE]
                     ?.let(RetryingQueueConfig::fromJson),
-                additionalAudienceCheck = content.get(ADDITIONAL_AUDIENCE_CONFIG)
+                additionalAudienceCheck = content[ADDITIONAL_AUDIENCE_CONFIG]
                     ?.let(AdditionalAudienceCheckConfig::fromJson)
             )
         }
@@ -263,7 +263,7 @@ public data class AdditionalAudienceCheckConfig(
 
             return AdditionalAudienceCheckConfig(
                 isEnabled = content.requireField(IS_ENABLED),
-                context = content.get(CONTEXT),
+                context = content[CONTEXT],
                 url = content.optionalField(URL)
             )
         }

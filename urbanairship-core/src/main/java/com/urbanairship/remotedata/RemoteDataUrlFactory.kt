@@ -44,7 +44,7 @@ internal class RemoteDataUrlFactory(
         return UAStringUtil.join(deliveryTypes, ",")
     }
 
-    public fun createContactUrl(contactID: String, locale: Locale, randomValue: Int): Uri? {
+    fun createContactUrl(contactID: String, locale: Locale, randomValue: Int): Uri? {
         return createUrl(
             path = "api/remote-data-contact/$platform/$contactID",
             locale = locale,
@@ -52,7 +52,7 @@ internal class RemoteDataUrlFactory(
         )
     }
 
-    public fun createAppUrl(locale: Locale, randomValue: Int): Uri? {
+    fun createAppUrl(locale: Locale, randomValue: Int): Uri? {
         return createUrl(
             path = "api/remote-data/app/${runtimeConfig.configOptions.appKey}/$platform",
             locale = locale,

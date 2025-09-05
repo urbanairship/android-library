@@ -54,6 +54,7 @@ internal class CheckboxModel(
     }
 
     override fun onViewAttached(view: CheckboxView) {
+        super.onViewAttached(view)
         // Update checked state whenever the selection state changes.
         viewScope.launch {
             checkboxState.changes.collect { state ->

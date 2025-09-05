@@ -1,7 +1,5 @@
 package com.urbanairship.json
 
-import android.os.Bundle
-import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.util.DateUtils
 

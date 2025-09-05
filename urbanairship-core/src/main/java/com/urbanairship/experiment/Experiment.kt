@@ -23,7 +23,7 @@ internal enum class ExperimentType(val jsonValue: String) {
 
     companion object {
         fun from(value: String): ExperimentType? {
-            return values().firstOrNull { it.jsonValue == value }
+            return ExperimentType.entries.firstOrNull { it.jsonValue == value }
         }
     }
 }
@@ -140,9 +140,7 @@ public class MessageInfo(
 
         other as MessageInfo
 
-        if (messageType != other.messageType) return false
-
-        return true
+        return messageType == other.messageType
     }
 
     override fun hashCode(): Int {
@@ -215,8 +213,7 @@ internal data class Experiment(
                     ?: return null
                 val audience = AudienceSelector.fromJson(definition.require(KEY_AUDIENCE_SELECTOR))
 
-                val compoundAudience = definition
-                    .get(KEY_COMPOUND_AUDIENCE_SELECTOR)
+                val compoundAudience = definition[KEY_COMPOUND_AUDIENCE_SELECTOR]
                     ?.let(ExperimentCompoundAudience::fromJson)
 
                 val exclusions = definition

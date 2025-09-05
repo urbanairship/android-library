@@ -36,6 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -59,7 +60,7 @@ public class AnalyticsTest {
     private val executor = Executor { obj: Runnable -> obj.run() }
     private val runtimeConfig = TestAirshipRuntimeConfig()
     private val activityMonitor = TestActivityMonitor()
-    private val privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL)
+    private val privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL, dispatcher = UnconfinedTestDispatcher())
 
 
     private val testDispatcher = StandardTestDispatcher()
@@ -239,6 +240,25 @@ public class AnalyticsTest {
     @Test
     public fun testEditAssociatedIdentifiers() {
         analytics.editAssociatedIdentifiers().addIdentifier("customKey", "customValue").apply()
+
+        verify {
+            mockEventManager.addEvent(
+                match {
+                    it.type == EventType.ASSOCIATE_IDENTIFIERS
+                },
+                eq(Event.Priority.NORMAL),
+            )
+        }
+
+        // Verify identifiers are stored
+        assertThat(analytics.associatedIdentifiers.ids).isEqualTo(mapOf("customKey" to "customValue"))
+    }
+
+    @Test
+    public fun testEditAssociatedIdentifiersClosure() {
+        analytics.editAssociatedIdentifiers {
+            addIdentifier("customKey", "customValue")
+        }
 
         verify {
             mockEventManager.addEvent(

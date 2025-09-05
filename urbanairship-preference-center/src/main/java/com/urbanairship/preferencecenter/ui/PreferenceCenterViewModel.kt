@@ -449,23 +449,23 @@ internal class PreferenceCenterViewModel(
 
         when (item) {
             is Item.ChannelSubscription -> with(item) {
-                channel.editSubscriptionLists()
-                    .mutate(subscriptionId, isEnabled)
-                    .apply()
+                channel.editSubscriptionLists {
+                    it.mutate(subscriptionId, isEnabled)
+                }
 
                 emit(Change.UpdateSubscriptions(subscriptionId, isEnabled))
             }
             is Item.ContactSubscription -> with(item) {
-                contact.editSubscriptionLists()
-                    .mutate(subscriptionId, scopes, isEnabled)
-                    .apply()
+                contact.editSubscriptionLists {
+                    mutate(subscriptionId, scopes, isEnabled)
+                }
 
                 emit(Change.UpdateScopedSubscriptions(subscriptionId, scopes, isEnabled))
             }
             is Item.ContactSubscriptionGroup -> with(item) {
-                contact.editSubscriptionLists()
-                    .mutate(subscriptionId, scopes, isEnabled)
-                    .apply()
+                contact.editSubscriptionLists {
+                    mutate(subscriptionId, scopes, isEnabled)
+                }
 
                 emit(Change.UpdateScopedSubscriptions(subscriptionId, scopes, isEnabled))
             }

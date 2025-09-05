@@ -37,6 +37,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -54,7 +55,7 @@ class AirshipChannelTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
 
-    private val localeChangeListeners = mutableListOf<LocaleChangedListener>()
+    private val localeChange = MutableSharedFlow<Locale>()
 
     private val channelIdFlow = MutableStateFlow<String?>(null)
 
@@ -65,10 +66,10 @@ class AirshipChannelTest {
             )
         )
     )
-    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL)
+    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL, dispatcher = UnconfinedTestDispatcher())
     private val testDispatcher = StandardTestDispatcher()
     private val mockLocaleManager = mockk<LocaleManager>() {
-        every { this@mockk.addListener(capture(localeChangeListeners)) } just runs
+        every { localeUpdates } returns localeChange
     }
 
     private val mockRegistrar = mockk<ChannelRegistrar>(relaxed = true) {
@@ -150,7 +151,7 @@ class AirshipChannelTest {
 
     @Test
     fun testLocaleChangeUpdatesRegistration(): TestResult = runTest {
-        localeChangeListeners.forEach { it.onLocaleChanged(Locale.ENGLISH) }
+        localeChange.emit(Locale.ENGLISH)
         verify { mockJobDispatcher.dispatch(keepJob) }
     }
 
@@ -237,6 +238,13 @@ class AirshipChannelTest {
     }
 
     @Test
+    fun testEditTagsClosure(): TestResult = runTest {
+        channel.editTags { addTag("foo") }
+        verify { mockJobDispatcher.dispatch(keepJob) }
+        assertEquals(channel.tags, setOf("foo"))
+    }
+
+    @Test
     fun testEditTagsFeatureDisabled(): TestResult = runTest {
         privacyManager.disable(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)
         channel.editTags().addTag("foo").apply()
@@ -246,6 +254,19 @@ class AirshipChannelTest {
     @Test
     fun testEditTagGroups(): TestResult = runTest {
         channel.editTagGroups().addTags("some group", setOf("foo")).apply()
+        verify { mockJobDispatcher.dispatch(keepJob) }
+        verify {
+            mockBatchUpdateManager.addUpdate(
+                tags = listOf(
+                    TagGroupsMutation.newAddTagsMutation("some group", setOf("foo"))
+                )
+            )
+        }
+    }
+
+    @Test
+    fun testEditTagGroupsClosure(): TestResult = runTest {
+        channel.editTagGroups { addTags("some group", setOf("foo")) }
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
             mockBatchUpdateManager.addUpdate(
@@ -272,6 +293,19 @@ class AirshipChannelTest {
     @Test
     fun testEditSubscriptions(): TestResult = runTest {
         channel.editSubscriptionLists().subscribe("some list").apply()
+        verify { mockJobDispatcher.dispatch(keepJob) }
+        verify {
+            mockBatchUpdateManager.addUpdate(
+                subscriptions = listOf(
+                    SubscriptionListMutation.newSubscribeMutation("some list", testClock.currentTimeMillis)
+                )
+            )
+        }
+    }
+
+    @Test
+    fun testEditSubscriptionsClosure(): TestResult = runTest {
+        channel.editSubscriptionLists { it.subscribe("some list") }
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
             mockBatchUpdateManager.addUpdate(
@@ -312,6 +346,19 @@ class AirshipChannelTest {
     @Test
     fun testEditAttributes(): TestResult = runTest {
         channel.editAttributes().removeAttribute("some attribute").apply()
+        verify { mockJobDispatcher.dispatch(keepJob) }
+        verify {
+            mockBatchUpdateManager.addUpdate(
+                attributes = listOf(
+                    AttributeMutation.newRemoveAttributeMutation("some attribute", testClock.currentTimeMillis)
+                )
+            )
+        }
+    }
+
+    @Test
+    fun testEditAttributesClosure(): TestResult = runTest {
+        channel.editAttributes { removeAttribute("some attribute") }
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
             mockBatchUpdateManager.addUpdate(

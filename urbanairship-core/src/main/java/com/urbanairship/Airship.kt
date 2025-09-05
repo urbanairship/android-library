@@ -11,6 +11,7 @@ import android.provider.Settings
 import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
+import com.urbanairship.Airship.Companion.shared
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.DeepLinkListener
 import com.urbanairship.analytics.AirshipEventFeed
@@ -44,9 +45,9 @@ import com.urbanairship.util.AppStoreUtils
 import com.urbanairship.util.ProcessUtils
 import java.util.Locale
 import kotlin.concurrent.Volatile
-import kotlin.jvm.Throws
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 /**
  * Airship manages the shared state for all Airship
@@ -115,7 +116,10 @@ public class Airship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTest
         public set
 
     private val componentClassMap = mutableMapOf<Class<*>, AirshipComponent>()
-    public val components = MutableStateFlow<List<AirshipComponent>>(emptyList())
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @VisibleForTesting
+    internal val components = MutableStateFlow<List<AirshipComponent>>(emptyList())
 
     /**
      * The default Action Registry.
@@ -738,7 +742,7 @@ public class Airship @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) @VisibleForTest
          * Requests the airship instance asynchronously.
          *
          *
-         * This method calls through to [.shared]
+         * This method calls through to [shared]
          * with a null looper.
          *
          * @param callback An optional callback

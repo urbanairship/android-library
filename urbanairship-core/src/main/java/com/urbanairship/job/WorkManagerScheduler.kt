@@ -9,11 +9,9 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequest
 import androidx.work.WorkManager
 import com.urbanairship.job.JobInfo.ConflictStrategy
-import com.urbanairship.job.SchedulerException
 import com.urbanairship.job.WorkUtils.convertToData
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 
 internal class WorkManagerScheduler : Scheduler {
 

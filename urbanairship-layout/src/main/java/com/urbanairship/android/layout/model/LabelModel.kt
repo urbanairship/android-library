@@ -23,5 +23,12 @@ internal class LabelModel(
         itemProperties: ItemProperties?
     ) = LabelView(context, this).apply {
         id = viewId
+
+        viewInfo.labels?.let { label ->
+            if (label.type == LabelInfo.AssociatedLabel.Type.LABELS) {
+                val id = environment.viewIdResolver.viewId(label.viewId, label.viewType)
+                labelFor = id
+            }
+        }
     }
 }

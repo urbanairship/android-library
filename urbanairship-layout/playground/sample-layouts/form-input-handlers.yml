@@ -130,6 +130,10 @@ view:
                                       view:
                                         type: label
                                         text: Bats
+                                        labels:
+                                          type: "labels"
+                                          view_type: radio_input
+                                          view_id: bats_radio
                                         text_appearance:
                                           color:
                                             default:
@@ -170,6 +174,7 @@ view:
                                         height: 48
                                       view:
                                         type: radio_input
+                                        identifier: bats_radio
                                         reporting_value: bats
                                         style:
                                           type: checkbox
@@ -227,6 +232,10 @@ view:
                                       view:
                                         type: label
                                         text: Zombies
+                                        labels:
+                                          type: "labels"
+                                          view_type: radio_input
+                                          view_id: zombies-radio
                                         text_appearance:
                                           color:
                                             default:
@@ -267,6 +276,7 @@ view:
                                       view:
                                         type: radio_input
                                         reporting_value: zombies
+                                        identifier: zombies-radio
                                         style:
                                           type: checkbox
                                           bindings:
@@ -460,6 +470,10 @@ view:
                                       view:
                                         type: label
                                         text: Trick-or-treating
+                                        labels:
+                                          type: "labels"
+                                          view_type: checkbox
+                                          view_id: trick-box
                                         text_appearance:
                                           color:
                                             default:
@@ -502,6 +516,7 @@ view:
                                         width: 48
                                         height: 48
                                       view:
+                                        identifier: trick-box
                                         type: checkbox
                                         reporting_value: trick-or-treating
                                         style:
@@ -581,6 +596,10 @@ view:
                                       view:
                                         type: label
                                         text: Haunted houses
+                                        labels:
+                                          type: "labels"
+                                          view_type: checkbox
+                                          view_id: haunted-box
                                         text_appearance:
                                           color:
                                             default:
@@ -603,6 +622,7 @@ view:
                                       view:
                                         type: checkbox
                                         reporting_value: haunted-houses
+                                        identifier: haunted-box
                                         style:
                                           type: checkbox
                                           bindings:
@@ -658,6 +678,10 @@ view:
                                       view:
                                         type: label
                                         text: Carving pumpkins
+                                        labels:
+                                          type: "labels"
+                                          view_type: checkbox
+                                          view_id: pumpkin-box
                                         text_appearance:
                                           color:
                                             default:
@@ -680,6 +704,10 @@ view:
                                       view:
                                         type: label
                                         text: Carving pumpkins
+                                        labels:
+                                          type: "labels"
+                                          view_type: checkbox
+                                          view_id: pumpkin-box
                                         text_appearance:
                                           color:
                                             default:
@@ -702,6 +730,7 @@ view:
                                       view:
                                         type: checkbox
                                         reporting_value: pumpkin-carving
+                                        identifier: pumpkin-box
                                         style:
                                           type: checkbox
                                           bindings:
@@ -972,8 +1001,13 @@ view:
                           top: 16
                           bottom: 4
                         view:
+                          identifier: favorite-candy-label
                           type: label
                           text: What is your favorite candy?
+                          labels:
+                            type: "labels"
+                            view_type: text_input
+                            view_id: favorite-candy
                           text_appearance:
                             font_size: 16
                             styles: [ italic ]

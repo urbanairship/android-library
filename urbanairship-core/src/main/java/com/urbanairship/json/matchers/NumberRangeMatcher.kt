@@ -1,13 +1,10 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.json.matchers
 
-import androidx.annotation.RestrictTo
 import androidx.core.util.ObjectsCompat
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
 import com.urbanairship.json.jsonMapOf
-import com.google.android.gms.common.internal.Objects
 
 /**
  * Range matcher.

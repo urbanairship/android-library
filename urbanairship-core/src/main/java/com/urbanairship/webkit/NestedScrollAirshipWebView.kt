@@ -56,7 +56,7 @@ public open class NestedScrollAirshipWebView public constructor(
     }
 
     @CallSuper
-    open override fun onTouchEvent(ev: MotionEvent): Boolean {
+    override fun onTouchEvent(ev: MotionEvent): Boolean {
         var returnValue = false
 
         val event = MotionEvent.obtain(ev)

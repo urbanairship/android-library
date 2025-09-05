@@ -31,6 +31,7 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
         ToggleType.CHECKBOX -> CheckBox::class.java.name
         ToggleType.SWITCH -> SwitchCompat::class.java.name
     }
+    val viewInfo = model.viewInfo
 
     lateinit var checkableView: CheckableViewAdapter<*>
 
@@ -40,7 +41,6 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
             ToggleType.CHECKBOX -> configureCheckbox(model.viewInfo.style as CheckboxStyle)
         }
     }
-
 
     private val minWidth: Int
         get() = when (model.viewInfo.style.type) {
@@ -85,16 +85,20 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
         val lp = LayoutParams(MATCH_PARENT, MATCH_PARENT).apply {
             topMargin = -3
         }
-        configureAccessibility(switchView)
+
         addView(switchView, lp)
+        configureAccessibility(switchView)
+        switchView.doOnAttach { configureAccessibility(it) }
     }
 
     private fun configureCheckbox(style: CheckboxStyle) {
         val checkboxView = createCheckboxView(style)
         checkboxView.id = model.checkableViewId
         checkableView = CheckableViewAdapter.Checkbox(checkboxView)
-        configureAccessibility(checkboxView)
+
         addView(checkboxView, MATCH_PARENT, MATCH_PARENT)
+        configureAccessibility(checkboxView)
+        checkboxView.doOnAttach { configureAccessibility(it) }
     }
 
     private fun configureAccessibility(view: View) {
@@ -105,7 +109,7 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
             ) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
 
-                model.contentDescription(context)?.ifNotEmpty { info.contentDescription = it }
+                model.contentDescription(context).ifNotEmpty { info.contentDescription = it }
                 info.isCheckable = host.isEnabled
                 info.className = accessibilityNodeClassName
 
@@ -134,12 +138,6 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
 
     override fun setEnabled(isEnabled: Boolean) {
         checkableView.setEnabled(isEnabled)
-    }
-
-    fun updateAccessibility() {
-        // Re-configure accessibility to ensure content descriptions are current
-        val view = getChildAt(0)
-        view?.let { configureAccessibility(it) }
     }
 
     companion object {

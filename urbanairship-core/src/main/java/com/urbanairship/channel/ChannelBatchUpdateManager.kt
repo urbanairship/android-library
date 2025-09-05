@@ -200,16 +200,16 @@ private data class AudienceUpdate(
 ) : JsonSerializable {
 
     constructor(json: JsonMap) : this(
-        tags = json.get(TAGS)?.optList()?.let { list ->
+        tags = json[TAGS]?.optList()?.let { list ->
             list.map { TagGroupsMutation.fromJsonValue(it) }
         },
-        attributes = json.get(ATTRIBUTES)?.optList()?.let { list ->
+        attributes = json[ATTRIBUTES]?.optList()?.let { list ->
             list.map { AttributeMutation.fromJsonValue(it) }
         },
-        subscriptions = json.get(SUBSCRIPTION_LISTS)?.optList()?.let { list ->
+        subscriptions = json[SUBSCRIPTION_LISTS]?.optList()?.let { list ->
             list.map { SubscriptionListMutation.fromJsonValue(it) }
         },
-        liveUpdates = json.get(LIVE_UPDATES)?.optList()?.let { list ->
+        liveUpdates = json[LIVE_UPDATES]?.optList()?.let { list ->
             list.map { LiveUpdateMutation.fromJson(it.requireMap()) }
         }
     )

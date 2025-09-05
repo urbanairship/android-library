@@ -2,7 +2,6 @@
 
 package com.urbanairship.analytics.templates
 
-import com.urbanairship.analytics.CustomEvent
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf

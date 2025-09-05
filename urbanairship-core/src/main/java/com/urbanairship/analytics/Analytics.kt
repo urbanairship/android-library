@@ -464,6 +464,16 @@ public constructor(
         }
     }
 
+    /**
+     * Edit the currently stored associated identifiers.
+     * Automatically calls [AssociatedIdentifiers.Editor.apply]
+     */
+    public fun editAssociatedIdentifiers(block: AssociatedIdentifiers.Editor.() -> Unit) {
+        val editor = editAssociatedIdentifiers()
+        block.invoke(editor)
+        editor.apply()
+    }
+
     public val associatedIdentifiers: AssociatedIdentifiers
         /**
          * Returns the device's current associated identifiers.

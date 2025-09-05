@@ -35,16 +35,16 @@ public class SetAttributesAction public constructor() : Action() {
 
         // Channel Attribute
         args[CHANNEL_KEY]?.optMap()?.let { channel ->
-            val channelAttributeEditor = Airship.shared().channel.editAttributes()
-            channel.map.entries.forEach { handleAttributeActions(channelAttributeEditor, it)}
-            channelAttributeEditor.apply()
+            val editor = Airship.shared().channel.editAttributes()
+            channel.map.entries.forEach { handleAttributeActions(editor, it)}
+            editor.apply()
         }
 
         // Contact Attribute
         args[NAMED_USER_KEY]?.optMap()?.let { user ->
-            val contactAttributeEditor = Airship.shared().contact.editAttributes()
-            user.map.entries.forEach { handleAttributeActions(contactAttributeEditor, it)}
-            contactAttributeEditor.apply()
+            val editor = Airship.shared().contact.editAttributes()
+            user.map.entries.forEach { handleAttributeActions(editor, it)}
+            editor.apply()
         }
 
         return newEmptyResult()
@@ -85,11 +85,7 @@ public class SetAttributesAction public constructor() : Action() {
         }
 
         val remove = attributeMutations.optMap().opt(REMOVE_KEY)
-        if (remove !== JsonValue.NULL && !isRemoveAttributeMutationValid(remove)) {
-            return false
-        }
-
-        return true
+        return !(remove !== JsonValue.NULL && !isRemoveAttributeMutationValid(remove))
     }
 
     private fun isSetAttributeMutationValid(setAttributeMutation: JsonValue): Boolean {

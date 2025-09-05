@@ -60,7 +60,10 @@ internal class TextInputView(
 
         LayoutUtils.applyTextInputModel(input, model)
 
-        model.contentDescription(context).ifNotEmpty { contentDescription = it }
+        // Set content description on the EditText instead of the parent
+        model.contentDescription(context).ifNotEmpty {
+            input.contentDescription = it
+        }
 
         model.listener = object : TextInputModel.Listener {
             override fun restoreValue(value: String) {
@@ -125,6 +128,7 @@ internal class TextInputView(
             it.movementMethod = ScrollingMovementMethod()
             it.background = null
             it.clipToOutline = true
+            it.id = model.editTextViewId
         }
     }
 

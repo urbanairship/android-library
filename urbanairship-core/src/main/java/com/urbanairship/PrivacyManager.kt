@@ -10,6 +10,14 @@ import com.urbanairship.json.JsonValue
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 
 /**
  * The privacy manager allow enabling/disabling features in the SDK that require user data.
@@ -38,8 +46,11 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
     private val dataStore: PreferenceDataStore,
     private val defaultEnabledFeatures: Feature,
     private val configObserver: RemoteConfigObserver = RemoteConfigObserver(dataStore),
-    resetEnabledFeatures: Boolean = false
+    resetEnabledFeatures: Boolean = false,
+    dispatcher: CoroutineDispatcher = Dispatchers.Default
 ) {
+
+    private val updateScope = CoroutineScope(dispatcher)
 
     /**
      * Privacy Manager listener.
@@ -57,18 +68,28 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
 
     private val lock = ReentrantLock()
     private val listeners: MutableList<Listener> = CopyOnWriteArrayList()
-    private var lastUpdated = Feature.NONE
+
+    private val updatesFlow = MutableSharedFlow<Feature>()
+
+    /** Emits the updated feature */
+    public val featureUpdates: Flow<Feature> = updatesFlow.asSharedFlow()
 
     init {
         if (resetEnabledFeatures) {
             dataStore.remove(ENABLED_FEATURES_KEY)
         }
 
-        lastUpdated = enabledFeatures
-
         migrateData()
 
         configObserver.addConfigListener(this::notifyUpdate)
+
+        updateScope.launch {
+            updatesFlow
+                .distinctUntilChanged()
+                .collect {
+                    listeners.forEach { it.onEnabledFeaturesChanged() }
+                }
+        }
     }
 
     private fun getDisabledFeatures(): Feature {
@@ -93,21 +114,13 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
         set(value) {
             lock.withLock {
                 localEnabledFeature = value
-                notifyUpdate()
             }
+            notifyUpdate()
         }
 
     private fun notifyUpdate() {
-        lock.withLock {
-            val newFeatures = enabledFeatures
-            if (lastUpdated == newFeatures) {
-                return@withLock
-            }
-
-            lastUpdated = newFeatures
-            for (listener in listeners) {
-                listener.onEnabledFeaturesChanged()
-            }
+        updateScope.launch {
+            updatesFlow.emit(enabledFeatures)
         }
     }
 

@@ -1,21 +1,18 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.json.matchers
 
-import androidx.annotation.RestrictTo
 import androidx.core.util.ObjectsCompat
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
 import com.urbanairship.json.jsonMapOf
-import com.google.android.gms.common.internal.Objects
 
 /**
  * Array contains matcher.
  *
  * @hide
  */
-internal class ArrayContainsMatcher public constructor(
+internal class ArrayContainsMatcher(
     private val predicate: JsonPredicate,
     private val index: Int?
 ) : ValueMatcher() {
