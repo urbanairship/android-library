@@ -596,7 +596,7 @@ public class AirshipChannel internal constructor(
         }
 
         if (privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
-            val permissions = buildMap<String, String> {
+            val permissions = buildMap {
                 permissionsManager.configuredPermissions.forEach { permission ->
                     try {
                         permissionsManager
@@ -640,8 +640,8 @@ public class AirshipChannel internal constructor(
 
     public suspend fun Extender.extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder {
         return when (this) {
-            is Extender.Suspending -> extend(builder)
-            is Extender.Blocking -> extend(builder)
+            is Suspending -> extend(builder)
+            is Blocking -> extend(builder)
         }
     }
 

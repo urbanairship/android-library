@@ -17,9 +17,7 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.RequestException
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
-import com.urbanairship.json.JsonException
 import com.urbanairship.util.Clock
-import java.util.concurrent.TimeUnit
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.Duration

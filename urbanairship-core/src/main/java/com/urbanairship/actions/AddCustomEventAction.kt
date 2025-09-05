@@ -11,7 +11,6 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.push.PushMessage
-import com.urbanairship.util.Checks
 
 /**
  * An action that adds a custom event.

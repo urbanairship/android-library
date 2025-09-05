@@ -2,7 +2,6 @@
 package com.urbanairship.analytics.data
 
 import androidx.annotation.Size
-import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request

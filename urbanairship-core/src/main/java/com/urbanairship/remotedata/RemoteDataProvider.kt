@@ -44,7 +44,7 @@ internal abstract class RemoteDataProvider(
     }
 
     private val _statusUpdates = MutableStateFlow(RemoteData.Status.OUT_OF_DATE)
-    public val statusUpdates: StateFlow<RemoteData.Status> = _statusUpdates.asStateFlow()
+    val statusUpdates: StateFlow<RemoteData.Status> = _statusUpdates.asStateFlow()
 
     private var lastRefreshState: LastRefreshState?
         get() {

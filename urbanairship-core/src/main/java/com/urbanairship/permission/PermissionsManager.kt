@@ -29,6 +29,7 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
@@ -409,7 +410,7 @@ private fun PermissionDelegate.checkPermissionFlow(context: Context, scope: Coro
     return stateFlow.mapNotNull { it }
 }
 
-private suspend fun ActivityMonitor.resumedActivities() = callbackFlow<Activity> {
+private fun ActivityMonitor.resumedActivities() = callbackFlow {
     val listener = object : SimpleActivityListener() {
         override fun onActivityResumed(activity: Activity) {
             this@callbackFlow.trySend(activity)

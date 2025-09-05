@@ -1,7 +1,6 @@
 package com.urbanairship.util
 
 import android.net.TrafficStats
-import androidx.annotation.RestrictTo
 import java.util.concurrent.ThreadFactory
 import java.util.concurrent.atomic.AtomicInteger
 

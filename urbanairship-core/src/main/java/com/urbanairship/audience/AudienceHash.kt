@@ -11,7 +11,6 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalFieldConverted
 import com.urbanairship.json.requireField
 import com.urbanairship.util.FarmHashFingerprint64
-import java.util.Objects
 
 internal enum class HashIdentifiers(val jsonValue: String) {
     CHANNEL("channel"),
@@ -19,7 +18,7 @@ internal enum class HashIdentifiers(val jsonValue: String) {
 
     companion object {
         fun from(value: String): HashIdentifiers? {
-            return values().firstOrNull { it.jsonValue == value }
+            return HashIdentifiers.entries.firstOrNull { it.jsonValue == value }
         }
     }
 }
@@ -29,7 +28,7 @@ internal enum class HashAlgorithm(val jsonValue: String) {
 
     companion object {
         fun from(value: String): HashAlgorithm? {
-            return values().firstOrNull { it.jsonValue == value }
+            return HashAlgorithm.entries.firstOrNull { it.jsonValue == value }
         }
     }
 }
