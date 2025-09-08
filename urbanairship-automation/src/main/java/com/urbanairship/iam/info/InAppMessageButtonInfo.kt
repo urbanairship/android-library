@@ -102,10 +102,10 @@ public class InAppMessageButtonInfo(
             return InAppMessageButtonInfo(
                 identifier = content.requireField(ID_KEY),
                 label = content.require(LABEL_KEY).let(InAppMessageTextInfo.Companion::fromJson),
-                behavior = content.get(BEHAVIOR_KEY)?.let(Behavior.Companion::fromJson),
+                behavior = content[BEHAVIOR_KEY]?.let(Behavior.Companion::fromJson),
                 borderRadius = content.opt(BORDER_RADIUS_KEY).getFloat(0F),
-                borderColor = content.get(BORDER_COLOR_KEY)?.let(InAppMessageColor.Companion::fromJson),
-                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor.Companion::fromJson),
+                borderColor = content[BORDER_COLOR_KEY]?.let(InAppMessageColor.Companion::fromJson),
+                backgroundColor = content[BACKGROUND_COLOR_KEY]?.let(InAppMessageColor.Companion::fromJson),
                 actions = content.optionalField(ACTIONS_KEY)
             )
         }

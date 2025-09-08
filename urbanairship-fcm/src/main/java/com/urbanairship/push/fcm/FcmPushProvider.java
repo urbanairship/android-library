@@ -29,6 +29,7 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
 
+    @NonNull
     @Override
     public Airship.Platform getPlatform() {
         return Airship.Platform.ANDROID;
@@ -40,7 +41,6 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         return DeliveryType.FCM;
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     @Nullable
     public String getRegistrationToken(@NonNull Context context) throws RegistrationException {
@@ -105,7 +105,7 @@ public class FcmPushProvider implements PushProvider, AirshipVersionInfo {
         } else {
             // This will throw an IllegalStateException if the app name is not registered
             FirebaseApp app = FirebaseApp.getInstance(configOptions.fcmFirebaseAppName);
-            return (FirebaseMessaging) app.get(FirebaseMessaging.class);
+            return app.get(FirebaseMessaging.class);
         }
     }
 }

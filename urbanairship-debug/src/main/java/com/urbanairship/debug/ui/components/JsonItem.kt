@@ -1,12 +1,9 @@
 package com.urbanairship.debug.ui.components
 
 import android.content.res.Configuration
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.ArrowDropUp
@@ -26,7 +23,6 @@ import androidx.compose.ui.unit.dp
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.jsonMapOf
-import org.w3c.dom.Text
 
 @Composable
 internal fun JsonItem(
@@ -116,7 +112,7 @@ private fun JsonItemPreview() {
                     "boolean" to true,
                     "number" to 1,
                     "object" to jsonMapOf("foo" to "bar", "cool" to "story"),
-                    "array" to listOf<String>("1", "2", "3")
+                    "array" to listOf("1", "2", "3")
                 )
             )
         }

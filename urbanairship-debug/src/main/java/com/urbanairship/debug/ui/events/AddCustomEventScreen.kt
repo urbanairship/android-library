@@ -80,7 +80,7 @@ internal fun CreateEventView(
 }
 
 @Composable
-private fun EventProperties(viewModel: AddEventViewModel, onNavigateUp: () -> Unit = {},) {
+private fun EventProperties(viewModel: AddEventViewModel, onNavigateUp: () -> Unit = {}) {
     Section(
         title = "event properties",
         accessory = {

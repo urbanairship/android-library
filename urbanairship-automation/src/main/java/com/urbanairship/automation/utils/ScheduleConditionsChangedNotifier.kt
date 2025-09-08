@@ -17,7 +17,7 @@ internal class ScheduleConditionsChangedNotifier {
     }
 
     internal suspend fun wait() {
-        suspendCoroutine<Unit> {
+        suspendCoroutine {
             synchronized(waitingList) { waitingList.add(it) }
         }
     }

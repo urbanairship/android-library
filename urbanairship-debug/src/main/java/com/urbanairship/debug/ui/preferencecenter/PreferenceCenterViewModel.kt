@@ -58,7 +58,7 @@ internal class DefaultPreferenceCenterViewModel(
                         val form = it.optMap().opt("form").optMap()
                         val id = form.opt("id").requireString()
                         val title =
-                            form.get("display")?.map?.get("name")?.string?.ifEmpty { null } ?: id
+                            form["display"]?.map?.get("name")?.string?.ifEmpty { null } ?: id
                         PrefCenter(id, title)
                     } catch (e: Exception) {
                         UALog.w("Failed to parse preference center config: ${e.message}")

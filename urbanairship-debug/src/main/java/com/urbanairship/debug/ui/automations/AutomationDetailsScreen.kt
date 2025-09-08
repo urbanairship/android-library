@@ -21,8 +21,6 @@ import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.JsonItem
 import com.urbanairship.debug.ui.components.TopBarNavigation
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
-import com.urbanairship.json.jsonMapOf
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 @Composable

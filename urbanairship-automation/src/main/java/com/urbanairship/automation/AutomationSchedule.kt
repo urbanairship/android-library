@@ -379,7 +379,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     }
 
     internal companion object {
-        internal const val DEFAULT_MESSAGE_TYPE = "transactional";
+
         internal const val TRIGGER_LIMIT = 10
 
         private const val IDENTIFIER = "id"
@@ -418,8 +418,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 return DateUtils.parseIso8601(string).toULong()
             }
 
-            val created = parseDate(content.get(CREATED))
-                ?: throw JsonException("Invalid created date string ${content.get(CREATED)}")
+            val created = parseDate(content[CREATED])
+                ?: throw JsonException("Invalid created date string ${content[CREATED]}")
 
             return AutomationSchedule(
                 identifier = content.requireField(IDENTIFIER),
@@ -427,28 +427,28 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                     AutomationTrigger.fromJson(it, TriggerExecutionType.EXECUTION)
                 },
                 group = content.optionalField(GROUP),
-                metadata = content.get(METADATA),
+                metadata = content[METADATA],
                 priority = content.optionalField(PRIORITY),
-                limit = content.get(LIMIT)?.getInt(0)?.toUInt(),
-                startDate = parseDate(content.get(START)),
-                endDate = parseDate(content.get(END)),
-                audience = content.get(AUDIENCE)?.let(AutomationAudience::fromJson),
-                compoundAudience = content.get(COMPOUND_AUDIENCE)?.let(AutomationCompoundAudience::fromJson),
-                delay = content.get(DELAY)?.let(AutomationDelay.Companion::fromJson),
+                limit = content[LIMIT]?.getInt(0)?.toUInt(),
+                startDate = parseDate(content[START]),
+                endDate = parseDate(content[END]),
+                audience = content[AUDIENCE]?.let(AutomationAudience::fromJson),
+                compoundAudience = content[COMPOUND_AUDIENCE]?.let(AutomationCompoundAudience::fromJson),
+                delay = content[DELAY]?.let(AutomationDelay.Companion::fromJson),
                 interval = content.optionalField(INTERVAL),
-                campaigns = content.get(CAMPAIGNS),
-                reportingContext = content.get(REPORTING_CONTEXT),
-                productId = content.get(PRODUCT_ID)?.requireString(),
+                campaigns = content[CAMPAIGNS],
+                reportingContext = content[REPORTING_CONTEXT],
+                productId = content[PRODUCT_ID]?.requireString(),
                 bypassHoldoutGroups = content.optionalField(BYPASS_HOLDOUT_GROUPS),
                 editGracePeriodDays = content.optionalField(EDIT_GRACE_PERIOD_DAYS),
-                frequencyConstraintIds = content.get(FREQUENCY_CONSTRAINT_IDS)
+                frequencyConstraintIds = content[FREQUENCY_CONSTRAINT_IDS]
                     ?.requireList()?.map { it.requireString() },
                 messageType = content.optionalField(MESSAGE_TYPE),
                 minSDKVersion = content.optionalField(MIN_SDK_VERSION),
                 queue = content.optionalField(QUEUE),
                 data = ScheduleData.fromJson(value),
                 created = created,
-                additionalAudienceCheckOverrides = content.get(ADDITIONAL_AUDIENCE_CHECK_OVERRIDES)
+                additionalAudienceCheckOverrides = content[ADDITIONAL_AUDIENCE_CHECK_OVERRIDES]
                     ?.let(AdditionalAudienceCheckOverrides::fromJson)
             )
         }

@@ -25,9 +25,9 @@ internal data class AutomationSourceInfo(
             return try {
                 val content = value.requireMap()
                 AutomationSourceInfo(
-                    remoteDataInfo = content.get(REMOTE_DATA_INFO)?.let { RemoteDataInfo(it) },
+                    remoteDataInfo = content[REMOTE_DATA_INFO]?.let { RemoteDataInfo(it) },
                     payloadTimestamp = content.requireField(PAYLOAD_TIMESTAMP),
-                    airshipSDKVersion = content.get(AIRSHIP_SDK_VERSION)?.requireString()
+                    airshipSDKVersion = content[AIRSHIP_SDK_VERSION]?.requireString()
                 )
             } catch (_: JsonException) {
                 null

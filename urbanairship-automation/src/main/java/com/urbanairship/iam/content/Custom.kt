@@ -19,7 +19,6 @@ public class Custom @VisibleForTesting internal constructor(
     }
 
     public companion object {
-        private const val CUSTOM_KEY = "custom"
 
         /**
          * Parses a json value.

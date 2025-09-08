@@ -22,8 +22,8 @@ internal data class DeferredScheduleResult(
             val content = value.requireMap()
             return DeferredScheduleResult(
                 isAudienceMatch = content.requireField(IS_AUDIENCE_MATCH),
-                message = content.get(MESSAGE)?.let(InAppMessage::parseJson),
-                actions = content.get(ACTIONS)
+                message = content[MESSAGE]?.let(InAppMessage::parseJson),
+                actions = content[ACTIONS]
             )
         }
     }

@@ -86,16 +86,6 @@ internal fun RowItem(
 }
 
 @Composable
-internal fun NoDataView(text: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Text(text)
-    }
-}
-
-@Composable
 internal fun LoadingView(modifier: Modifier = Modifier.width(64.dp)) {
     Box(contentAlignment = Alignment.Center) {
         CircularProgressIndicator(

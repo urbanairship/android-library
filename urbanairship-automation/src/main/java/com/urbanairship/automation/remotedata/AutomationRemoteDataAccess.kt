@@ -163,7 +163,7 @@ internal class AutomationRemoteDataAccess(
 
     private fun remoteDataInfo(schedule: AutomationSchedule): RemoteDataInfo? {
         val metadata = schedule.metadata?.optMap() ?: return null
-        val infoJson = metadata.get(InAppRemoteData.REMOTE_INFO_METADATA_KEY) ?: return null
+        val infoJson = metadata[InAppRemoteData.REMOTE_INFO_METADATA_KEY] ?: return null
         return try {
             if (infoJson.isString) {
                 // 17.x and older
@@ -202,7 +202,7 @@ internal class InAppRemoteData(
                             null
                         }
                     },
-                    constraints = value.get(CONSTRAINTS)?.requireList()?.map(FrequencyConstraint::fromJson)
+                    constraints = value[CONSTRAINTS]?.requireList()?.map(FrequencyConstraint::fromJson)
                 )
             }
         }
@@ -223,7 +223,7 @@ internal class InAppRemoteData(
 
     companion object {
         const val LEGACY_REMOTE_INFO_METADATA_KEY = "com.urbanairship.iaa.REMOTE_DATA_METADATA"
-        const val REMOTE_INFO_METADATA_KEY = "com.urbanairship.iaa.REMOTE_DATA_INFO";
+        const val REMOTE_INFO_METADATA_KEY = "com.urbanairship.iaa.REMOTE_DATA_INFO"
 
         fun fromPayloads(payloads: List<RemoteDataPayload>): InAppRemoteData {
             val parsed = mutableMapOf<RemoteDataSource, Payload>()

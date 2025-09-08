@@ -4,13 +4,10 @@ package com.urbanairship.iam.analytics
 
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
-import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.ConversionData
 import com.urbanairship.analytics.Event
 import com.urbanairship.analytics.EventType
-import com.urbanairship.automation.engine.AutomationEventFeed
-import com.urbanairship.iam.analytics.events.InAppDisplayEvent
 import com.urbanairship.iam.analytics.events.InAppEvent
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable

@@ -35,7 +35,7 @@ import org.jetbrains.annotations.VisibleForTesting
 import java.io.File
 import java.util.UUID
 
-internal interface AutomationStoreInterface: ScheduleStoreInterface, TriggerStoreInterface {}
+internal interface AutomationStoreInterface: ScheduleStoreInterface, TriggerStoreInterface
 
 internal interface ScheduleStoreInterface {
     suspend fun getSchedules(): List<AutomationScheduleData>

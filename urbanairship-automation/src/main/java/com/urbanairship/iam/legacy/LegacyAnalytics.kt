@@ -44,7 +44,7 @@ private class LegacyResolutionEvent(
     override val eventType: EventType = EventType.IN_APP_RESOLUTION
     override val data: JsonSerializable? = reportData
 
-    internal companion object {
+    companion object {
 
         private const val RESOLUTION_TYPE = "type"
         private const val REPLACED = "replaced"

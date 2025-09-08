@@ -49,9 +49,9 @@ public class AutomationAudience(
 
         internal fun toPrepareResult(): SchedulePrepareResult {
             return when(this) {
-                AutomationAudience.MissBehavior.CANCEL -> SchedulePrepareResult.Cancel
-                AutomationAudience.MissBehavior.SKIP -> SchedulePrepareResult.Skip
-                AutomationAudience.MissBehavior.PENALIZE -> SchedulePrepareResult.Penalize
+                CANCEL -> SchedulePrepareResult.Cancel
+                SKIP -> SchedulePrepareResult.Skip
+                PENALIZE -> SchedulePrepareResult.Penalize
             }
         }
     }
@@ -63,7 +63,7 @@ public class AutomationAudience(
         public fun fromJson(value: JsonValue): AutomationAudience {
             return AutomationAudience(
                 audienceSelector = AudienceSelector.fromJson(value),
-                missBehavior = value.optMap().get(MISS_BEHAVIOR)?.let(MissBehavior.Companion::fromJson)
+                missBehavior = value.optMap()[MISS_BEHAVIOR]?.let(MissBehavior.Companion::fromJson)
             )
         }
     }
@@ -107,7 +107,7 @@ internal data class AdditionalAudienceCheckOverrides(
 
             return AdditionalAudienceCheckOverrides(
                 bypass = content.optionalField(BYPASS),
-                context = content.get(CONTEXT),
+                context = content[CONTEXT],
                 url = content.optionalField(URL)
             )
         }

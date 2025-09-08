@@ -127,7 +127,7 @@ public class Modal @VisibleForTesting internal constructor(
         /**
          * Maximum number of button supported by a modal.
          */
-        public const val MAX_BUTTONS: Int = 2;
+        public const val MAX_BUTTONS: Int = 2
 
         private const val BODY_KEY = "body"
         private const val HEADING_KEY = "heading"
@@ -152,20 +152,20 @@ public class Modal @VisibleForTesting internal constructor(
         public fun fromJson(value: JsonValue): Modal {
             val content = value.requireMap()
             return Modal(
-                heading = content.get(HEADING_KEY)?.let(InAppMessageTextInfo::fromJson),
-                body = content.get(BODY_KEY)?.let(InAppMessageTextInfo::fromJson),
-                media = content.get(MEDIA_KEY)?.let(InAppMessageMediaInfo::fromJson),
-                footer = content.get(FOOTER_KEY)?.let(InAppMessageButtonInfo::fromJson),
-                buttons = content.get(BUTTONS_KEY)?.requireList()?.map(InAppMessageButtonInfo::fromJson)
+                heading = content[HEADING_KEY]?.let(InAppMessageTextInfo::fromJson),
+                body = content[BODY_KEY]?.let(InAppMessageTextInfo::fromJson),
+                media = content[MEDIA_KEY]?.let(InAppMessageMediaInfo::fromJson),
+                footer = content[FOOTER_KEY]?.let(InAppMessageButtonInfo::fromJson),
+                buttons = content[BUTTONS_KEY]?.requireList()?.map(InAppMessageButtonInfo::fromJson)
                     ?: emptyList(),
-                buttonLayoutType = content.get(BUTTON_LAYOUT_KEY)?.let(InAppMessageButtonLayoutType::fromJson)
+                buttonLayoutType = content[BUTTON_LAYOUT_KEY]?.let(InAppMessageButtonLayoutType::fromJson)
                     ?: InAppMessageButtonLayoutType.SEPARATE,
-                template = content.get(TEMPLATE_KEY)?.let(Template.Companion::fromJson)
+                template = content[TEMPLATE_KEY]?.let(Template.Companion::fromJson)
                     ?: Template.HEADER_MEDIA_BODY,
-                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                backgroundColor = content[BACKGROUND_COLOR_KEY]?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.WHITE),
                 borderRadius = content.opt(BORDER_RADIUS_KEY).getFloat(0F),
-                dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                dismissButtonColor = content[DISMISS_BUTTON_COLOR_KEY]?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.BLACK),
                 allowFullscreenDisplay = content.optionalField(ALLOW_FULLSCREEN_DISPLAY_KEY)
                     ?: false

@@ -82,7 +82,7 @@ internal data class FeatureFlagCompoundAudience(
 ): JsonSerializable {
 
     companion object {
-        private val SELECTOR = "selector"
+        private const val SELECTOR = "selector"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): FeatureFlagCompoundAudience {
@@ -118,8 +118,7 @@ internal data class VariablesVariant(
             return VariablesVariant(
                 id = json.requireField(KEY_ID),
                 selector = AudienceSelector.fromJson(json.opt(KEY_SELECTOR)),
-                compoundAudienceSelector = json
-                    .get(KEY_COMPOUND_AUDIENCE)
+                compoundAudienceSelector = json[KEY_COMPOUND_AUDIENCE]
                     ?.let(FeatureFlagCompoundAudience::fromJson),
                 reportingMetadata = json.requireField(KEY_REPORTING_METADATA),
                 data = json.optionalField(KEY_DATA)
@@ -232,9 +231,8 @@ internal data class FeatureFlagInfo(
         internal fun fromJson(json: JsonMap): FeatureFlagInfo? {
             try {
                 val payload = json.require(KEY_PAYLOAD).optMap()
-                val audience = payload.get(KEY_AUDIENCE_SELECTOR)?.let(AudienceSelector::fromJson)
-                val compoundAudience = payload
-                    .get(KEY_COMPOUND_AUDIENCE_SELECTOR)
+                val audience = payload[KEY_AUDIENCE_SELECTOR]?.let(AudienceSelector::fromJson)
+                val compoundAudience = payload[KEY_COMPOUND_AUDIENCE_SELECTOR]
                     ?.let(FeatureFlagCompoundAudience::fromJson)
 
                 val payloadType =  payload.requireField<String>(KEY_TYPE).let { type ->
@@ -270,7 +268,7 @@ internal data class FeatureFlagInfo(
                     timeCriteria = payload.opt(KEY_TIME_CRITERIA).map?.let { TimeCriteria.fromJson(it) },
                     payload = parsedPayload,
                     evaluationOptions = payload.opt(KEY_EVALUATION_OPTIONS).map?.let { EvaluationOptions.fromJson(it) },
-                    controlOptions = payload.get(KEY_CONTROL_OPTIONS)?.let(ControlOptions::fromJson)
+                    controlOptions = payload[KEY_CONTROL_OPTIONS]?.let(ControlOptions::fromJson)
                 )
             } catch (ex: JsonException) {
                 UALog.e { "failed to parse FeatureFlagInfo from json $json" }
@@ -330,8 +328,7 @@ internal data class ControlOptions (
             val content = value.requireMap()
 
             return ControlOptions(
-                compoundAudience = content
-                    .get(COMPOUND_AUDIENCE)
+                compoundAudience = content[COMPOUND_AUDIENCE]
                     ?.let(FeatureFlagCompoundAudience::fromJson),
                 reportingMetadata = content.requireMap(REPORTING_METADATA),
                 controlType = Type.fromJson(value)
@@ -362,7 +359,7 @@ internal data class ControlOptions (
 
                 return when (OptionType.fromJson(content.require(TYPE))) {
                     OptionType.FLAG -> Flag
-                    OptionType.VARIABLES -> Variables(content.get(DATA)?.requireMap())
+                    OptionType.VARIABLES -> Variables(content[DATA]?.requireMap())
                 }
             }
         }

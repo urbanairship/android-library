@@ -70,7 +70,7 @@ internal class TriggerData(
                 triggerId = content.requireField(TRIGGER_ID),
                 triggerCount = content.requireField(COUNT),
                 children = children,
-                lastTriggerableState = content.get(LAST_TRIGGERABLE_STATE)?.let(TriggerableState::fromJson)
+                lastTriggerableState = content[LAST_TRIGGERABLE_STATE]?.let(TriggerableState::fromJson)
             )
         }
     }

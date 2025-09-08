@@ -142,7 +142,7 @@ public class LegacyInAppMessage @JvmOverloads public constructor(
 
             return LegacyInAppMessage(
                 id = sendId,
-                placement = displayJson.get(POSITION_KEY)?.let { Banner.Placement.fromJson(it) } ?: Banner.Placement.TOP,
+                placement = displayJson[POSITION_KEY]?.let { Banner.Placement.fromJson(it) } ?: Banner.Placement.TOP,
                 alert = displayJson.optionalField(ALERT_KEY),
                 displayDurationMs = displayJson.optionalField<Long>(DURATION_KEY)?.let {
                     TimeUnit.SECONDS.toMillis(it)

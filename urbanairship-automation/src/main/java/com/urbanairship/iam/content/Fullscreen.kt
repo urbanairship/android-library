@@ -135,25 +135,25 @@ public class Fullscreen @VisibleForTesting internal constructor(
         @Throws(JsonException::class)
         public fun fromJson(value: JsonValue): Fullscreen {
             val content = value.requireMap()
-            val buttons = content.get(BUTTONS_KEY)?.requireList()?.map(InAppMessageButtonInfo::fromJson) ?: listOf()
+            val buttons = content[BUTTONS_KEY]?.requireList()?.map(InAppMessageButtonInfo::fromJson) ?: listOf()
             val buttonType = if (buttons.size > 2) {
                 InAppMessageButtonLayoutType.STACKED
             } else {
-                content.get(BUTTON_LAYOUT_KEY)?.let(InAppMessageButtonLayoutType::fromJson)
+                content[BUTTON_LAYOUT_KEY]?.let(InAppMessageButtonLayoutType::fromJson)
                     ?: InAppMessageButtonLayoutType.SEPARATE
             }
 
             return Fullscreen(
-                heading = content.get(HEADING_KEY)?.let(InAppMessageTextInfo::fromJson),
-                body = content.get(BODY_KEY)?.let(InAppMessageTextInfo::fromJson),
-                media = content.get(MEDIA_KEY)?.let(InAppMessageMediaInfo::fromJson),
+                heading = content[HEADING_KEY]?.let(InAppMessageTextInfo::fromJson),
+                body = content[BODY_KEY]?.let(InAppMessageTextInfo::fromJson),
+                media = content[MEDIA_KEY]?.let(InAppMessageMediaInfo::fromJson),
                 buttons = buttons,
                 buttonLayoutType = buttonType,
-                footer = content.get(FOOTER_KEY)?.let(InAppMessageButtonInfo::fromJson),
-                template = content.get(TEMPLATE_KEY)?.let(Template::fromJson) ?: Template.HEADER_MEDIA_BODY,
-                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                footer = content[FOOTER_KEY]?.let(InAppMessageButtonInfo::fromJson),
+                template = content[TEMPLATE_KEY]?.let(Template::fromJson) ?: Template.HEADER_MEDIA_BODY,
+                backgroundColor = content[BACKGROUND_COLOR_KEY]?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.WHITE),
-                dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                dismissButtonColor = content[DISMISS_BUTTON_COLOR_KEY]?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.BLACK),
             )
         }

@@ -29,7 +29,6 @@ import com.urbanairship.automation.storage.AutomationDatabase
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.utils.NetworkMonitor
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
-import com.urbanairship.base.Supplier
 import com.urbanairship.cache.AirshipCache
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -51,7 +50,6 @@ import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.automation.AutomationModuleFactory
 import com.urbanairship.push.PushManager
-import com.urbanairship.remoteconfig.RetryingQueueConfig
 import com.urbanairship.remotedata.RemoteData
 
 /**

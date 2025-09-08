@@ -183,19 +183,19 @@ public class Banner @VisibleForTesting internal constructor(
         public fun fromJson(value: JsonValue): Banner {
             val content = value.requireMap()
             return Banner(
-                heading = content.get(HEADING_KEY)?.let(InAppMessageTextInfo::fromJson),
-                body = content.get(BODY_KEY)?.let(InAppMessageTextInfo::fromJson),
-                media = content.get(MEDIA_KEY)?.let(InAppMessageMediaInfo::fromJson),
-                buttons = content.get(BUTTONS_KEY)?.requireList()?.map(InAppMessageButtonInfo::fromJson),
-                buttonLayoutType = content.get(BUTTON_LAYOUT_KEY)?.let(InAppMessageButtonLayoutType::fromJson)
+                heading = content[HEADING_KEY]?.let(InAppMessageTextInfo::fromJson),
+                body = content[BODY_KEY]?.let(InAppMessageTextInfo::fromJson),
+                media = content[MEDIA_KEY]?.let(InAppMessageMediaInfo::fromJson),
+                buttons = content[BUTTONS_KEY]?.requireList()?.map(InAppMessageButtonInfo::fromJson),
+                buttonLayoutType = content[BUTTON_LAYOUT_KEY]?.let(InAppMessageButtonLayoutType::fromJson)
                     ?: InAppMessageButtonLayoutType.SEPARATE,
-                placement = content.get(PLACEMENT_KEY)?.let(Placement::fromJson) ?: Placement.BOTTOM,
-                template = content.get(TEMPLATE_KEY)?.let(Template::fromJson)
+                placement = content[PLACEMENT_KEY]?.let(Placement::fromJson) ?: Placement.BOTTOM,
+                template = content[TEMPLATE_KEY]?.let(Template::fromJson)
                     ?: Template.MEDIA_LEFT,
                 durationMs = content.opt(DURATION_KEY).getLong(DEFAULT_DURATION_MS),
-                backgroundColor = content.get(BACKGROUND_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                backgroundColor = content[BACKGROUND_COLOR_KEY]?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.WHITE),
-                dismissButtonColor = content.get(DISMISS_BUTTON_COLOR_KEY)?.let(InAppMessageColor::fromJson)
+                dismissButtonColor = content[DISMISS_BUTTON_COLOR_KEY]?.let(InAppMessageColor::fromJson)
                     ?: InAppMessageColor(Color.BLACK),
                 borderRadius = content.opt(BORDER_RADIUS_KEY).getFloat(0F),
                 actions = content.optionalField(ACTIONS_KEY)

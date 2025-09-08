@@ -96,24 +96,24 @@ public class AutomationDelay(
             val content = value.requireMap()
 
             if (content.opt(CANCELLATION_TRIGGERS_KEY).optList().count() > AutomationSchedule.TRIGGER_LIMIT) {
-                throw IllegalArgumentException("No more than ${AutomationSchedule.TRIGGER_LIMIT}  cancellation triggers allowed.");
+                throw IllegalArgumentException("No more than ${AutomationSchedule.TRIGGER_LIMIT}  cancellation triggers allowed.")
             }
 
             val screens = if (content.opt(SCREEN_KEY).isString) {
                 listOf(content.opt(SCREEN_KEY).optString())
             } else {
-                content.get(SCREEN_KEY)?.requireList()?.map { it.requireString() }
+                content[SCREEN_KEY]?.requireList()?.map { it.requireString() }
             }
 
             return AutomationDelay(
                 seconds = content.optionalField(SECONDS_KEY),
-                appState = content.get(APP_STATE_KEY)?.let(AutomationAppState::fromJson),
+                appState = content[APP_STATE_KEY]?.let(AutomationAppState::fromJson),
                 screens = screens,
                 regionId = content.optionalField(REGION_ID_KEY),
-                cancellationTriggers = content.get(CANCELLATION_TRIGGERS_KEY)?.requireList()?.map {
+                cancellationTriggers = content[CANCELLATION_TRIGGERS_KEY]?.requireList()?.map {
                     AutomationTrigger.fromJson(it, TriggerExecutionType.DELAY_CANCELLATION)
                 },
-                executionWindow = content.get(EXECUTION_WINDOW_KEY)?.let(ExecutionWindow::fromJson)
+                executionWindow = content[EXECUTION_WINDOW_KEY]?.let(ExecutionWindow::fromJson)
             )
         }
     }
