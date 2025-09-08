@@ -5,8 +5,11 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import java.util.Locale
+import app.cash.turbine.test
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -29,15 +32,14 @@ class LocaleManagerTest {
     }
 
     @Test
-    fun testNotifyLocaleChanged() {
-        val en = Locale("en")
-        context.resources.configuration.setLocale(en)
+    fun testLocaleUpdatesFlow(): TestResult = runTest {
+        localeManager.localeUpdates.test {
+            val en = Locale("en")
+            context.resources.configuration.setLocale(en)
 
-        val listener: LocaleChangedListener = mockk(relaxed = true)
-        localeManager.addListener(listener)
+            localeManager.onDeviceLocaleChanged()
 
-        localeManager.onDeviceLocaleChanged()
-
-        verify { listener.onLocaleChanged(en) }
+            Assert.assertEquals(en, awaitItem())
+        }
     }
 }

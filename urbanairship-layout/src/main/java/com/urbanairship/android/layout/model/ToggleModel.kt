@@ -7,7 +7,6 @@ import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ToggleInfo
-import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.EventHandler.Type
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.property.hasTapHandler
@@ -79,7 +78,7 @@ internal class ToggleModel(
                 )
 
                 if (viewInfo.eventHandlers.hasFormInputHandler()) {
-                    handleViewEvent(EventHandler.Type.FORM_INPUT, isChecked)
+                    handleViewEvent(Type.FORM_INPUT, isChecked)
                 }
 
                 valueChanged.update { it }

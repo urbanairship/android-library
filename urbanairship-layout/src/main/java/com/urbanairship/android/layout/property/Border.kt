@@ -150,8 +150,8 @@ public class Border public constructor(
             return Border(
                 radius = json.opt("radius").integer,
                 strokeWidth = json.opt("stroke_width").integer,
-                strokeColor = json.get("stroke_color")?.requireMap()?.let { Color.fromJson(it) },
-                cornerRadius = json.get("corner_radius")?.let(CornerRadius::fromJson)
+                strokeColor = json["stroke_color"]?.requireMap()?.let { Color.fromJson(it) },
+                cornerRadius = json["corner_radius"]?.let(CornerRadius::fromJson)
             )
         }
     }

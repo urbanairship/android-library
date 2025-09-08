@@ -69,7 +69,7 @@ public class FormControllerTest {
         every { time } returns System.currentTimeMillis()
     }
     private val testEventHandler = spyk(LayoutEventHandler(testScope))
-    private val mockEnv: ModelEnvironment = mockk {
+    private val mockEnv: ModelEnvironment = mockk(relaxed = true) {
         every { reporter } returns mockReporter
         every { actionsRunner } returns mockActionsRunner
         every { attributeHandler } returns mockAttributeHandler

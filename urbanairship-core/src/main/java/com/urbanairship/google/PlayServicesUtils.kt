@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import com.urbanairship.UALog
 import com.urbanairship.google.GooglePlayServicesUtilWrapper.isUserRecoverableError
-import com.urbanairship.google.PlayServicesErrorActivity
 
 /**
  * A utility class to help verify and resolve Google Play services issues.

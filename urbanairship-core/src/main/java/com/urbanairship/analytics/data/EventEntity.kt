@@ -1,15 +1,11 @@
 package com.urbanairship.analytics.data
 
-import androidx.annotation.RestrictTo
 import androidx.core.util.ObjectsCompat
-import androidx.room.ColumnInfo
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.urbanairship.analytics.AirshipEventData
 import com.urbanairship.analytics.Event
-import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.FormatterUtils.toSecondsString
 import java.nio.charset.StandardCharsets
@@ -19,7 +15,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * Representation of an [Event] for persistent storage via Room.
  */
 @Entity(tableName = "events", indices = [Index(value = ["eventId"], unique = true)])
-internal data class EventEntity constructor(
+internal data class EventEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val type: String,

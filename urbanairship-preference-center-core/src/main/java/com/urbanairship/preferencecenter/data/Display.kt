@@ -1,14 +1,11 @@
 package com.urbanairship.preferencecenter.data
 
-import android.os.Parcelable
-import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import kotlin.jvm.Throws
-import kotlinx.parcelize.Parcelize
 
 /**
  * Common display attributes.

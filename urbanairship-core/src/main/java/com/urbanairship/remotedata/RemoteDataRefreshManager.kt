@@ -3,7 +3,6 @@
 package com.urbanairship.remotedata
 
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.AirshipLogHandler
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.job.JobDispatcher

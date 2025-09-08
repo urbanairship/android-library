@@ -8,8 +8,15 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import java.util.concurrent.Executor
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * PreferenceDataStore stores and retrieves all the Airship preferences scoped at the app key.
@@ -18,15 +25,14 @@ import kotlinx.coroutines.flow.update
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PreferenceDataStore internal constructor(
-    private val db: PreferenceDataDatabase
+    private val db: PreferenceDataDatabase,
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) {
 
-    public var executor: Executor = AirshipExecutors.newSerialExecutor()
+    private val scope = CoroutineScope(dispatcher)
     private val preferences = MutableStateFlow<Map<String, Preference>>(emptyMap())
 
     private val dao = db.dao
-
-    private val listeners = MutableStateFlow<List<PreferenceChangeListener>>(emptyList())
 
     /**
      * Listener for when preferences changes either by the
@@ -40,24 +46,6 @@ public class PreferenceDataStore internal constructor(
          * @param key The key of the preference.
          */
         public fun onPreferenceChange(key: String)
-    }
-
-    /**
-     * Adds a listener for preference changes.
-     *
-     * @param listener A PreferenceChangeListener.
-     */
-    public fun addListener(listener: PreferenceChangeListener) {
-        listeners.update { it + listener }
-    }
-
-    /**
-     * Removes a listener for preference changes.
-     *
-     * @param listener A PreferenceChangeListener.
-     */
-    public fun removeListener(listener: PreferenceChangeListener) {
-        listeners.update { it - listener }
     }
 
     private fun loadPreferences() {
@@ -124,7 +112,6 @@ public class PreferenceDataStore internal constructor(
      * Unregisters any observers and closes the db connection.
      */
     public fun tearDown() {
-        listeners.update { emptyList() }
         db.close()
     }
 
@@ -317,15 +304,6 @@ public class PreferenceDataStore internal constructor(
     }
 
     /**
-     * Called when a preference changes in value.
-     *
-     * @param key The key of the preference.
-     */
-    private fun onPreferenceChanged(key: String) {
-        listeners.value.forEach { it.onPreferenceChange(key) }
-    }
-
-    /**
      * Gets the Preference for the key.
      *
      * @param key The preference key.
@@ -370,7 +348,7 @@ public class PreferenceDataStore internal constructor(
          */
         fun put(value: String?) {
             if (setValue(value)) {
-                executor.execute { writeValue(value) }
+                scope.launch { writeValue(value) }
             }
         }
 
@@ -409,7 +387,6 @@ public class PreferenceDataStore internal constructor(
                 this.value = value
             }
             UALog.v("Preference updated: %s", key)
-            onPreferenceChanged(key)
             return true
         }
 

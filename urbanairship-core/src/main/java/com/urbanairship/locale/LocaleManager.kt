@@ -3,10 +3,19 @@ package com.urbanairship.locale
 import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.core.os.ConfigurationCompat
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import java.util.Locale
 import kotlin.concurrent.Volatile
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.launch
 
 /**
  * Locale manager. Handles listening for locale changes.
@@ -16,7 +25,8 @@ import kotlin.concurrent.Volatile
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class LocaleManager public constructor(
     context: Context,
-    private val preferenceDataStore: PreferenceDataStore
+    private val preferenceDataStore: PreferenceDataStore,
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) {
 
     private val context: Context = context.applicationContext
@@ -25,22 +35,19 @@ public class LocaleManager public constructor(
     private var deviceLocale: Locale? = null
     private val localeChangedListeners = mutableListOf<LocaleChangedListener>()
 
-    /**
-     * Adds a locale change listener.
-     *
-     * @param listener The locale listener.
-     */
-    public fun addListener(listener: LocaleChangedListener) {
-        localeChangedListeners.add(listener)
-    }
+    private val updateScope = CoroutineScope(dispatcher)
 
-    /**
-     * Removes the locale change listener.
-     *
-     * @param listener The locale listener.
-     */
-    public fun removeListener(listener: LocaleChangedListener) {
-        localeChangedListeners.remove(listener)
+    private val localeUpdatesFlow = MutableSharedFlow<Locale>()
+    public val localeUpdates: Flow<Locale> = localeUpdatesFlow.asSharedFlow()
+
+    init {
+        updateScope.launch {
+            localeUpdatesFlow
+                .distinctUntilChanged()
+                .collect { locale ->
+                    localeChangedListeners.forEach { it.onLocaleChanged(locale) }
+                }
+        }
     }
 
     /**
@@ -61,9 +68,7 @@ public class LocaleManager public constructor(
      * Called by [LocaleChangeReceiver] to notify the override locale changed.
      */
     public fun notifyLocaleChanged(locale: Locale) {
-        for (listener in localeChangedListeners) {
-            listener.onLocaleChanged(locale)
-        }
+        updateScope.launch { localeUpdatesFlow.emit(locale) }
     }
 
     /**

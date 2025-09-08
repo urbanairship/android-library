@@ -3,7 +3,6 @@ package com.urbanairship.push
 
 import android.content.Context
 import android.os.Build
-import androidx.annotation.RestrictTo
 import androidx.core.app.NotificationManagerCompat
 
 /**

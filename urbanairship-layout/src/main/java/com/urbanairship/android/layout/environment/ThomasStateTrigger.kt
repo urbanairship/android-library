@@ -21,7 +21,7 @@ internal data class ThomasStateTrigger(
             return ThomasStateTrigger(
                 id = json.requireField("identifier"),
                 triggerWhenStateMatches = JsonPredicate.parse(json.requireField("trigger_when_state_matches")),
-                resetWhenStateMatches = JsonPredicate.parse(json.get("reset_when_state_matches")),
+                resetWhenStateMatches = JsonPredicate.parse(json["reset_when_state_matches"]),
                 onTrigger = TriggerActions.fromJson(json.requireField("on_trigger"))
             )
         }

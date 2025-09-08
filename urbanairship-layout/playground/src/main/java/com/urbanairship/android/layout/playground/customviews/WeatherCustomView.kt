@@ -24,7 +24,7 @@ import com.urbanairship.android.layout.playground.R
 import com.urbanairship.json.requireField
 
 /** XML-based weather view. */
-public class CustomWeatherViewXml(context: Context) : FrameLayout(context) {
+class CustomWeatherViewXml(context: Context) : FrameLayout(context) {
     init {
         inflate(context, R.layout.custom_view_weather, this)
     }
@@ -36,7 +36,7 @@ public class CustomWeatherViewXml(context: Context) : FrameLayout(context) {
 }
 
 /** Wrapper for [ComposeWeatherView]. */
-public class CustomWeatherView: AirshipCustomViewHandler {
+class CustomWeatherView: AirshipCustomViewHandler {
 
     override fun onCreateView(context: Context, args: AirshipCustomViewArguments): View = ComposeView(context).apply {
         setContent {

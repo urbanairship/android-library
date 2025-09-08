@@ -17,7 +17,7 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.util.UAHttpStatusUtil
 
 @OpenForTesting
-internal class SubscriptionListApiClient constructor(
+internal class SubscriptionListApiClient(
     private val runtimeConfig: AirshipRuntimeConfig,
     private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
 ) {
@@ -44,7 +44,7 @@ internal class SubscriptionListApiClient constructor(
                 JsonValue.parseString(responseBody).requireMap()
                     .optionalField<JsonList>("list_ids")
                     ?.map { value -> value.requireString() }
-                    ?.toSet() ?: emptySet<String>()
+                    ?.toSet() ?: emptySet()
             } else {
                 null
             }

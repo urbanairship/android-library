@@ -22,7 +22,7 @@ import com.urbanairship.json.requireField
 import com.urbanairship.util.UAHttpStatusUtil
 
 /**  high level abstraction for performing Inbox API requests. */
-internal class InboxApiClient constructor(
+internal class InboxApiClient(
     private val runtimeConfig: AirshipRuntimeConfig,
     private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
 ) {

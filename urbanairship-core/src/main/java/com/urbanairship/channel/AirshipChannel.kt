@@ -172,7 +172,9 @@ public class AirshipChannel internal constructor(
             }
         })
 
-        localeManager.addListener { updateRegistration() }
+        scope.launch {
+            localeManager.localeUpdates.collect { updateRegistration() }
+        }
 
         val startedId = channelRegistrar.channelId
         // Channel created
@@ -320,6 +322,15 @@ public class AirshipChannel internal constructor(
     }
 
     /**
+     * Edits channel Tags. Automatically calls [TagEditor.apply].
+     */
+    public fun editTags(block: TagEditor.() -> Unit) {
+        val editor = editTags()
+        block.invoke(editor)
+        editor.apply()
+    }
+
+    /**
      * Edit the channel tag groups.
      *
      * @return A [TagGroupsEditor].
@@ -349,6 +360,15 @@ public class AirshipChannel internal constructor(
     }
 
     /**
+     * Edits channel tag groups. Automatically calls [TagGroupsEditor.apply].
+     */
+    public fun editTagGroups(block: TagGroupsEditor.() -> Unit) {
+        val editor = editTagGroups()
+        block.invoke(editor)
+        editor.apply()
+    }
+
+    /**
      * Edit the attributes associated with this channel.
      *
      * @return An [AttributeEditor].
@@ -367,6 +387,15 @@ public class AirshipChannel internal constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Edits the attributes associated with this channel. Automatically calls [AttributeEditor.apply].
+     */
+    public fun editAttributes(block: AttributeEditor.() -> Unit) {
+        val editor = editAttributes()
+        block.invoke(editor)
+        editor.apply()
     }
 
     /**
@@ -456,6 +485,15 @@ public class AirshipChannel internal constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Edits the channel subscription lists. Automatically calls [SubscriptionListEditor.apply].
+     */
+    public fun editSubscriptionLists(block: (SubscriptionListEditor) -> Unit) {
+        val editor = editSubscriptionLists()
+        block.invoke(editor)
+        editor.apply()
     }
 
     /**
@@ -558,7 +596,7 @@ public class AirshipChannel internal constructor(
         }
 
         if (privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
-            val permissions = buildMap<String, String> {
+            val permissions = buildMap {
                 permissionsManager.configuredPermissions.forEach { permission ->
                     try {
                         permissionsManager
@@ -602,8 +640,8 @@ public class AirshipChannel internal constructor(
 
     public suspend fun Extender.extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder {
         return when (this) {
-            is Extender.Suspending -> extend(builder)
-            is Extender.Blocking -> extend(builder)
+            is Suspending -> extend(builder)
+            is Blocking -> extend(builder)
         }
     }
 

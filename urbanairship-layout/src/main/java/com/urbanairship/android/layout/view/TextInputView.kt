@@ -6,7 +6,6 @@ import android.text.Editable
 import android.text.method.ScrollingMovementMethod
 import android.view.MotionEvent
 import android.view.View
-import android.view.View.OnTouchListener
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.view.inputmethod.EditorInfo
@@ -27,7 +26,6 @@ import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.util.isLayoutRtl
-import com.urbanairship.android.layout.util.onEditing
 import com.urbanairship.android.layout.util.textChanges
 import com.urbanairship.android.layout.widget.TappableView
 import kotlinx.coroutines.channels.Channel
@@ -62,7 +60,10 @@ internal class TextInputView(
 
         LayoutUtils.applyTextInputModel(input, model)
 
-        model.contentDescription(context).ifNotEmpty { contentDescription = it }
+        // Set content description on the EditText instead of the parent
+        model.contentDescription(context).ifNotEmpty {
+            input.contentDescription = it
+        }
 
         model.listener = object : TextInputModel.Listener {
             override fun restoreValue(value: String) {
@@ -119,7 +120,6 @@ internal class TextInputView(
     }
 
     internal fun textChanges() = input.textChanges()
-    internal fun onEditing() = input.onEditing()
     internal val text: Editable?
         get() = input.text
 
@@ -128,6 +128,7 @@ internal class TextInputView(
             it.movementMethod = ScrollingMovementMethod()
             it.background = null
             it.clipToOutline = true
+            it.id = model.editTextViewId
         }
     }
 

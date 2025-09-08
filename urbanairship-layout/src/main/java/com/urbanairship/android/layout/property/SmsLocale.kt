@@ -142,8 +142,8 @@ public class SmsLocale(
             return SmsLocale(
                 countryCode = content.requireField(COUNTRY_CODE),
                 prefix = content.requireField(PREFIX),
-                registration = content.get(REGISTRATION)?.let(Registration::fromJson),
-                validationHints = content.get(VALIDATION_HINTS)?.let(ValidationHints::fromJson)
+                registration = content[REGISTRATION]?.let(Registration::fromJson),
+                validationHints = content[VALIDATION_HINTS]?.let(ValidationHints::fromJson)
             )
         }
     }

@@ -6,6 +6,8 @@ import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.Identifiable
+import com.urbanairship.android.layout.info.RecentlyIdentifiable
 import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
@@ -32,6 +34,11 @@ internal class TextInputModel(
     viewInfo = viewInfo, environment = environment, properties = properties
 ) {
 
+    // We need to use the resolved id for the editTextViewId to make labelFor work since
+    // a TextInputView is a linear layout that wraps an edit text.
+    override val viewId: Int = environment.viewIdResolver.viewId()
+    val editTextViewId = environment.viewIdResolver.viewId(viewInfo.identifier, viewInfo.type)
+
     internal fun onNewLocale(smsLocale: SmsLocale) {
         _smsLocale.update { smsLocale }
     }
@@ -42,7 +49,7 @@ internal class TextInputModel(
         fun restoreValue(value: String)
     }
 
-    private val currentInput = MutableStateFlow<String>("")
+    private val currentInput = MutableStateFlow("")
 
     private val inputValidator: AirshipInputValidation.Validator?
         get() {

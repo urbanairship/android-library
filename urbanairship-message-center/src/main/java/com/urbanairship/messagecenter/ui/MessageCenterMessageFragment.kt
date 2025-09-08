@@ -15,7 +15,7 @@ import com.google.android.material.appbar.CollapsingToolbarLayout
 /** A [MessageListFragment] with a toolbar, used by [MessageCenterFragment]. */
 public open class MessageCenterMessageFragment(
     @LayoutRes contentLayoutId: Int = R.layout.ua_fragment_message_center_message
-) : com.urbanairship.messagecenter.ui.MessageFragment(contentLayoutId) {
+) : MessageFragment(contentLayoutId) {
 
     /** Gets the message title from the arguments. */
     private val messageTitle: String? by lazy { arguments?.getString(ARG_MESSAGE_TITLE) }

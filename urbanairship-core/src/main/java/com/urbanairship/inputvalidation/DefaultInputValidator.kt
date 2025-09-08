@@ -82,7 +82,7 @@ internal class DefaultInputValidator(
      *
      * @return The result of the email validation, either valid or invalid.
      */
-    private suspend fun validate(
+    private fun validate(
         email: AirshipInputValidation.Request.Email,
         request: AirshipInputValidation.Request
     ): AirshipInputValidation.Result {

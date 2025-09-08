@@ -9,7 +9,7 @@ internal enum class StoryIndicatorSource(private val value: String) {
     companion object {
         @Throws(IllegalArgumentException::class)
         fun from(value: String): StoryIndicatorSource {
-            for (type in values()) {
+            for (type in entries) {
                 if (type.value == value.lowercase()) {
                     return type
                 }

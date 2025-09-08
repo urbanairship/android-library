@@ -675,7 +675,7 @@ public class ChannelRegistrationPayloadTest {
             )
         )
 
-        assertEquals(expected, payload.toJsonValue())
+        assertEquals(expected, payload.toJsonValue().map)
     }
 
     @Test
@@ -694,7 +694,7 @@ public class ChannelRegistrationPayloadTest {
             )
         )
 
-        assertEquals(expected, payload.toJsonValue())
+        assertEquals(expected, payload.toJsonValue().map)
     }
 
     /**

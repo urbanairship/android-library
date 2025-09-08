@@ -170,10 +170,9 @@ internal class DefaultAnalyticsIdentifierViewModel: AnalyticsIdentifierViewModel
             return
         }
 
-        Airship.shared().analytics
-            .editAssociatedIdentifiers()
-            .addIdentifier(item.name, item.value)
-            .apply()
+        Airship.shared().analytics.editAssociatedIdentifiers {
+            addIdentifier(item.name, item.value)
+        }
 
         refresh()
     }
@@ -183,10 +182,9 @@ internal class DefaultAnalyticsIdentifierViewModel: AnalyticsIdentifierViewModel
             return
         }
 
-        Airship.shared().analytics
-            .editAssociatedIdentifiers()
-            .removeIdentifier(item.name)
-            .apply()
+        Airship.shared().analytics.editAssociatedIdentifiers {
+            removeIdentifier(item.name)
+        }
 
         refresh()
     }

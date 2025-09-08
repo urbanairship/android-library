@@ -3,7 +3,6 @@ package com.urbanairship.util
 
 import android.net.Uri
 import androidx.annotation.RestrictTo
-import com.urbanairship.util.UAStringUtil.isEmpty
 import java.net.URL
 
 /**

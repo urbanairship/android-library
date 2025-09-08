@@ -21,7 +21,6 @@ import com.urbanairship.android.layout.property.Image.CenteredImageSpan
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.ColorStateListBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
-import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
 import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.debouncedClicks
@@ -151,7 +150,7 @@ internal class LabelButtonView(
 
                 this@LabelButtonView.rippleColor = ColorStateList.valueOf(pressedColor)
                 this@LabelButtonView.strokeWidth =
-                    ResourceUtils.dpToPx(context, strokeWidth).toInt()
+                    dpToPx(context, strokeWidth).toInt()
                 this@LabelButtonView.strokeColor =
                     ColorStateListBuilder().add(disabledStrokeColor, -R.attr.state_enabled)
                         .add(strokeColor).build()
@@ -168,7 +167,7 @@ internal class LabelButtonView(
         val autoHeight = MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY
         val autoWidth = MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.EXACTLY
         if (autoHeight || autoWidth) {
-            val twelveDp = ResourceUtils.dpToPx(context, 12).toInt()
+            val twelveDp = dpToPx(context, 12).toInt()
             val horizontal = if (autoWidth) twelveDp else 0
             val vertical = if (autoHeight) twelveDp else 0
             setPadding(

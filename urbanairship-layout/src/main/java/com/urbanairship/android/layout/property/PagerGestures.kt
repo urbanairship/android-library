@@ -101,7 +101,7 @@ internal enum class GestureType(private val value: String) {
     companion object {
         @Throws(IllegalArgumentException::class)
         fun from(value: String): GestureType {
-            for (type in values()) {
+            for (type in entries) {
                 if (type.value == value.lowercase()) {
                     return type
                 }
@@ -118,7 +118,7 @@ internal enum class GestureDirection(private val value: String) {
     companion object {
         @Throws(IllegalArgumentException::class)
         fun from(value: String): GestureDirection {
-            for (type in values()) {
+            for (type in entries) {
                 if (type.value == value.lowercase()) {
                     return type
                 }
@@ -151,7 +151,7 @@ internal enum class GestureLocation(private val value: String) {
     companion object {
         @Throws(IllegalArgumentException::class)
         fun from(value: String): GestureLocation {
-            for (type in values()) {
+            for (type in entries) {
                 if (type.value == value.lowercase()) {
                     return type
                 }

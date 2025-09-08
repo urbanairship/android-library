@@ -126,7 +126,7 @@ internal class PropertiesConfigParser private constructor(
          * @param properties The properties.
          * @return A PropertiesConfigParser instance.
          */
-        public fun fromProperties(
+        fun fromProperties(
             context: Context, properties: Properties
         ): PropertiesConfigParser {
 

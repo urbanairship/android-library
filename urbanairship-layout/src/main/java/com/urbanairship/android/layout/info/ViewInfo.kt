@@ -3,7 +3,6 @@ package com.urbanairship.android.layout.info
 import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.environment.ThomasStateTrigger
 import com.urbanairship.android.layout.info.ItemInfo.ViewItemInfo
-import com.urbanairship.android.layout.info.LabelInfo.ViewOverrides
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.AutomatedAction
@@ -175,8 +174,8 @@ internal data class ViewPropertyOverride<T>(
     constructor(
         json: JsonValue, valueParser: (JsonValue) -> T
     ): this(
-        whenStateMatcher = json.requireMap().get("when_state_matches")?.let { JsonPredicate.parse(it) },
-        value = json.requireMap().get("value")?.let(valueParser)
+        whenStateMatcher = json.requireMap()["when_state_matches"]?.let { JsonPredicate.parse(it) },
+        value = json.requireMap()["value"]?.let(valueParser)
     )
 }
 
@@ -244,6 +243,20 @@ internal interface Identifiable {
     val identifier: String
 }
 
+/**
+ * Recently identifiable are for view types that originally did not have an ID but now they do.
+ * We can't assume they will have it since we might have an old definition cached.
+ */
+internal interface RecentlyIdentifiable {
+    val identifier: String?
+}
+
+internal class RecentlyIdentifiableInfo(override val identifier: String?) : RecentlyIdentifiable
+
+private fun recentlyIdentifiable(json: JsonMap): RecentlyIdentifiable =
+    RecentlyIdentifiableInfo(identifier = json.optionalField("identifier"))
+
+
 internal class IdentifiableInfo(override val identifier: String) : Identifiable
 
 private fun identifiable(json: JsonMap): Identifiable =
@@ -283,9 +296,9 @@ internal data class ValidatableInfo(
 private fun validatable(json: JsonMap) =
     ValidatableInfo(
         isRequired = json.optionalField("required") ?: false,
-        onError = json.get("on_error")?.let { ValidationAction(it) },
-        onValid = json.get("on_valid")?.let { ValidationAction(it) },
-        onEdit = json.get("on_edit")?.let { ValidationAction(it) },
+        onError = json["on_error"]?.let { ValidationAction(it) },
+        onValid = json["on_valid"]?.let { ValidationAction(it) },
+        onEdit = json["on_edit"]?.let { ValidationAction(it) },
     )
 
 // ------ Base Component Interfaces ------
@@ -430,13 +443,11 @@ internal class IconViewInfo(json: JsonMap) : ViewInfo(), View by view(json), Acc
     }
 }
 
-internal interface BaseCheckable: View, Accessible {
-}
+internal interface BaseCheckable: View, Accessible
 
 internal open class BaseCheckableInfo(
     json: JsonMap
-) : ViewInfo(), BaseCheckable, View by view(json), Accessible by accessible(json) {
-}
+) : ViewInfo(), BaseCheckable, View by view(json), Accessible by accessible(json)
 
 internal interface Checkable : BaseCheckable, View, Accessible {
     val style: ToggleStyle
@@ -457,6 +468,24 @@ internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemI
         .let { if (randomizeChildren) it.shuffled() else it }
 
     override val children: List<LinearLayoutItemInfo> = items
+
+    val accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole(it) }
+
+    internal class AccessibilityRole(json: JsonMap) {
+        val type: Type = Type.fromJson(json.requireField("type"))
+        val hierarchical: Boolean? = json.optionalField<Boolean>("hierarchical")
+
+        internal enum class Type(val value: String) {
+            LIST_VIEW("list_view");
+
+            internal companion object {
+                @Throws(JsonException::class)
+                fun fromJson(value: String): Type = entries.firstOrNull {
+                    it.value.equals(value, ignoreCase = true)
+                }?: throw JsonException("Invalid LinearLayoutInfo.AccessibilityRole type: $value")
+            }
+        }
+    }
 }
 
 internal class LinearLayoutItemInfo(
@@ -467,6 +496,23 @@ internal class LinearLayoutItemInfo(
 
     val position: Position? = json.optionalMap("position")
         ?.let { Position.fromJson(it) }
+
+    val accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole(it) }
+
+    internal class AccessibilityRole(json: JsonMap) {
+        val type: Type = Type.fromJson(json.requireField("type"))
+
+        internal enum class Type(val value: String) {
+            LIST_ITEM("list_item");
+
+            internal companion object {
+                @Throws(JsonException::class)
+                fun fromJson(value: String): Type = entries.firstOrNull {
+                    it.value.equals(value, ignoreCase = true)
+                }?: throw JsonException("Invalid LinearLayoutItemInfo.AccessibilityRole type: $value")
+            }
+        }
+    }
 }
 
 internal class ContainerLayoutInfo(
@@ -516,7 +562,25 @@ internal class LabelInfo(
     val markdownOptions: MarkdownOptions? = json.optionalMap("markdown")?.let { MarkdownOptions(it) }
     var accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole.fromJson(it) }
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
+    val labels: AssociatedLabel? = json.optionalMap("labels")?.let { AssociatedLabel(it) }
 
+    internal class AssociatedLabel(json: JsonMap) {
+        val type: Type = Type.fromJson(json.requireField("type"))
+        val viewId: String = json.requireField("view_id")
+        val viewType: ViewType = ViewType.from(json.requireField<String>("view_type"))
+
+        internal enum class Type(val value: String) {
+            LABELS("labels"),
+            DESCRIBES("describes");
+
+            internal companion object {
+                @Throws(JsonException::class)
+                fun fromJson(value: String): Type = entries.firstOrNull {
+                    it.value.equals(value, ignoreCase = true)
+                }?: throw JsonException("Invalid AssociatedLabel type: $value")
+            }
+        }
+    }
     internal sealed class IconStart(
         val type: Type
     ) {
@@ -606,7 +670,7 @@ internal class ImageButtonInfo(json: JsonMap) : ButtonInfo(json) {
     val image: Image = Image.fromJson(json.requireField("image"))
 }
 
-internal class CheckboxInfo(json: JsonMap) : CheckableInfo(json) {
+internal class CheckboxInfo(json: JsonMap) : CheckableInfo(json), RecentlyIdentifiable by recentlyIdentifiable(json) {
     val reportingValue: JsonValue = json.requireField("reporting_value")
 }
 
@@ -618,7 +682,7 @@ internal class ToggleInfo(
     val attributeValue: AttributeValue? = json.optionalField("attribute_value")
 }
 
-internal class RadioInputInfo(json: JsonMap) : CheckableInfo(json) {
+internal class RadioInputInfo(json: JsonMap) : CheckableInfo(json), RecentlyIdentifiable by recentlyIdentifiable(json) {
     val reportingValue: JsonValue = json.requireField("reporting_value")
     val attributeValue: AttributeValue? = json.optionalField("attribute_value")
 }
@@ -637,7 +701,7 @@ internal class TextInputInfo(
     }
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
 
-    val emailRegistrationOptions: ThomasEmailRegistrationOptions? = json.get("email_registration")?.let {
+    val emailRegistrationOptions: ThomasEmailRegistrationOptions? = json["email_registration"]?.let {
         if (inputType == FormInputType.EMAIL) {
             ThomasEmailRegistrationOptions.fromJson(it)
         } else {
@@ -819,7 +883,7 @@ internal class PagerItemInfo(
     val accessibilityActions = json.optionalList("accessibility_actions")
         ?.let { AccessibilityAction.fromList(it) }
     val stateActions = json.optionalList("state_actions")?.map(StateAction::fromJson)
-    val branching = json.get("branching")?.let(PageBranching::from)
+    val branching = json["branching"]?.let(PageBranching::from)
 }
 
 internal class PagerIndicatorInfo(
@@ -874,7 +938,7 @@ internal class PagerControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(
     override val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 
-    val branching = json.get("branching")?.let(PagerControllerBranching::from)
+    val branching = json["branching"]?.let(PagerControllerBranching::from)
 }
 
 internal open class BaseToggleLayoutInfo(json: JsonMap) :  ViewGroupInfo<ViewItemInfo>(), Identifiable by identifiable(json), View by view(json) {

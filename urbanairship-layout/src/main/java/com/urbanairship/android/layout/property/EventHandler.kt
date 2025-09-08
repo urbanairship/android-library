@@ -22,7 +22,7 @@ internal data class EventHandler(
 
         companion object {
             fun from(value: String): Type {
-                return Type.values().firstOrNull { it.value == value }
+                return entries.firstOrNull { it.value == value }
                     ?: throw JsonException("Unknown EventHandler type: '$value'")
             }
         }

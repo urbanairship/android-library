@@ -42,7 +42,7 @@ public class AudienceHashSelector internal constructor(
                 return AudienceHashSelector(
                     hash = hash,
                     bucket = bucket,
-                    sticky = json.get(KEY_STICKY)?.let(AudienceSticky::fromJson)
+                    sticky = json[KEY_STICKY]?.let(AudienceSticky::fromJson)
                 )
             } catch (ex: JsonException) {
                 UALog.e { "failed to parse AudienceSelector from json $json" }

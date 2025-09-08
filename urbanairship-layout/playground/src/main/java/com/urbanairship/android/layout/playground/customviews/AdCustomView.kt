@@ -14,7 +14,7 @@ import com.urbanairship.android.layout.AirshipCustomViewArguments
 import com.urbanairship.android.layout.AirshipCustomViewHandler
 import com.urbanairship.json.requireField
 
-public class CustomAdView: AirshipCustomViewHandler {
+class CustomAdView: AirshipCustomViewHandler {
 
     override fun onCreateView(context: Context, args: AirshipCustomViewArguments): View =
         ComposeView(context).apply {

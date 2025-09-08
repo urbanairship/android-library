@@ -82,7 +82,7 @@ internal class ImageButtonView(
                     // once they become visible and have a measured size.
                     visibilityChangeListener = object : BaseView.VisibilityChangeListener {
                         override fun onVisibilityChanged(visibility: Int) {
-                            if (visibility == View.VISIBLE && !isLoaded) {
+                            if (visibility == VISIBLE && !isLoaded) {
                                 loadImage(url)
                             }
                         }
