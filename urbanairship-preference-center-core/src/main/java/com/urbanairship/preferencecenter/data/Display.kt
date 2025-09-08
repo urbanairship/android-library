@@ -15,7 +15,7 @@ public data class CommonDisplay(
     val description: String? = null
 ) {
     public companion object {
-        public val EMPTY = CommonDisplay(null, null)
+        public val EMPTY: CommonDisplay = CommonDisplay(null, null)
 
         private const val KEY_NAME = "name"
         private const val KEY_DESCRIPTION = "description"
