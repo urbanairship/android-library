@@ -23,7 +23,7 @@ import org.junit.runner.RunWith
  * value from a Java-style properties file.
  */
 @RunWith(AndroidJUnit4::class)
-class AirshipConfigOptionsTest {
+public class AirshipConfigOptionsTest {
 
     private val application: Context = ApplicationProvider.getApplicationContext()
 
@@ -31,7 +31,7 @@ class AirshipConfigOptionsTest {
      * This test verifies the applyProperties method can parse different types
      */
     @Test
-    fun testLoadFromProperties() {
+    public fun testLoadFromProperties() {
         val production = AirshipConfigOptions.Builder()
             .applyProperties(application, getProperties(TEST_PROPERTIES_FILE))
             .build()
@@ -84,7 +84,7 @@ class AirshipConfigOptionsTest {
      * This test loads invalid values and verify the property value is set to default
      */
     @Test
-    fun testInvalidOptions() {
+    public fun testInvalidOptions() {
         val development = AirshipConfigOptions.Builder()
             .applyProperties(application, getProperties(INVALID_PROPERTIES_FILE))
             .setInProduction(false)
@@ -103,14 +103,14 @@ class AirshipConfigOptionsTest {
     }
 
     @Test(expected = ConfigException::class)
-    fun testThrowsInvalidConfigFile() {
+    public fun testThrowsInvalidConfigFile() {
         val development = AirshipConfigOptions.Builder()
             .tryApplyProperties(application, UUID.randomUUID().toString())
             .build()
     }
 
     @Test
-    fun testDefaultConfig() {
+    public fun testDefaultConfig() {
         val defaultConfig = AirshipConfigOptions.Builder()
             .setDevelopmentAppKey("appKey")
             .setDevelopmentAppSecret("appSecret")
@@ -153,7 +153,7 @@ class AirshipConfigOptionsTest {
     }
 
     @Test
-    fun testValidate() {
+    public fun testValidate() {
         val valid = AirshipConfigOptions.newBuilder()
             .setAppKey("-----1abc123_-90000000")
             .setAppSecret("0A00000000000000000000")
@@ -163,7 +163,7 @@ class AirshipConfigOptionsTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testValidateChecksKey() {
+    public fun testValidateChecksKey() {
         val valid = AirshipConfigOptions.newBuilder()
             .setAppKey("0A00000000000") // not enough characters
             .build()
@@ -172,7 +172,7 @@ class AirshipConfigOptionsTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testValidateChecksSecret() {
+    public fun testValidateChecksSecret() {
         val valid = AirshipConfigOptions.newBuilder()
             .setAppSecret("0A00000000000000000000EXTRA") // too many characters
             .build()
@@ -181,7 +181,7 @@ class AirshipConfigOptionsTest {
     }
 
     @Test
-    fun testEuCloudSite() {
+    public fun testEuCloudSite() {
         val configOptions = AirshipConfigOptions.newBuilder()
             .setSite(AirshipConfigOptions.Site.SITE_EU)
             .build()
@@ -193,7 +193,7 @@ class AirshipConfigOptionsTest {
     }
 
     @Test
-    fun testUsCloudSite() {
+    public fun testUsCloudSite() {
         val configOptions = AirshipConfigOptions.newBuilder()
             .setSite(AirshipConfigOptions.Site.SITE_US)
             .build()
@@ -205,7 +205,7 @@ class AirshipConfigOptionsTest {
     }
 
     @Test
-    fun testUrlOverrides() {
+    public fun testUrlOverrides() {
         val configOptions =AirshipConfigOptions.newBuilder()
             .setSite(AirshipConfigOptions.Site.SITE_EU)
             .setAnalyticsUrl("some-analytics-url")
@@ -221,7 +221,7 @@ class AirshipConfigOptionsTest {
     }
 
     @Test
-    fun testEnabledFeaturesMigration() {
+    public fun testEnabledFeaturesMigration() {
         var configOptions = AirshipConfigOptions.newBuilder()
             .setEnabledFeatures(PrivacyManager.Feature.PUSH)
             .setDataCollectionOptInEnabled(true)
@@ -238,7 +238,7 @@ class AirshipConfigOptionsTest {
         Assert.assertEquals(PrivacyManager.Feature.ALL, configOptions.enabledFeatures)
     }
 
-    fun getProperties(file: String): Properties {
+    public fun getProperties(file: String): Properties {
         var stream: InputStream? = null
         try {
             stream = javaClass.classLoader.getResourceAsStream(file)
@@ -250,7 +250,7 @@ class AirshipConfigOptionsTest {
         }
     }
 
-    companion object {
+    private companion object {
 
         private const val TEST_PROPERTIES_FILE = "valid.properties"
         private const val INVALID_PROPERTIES_FILE = "invalid.properties"

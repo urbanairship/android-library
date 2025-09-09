@@ -6,7 +6,7 @@ import org.junit.Assert
 import org.junit.Test
 import org.robolectric.Shadows
 
-class ApplicationMetricsTest : BaseTestCase() {
+public class ApplicationMetricsTest : BaseTestCase() {
 
     private val activityMonitor = TestActivityMonitor()
     private val dataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext())
@@ -25,7 +25,7 @@ class ApplicationMetricsTest : BaseTestCase() {
      * have been tracked.
      */
     @Test
-    fun testGetLastOpenNotSet() {
+    public fun testGetLastOpenNotSet() {
         metrics.init()
         Assert.assertEquals("Last open time should default to -1", -1, metrics.lastOpenTimeMillis)
     }
@@ -35,7 +35,7 @@ class ApplicationMetricsTest : BaseTestCase() {
      * last open time is updated.
      */
     @Test
-    fun testLastOpenTimeTracking() {
+    public fun testLastOpenTimeTracking() {
         metrics.init()
 
         // Foreground the app to update last open time
@@ -46,7 +46,7 @@ class ApplicationMetricsTest : BaseTestCase() {
     }
 
     @Test
-    fun testGetAppVersionUpdated() {
+    public fun testGetAppVersionUpdated() {
         dataStore.put("com.urbanairship.application.metrics.APP_VERSION", 1L)
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 2
@@ -63,7 +63,7 @@ class ApplicationMetricsTest : BaseTestCase() {
     }
 
     @Test
-    fun testGetAppVersionUpdatedNoLastVersion() {
+    public fun testGetAppVersionUpdatedNoLastVersion() {
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 2
         metrics.init()
@@ -79,7 +79,7 @@ class ApplicationMetricsTest : BaseTestCase() {
     }
 
     @Test
-    fun testGetAppVersionUpdatedEqualVersions() {
+    public fun testGetAppVersionUpdatedEqualVersions() {
         dataStore.put("com.urbanairship.application.metrics.APP_VERSION", 2L)
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 2L
@@ -96,7 +96,7 @@ class ApplicationMetricsTest : BaseTestCase() {
     }
 
     @Test
-    fun testGetAppVersionUpdatedEarlierVersion() {
+    public fun testGetAppVersionUpdatedEarlierVersion() {
         dataStore.put("com.urbanairship.application.metrics.APP_VERSION", 2L)
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 1L

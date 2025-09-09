@@ -18,7 +18,7 @@ public class RateLimiterTest {
     private val rateLimiter: RateLimiter = RateLimiter(clock)
 
     @Test
-    fun testRateLimit() {
+    public fun testRateLimit() {
         rateLimiter.setLimit("foo", 3, 1.seconds)
         Assert.assertEquals(
             RateLimiter.LimitStatus.UNDER,
@@ -72,12 +72,12 @@ public class RateLimiterTest {
     }
 
     @Test
-    fun testStatusNoRule() {
+    public fun testStatusNoRule() {
         Assert.assertNull(rateLimiter.status("something"))
     }
 
     @Test
-    fun testRateLimitOverTrack() {
+    public fun testRateLimitOverTrack() {
         rateLimiter.setLimit("foo", 1, 10.milliseconds)
         Assert.assertEquals(
             RateLimiter.LimitStatus.UNDER,
@@ -123,7 +123,7 @@ public class RateLimiterTest {
     }
 
     @Test
-    fun testMultipleRules() {
+    public fun testMultipleRules() {
         rateLimiter.setLimit("foo", 1, 10.milliseconds)
         rateLimiter.setLimit("bar", 4, 3.milliseconds)
 

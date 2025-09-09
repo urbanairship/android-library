@@ -23,7 +23,7 @@ import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowApplication
 
 @RunWith(AndroidJUnit4::class)
-class AirshipTest {
+public class AirshipTest {
 
     private var configOptions = AirshipConfigOptions.Builder()
         .setProductionAppKey("0000000000000000000000")
@@ -35,13 +35,13 @@ class AirshipTest {
     private var application = TestApplication.getApplication()
 
     @Before
-    fun setup() {
+    public fun setup() {
         // TestApplication automatically sets up airship for other tests, clean it up with land.
         Airship.land()
     }
 
     @After
-    fun cleanup() {
+    public fun cleanup() {
         Airship.land()
     }
 
@@ -49,7 +49,7 @@ class AirshipTest {
      * Test takeOff with valid application and config options calls the correct callbacks.
      */
     @Test
-    fun testAsyncTakeOff() {
+    public fun testAsyncTakeOff() {
         val testCallback = TestCallback()
         Airship.shared(testCallback)
 
@@ -88,7 +88,7 @@ class AirshipTest {
      * Also tests the AIRSHIP_READY broadcast is extended.
      */
     @Test
-    fun testAsyncTakeOffWithExtendedBroadcasts() {
+    public fun testAsyncTakeOffWithExtendedBroadcasts() {
         val testCallback = TestCallback()
         Airship.shared(testCallback)
 
@@ -139,12 +139,12 @@ class AirshipTest {
      * takeOff
      */
     @Test(expected = IllegalStateException::class)
-    fun testSharedBeforeTakeOff() {
+    public fun testSharedBeforeTakeOff() {
         Airship.shared()
     }
 
     @Test
-    fun testDeepLinkListener() {
+    public fun testDeepLinkListener() {
         Airship.takeOff(application, configOptions)
 
         val airship = Airship.shared()
@@ -171,7 +171,7 @@ class AirshipTest {
     }
 
     @Test
-    fun testDeepLinkNotHandledByListener() {
+    public fun testDeepLinkNotHandledByListener() {
         Airship.takeOff(application, configOptions)
 
         val airship = Airship.shared()
@@ -185,7 +185,7 @@ class AirshipTest {
     }
 
     @Test
-    fun testAirshipDeepLinks() {
+    public fun testAirshipDeepLinks() {
         // App Settings deeplink
         Airship.takeOff(application, configOptions)
 
@@ -219,7 +219,7 @@ class AirshipTest {
     }
 
     @Test
-    fun testAirshipComponentsDeepLinks() {
+    public fun testAirshipComponentsDeepLinks() {
         Airship.takeOff(application, configOptions)
 
         val airship = Airship.shared()
@@ -252,7 +252,7 @@ class AirshipTest {
     }
 
     @Test
-    fun testAirshipComponentsDeepLinksFallbackDeepLinkListener() {
+    public fun testAirshipComponentsDeepLinksFallbackDeepLinkListener() {
         Airship.takeOff(application, configOptions)
 
         val airship = Airship.shared()
@@ -275,7 +275,7 @@ class AirshipTest {
     }
 
     @Test
-    fun testAirshipComponentsDeepLinksNotHandled() {
+    public fun testAirshipComponentsDeepLinksNotHandled() {
         Airship.takeOff(application, configOptions)
 
         val airship = Airship.shared()

@@ -5,10 +5,10 @@ import com.urbanairship.json.jsonMapOf
 import org.junit.Assert
 import org.junit.Test
 
-class FieldTest {
+public class FieldTest {
 
     @Test
-    fun testFullField() {
+    public fun testFullField() {
         val name = "name"
         val label = "label"
         val value = 5
@@ -29,14 +29,14 @@ class FieldTest {
     }
 
     @Test
-    fun testFieldVariations() {
+    public fun testFieldVariations() {
         Field.newBuilder().setName("name").setValue(5).build()
 
         Field.newBuilder().setName("name").setLabel("label").build()
     }
 
     @Test(expected = IllegalStateException::class)
-    fun testFieldOnlyLabel() {
+    public fun testFieldOnlyLabel() {
         Field.newBuilder().setLabel("label").build()
     }
 }

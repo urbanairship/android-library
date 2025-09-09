@@ -5,13 +5,13 @@ import java.net.HttpURLConnection
 import org.junit.Assert
 import org.junit.Test
 
-class UAHttpStatusUtilTest {
+public class UAHttpStatusUtilTest {
 
     /**
      * Test inSuccessRange succeeds
      */
     @Test
-    fun testInSuccessRangePass() {
+    public fun testInSuccessRangePass() {
         Assert.assertTrue(
             "UAHttpStatusUtil inSuccessRange should return true.",
             UAHttpStatusUtil.inSuccessRange(HttpURLConnection.HTTP_OK)
@@ -22,7 +22,7 @@ class UAHttpStatusUtilTest {
      * Test inSuccessRange fails
      */
     @Test
-    fun testInSuccessRangeFail() {
+    public fun testInSuccessRangeFail() {
         Assert.assertFalse(
             "UAHttpStatusUtil inSuccessRange should return false.",
             UAHttpStatusUtil.inSuccessRange(HttpURLConnection.HTTP_NOT_FOUND)
@@ -33,7 +33,7 @@ class UAHttpStatusUtilTest {
      * Test inSuccessRange fails with 0
      */
     @Test
-    fun testInSuccessRangeZero() {
+    public fun testInSuccessRangeZero() {
         Assert.assertFalse(
             "UAHttpStatusUtil inSuccessRange should return false.",
             UAHttpStatusUtil.inSuccessRange(0)
@@ -44,7 +44,7 @@ class UAHttpStatusUtilTest {
      * Test inSuccessRange fails with a negative integer
      */
     @Test
-    fun testInSuccessRangeNegative() {
+    public fun testInSuccessRangeNegative() {
         Assert.assertFalse(
             "UAHttpStatusUtil inSuccessRange should return false.",
             UAHttpStatusUtil.inSuccessRange(-1)
@@ -55,7 +55,7 @@ class UAHttpStatusUtilTest {
      * Test inRedirectionRange succeeds
      */
     @Test
-    fun testInRedirectionRangePass() {
+    public fun testInRedirectionRangePass() {
         Assert.assertTrue(
             "UAHttpStatusUtil inRedirectionRange should return true.",
             UAHttpStatusUtil.inRedirectionRange(HttpURLConnection.HTTP_MOVED_PERM)
@@ -66,7 +66,7 @@ class UAHttpStatusUtilTest {
      * Test inRedirectionRange fails
      */
     @Test
-    fun testInRedirectionRangeFail() {
+    public fun testInRedirectionRangeFail() {
         Assert.assertFalse(
             "UAHttpStatusUtil inRedirectionRange should return false.",
             UAHttpStatusUtil.inRedirectionRange(HttpURLConnection.HTTP_NOT_FOUND)
@@ -77,7 +77,7 @@ class UAHttpStatusUtilTest {
      * Test inRedirectionRange fails with 0
      */
     @Test
-    fun testInRedirectionRangeZero() {
+    public fun testInRedirectionRangeZero() {
         Assert.assertFalse(
             "UAHttpStatusUtil inRedirectionRange should return false.",
             UAHttpStatusUtil.inRedirectionRange(0)
@@ -88,7 +88,7 @@ class UAHttpStatusUtilTest {
      * Test inRedirectionRange fails with a negative integer
      */
     @Test
-    fun testInRedirectionRangeNegative() {
+    public fun testInRedirectionRangeNegative() {
         Assert.assertFalse(
             "UAHttpStatusUtil inRedirectionRange should return false.",
             UAHttpStatusUtil.inRedirectionRange(-1)
@@ -99,7 +99,7 @@ class UAHttpStatusUtilTest {
      * Test inClientErrorRange succeeds
      */
     @Test
-    fun testInClientErrorRangePass() {
+    public fun testInClientErrorRangePass() {
         Assert.assertTrue(
             "UAHttpStatusUtil inClientErrorRange should return true.",
             UAHttpStatusUtil.inClientErrorRange(HttpURLConnection.HTTP_BAD_REQUEST)
@@ -110,7 +110,7 @@ class UAHttpStatusUtilTest {
      * Test inClientErrorRange fails
      */
     @Test
-    fun testInClientErrorRangeFail() {
+    public fun testInClientErrorRangeFail() {
         Assert.assertFalse(
             "UAHttpStatusUtil inClientErrorRange should return false.",
             UAHttpStatusUtil.inClientErrorRange(HttpURLConnection.HTTP_OK)
@@ -121,7 +121,7 @@ class UAHttpStatusUtilTest {
      * Test inClientErrorRange fails with 0
      */
     @Test
-    fun testInClientErrorRangeZero() {
+    public fun testInClientErrorRangeZero() {
         Assert.assertFalse(
             "UAHttpStatusUtil inClientErrorRange should return false.",
             UAHttpStatusUtil.inClientErrorRange(0)
@@ -132,7 +132,7 @@ class UAHttpStatusUtilTest {
      * Test inClientErrorRange fails with a negative integer
      */
     @Test
-    fun testInClientErrorRangeNegative() {
+    public fun testInClientErrorRangeNegative() {
         Assert.assertFalse(
             "UAHttpStatusUtil inClientErrorRange should return false.",
             UAHttpStatusUtil.inClientErrorRange(-1)
@@ -143,7 +143,7 @@ class UAHttpStatusUtilTest {
      * Test inServerErrorRange succeeds
      */
     @Test
-    fun testInServerErrorRangePass() {
+    public fun testInServerErrorRangePass() {
         Assert.assertTrue(
             "UAHttpStatusUtil inServerErrorRange should return true.",
             UAHttpStatusUtil.inServerErrorRange(HttpURLConnection.HTTP_INTERNAL_ERROR)
@@ -154,7 +154,7 @@ class UAHttpStatusUtilTest {
      * Test inServerErrorRange fails
      */
     @Test
-    fun testInServerErrorRangeFail() {
+    public fun testInServerErrorRangeFail() {
         Assert.assertFalse(
             "UAHttpStatusUtil inServerErrorRange should return false.",
             UAHttpStatusUtil.inServerErrorRange(HttpURLConnection.HTTP_OK)
@@ -165,7 +165,7 @@ class UAHttpStatusUtilTest {
      * Test inServerErrorRange fails with 0
      */
     @Test
-    fun testInServerErrorRangeZero() {
+    public fun testInServerErrorRangeZero() {
         Assert.assertFalse(
             "UAHttpStatusUtil inServerErrorRange should return false.",
             UAHttpStatusUtil.inServerErrorRange(0)
@@ -176,7 +176,7 @@ class UAHttpStatusUtilTest {
      * Test inServerErrorRange fails with negative integer
      */
     @Test
-    fun testInServerErrorRangeNegative() {
+    public fun testInServerErrorRangeNegative() {
         Assert.assertFalse(
             "UAHttpStatusUtil inServerErrorRange should return false.",
             UAHttpStatusUtil.inServerErrorRange(-1)

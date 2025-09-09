@@ -9,10 +9,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class JavaScriptEnvironmentTest {
+public class JavaScriptEnvironmentTest {
 
     @Test
-    fun testStringGetter() {
+    public fun testStringGetter() {
         val environment = JavaScriptEnvironment.newBuilder()
             .addGetter("cool", "neat")
             .build()
@@ -23,7 +23,7 @@ class JavaScriptEnvironmentTest {
     }
 
     @Test
-    fun testNumberGetter() {
+    public fun testNumberGetter() {
         val environment = JavaScriptEnvironment.newBuilder()
             .addGetter("rad", 100)
             .build()
@@ -34,7 +34,7 @@ class JavaScriptEnvironmentTest {
     }
 
     @Test
-    fun testJsonMapGetter() {
+    public fun testJsonMapGetter() {
         val map = jsonMapOf("cool" to "story")
 
         val environment = JavaScriptEnvironment.newBuilder()
@@ -47,7 +47,7 @@ class JavaScriptEnvironmentTest {
     }
 
     @Test
-    fun testJsonArrayGetter() {
+    public fun testJsonArrayGetter() {
         val value = JsonValue.wrapOpt(listOf("foo", "bar"))
 
         val environment = JavaScriptEnvironment.newBuilder()

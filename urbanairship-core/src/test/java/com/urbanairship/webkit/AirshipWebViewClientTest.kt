@@ -25,7 +25,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class AirshipWebViewClientTest {
+public class AirshipWebViewClientTest {
 
     private val rootView: View = mockk(relaxed = true)
     private var webViewUrl: String? = "http://test-client"
@@ -40,7 +40,7 @@ class AirshipWebViewClientTest {
     private lateinit var client: AirshipWebViewClient
 
     @Before
-    fun setup() {
+    public fun setup() {
         TestApplication.getApplication().setContact(mockContact)
         Airship.shared().urlAllowList.addEntry("http://test-client")
         client = AirshipWebViewClient(nativeBridge)
@@ -50,7 +50,7 @@ class AirshipWebViewClientTest {
      * Test any uairship scheme does not get intercepted when the webview's url is not allowed.
      */
     @Test
-    fun testHandleCommandNotAllowed() {
+    public fun testHandleCommandNotAllowed() {
         webViewUrl = "http://not-allowed"
         val url = "uairship://run-actions?action"
         Assert.assertFalse(client.shouldOverrideUrlLoading(webView, url))
@@ -65,7 +65,7 @@ class AirshipWebViewClientTest {
      */
     @Test
     @SuppressLint("NewApi")
-    fun testOnPageFinished() {
+    public fun testOnPageFinished() {
         every { nativeBridge.loadJavaScriptEnvironment(any(), any(), any()) } answers {
             val argument = arg<JavaScriptExecutor>(2)
             argument.executeJavaScript("test")
@@ -82,7 +82,7 @@ class AirshipWebViewClientTest {
      */
     @Test
     @SuppressLint("NewApi")
-    fun testOnPageFinishedNotAllowed() {
+    public fun testOnPageFinishedNotAllowed() {
         webViewUrl = "http://notallowed"
         client.onPageFinished(webView, webViewUrl)
         verify { nativeBridge wasNot Called }
@@ -92,7 +92,7 @@ class AirshipWebViewClientTest {
      * Test close command calls onClose
      */
     @Test
-    fun testOnClose() {
+    public fun testOnClose() {
         val url = "uairship://close"
 
         val spy = spyk(client)
@@ -121,7 +121,7 @@ class AirshipWebViewClientTest {
      * Test close command calls onClose
      */
     @Test
-    fun testOnAirshipCommand() {
+    public fun testOnAirshipCommand() {
         val url = "uairship://cool"
 
         val spy = spyk(client)
@@ -140,7 +140,7 @@ class AirshipWebViewClientTest {
      * Test JavaScriptExecutor executes on the right web view.
      */
     @Test
-    fun testHandleCommandJavaScriptExecutor() {
+    public fun testHandleCommandJavaScriptExecutor() {
         val url = "uairship://whatever"
 
         val jsExecutor = slot<JavaScriptExecutor>()

@@ -18,7 +18,7 @@ public class ActionButtonGroupsParserTest {
      * Test loading a resources that is not found returns an empty map.
      */
     @Test
-    fun testLoadXmlMissingResource() {
+    public fun testLoadXmlMissingResource() {
         val groups = ActionButtonGroupsParser.fromXml(context, -1)
         Assert.assertTrue(groups.isEmpty())
     }
@@ -27,7 +27,7 @@ public class ActionButtonGroupsParserTest {
      * Test loading groups.
      */
     @Test
-    fun testDefaultGroups() {
+    public fun testDefaultGroups() {
         val groups = ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons)
 
         // We provide 37 groups

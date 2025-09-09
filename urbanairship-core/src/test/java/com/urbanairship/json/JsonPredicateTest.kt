@@ -38,7 +38,7 @@ public class JsonPredicateTest {
         .build()
 
     @Test
-    fun testAnd() {
+    public fun testAnd() {
         val predicate = JsonPredicate.newBuilder()
             .setPredicateType(JsonPredicate.PredicateType.AND)
             .addMatcher(legMatcher)
@@ -54,7 +54,7 @@ public class JsonPredicateTest {
     }
 
     @Test
-    fun testJSONPredicateArrayLength() {
+    public fun testJSONPredicateArrayLength() {
         // This JSON is flawed as you cant have an array of matchers for value. However it shows
         // order of matcher parsing and its the same test on web, so we are using it.
         val json = """{
@@ -78,7 +78,7 @@ public class JsonPredicateTest {
     }
 
     @Test
-    fun testOr() {
+    public fun testOr() {
         val predicate = JsonPredicate.newBuilder()
             .setPredicateType(JsonPredicate.PredicateType.OR)
             .addMatcher(legMatcher)
@@ -92,7 +92,7 @@ public class JsonPredicateTest {
     }
 
     @Test
-    fun testNot() {
+    public fun testNot() {
         var predicate = JsonPredicate.newBuilder()
             .setPredicateType(JsonPredicate.PredicateType.NOT)
             .addMatcher(
@@ -113,7 +113,7 @@ public class JsonPredicateTest {
     }
 
     @Test
-    fun testAndOr() {
+    public fun testAndOr() {
         val or = JsonPredicate.newBuilder()
             .setPredicateType(JsonPredicate.PredicateType.OR)
             .addMatcher(legMatcher)
@@ -143,7 +143,7 @@ public class JsonPredicateTest {
     }
 
     @Test
-    fun testOrAnd() {
+    public fun testOrAnd() {
         val and = JsonPredicate.newBuilder()
             .setPredicateType(JsonPredicate.PredicateType.AND)
             .addMatcher(nameMatcher)
@@ -174,7 +174,7 @@ public class JsonPredicateTest {
     }
 
     @Test
-    fun testAndOrNot() {
+    public fun testAndOrNot() {
         val or = JsonPredicate.newBuilder()
             .setPredicateType(JsonPredicate.PredicateType.OR)
             .addMatcher(legMatcher)
@@ -226,7 +226,7 @@ public class JsonPredicateTest {
     }
 
     @Test
-    fun testNestedNot() {
+    public fun testNestedNot() {
         val andOr = JsonPredicate.newBuilder()
             .setPredicateType(JsonPredicate.PredicateType.AND)
             .addMatcher(
@@ -298,7 +298,7 @@ public class JsonPredicateTest {
     }
 
     @Test
-    fun testParse() {
+    public fun testParse() {
         val andOr = JsonPredicate.newBuilder()
             .setPredicateType(JsonPredicate.PredicateType.AND)
             .addMatcher(
@@ -349,7 +349,7 @@ public class JsonPredicateTest {
     }
 
     @Test
-    fun testJSONPredicateNotNoArray() {
+    public fun testJSONPredicateNotNoArray() {
         val json = """
             {
               "not": {
@@ -381,7 +381,7 @@ public class JsonPredicateTest {
      * Test parsing a JsonMatcher directly produces a JsonPredicate.
      */
     @Test
-    fun testParseJsonMatcher() {
+    public fun testParseJsonMatcher() {
         val matcher = JsonMatcher.newBuilder()
             .setValueMatcher(ValueMatcher.newValueMatcher(JsonValue.wrap("mittens")))
             .build()
@@ -395,7 +395,7 @@ public class JsonPredicateTest {
      * Test parsing an empty JsonMap throws a JsonException.
      */
     @Test(expected = JsonException::class)
-    fun testParseEmptyMap() {
+    public fun testParseEmptyMap() {
         JsonPredicate.parse(JsonMap.EMPTY_MAP.toJsonValue())
     }
 
@@ -403,12 +403,12 @@ public class JsonPredicateTest {
      * Test parsing an invalid JsonValue throws a JsonException.
      */
     @Test(expected = JsonException::class)
-    fun testParseInvalidJson() {
+    public fun testParseInvalidJson() {
         JsonPredicate.parse(JsonValue.wrap("not valid"))
     }
 
     @Test
-    fun testAndroidVersionTest() {
+    public fun testAndroidVersionTest() {
         val versionObject = VersionUtils.createVersionObject(2008200331)
         val predicate = JsonPredicate.newBuilder()
             .addMatcher(

@@ -99,7 +99,7 @@ public class PushManagerTest {
      * Test init starts push registration if the registration token is not available.
      */
     @Test
-    fun testInit() {
+    public fun testInit() {
         every { mockDispatcher.dispatch(any()) } answers {
             val job: JobInfo = firstArg()
             Assert.assertTrue(job.action == PushManager.ACTION_UPDATE_PUSH_REGISTRATION)
@@ -113,7 +113,7 @@ public class PushManagerTest {
      * Test delivery type changes will clear the previous token.
      */
     @Test
-    fun testInitClearsPushTokenOnDeliveryChange() {
+    public fun testInitClearsPushTokenOnDeliveryChange() {
         // Register for a token
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
@@ -162,7 +162,7 @@ public class PushManagerTest {
      * Test on registering for a push token.
      */
     @Test
-    fun testPushRegistration() {
+    public fun testPushRegistration() {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
@@ -176,7 +176,7 @@ public class PushManagerTest {
      * Test push provider unavailable exceptions keep the token.
      */
     @Test
-    fun testPushProviderUnavailableException() {
+    public fun testPushProviderUnavailableException() {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
@@ -192,7 +192,7 @@ public class PushManagerTest {
      * Test registration exceptions clear the token.
      */
     @Test
-    fun tesRegistrationException() {
+    public fun tesRegistrationException() {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
@@ -208,7 +208,7 @@ public class PushManagerTest {
      * Test OptIn is only true if push and notifications are enabled and we have a push token.
      */
     @Test
-    fun testOptIn() {
+    public fun testOptIn() {
         pushManager.init()
 
         // Enable and have permission
@@ -244,7 +244,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testGetPushProviderType() {
+    public fun testGetPushProviderType() {
         pushManager.init()
 
         var deliveryType = PushProvider.DeliveryType.FCM
@@ -263,7 +263,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testGetPushProviderTypeNoProvider() {
+    public fun testGetPushProviderTypeNoProvider() {
         every { mockPushProviders.getBestProvider(any()) } returns null
 
         pushManager.init()
@@ -275,7 +275,7 @@ public class PushManagerTest {
      * Test Airship notification action button groups are available
      */
     @Test
-    fun testUrbanAirshipNotificationActionButtonGroups() {
+    public fun testUrbanAirshipNotificationActionButtonGroups() {
         val keys = ActionButtonGroupsParser.fromXml(
             ApplicationProvider.getApplicationContext(), R.xml.ua_notification_buttons
         ).keys
@@ -293,7 +293,7 @@ public class PushManagerTest {
      * Test trying to add a notification action button group with the reserved prefix
      */
     @Test
-    fun testAddingNotificationActionButtonGroupWithReservedPrefix() {
+    public fun testAddingNotificationActionButtonGroupWithReservedPrefix() {
         pushManager.addNotificationActionButtonGroup(
             "ua_my_test_id", NotificationActionButtonGroup.newBuilder().build()
         )
@@ -307,7 +307,7 @@ public class PushManagerTest {
      * Test trying to remove a notification action button group with the reserved prefix
      */
     @Test
-    fun testRemovingNotificationActionButtonGroupWithReservedPrefix() {
+    public fun testRemovingNotificationActionButtonGroupWithReservedPrefix() {
         val keys = ActionButtonGroupsParser.fromXml(
             ApplicationProvider.getApplicationContext(), R.xml.ua_notification_buttons
         ).keys
@@ -325,7 +325,7 @@ public class PushManagerTest {
      * Test channel registration extender when push is opted in.
      */
     @Test
-    fun testChannelRegistrationExtenderOptedIn() {
+    public fun testChannelRegistrationExtenderOptedIn() {
         var extender: AirshipChannel.Extender.Blocking? = null
         every { mockAirshipChannel.addChannelRegistrationPayloadExtender(any()) } answers {
             extender = firstArg()
@@ -360,7 +360,7 @@ public class PushManagerTest {
      * Test channel registration extender when push is opted out.
      */
     @Test
-    fun testChannelRegistrationExtenderOptedOut() {
+    public fun testChannelRegistrationExtenderOptedOut() {
 
         var extender: AirshipChannel.Extender.Blocking? = null
         every { mockAirshipChannel.addChannelRegistrationPayloadExtender(any()) } answers {
@@ -386,7 +386,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testDeliveryTypeAndroidPlatform() {
+    public fun testDeliveryTypeAndroidPlatform() {
         var extender: AirshipChannel.Extender.Blocking? = null
         every { mockAirshipChannel.addChannelRegistrationPayloadExtender(any()) } answers {
             extender = firstArg()
@@ -414,7 +414,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testAnalyticHeaders() {
+    public fun testAnalyticHeaders() {
         var delegate: Analytics.AnalyticsHeaderDelegate? = null
         every { mockAnalytics.addHeaderDelegate(any()) } answers {
             delegate = firstArg()
@@ -433,7 +433,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testOnPushReceived() {
+    public fun testOnPushReceived() {
         val message = PushMessage(bundleOf())
 
         val internalPushListener: PushListener = mockk(relaxed = true)
@@ -452,7 +452,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testOnPushReceivedInternal() {
+    public fun testOnPushReceivedInternal() {
         val bundle = bundleOf(PushMessage.REMOTE_DATA_UPDATE_KEY to "true")
         val message = PushMessage(bundle)
 
@@ -467,7 +467,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testOnNotificationPosted() {
+    public fun testOnNotificationPosted() {
         val bundle = bundleOf(PushMessage.REMOTE_DATA_UPDATE_KEY to "true")
         val message = PushMessage(bundle)
 
@@ -486,7 +486,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testOnTokenChange() {
+    public fun testOnTokenChange() {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
@@ -505,7 +505,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testOnTokenChangeSameToken() {
+    public fun testOnTokenChangeSameToken() {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
@@ -524,7 +524,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testOnTokenChangeLegacy() {
+    public fun testOnTokenChangeLegacy() {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
@@ -543,7 +543,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testPermissionEnabler() {
+    public fun testPermissionEnabler() {
         var consumer: Consumer<Permission>? = null
         every { mockPermissionManager.addAirshipEnabler(any()) } answers {
             consumer = firstArg()
@@ -564,7 +564,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testForegroundChecksPermission() {
+    public fun testForegroundChecksPermission() {
         pushManager.init()
         pushManager.onAirshipReady()
         this.notificationStatus = PermissionStatus.NOT_DETERMINED
@@ -575,7 +575,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testEnableNotificationsChecksPermission() {
+    public fun testEnableNotificationsChecksPermission() {
         activityMonitor.foreground()
 
         this.notificationStatus = PermissionStatus.NOT_DETERMINED
@@ -584,7 +584,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testEnableUserNotifications() {
+    public fun testEnableUserNotifications() {
         val consumer = TestConsumer<Boolean>()
 
         coEvery { mockPermissionManager.suspendingRequestPermission(
@@ -600,7 +600,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testEnableUserNotificationsDenied() {
+    public fun testEnableUserNotificationsDenied() {
         val consumer = TestConsumer<Boolean>()
 
         coEvery { mockPermissionManager.suspendingRequestPermission(
@@ -616,7 +616,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testEnableUserNotificationsFallback() {
+    public fun testEnableUserNotificationsFallback() {
         val consumer = TestConsumer<Boolean>()
 
         coEvery { mockPermissionManager.suspendingRequestPermission(
@@ -632,7 +632,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testPrivacyManagerEnablesNotifications() {
+    public fun testPrivacyManagerEnablesNotifications() {
         pushManager.onAirshipReady()
 
         this.notificationStatus = PermissionStatus.NOT_DETERMINED
@@ -647,7 +647,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testPermissionStatusChangesUpdatesChannelRegistration(): TestResult = runTest {
+    public fun testPermissionStatusChangesUpdatesChannelRegistration(): TestResult = runTest {
 
         val statusUpdates = MutableSharedFlow<Pair<Permission, PermissionStatus>>()
         every { mockPermissionManager.permissionStatusUpdates } returns statusUpdates
@@ -664,7 +664,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testRequestPermissionWhenEnabled() {
+    public fun testRequestPermissionWhenEnabled() {
         this.notificationStatus = PermissionStatus.DENIED
 
         pushManager.init()
@@ -686,7 +686,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testUpdateRegistrationWhenDisabled() {
+    public fun testUpdateRegistrationWhenDisabled() {
         this.notificationStatus = PermissionStatus.DENIED
         pushManager.userNotificationsEnabled = true
         clearMocks(mockAirshipChannel)
@@ -696,7 +696,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testUpdateRegistrationAfterPrompt() {
+    public fun testUpdateRegistrationAfterPrompt() {
         coEvery { mockPermissionManager.suspendingRequestPermission(any()) } returns PermissionRequestResult.granted()
 
         pushManager.init()
@@ -710,7 +710,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testCheckPermissionAirshipReady() {
+    public fun testCheckPermissionAirshipReady() {
         this.notificationStatus = PermissionStatus.DENIED
         pushManager.init()
         privacyManager.enable(PrivacyManager.Feature.PUSH)
@@ -726,7 +726,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testPromptNotificationPermissionOncePerEnable() {
+    public fun testPromptNotificationPermissionOncePerEnable() {
         this.notificationStatus = PermissionStatus.DENIED
         pushManager.init()
         privacyManager.enable(PrivacyManager.Feature.PUSH)
@@ -750,7 +750,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testPromptNotificationPermissionDisabled() {
+    public fun testPromptNotificationPermissionDisabled() {
         runtimeConfig.setConfigOptions(
             AirshipConfigOptions.newBuilder()
                 .setAppKey("appKey")
@@ -769,7 +769,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testPushStatus() {
+    public fun testPushStatus() {
         pushManager.init()
         privacyManager.enable(PrivacyManager.Feature.PUSH)
         pushManager.onAirshipReady()
@@ -791,7 +791,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testPushStatusNoToken() {
+    public fun testPushStatusNoToken() {
         pushManager.init()
         privacyManager.enable(PrivacyManager.Feature.PUSH)
         pushManager.onAirshipReady()
@@ -810,7 +810,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testPushStatusChangedListenerEnableNotifications() {
+    public fun testPushStatusChangedListenerEnableNotifications() {
         val listener: PushNotificationStatusListener = mockk(relaxed = true)
 
         pushManager.userNotificationsEnabled = false
@@ -837,7 +837,7 @@ public class PushManagerTest {
     }
 
     @Test
-    fun testPushStatusChanges() {
+    public fun testPushStatusChanges() {
         pushManager.init()
         privacyManager.enable(PrivacyManager.Feature.PUSH)
         pushManager.onAirshipReady()

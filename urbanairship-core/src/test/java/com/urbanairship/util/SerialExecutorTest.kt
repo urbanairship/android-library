@@ -6,12 +6,12 @@ import java.util.concurrent.Executors
 import org.junit.Assert
 import org.junit.Test
 
-class SerialExecutorTest {
+public class SerialExecutorTest {
 
     private var executor: Executor = SerialExecutor(Executors.newFixedThreadPool(4))
 
     @Test
-    fun testOrder() {
+    public fun testOrder() {
         val actual = mutableListOf<Int>()
         val expected = mutableListOf<Int>()
 

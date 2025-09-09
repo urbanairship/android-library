@@ -19,7 +19,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class PushMessageTest {
+public class PushMessageTest {
 
     private val clock = TestClock()
 
@@ -27,7 +27,7 @@ class PushMessageTest {
      * Test when the message expired.
      */
     @Test
-    fun testIsExpired() {
+    public fun testIsExpired() {
         // Set expiration in the past (Sun, 09 Sep 2001 01:46:40 GMT)
         val pushMessage = PushMessage(
             bundleOf(PushMessage.EXTRA_EXPIRATION to 1000000.toString())
@@ -39,7 +39,7 @@ class PushMessageTest {
      * Test when message does not have an expiration.
      */
     @Test
-    fun testNoExpiration() {
+    public fun testNoExpiration() {
         val pushMessage = PushMessage(bundleOf())
         Assert.assertFalse("Message should not have an expiration.", pushMessage.isExpired)
     }
@@ -48,7 +48,7 @@ class PushMessageTest {
      * Test when the message has not expired.
      */
     @Test
-    fun testNotExpired() {
+    public fun testNotExpired() {
         clock.currentTimeMillis = 1
 
         val pushMessage = PushMessage(
@@ -62,7 +62,7 @@ class PushMessageTest {
      * Test the message is ping.
      */
     @Test
-    fun testIsPing() {
+    public fun testIsPing() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_PING to "testPing")
         )
@@ -73,7 +73,7 @@ class PushMessageTest {
      * Test the message is not ping.
      */
     @Test
-    fun testIsNotPing() {
+    public fun testIsNotPing() {
         val pushMessage = PushMessage(bundleOf())
         Assert.assertFalse("The message is not ping.", pushMessage.isPing)
     }
@@ -82,7 +82,7 @@ class PushMessageTest {
      * Test get the message's canonical push ID.
      */
     @Test
-    fun testGetCanonicalPushId() {
+    public fun testGetCanonicalPushId() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_PUSH_ID to "testPushID")
         )
@@ -93,7 +93,7 @@ class PushMessageTest {
      * Test get the rich push message ID.
      */
     @Test
-    fun testGetRichPushMessageId() {
+    public fun testGetRichPushMessageId() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_RICH_PUSH_ID to "testRichPushID")
         )
@@ -106,7 +106,7 @@ class PushMessageTest {
      * Test get the notification alert.
      */
     @Test
-    fun testGetAlert() {
+    public fun testGetAlert() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_ALERT to "Test Push Alert!")
         )
@@ -119,7 +119,7 @@ class PushMessageTest {
      * Test get push send ID.
      */
     @Test
-    fun testGetSendId() {
+    public fun testGetSendId() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_SEND_ID to "testSendID")
         )
@@ -130,7 +130,7 @@ class PushMessageTest {
      * Test get push metadata.
      */
     @Test
-    fun testGetMetadata() {
+    public fun testGetMetadata() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_METADATA to "testMetadata")
         )
@@ -143,7 +143,7 @@ class PushMessageTest {
      * Test get push bundle.
      */
     @Test
-    fun testGetPushBundle() {
+    public fun testGetPushBundle() {
         val extras = bundleOf(
             PushMessage.EXTRA_ALERT to "Test Push Alert!",
             PushMessage.EXTRA_PUSH_ID to "testPushID"
@@ -157,7 +157,7 @@ class PushMessageTest {
      * Test get notification title.
      */
     @Test
-    fun testGetTitle() {
+    public fun testGetTitle() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_TITLE to "Test Title")
         )
@@ -168,7 +168,7 @@ class PushMessageTest {
      * Test get notification summary.
      */
     @Test
-    fun testGetSummary() {
+    public fun testGetSummary() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_SUMMARY to "Test Summary")
         )
@@ -181,7 +181,7 @@ class PushMessageTest {
      * Test get wearable payload.
      */
     @Test
-    fun testGetWearablePayload() {
+    public fun testGetWearablePayload() {
         val wearable = """
             {
               "wearable": {
@@ -208,7 +208,7 @@ class PushMessageTest {
      * Test get notification style payload.
      */
     @Test
-    fun testGetStylePayload() {
+    public fun testGetStylePayload() {
         val bigTextStyle =
             "\"type\":\"big_text\", \"big_text\":\"big text\", \"title\":\"big text title\", \"summary\":\"big text summary\""
 
@@ -224,7 +224,7 @@ class PushMessageTest {
      * Test isLocalOnly.
      */
     @Test
-    fun testIsLocalOnly() {
+    public fun testIsLocalOnly() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_LOCAL_ONLY to "true")
         )
@@ -235,7 +235,7 @@ class PushMessageTest {
      * Test getPriority at the MAX_PRIORITY.
      */
     @Test
-    fun testGetPriorityMax() {
+    public fun testGetPriorityMax() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_PRIORITY to PushMessage.MAX_PRIORITY.toString())
         )
@@ -250,7 +250,7 @@ class PushMessageTest {
      * Test getPriority above the MAX_PRIORITY.
      */
     @Test
-    fun testGetPriorityAboveMax() {
+    public fun testGetPriorityAboveMax() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_PRIORITY to (PushMessage.MAX_PRIORITY + 1).toString())
         )
@@ -265,7 +265,7 @@ class PushMessageTest {
      * Test getPriority below the MAX_PRIORITY.
      */
     @Test
-    fun testGetPriorityBelowMax() {
+    public fun testGetPriorityBelowMax() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_PRIORITY to (PushMessage.MAX_PRIORITY - 1).toString())
         )
@@ -280,7 +280,7 @@ class PushMessageTest {
      * Test getPriority at the MIN_PRIORITY.
      */
     @Test
-    fun testGetPriorityMin() {
+    public fun testGetPriorityMin() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_PRIORITY to PushMessage.MIN_PRIORITY.toString())
         )
@@ -295,7 +295,7 @@ class PushMessageTest {
      * Test getPriority above the MIN_PRIORITY.
      */
     @Test
-    fun testGetPriorityAboveMin() {
+    public fun testGetPriorityAboveMin() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_PRIORITY to (PushMessage.MIN_PRIORITY + 1).toString())
         )
@@ -310,7 +310,7 @@ class PushMessageTest {
      * Test getPriority below the MIN_PRIORITY.
      */
     @Test
-    fun testGetPriorityBelowMin() {
+    public fun testGetPriorityBelowMin() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_PRIORITY to (PushMessage.MIN_PRIORITY - 1).toString())
         )
@@ -325,7 +325,7 @@ class PushMessageTest {
      * Test getVisibility at the MAX_VISIBILITY.
      */
     @Test
-    fun testGetVisibilityMax() {
+    public fun testGetVisibilityMax() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_VISIBILITY to PushMessage.MAX_VISIBILITY.toString())
         )
@@ -340,7 +340,7 @@ class PushMessageTest {
      * Test getVisibility above MAX_VISIBILITY.
      */
     @Test
-    fun testGetVisibilityAboveMax() {
+    public fun testGetVisibilityAboveMax() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_VISIBILITY to (PushMessage.MAX_VISIBILITY + 1).toString())
         )
@@ -355,7 +355,7 @@ class PushMessageTest {
      * Test getVisibility below MAX_VISIBILITY.
      */
     @Test
-    fun testGetVisibilityBelowMax() {
+    public fun testGetVisibilityBelowMax() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_VISIBILITY to (PushMessage.MAX_VISIBILITY - 1).toString())
         )
@@ -370,7 +370,7 @@ class PushMessageTest {
      * Test getVisibility at the MIN_VISIBILITY.
      */
     @Test
-    fun testGetVisibilityMin() {
+    public fun testGetVisibilityMin() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_VISIBILITY to PushMessage.MIN_VISIBILITY.toString())
         )
@@ -385,7 +385,7 @@ class PushMessageTest {
      * Test getVisibility above MIN_VISIBILITY.
      */
     @Test
-    fun testGetVisibilityAboveMin() {
+    public fun testGetVisibilityAboveMin() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_VISIBILITY to (PushMessage.MIN_VISIBILITY + 1).toString())
         )
@@ -400,7 +400,7 @@ class PushMessageTest {
      * Test getVisibility below MIN_VISIBILITY.
      */
     @Test
-    fun testGetVisibilityBelowMin() {
+    public fun testGetVisibilityBelowMin() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_VISIBILITY to (PushMessage.MIN_VISIBILITY - 1).toString())
         )
@@ -415,7 +415,7 @@ class PushMessageTest {
      * Test getCategory.
      */
     @Test
-    fun testGetCategory() {
+    public fun testGetCategory() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_CATEGORY to "promo")
         )
@@ -426,7 +426,7 @@ class PushMessageTest {
      * Test get public notification payload.
      */
     @Test
-    fun testGetPublicNotificationPayload() {
+    public fun testGetPublicNotificationPayload() {
         val publicNotification =
             "\"title\":\"test title\", \"alert\":\"test alert\", \"summary\":\"test summary\""
 
@@ -444,7 +444,7 @@ class PushMessageTest {
      * Test saving and reading a push message from a parcel.
      */
     @Test
-    fun testParcelable() {
+    public fun testParcelable() {
         val message = PushMessage(
             pushBundle = bundleOf(
                 PushMessage.EXTRA_ALERT to "Test Push Alert!",
@@ -469,7 +469,7 @@ class PushMessageTest {
      * Test get actions returns a Map of action names to action values.
      */
     @Test
-    fun testGetActions() {
+    public fun testGetActions() {
         val actions = mapOf(
             "action_name" to ActionValue.wrap("action_value"),
             "oh" to ActionValue.wrap("hi")
@@ -488,7 +488,7 @@ class PushMessageTest {
      * Test get actions returns an empty map if its unable to parse the actions payload.
      */
     @Test
-    fun testGetActionsInvalidPayload() {
+    public fun testGetActionsInvalidPayload() {
         val message = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_ACTIONS to "}}what{{")
         )
@@ -501,7 +501,7 @@ class PushMessageTest {
      * not already define a inbox action.
      */
     @Test
-    fun testGetActionAppendsInboxAction() {
+    public fun testGetActionAppendsInboxAction() {
         val actions = mutableMapOf(
             "action_name" to ActionValue.wrap("action_value"),
             "oh" to ActionValue.wrap("hi")
@@ -522,7 +522,7 @@ class PushMessageTest {
      * Test get notification sound.
      */
     @Test
-    fun testGetSound() {
+    public fun testGetSound() {
         val context = spyk(Airship.applicationContext)
         val resources: Resources = mockk {
             every { getIdentifier("test_sound", any(), any()) } returns 5
@@ -543,7 +543,7 @@ class PushMessageTest {
      * Test get notification sound is null when not found.
      */
     @Test
-    fun testGetSoundNull() {
+    public fun testGetSoundNull() {
         val context = Airship.applicationContext
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_SOUND to "test_sound")
@@ -558,7 +558,7 @@ class PushMessageTest {
      * Test get the notification icon.
      */
     @Test
-    fun testGetIcon() {
+    public fun testGetIcon() {
         val context = spyk(Airship.applicationContext)
         val resources: Resources = mockk {
             every { getIdentifier("icon", any(), any()) } returns 5
@@ -580,7 +580,7 @@ class PushMessageTest {
      * Test get notification icon color.
      */
     @Test
-    fun testGetIconColor() {
+    public fun testGetIconColor() {
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_ICON_COLOR to "red")
         )
@@ -595,7 +595,7 @@ class PushMessageTest {
      * Test fromIntent creates a PushMessage instance if a bundle exists under PushManager.EXTRA_PUSH_MESSAGE_BUNDLE.
      */
     @Test
-    fun testFromIntent() {
+    public fun testFromIntent() {
         val bundle = bundleOf()
         val intent = Intent()
         intent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, bundle)
@@ -609,7 +609,7 @@ class PushMessageTest {
      * Test fromIntent returns null if its unable to find a bundle extra under PushManager.EXTRA_PUSH_MESSAGE_BUNDLE.
      */
     @Test
-    fun testFromIntentInvalid() {
+    public fun testFromIntentInvalid() {
         Assert.assertNull(PushMessage.fromIntent(null))
         Assert.assertNull(PushMessage.fromIntent(Intent()))
         Assert.assertNull(
@@ -626,7 +626,7 @@ class PushMessageTest {
      * returns true.
      */
     @Test
-    fun testContainsAirshipKeys() {
+    public fun testContainsAirshipKeys() {
         val bundle = bundleOf("cool" to "story")
         var message = PushMessage(bundle)
         Assert.assertFalse(message.containsAirshipKeys())
@@ -637,7 +637,7 @@ class PushMessageTest {
     }
 
     @Test
-    fun testIsAirshipPush() {
+    public fun testIsAirshipPush() {
         val bundle = bundleOf("cool" to "story")
 
         var message = PushMessage(bundle)
@@ -649,7 +649,7 @@ class PushMessageTest {
     }
 
     @Test
-    fun testIsAccengageVisiblePush() {
+    public fun testIsAccengageVisiblePush() {
         val bundle = bundleOf("cool" to "story")
 
         var message = PushMessage(bundle)
@@ -661,7 +661,7 @@ class PushMessageTest {
     }
 
     @Test
-    fun testIsAccengagePush() {
+    public fun testIsAccengagePush() {
         val bundle = bundleOf("cool" to "story")
 
         var message = PushMessage(bundle)

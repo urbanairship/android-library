@@ -27,7 +27,7 @@ public class JsonValueTest {
      * Test wrapping a JsonSerializable object returns the objects JsonValue.
      */
     @Test
-    fun testWrapJsonSerializable() {
+    public fun testWrapJsonSerializable() {
         val serializableValue = JsonValue.wrap("some value")
         val jsonSerializable = JsonSerializable { serializableValue }
 
@@ -39,7 +39,7 @@ public class JsonValueTest {
      * Test wrapping a JSONObject.
      */
     @Test
-    fun testWrapJSONObject() {
+    public fun testWrapJSONObject() {
         val jsonObject = JSONObject(primitiveMap)
         jsonObject.put("map", JSONObject(primitiveMap))
         jsonObject.put("collection", JSONArray(primitiveList))
@@ -63,7 +63,7 @@ public class JsonValueTest {
      * Test wrapping a JSONArray.
      */
     @Test
-    fun testWrapJSONArray() {
+    public fun testWrapJSONArray() {
         val jsonArray = JSONArray(primitiveList)
         jsonArray.put(JSONObject(primitiveMap))
         jsonArray.put(JSONArray(primitiveList))
@@ -84,7 +84,7 @@ public class JsonValueTest {
      * Test wrapping a map.
      */
     @Test
-    fun testWrapMap() {
+    public fun testWrapMap() {
         val map = primitiveMap.toMutableMap()
             .apply {
                 put("map", primitiveMap)
@@ -108,7 +108,7 @@ public class JsonValueTest {
      * Test wrapping a list.
      */
     @Test
-    fun testWrapList() {
+    public fun testWrapList() {
         val list = primitiveList.toMutableList()
             .apply {
                 add(primitiveMap)
@@ -131,7 +131,7 @@ public class JsonValueTest {
      * Test wrapping an array.
      */
     @Test
-    fun testWrapArray() {
+    public fun testWrapArray() {
         val list = primitiveList.toMutableList()
             .apply {
                 add(primitiveMap)
@@ -160,7 +160,7 @@ public class JsonValueTest {
      * Test wrapping integers.
      */
     @Test
-    fun testWrapInteger() {
+    public fun testWrapInteger() {
         // bytes and shorts are converted to Integer
         Assert.assertEquals(1, JsonValue.wrap(1.toByte().toInt()).getInt(0))
         Assert.assertEquals(1, JsonValue.wrap(1.toShort().toInt()).getInt(0))
@@ -173,7 +173,7 @@ public class JsonValueTest {
      * Test wrapping longs.
      */
     @Test
-    fun testWrapLong() {
+    public fun testWrapLong() {
         Assert.assertEquals(1L, JsonValue.wrap(1L).getLong(0))
         Assert.assertTrue(JsonValue.wrap(1L).value is Long)
     }
@@ -182,7 +182,7 @@ public class JsonValueTest {
      * Test wrapping doubles.
      */
     @Test
-    fun testWrapDouble() {
+    public fun testWrapDouble() {
         // floats are converted to doubles
         Assert.assertEquals(1.0, JsonValue.wrap(1.0).getDouble(0.0), 0.0001)
         Assert.assertTrue(JsonValue.wrap(1.0).value is Double)
@@ -195,7 +195,7 @@ public class JsonValueTest {
      * Test wrapping booleans.
      */
     @Test
-    fun testWrapBoolean() {
+    public fun testWrapBoolean() {
         Assert.assertTrue(JsonValue.wrap(true).getBoolean(false))
         Assert.assertTrue(JsonValue.wrap(true).value is Boolean)
 
@@ -207,7 +207,7 @@ public class JsonValueTest {
      * Test wrapping strings.
      */
     @Test
-    fun testWrapString() {
+    public fun testWrapString() {
         Assert.assertEquals("Hello", JsonValue.wrap("Hello").string)
         Assert.assertTrue(JsonValue.wrap("Hello").value is String)
 
@@ -219,7 +219,7 @@ public class JsonValueTest {
      * Test wrapping null.
      */
     @Test
-    fun testWrapNull() {
+    public fun testWrapNull() {
         Assert.assertTrue(JsonValue.wrap(`object` = null).isNull)
     }
 
@@ -227,7 +227,7 @@ public class JsonValueTest {
      * Test JsonValue toString produces valid JSON output.
      */
     @Test
-    fun testToString() {
+    public fun testToString() {
         // Primitives
         Assert.assertEquals("\"Hello\"", JsonValue.wrap("Hello").toString())
         Assert.assertEquals("1", JsonValue.wrap(1).toString())
@@ -309,7 +309,7 @@ public class JsonValueTest {
      * Test parsing a valid JSON String produces the equivalent JsonValue.
      */
     @Test
-    fun testParseString() {
+    public fun testParseString() {
         Assert.assertEquals(JsonValue.wrap("Hello"), JsonValue.parseString("\"Hello\""))
         Assert.assertEquals(JsonValue.wrap(1), JsonValue.parseString("1"))
         Assert.assertEquals(JsonValue.wrap(true), JsonValue.parseString("true"))
@@ -340,7 +340,7 @@ public class JsonValueTest {
      * Test trying to wrap Double.NaN throws an exception.
      */
     @Test
-    fun testDoubleNAN() {
+    public fun testDoubleNAN() {
         Assert.assertEquals(JsonValue.NULL, JsonValue.wrap(Double.NaN))
     }
 
@@ -348,7 +348,7 @@ public class JsonValueTest {
      * Test trying to wrap Double.NEGATIVE_INFINITY throws an exception.
      */
     @Test
-    fun testDoubleNegativeInfinity() {
+    public fun testDoubleNegativeInfinity() {
         Assert.assertEquals(JsonValue.NULL, JsonValue.wrap(Double.NEGATIVE_INFINITY))
     }
 
@@ -356,7 +356,7 @@ public class JsonValueTest {
      * Test trying to wrap Double.POSITIVE_INFINITY throws an exception.
      */
     @Test
-    fun testDoublePositiveInfinity() {
+    public fun testDoublePositiveInfinity() {
         Assert.assertEquals(JsonValue.NULL, JsonValue.wrap(Double.POSITIVE_INFINITY))
     }
 
@@ -364,7 +364,7 @@ public class JsonValueTest {
      * Test saving and reading a JsonValue from a parcel.
      */
     @Test
-    fun testParcelable() {
+    public fun testParcelable() {
         val jsonValue = JsonValue.wrap(primitiveMap)
 
         // Write the push message to a parcel
@@ -385,7 +385,7 @@ public class JsonValueTest {
      * Test isNull is true for null values.
      */
     @Test
-    fun testIsNull() {
+    public fun testIsNull() {
         Assert.assertTrue(JsonValue.NULL.isNull)
         Assert.assertTrue(JsonValue.wrap(null as Any?).isNull)
     }
@@ -394,7 +394,7 @@ public class JsonValueTest {
      * Test isString is true for String values.
      */
     @Test
-    fun testIsString() {
+    public fun testIsString() {
         Assert.assertTrue(JsonValue.wrap('c').isString)
         Assert.assertTrue(JsonValue.wrap("hi").isString)
     }
@@ -403,7 +403,7 @@ public class JsonValueTest {
      * Test isInteger is true only for int values.
      */
     @Test
-    fun testIsInteger() {
+    public fun testIsInteger() {
         Assert.assertTrue(JsonValue.wrap(1).isInteger)
 
         Assert.assertFalse(JsonValue.wrap(1L).isInteger)
@@ -415,7 +415,7 @@ public class JsonValueTest {
      * Test isLong is true only for longs.
      */
     @Test
-    fun testIsLong() {
+    public fun testIsLong() {
         Assert.assertTrue(JsonValue.wrap(1L).isLong)
 
         Assert.assertFalse(JsonValue.wrap(1).isLong)
@@ -427,7 +427,7 @@ public class JsonValueTest {
      * Test isDouble is true for floats and doubles.
      */
     @Test
-    fun testIsDouble() {
+    public fun testIsDouble() {
         Assert.assertTrue(JsonValue.wrap(1.0).isDouble)
         Assert.assertTrue(JsonValue.wrap(1.0).isDouble)
 
@@ -439,7 +439,7 @@ public class JsonValueTest {
      * Test isNumber is true for any number types.
      */
     @Test
-    fun testIsNumber() {
+    public fun testIsNumber() {
         Assert.assertTrue(JsonValue.wrap(1.0).isNumber)
         Assert.assertTrue(JsonValue.wrap(1.0).isNumber)
         Assert.assertTrue(JsonValue.wrap(1).isNumber)
@@ -450,7 +450,7 @@ public class JsonValueTest {
      * Test isBoolean is true for any boolean values.
      */
     @Test
-    fun testIsBoolean() {
+    public fun testIsBoolean() {
         Assert.assertTrue(JsonValue.wrap(true).isBoolean)
         Assert.assertTrue(JsonValue.wrap(false).isBoolean)
     }
@@ -459,7 +459,7 @@ public class JsonValueTest {
      * Test isJsonMap is true for map values.
      */
     @Test
-    fun testIsJsonMap() {
+    public fun testIsJsonMap() {
         Assert.assertTrue(JsonValue.wrap(mapOf<String, String>()).isJsonMap)
     }
 
@@ -467,7 +467,7 @@ public class JsonValueTest {
      * Test isJsonList is true for list values.
      */
     @Test
-    fun testIsJsonList() {
+    public fun testIsJsonList() {
         Assert.assertTrue(JsonValue.wrap(emptyList<String>()).isJsonList)
     }
 
@@ -475,7 +475,7 @@ public class JsonValueTest {
      * Tests equals handling for numbers.
      */
     @Test
-    fun testNumberEquals() {
+    public fun testNumberEquals() {
         // Double
         Assert.assertFalse(JsonValue.wrap(1) == JsonValue.wrap(1.5))
         Assert.assertFalse(JsonValue.wrap(1L) == JsonValue.wrap(1.5))

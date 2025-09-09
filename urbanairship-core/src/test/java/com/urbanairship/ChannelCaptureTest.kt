@@ -22,7 +22,7 @@ import org.junit.runner.RunWith
 
 @SuppressLint("NewApi")
 @RunWith(AndroidJUnit4::class)
-class ChannelCaptureTest {
+public class ChannelCaptureTest {
 
     private val mockChannel: AirshipChannel = mockk()
     private var configOptions = AirshipConfigOptions.Builder()
@@ -48,13 +48,13 @@ class ChannelCaptureTest {
     )
 
     @Before
-    fun setup() {
+    public fun setup() {
         capture.init()
         clearClipboard()
     }
 
     @After
-    fun takeDown() {
+    public fun takeDown() {
         capture.isEnabled = false
     }
 
@@ -62,7 +62,7 @@ class ChannelCaptureTest {
      * Test disabling the channel capture through AirshipConfigOptions.
      */
     @Test
-    fun testChannelCaptureDisabled() {
+    public fun testChannelCaptureDisabled() {
         // Disable the channel capture
         configOptions = AirshipConfigOptions.Builder()
             .setDevelopmentAppKey("appKey")
@@ -90,7 +90,7 @@ class ChannelCaptureTest {
      * Test enabling the channel capture through AirshipConfigOptions.
      */
     @Test
-    fun testChannelCaptureEnabled() {
+    public fun testChannelCaptureEnabled() {
         // Enable the channel capture
         configOptions = AirshipConfigOptions.Builder()
             .setDevelopmentAppKey("appKey")
@@ -119,7 +119,7 @@ class ChannelCaptureTest {
      * Test the channel capture with Channel ID null.
      */
     @Test
-    fun testChannelCaptureEnabledChannelNull() {
+    public fun testChannelCaptureEnabledChannelNull() {
         // Enable the channel capture
         configOptions = AirshipConfigOptions.Builder()
             .setDevelopmentAppKey("appKey")
@@ -148,7 +148,7 @@ class ChannelCaptureTest {
      * Test the channel capture on a single knock.
      */
     @Test
-    fun testChannelCaptureSingleForeground() {
+    public fun testChannelCaptureSingleForeground() {
         // Enable the channel capture
         configOptions = AirshipConfigOptions.Builder()
             .setDevelopmentAppKey("appKey")
@@ -177,7 +177,7 @@ class ChannelCaptureTest {
      * Test channel capture requires 6 knocks each time.
      */
     @Test
-    fun testChannelCaptureRequires6Knocks() {
+    public fun testChannelCaptureRequires6Knocks() {
         // Enable the channel capture
         configOptions = AirshipConfigOptions.Builder()
             .setDevelopmentAppKey("appKey")
@@ -225,7 +225,7 @@ class ChannelCaptureTest {
      * Test enabling the channel capture at runtime
      */
     @Test
-    fun testEnable() {
+    public fun testEnable() {
         capture.isEnabled = true
         Assert.assertTrue(capture.isEnabled)
     }
@@ -234,7 +234,7 @@ class ChannelCaptureTest {
      * Test disabling the channel capture at runtime
      */
     @Test
-    fun testDisable() {
+    public fun testDisable() {
         capture.isEnabled = true
         capture.isEnabled = false
         Assert.assertFalse(capture.isEnabled)

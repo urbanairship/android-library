@@ -26,7 +26,7 @@ import org.junit.runner.RunWith
  * [NotificationIntentProcessor] tests.
  */
 @RunWith(AndroidJUnit4::class)
-class NotificationIntentProcessorTest {
+public class NotificationIntentProcessorTest {
 
     private var context: Context = mockk(relaxed = true)
     private var notificationManager: NotificationManager = mockk(relaxed = true)
@@ -40,7 +40,7 @@ class NotificationIntentProcessorTest {
     private lateinit var launchIntent: Intent
 
     @Before
-    fun before() {
+    public fun before() {
         val pushManager: PushManager = mockk(relaxed = true) {
             every { notificationListener } returns this@NotificationIntentProcessorTest.notificationListener
         }
@@ -79,7 +79,7 @@ class NotificationIntentProcessorTest {
      * Test notification response.
      */
     @Test
-    fun testNotificationResponse() {
+    public fun testNotificationResponse() {
         every { notificationListener.onNotificationOpened(any()) } returns false
 
         val result = processIntent(responseIntent)
@@ -100,7 +100,7 @@ class NotificationIntentProcessorTest {
      * Test notification response.
      */
     @Test
-    fun testNotificationResponseSuspending(): TestResult = runTest {
+    public fun testNotificationResponseSuspending(): TestResult = runTest {
         every { notificationListener.onNotificationOpened(any()) } returns false
 
         val result = NotificationIntentProcessor(Airship.shared(), context, responseIntent, dispatcher)
@@ -123,7 +123,7 @@ class NotificationIntentProcessorTest {
      * Test notification response when the listener returns true.
      */
     @Test
-    fun testNotificationResponseListenerStartsApp() {
+    public fun testNotificationResponseListenerStartsApp() {
         every { notificationListener.onNotificationOpened(any()) } returns true
 
         val result = processIntent(responseIntent)
@@ -137,7 +137,7 @@ class NotificationIntentProcessorTest {
      * Test foreground action response.
      */
     @Test
-    fun testForegroundActionResponse() {
+    public fun testForegroundActionResponse() {
         every { notificationListener.onNotificationForegroundAction(any(), any()) } returns false
 
         // Update the response intent to contain action info
@@ -169,7 +169,7 @@ class NotificationIntentProcessorTest {
      * Test foreground action response when the listener returns true.
      */
     @Test
-    fun testForegroundActionResponseListenerStartsApp() {
+    public fun testForegroundActionResponseListenerStartsApp() {
         every { notificationListener.onNotificationForegroundAction(any(), any()) } returns true
 
         // Update the response intent to contain action info
@@ -188,7 +188,7 @@ class NotificationIntentProcessorTest {
      * Test background action response.
      */
     @Test
-    fun testBackgroundActionResponse() {
+    public fun testBackgroundActionResponse() {
         // Update the response intent to contain action info
         responseIntent
             .putExtra(PushManager.EXTRA_NOTIFICATION_BUTTON_ID, "buttonId")
@@ -214,7 +214,7 @@ class NotificationIntentProcessorTest {
      * Test notification dismissed.
      */
     @Test
-    fun testNotificationDismissed() {
+    public fun testNotificationDismissed() {
         val result = processIntent(dismissIntent)
         Assert.assertTrue(result == true)
 
@@ -229,7 +229,7 @@ class NotificationIntentProcessorTest {
      * Test invalid intents.
      */
     @Test
-    fun testInvalidIntents() {
+    public fun testInvalidIntents() {
         // Missing action
         Assert.assertFalse(processIntent(Intent()) == true)
 

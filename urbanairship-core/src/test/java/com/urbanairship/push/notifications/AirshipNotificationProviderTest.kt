@@ -18,7 +18,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class AirshipNotificationProviderTest {
+public class AirshipNotificationProviderTest {
 
     private var configOptions = AirshipConfigOptions.Builder()
         .setDevelopmentAppKey("appKey")
@@ -42,7 +42,7 @@ class AirshipNotificationProviderTest {
     )
 
     @Before
-    fun setup() {
+    public fun setup() {
         createChannel("test_channel")
     }
 
@@ -50,7 +50,7 @@ class AirshipNotificationProviderTest {
      * Test empty alert should result in a CANCEL status.
      */
     @Test
-    fun testBuildNotificationNull() {
+    public fun testBuildNotificationNull() {
         val emptyPushMessage = PushMessage(bundleOf())
 
         val arguments = provider.onCreateNotificationArguments(context, emptyPushMessage)
@@ -62,7 +62,7 @@ class AirshipNotificationProviderTest {
      * Test creating a notification.
      */
     @Test
-    fun testBuildNotification() {
+    public fun testBuildNotification() {
         val arguments = provider.onCreateNotificationArguments(context, defaultPushMessage)
         val result = provider.onCreateNotification(context, arguments)
 
@@ -74,7 +74,7 @@ class AirshipNotificationProviderTest {
      * Test the defaults.
      */
     @Test
-    fun testDefaults() {
+    public fun testDefaults() {
         Assert.assertEquals(10, provider.smallIcon)
         Assert.assertEquals(20, provider.defaultAccentColor)
         Assert.assertEquals("test_channel", provider.defaultNotificationChannelId)
@@ -84,7 +84,7 @@ class AirshipNotificationProviderTest {
      * Test arguments when the channel is empty.
      */
     @Test
-    fun testArgumentsDefaultChannel() {
+    public fun testArgumentsDefaultChannel() {
         provider.defaultNotificationChannelId = "does not exist"
         val arguments = provider.onCreateNotificationArguments(context, defaultPushMessage)
 
@@ -97,7 +97,7 @@ class AirshipNotificationProviderTest {
      * Test the channel will fallback to the SDK default channel if the specified channel does not exist.
      */
     @Test
-    fun testArgumentsFallbackChannel() {
+    public fun testArgumentsFallbackChannel() {
         val arguments = provider.onCreateNotificationArguments(context, defaultPushMessage)
 
         Assert.assertEquals("test_channel", arguments.notificationChannelId)
@@ -113,7 +113,7 @@ class AirshipNotificationProviderTest {
      * Test arguments when the channel is defined on the push message.
      */
     @Test
-    fun testArgumentsWithChannel() {
+    public fun testArgumentsWithChannel() {
         createChannel("cool-channel")
 
         val pushMessage = PushMessage(
@@ -139,7 +139,7 @@ class AirshipNotificationProviderTest {
      * Test overriding the small icon from a push.
      */
     @Test
-    fun testOverrideSmallIcon() {
+    public fun testOverrideSmallIcon() {
         val mockPush: PushMessage = mockk(relaxed = true) {
             every { alert } returns "alert"
             every { getIcon(context, any()) } returns 100

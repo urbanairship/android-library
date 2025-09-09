@@ -7,10 +7,10 @@ import org.junit.Test
 /**
  * [ImageUtils] tests.
  */
-class ImageUtilsTest {
+public class ImageUtilsTest {
 
     @Test
-    fun testCalculateTargetSize() {
+    public fun testCalculateTargetSize() {
         // Returns requested dimensions if both are non-zero
         Assert.assertEquals(ImageUtils.Size(10, 10), calculateTargetSize(1, 1, 10, 10, -1, -1))
         Assert.assertEquals(ImageUtils.Size(20, 20), calculateTargetSize(1, 2, 20, 20, -1, -1))
@@ -25,7 +25,7 @@ class ImageUtilsTest {
     }
 
     @Test
-    fun testFallbackDimensions() {
+    public fun testFallbackDimensions() {
         // Requested height = 0, no fallback
         Assert.assertEquals(ImageUtils.Size(10, 20), calculateTargetSize(5, 10, 10, 0, -1, -1))
         // Requested height = 0, with fallback
@@ -42,17 +42,17 @@ class ImageUtilsTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testCalculateTargetSizeZeroWidth() {
+    public fun testCalculateTargetSizeZeroWidth() {
         Assert.assertEquals(ImageUtils.Size(1, 1), calculateTargetSize(0, 1, 1, 1, -1, -1))
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testCalculateTargetSizeZeroHeight() {
+    public fun testCalculateTargetSizeZeroHeight() {
         Assert.assertEquals(ImageUtils.Size(1, 1), calculateTargetSize(1, 0, 1, 1, -1, -1))
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testCalculateTargetSizeZeroReqWidthAndReqHeight() {
+    public fun testCalculateTargetSizeZeroReqWidthAndReqHeight() {
         Assert.assertEquals(ImageUtils.Size(1, 1), calculateTargetSize(1, 1, 0, 0, -1, -1))
     }
 }

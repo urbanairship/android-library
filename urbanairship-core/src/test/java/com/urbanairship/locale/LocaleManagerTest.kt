@@ -18,13 +18,13 @@ import org.junit.runner.RunWith
  * Tests for [LocaleManager]
  */
 @RunWith(AndroidJUnit4::class)
-class LocaleManagerTest {
+public class LocaleManagerTest {
 
     private var context: Context = ApplicationProvider.getApplicationContext()
     private var localeManager = LocaleManager(context, PreferenceDataStore.inMemoryStore(context))
 
     @Test
-    fun testGetLocale() {
+    public fun testGetLocale() {
         val de = Locale("de")
         context.resources.configuration.setLocale(de)
 
@@ -32,7 +32,7 @@ class LocaleManagerTest {
     }
 
     @Test
-    fun testLocaleUpdatesFlow(): TestResult = runTest {
+    public fun testLocaleUpdatesFlow(): TestResult = runTest {
         localeManager.localeUpdates.test {
             val en = Locale("en")
             context.resources.configuration.setLocale(en)

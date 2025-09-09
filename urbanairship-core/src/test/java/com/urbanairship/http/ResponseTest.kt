@@ -11,16 +11,16 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class ResponseTest {
+public class ResponseTest {
 
     @Test
-    fun testNullLocationHeader() {
+    public fun testNullLocationHeader() {
         val response = Response<Void?>(200, null)
         TestCase.assertNull(response.locationHeader)
     }
 
     @Test
-    fun testLocationHeader() {
+    public fun testLocationHeader() {
         val headers = mapOf("Location" to "https://fakeLocation.com")
 
         val response = Response<Void?>(200, null, null, headers)
@@ -28,13 +28,13 @@ class ResponseTest {
     }
 
     @Test
-    fun testNullRetryAfterHeader() {
+    public fun testNullRetryAfterHeader() {
         val response = Response<Void?>(200, null)
         TestCase.assertEquals(-1, response.getRetryAfterHeader(TimeUnit.MILLISECONDS, -1))
     }
 
     @Test
-    fun testRetryAfterSeconds() {
+    public fun testRetryAfterSeconds() {
         val headers = mapOf("Retry-After" to "120")
         val clock: Clock = TestClock()
 
@@ -43,7 +43,7 @@ class ResponseTest {
     }
 
     @Test
-    fun testRetryAfterDate() {
+    public fun testRetryAfterDate() {
         val clock: Clock = TestClock()
 
         val futureTimeStamp = DateUtils.createIso8601TimeStamp(clock.currentTimeMillis() + 100000)
@@ -59,7 +59,7 @@ class ResponseTest {
     }
 
     @Test
-    fun testInvalidRetryAfter() {
+    public fun testInvalidRetryAfter() {
         val headers = mapOf("Retry-After" to "what")
 
         val response = Response<Void?>(200, null, null, headers)

@@ -14,10 +14,10 @@ import org.junit.runner.RunWith
  * [ValueMatcher] tests.
  */
 @RunWith(AndroidJUnit4::class)
-class ValueMatcherTest {
+public class ValueMatcherTest {
 
     @Test
-    fun testValueMatcher() {
+    public fun testValueMatcher() {
         var value = JsonValue.wrap(5)
         var matcher = ValueMatcher.newValueMatcher(value)
 
@@ -114,7 +114,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testNumberRangeMatcher() {
+    public fun testNumberRangeMatcher() {
         var min: Double? = 5.0
         var max: Double? = null
         var value = JsonValue.wrap(6.0)
@@ -156,7 +156,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testAbsenceMatcher() {
+    public fun testAbsenceMatcher() {
         var value = JsonValue.NULL
         var matcher = ValueMatcher.newIsAbsentMatcher()
         Assert.assertTrue(matcher.apply(value))
@@ -180,7 +180,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testVersionMatcher() {
+    public fun testVersionMatcher() {
         val matcher = ValueMatcher.newVersionMatcher("1.+")
 
         Assert.assertTrue(matcher.apply(JsonValue.wrap("1.2.4")))
@@ -193,7 +193,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testArrayContainsMatcher() {
+    public fun testArrayContainsMatcher() {
         val predicate = JsonPredicate.newBuilder()
             .addMatcher(
                 matcher = JsonMatcher.newBuilder()
@@ -241,7 +241,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testArrayLengthMatcher() {
+    public fun testArrayLengthMatcher() {
         val predicate = JsonPredicate.newBuilder()
             .addMatcher(
                 matcher = JsonMatcher.newBuilder()
@@ -268,7 +268,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testParse() {
+    public fun testParse() {
         val min = 5.0
         val max = 7.0
         var json = jsonMapOf(
@@ -313,7 +313,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testParseArrayContainsMatcher() {
+    public fun testParseArrayContainsMatcher() {
         val predicate = JsonPredicate.newBuilder()
             .addMatcher(
                 matcher = JsonMatcher.newBuilder()
@@ -335,7 +335,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testStringBeginsMatcher() {
+    public fun testStringBeginsMatcher() {
         val matcher = StringBeginsMatcher(JsonValue.wrap("foo"))
         Assert.assertTrue(matcher.apply(JsonValue.wrap("foobar")))
         Assert.assertTrue(matcher.apply(JsonValue.wrap("FOOBAR"), true))
@@ -344,7 +344,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testStringEndsMatcher() {
+    public fun testStringEndsMatcher() {
         val matcher = StringEndsMatcher(JsonValue.wrap("bar"))
         Assert.assertTrue(matcher.apply(JsonValue.wrap("foobar")))
         Assert.assertTrue(matcher.apply(JsonValue.wrap("FOOBAR"), true))
@@ -353,7 +353,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testStringContainsMatcher() {
+    public fun testStringContainsMatcher() {
         val matcher = StringContainsMatcher(JsonValue.wrap("oob"))
         Assert.assertTrue(matcher.apply(JsonValue.wrap("foobar")))
         Assert.assertTrue(matcher.apply(JsonValue.wrap("FOOBAR"), true))
@@ -362,7 +362,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testStringContainsMatcherEdgeCase() {
+    public fun testStringContainsMatcherEdgeCase() {
         // this one fails if the implementation is
         // return containerComparableLowerCase.contains(containeeComparableLowerCase);
         val matcher = StringContainsMatcher(JsonValue.wrap("iẞAR"))
@@ -371,7 +371,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testStringEndsMatcherEdgeCase() {
+    public fun testStringEndsMatcherEdgeCase() {
         // this one fails if the implementation is
         // containerComparable.toLowerCase().endsWith(containeeComparable.toLowerCase());
         val matcher = StringEndsMatcher(JsonValue.wrap("i"))
@@ -380,7 +380,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testStringBeginsMatcherEdgeCase() {
+    public fun testStringBeginsMatcherEdgeCase() {
         // this one fails if the implementation is
         // containerComparable.toLowerCase().startsWidth(containeeComparable.toLowerCase());
         val matcher = StringBeginsMatcher(JsonValue.wrap("i"))
@@ -389,7 +389,7 @@ class ValueMatcherTest {
     }
 
     @Test
-    fun testStringEqualsMatcherEdgeCase() {
+    public fun testStringEqualsMatcherEdgeCase() {
         val matcher = ExactValueMatcher(JsonValue.wrap("i"))
         Assert.assertFalse(matcher.apply(JsonValue.wrap("İ")))
         Assert.assertTrue(matcher.apply(JsonValue.wrap("İ"), true))

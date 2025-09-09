@@ -8,10 +8,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class PushProvidersTest {
+public class PushProvidersTest {
 
     @Test
-    fun testValidPushProvider() {
+    public fun testValidPushProvider() {
         verifyInvalidProvider(
             TestPushProvider(
                 Airship.Platform.AMAZON, PushProvider.DeliveryType.FCM
@@ -45,9 +45,9 @@ class PushProvidersTest {
         )
     }
 
-    companion object {
+    public companion object {
 
-        fun verifyValidProvider(provider: TestPushProvider) {
+        public fun verifyValidProvider(provider: TestPushProvider) {
             val configOptions =
                 AirshipConfigOptions.newBuilder().setCustomPushProvider(provider).build()
 
@@ -56,7 +56,7 @@ class PushProvidersTest {
             Assert.assertEquals(provider, providers.getAvailableProviders()[0])
         }
 
-        fun verifyInvalidProvider(provider: TestPushProvider) {
+        public fun verifyInvalidProvider(provider: TestPushProvider) {
             val configOptions =
                 AirshipConfigOptions.newBuilder().setCustomPushProvider(provider).build()
 

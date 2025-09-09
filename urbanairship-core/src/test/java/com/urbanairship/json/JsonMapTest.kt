@@ -12,13 +12,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class JsonMapTest {
+public class JsonMapTest {
 
     private lateinit var jsonMap: JsonMap
 
     @Before
     @Throws(JsonException::class)
-    fun setUp() {
+    public fun setUp() {
         val map = mapOf(
             "null-key" to null,
             "some-key" to "some-value",
@@ -33,7 +33,7 @@ class JsonMapTest {
      * Test creating a new JsonMap with a null map.
      */
     @Test
-    fun testCreateNull() {
+    public fun testCreateNull() {
         val emptyMap = JsonMap(null)
         Assert.assertEquals(0, emptyMap.size())
         Assert.assertTrue(emptyMap.isEmpty)
@@ -44,7 +44,7 @@ class JsonMapTest {
      * Test getting an optional value returns a null JsonValue instead of null.
      */
     @Test
-    fun testOpt() {
+    public fun testOpt() {
         // Verify it gets values that are available
         Assert.assertEquals("some-value", jsonMap.opt("some-key").string)
 
@@ -56,7 +56,7 @@ class JsonMapTest {
      * Test toString produces a JSON encoded String.
      */
     @Test
-    fun testToString() {
+    public fun testToString() {
         val parsedValue = parseString(jsonMap.toString())
         Assert.assertEquals(parsedValue.map, jsonMap)
     }
@@ -65,12 +65,12 @@ class JsonMapTest {
      * Test toString on an empty map produces a JSON encoded String.
      */
     @Test
-    fun testEmptyMapToString() {
+    public fun testEmptyMapToString() {
         Assert.assertEquals("{}", JsonMap(null).toString())
     }
 
     @Test
-    fun testMapBuilder() {
+    public fun testMapBuilder() {
         val list = listOf("String", 1.2, false, 1, 'c')
 
         jsonMap = newBuilder()
