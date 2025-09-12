@@ -29,7 +29,7 @@ import kotlinx.parcelize.Parcelize
 public class MessageListViewModel(
     private var predicate: Predicate<Message>?,
     private val inbox: Inbox = MessageCenter.shared().inbox,
-    private val savedStateHandle: SavedStateHandle,
+//    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
     private val restoredState: MessageListState.Content? = null
@@ -145,7 +145,7 @@ public class MessageListViewModel(
                 MessageListViewModel(
                     predicate = predicate,
                     inbox = MessageCenter.shared().inbox,
-                    savedStateHandle = createSavedStateHandle(),
+//                    savedStateHandle = createSavedStateHandle(),
                 )
             }
         }

@@ -1,6 +1,7 @@
 package com.urbanairship.messagecenter
 
 import android.os.Parcelable
+import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
@@ -22,8 +23,9 @@ import kotlinx.parcelize.Parcelize
  * @property expirationDate (Optional) The date and time the message will expire (UTC).
  * @property extras (Optional) Additional key-value pairs associated with the message.
  */
+
 @Parcelize
-public class Message internal constructor(
+public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
     public val id: String,
     public val title: String,
     public val bodyUrl: String,
