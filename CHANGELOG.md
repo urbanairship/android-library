@@ -4,6 +4,12 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.13.1 - September 15, 2025
+Patch release to fix an issue with showing out of date In-App Automations and Scenes.
+
+### Changes
+- Fixed refreshing out of date In-App Automations and Scenes before displaying.
+
 ## Version 19.13.0 - September 5, 2025
 Minor release that adds support for handling `uairship://message_center/message/<message_id>` links to open a specific message in Message Center.
 
