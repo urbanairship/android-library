@@ -17,9 +17,11 @@ import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Network
+import kotlin.collections.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 
 /**
  * Remote data access for automation
@@ -163,7 +165,7 @@ internal class AutomationRemoteDataAccess(
 
     private fun remoteDataInfo(schedule: AutomationSchedule): RemoteDataInfo? {
         val metadata = schedule.metadata?.optMap() ?: return null
-        val infoJson = metadata.get(InAppRemoteData.REMOTE_INFO_METADATA_KEY) ?: return null
+        val infoJson = metadata[InAppRemoteData.REMOTE_INFO_METADATA_KEY] ?: return null
         return try {
             if (infoJson.isString) {
                 // 17.x and older
@@ -179,10 +181,9 @@ internal class AutomationRemoteDataAccess(
 
 }
 
-internal class InAppRemoteData(
+internal data class InAppRemoteData(
     val payload: Map<RemoteDataSource, Payload>
 ) {
-
     data class Data(
         val schedules: List<AutomationSchedule>,
         val constraints: List<FrequencyConstraint>?
@@ -202,7 +203,7 @@ internal class InAppRemoteData(
                             null
                         }
                     },
-                    constraints = value.get(CONSTRAINTS)?.requireList()?.map(FrequencyConstraint::fromJson)
+                    constraints = value[CONSTRAINTS]?.requireList()?.map(FrequencyConstraint::fromJson)
                 )
             }
         }
@@ -223,7 +224,7 @@ internal class InAppRemoteData(
 
     companion object {
         const val LEGACY_REMOTE_INFO_METADATA_KEY = "com.urbanairship.iaa.REMOTE_DATA_METADATA"
-        const val REMOTE_INFO_METADATA_KEY = "com.urbanairship.iaa.REMOTE_DATA_INFO";
+        const val REMOTE_INFO_METADATA_KEY = "com.urbanairship.iaa.REMOTE_DATA_INFO"
 
         fun fromPayloads(payloads: List<RemoteDataPayload>): InAppRemoteData {
             val parsed = mutableMapOf<RemoteDataSource, Payload>()

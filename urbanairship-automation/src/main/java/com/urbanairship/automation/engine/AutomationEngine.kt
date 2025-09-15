@@ -413,7 +413,7 @@ internal class AutomationEngine(
         }
 
         if (!preprocessDelay(data)) {
-            UALog.v {"Preprocessing delay interrupted, retrying" }
+            UALog.v {"Preprocessing delay interrupted $data, retrying" }
             processTriggeredSchedule(scheduleId)
         }
 
@@ -538,6 +538,7 @@ internal class AutomationEngine(
 
         val updated = updateState(data.schedule.identifier) {
             if (!it.isInState(listOf(AutomationScheduleState.TRIGGERED))) {
+                UALog.v { "Schedule $data no longer triggered" }
                 return@updateState it
             }
 
@@ -550,6 +551,12 @@ internal class AutomationEngine(
                 }
                 SchedulePrepareResult.Skip -> {
                     it.prepareCancelled(clock.currentTimeMillis(), penalize = false)
+                }
+                SchedulePrepareResult.Invalidate -> {
+                    scope.launch {
+                        startTaskToProcessTriggeredSchedule(data.schedule.identifier)
+                    }
+                    it
                 }
                 else -> { it }
             }

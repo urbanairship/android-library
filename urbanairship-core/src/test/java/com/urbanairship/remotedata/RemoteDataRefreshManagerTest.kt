@@ -13,6 +13,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import java.util.Locale
+import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -58,8 +59,8 @@ public class RemoteDataRefreshManagerTest {
     @Test
     public fun testRefresh(): TestResult = runTest {
         every { mockPrivacyManager.isAnyFeatureEnabled(any()) } returns true
-        coEvery { mockAppRemoteDataProvider.refresh(any(), any(), any()) } returns RemoteDataProvider.RefreshResult.NEW_DATA
-        coEvery { mockContactRemoteDataProvider.refresh(any(), any(), any()) } returns RemoteDataProvider.RefreshResult.SKIPPED
+        coEvery { mockAppRemoteDataProvider.refresh(any(), any(), any()) } returns RemoteDataProvider.RefreshResult.NewData()
+        coEvery { mockContactRemoteDataProvider.refresh(any(), any(), any()) } returns RemoteDataProvider.RefreshResult.Skipped()
 
         remoteDataRefreshManager.refreshFlow.test {
             val jobResult = remoteDataRefreshManager.performRefresh(
@@ -70,13 +71,21 @@ public class RemoteDataRefreshManagerTest {
 
             assertEquals(JobResult.SUCCESS, jobResult)
 
-            assertEquals(
-                setOf(
-                    Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.NEW_DATA),
-                    Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.SKIPPED),
-                ),
-                setOf(awaitItem(), awaitItem())
-            )
+            val results = setOf(awaitItem(), awaitItem())
+            assertThat(results.size).isEqualTo(2)
+            assertThat(
+                results.any { value ->
+                    return@any value.first == RemoteDataSource.APP &&
+                            value.second is RemoteDataProvider.RefreshResult.NewData
+                }
+            ).isTrue()
+
+            assertThat(
+                results.any { value ->
+                    return@any value.first == RemoteDataSource.CONTACT &&
+                            value.second is RemoteDataProvider.RefreshResult.Skipped
+                }
+            ).isTrue()
         }
 
         coVerify { mockAppRemoteDataProvider.refresh("some token", Locale.CANADA, 100) }
@@ -86,8 +95,8 @@ public class RemoteDataRefreshManagerTest {
     @Test
     public fun testRefreshFailed(): TestResult = runTest {
         every { mockPrivacyManager.isAnyFeatureEnabled(any()) } returns true
-        coEvery { mockAppRemoteDataProvider.refresh(any(), any(), any()) } returns RemoteDataProvider.RefreshResult.FAILED
-        coEvery { mockContactRemoteDataProvider.refresh(any(), any(), any()) } returns RemoteDataProvider.RefreshResult.SKIPPED
+        coEvery { mockAppRemoteDataProvider.refresh(any(), any(), any()) } returns RemoteDataProvider.RefreshResult.Failed()
+        coEvery { mockContactRemoteDataProvider.refresh(any(), any(), any()) } returns RemoteDataProvider.RefreshResult.Skipped()
 
         remoteDataRefreshManager.refreshFlow.test {
             val jobResult = remoteDataRefreshManager.performRefresh(
@@ -98,13 +107,21 @@ public class RemoteDataRefreshManagerTest {
 
             assertEquals(JobResult.RETRY, jobResult)
 
-            assertEquals(
-                setOf(
-                    Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.FAILED),
-                    Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.SKIPPED),
-                ),
-                setOf(awaitItem(), awaitItem())
-            )
+            val results = setOf(awaitItem(), awaitItem())
+            assertThat(results.size).isEqualTo(2)
+            assertThat(
+                results.any { value ->
+                    return@any value.first == RemoteDataSource.APP &&
+                            value.second is RemoteDataProvider.RefreshResult.Failed
+                }
+            ).isTrue()
+
+            assertThat(
+                results.any { value ->
+                    return@any value.first == RemoteDataSource.CONTACT &&
+                            value.second is RemoteDataProvider.RefreshResult.Skipped
+                }
+            ).isTrue()
         }
 
         coVerify { mockAppRemoteDataProvider.refresh("some token", Locale.CANADA, 100) }
@@ -124,13 +141,21 @@ public class RemoteDataRefreshManagerTest {
 
             assertEquals(JobResult.SUCCESS, jobResult)
 
-            assertEquals(
-                setOf(
-                    Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.SKIPPED),
-                    Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.SKIPPED),
-                ),
-                setOf(awaitItem(), awaitItem())
-            )
+            val results = setOf(awaitItem(), awaitItem())
+            assertThat(results.size).isEqualTo(2)
+            assertThat(
+                results.any { value ->
+                    return@any value.first == RemoteDataSource.APP &&
+                            value.second is RemoteDataProvider.RefreshResult.Skipped
+                }
+            ).isTrue()
+
+            assertThat(
+                results.any { value ->
+                    return@any value.first == RemoteDataSource.CONTACT &&
+                            value.second is RemoteDataProvider.RefreshResult.Skipped
+                }
+            ).isTrue()
         }
 
         coVerify(exactly = 0) { mockAppRemoteDataProvider.refresh(any(), any(), any()) }

@@ -42,6 +42,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
@@ -175,7 +176,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     }
 
     init {
-        activityMonitor.addApplicationListener(applicationListener)
+        updateChangeToken()
         pushManager.addInternalPushListener(pushListener)
         localeManager.addListener(localeChangedListener)
         privacyManager.addListener(privacyListener)
@@ -191,16 +192,12 @@ public class RemoteData @VisibleForTesting internal constructor(
         scope.launch {
             refreshManager.refreshFlow.collect {
                 val refreshStatus = when (it.second) {
-                    RemoteDataProvider.RefreshResult.SKIPPED -> RefreshStatus.SUCCESS
-                    RemoteDataProvider.RefreshResult.NEW_DATA -> RefreshStatus.SUCCESS
-                    RemoteDataProvider.RefreshResult.FAILED -> RefreshStatus.FAILED
+                    is RemoteDataProvider.RefreshResult.Skipped -> RefreshStatus.SUCCESS
+                    is RemoteDataProvider.RefreshResult.NewData -> RefreshStatus.SUCCESS
+                    is RemoteDataProvider.RefreshResult.Failed -> RefreshStatus.FAILED
                 }
                 refreshStatusFlowMap[it.first]?.emit(refreshStatus)
             }
-        }
-
-        if (activityMonitor.isAppForegrounded) {
-            applicationListener.onForeground(clock.currentTimeMillis())
         }
 
         // For the first refresh bypass work manager since it can delay the job in
@@ -210,8 +207,16 @@ public class RemoteData @VisibleForTesting internal constructor(
         this.startUpRefreshJob = scope.launch {
             airshipReady.first { it }
             refreshManager.performRefresh(
-                changeToken = changeToken, locale = localeManager.locale, randomValue = randomValue
+                changeToken = changeToken,
+                locale = localeManager.locale,
+                randomValue = randomValue
             )
+        }
+
+        activityMonitor.addApplicationListener(applicationListener)
+
+        if (activityMonitor.isAppForegrounded) {
+            applicationListener.onForeground(clock.currentTimeMillis())
         }
     }
 
@@ -309,13 +314,15 @@ public class RemoteData @VisibleForTesting internal constructor(
             .runningFold(mutableListOf<RemoteDataProvider.RefreshResult>()) { acc, value ->
                 acc.add(value.second)
                 acc
-            }
-            .filter { it.size == providerSources.count() }
-            .map { !it.contains(RemoteDataProvider.RefreshResult.FAILED) }
-            .onStart {
+            }.filter {
+                it.size == providerSources.count()
+            }.map { collection ->
+                !collection.any { item ->
+                    item is RemoteDataProvider.RefreshResult.Failed
+                }
+            }.onStart {
                 dispatchRefreshJob()
-            }
-            .first()
+            }.first()
     }
 
     public fun refreshStatusFlow(source: RemoteDataSource): StateFlow<RefreshStatus> {
@@ -328,12 +335,13 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     public fun payloadFlow(types: List<String>): Flow<List<RemoteDataPayload>> {
         return refreshManager.refreshFlow
-            .filter { it.second == RemoteDataProvider.RefreshResult.NEW_DATA }
+            .filter { it.second is RemoteDataProvider.RefreshResult.NewData }
             .map {
                 payloads(types)
             }.onStart {
                 emit(payloads(types))
             }
+            .conflate()
     }
 
     private fun updateChangeToken() {
@@ -357,7 +365,7 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     public fun isCurrent(remoteDataInfo: RemoteDataInfo): Boolean {
         return providers.firstOrNull { it.source == remoteDataInfo.source }
-            ?.isCurrent(localeManager.locale, randomValue) ?: false
+            ?.isCurrent(localeManager.locale, randomValue, remoteDataInfo) ?: false
     }
 
     public fun status(source: RemoteDataSource): Status {
@@ -377,7 +385,7 @@ public class RemoteData @VisibleForTesting internal constructor(
      * Waits for remote-data `source` to successfully refresh up to the specified `maxTimeMillis`.
      */
     public suspend fun waitForRefresh(source: RemoteDataSource, maxTimeMillis: Long? = null) {
-        UALog.v { "Waiting for remote data to refresh successfully $source" }
+//        UALog.v { "Waiting for remote data to refresh successfully $source" }
         waitForRefresh(source, maxTimeMillis) {
             it == RefreshStatus.SUCCESS
         }
