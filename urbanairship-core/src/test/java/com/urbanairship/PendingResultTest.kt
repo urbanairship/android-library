@@ -10,7 +10,7 @@ import org.junit.runner.RunWith
 import org.robolectric.Shadows
 
 @RunWith(AndroidJUnit4::class)
-class PendingResultTest {
+public class PendingResultTest {
 
     private var resultCallback = TestResultCallback<Boolean>()
     private var pendingResult = PendingResult<Boolean>()
@@ -18,12 +18,12 @@ class PendingResultTest {
     private var looper = Looper.myLooper()
 
     @Before
-    fun setup() {
+    public fun setup() {
         pendingResult.addResultCallback(Looper.myLooper(), resultCallback)
     }
 
     @Test
-    fun testGet() {
+    public fun testGet() {
         setResultAsync(true)
 
         // Verify we get the result
@@ -41,7 +41,7 @@ class PendingResultTest {
     }
 
     @Test
-    fun testCancel() {
+    public fun testCancel() {
         pendingResult.cancel()
         Assert.assertTrue(pendingResult.isDone)
         Assert.assertTrue(pendingResult.isCancelled)

@@ -151,7 +151,7 @@ public class NotificationActionButton private constructor(
             private set
         public var isForegroundAction: Boolean = true
             private set
-        public val remoteInputs = mutableListOf<LocalizableRemoteInput>()
+        public val remoteInputs: MutableList<LocalizableRemoteInput> = mutableListOf()
         private val extenders = mutableListOf<NotificationCompat.Action.Extender>()
         public var description: String? = null
             private set

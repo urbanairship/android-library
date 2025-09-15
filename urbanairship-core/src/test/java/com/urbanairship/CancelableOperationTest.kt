@@ -13,7 +13,7 @@ import org.robolectric.annotation.LooperMode
 import org.robolectric.shadows.ShadowLooper
 
 @RunWith(AndroidJUnit4::class)
-class CancelableOperationTest {
+public class CancelableOperationTest {
 
     private val looper = Shadows.shadowOf(Looper.myLooper())
     private var operation = TestOperation(Looper.myLooper())
@@ -22,7 +22,7 @@ class CancelableOperationTest {
      * Test that the onRun method is executed on the looper's message queue.
      */
     @Test
-    fun testRun() {
+    public fun testRun() {
         // Pause the looper to prevent messages from being processed
         looper.pause()
 
@@ -45,7 +45,7 @@ class CancelableOperationTest {
      * on the looper's message queue.
      */
     @Test
-    fun testCancelRun() {
+    public fun testCancelRun() {
         // Pause the looper to prevent messages from being processed
         looper.pause()
 
@@ -72,7 +72,7 @@ class CancelableOperationTest {
      * Test trying to run an operation after it has already run.
      */
     @Test
-    fun testRunAfterDone() {
+    public fun testRunAfterDone() {
         // Run it
         operation.run()
         looper.idle()
@@ -90,7 +90,7 @@ class CancelableOperationTest {
      * Test trying to run an operation after it has already been canceled.
      */
     @Test
-    fun testRunAfterCancel() {
+    public fun testRunAfterCancel() {
         // Cancel it
         operation.cancel()
         Assert.assertTrue(operation.isCancelled())
@@ -106,7 +106,7 @@ class CancelableOperationTest {
     }
 
     @Test
-    fun testAddRunnable() {
+    public fun testAddRunnable() {
         val onRun = TestOperation(Looper.myLooper())
         operation.addOnRun(onRun)
 
@@ -120,7 +120,7 @@ class CancelableOperationTest {
     }
 
     @Test
-    fun testAddRunnableAfterRun() {
+    public fun testAddRunnableAfterRun() {
         // Run it
         operation.run()
 
@@ -139,7 +139,7 @@ class CancelableOperationTest {
     }
 
     @Test
-    fun testAddOnCancel() {
+    public fun testAddOnCancel() {
         val onCancel = TestOperation(Looper.myLooper())
         operation.addOnCancel(onCancel)
 
@@ -153,7 +153,7 @@ class CancelableOperationTest {
     }
 
     @Test
-    fun testAddOnCancelAfterCancelled() {
+    public fun testAddOnCancelAfterCancelled() {
         // Cancel it
         operation.cancel()
 
@@ -172,13 +172,13 @@ class CancelableOperationTest {
     /**
      * Implementation of CancelableOperation for testing.
      */
-    class TestOperation(looper: Looper?) : CancelableOperation(looper) {
+    public class TestOperation(looper: Looper?) : CancelableOperation(looper) {
 
         @Volatile
-        var onRunCalled: Boolean = false
+        public var onRunCalled: Boolean = false
 
         @Volatile
-        var onCancelCalled: Boolean = false
+        public var onCancelCalled: Boolean = false
 
         override fun onRun() {
             onRunCalled = true

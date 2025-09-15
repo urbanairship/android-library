@@ -17,7 +17,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class JobDispatcherTest {
+public class JobDispatcherTest {
 
     private val mockRateLimiter: RateLimiter = mockk(relaxed = true)
     private val jobRunner = TestJobRunner()
@@ -27,7 +27,7 @@ class JobDispatcherTest {
     private val mockConsumer: Consumer<JobResult> = mockk(relaxed = true)
 
     @Test
-    fun testDispatch() {
+    public fun testDispatch() {
         val jobInfo = JobInfo.newBuilder()
             .setAction("test_action")
             .setAirshipComponent(PushManager::class.java)
@@ -40,7 +40,7 @@ class JobDispatcherTest {
     }
 
     @Test
-    fun testStartJob() {
+    public fun testStartJob() {
         val jobInfo = JobInfo.newBuilder()
             .setAction("test_action")
             .setAirshipComponent(PushManager::class.java)
@@ -55,7 +55,7 @@ class JobDispatcherTest {
     }
 
     @Test
-    fun testMaxRetries() {
+    public fun testMaxRetries() {
         val jobInfo = JobInfo.newBuilder()
             .setAction("test_action")
             .setAirshipComponent(PushManager::class.java)
@@ -73,13 +73,13 @@ class JobDispatcherTest {
     }
 
     @Test
-    fun testSetRateLimit() {
+    public fun testSetRateLimit() {
         dispatcher.setRateLimit("foo", 19, 100.days)
         verify { mockRateLimiter.setLimit("foo", 19, 100.days) }
     }
 
     @Test
-    fun testDispatchRateLimit() {
+    public fun testDispatchRateLimit() {
         val jobInfo = JobInfo.newBuilder()
             .setAction("test_action")
             .setAirshipComponent(PushManager::class.java)
@@ -102,7 +102,7 @@ class JobDispatcherTest {
     }
 
     @Test
-    fun testStartJobTracksRateLimits() {
+    public fun testStartJobTracksRateLimits() {
         val jobInfo = JobInfo.newBuilder()
             .setAction("test_action")
             .setAirshipComponent(PushManager::class.java)
@@ -118,7 +118,7 @@ class JobDispatcherTest {
     }
 
     @Test
-    fun testStartJobOverRateLimit() {
+    public fun testStartJobOverRateLimit() {
         val jobInfo = JobInfo.newBuilder()
             .setAction("test_action")
             .setAirshipComponent(PushManager::class.java)

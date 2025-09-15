@@ -39,7 +39,7 @@ import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
 @RunWith(AndroidJUnit4::class)
-class IncomingPushRunnableTest {
+public class IncomingPushRunnableTest {
 
     private var activityMonitor = TestActivityMonitor()
     private var pushBundle = bundleOf(
@@ -78,7 +78,7 @@ class IncomingPushRunnableTest {
 
 
     @Before
-    fun setup() {
+    public fun setup() {
         TestApplication.getApplication().setPushManager(pushManager)
         TestApplication.getApplication().setAnalytics(analytics)
 
@@ -106,7 +106,7 @@ class IncomingPushRunnableTest {
      * Test displaying a notification from a push message.
      */
     @Test
-    fun testDisplayNotification() {
+    public fun testDisplayNotification() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -145,7 +145,7 @@ class IncomingPushRunnableTest {
      * Test ignoring push from other vendors.
      */
     @Test
-    fun test() {
+    public fun test() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -169,7 +169,7 @@ class IncomingPushRunnableTest {
      * Test receiving a push from an invalid provider.
      */
     @Test
-    fun testInvalidPushProvider() {
+    public fun testInvalidPushProvider() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -190,7 +190,7 @@ class IncomingPushRunnableTest {
      * Test user notifications disabled still notifies user of a background notification.
      */
     @Test
-    fun testUserNotificationsDisabled() {
+    public fun testUserNotificationsDisabled() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns false
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -204,7 +204,7 @@ class IncomingPushRunnableTest {
      * Test suppress message in foreground when isForegroundDisplayable is false.
      */
     @Test
-    fun testNotForegroundDisplayable() {
+    public fun testNotForegroundDisplayable() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -235,7 +235,7 @@ class IncomingPushRunnableTest {
      * Test message in foreground when isForegroundDisplayable is true.
      */
     @Test
-    fun testForegroundDisplayable() {
+    public fun testForegroundDisplayable() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -264,7 +264,7 @@ class IncomingPushRunnableTest {
     }
 
     @Test
-    fun testForegroundDisplayPredicate() {
+    public fun testForegroundDisplayPredicate() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -294,7 +294,7 @@ class IncomingPushRunnableTest {
      * Test handling a background push.
      */
     @Test
-    fun testBackgroundPush() {
+    public fun testBackgroundPush() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -308,7 +308,7 @@ class IncomingPushRunnableTest {
      * Test handling an exceptions from the notification provider.
      */
     @Test
-    fun testNotificationProviderException() {
+    public fun testNotificationProviderException() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -329,7 +329,7 @@ class IncomingPushRunnableTest {
     }
 
     @Test
-    fun testNotificationProviderSuccess() {
+    public fun testNotificationProviderSuccess() {
         val notification = createNotification()
         notificationProvider.notification = notification
 
@@ -347,7 +347,7 @@ class IncomingPushRunnableTest {
      * Test that when the provider returns a cancel status, no notification is posted and no jobs are scheduled
      */
     @Test
-    fun testNotificationProviderResultCancel() {
+    public fun testNotificationProviderResultCancel() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -370,7 +370,7 @@ class IncomingPushRunnableTest {
      * Test that when the factory returns a retry status, no notification is posted and a retry job is scheduled
      */
     @Test
-    fun testNotificationFactoryResultRetry() {
+    public fun testNotificationFactoryResultRetry() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -393,7 +393,7 @@ class IncomingPushRunnableTest {
      * Test that when the factory returns a successful result, a notification is posted and no jobs are scheduled.
      */
     @Test
-    fun testNotificationFactoryResultOK() {
+    public fun testNotificationFactoryResultOK() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -411,7 +411,7 @@ class IncomingPushRunnableTest {
      * Test notification content intent
      */
     @Test
-    fun testNotificationContentIntent() {
+    public fun testNotificationContentIntent() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -455,7 +455,7 @@ class IncomingPushRunnableTest {
      * Test notification delete intent
      */
     @Test
-    fun testNotificationDeleteIntent() {
+    public fun testNotificationDeleteIntent() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -494,7 +494,7 @@ class IncomingPushRunnableTest {
      */
     @Test
     @Config(sdk = [25])
-    fun testDeliverPushPreOreo() {
+    public fun testDeliverPushPreOreo() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -529,7 +529,7 @@ class IncomingPushRunnableTest {
      * Test remote data notifications
      */
     @Test
-    fun testRemoteDataMessage() {
+    public fun testRemoteDataMessage() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -561,7 +561,7 @@ class IncomingPushRunnableTest {
     }
 
     @Test
-    fun testNullNotificationChannel() {
+    public fun testNullNotificationChannel() {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
@@ -589,10 +589,10 @@ class IncomingPushRunnableTest {
         .setAutoCancel(true)
         .build()
 
-    open class TestNotificationProvider : NotificationProvider {
+    public open class TestNotificationProvider : NotificationProvider {
 
-        var notification: Notification? = null
-        var tag: String? = null
+        public var notification: Notification? = null
+        public var tag: String? = null
 
         override fun onCreateNotificationArguments(
             context: Context, message: PushMessage
@@ -619,7 +619,7 @@ class IncomingPushRunnableTest {
         }
     }
 
-    companion object {
+    public companion object {
 
         private const val TEST_NOTIFICATION_ID = 123
         private const val TEST_NOTIFICATION_CHANNEL_ID = "Test notification channel"

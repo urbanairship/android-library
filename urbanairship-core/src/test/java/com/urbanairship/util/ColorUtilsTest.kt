@@ -9,10 +9,10 @@ import org.junit.Test
 /**
  * [ColorUtils] tests
  */
-class ColorUtilsTest {
+public class ColorUtilsTest {
 
     @Test
-    fun testCovertColorString() {
+    public fun testCovertColorString() {
         Assert.assertEquals("#ff000000", convertToString(Color.BLACK))
         Assert.assertEquals("#ff0000ff", convertToString(Color.BLUE))
         Assert.assertEquals("#ffff0000", convertToString(Color.RED))

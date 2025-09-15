@@ -16,21 +16,21 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class ModuleTest {
+public class ModuleTest {
 
     private var context: Context = ApplicationProvider.getApplicationContext()
     private var dataStore = PreferenceDataStore.inMemoryStore(context)
     private var actionRegistry: ActionRegistry = mockk(relaxed = true)
 
     @Test
-    fun testGetComponents() {
+    public fun testGetComponents() {
         val component = TestComponent(context, dataStore)
         val module = singleComponent(component, 0)
         TestCase.assertEquals(setOf(component), module.components)
     }
 
     @Test
-    fun testRegisterActions() {
+    public fun testRegisterActions() {
         val component = TestComponent(context, dataStore)
         val module = singleComponent(component, 100)
 
@@ -38,6 +38,6 @@ class ModuleTest {
         verify { actionRegistry.registerActions(context, 100) }
     }
 
-    class TestComponent(context: Context, dataStore: PreferenceDataStore) :
+    public class TestComponent(context: Context, dataStore: PreferenceDataStore) :
         AirshipComponent(context, dataStore)
 }

@@ -13,6 +13,7 @@ import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -21,7 +22,7 @@ import org.junit.Before
 import org.junit.Test
 import org.robolectric.annotation.Config
 
-class NotificationChannelRegistryTest : BaseTestCase() {
+public class NotificationChannelRegistryTest : BaseTestCase() {
 
     private val notificationManager: NotificationManager = mockk(relaxed = true)
     private val dataManager: NotificationChannelRegistryDataManager = mockk(relaxed = true)
@@ -29,17 +30,17 @@ class NotificationChannelRegistryTest : BaseTestCase() {
         every { getSystemService(Context.NOTIFICATION_SERVICE) } returns notificationManager
     }
 
-    val testDispatcher = StandardTestDispatcher()
+    public val testDispatcher: TestDispatcher = StandardTestDispatcher()
     private val channelRegistry: NotificationChannelRegistry = NotificationChannelRegistry(
         context = context,
         dataManager = dataManager,
         dispatcher = testDispatcher
     )
 
-    val channel: NotificationChannel = NotificationChannel("test", "Test Channel", NotificationManagerCompat.IMPORTANCE_HIGH)
-    val otherChannel: NotificationChannel = NotificationChannel("test2", "Test Channel 2", NotificationManagerCompat.IMPORTANCE_LOW)
-    val channelCompat: NotificationChannelCompat = NotificationChannelCompat("test", "Test Channel", NotificationManagerCompat.IMPORTANCE_HIGH)
-    val otherChannelCompat: NotificationChannelCompat = NotificationChannelCompat("test2", "Test Channel 2", NotificationManagerCompat.IMPORTANCE_LOW)
+    public val channel: NotificationChannel = NotificationChannel("test", "Test Channel", NotificationManagerCompat.IMPORTANCE_HIGH)
+    public val otherChannel: NotificationChannel = NotificationChannel("test2", "Test Channel 2", NotificationManagerCompat.IMPORTANCE_LOW)
+    public val channelCompat: NotificationChannelCompat = NotificationChannelCompat("test", "Test Channel", NotificationManagerCompat.IMPORTANCE_HIGH)
+    public val otherChannelCompat: NotificationChannelCompat = NotificationChannelCompat("test2", "Test Channel 2", NotificationManagerCompat.IMPORTANCE_LOW)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Before
@@ -49,7 +50,7 @@ class NotificationChannelRegistryTest : BaseTestCase() {
 
     @Test
     @Config(sdk = [25])
-    fun testGetNotificationChannelAsyncPreOreo(): TestResult = runTest {
+    public fun testGetNotificationChannelAsyncPreOreo(): TestResult = runTest {
         every { dataManager.getChannel("test") } returns channelCompat
         val result = channelRegistry.getNotificationChannel("test")
         testDispatcher.scheduler.advanceUntilIdle()
@@ -59,7 +60,7 @@ class NotificationChannelRegistryTest : BaseTestCase() {
     }
 
     @Test
-    fun testGetNotificationChannelAsync(): TestResult = runTest {
+    public fun testGetNotificationChannelAsync(): TestResult = runTest {
         every { notificationManager.getNotificationChannel("test") } returns channel
         val result = channelRegistry.getNotificationChannel("test")
         testDispatcher.scheduler.advanceUntilIdle()
@@ -70,28 +71,28 @@ class NotificationChannelRegistryTest : BaseTestCase() {
 
     @Test
     @Config(sdk = [25])
-    fun testCreateNotificationChannelPreOreo() {
+    public fun testCreateNotificationChannelPreOreo() {
         channelRegistry.createNotificationChannel(channelCompat)
         testDispatcher.scheduler.advanceUntilIdle()
         verify { dataManager.createChannel(channelCompat) }
     }
 
     @Test
-    fun testCreateNotificationChannel() {
+    public fun testCreateNotificationChannel() {
         channelRegistry.createNotificationChannel(channelCompat)
         testDispatcher.scheduler.advanceUntilIdle()
         verify { notificationManager.createNotificationChannel(channel) }
     }
 
     @Test
-    fun testCreateDeferredChannel() {
+    public fun testCreateDeferredChannel() {
         channelRegistry.createDeferredNotificationChannel(channelCompat)
         testDispatcher.scheduler.advanceUntilIdle()
         verify { notificationManager wasNot Called }
     }
 
     @Test
-    fun testGetNotificationChannelCreatesRealChannel(): TestResult = runTest {
+    public fun testGetNotificationChannelCreatesRealChannel(): TestResult = runTest {
         every { notificationManager.getNotificationChannel(channelCompat.id) } returns null
         every { dataManager.getChannel(channelCompat.id) } answers { channelCompat }
         channelRegistry.getNotificationChannel(channelCompat.id)
@@ -101,14 +102,14 @@ class NotificationChannelRegistryTest : BaseTestCase() {
 
     @Test
     @Config(sdk = [25])
-    fun testDeleteNotificationChannelPreOreo() {
+    public fun testDeleteNotificationChannelPreOreo() {
         channelRegistry.deleteNotificationChannel("test")
         testDispatcher.scheduler.advanceUntilIdle()
         verify { dataManager.deleteChannel("test") }
     }
 
     @Test
-    fun testDeleteNotificationChannel() {
+    public fun testDeleteNotificationChannel() {
         channelRegistry.deleteNotificationChannel("test")
         testDispatcher.scheduler.advanceUntilIdle()
         verify { notificationManager.deleteNotificationChannel("test") }

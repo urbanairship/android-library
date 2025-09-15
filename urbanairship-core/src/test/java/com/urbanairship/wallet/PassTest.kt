@@ -13,10 +13,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class PassTest {
+public class PassTest {
 
     @Test
-    fun testParsePass() {
+    public fun testParsePass() {
         // This test doesn't require a full JSON payload
         val json = """{
            "createdAt":"2016-06-09T18:07:42Z",
@@ -46,7 +46,7 @@ class PassTest {
     }
 
     @Test
-    fun testRequestToSavePass() {
+    public fun testRequestToSavePass() {
         val pass = Pass(
             Uri.parse("https://goo.gl/app/pay?link=https://www.android.com/payapp/savetoandroidpay/555"),
             "5"

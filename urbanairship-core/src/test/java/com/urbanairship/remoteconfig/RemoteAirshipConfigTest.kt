@@ -9,10 +9,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class RemoteAirshipConfigTest {
+public class RemoteAirshipConfigTest {
 
     @Test
-    fun testJson() {
+    public fun testJson() {
         val json = jsonMapOf(
             "device_api_url" to "https://deivce-api.examaple.com",
             "remote_data_url" to "https://remote-data.examaple.com",
@@ -32,7 +32,7 @@ class RemoteAirshipConfigTest {
     }
 
     @Test
-    fun testEmptyJson() {
+    public fun testEmptyJson() {
         val airshipConfig = RemoteAirshipConfig.fromJson(JsonValue.NULL)
         Assert.assertNull(airshipConfig.deviceApiUrl)
         Assert.assertNull(airshipConfig.remoteDataUrl)

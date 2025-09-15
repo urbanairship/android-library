@@ -9,13 +9,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class JsonListTest {
+public class JsonListTest {
 
     private var jsonList: JsonList? = null
 
     @Before
     @Throws(JsonException::class)
-    fun setUp() {
+    public fun setUp() {
         jsonList = wrap(arrayOf("first-value", "second-value", null)).list
         Assert.assertNotNull(jsonList)
     }
@@ -24,7 +24,7 @@ class JsonListTest {
      * Test creating a new JsonList with a null list.
      */
     @Test
-    fun testCreateNull() {
+    public fun testCreateNull() {
         val emptyList = JsonList(null)
         Assert.assertEquals(0, emptyList.size())
         Assert.assertTrue(emptyList.isEmpty)
@@ -34,7 +34,7 @@ class JsonListTest {
      * Test toString produces a JSON encoded String.
      */
     @Test
-    fun testToString() {
+    public fun testToString() {
         val expected = "[\"first-value\",\"second-value\"]"
         Assert.assertEquals(expected, jsonList.toString())
     }
@@ -43,7 +43,7 @@ class JsonListTest {
      * Test toString on an empty list produces a JSON encoded String.
      */
     @Test
-    fun testEmptyMapToString() {
+    public fun testEmptyMapToString() {
         Assert.assertEquals("[]", JsonList(null).toString())
     }
 }

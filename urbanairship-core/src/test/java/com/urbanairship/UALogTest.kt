@@ -7,13 +7,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class UALogTest {
+public class UALogTest {
 
     /**
      * Test the logger listener.
      */
     @Test
-    fun testListener() {
+    public fun testListener() {
         val errorMessage = "This is a test"
         val error: Throwable = IllegalArgumentException("Oh no")
         val called = ArrayList<String>()
@@ -37,7 +37,7 @@ class UALogTest {
     }
 
     @Test
-    fun testClassNamePrefix() {
+    public fun testClassNamePrefix() {
         UALog.logLevel = Log.VERBOSE
 
         val rawMessage = "This is another test"

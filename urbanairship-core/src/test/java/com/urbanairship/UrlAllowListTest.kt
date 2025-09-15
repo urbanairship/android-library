@@ -9,7 +9,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class UrlAllowListTest {
+public class UrlAllowListTest {
 
     private var urlAllowList = UrlAllowList()
 
@@ -17,7 +17,7 @@ class UrlAllowListTest {
      * Test an empty urlAllowList rejects all URLs.
      */
     @Test
-    fun testEmptyUrlAllowList() {
+    public fun testEmptyUrlAllowList() {
         Assert.assertFalse(urlAllowList.isAllowed(null, UrlAllowList.Scope.JAVASCRIPT_INTERFACE))
         Assert.assertFalse(urlAllowList.isAllowed("", UrlAllowList.Scope.OPEN_URL))
         Assert.assertFalse(
@@ -49,7 +49,7 @@ class UrlAllowListTest {
     }
 
     @Test
-    fun testDefaultAllowListAnyOpen() {
+    public fun testDefaultAllowListAnyOpen() {
         val airshipConfigOptions = AirshipConfigOptions.Builder()
             .setDevelopmentAppKey("appKey")
             .setDevelopmentAppSecret("appSecret")
@@ -135,7 +135,7 @@ class UrlAllowListTest {
      * Test the default urlAllowList accepts Airship URLs.
      */
     @Test
-    fun testDefaultUrlAllowList() {
+    public fun testDefaultUrlAllowList() {
         val airshipConfigOptions = AirshipConfigOptions.Builder()
             .setDevelopmentAppKey("appKey")
             .setDevelopmentAppSecret("appSecret")
@@ -234,7 +234,7 @@ class UrlAllowListTest {
      * Test setting invalid patterns returns false.
      */
     @Test
-    fun testInvalidPatterns() {
+    public fun testInvalidPatterns() {
         // Not a URL
         Assert.assertFalse(urlAllowList.addEntry("not a url"))
 
@@ -254,7 +254,7 @@ class UrlAllowListTest {
      * Test international URLs.
      */
     @Test
-    fun testInternationalURLs() {
+    public fun testInternationalURLs() {
         Assert.assertTrue(urlAllowList.addEntry("*://ουτοπία.δπθ.gr"))
         Assert.assertTrue(urlAllowList.addEntry("*://müller.com"))
 
@@ -270,7 +270,7 @@ class UrlAllowListTest {
      * Test wild card scheme with wild cards.
      */
     @Test
-    fun testSchemeWildCard() {
+    public fun testSchemeWildCard() {
         Assert.assertTrue(urlAllowList.addEntry("*://www.urbanairship.com"))
         Assert.assertTrue(urlAllowList.addEntry("cool*story://rad"))
 
@@ -310,7 +310,7 @@ class UrlAllowListTest {
      * Test scheme matching works.
      */
     @Test
-    fun testScheme() {
+    public fun testScheme() {
         urlAllowList.addEntry("https://www.urbanairship.com")
         urlAllowList.addEntry("file:///asset.html")
 
@@ -334,7 +334,7 @@ class UrlAllowListTest {
      * Test regular expression on the host and schema are treated as literals.
      */
     @Test
-    fun testRegExEscaped() {
+    public fun testRegExEscaped() {
         Assert.assertTrue(urlAllowList.addEntry("w+.+://[a-z,A-Z]+"))
 
         Assert.assertFalse(urlAllowList.isAllowed("wwww://urbanairship", UrlAllowList.Scope.ALL))
@@ -347,7 +347,7 @@ class UrlAllowListTest {
      * Test host matching actually works.
      */
     @Test
-    fun testHost() {
+    public fun testHost() {
         Assert.assertTrue(
             urlAllowList.addEntry(
                 "http://www.urbanairship.com", UrlAllowList.Scope.ALL
@@ -381,7 +381,7 @@ class UrlAllowListTest {
      * Test wild card in the host.
      */
     @Test
-    fun testHostWildCard() {
+    public fun testHostWildCard() {
         Assert.assertTrue(urlAllowList.addEntry("http://*", UrlAllowList.Scope.ALL))
         Assert.assertTrue(urlAllowList.addEntry("https://*.coolstory", UrlAllowList.Scope.ALL))
 
@@ -427,7 +427,7 @@ class UrlAllowListTest {
      * Test wild card for subdomain accepts any subdomain, including no subdomain.
      */
     @Test
-    fun testHostWildCardSubDomain() {
+    public fun testHostWildCardSubDomain() {
         Assert.assertTrue(urlAllowList.addEntry("http://*.urbanairship.com"))
 
         // Accept
@@ -459,7 +459,7 @@ class UrlAllowListTest {
      * Test wild card matcher matches any url.
      */
     @Test
-    fun testWildCardMatcher() {
+    public fun testWildCardMatcher() {
         Assert.assertTrue(urlAllowList.addEntry("*"))
 
         Assert.assertTrue(urlAllowList.isAllowed("file:///what/oh/hi", UrlAllowList.Scope.ALL))
@@ -489,7 +489,7 @@ class UrlAllowListTest {
      * Test file paths.
      */
     @Test
-    fun testFilePaths() {
+    public fun testFilePaths() {
         Assert.assertTrue(urlAllowList.addEntry("file:///foo/index.html", UrlAllowList.Scope.ALL))
 
         // Reject
@@ -521,7 +521,7 @@ class UrlAllowListTest {
      * Test file paths with wild cards.
      */
     @Test
-    fun testFilePathsWildCard() {
+    public fun testFilePathsWildCard() {
         Assert.assertTrue(urlAllowList.addEntry("file:///foo/*"))
 
         // Reject
@@ -545,7 +545,7 @@ class UrlAllowListTest {
      * Test paths paths.
      */
     @Test
-    fun testURLPaths() {
+    public fun testURLPaths() {
         urlAllowList.addEntry("*://*.urbanairship.com/accept.html")
         urlAllowList.addEntry("*://*.urbanairship.com/anythingHTML/*.html")
         urlAllowList.addEntry("https://urbanairship.com/what/index.html")
@@ -601,7 +601,7 @@ class UrlAllowListTest {
      * Test scope.
      */
     @Test
-    fun testScope() {
+    public fun testScope() {
         urlAllowList.addEntry(
             "*://*.urbanairship.com/accept-js.html", UrlAllowList.Scope.JAVASCRIPT_INTERFACE
         )
@@ -663,7 +663,7 @@ class UrlAllowListTest {
      * Test disabling url scope allowList.
      */
     @Test
-    fun testDisableUrlScopeAllowList() {
+    public fun testDisableUrlScopeAllowList() {
         Assert.assertFalse(
             urlAllowList.isAllowed(
                 "https://someurl.com", UrlAllowList.Scope.OPEN_URL
@@ -688,7 +688,7 @@ class UrlAllowListTest {
      * Test Scope.ALL url allow check if two separate entries match for both types of scope.
      */
     @Test
-    fun testScopeAll() {
+    public fun testScopeAll() {
         urlAllowList.addEntry("*", UrlAllowList.Scope.JAVASCRIPT_INTERFACE)
         urlAllowList.addEntry("*://*.urbanairship.com/all.html", UrlAllowList.Scope.OPEN_URL)
 
@@ -703,7 +703,7 @@ class UrlAllowListTest {
      * Test deep links.
      */
     @Test
-    fun testDeepLinks() {
+    public fun testDeepLinks() {
         // Test any path and undefined host
         Assert.assertTrue(urlAllowList.addEntry("com.urbanairship.one:/*"))
         Assert.assertTrue(
@@ -808,7 +808,7 @@ class UrlAllowListTest {
     }
 
     @Test
-    fun testRootPath() {
+    public fun testRootPath() {
         Assert.assertTrue(urlAllowList.addEntry("com.urbanairship.five:/"))
 
         Assert.assertTrue(
@@ -830,7 +830,7 @@ class UrlAllowListTest {
     }
 
     @Test
-    fun testCallback() {
+    public fun testCallback() {
         // set up a simple urlAllowList
         Assert.assertTrue(urlAllowList.addEntry("https://*.urbanairship.com"))
         Assert.assertTrue(
@@ -875,7 +875,7 @@ class UrlAllowListTest {
      * Test sms wild card in the path
      */
     @Test
-    fun testSmsPath() {
+    public fun testSmsPath() {
         urlAllowList.addEntry("sms:86753*9*")
 
         // Reject

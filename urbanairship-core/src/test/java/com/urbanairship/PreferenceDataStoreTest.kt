@@ -14,13 +14,13 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class PreferenceDataStoreTest {
+public class PreferenceDataStoreTest {
 
     private var context: Context = ApplicationProvider.getApplicationContext()
     private var testPrefs = PreferenceDataStore.inMemoryStore(context)
 
     @Test
-    fun testIsSet() {
+    public fun testIsSet() {
         Assert.assertFalse(testPrefs.isSet("neat"))
         testPrefs.put("neat", "oh hi")
         Assert.assertTrue(testPrefs.isSet("neat"))
@@ -33,7 +33,7 @@ class PreferenceDataStoreTest {
      * Test saving string values.
      */
     @Test
-    fun testString() {
+    public fun testString() {
         testPrefs.put("value", "oh hi")
         Assert.assertEquals("oh hi", testPrefs.getString("value", "oh hi"))
 
@@ -45,7 +45,7 @@ class PreferenceDataStoreTest {
      * Test saving longs.
      */
     @Test
-    fun testLong() {
+    public fun testLong() {
         testPrefs.put("value", 123L)
         Assert.assertEquals(123, testPrefs.getLong("value", -1))
     }
@@ -54,7 +54,7 @@ class PreferenceDataStoreTest {
      * Test saving ints.
      */
     @Test
-    fun testInt() {
+    public fun testInt() {
         testPrefs.put("value", 123)
         Assert.assertEquals(123, testPrefs.getInt("value", -1).toLong())
     }
@@ -63,7 +63,7 @@ class PreferenceDataStoreTest {
      * Test saving booleans.
      */
     @Test
-    fun testBoolean() {
+    public fun testBoolean() {
         testPrefs.put("value", true)
         Assert.assertTrue(testPrefs.getBoolean("value", false))
 
@@ -75,7 +75,7 @@ class PreferenceDataStoreTest {
      * Test saving json values.
      */
     @Test
-    fun testJsonValue() {
+    public fun testJsonValue() {
         val map = mapOf(
             "string" to "string",
             "int" to 123,
@@ -94,7 +94,7 @@ class PreferenceDataStoreTest {
      * Test saving json serializable values.
      */
     @Test
-    fun testJsonSerializable() {
+    public fun testJsonSerializable() {
         val map = mapOf(
             "string" to "string",
             "int" to 123,
@@ -119,7 +119,7 @@ class PreferenceDataStoreTest {
      * Test saving json serializable when toJson returns null.
      */
     @Test
-    fun testJsonSerializableNullJsonValue() {
+    public fun testJsonSerializableNullJsonValue() {
         val testObject: JsonSerializable = object : JsonSerializable {
             override fun toJsonValue(): JsonValue {
                 return JsonValue.NULL

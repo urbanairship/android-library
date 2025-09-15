@@ -14,5 +14,5 @@ public fun interface LocaleChangedListener {
      *
      * @param locale The current default locale.
      */
-    fun onLocaleChanged(locale: Locale)
+    public fun onLocaleChanged(locale: Locale)
 }

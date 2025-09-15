@@ -13,10 +13,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class QuietTimeIntervalTest {
+public class QuietTimeIntervalTest {
 
     @Test
-    fun testParsing() {
+    public fun testParsing() {
         val startHour = Calendar.getInstance()[Calendar.HOUR_OF_DAY] - 1
         val endHour = Calendar.getInstance()[Calendar.HOUR_OF_DAY] + 1
         val interval = QuietTimeInterval.newBuilder()
@@ -42,7 +42,7 @@ class QuietTimeIntervalTest {
     }
 
     @Test
-    fun testQuietTimeIntervalStartBeforeEnd() {
+    public fun testQuietTimeIntervalStartBeforeEnd() {
         val interval = QuietTimeInterval.newBuilder()
             .setStartHour(3)
             .setStartMin(30)
@@ -74,7 +74,7 @@ class QuietTimeIntervalTest {
     }
 
     @Test
-    fun testQuietTimeIntervalStartAfterEnd() {
+    public fun testQuietTimeIntervalStartAfterEnd() {
         val interval = QuietTimeInterval.newBuilder()
             .setStartHour(3)
             .setStartMin(30)
@@ -106,7 +106,7 @@ class QuietTimeIntervalTest {
     }
 
     @Test
-    fun testQuietTimeEqualStartEnd() {
+    public fun testQuietTimeEqualStartEnd() {
         // Test that when start is equals to end, end is set to a day later.
         val interval = QuietTimeInterval.newBuilder()
             .setStartHour(3)
@@ -134,7 +134,7 @@ class QuietTimeIntervalTest {
     }
 
     @Test
-    fun testQuietTimeEdgeTimes() {
+    public fun testQuietTimeEdgeTimes() {
         var interval = QuietTimeInterval.newBuilder()
             .setStartHour(0)
             .setStartMin(0)

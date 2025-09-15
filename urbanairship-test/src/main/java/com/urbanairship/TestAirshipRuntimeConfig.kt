@@ -33,11 +33,11 @@ public class TestAirshipRuntimeConfig private constructor(
         remoteConfig?.let { updateRemoteConfig(it) }
     }
 
-    fun setPlatform(platform: Airship.Platform) {
+    public fun setPlatform(platform: Airship.Platform) {
         platformProvider.value = platform
     }
 
-    fun setConfigOptions(configOptions: AirshipConfigOptions) {
+    public fun setConfigOptions(configOptions: AirshipConfigOptions) {
         configProvider.value = configOptions
     }
 

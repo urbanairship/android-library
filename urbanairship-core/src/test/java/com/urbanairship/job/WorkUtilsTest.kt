@@ -14,10 +14,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class WorkUtilsTest {
+public class WorkUtilsTest {
 
     @Test
-    fun testConvert() {
+    public fun testConvert() {
         val original = newBuilder()
             .setAction("some action")
             .setAirshipComponent(PushManager::class.java)

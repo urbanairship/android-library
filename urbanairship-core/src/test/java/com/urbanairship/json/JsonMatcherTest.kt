@@ -9,10 +9,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class JsonMatcherTest {
+public class JsonMatcherTest {
 
     @Test
-    fun testMatcher() {
+    public fun testMatcher() {
         val valueMatcher = newValueMatcher(wrap("value"))
 
         val builder = JsonMatcher.newBuilder()
@@ -54,7 +54,7 @@ class JsonMatcherTest {
     }
 
     @Test
-    fun testParse() {
+    public fun testParse() {
         val valueMatcher = newValueMatcher(wrap("string"))
 
         val valueJson = jsonMapOf("equals" to "string").toJsonValue()
@@ -93,7 +93,7 @@ class JsonMatcherTest {
      * Test parsing an empty JsonMap throws a JsonException.
      */
     @Test(expected = JsonException::class)
-    fun testParseEmptyMap() {
+    public fun testParseEmptyMap() {
         JsonMatcher.parse(JsonMap.EMPTY_MAP.toJsonValue())
     }
 
@@ -101,7 +101,7 @@ class JsonMatcherTest {
      * Test parsing an invalid JsonValue throws a JsonException.
      */
     @Test(expected = JsonException::class)
-    fun testParseInvalidJson() {
+    public fun testParseInvalidJson() {
         JsonMatcher.parse(wrap("not valid"))
     }
 
@@ -109,7 +109,7 @@ class JsonMatcherTest {
      * Test parsing an invalid JsonValue throws a JsonException.
      */
     @Test(expected = JsonException::class)
-    fun testParseJsonMissingValueMatcher() {
+    public fun testParseJsonMissingValueMatcher() {
         val json = jsonMapOf("key" to "value").toJsonValue()
         JsonMatcher.parse(json)
     }

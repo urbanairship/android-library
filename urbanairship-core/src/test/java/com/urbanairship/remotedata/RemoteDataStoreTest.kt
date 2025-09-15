@@ -14,7 +14,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class RemoteDataStoreTest {
+public class RemoteDataStoreTest {
 
     private var dataStore = RemoteDataStore(TestApplication.getApplication(), "appKey", "test")
     private var payloads = setOf(
@@ -33,7 +33,7 @@ class RemoteDataStoreTest {
     )
 
     @After
-    fun teardown() {
+    public fun teardown() {
         dataStore.deletePayloads()
         dataStore.close()
     }
@@ -42,7 +42,7 @@ class RemoteDataStoreTest {
      * Test saving payloads
      */
     @Test
-    fun testSavePayloads() {
+    public fun testSavePayloads() {
         val success = dataStore.savePayloads(payloads)
         Assert.assertTrue(success)
     }
@@ -51,7 +51,7 @@ class RemoteDataStoreTest {
      * Test getting payloads
      */
     @Test
-    fun testGetPayloads() {
+    public fun testGetPayloads() {
         dataStore.savePayloads(payloads)
         var savedPayloads = dataStore.getPayloads(listOf("type", "otherType"))
         Assert.assertNotNull(savedPayloads)
@@ -66,7 +66,7 @@ class RemoteDataStoreTest {
      * Test deleting payloads.
      */
     @Test
-    fun testDeletePayloads() {
+    public fun testDeletePayloads() {
         dataStore.savePayloads(payloads)
         dataStore.deletePayloads()
         Assert.assertTrue(dataStore.getPayloads(listOf("type", "otherType")).isEmpty())

@@ -11,7 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class NotificationChannelRegistryDataManagerTest {
+public class NotificationChannelRegistryDataManagerTest {
 
     private var dataManager = NotificationChannelRegistryDataManager(
         context = TestApplication.getApplication(),
@@ -42,18 +42,18 @@ class NotificationChannelRegistryDataManagerTest {
         }
 
     @After
-    fun teardown() {
+    public fun teardown() {
         dataManager.deleteChannels()
     }
 
     @Test
-    fun testCreateChannel() {
+    public fun testCreateChannel() {
         val success = dataManager.createChannel(channel1)
         Assert.assertTrue(success)
     }
 
     @Test
-    fun testCreateChannelUpserts() {
+    public fun testCreateChannelUpserts() {
         // Initial create
         dataManager.createChannel(channel1)
         Assert.assertEquals(1, dataManager.channels.size.toLong())
@@ -73,13 +73,13 @@ class NotificationChannelRegistryDataManagerTest {
     }
 
     @Test
-    fun testGetChannel() {
+    public fun testGetChannel() {
         dataManager.createChannel(channel1)
         Assert.assertEquals(channel1, dataManager.getChannel(channel1.id))
     }
 
     @Test
-    fun testGetChannels() {
+    public fun testGetChannels() {
         dataManager.createChannel(channel1)
         dataManager.createChannel(channel2)
 
@@ -90,7 +90,7 @@ class NotificationChannelRegistryDataManagerTest {
     }
 
     @Test
-    fun testDeleteChannel() {
+    public fun testDeleteChannel() {
         dataManager.createChannel(channel1)
         Assert.assertTrue(dataManager.deleteChannel(channel1.id))
     }

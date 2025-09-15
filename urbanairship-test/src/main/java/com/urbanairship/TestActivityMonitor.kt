@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 /**
  * Test Activity Monitor.
  */
-class TestActivityMonitor : ActivityMonitor {
+public class TestActivityMonitor : ActivityMonitor {
 
     private val _foregroundState = MutableStateFlow(false)
     override val foregroundState: StateFlow<Boolean> = _foregroundState.asStateFlow()
@@ -54,7 +54,7 @@ class TestActivityMonitor : ActivityMonitor {
                 super.onActivityStopped(activity)
             }
         }
-    override var isAppForegrounded = false
+    override var isAppForegrounded: Boolean = false
         private set
 
     private var _resumedActivities: MutableList<Activity> = mutableListOf()
@@ -65,7 +65,7 @@ class TestActivityMonitor : ActivityMonitor {
     /**
      * Starts an activity.
      */
-    fun startActivity() {
+    public fun startActivity() {
         val activity = Activity()
         startActivity(activity)
     }
@@ -73,40 +73,40 @@ class TestActivityMonitor : ActivityMonitor {
     /**
      * Stops an activity.
      */
-    fun stopActivity() {
+    public fun stopActivity() {
         val activity = Activity()
         stopActivity(activity)
     }
 
-    fun foreground(timeStamp: Long) {
+    public fun foreground(timeStamp: Long) {
         applicationListener.onForeground(timeStamp)
     }
 
-    fun foreground() {
+    public fun foreground() {
         isAppForegrounded = true
         _foregroundState.value = true
         applicationListener.onForeground(0)
     }
 
-    fun background() {
+    public fun background() {
         isAppForegrounded = false
         _foregroundState.value = false
         applicationListener.onBackground(0)
     }
 
-    fun startActivity(activity: Activity) {
+    public fun startActivity(activity: Activity) {
         activityListener.onActivityStarted(activity)
     }
 
-    fun resumeActivity(activity: Activity) {
+    public fun resumeActivity(activity: Activity) {
         activityListener.onActivityResumed(activity)
     }
 
-    fun pauseActivity(activity: Activity) {
+    public fun pauseActivity(activity: Activity) {
         activityListener.onActivityPaused(activity)
     }
 
-    fun stopActivity(activity: Activity) {
+    public fun stopActivity(activity: Activity) {
         activityListener.onActivityStopped(activity)
     }
 

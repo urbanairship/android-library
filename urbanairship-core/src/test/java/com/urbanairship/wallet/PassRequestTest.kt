@@ -20,12 +20,12 @@ import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
 
 @RunWith(AndroidJUnit4::class)
-class PassRequestTest {
+public class PassRequestTest {
 
     private val requestSession = TestRequestSession()
 
     @Before
-    fun setup() {
+    public fun setup() {
         TestApplication.getApplication().testRuntimeConfig?.updateRemoteConfig(
             config = RemoteConfig(
                 RemoteAirshipConfig(
@@ -36,7 +36,7 @@ class PassRequestTest {
     }
 
     @Test
-    fun testDefaultUrl() {
+    public fun testDefaultUrl() {
         val request = PassRequest.newBuilder()
             .setAuth("test_user_name", "test_api_key")
             .setTemplateId("test_template_id")
@@ -49,7 +49,7 @@ class PassRequestTest {
     }
 
     @Test
-    fun testExecute() {
+    public fun testExecute() {
         // Based off of example JSON in http://docs.urbanairship.com/api/wallet.html#create-pass
         val requestJson = """{
             "headers":{
@@ -145,7 +145,7 @@ class PassRequestTest {
     }
 
     @Test
-    fun testExecuteFail() {
+    public fun testExecuteFail() {
         requestSession.addResponse(HttpURLConnection.HTTP_BAD_REQUEST, null)
         val passRequestBuilder = PassRequest.newBuilder()
             .setAuth("test_user_name", "test_api_key")

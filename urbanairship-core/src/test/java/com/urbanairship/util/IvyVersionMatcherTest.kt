@@ -8,20 +8,20 @@ import org.junit.Test
 /**
  * [IvyVersionMatcher] tests.
  */
-class IvyVersionMatcherTest {
+public class IvyVersionMatcherTest {
 
     @Test(expected = IllegalArgumentException::class)
-    fun testEmptyConstraint() {
+    public fun testEmptyConstraint() {
         IvyVersionMatcher.newMatcher("")
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testInvalidNumber() {
+    public fun testInvalidNumber() {
         IvyVersionMatcher.newMatcher("1.a")
     }
 
     @Test
-    fun testValidVersions() {
+    public fun testValidVersions() {
         IvyVersionMatcher.newMatcher("[1.22.6.189,)")
         IvyVersionMatcher.newMatcher("[1.22.6.189,2.2.3.4]")
         IvyVersionMatcher.newMatcher("[1.22.6.189, 2.2.3.4]")
@@ -32,7 +32,7 @@ class IvyVersionMatcherTest {
     }
 
     @Test
-    fun testRangeLongVersion() {
+    public fun testRangeLongVersion() {
         val matcher = IvyVersionMatcher.newMatcher("[1.22.6.189,)")
         // Should only match the first 3 values
         Assert.assertTrue(matcher.apply("1.22.6"))
@@ -43,7 +43,7 @@ class IvyVersionMatcherTest {
     }
 
     @Test
-    fun testRangeWithWhiteSpace() {
+    public fun testRangeWithWhiteSpace() {
         val matcher = IvyVersionMatcher.newMatcher("[ 1.2 , 2.0 ]")
 
         Assert.assertTrue(matcher.apply("1.2"))
@@ -59,27 +59,27 @@ class IvyVersionMatcherTest {
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testInfiniteStartRangeWithVersion() {
+    public fun testInfiniteStartRangeWithVersion() {
         IvyVersionMatcher.newMatcher("(1.0,2.0]")
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testInfiniteEndRangeWithVersion() {
+    public fun testInfiniteEndRangeWithVersion() {
         IvyVersionMatcher.newMatcher("[1.0,2.0)")
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testInvalidStartToken() {
+    public fun testInvalidStartToken() {
         IvyVersionMatcher.newMatcher("),2.0]")
     }
 
     @Test(expected = IllegalArgumentException::class)
-    fun testInvalidEndToken() {
+    public fun testInvalidEndToken() {
         IvyVersionMatcher.newMatcher("[1.0,2.0(")
     }
 
     @Test
-    fun testExactVersion() {
+    public fun testExactVersion() {
         var matcher = IvyVersionMatcher.newMatcher("1.0")
         Assert.assertTrue(matcher.apply("1.0"))
         Assert.assertTrue(matcher.apply("1.0-SNAPSHOT"))
@@ -139,7 +139,7 @@ class IvyVersionMatcherTest {
     }
 
     @Test
-    fun testSubVersion() {
+    public fun testSubVersion() {
         var matcher = IvyVersionMatcher.newMatcher("1.0.+")
         Assert.assertTrue(matcher.apply("1.0.1"))
         Assert.assertTrue(matcher.apply("1.0.5"))
@@ -220,7 +220,7 @@ class IvyVersionMatcherTest {
     }
 
     @Test
-    fun testVersionRange() {
+    public fun testVersionRange() {
         var matcher = IvyVersionMatcher.newMatcher("[1.0, 2.0]")
         Assert.assertTrue(matcher.apply("1.0"))
         Assert.assertTrue(matcher.apply("1.0.1"))
@@ -345,7 +345,7 @@ class IvyVersionMatcherTest {
     }
 
     @Test
-    fun testExactConstraintIgnoresVersionQualifiers() {
+    public fun testExactConstraintIgnoresVersionQualifiers() {
         val matcher = IvyVersionMatcher.newMatcher("1.0-beta")
         Assert.assertTrue(matcher.apply("1.0-SNAPSHOT"))
         Assert.assertTrue(matcher.apply("1.0-alpha"))
@@ -367,7 +367,7 @@ class IvyVersionMatcherTest {
     }
 
     @Test
-    fun testVersionRangeIgnoresVersionQualifiers() {
+    public fun testVersionRangeIgnoresVersionQualifiers() {
         var matcher = IvyVersionMatcher.newMatcher("[1.0-alpha, 2.0-alpha01]")
         Assert.assertTrue(matcher.apply("1.0"))
         Assert.assertTrue(matcher.apply("1.0-SNAPSHOT"))
@@ -405,7 +405,7 @@ class IvyVersionMatcherTest {
     }
 
     @Test
-    fun testSubVersionIgnoresVersionQualifiers() {
+    public fun testSubVersionIgnoresVersionQualifiers() {
         val matcher = IvyVersionMatcher.newMatcher("1.0-rc1+")
         Assert.assertTrue(matcher.apply("1.0"))
         Assert.assertTrue(matcher.apply("1.0-alpha"))
@@ -421,7 +421,7 @@ class IvyVersionMatcherTest {
     }
 
     @Test
-    fun testNormalizeVersion() {
+    public fun testNormalizeVersion() {
         org.junit.Assert.assertNull(IvyVersionMatcher.normalizeVersion(null))
         Assert.assertEquals("", IvyVersionMatcher.normalizeVersion(""))
 
