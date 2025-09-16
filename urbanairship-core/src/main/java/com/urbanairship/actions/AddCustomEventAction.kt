@@ -61,7 +61,7 @@ public class AddCustomEventAction public constructor() : Action() {
             .setAttribution(arguments.metadata.getParcelable<Parcelable>(ActionArguments.PUSH_MESSAGE_METADATA) as PushMessage?)
             .setInteraction(interactionType, interactionId)
 
-        if (eventStringValue != null) {
+        if (!eventStringValue.isNullOrEmpty()) {
             eventBuilder.setEventValue(eventStringValue)
         } else {
             eventBuilder.setEventValue(eventDoubleValue)
