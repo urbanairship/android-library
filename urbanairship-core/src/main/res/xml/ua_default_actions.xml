@@ -4,6 +4,7 @@
         class="com.urbanairship.actions.AddCustomEventAction"
         predicate="com.urbanairship.actions.AddCustomEventAction$AddCustomEventActionPredicate">
         <name>add_custom_event_action</name>
+        <name>^+ce</name>
     </ActionEntry>
 
     <ActionEntry

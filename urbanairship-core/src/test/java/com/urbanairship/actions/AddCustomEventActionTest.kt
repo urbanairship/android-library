@@ -61,6 +61,19 @@ public class AddCustomEventActionTest {
         }
     }
 
+    @Test
+    public fun testAcceptsArgumentsNewNameAllSituations() {
+        val map = mapOf("name" to "new event name")
+
+        // Check every accepted situation
+        for (situation in acceptedSituations) {
+            val args: ActionArguments = ActionTestUtils.createArgs(situation, map)
+            assertTrue(
+                "Should accept arguments in situation $situation", action.acceptsArguments(args)
+            )
+        }
+    }
+
     /**
      * Test that it rejects empty argument values.
      */
@@ -115,6 +128,42 @@ public class AddCustomEventActionTest {
             EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type")
             EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id")
             EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name")
+        }
+
+        val result = action.perform(args)
+        assertEquals("Action should've completed", ActionResult.Status.COMPLETED, result.status)
+
+        // Verify the event was added
+        val argumentCaptor = ArgumentCaptor.forClass(
+            CustomEvent::class.java
+        )
+
+        verify { analytics.recordCustomEvent(any()) }
+    }
+
+    @Test
+    @Throws(JSONException::class)
+    public fun testPerformPreferNewNames() {
+        val map = mapOf(
+            CustomEvent.TRANSACTION_ID to "transaction id",
+            CustomEvent.EVENT_VALUE to "123.45",
+            CustomEvent.INTERACTION_TYPE to "interaction type",
+            CustomEvent.INTERACTION_ID to "interaction id",
+            CustomEvent.EVENT_NAME to "event name",
+            AddCustomEventAction.KEY_NAME to "new event name",
+            AddCustomEventAction.KEY_VALUE to "321.21"
+        )
+
+        val args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map)
+
+        // Validate the resulting event
+        every { analytics.recordCustomEvent(any()) } answers {
+            val event: CustomEvent = firstArg()
+            EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id")
+            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 321210000L)
+            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type")
+            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id")
+            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "new event name")
         }
 
         val result = action.perform(args)

@@ -38,7 +38,7 @@ public class ActionRegistryTest {
         validateEntry(registry.getEntry("^+t"), "^+t", "add_tags_action")
         validateEntry(registry.getEntry("^-t"), "^-t", "remove_tags_action")
         validateEntry(registry.getEntry("^u"), "^u", "open_external_url_action")
-        validateEntry(registry.getEntry("add_custom_event_action"), "add_custom_event_action")
+        validateEntry(registry.getEntry("add_custom_event_action"), "^+ce", "add_custom_event_action")
         validateEntry(registry.getEntry("^s"), "^s", "share_action")
         validateEntry(registry.getEntry("^c"), "^c", "clipboard_action")
         validateEntry(registry.getEntry("toast_action"), "toast_action")

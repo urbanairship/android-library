@@ -7,6 +7,7 @@ import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 import com.urbanairship.actions.ActionResult.Companion.newErrorResult
 import com.urbanairship.analytics.CustomEvent
 import com.urbanairship.analytics.CustomEvent.Companion.newBuilder
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
@@ -35,7 +36,7 @@ import com.urbanairship.push.PushMessage
  * Result value: `null`
  *
  *
- * Default Registration Name: [DEFAULT_REGISTRY_NAME]
+ * Default Registration Name: [DEFAULT_REGISTRY_NAME], [DEFAULT_REGISTRY_SHORT_NAME]
  *
  *
  * Default Registration Predicate: Rejects [Action.Situation.PUSH_RECEIVED]
@@ -46,11 +47,11 @@ public class AddCustomEventAction public constructor() : Action() {
         val customEventMap = arguments.value.toJsonValue().optMap()
 
         // Parse the event values from the map
-        val eventName = customEventMap.optionalField<String>(CustomEvent.EVENT_NAME)
+        val eventName = getEventName(customEventMap)
         requireNotNull(eventName) { "Missing event name" }
 
-        val eventStringValue = customEventMap.optionalField<String>(CustomEvent.EVENT_VALUE)
-        val eventDoubleValue = customEventMap.optionalField<Double>(CustomEvent.EVENT_VALUE) ?: 0.0
+        val eventStringValue: String? = getEventValue(customEventMap)
+        val eventDoubleValue: Double = getEventValue(customEventMap) ?: 0.0
 
         val interactionType = customEventMap.optionalField<String>(CustomEvent.INTERACTION_TYPE)
         val interactionId = customEventMap.optionalField<String>(CustomEvent.INTERACTION_ID)
@@ -99,12 +100,22 @@ public class AddCustomEventAction public constructor() : Action() {
             return false
         }
 
-        if (map["event_name"] == null) {
+        if (!map.containsKey(KEY_NAME) && !map.containsKey(CustomEvent.EVENT_NAME)) {
             UALog.e("CustomEventAction requires an event name in the event data.")
             return false
         }
 
         return true
+    }
+
+    private fun getEventName(map: JsonMap): String? {
+        return map.optionalField(KEY_NAME)
+            ?: map.optionalField(CustomEvent.EVENT_NAME)
+    }
+
+    private inline fun <reified T> getEventValue(map: JsonMap): T? {
+        return map.optionalField(KEY_VALUE)
+            ?: map.optionalField(CustomEvent.EVENT_VALUE)
     }
 
     /**
@@ -119,10 +130,18 @@ public class AddCustomEventAction public constructor() : Action() {
 
     public companion object {
 
+        public const val KEY_NAME: String = "name"
+        public const val KEY_VALUE: String = "value"
+
         /**
          * Default registry name
          */
         public const val DEFAULT_REGISTRY_NAME: String = "add_custom_event_action"
+
+        /**
+         * Default registry short name
+         */
+        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^+ce"
 
         public const val IN_APP_CONTEXT_METADATA_KEY: String = "in_app_metadata"
     }
