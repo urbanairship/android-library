@@ -14,6 +14,13 @@
         <name>^+t</name>
     </ActionEntry>
 
+    <ActionEntry
+        class="com.urbanairship.actions.tags.ModifyTagsAction"
+        predicate="com.urbanairship.actions.tags.ModifyTagsAction$ModifyTagsPredicate">
+        <name>tag_action</name>
+        <name>^t</name>
+    </ActionEntry>
+
     <ActionEntry class="com.urbanairship.actions.ClipboardAction">
         <name>clipboard_action</name>
         <name>^c</name>

@@ -32,10 +32,11 @@ public class ActionRegistryTest {
     @Test
     public fun testDefaultActions() {
         registry.registerDefaultActions(TestApplication.getApplication())
-        assertEquals("Default entries changed", 15, registry.entries.size)
+        assertEquals("Default entries changed", 16, registry.entries.size)
 
         validateEntry(registry.getEntry("^d"), "^d", "deep_link_action")
         validateEntry(registry.getEntry("^+t"), "^+t", "add_tags_action")
+        validateEntry(registry.getEntry("^t"), "^t", "tag_action")
         validateEntry(registry.getEntry("^-t"), "^-t", "remove_tags_action")
         validateEntry(registry.getEntry("^u"), "^u", "open_external_url_action")
         validateEntry(registry.getEntry("add_custom_event_action"), "^+ce", "add_custom_event_action")
