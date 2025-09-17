@@ -50,7 +50,6 @@ public class AddCustomEventAction public constructor() : Action() {
         val eventName = getEventName(customEventMap)
         requireNotNull(eventName) { "Missing event name" }
 
-        val eventStringValue: String? = getEventValue(customEventMap)
         val eventDoubleValue: Double = getEventValue(customEventMap) ?: 0.0
 
         val interactionType = customEventMap.optionalField<String>(CustomEvent.INTERACTION_TYPE)
@@ -61,11 +60,7 @@ public class AddCustomEventAction public constructor() : Action() {
             .setAttribution(arguments.metadata.getParcelable<Parcelable>(ActionArguments.PUSH_MESSAGE_METADATA) as PushMessage?)
             .setInteraction(interactionType, interactionId)
 
-        if (!eventStringValue.isNullOrEmpty()) {
-            eventBuilder.setEventValue(eventStringValue)
-        } else {
-            eventBuilder.setEventValue(eventDoubleValue)
-        }
+        eventBuilder.setEventValue(eventDoubleValue)
 
         arguments.metadata.getString(IN_APP_CONTEXT_METADATA_KEY)?.let { inApp ->
             try {
