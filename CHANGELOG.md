@@ -4,6 +4,12 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.13.2 - September 17, 2025
+Patch release that adds more logs to the deferred schedules preparing process.
+
+### Changes
+- Added more logs to the deferred schedules preparing process.
+
 ## Version 19.13.1 - September 15, 2025
 Patch release to fix an issue with showing out of date In-App Automations and Scenes.
 
