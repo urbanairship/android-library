@@ -181,10 +181,10 @@ internal sealed class State {
     ) : State() {
 
         val hasNext
-            get() = pageIndex < pageIds.size - 1
+            get() = pageIndex < pageIds.size - 1 && !isScrollDisabled
 
         val hasPrevious: Boolean
-            get() = pageIndex > 0
+            get() = pageIndex > 0 && !isScrollDisabled
 
         internal fun copyWithPageIndex(index: Int) =
             if (index == pageIndex) {
@@ -215,7 +215,7 @@ internal sealed class State {
                 PageRequest.FIRST -> 0
             }
 
-            return if (pageIndex >= 0 && pageIndex < pageIds.size) {
+            return if (nextIndex >= 0 && nextIndex < pageIds.size) {
                 copyWithPageIndex(nextIndex)
             } else {
                 copy(progress = 0)

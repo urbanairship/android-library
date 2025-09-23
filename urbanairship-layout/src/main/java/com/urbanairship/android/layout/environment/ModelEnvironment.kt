@@ -9,6 +9,7 @@ import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.util.ThomasViewIdResolver
 import com.urbanairship.channel.AttributeEditor
+import com.urbanairship.experiment.ResolutionType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -94,7 +95,7 @@ internal sealed class LayoutEvent {
 
     data object PagerPrevious : LayoutEvent()
 
-    data object Finish : LayoutEvent()
+    data class Finish(val cancel: Boolean = false) : LayoutEvent()
 }
 
 internal class AttributeHandler(

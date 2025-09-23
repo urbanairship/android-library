@@ -2,9 +2,22 @@ package com.urbanairship.android.layout
 
 import android.content.Context
 import android.view.View
+import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
+import com.urbanairship.android.layout.environment.SharedState
+import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.model.PageRequest
+import com.urbanairship.android.layout.scenecontroller.SceneController
 import com.urbanairship.json.JsonMap
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * Manager for custom views rendered in scenes.
@@ -78,6 +91,7 @@ public class AirshipCustomViewArguments(
     public val name: String,
     public val properties: JsonMap,
     public val sizeInfo: SizeInfo,
+    public val sceneController: SceneController
 ) {
 
     override fun equals(other: Any?): Boolean {

@@ -50,6 +50,6 @@ internal class WebViewModel(
                 context = layoutState.reportingContext()
             )
         )
-        broadcast(LayoutEvent.Finish)
+        broadcast(LayoutEvent.Finish())
     }
 }

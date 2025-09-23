@@ -174,6 +174,6 @@ internal abstract class ButtonModel<T, I: Button>(
             )
         )
 
-        broadcast(LayoutEvent.Finish).join()
+        broadcast(LayoutEvent.Finish()).join()
     }
 }

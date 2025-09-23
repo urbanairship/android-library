@@ -7,9 +7,12 @@ import com.urbanairship.android.layout.AirshipCustomViewArguments
 import com.urbanairship.android.layout.AirshipCustomViewArguments.SizeInfo
 import com.urbanairship.android.layout.AirshipCustomViewHandler
 import com.urbanairship.android.layout.AirshipCustomViewManager
+import com.urbanairship.android.layout.AirshipEmbeddedViewManager
+import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.CustomViewInfo
+import com.urbanairship.android.layout.scenecontroller.SceneController
 import com.urbanairship.android.layout.view.CustomView
 
 /** Model for customer provided views. */
@@ -35,6 +38,10 @@ internal class CustomViewModel(
             sizeInfo = SizeInfo(
                 isAutoWidth = itemProperties?.size?.width?.isAuto ?: false,
                 isAutoHeight = itemProperties?.size?.height?.isAuto ?: false,
+            ),
+            sceneController = SceneController(
+                pagerState = environment.layoutState.pager,
+                dismiss = { cancel -> broadcast(LayoutEvent.Finish(cancel)) }
             )
         )
 

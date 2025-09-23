@@ -27,6 +27,7 @@ import com.urbanairship.android.layout.playground.customviews.CustomAdView
 import com.urbanairship.android.layout.playground.customviews.CustomMapView
 import com.urbanairship.android.layout.playground.customviews.CustomWeatherView
 import com.urbanairship.android.layout.playground.customviews.CustomWeatherViewXml
+import com.urbanairship.android.layout.playground.customviews.SceneControllerCustomView
 import com.urbanairship.android.layout.playground.databinding.ActivityMainBinding
 import com.urbanairship.android.layout.playground.embedded.EmbeddedActivity
 import com.urbanairship.android.layout.reporting.LayoutData
@@ -93,6 +94,7 @@ class MainActivity : AppCompatActivity() {
         AirshipCustomViewManager.register("weather_custom_view", CustomWeatherView())
         AirshipCustomViewManager.register("ad_custom_view", CustomAdView())
         AirshipCustomViewManager.register("map_custom_view", CustomMapView())
+        AirshipCustomViewManager.register("scene_controller_test", SceneControllerCustomView())
     }
 
     override fun onResume() {

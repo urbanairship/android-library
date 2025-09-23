@@ -221,6 +221,10 @@ public class EmbeddedLayout(
         embeddedViewManager.dismiss(embeddedViewId, viewInstanceId)
     }
 
+    private fun dismissAndCancel() {
+        embeddedViewManager.dismissAll(embeddedViewId)
+    }
+
     @MainThread
     private fun onDisplayFinished() {
         UALog.v("Embedded content finished displaying! $embeddedViewId, $viewInstanceId")
@@ -230,7 +234,13 @@ public class EmbeddedLayout(
 
     private fun observeLayoutEvents(events: Flow<LayoutEvent>) = layoutScope.launch {
         events.filterIsInstance<LayoutEvent.Finish>()
-            .collect { dismiss() }
+            .collect {
+                if (it.cancel) {
+                    dismissAndCancel()
+                } else {
+                    dismiss()
+                }
+            }
     }
 
     private fun reportStateChange(events: Flow<LayoutEvent>) = layoutScope.launch {

@@ -534,7 +534,7 @@ internal class PagerModel(
             )
         )
 
-        broadcast(LayoutEvent.Finish)
+        broadcast(LayoutEvent.Finish())
     }
 
     private fun pauseStory() {
