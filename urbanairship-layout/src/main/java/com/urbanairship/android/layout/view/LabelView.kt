@@ -40,7 +40,7 @@ internal class LabelView(
         ViewCompat.setAccessibilityHeading(this, model.viewInfo.accessibilityRole?.type == LabelInfo.AccessibilityRoleType.HEADING)
 
         isClickable = false
-
+        isFocusable = false
 
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {

@@ -13,6 +13,7 @@ import com.urbanairship.automation.isNewSchedule
 import com.urbanairship.automation.limits.FrequencyConstraint
 import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.remotedata.RemoteDataSource
+import kotlin.collections.map
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -41,10 +42,21 @@ internal class AutomationRemoteDataSubscriber (
                 if (it) {
                     subscription = scope.launch {
                         remoteDataAccess.updatesFlow.collect { payloads ->
+                            UALog.v {
+                                val sourceInfo = payloads.payload.map {  payload ->
+                                    "${payload.value.remoteDataInfo?.source}: ${payload.value.remoteDataInfo?.lastModified}"
+                                }
+
+                                "Received automation payloads: $sourceInfo"
+                            }
+
                             if (!processConstraints(payloads)) {
+                                UALog.w { "Failed to process constraints, skipping update." }
                                 return@collect
                             }
+
                             processAutomations(payloads)
+                            UALog.v { "Subscriber finished update" }
                         }
                     }
                 } else {
@@ -69,6 +81,8 @@ internal class AutomationRemoteDataSubscriber (
         get() = remoteDataAccess.statusUpdates
 
     private suspend fun processAutomations(data: InAppRemoteData) {
+        UALog.v { "Processing automations" }
+
         val currentSchedules = engine.getSchedules()
 
         RemoteDataSource.entries.forEach { source ->
@@ -78,13 +92,15 @@ internal class AutomationRemoteDataSubscriber (
     }
 
     private suspend fun processConstraints(data: InAppRemoteData): Boolean {
+        UALog.v { "Processing constraints" }
+
         val constraints = data.payload.values
             .mapNotNull { it.data.constraints }
             .fold(emptyList<FrequencyConstraint>()) { acc, next -> acc + next}
 
         val result = frequencyLimitManager.setConstraints(constraints)
         if (result.isFailure) {
-            UALog.d { "Failed to process constraints ${result.exceptionOrNull()}" }
+            UALog.w { "Failed to process constraints ${result.exceptionOrNull()}" }
         }
         return result.isSuccess
     }
@@ -114,6 +130,7 @@ internal class AutomationRemoteDataSubscriber (
         )
 
         if (currentSourceInfo == lastSourceInfo) {
+            UALog.v { "Up to date, skipping for source $source" }
             return
         }
 
@@ -139,6 +156,7 @@ internal class AutomationRemoteDataSubscriber (
                 lastSDKVersion = lastSourceInfo?.airshipSDKVersion
             )
         }
+
         if (toUpsert.isNotEmpty()) {
             engine.upsertSchedules(toUpsert)
         }

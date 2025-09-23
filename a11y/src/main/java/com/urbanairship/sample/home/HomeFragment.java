@@ -32,6 +32,9 @@ public class HomeFragment extends Fragment {
         bindThomasButtons(binding);
         bindIAAButtons(binding);
 
+        // Wire up embedded view to use the parent height of the scroll view.
+        binding.embeddedViewContainer.setParentHeightProvider(binding.scrollView::getHeight);
+
         return binding.getRoot();
     }
 

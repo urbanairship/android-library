@@ -4,6 +4,31 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.13.2 - September 17, 2025
+Patch release that adds more logs to the deferred schedules preparing process.
+
+### Changes
+- Added more logs to the deferred schedules preparing process.
+
+## Version 19.13.1 - September 15, 2025
+Patch release to fix an issue with showing out of date In-App Automations and Scenes.
+
+### Changes
+- Fixed refreshing out of date In-App Automations and Scenes before displaying.
+
+## Version 19.13.0 - September 5, 2025
+Minor release that adds support for handling `uairship://message_center/message/<message_id>` links to open a specific message in Message Center.
+
+### Changes
+- Added support for handling `uairship://message_center/message/<message_id>` links to Message Center
+
+## Version 19.12.0 - September 4, 2025
+Minor release that adds a new flag to HTML In-App message content to force full screen on all devices.
+
+### Changes
+- Added `forceFullScreenDisplay` to HTML In-App message content
+- Improved accessibility in Scenes by removing labels from being focusable when using keyboard navigation
+
 ## Version 19.11.0 - August 21, 2025
 Minor release that enforces that incoming pushes are for the current channel ID and adds a manifest 
 metadata entry to control handling of insets for IAM banners for edge-to-edge mode.

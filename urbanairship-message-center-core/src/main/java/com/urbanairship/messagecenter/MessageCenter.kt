@@ -255,6 +255,9 @@ public constructor(
             } else if (paths.size == 1) {
                 showMessageCenter(paths[0])
                 return true
+            } else if (paths.size == 2 && "message" == paths[0]) {
+                showMessageCenter(paths[1])
+                return true
             }
         }
         return false

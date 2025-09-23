@@ -94,6 +94,7 @@ public class AutomationRemoteDataSubscriberTest {
         )
 
         coJustRun { engine.upsertSchedules(any()) }
+
         subscriber.subscribe()
 
         advanceUntilIdle()
@@ -444,7 +445,7 @@ public class AutomationRemoteDataSubscriberTest {
         minSDKVersion: String? = null,
         created: Long = clock.currentTimeMillis()
     ) : List<AutomationSchedule> {
-        return (1 until count)
+        return (0 until count)
             .map { makeSchedule(source, minSDKVersion, created) }
     }
 

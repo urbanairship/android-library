@@ -3,13 +3,18 @@ package com.urbanairship.messagecenter
 
 import android.app.Application
 import android.content.Context
+import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.Airship
+import com.urbanairship.job.JobInfo
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
+import com.urbanairship.job.JobResult
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -22,6 +27,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
@@ -46,6 +53,8 @@ public class MessageCenterTest {
     private val inbox = mockk<Inbox>(relaxUnitFun = true) {
         coEvery { fetchMessages() } returns true
     }
+
+    val onShowMessageCenterListener = mockk<MessageCenter.OnShowMessageCenterListener>()
 
     private val messageCenter: MessageCenter = MessageCenter(
         context = context,
@@ -93,5 +102,84 @@ public class MessageCenterTest {
         messageCenter.showMessageCenter()
 
         assertNull(shadowApplication.nextStartedActivity)
+    }
+
+    @Test
+    public fun testDeepLinkMessageCenter() {
+        every { onShowMessageCenterListener.onShowMessageCenter(null) } returns false
+
+        messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener)
+
+        val deepLink = Uri.parse("uairship://message_center")
+        assertTrue(messageCenter.onAirshipDeepLink(deepLink))
+        verify { onShowMessageCenterListener.onShowMessageCenter(null) }
+    }
+
+    @Test
+    public fun testDeepLinkMessageCenterTrailingSlash() {
+        every { onShowMessageCenterListener.onShowMessageCenter(null) } returns false
+
+        messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener)
+
+        val deepLink = Uri.parse("uairship://message_center/")
+        assertTrue(messageCenter.onAirshipDeepLink(deepLink))
+        verify { onShowMessageCenterListener.onShowMessageCenter(null) }
+    }
+
+    @Test
+    public fun testDeepLinkMessageFull() {
+        every { onShowMessageCenterListener.onShowMessageCenter("cool-message") } returns false
+
+        messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener)
+
+        val deepLink = Uri.parse("uairship://message_center/message/cool-message")
+        assertTrue(messageCenter.onAirshipDeepLink(deepLink))
+        verify { onShowMessageCenterListener.onShowMessageCenter("cool-message") }
+    }
+
+    @Test
+    public fun testDeepLinkMessageTrailingSlashFull() {
+        every { onShowMessageCenterListener.onShowMessageCenter("cool-message") } returns false
+
+        messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener)
+
+        val deepLink = Uri.parse("uairship://message_center/message/cool-message/")
+        assertTrue(messageCenter.onAirshipDeepLink(deepLink))
+        verify { onShowMessageCenterListener.onShowMessageCenter("cool-message") }
+    }
+
+    @Test
+    public fun testDeepLinkMessageShort() {
+        every { onShowMessageCenterListener.onShowMessageCenter("cool-message") } returns false
+
+        messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener)
+
+        val deepLink = Uri.parse("uairship://message_center/cool-message")
+        assertTrue(messageCenter.onAirshipDeepLink(deepLink))
+        verify { onShowMessageCenterListener.onShowMessageCenter("cool-message") }
+    }
+
+    @Test
+    public fun testDeepLinkMessageTrailingSlashShort() {
+        every { onShowMessageCenterListener.onShowMessageCenter("cool-message") } returns false
+
+        messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener)
+
+        val deepLink = Uri.parse("uairship://message_center/cool-message/")
+        assertTrue(messageCenter.onAirshipDeepLink(deepLink))
+        verify { onShowMessageCenterListener.onShowMessageCenter("cool-message") }
+    }
+
+    @Test
+    public fun testInvalidDeepLinks() {
+        messageCenter.setOnShowMessageCenterListener(onShowMessageCenterListener)
+
+        val wrongHost = Uri.parse("uairship://what/cool-message/")
+        assertFalse(messageCenter.onAirshipDeepLink(wrongHost))
+
+        val wrongArgs = Uri.parse("uairship://message_center/cool-message/what")
+        assertFalse(messageCenter.onAirshipDeepLink(wrongArgs))
+
+        verify(exactly = 0) { onShowMessageCenterListener.onShowMessageCenter(any()) }
     }
 }

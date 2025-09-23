@@ -12,6 +12,7 @@ import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -42,7 +43,7 @@ internal class RemoteDataRefreshManager(
             if (!privacyManager.isAnyFeatureEnabled(ignoringRemoteConfig = true)) {
                 UALog.d { "Refresh skipped since privacy features are disabled." }
                 providers.forEach {
-                    _refreshFlow.emit(Pair(it.source, RemoteDataProvider.RefreshResult.SKIPPED))
+                    _refreshFlow.emit(Pair(it.source, RemoteDataProvider.RefreshResult.Skipped()))
                 }
                 return@withContext JobResult.SUCCESS
             }
@@ -57,7 +58,7 @@ internal class RemoteDataRefreshManager(
 
             UALog.d { "Remote data refresh result: $result" }
 
-            if (result.contains(RemoteDataProvider.RefreshResult.FAILED)) {
+            if (result.any { it is RemoteDataProvider.RefreshResult.Failed }) {
                 JobResult.RETRY
             } else {
                 JobResult.SUCCESS

@@ -76,6 +76,7 @@ public class DeferredResolver internal constructor(
                 val value = response.value
                 // Check for null value or null JsonValue
                 if (value == null || value.isNull) {
+                    UALog.w { "Failed to resolve deferred: $resolvedUrl. Missing result. Will retry." }
                     return DeferredResult.RetriableError(statusCode = statusCode)
                 }
                 return try {
@@ -85,30 +86,41 @@ public class DeferredResolver internal constructor(
                     DeferredResult.RetriableError(statusCode = statusCode)
                 }
             }
-            404 -> return DeferredResult.NotFound()
+            404 -> {
+                UALog.d { "Failed to resolve deferred: $resolvedUrl. Not found." }
+                return DeferredResult.NotFound(statusCode)
+            }
             409 -> {
                 addOutdatedUrl(resolvedUrl)
-                return DeferredResult.OutOfDate()
+                UALog.d { "Failed to resolve deferred: $resolvedUrl. Out of date." }
+                return DeferredResult.OutOfDate(statusCode)
             }
             429 -> {
                 response.locationHeader?.let {
                     addUrlMapping(request.uri, it)
                 }
+                val retryDelay = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0)
+                UALog.d { "Failed to resolve deferred: $resolvedUrl with status code: $statusCode. Retry after $retryDelay." }
                 return DeferredResult.RetriableError(
-                    retryAfter = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0),
+                    retryAfter = retryDelay,
                     statusCode = statusCode
                 )
             }
             307 -> {
                 val redirect = response.locationHeader
-                    ?: return DeferredResult.RetriableError(
-                        retryAfter = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0),
+                if (redirect == null) {
+                    val retryDelay = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0)
+                    UALog.d { "Failed to resolve deferred: $resolvedUrl with status code: $statusCode. Retry after $retryDelay." }
+                    return DeferredResult.RetriableError(
+                        retryAfter = retryDelay,
                         statusCode = statusCode
                     )
+                }
                 addUrlMapping(request.uri, redirect)
 
                 val retryDelay = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, -1)
                 if (retryDelay > 0) {
+                    UALog.d { "Failed to resolve deferred: $resolvedUrl with status code: $statusCode. Retry after $retryDelay." }
                     return DeferredResult.RetriableError(retryDelay, statusCode = statusCode)
                 }
 
@@ -122,9 +134,13 @@ public class DeferredResolver internal constructor(
                     )
                 }
 
+                UALog.d { "Failed to resolve deferred: $resolvedUrl with status code: $statusCode. Will retry." }
                 return DeferredResult.RetriableError(statusCode = statusCode)
             }
-            else -> return DeferredResult.RetriableError(statusCode = statusCode)
+            else -> {
+                UALog.d { "Failed to resolve deferred: $resolvedUrl with status code: $statusCode. Will retry." }
+                return DeferredResult.RetriableError(statusCode = statusCode)
+            }
         }
     }
 

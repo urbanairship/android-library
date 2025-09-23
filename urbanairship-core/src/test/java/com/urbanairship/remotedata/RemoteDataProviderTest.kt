@@ -92,7 +92,7 @@ public class RemoteDataProviderTest {
         }
 
         val result = provider.refresh("some token", locale, randomValue)
-        assertEquals(RemoteDataProvider.RefreshResult.NEW_DATA, result)
+        assertTrue(result is RemoteDataProvider.RefreshResult.NewData)
 
         val payloads = provider.payloads(listOf("some type", "some other type"))
         assertEquals(refreshResult.payloads.toSet(), payloads)
@@ -128,7 +128,7 @@ public class RemoteDataProviderTest {
 
         // load data
         var result = provider.refresh("some token", Locale("bs"), 100)
-        assertEquals(RemoteDataProvider.RefreshResult.NEW_DATA, result)
+        assertTrue(result is RemoteDataProvider.RefreshResult.NewData)
 
         var payloads = provider.payloads(listOf("some type", "some other type"))
         assertFalse(payloads.isEmpty())
@@ -139,10 +139,10 @@ public class RemoteDataProviderTest {
         assertTrue(payloads.isEmpty())
 
         result = provider.refresh("some token", Locale("bs"), 100)
-        assertEquals(RemoteDataProvider.RefreshResult.NEW_DATA, result)
+        assertTrue(result is RemoteDataProvider.RefreshResult.NewData)
 
         result = provider.refresh("some token", Locale("bs"), 100)
-        assertEquals(RemoteDataProvider.RefreshResult.SKIPPED, result)
+        assertTrue(result is RemoteDataProvider.RefreshResult.Skipped)
     }
 
     @Test
@@ -175,7 +175,7 @@ public class RemoteDataProviderTest {
 
         // load data
         var result = provider.refresh("some token", Locale("bs"), 100)
-        assertEquals(RemoteDataProvider.RefreshResult.NEW_DATA, result)
+        assertTrue(result is RemoteDataProvider.RefreshResult.NewData)
 
         provider.isRemoteDataInfoUpToDateCallback = { info, locale, randomValue ->
             assertEquals(remoteDataInfo, info)
@@ -185,7 +185,7 @@ public class RemoteDataProviderTest {
         }
 
         result = provider.refresh("some token", Locale("bs"), 100)
-        assertEquals(RemoteDataProvider.RefreshResult.SKIPPED, result)
+        assertTrue(result is RemoteDataProvider.RefreshResult.Skipped)
     }
 
     @Test
@@ -218,7 +218,7 @@ public class RemoteDataProviderTest {
 
         // load data
         var result = provider.refresh("some token", Locale("bs"), 100)
-        assertEquals(RemoteDataProvider.RefreshResult.NEW_DATA, result)
+        assertTrue(result is RemoteDataProvider.RefreshResult.NewData)
 
         provider.isRemoteDataInfoUpToDateCallback = { _, _, _ ->
             false
@@ -234,7 +234,7 @@ public class RemoteDataProviderTest {
         }
 
         result = provider.refresh("some token", Locale("bs"), 100)
-        assertEquals(RemoteDataProvider.RefreshResult.SKIPPED, result)
+        assertTrue(result is RemoteDataProvider.RefreshResult.Skipped)
     }
 
     @Test
@@ -249,7 +249,7 @@ public class RemoteDataProviderTest {
         }
 
         val result = provider.refresh("some token", Locale("bs"), 100)
-        assertEquals(RemoteDataProvider.RefreshResult.FAILED, result)
+        assertTrue(result is RemoteDataProvider.RefreshResult.Failed)
     }
 
     @Test
@@ -264,7 +264,7 @@ public class RemoteDataProviderTest {
         }
 
         val result = provider.refresh("some token", Locale("bs"), 100)
-        assertEquals(RemoteDataProvider.RefreshResult.FAILED, result)
+        assertTrue(result is RemoteDataProvider.RefreshResult.Failed)
     }
 
     @Test
@@ -279,20 +279,21 @@ public class RemoteDataProviderTest {
         }
 
         val result = provider.refresh("some token", Locale("bs"), 100)
-        assertEquals(RemoteDataProvider.RefreshResult.FAILED, result)
+        assertTrue(result is RemoteDataProvider.RefreshResult.Failed)
     }
 
     @Test
     public fun testIsCurrent(): TestResult = runTest {
-        // No data
-        var isCurrent = provider.isCurrent(Locale.CANADA_FRENCH, 100)
-        assertFalse(isCurrent)
-
         val remoteDataInfo = RemoteDataInfo(
             url = "example://",
             lastModified = "some last modified",
             source = RemoteDataSource.APP
         )
+
+        // No data
+        var isCurrent = provider.isCurrent(Locale.CANADA_FRENCH, 10, remoteDataInfo)
+        assertFalse(isCurrent)
+
 
         provider.fetchRemoteDataCallback = { _, _, _ ->
             val refreshResult = RemoteDataApiClient.Result(
@@ -315,19 +316,19 @@ public class RemoteDataProviderTest {
         }
 
         // load data
-        var result = provider.refresh("some token", Locale.CANADA_FRENCH, 100)
-        assertEquals(RemoteDataProvider.RefreshResult.NEW_DATA, result)
+        val result = provider.refresh("some token", Locale.CANADA_FRENCH, 100)
+        assertTrue(result is RemoteDataProvider.RefreshResult.NewData)
 
         provider.isRemoteDataInfoUpToDateCallback = { _, _, _ ->
             true
         }
-        isCurrent = provider.isCurrent(Locale.CANADA_FRENCH, 100)
+        isCurrent = provider.isCurrent(Locale.CANADA_FRENCH, 100, remoteDataInfo)
         assertTrue(isCurrent)
 
         provider.isRemoteDataInfoUpToDateCallback = { _, _, _ ->
             false
         }
-        isCurrent = provider.isCurrent(Locale.CANADA_FRENCH, 100)
+        isCurrent = provider.isCurrent(Locale.CANADA_FRENCH, 100, remoteDataInfo)
         assertFalse(isCurrent)
     }
 

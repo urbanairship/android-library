@@ -217,8 +217,8 @@ public class RemoteDataTest {
                 assertTrue(remoteData.refresh())
             },
             async {
-                refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.NEW_DATA))
-                refreshFlow.emit(Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.SKIPPED))
+                refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.NewData()))
+                refreshFlow.emit(Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.Skipped()))
             }
         )
     }
@@ -230,8 +230,8 @@ public class RemoteDataTest {
                 assertFalse(remoteData.refresh())
             },
             async {
-                refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.NEW_DATA))
-                refreshFlow.emit(Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.FAILED))
+                refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.NewData()))
+                refreshFlow.emit(Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.Failed()))
             }
         )
     }
@@ -243,8 +243,8 @@ public class RemoteDataTest {
                 assertTrue(remoteData.refresh(RemoteDataSource.APP))
             },
             async {
-                refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.NEW_DATA))
-                refreshFlow.emit(Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.FAILED))
+                refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.NewData()))
+                refreshFlow.emit(Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.Failed()))
             }
         )
     }
@@ -327,16 +327,16 @@ public class RemoteDataTest {
             assertEquals(emptyList<RemoteDataPayload>(), awaitItem())
 
             // Verify Skipped and Failed are ignored
-            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.SKIPPED))
-            refreshFlow.emit(Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.SKIPPED))
-            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.FAILED))
-            refreshFlow.emit(Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.FAILED))
+            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.Skipped()))
+            refreshFlow.emit(Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.Skipped()))
+            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.Failed()))
+            refreshFlow.emit(Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.Failed()))
             ensureAllEventsConsumed()
 
-            refreshFlow.emit(Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.NEW_DATA))
+            refreshFlow.emit(Pair(RemoteDataSource.CONTACT, RemoteDataProvider.RefreshResult.NewData()))
             assertEquals(listOf(contactFoo), awaitItem())
 
-            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.NEW_DATA))
+            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.NewData()))
             assertEquals(listOf(channelFoo, contactFoo, channelBar), awaitItem())
         }
     }
@@ -400,7 +400,7 @@ public class RemoteDataTest {
     public fun testRefreshStatusSuccess(): TestResult = runTest {
         remoteData.refreshStatusFlow(RemoteDataSource.APP).test {
             assertEquals(RemoteData.RefreshStatus.NONE, awaitItem())
-            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.NEW_DATA))
+            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.NewData()))
             assertEquals(RemoteData.RefreshStatus.SUCCESS, awaitItem())
         }
     }
@@ -409,7 +409,7 @@ public class RemoteDataTest {
     public fun testRefreshStatusFailed(): TestResult = runTest {
         remoteData.refreshStatusFlow(RemoteDataSource.APP).test {
             assertEquals(RemoteData.RefreshStatus.NONE, awaitItem())
-            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.FAILED))
+            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.Failed()))
             assertEquals(RemoteData.RefreshStatus.FAILED, awaitItem())
         }
     }
@@ -418,7 +418,7 @@ public class RemoteDataTest {
     public fun testRefreshStatusSkipped(): TestResult = runTest {
         remoteData.refreshStatusFlow(RemoteDataSource.APP).test {
             assertEquals(RemoteData.RefreshStatus.NONE, awaitItem())
-            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.SKIPPED))
+            refreshFlow.emit(Pair(RemoteDataSource.APP, RemoteDataProvider.RefreshResult.Skipped()))
             assertEquals(RemoteData.RefreshStatus.SUCCESS, awaitItem())
         }
     }

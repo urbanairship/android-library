@@ -16,15 +16,15 @@ import kotlin.jvm.Throws
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public sealed class DeferredResult<T> {
-    public class Success<T>(public val result: T) : DeferredResult<T>()
-    public class RetriableError<T>(
+    public data class Success<T>(public val result: T) : DeferredResult<T>()
+    public data class RetriableError<T>(
         public val retryAfter: Long? = null,
         public val statusCode: Int? = null,
         public val errorDescription: String? = null
     ) : DeferredResult<T>()
-    public class TimedOut<T>() : DeferredResult<T>()
-    public class OutOfDate<T>() : DeferredResult<T>()
-    public class NotFound<T>() : DeferredResult<T>()
+    public data class TimedOut<T>(public val statusCode: Int? = null) : DeferredResult<T>()
+    public data class OutOfDate<T>(public val statusCode: Int? = null) : DeferredResult<T>()
+    public data class NotFound<T>(public val statusCode: Int? = null) : DeferredResult<T>()
 }
 
 /**

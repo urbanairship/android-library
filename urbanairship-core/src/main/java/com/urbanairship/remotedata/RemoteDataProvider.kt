@@ -74,8 +74,14 @@ internal abstract class RemoteDataProvider(
         this.lastRefreshState = null
     }
 
-    fun isCurrent(locale: Locale, randomValue: Int): Boolean {
+    fun isCurrent(locale: Locale, randomValue: Int, remoteDataInfo: RemoteDataInfo): Boolean {
         if (!isEnabled) {
+            return false
+        }
+
+        if (remoteDataInfo != lastRefreshState?.remoteDataInfo) {
+            UALog.v { "Remote data info $remoteDataInfo does not match last refresh state ${lastRefreshState?.remoteDataInfo}" }
+
             return false
         }
 
@@ -98,10 +104,10 @@ internal abstract class RemoteDataProvider(
     suspend fun refresh(changeToken: String, locale: Locale, randomValue: Int): RefreshResult {
         if (!this.isEnabled) {
             if (this.remoteDataStore.deletePayloads() > 0) {
-                return RefreshResult.NEW_DATA
+                return RefreshResult.NewData()
             }
 
-            return RefreshResult.SKIPPED
+            return RefreshResult.Skipped()
         }
 
         val refreshState = this.lastRefreshState
@@ -115,15 +121,16 @@ internal abstract class RemoteDataProvider(
         notifyNewStatus(currentState)
 
         if (currentState == RemoteData.Status.UP_TO_DATE) {
-            return RefreshResult.SKIPPED
+            return RefreshResult.Skipped()
         }
 
         val result = fetchRemoteData(locale, randomValue, refreshState?.remoteDataInfo)
         if (result.exception != null) {
-            return RefreshResult.FAILED
+            return RefreshResult.Failed()
         }
 
         if (result.isSuccessful && result.value != null) {
+            UALog.v { "Updating remote data store for source $source" }
             remoteDataStore.deletePayloads()
             remoteDataStore.savePayloads(result.value.payloads)
             this.lastRefreshState = LastRefreshState(
@@ -132,13 +139,13 @@ internal abstract class RemoteDataProvider(
                 clock.currentTimeMillis()
             )
 
-            return RefreshResult.NEW_DATA
+            return RefreshResult.NewData()
         }
 
         if (result.status == 304) {
             if (refreshState == null) {
                 UALog.e { "Received a 304 without a previous refresh state" }
-                return RefreshResult.FAILED
+                return RefreshResult.Failed()
             }
 
             this.lastRefreshState = LastRefreshState(
@@ -146,10 +153,10 @@ internal abstract class RemoteDataProvider(
                 refreshState.remoteDataInfo,
                 clock.currentTimeMillis()
             )
-            return RefreshResult.SKIPPED
+            return RefreshResult.Skipped()
         }
 
-        return RefreshResult.FAILED
+        return RefreshResult.Failed()
     }
 
     @VisibleForTesting
@@ -222,10 +229,15 @@ internal abstract class RemoteDataProvider(
         ).toJsonValue()
     }
 
-    internal enum class RefreshResult {
-        SKIPPED,
-        NEW_DATA,
-        FAILED
+    internal sealed interface RefreshResult {
+        data class Skipped(private val id: Long = System.nanoTime()) : RefreshResult
+
+        data class NewData(private val id: Long = System.nanoTime()) : RefreshResult
+
+        data class Failed(
+            val error: Throwable? = null,
+            private val id: Long = System.nanoTime()
+        ) : RefreshResult
     }
 
     companion object {

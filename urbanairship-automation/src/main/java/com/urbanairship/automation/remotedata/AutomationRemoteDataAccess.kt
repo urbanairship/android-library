@@ -17,9 +17,11 @@ import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.remotedata.RemoteDataSource
 import com.urbanairship.util.Network
+import kotlin.collections.map
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 
 /**
  * Remote data access for automation
@@ -179,10 +181,9 @@ internal class AutomationRemoteDataAccess(
 
 }
 
-internal class InAppRemoteData(
+internal data class InAppRemoteData(
     val payload: Map<RemoteDataSource, Payload>
 ) {
-
     data class Data(
         val schedules: List<AutomationSchedule>,
         val constraints: List<FrequencyConstraint>?

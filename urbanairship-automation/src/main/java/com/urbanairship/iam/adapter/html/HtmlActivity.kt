@@ -153,6 +153,8 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
     }
 
     private fun isFullScreen(html: HTML): Boolean {
+        if (html.forceFullScreenDisplay) { return true }
+
         return if (html.allowFullscreenDisplay) {
             try {
                 resources.getBoolean(R.bool.ua_iam_html_allow_fullscreen_display)
