@@ -1,11 +1,16 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
-import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.UALog
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
-import com.urbanairship.channel.AttributeEditor
+import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireField
+import com.urbanairship.json.toJsonMap
 import java.util.Date
 
 /**
@@ -31,118 +36,287 @@ import java.util.Date
 public class SetAttributesAction public constructor() : Action() {
 
     override fun perform(arguments: ActionArguments): ActionResult {
-        val args = arguments.value.map ?: return newEmptyResult()
-
-        // Channel Attribute
-        args[CHANNEL_KEY]?.optMap()?.let { channel ->
-            val editor = Airship.shared().channel.editAttributes()
-            channel.map.entries.forEach { handleAttributeActions(editor, it)}
-            editor.apply()
+        val actions = try {
+            parseActions(arguments.value.toJsonValue())
+        } catch (ex: kotlin.Exception) {
+            UALog.w(ex) { "Failed to parse actions" }
+            return newEmptyResult()
         }
 
-        // Contact Attribute
-        args[NAMED_USER_KEY]?.optMap()?.let { user ->
-            val editor = Airship.shared().contact.editAttributes()
-            user.map.entries.forEach { handleAttributeActions(editor, it)}
-            editor.apply()
+        val channelEditor = Airship.shared().channel.editAttributes()
+        val contactEditor = Airship.shared().contact.editAttributes()
+
+        val targets = actions.map { it.editor }.toSet()
+
+        for (item in actions) {
+            val editor = when (item.editor) {
+                AttributeActionArgs.Editor.CHANNEL -> channelEditor
+                AttributeActionArgs.Editor.CONTACT -> contactEditor
+            }
+
+            when(item) {
+                is AttributeActionArgs.Remove -> editor.removeAttribute(item.name)
+                is AttributeActionArgs.Set -> {
+                    when(val unwrapped = item.value) {
+                        is AttributeActionArgs.Value.DateValue -> editor.setAttribute(item.name, unwrapped.value)
+                        is AttributeActionArgs.Value.NumberValue -> {
+                            val number = unwrapped.value
+                            when(number) {
+                                is Int -> editor.setAttribute(item.name, number)
+                                is Long -> editor.setAttribute(item.name, number)
+                                is Float -> editor.setAttribute(item.name, number)
+                                is Double -> editor.setAttribute(item.name, number)
+                            }
+                        }
+                        is AttributeActionArgs.Value.StringValue -> editor.setAttribute(item.name, unwrapped.value)
+                        is AttributeActionArgs.Value.Json -> {
+                            val expirable = unwrapped.value
+                            editor.setAttribute(
+                                attribute = expirable.name,
+                                instanceId = expirable.instanceId,
+                                expiration = expirable.expiration,
+                                json = expirable.value)
+                        }
+                    }
+                }
+            }
+        }
+
+        if (targets.contains(AttributeActionArgs.Editor.CHANNEL)) {
+            channelEditor.apply()
+        }
+
+        if (targets.contains(AttributeActionArgs.Editor.CONTACT)) {
+            contactEditor.apply()
         }
 
         return newEmptyResult()
     }
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
-        if (arguments.value.isNull) {
+        try {
+            val actions = parseActions(arguments.value.toJsonValue())
+            return actions.isNotEmpty()
+        } catch (_: kotlin.Exception) {
             return false
         }
-
-        if (arguments.value.map == null) {
-            return false
-        }
-
-        // Channel attributes
-        val channel = arguments.value.map.opt(CHANNEL_KEY)
-        if (channel !== JsonValue.NULL && !areAttributeMutationsValid(channel)) {
-            return false
-        }
-
-        // Named User attributes
-        val namedUser = arguments.value.map.opt(NAMED_USER_KEY)
-        if (namedUser !== JsonValue.NULL && !areAttributeMutationsValid(namedUser)) {
-            return false
-        }
-
-        return channel !== JsonValue.NULL || namedUser !== JsonValue.NULL
     }
 
-    private fun areAttributeMutationsValid(attributeMutations: JsonValue): Boolean {
-        if (attributeMutations.map == null) {
-            return false
+    @Throws(JsonException::class, IllegalArgumentException::class)
+    private fun parseActions(value: JsonValue): List<AttributeActionArgs> {
+        if (value.isNull) {
+            throw IllegalArgumentException("Null is not allowed")
         }
 
-        val set = attributeMutations.optMap().opt(SET_KEY)
-        if (set !== JsonValue.NULL && !isSetAttributeMutationValid(set)) {
-            return false
+        if (value.isJsonList) {
+            return value.requireList().list.map(AttributeActionArgs::fromJson)
         }
 
-        val remove = attributeMutations.optMap().opt(REMOVE_KEY)
-        return !(remove !== JsonValue.NULL && !isRemoveAttributeMutationValid(remove))
+        val map = value.map?.map ?: throw IllegalArgumentException("json map is expected")
+
+        val convertToAttribute: (AttributeActionArgs.Editor, JsonMap?) -> List<AttributeActionArgs> = convertToAttribute@ { editor, source ->
+            if (source == null) {
+                return@convertToAttribute emptyList()
+            }
+
+            val sets = source.map[SET_KEY]
+                ?.requireMap()
+                ?.map { (key, value) ->
+                    AttributeActionArgs.Set(
+                        editor = editor,
+                        name = key,
+                        value = AttributeActionArgs.Value.fromMapValue(value.value)
+                    )
+                }
+                ?: emptyList()
+
+            val removes = source.map[REMOVE_KEY]
+                ?.requireList()
+                ?.list
+                ?.map { AttributeActionArgs.Remove(editor, it.requireString()) }
+                ?: emptyList()
+
+            sets + removes
+        }
+
+        return convertToAttribute(AttributeActionArgs.Editor.CHANNEL, map[CHANNEL_KEY]?.requireMap()) +
+                convertToAttribute(AttributeActionArgs.Editor.CONTACT, map[NAMED_USER_KEY]?.requireMap())
     }
 
-    private fun isSetAttributeMutationValid(setAttributeMutation: JsonValue): Boolean {
-        return setAttributeMutation.map != null
-    }
+    private sealed class AttributeActionArgs(
+        val action: Action,
+        val editor: Editor,
+        val name: String
+    ): JsonSerializable {
 
-    private fun isRemoveAttributeMutationValid(removeAttributeMutation: JsonValue): Boolean {
-        return removeAttributeMutation.list != null
-    }
+        class Set(
+            editor: Editor, name: String, val value: Value
+        ) : AttributeActionArgs(Action.SET, editor, name)
 
-    /**
-     * Handles the attributes updates
-     * @param attributeEditor The attribute editor
-     * @param entry The attribute entry
-     */
-    private fun handleAttributeActions(
-        attributeEditor: AttributeEditor, entry: Map.Entry<String, JsonValue>
-    ) {
-        when (entry.key) {
-            SET_KEY -> {
-                entry.value
-                    .optMap()
-                    .entrySet()
-                    .forEach {
-                        val value = it.value.value ?: return@forEach
-                        setAttribute(attributeEditor, it.key, value)
+        class Remove(
+            editor: Editor, name: String
+        ) : AttributeActionArgs(Action.REMOVE, editor, name)
+
+        override fun toJsonValue(): JsonValue {
+            val builder = JsonMap.newBuilder().put(KEY_ACTION, action).put(KEY_TARGET, editor)
+                .put(KEY_NAME, name)
+
+            when (this) {
+                is Set -> builder.put(KEY_VALUE, value)
+                else -> {}
+            }
+
+            return builder.build().toJsonValue()
+        }
+
+        enum class Action(val jsonValue: String) : JsonSerializable { SET("set"), REMOVE("remove");
+
+            override fun toJsonValue(): JsonValue = JsonValue.wrap(jsonValue)
+
+            companion object {
+
+                @Throws(JsonException::class)
+                fun fromJson(value: JsonValue): Action {
+                    val content = value.requireString()
+                    return entries.firstOrNull { it.jsonValue == content }
+                        ?: throw JsonException("invalid value $value")
+                }
+            }
+        }
+
+        enum class Editor(val jsonValue: String) :
+            JsonSerializable {
+
+            CHANNEL("channel"), CONTACT("contact");
+
+            override fun toJsonValue(): JsonValue = JsonValue.wrap(jsonValue)
+
+            companion object {
+
+                @Throws(JsonException::class)
+                fun fromJson(value: JsonValue): Editor {
+                    val content = value.requireString()
+                    return entries.firstOrNull { it.jsonValue == content }
+                        ?: throw JsonException("invalid value $value")
+                }
+            }
+        }
+
+        sealed class Value() : JsonSerializable { data class StringValue(val value: String) :
+            Value()
+
+            data class NumberValue(val value: Number) : Value()
+            data class DateValue(val value: Date) : Value()
+            data class Json(val value: ExpirableValue) : Value()
+
+            override fun toJsonValue(): JsonValue {
+                return when (this) {
+                    is StringValue -> JsonValue.wrap(value)
+                    is NumberValue -> JsonValue.wrap(value)
+                    is DateValue -> JsonValue.wrap(value.time)
+                    is Json -> value.toJsonValue()
+                }
+            }
+
+            class ExpirableValue(
+                val name: String, val instanceId: String, val expiration: Date?, val value: JsonMap
+            ) : JsonSerializable {
+
+                companion object {
+
+                    private const val KEY_EXPIRATION = "exp"
+
+                    @Throws(JsonException::class)
+                    fun fromJson(value: JsonValue): ExpirableValue {
+                        val content = value.requireMap()
+                        if (content.size() != 1) {
+                            throw JsonException("Only one entry in $value is allowed")
+                        }
+
+                        val key = content.keySet().firstOrNull()
+                            ?: throw JsonException("Empty input data")
+                        if (!key.contains("#")) {
+                            throw JsonException("Invalid key format: $key")
+                        }
+
+                        val data = content.values().firstOrNull()?.requireMap()?.map?.toMutableMap()
+                            ?: throw JsonException("Invalid value format: $content")
+
+                        val components = key.split("#")
+                        if (components.size != 2 || components.any { it.isEmpty() }) {
+                            throw JsonException("Invalid key format: $key")
+                        }
+
+                        return ExpirableValue(
+                            name = components[0],
+                            instanceId = components[1],
+                            expiration = convertToData(data.remove(KEY_EXPIRATION)),
+                            value = data.toJsonMap()
+                        )
                     }
+
+                    fun convertToData(value: JsonValue?): Date? {
+                        val number = value?.number ?: return null
+                        return Date(number.toLong() * 1000)
+                    }
+                }
+
+                override fun toJsonValue(): JsonValue {
+                    val content =
+                        JsonMap.newBuilder().putAll(value).putOpt(KEY_EXPIRATION, expiration?.time)
+                            .build()
+
+                    return jsonMapOf("$name#$value" to content).toJsonValue()
+                }
             }
 
-            REMOVE_KEY -> {
-                entry.value
-                    .optList()
-                    .list
-                    .map { it.optString() }
-                    .forEach(attributeEditor::removeAttribute)
-            }
+            companion object {
 
-            else -> {}
+                @Throws(JsonException::class)
+                fun fromJson(value: JsonValue): Value {
+                    return when (val converted = value.value) {
+                        is String -> StringValue(converted)
+                        is Long -> DateValue(Date(converted * 1000))
+                        is Number -> NumberValue(converted)
+                        is JsonSerializable -> Json(ExpirableValue.fromJson(converted.toJsonValue()))
+                        else -> throw JsonException("Unsupported value type: $converted")
+                    }
+                }
+
+                @Throws(IllegalArgumentException::class)
+                fun fromMapValue(value: Any?): Value {
+                    return when (value) {
+                        is String -> StringValue(value)
+                        is Number -> NumberValue(value)
+                        is Date -> DateValue(value)
+                        else -> throw IllegalArgumentException("Unsupported value type: $value")
+                    }
+                }
+            }
         }
-    }
 
-    /**
-     * Apply the attribute settings.
-     * @param attributeEditor The attribute editor.
-     * @param key The attribute key.
-     * @param value The attribute value.
-     */
-    private fun setAttribute(attributeEditor: AttributeEditor, key: String, value: Any) {
-        when (value) {
-            is Int -> attributeEditor.setAttribute(key, value)
-            is Long -> attributeEditor.setAttribute(key, value)
-            is Float -> attributeEditor.setAttribute(key, value)
-            is Double -> attributeEditor.setAttribute(key, value)
-            is String -> attributeEditor.setAttribute(key, value)
-            is Date -> attributeEditor.setAttribute(key, value)
-            else -> {
-                UALog.w("SetAttributesAction - Invalid value type for the key: $key")
+        companion object {
+
+            private const val KEY_ACTION = "action"
+            private const val KEY_TARGET = "type"
+            private const val KEY_NAME = "name"
+            private const val KEY_VALUE = "value"
+
+            @Throws(JsonException::class)
+            fun fromJson(value: JsonValue): AttributeActionArgs {
+                val content = value.requireMap()
+                val name: String = content.requireField(KEY_NAME)
+                val editor = Editor.fromJson(content.require(KEY_TARGET))
+
+                return when (Action.fromJson(content.require(KEY_ACTION))) {
+                    Action.SET -> Set(
+                        editor = editor,
+                        name = name,
+                        value = Value.fromJson(content.require(KEY_VALUE))
+                    )
+
+                    Action.REMOVE -> Remove(editor, name)
+                }
             }
         }
     }
@@ -163,6 +337,7 @@ public class SetAttributesAction public constructor() : Action() {
          * Default registry name
          */
         public const val DEFAULT_REGISTRY_NAME: String = "set_attributes_action"
+        private const val DEFAULT_REGISTRY_NAME_IOS: String = "modify_attributes_action"
 
         /**
          * Default registry short name

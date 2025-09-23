@@ -9,6 +9,8 @@ import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.contacts.Contact
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonListOf
+import com.urbanairship.json.jsonMapOf
 import java.util.Date
 import io.mockk.every
 import io.mockk.mockk
@@ -248,6 +250,7 @@ public class SetAttributesActionTest {
         }
 
         every { channel.editAttributes() } returns attributeEditor
+        every { contact.editAttributes() } returns mockk()
 
         // Channel attributes
         val channelSet = JSONObject()
@@ -298,6 +301,7 @@ public class SetAttributesActionTest {
         }
 
         every { contact.editAttributes() } returns attributeEditor
+        every { channel.editAttributes() } returns mockk()
 
         // Named User attributes
         val namedUserSet = JSONObject()
@@ -406,6 +410,155 @@ public class SetAttributesActionTest {
             AttributeMutation.newRemoveAttributeMutation(
                 "not_needed", 1000
             )
+        )
+
+        assertEquals(expectedAttributeMutations, attributeMutations)
+    }
+
+    @Test
+    fun acceptReturnsFalseForInvalidJsonValue() {
+        val inputJsons = listOf(
+            jsonListOf(
+                jsonMapOf(
+                    "action" to "set",
+                    "type" to "channel",
+                    "name" to "another name",
+                    "value" to jsonMapOf(
+                        "json_test" to jsonMapOf(
+                            "exp" to 1012,
+                            "nested" to jsonMapOf(
+                                "foo" to "bar"
+                            )
+                        )
+                    )
+                )
+            ),
+            jsonListOf(
+                jsonMapOf(
+                    "action" to "set",
+                    "type" to "channel",
+                    "name" to "another name",
+                    "value" to jsonMapOf(
+                        "json#test#" to jsonMapOf(
+                            "exp" to 1012,
+                            "nested" to jsonMapOf(
+                                "foo" to "bar"
+                            )
+                        )
+                    )
+                )
+            ),
+            jsonListOf(
+                jsonMapOf(
+                    "action" to "set",
+                    "type" to "channel",
+                    "name" to "another name",
+                    "value" to jsonMapOf(
+                        "json_test#" to jsonMapOf(
+                            "exp" to 1012,
+                            "nested" to jsonMapOf(
+                                "foo" to "bar"
+                            )
+                        )
+                    )
+                )
+            )
+        )
+
+        for (inputJson in inputJsons) {
+            val args = ActionTestUtils.createArgs(Action.Situation.MANUAL_INVOCATION, wrap(inputJson))
+            val result = action.acceptsArguments(args)
+            assertFalse(result)
+        }
+    }
+
+    @Test
+    fun performWithJsonValue() {
+        val attributeMutations = mutableSetOf<AttributeMutation>()
+        val attributeEditor = object : AttributeEditor(clock) {
+            override fun onApply(collapsedMutations: List<AttributeMutation>) {
+                attributeMutations.addAll(collapsedMutations)
+            }
+        }
+
+        every { channel.editAttributes() } returns attributeEditor
+        every { contact.editAttributes() } returns attributeEditor
+
+        val inputJson = jsonListOf(
+            jsonMapOf(
+                "action" to "set",
+                "type" to "channel",
+                "name" to "another name",
+                "value" to jsonMapOf(
+                    "json#test" to jsonMapOf(
+                        "exp" to 1012,
+                        "nested" to jsonMapOf(
+                            "foo" to "bar"
+                        )
+                    )
+                )
+            )
+        )
+
+        val args = ActionTestUtils.createArgs(Action.Situation.MANUAL_INVOCATION, wrap(inputJson))
+        val result = action.perform(args)
+
+        assertTrue(result.value.isNull)
+
+        val expectedAttributeMutations = setOf(
+            AttributeMutation.newSetAttributeMutation(
+                key = "json#test",
+                jsonValue = JsonValue.wrap(mapOf(
+                    "nested" to mapOf("foo" to "bar"),
+                    "exp" to 1012
+                )),
+                timestamp = 1000
+            ),
+        )
+
+        assertEquals(expectedAttributeMutations, attributeMutations)
+    }
+
+    @Test
+    fun performWithJsonValueWithNoExpiration() {
+        val attributeMutations = mutableSetOf<AttributeMutation>()
+        val attributeEditor = object : AttributeEditor(clock) {
+            override fun onApply(collapsedMutations: List<AttributeMutation>) {
+                attributeMutations.addAll(collapsedMutations)
+            }
+        }
+
+        every { channel.editAttributes() } returns attributeEditor
+        every { contact.editAttributes() } returns attributeEditor
+
+        val inputJson = jsonListOf(
+            jsonMapOf(
+                "action" to "set",
+                "type" to "channel",
+                "name" to "another name",
+                "value" to jsonMapOf(
+                    "json#test" to jsonMapOf(
+                        "nested" to jsonMapOf(
+                            "foo" to "bar"
+                        )
+                    )
+                )
+            )
+        )
+
+        val args = ActionTestUtils.createArgs(Action.Situation.MANUAL_INVOCATION, wrap(inputJson))
+        val result = action.perform(args)
+
+        assertTrue(result.value.isNull)
+
+        val expectedAttributeMutations = setOf(
+            AttributeMutation.newSetAttributeMutation(
+                key = "json#test",
+                jsonValue = JsonValue.wrap(mapOf(
+                    "nested" to mapOf("foo" to "bar")
+                )),
+                timestamp = 1000
+            ),
         )
 
         assertEquals(expectedAttributeMutations, attributeMutations)

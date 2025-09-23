@@ -64,6 +64,7 @@
         class="com.urbanairship.actions.SetAttributesAction"
         predicate="com.urbanairship.actions.SetAttributesAction$SetAttributesPredicate">
         <name>set_attributes_action</name>
+        <name>modify_attributes_action</name>
         <name>^a</name>
     </ActionEntry>
 

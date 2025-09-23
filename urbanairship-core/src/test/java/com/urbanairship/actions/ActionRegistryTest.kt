@@ -47,7 +47,7 @@ public class ActionRegistryTest {
         validateEntry(registry.getEntry("^fdi"), "^fdi", "fetch_device_info")
         validateEntry(registry.getEntry("^ef"), "^ef", "enable_feature")
         validateEntry(registry.getEntry("^ra"), "^ra", "rate_app_action")
-        validateEntry(registry.getEntry("^a"), "^a", "set_attributes_action")
+        validateEntry(registry.getEntry("^a"), "^a", "set_attributes_action", "modify_attributes_action")
         validateEntry(
             registry.getEntry("^sla"),
             "^sla",
