@@ -24,4 +24,3 @@ internal val LightColorScheme = lightColorScheme(
 internal val DarkColorScheme = darkColorScheme(
     primary = AirshipColors.airshipBlue
 )
-
