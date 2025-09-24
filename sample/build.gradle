@@ -100,6 +100,9 @@ dependencies {
     implementation project(':urbanairship-debug')
 
     implementation libs.glide
+    implementation libs.androidx.ui.viewbinding
+    implementation libs.androidx.fragment.compose
+    implementation libs.androidx.ui.tooling.preview
 
     // Testing-only dependencies
 
@@ -129,8 +132,18 @@ dependencies {
     androidTestImplementation(libs.mockito.core)
     androidTestImplementation(libs.mockito.android)
 
+    // Compose
+    implementation(libs.compose.material3)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+
+    // Navigation 3
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+
     androidTestImplementation(libs.androidx.navigation.testing)
     debugImplementation(libs.androidx.fragment.testing)
+    debugImplementation libs.androidx.ui.tooling
 }
 
 
