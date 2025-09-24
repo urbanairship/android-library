@@ -38,6 +38,10 @@ class InboxMessageFragment : MessageCenterMessageFragment(R.layout.fragment_inbo
                 Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
             }
         }
+
+        onMessageCloseListener = OnMessageCloseListener {
+            findNavController().popBackStack()
+        }
     }
 }
 

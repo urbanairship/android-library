@@ -1,8 +1,6 @@
 package com.urbanairship.messagecenter.ui
 
-import android.content.Intent
 import android.content.res.Configuration
-import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
@@ -14,9 +12,9 @@ import androidx.slidingpanelayout.widget.SlidingPaneLayout
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment.OnMessageDeletedListener
+import com.urbanairship.messagecenter.ui.MessageCenterMessageFragment.OnMessageCloseListener
 import com.urbanairship.messagecenter.ui.MessageListFragment.OnMessageClickListener
 import com.urbanairship.messagecenter.ui.view.MessageViewState
 import com.urbanairship.messagecenter.util.setImportantForAccessibility
@@ -141,6 +139,10 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
                 showListSnackbar(
                     resources.getQuantityString(R.plurals.ua_mc_description_deleted, 1, 1)
                 )
+                closeMessage()
+            }
+
+            onMessageCloseListener = OnMessageCloseListener {
                 closeMessage()
             }
         }

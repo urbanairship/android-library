@@ -102,6 +102,10 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
                 }
             }
 
+            override fun onClose(webView: WebView) {
+                finish()
+            }
+
             @Deprecated("Deprecated in Java")
             override fun onReceivedError(
                 view: WebView,
