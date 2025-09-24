@@ -1,19 +1,16 @@
 package com.urbanairship.preferencecenter.compose.ui.item
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.SuggestionChipDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import com.urbanairship.preferencecenter.core.R
+import com.urbanairship.preferencecenter.compose.ui.theme.PrefCenterTheme
+import com.urbanairship.preferencecenter.compose.ui.theme.PreferenceCenterTheme
 import com.urbanairship.preferencecenter.data.CommonDisplay
 import com.urbanairship.preferencecenter.data.Conditions
 import com.urbanairship.preferencecenter.data.Section
@@ -22,46 +19,31 @@ internal data class SectionBreakItem(
     val section: Section.SectionBreak
 ) : BasePrefCenterItem(TYPE_SECTION_BREAK) {
 
-    override val id: String = section.id
     override val conditions: Conditions = section.conditions
     val label: String? = section.display.name
-
-    override fun areItemsTheSame(otherItem: BasePrefCenterItem): Boolean {
-        if (this === otherItem) return true
-        if (javaClass != otherItem.javaClass) return false
-        otherItem as SectionBreakItem
-        return id == otherItem.id
-    }
-
-    override fun areContentsTheSame(otherItem: BasePrefCenterItem): Boolean {
-        if (javaClass != otherItem.javaClass) return false
-        otherItem as SectionBreakItem
-
-        if (label != otherItem.label) return false
-
-        return true
-    }
 }
 
 @Composable
-internal fun SectionBreakItem.toView() {
+internal fun SectionBreakItem.Content() {
+    if (label.isNullOrEmpty()) {
+        return
+    }
+
     SuggestionChip(
-        modifier = Modifier
-            .padding(start = 16.dp, top = 10.dp, end = 16.dp),
+        modifier = Modifier.padding(PrefCenterTheme.dimens.itemPadding),
         onClick = { },
         enabled = false,
         colors = SuggestionChipDefaults.suggestionChipColors().copy(
-            disabledContainerColor = colorResource(R.color.ua_preference_center_section_break_label_background),
-            labelColor = Color.White,
+            disabledContainerColor = PrefCenterTheme.colors.sectionLabelBackground
         ),
-        shape = MaterialTheme.shapes.large,
+        shape = PrefCenterTheme.shapes.sectionLabel,
         label = {
             Text(
-                text = label ?: "",
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
+                text = label,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
+                style = PrefCenterTheme.typography.sectionLabel,
+                color = PrefCenterTheme.colors.sectionLabelText
             )
         }
     )
@@ -70,11 +52,15 @@ internal fun SectionBreakItem.toView() {
 @Preview
 @Composable
 private fun preview() {
-    SectionBreakItem(
-        section = Section.SectionBreak(
-            id = "id",
-            display = CommonDisplay(name = "name"),
-            conditions = emptyList()
-        )
-    ).toView()
+    PreferenceCenterTheme {
+        Surface {
+            SectionBreakItem(
+                Section.SectionBreak(
+                    id = "id",
+                    display = CommonDisplay(name = "SMS"),
+                    conditions = emptyList()
+                )
+            ).Content()
+        }
+    }
 }

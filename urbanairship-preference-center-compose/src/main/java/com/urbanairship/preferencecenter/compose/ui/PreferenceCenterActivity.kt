@@ -3,16 +3,21 @@ package com.urbanairship.preferencecenter.compose.ui
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import com.urbanairship.Airship
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.preferencecenter.PreferenceCenter
+import com.urbanairship.preferencecenter.compose.ui.theme.PreferenceCenterTheme
 
 /** `Activity` that displays a Preference Center composable UI. */
 public class PreferenceCenterActivity: ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        enableEdgeToEdge()
+
         Autopilot.automaticTakeOff(application)
 
         if (!Airship.isTakingOff && !Airship.isFlying) {
@@ -25,12 +30,12 @@ public class PreferenceCenterActivity: ComponentActivity() {
             ?: throw IllegalArgumentException("Missing required extra: EXTRA_ID")
 
         setContent {
-            PreferenceCenterView(
-                viewModel = DefaultPreferenceCenterViewModel(
-                    preferenceCenterId = id
-                ),
-                onBackButton = { finish() }
-            )
+            PreferenceCenterTheme {
+                PreferenceCenterScreen(
+                    identifier = id,
+                    onNavigateUp = { finish() }
+                )
+            }
         }
     }
 }

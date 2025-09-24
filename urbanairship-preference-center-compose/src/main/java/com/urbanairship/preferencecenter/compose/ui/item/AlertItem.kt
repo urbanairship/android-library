@@ -6,21 +6,23 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.urbanairship.R
 import com.urbanairship.json.JsonValue
-import com.urbanairship.preferencecenter.core.R
+import com.urbanairship.preferencecenter.compose.ui.theme.PrefCenterTheme
+import com.urbanairship.preferencecenter.compose.ui.theme.PreferenceCenterTheme
 import com.urbanairship.preferencecenter.data.Conditions
 import com.urbanairship.preferencecenter.data.IconDisplay
 import com.urbanairship.preferencecenter.data.Item
@@ -31,88 +33,73 @@ internal data class AlertItem(
     val item: Item.Alert
 ): BasePrefCenterItem(TYPE_ALERT) {
 
-    override val id: String = item.id
     override val conditions: Conditions = item.conditions
 
     val title = item.iconDisplay.name
     val description = item.iconDisplay.description
     val icon = item.iconDisplay.icon
     val button = item.button
-
-    override fun areItemsTheSame(otherItem: BasePrefCenterItem): Boolean {
-        if (this === otherItem) return true
-        if (javaClass != otherItem.javaClass) return false
-        otherItem as AlertItem
-        return id == otherItem.id
-    }
-
-    override fun areContentsTheSame(otherItem: BasePrefCenterItem): Boolean {
-        if (javaClass != otherItem.javaClass) return false
-        otherItem as AlertItem
-
-        if (title != otherItem.title) return false
-        if (description != otherItem.description) return false
-        if (icon != otherItem.icon) return false
-        if (button != otherItem.button) return false
-
-        return true
-    }
 }
 
 @Composable
-internal fun AlertItem.toView(
+internal fun AlertItem.Content(
     onClick: (actions: Map<String, JsonValue>) -> Unit
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+            .padding(PrefCenterTheme.dimens.alertItemPadding),
     ) {
 
         icon?.let { url ->
             GlideImage(
-                modifier = Modifier
-                    .padding(start = 24.dp, end = 24.dp)
-                    .size(width = 72.dp, height = 72.dp),
                 imageModel = { url },
                 imageOptions = ImageOptions(
                     contentScale = ContentScale.Inside,
-                    colorFilter = ColorFilter.tint(colorResource(R.color.ua_preference_center_divider_color))
+                    colorFilter = ColorFilter.tint(PrefCenterTheme.colors.alertIconTint)
                 ),
+                previewPlaceholder = painterResource(R.drawable.ua_ic_notification_button_info),
+                modifier = Modifier.padding(PrefCenterTheme.dimens.alertIconPadding)
+                    .size(PrefCenterTheme.dimens.alertIconSize),
             )
         }
 
         Column(Modifier.fillMaxWidth()) {
             title?.let { text ->
                 Text(
-                    modifier = Modifier.padding(bottom = 4.dp),
                     text = text,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground
+                    style = PrefCenterTheme.typography.alertTitle,
+                    color = PrefCenterTheme.colors.alertTitleText,
+                    modifier = Modifier.padding(PrefCenterTheme.dimens.alertItemTitlePadding),
                 )
             }
 
             description?.let { text ->
                 Text(
-                    modifier = Modifier.padding(bottom = 4.dp),
                     text = text,
                     maxLines = 3,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onBackground
+                    overflow = TextOverflow.Ellipsis,
+                    style = PrefCenterTheme.typography.alertDescription,
+                    color = PrefCenterTheme.colors.alertDescriptionText,
+                    modifier = Modifier.padding(PrefCenterTheme.dimens.alertItemDescriptionPadding),
                 )
             }
 
             button?.let { button ->
                 Button(
-                    modifier = Modifier.semantics { contentDescription = button.contentDescription ?: "" },
-                    onClick = { onClick(button.actions) }
+                    onClick = { onClick(button.actions) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = PrefCenterTheme.colors.alertButtonBackground
+                    ),
+                    modifier = Modifier.padding(PrefCenterTheme.dimens.alertItemButtonPadding)
+                        .semantics { contentDescription = button.contentDescription ?: button.text },
                 ) {
                     Text(
                         text = button.text,
-                        color = colorResource(R.color.ua_preference_center_alert_button_text)
+                        style = PrefCenterTheme.typography.alertButtonLabel,
+                        color = PrefCenterTheme.colors.alertButtonText
                     )
                 }
             }
@@ -123,22 +110,22 @@ internal fun AlertItem.toView(
 @Preview
 @Composable
 private fun preview() {
-    AlertItem(
-        item = Item.Alert(
-            id = "id",
-            iconDisplay = IconDisplay(
-                name = "preview",
-                description = "preview",
-                icon = "preview"
-            ),
-            button = com.urbanairship.preferencecenter.data.Button(
-                text = "action button",
-                contentDescription = "preview",
-                actions = mapOf()
-            ),
-            conditions = emptyList()
-        )
-    ).toView(
-        onClick = { }
-    )
+    PreferenceCenterTheme {
+        Surface {
+            AlertItem(
+                item = Item.Alert(
+                    id = "id",
+                    iconDisplay = IconDisplay(
+                        name = "Something went wrong!",
+                        description = "Please try again later.",
+                        icon = "preview"
+                    ),
+                    button = com.urbanairship.preferencecenter.data.Button(
+                        text = "Retry", contentDescription = null, actions = mapOf()
+                    ),
+                    conditions = emptyList()
+                )
+            ).Content(onClick = { })
+        }
+    }
 }

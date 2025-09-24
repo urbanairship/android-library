@@ -1,30 +1,24 @@
 package com.urbanairship.preferencecenter.compose.ui
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -34,10 +28,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -45,7 +37,6 @@ import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -53,7 +44,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import com.urbanairship.UALog
-import com.urbanairship.preferencecenter.core.R
+import com.urbanairship.preferencecenter.compose.ui.theme.PrefCenterTheme
+import com.urbanairship.preferencecenter.compose.ui.theme.PreferenceCenterTheme
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.Platform
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.PromptDisplay
@@ -73,9 +65,8 @@ internal fun ContactAddDialog(
     validator: (input: String?) -> Boolean,
     viewModel: AddContactDialogViewModel
 ) {
-
-    var isValid by remember { mutableStateOf(!viewModel.showError) }
-    var inputValue by remember { mutableStateOf( "") }
+    var isValid by remember { mutableStateOf(false) }
+    var inputValue by remember { mutableStateOf("") }
     var senderInfo: SmsSenderInfo? = null
     val errorText = viewModel.errors.collectAsStateWithLifecycle(null).value
 
@@ -83,85 +74,77 @@ internal fun ContactAddDialog(
         onDismissRequest = viewModel::dismiss
     ) {
         Surface(
-            shape = MaterialTheme.shapes.large
+            shape = PrefCenterTheme.shapes.contactManagementDialog,
+            color = PrefCenterTheme.colors.contactManagementDialogBackground,
         ) {
-            Column(Modifier
-                .padding(top = 12.dp, start = 16.dp, end = 16.dp)
-                .background(MaterialTheme.colorScheme.surface)
-            ) {
+            Column(Modifier.padding(PrefCenterTheme.dimens.contactManagementDialogPadding)) {
+                // Title
                 Text(
                     text = prompt.prompt.display.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.secondary
+                    style = PrefCenterTheme.typography.contactManagementDialogTitle,
+                    color = PrefCenterTheme.colors.contactManagementDialogTitleText,
+                    modifier = Modifier.padding(PrefCenterTheme.dimens.contactManagementDialogTitlePadding)
                 )
 
+                // Description (Optional)
                 prompt.prompt.display.description?.let { text ->
                     Text(
                         text = text,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.secondary
+                        style = PrefCenterTheme.typography.contactManagementDialogDescription,
+                        color = PrefCenterTheme.colors.contactManagementDialogDescriptionText,
+                        modifier = Modifier.padding(PrefCenterTheme.dimens.contactManagementDialogDescriptionPadding)
                     )
                 }
 
+                // Sender picker (only for SMS)
                 if (platform is Platform.Sms) {
-                    if (senderInfo == null) {
-                        senderInfo = platform.registrationOptions.senders.first()
-                    }
-
-                    phoneCountryPicker(
+                    PhoneCountryPicker(
+                        modifier = Modifier.fillMaxWidth()
+                            .padding(PrefCenterTheme.dimens.contactManagementDialogInputPadding)
+                            .sizeIn(minHeight = PrefCenterTheme.dimens.contactManagementDialogInputMinHeight),
                         items = platform.registrationOptions.senders,
-                        countryPickerTitle = platform.registrationOptions.countryLabel,
-                        initialValue = senderInfo ?: platform.registrationOptions.senders.first(),
-                        onItemSelected = { selected ->
-                            senderInfo = selected
-                        }
+                        inputLabel = platform.registrationOptions.countryLabel,
+                        selectedItem = senderInfo ?: platform.registrationOptions.senders.first(),
+                        onItemSelected = { senderInfo = it }
                     )
                 }
 
-                val interactionSource = remember { MutableInteractionSource() }
-                BasicTextField(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 20.dp)
-                        .sizeIn(minHeight = 60.dp),
-                    decorationBox = { innerTextField ->
-                        OutlinedTextFieldDefaults.DecorationBox(
-                            value = inputValue,
-                            innerTextField = innerTextField,
-                            enabled = true,
-                            singleLine = true,
-                            visualTransformation = VisualTransformation.None,
-                            interactionSource = interactionSource,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = colorResource(R.color.ua_preference_center_dialog_input_outline),
-                                unfocusedBorderColor = colorResource(R.color.ua_preference_center_dialog_input_outline),
-                            ),
-                            placeholder = {
-                                Text(platform.placeholder())
-                            },
-                            contentPadding = PaddingValues(horizontal = 8.dp),
-                            isError = viewModel.showError,
-                            label = {
-                                Text(platform.placeholder())
-                            },
-                            supportingText = {
-                                if (viewModel.showError) {
-                                    Text(
-                                        text = errorText ?: "",
-                                        color = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            },
-                            trailingIcon = {
-                                if (viewModel.showError) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Info,
-                                        contentDescription = stringResource(com.urbanairship.R.string.ua_content_error),
-                                        tint = MaterialTheme.colorScheme.error
-                                    )
-                                }
-                            }
-                        )
+                // Input field
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth()
+                        .padding(PrefCenterTheme.dimens.contactManagementDialogInputPadding)
+                        .sizeIn(minHeight = PrefCenterTheme.dimens.contactManagementDialogInputMinHeight),
+                    value = inputValue,
+                    onValueChange = { text ->
+                        isValid = validator(text)
+                        inputValue = text
+                        viewModel.resetError()
+                    },
+                    label = { Text(platform.label()) },
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = PrefCenterTheme.colors.contactManagementDialogInputBorderFocused,
+                        unfocusedBorderColor = PrefCenterTheme.colors.contactManagementDialogInputBorderUnfocused,
+                        focusedLabelColor = PrefCenterTheme.colors.contactManagementDialogInputLabelFocused,
+                        unfocusedLabelColor = PrefCenterTheme.colors.contactManagementDialogInputLabelUnfocused,
+                    ),
+                    isError = viewModel.showError,
+                    supportingText = {
+                        if (viewModel.showError && errorText != null) {
+                            Text(
+                                text = errorText,
+                                style = PrefCenterTheme.typography.contactManagementDialogDescription,
+                                color = PrefCenterTheme.colors.error
+                            )
+                        }
+                    },
+                    trailingIcon = {
+                        if (viewModel.showError) {
+                            Icon(
+                                imageVector = Icons.Filled.Info,
+                                contentDescription = stringResource(com.urbanairship.R.string.ua_content_error),
+                                tint = PrefCenterTheme.colors.error
+                            )
+                        }
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done,
@@ -174,34 +157,33 @@ internal fun ContactAddDialog(
                             }
                         }
                     ),
-                    value = inputValue,
-                    onValueChange = { text ->
-                        isValid = validator(text)
-                        inputValue = text
-                        viewModel.resetError()
-                    },
                 )
 
+                // Footer (Optional)
                 prompt.prompt.display.footer?.let { text ->
                     Text(
-                        modifier = Modifier.padding(bottom = 8.dp),
+                        modifier = Modifier.padding(PrefCenterTheme.dimens.contactManagementDialogFooterPadding),
+                        color = PrefCenterTheme.colors.contactManagementDialogDescriptionText,
+                        style = PrefCenterTheme.typography.contactManagementDialogDescription,
                         text = AnnotatedString.fromHtml(
                             htmlString = text.airshipMarkdownToHtml(),
                             linkStyles = TextLinkStyles(
                                 style = SpanStyle(
                                     textDecoration = TextDecoration.Underline,
-                                    color = Color.Blue
+                                    color = PrefCenterTheme.colors.link
                                 )
                             )
                         )
                     )
                 }
 
-                Row(Modifier.padding(bottom = 8.dp)) {
+                // Buttons
+                Row(Modifier.fillMaxWidth()) {
                     TextButton(onClick = viewModel::dismiss) {
                         Text(
                             text = stringResource(com.urbanairship.R.string.ua_cancel),
-                            color = MaterialTheme.colorScheme.onBackground
+                            color = PrefCenterTheme.colors.contactManagementDialogButtonLabelNeutral,
+                            style = PrefCenterTheme.typography.contactManagementButtonLabel
                         )
                     }
 
@@ -209,11 +191,16 @@ internal fun ContactAddDialog(
 
                     TextButton(
                         onClick = { viewModel.submit(platform, inputValue, senderInfo) },
-                        enabled = isValid
+                        enabled = isValid,
+                        colors = ButtonDefaults.textButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = PrefCenterTheme.colors.contactManagementDialogButtonLabelPositive,
+                            disabledContentColor = PrefCenterTheme.colors.contactManagementDialogButtonLabelDisabled
+                        )
                     ) {
                         Text(
                             text = stringResource(com.urbanairship.R.string.ua_notification_button_add),
-                            color = MaterialTheme.colorScheme.primary
+                            style = PrefCenterTheme.typography.contactManagementButtonLabel
                         )
                     }
                 }
@@ -224,57 +211,56 @@ internal fun ContactAddDialog(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun phoneCountryPicker(
+private fun PhoneCountryPicker(
     modifier: Modifier = Modifier,
-    countryPickerTitle: String,
+    inputLabel: String,
     items: List<SmsSenderInfo>,
-    initialValue: SmsSenderInfo,
+    selectedItem: SmsSenderInfo,
     onItemSelected: (SmsSenderInfo) -> Unit
 ) {
 
     var isExpanded by remember { mutableStateOf(false) }
-    var selected by remember { mutableStateOf(initialValue) }
+    var selected by remember { mutableStateOf(selectedItem) }
 
     ExposedDropdownMenuBox(
         expanded = isExpanded,
         onExpandedChange = { isExpanded = !isExpanded },
+        modifier = modifier
     ) {
-        Column {
-            Text(
-                modifier = Modifier.padding(top = 4.dp).menuAnchor(
-                    type = MenuAnchorType.PrimaryNotEditable,
-                    enabled = true
-                ),
-                text = countryPickerTitle,
-                color = MaterialTheme.colorScheme.secondary
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .sizeIn(minHeight = 30.dp)
-                    .padding(end = 4.dp)
-                    .clickable { isExpanded = !isExpanded },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(selected.displayName)
-
-                Spacer(Modifier.weight(1f))
-
-                ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
-            }
-        }
+        OutlinedTextField(
+            label = { Text(inputLabel) },
+            value = selected.displayName,
+            onValueChange = {},
+            readOnly = true,
+            singleLine = true,
+            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded) },
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedBorderColor = PrefCenterTheme.colors.contactManagementDialogInputBorderFocused,
+                unfocusedBorderColor = PrefCenterTheme.colors.contactManagementDialogInputBorderUnfocused,
+                focusedLabelColor = PrefCenterTheme.colors.contactManagementDialogInputLabelFocused,
+                unfocusedLabelColor = PrefCenterTheme.colors.contactManagementDialogInputLabelUnfocused,
+            ),
+            modifier = Modifier.fillMaxWidth()
+                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+        )
 
         ExposedDropdownMenu(
             expanded = isExpanded,
             onDismissRequest = { isExpanded = false },
+            tonalElevation = 0.dp,
+            containerColor = PrefCenterTheme.colors.surface,
         ) {
             items.forEach { option ->
                 DropdownMenuItem(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .size(height = 26.dp, width = 0.dp),
-                    text = { Text(option.displayName) },
+                    modifier = Modifier.fillMaxWidth()
+                        .sizeIn(minHeight = PrefCenterTheme.dimens.contactManagementDialogInputMinHeight),
+                    text = {
+                        Text(
+                            text = option.displayName,
+                            color = PrefCenterTheme.colors.contactManagementDialogTitleText,
+                            style = PrefCenterTheme.typography.contactManagementDialogDropdownItem
+                        )
+                    },
                     onClick = {
                         selected = option
                         isExpanded = false
@@ -284,7 +270,6 @@ private fun phoneCountryPicker(
             }
         }
     }
-    HorizontalDivider()
 }
 
 internal sealed class DialogResult {
@@ -319,9 +304,7 @@ internal class AddContactDialogViewModel(
     }
 
     val showError: Boolean
-        get() {
-            return errors.value != null
-        }
+        get() = errors.value != null
 
     val errorText: String?
         get() = errors.value
@@ -335,12 +318,7 @@ internal class AddContactDialogViewModel(
         address: String,
         sender: SmsSenderInfo?
     ) {
-
-        val result = generateResult(
-            platform = platform,
-            address = address,
-            sender = sender
-        )
+        val result = generateResult(platform = platform, address = address, sender = sender)
 
         if (result == null || result.address.isBlank()) {
             UALog.e { "Add contact channel dialog result was null!" }
@@ -366,78 +344,79 @@ internal class AddContactDialogViewModel(
                     prefix = sender.dialingCode
                 )
             }
-            is Platform.Email -> {
-                DialogResult.Email(address.trim())
-            }
+            is Platform.Email -> DialogResult.Email(address.trim())
         }
     }
 }
 
-private fun Platform.placeholder(): String {
+private fun Platform.label(): String {
     return when(this) {
         is Platform.Email -> registrationOptions.addressLabel
         is Platform.Sms -> registrationOptions.phoneLabel
     }
 }
 
-@Preview("Add Phone Number")
+@Preview
 @Composable
-private fun previewAddPhoneNumber() {
-    ContactAddDialog(
-        platform = Platform.Sms(
-            registrationOptions = Item.ContactManagement.RegistrationOptions.Sms(
-                senders = listOf(
-                    Item.ContactManagement.SmsSenderInfo(
-                        senderId = "preview sender id",
-                        placeholderText = "preview placeholder text",
-                        dialingCode = "+1",
-                        displayName = "US",
+private fun preview() {
+    PreferenceCenterTheme {
+        Surface {
+            ContactAddDialog(
+                platform = Platform.Sms(
+                    registrationOptions = Item.ContactManagement.RegistrationOptions.Sms(
+                        senders = listOf(
+                            SmsSenderInfo(
+                                senderId = "preview sender id",
+                                placeholderText = "preview placeholder text",
+                                dialingCode = "+1",
+                                displayName = "US",
+                            )
+                        ),
+                        countryLabel = "Country Code",
+                        phoneLabel = "Phone Number",
+                        resendOptions = Item.ContactManagement.ResendOptions(
+                            interval = 10,
+                            message = "resend message",
+                            button = Item.ContactManagement.LabeledButton(
+                                text = "resend button",
+                                contentDescription = "resend button content description",
+                            ),
+                            onSuccess = null
+                        ),
+                        errorMessages = Item.ContactManagement.ErrorMessages(
+                            defaultMessage = "default message",
+                            invalidMessage = "invalid message",
+                        )
                     )
                 ),
-                countryLabel = "preview country label",
-                phoneLabel = "preview phone label",
-                resendOptions = Item.ContactManagement.ResendOptions(
-                    interval = 10,
-                    message = "resend message",
-                    button = Item.ContactManagement.LabeledButton(
-                        text = "resend button",
-                        contentDescription = "resend button content description",
-                    ),
-                    onSuccess = null
+                prompt = Item.ContactManagement.AddPrompt(
+                    prompt = Item.ContactManagement.AddChannelPrompt(
+                        type = "sms",
+                        display = PromptDisplay(
+                            title = "Add a phone number",
+                            description = "We'll send you a text message to verify opting in.",
+                            footer = "Terms & Conditions",
+                        ),
+                        submitButton = Item.ContactManagement.LabeledButton(
+                            text = "submit button",
+                            contentDescription = "submit button content description",
+                        ),
+                        closeButton = Item.ContactManagement.IconButton(
+                            contentDescription = "close button content description",
+                        ),
+                        cancelButton = Item.ContactManagement.LabeledButton(
+                            text = "cancel button",
+                            contentDescription = "cancel button content description",
+                        ),
+                        onSubmit = null,
+                    ), button = Item.ContactManagement.LabeledButton(
+                        text = "add button",
+                        contentDescription = "add button content description",
+                    )
                 ),
-                errorMessages = Item.ContactManagement.ErrorMessages(
-                    defaultMessage = "default message",
-                    invalidMessage = "invalid message",
-                )
+                validator = { _ -> true },
+                viewModel = AddContactDialogViewModel(emptyFlow(), {}, {})
             )
-        ),
-        prompt = Item.ContactManagement.AddPrompt(
-            prompt = Item.ContactManagement.AddChannelPrompt(
-                type = "sms",
-                display = PromptDisplay(
-                    title = "sms title",
-                    description = "sms description",
-                    footer = "sms footer",
-                ),
-                submitButton = Item.ContactManagement.LabeledButton(
-                    text = "submit button",
-                    contentDescription = "submit button content description",
-                ),
-                closeButton = Item.ContactManagement.IconButton(
-                    contentDescription = "close button content description",
-                ),
-                cancelButton = Item.ContactManagement.LabeledButton(
-                    text = "cancel button",
-                    contentDescription = "cancel button content description",
-                ),
-                onSubmit = null,
-            ),
-            button = Item.ContactManagement.LabeledButton(
-                text = "add button",
-                contentDescription = "add button content description",
-            )
-        ),
-        validator = { _ -> true },
-        viewModel = AddContactDialogViewModel(emptyFlow(), {}, {})
-    )
+        }
+    }
 }

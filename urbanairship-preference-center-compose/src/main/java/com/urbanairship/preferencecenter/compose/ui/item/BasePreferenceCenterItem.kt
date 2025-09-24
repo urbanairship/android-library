@@ -1,6 +1,7 @@
 package com.urbanairship.preferencecenter.compose.ui.item
 
 import com.urbanairship.preferencecenter.data.Conditions
+import java.util.UUID
 
 internal sealed class BasePrefCenterItem(val type: Int) {
 
@@ -15,9 +16,6 @@ internal sealed class BasePrefCenterItem(val type: Int) {
         const val TYPE_CONTACT_MANAGEMENT = 7
     }
 
-    abstract val id: String
+    val id: String = UUID.randomUUID().toString()
     abstract val conditions: Conditions
-
-    abstract fun areItemsTheSame(otherItem: BasePrefCenterItem): Boolean
-    abstract fun areContentsTheSame(otherItem: BasePrefCenterItem): Boolean
 }

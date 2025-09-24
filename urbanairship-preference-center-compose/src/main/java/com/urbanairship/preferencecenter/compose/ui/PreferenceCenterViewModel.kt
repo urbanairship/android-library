@@ -4,7 +4,11 @@ import android.os.Parcel
 import android.os.Parcelable
 import androidx.annotation.VisibleForTesting
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.CreationExtras
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionRunner
@@ -71,10 +75,23 @@ import kotlinx.parcelize.RawValue
 import kotlinx.parcelize.TypeParceler
 
 internal interface PreferenceCenterViewModel {
+    val identifier: String
     val states: StateFlow<ViewState>
     val displayDialog: StateFlow<ContactManagerDialog?>
     val errors: Flow<String?>
     fun handle(action: Action)
+
+    companion object {
+        internal fun forPreview(
+            state: ViewState = ViewState.Loading
+        ): PreferenceCenterViewModel = object : PreferenceCenterViewModel {
+            override val identifier: String = "preview"
+            override val states: StateFlow<ViewState> = MutableStateFlow(state)
+            override fun handle(action: Action) {}
+            override val displayDialog: StateFlow<ContactManagerDialog?> = MutableStateFlow(null)
+            override val errors: Flow<String?> = emptyFlow()
+        }
+    }
 }
 
 internal sealed class ContactManagerDialog {
@@ -86,7 +103,7 @@ internal sealed class ContactManagerDialog {
 
 @OpenForTesting
 internal class DefaultPreferenceCenterViewModel(
-    private val preferenceCenterId: String,
+    override val identifier: String,
     private val preferenceCenter: PreferenceCenter = PreferenceCenter.shared(),
     private val channel: AirshipChannel = Airship.shared().channel,
     private val contact: Contact = Airship.shared().contact,
@@ -98,6 +115,16 @@ internal class DefaultPreferenceCenterViewModel(
     internal companion object {
         private val defaultPendingLabelHideDelay = 30.seconds
         private val defaultResendLabelHideDelay = 15.seconds
+
+        internal val IDENTIFIER_KEY = object : CreationExtras.Key<String> {}
+
+        internal val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val identifier = this[IDENTIFIER_KEY]
+                    ?: throw IllegalArgumentException("Missing Preference Center identifier")
+                DefaultPreferenceCenterViewModel(identifier = identifier)
+            }
+        }
     }
 
     private val stateFlow: MutableStateFlow<ViewState> = MutableStateFlow(ViewState.Loading)
@@ -138,7 +165,7 @@ internal class DefaultPreferenceCenterViewModel(
         }
 
         viewModelScope.launch(dispatcher) {
-            states.collect { state -> UALog.v("!!!test > $state") }
+            states.collect { state -> UALog.v("> $state") }
         }
 
         // Collect updates from the condition monitor and repost them on the actions flow.
@@ -329,7 +356,7 @@ internal class DefaultPreferenceCenterViewModel(
     )
 
     /** Flow that reduces the current [ViewState] and incoming [Change] to a new [ViewState]. */
-    private suspend fun states(state: ViewState, change: Change): Flow<ViewState> =
+    private fun states(state: ViewState, change: Change): Flow<ViewState> =
         when (change) {
             is Change.ShowLoading -> ViewState.Loading
             is Change.ShowContent -> when (state) {
@@ -554,7 +581,7 @@ internal class DefaultPreferenceCenterViewModel(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun enrichedConfig(): Flow<EnrichedConfig> =
         // Fetch config first to determine which subscriptions are needed and flat map them into the flow.
-        getConfig(preferenceCenterId)
+        getConfig(identifier)
             .map(::EnrichedConfig)
             .flatMapConcat { enrichedConfig ->
                 val config = enrichedConfig.config
@@ -650,7 +677,6 @@ internal fun PreferenceCenterConfig.asPrefCenterItems(): List<BasePrefCenterItem
                         is Item.ContactSubscriptionGroup -> ContactSubscriptionGroupItem(item)
                         is Item.Alert -> AlertItem(item)
                         is Item.ContactManagement -> ContactManagementItem(item)
-                        else -> null
                     }
                 }
 

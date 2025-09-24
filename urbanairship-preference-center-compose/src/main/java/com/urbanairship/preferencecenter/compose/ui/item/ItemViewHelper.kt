@@ -2,7 +2,6 @@ package com.urbanairship.preferencecenter.compose.ui.item
 
 import androidx.compose.runtime.Composable
 import com.urbanairship.preferencecenter.compose.ui.Action
-import com.urbanairship.preferencecenter.compose.ui.PreferenceCenterViewModel
 import com.urbanairship.preferencecenter.compose.ui.ViewState
 
 internal object ItemViewHelper {
@@ -11,39 +10,41 @@ internal object ItemViewHelper {
     fun createItemView(
         item: BasePrefCenterItem,
         viewState: ViewState.Content,
-        model: PreferenceCenterViewModel
+        onAction: (Action) -> Unit,
     ) {
         return when (item) {
-            is SectionItem -> item.toView()
-            is SectionBreakItem -> item.toView()
-            is DescriptionItem -> item.toView()
-            is ContactSubscriptionItem -> item.toView(
+            is SectionItem -> item.Content()
+            is SectionBreakItem -> item.Content()
+            is DescriptionItem -> item.Content()
+            is ContactSubscriptionItem -> item.Content(
                 isChecked = { id, scope ->
                     viewState.contactSubscriptions[id]?.containsAll(scope) ?: false
                 },
                 onCheckedChanged = { checked ->
-                    model.handle(
+                    onAction(
                         Action.ScopedPreferenceItemChanged(
                             item = item.item,
                             scopes = item.scopes,
-                            isEnabled = checked)
+                            isEnabled = checked
+                        )
                     )
                 }
             )
-            is ContactSubscriptionGroupItem -> item.toView(
+            is ContactSubscriptionGroupItem -> item.Content(
                 isChecked = { id, scope ->
                     viewState.contactSubscriptions[id]?.containsAll(scope) ?: false
                 },
                 onCheckedChange = { scopes, checked ->
-                    model.handle(
+                    onAction(
                         Action.ScopedPreferenceItemChanged(
                             item = item.item,
                             scopes = scopes,
-                            isEnabled = checked)
+                            isEnabled = checked
+                        )
                     )
                 }
             )
-            is ContactManagementItem -> item.toView(
+            is ContactManagementItem -> item.Content(
                 contactChannelsProvider = { viewState.contactChannelState },
                 handler = { action ->
                     val modelAction = when(action) {
@@ -52,15 +53,15 @@ internal object ItemViewHelper {
                         is ContactManagementItem.Action.Resend -> Action.ResendChannelVerification(item.item, action.channel)
                     }
 
-                    model.handle(modelAction)
+                    onAction(modelAction)
                 }
             )
-            is ChannelSubscriptionItem -> item.toView(
+            is ChannelSubscriptionItem -> item.Content(
                 isChecked = { viewState.channelSubscriptions.contains(item.subscriptionId) },
-                onCheckedChanged = { checked -> model.handle(Action.PreferenceItemChanged(item.item, checked)) }
+                onCheckedChanged = { checked -> onAction(Action.PreferenceItemChanged(item.item, checked)) }
             )
-            is AlertItem -> item.toView {
-                model.handle(Action.ButtonActions(it))
+            is AlertItem -> item.Content {
+                onAction(Action.ButtonActions(it))
             }
         }
     }

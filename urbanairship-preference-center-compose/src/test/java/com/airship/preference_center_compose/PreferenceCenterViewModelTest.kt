@@ -1371,7 +1371,7 @@ public class PreferenceCenterViewModelTest {
         }
 
         return DefaultPreferenceCenterViewModel(
-            preferenceCenterId = preferenceCenterId,
+            identifier = preferenceCenterId,
             preferenceCenter = preferenceCenter,
             channel = channel,
             contact = contact,
