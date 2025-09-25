@@ -112,7 +112,7 @@ public class AddCustomEventActionTest {
     public fun testPerform() {
         val map = mapOf(
             CustomEvent.TRANSACTION_ID to "transaction id",
-            CustomEvent.EVENT_VALUE to "123.45",
+            CustomEvent.EVENT_VALUE to 123.45,
             CustomEvent.INTERACTION_TYPE to "interaction type",
             CustomEvent.INTERACTION_ID to "interaction id",
             CustomEvent.EVENT_NAME to "event name"
@@ -146,12 +146,12 @@ public class AddCustomEventActionTest {
     public fun testPerformPreferNewNames() {
         val map = mapOf(
             CustomEvent.TRANSACTION_ID to "transaction id",
-            CustomEvent.EVENT_VALUE to "123.45",
+            CustomEvent.EVENT_VALUE to 123.45,
             CustomEvent.INTERACTION_TYPE to "interaction type",
             CustomEvent.INTERACTION_ID to "interaction id",
             CustomEvent.EVENT_NAME to "event name",
             AddCustomEventAction.KEY_NAME to "new event name",
-            AddCustomEventAction.KEY_VALUE to "321.21"
+            AddCustomEventAction.KEY_VALUE to 321.21
         )
 
         val args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map)
@@ -181,7 +181,7 @@ public class AddCustomEventActionTest {
     public fun testPerformInAppContext() {
         val map = mapOf(
             CustomEvent.TRANSACTION_ID to "transaction id",
-            CustomEvent.EVENT_VALUE to "123.45",
+            CustomEvent.EVENT_VALUE to 123.45,
             CustomEvent.INTERACTION_TYPE to "interaction type",
             CustomEvent.INTERACTION_ID to "interaction id",
             CustomEvent.EVENT_NAME to "event name"
@@ -299,7 +299,7 @@ public class AddCustomEventActionTest {
     public fun testPerformPushMessageMetadata() {
         val map = mapOf(
             CustomEvent.TRANSACTION_ID to "transaction id",
-            CustomEvent.EVENT_VALUE to "123.45",
+            CustomEvent.EVENT_VALUE to 123.45,
             CustomEvent.INTERACTION_TYPE to "interaction type",
             CustomEvent.INTERACTION_ID to "interaction id",
             CustomEvent.EVENT_NAME to "event name"
@@ -336,7 +336,7 @@ public class AddCustomEventActionTest {
     public fun testPerformWithProperties() {
         val map = mapOf(
             CustomEvent.TRANSACTION_ID to "transaction id",
-            CustomEvent.EVENT_VALUE to "123.45",
+            CustomEvent.EVENT_VALUE to 123.45,
             CustomEvent.INTERACTION_TYPE to "interaction type",
             CustomEvent.INTERACTION_ID to "interaction id",
             CustomEvent.EVENT_NAME to "event name",
