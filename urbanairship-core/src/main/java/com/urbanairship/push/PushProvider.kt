@@ -3,6 +3,7 @@ package com.urbanairship.push
 
 import android.content.Context
 import com.urbanairship.Airship
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 
@@ -15,6 +16,17 @@ public interface PushProvider {
         ADM("adm"), FCM("fcm"), HMS("hms");
 
         override fun toJsonValue(): JsonValue = JsonValue.wrap(value)
+
+        internal companion object {
+
+            @Throws(JsonException::class)
+            fun fromJson(value: JsonValue): DeliveryType {
+                val content = value.requireString()
+                return DeliveryType.entries.firstOrNull { it.value == content }
+                    ?: throw JsonException("Invalid delivery type $content")
+            }
+        }
+
     }
 
     public class PushProviderUnavailableException : RegistrationException {

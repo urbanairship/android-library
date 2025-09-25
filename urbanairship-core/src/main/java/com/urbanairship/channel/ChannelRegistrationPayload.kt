@@ -625,7 +625,10 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
 
             val deliveryType = channelJson
                 .optionalMap(ANDROID_EXTRAS_KEY)
-                ?.optionalField<String>(ANDROID_DELIVERY_TYPE)
+                ?.optionalField<JsonValue>(ANDROID_DELIVERY_TYPE)
+                ?.let {
+                    PushProvider.DeliveryType.fromJson(it)
+                }
 
             val permissions = channelJson
                 .optionalMap(PERMISSIONS)
@@ -654,6 +657,7 @@ public class ChannelRegistrationPayload private constructor(builder: Builder) : 
                 .setContactId(channelJson.optionalField(CONTACT_ID_KEY))
                 .setIsActive(channelJson.opt(IS_ACTIVE).getBoolean(false))
                 .setPermissions(permissions)
+                .setDeliveryType(deliveryType)
                 .build()
         }
     }
