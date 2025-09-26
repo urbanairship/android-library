@@ -552,12 +552,6 @@ internal class AutomationEngine(
                 SchedulePrepareResult.Skip -> {
                     it.prepareCancelled(clock.currentTimeMillis(), penalize = false)
                 }
-                SchedulePrepareResult.Invalidate -> {
-                    scope.launch {
-                        startTaskToProcessTriggeredSchedule(data.schedule.identifier)
-                    }
-                    it
-                }
                 else -> { it }
             }
         } ?: data
