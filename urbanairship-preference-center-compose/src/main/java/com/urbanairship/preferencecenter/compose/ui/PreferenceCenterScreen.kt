@@ -23,10 +23,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.urbanairship.contacts.Scope
+import com.urbanairship.json.jsonMapOf
 import com.urbanairship.preferencecenter.compose.ui.item.DescriptionItem
 import com.urbanairship.preferencecenter.compose.ui.item.ItemViewHelper
 import com.urbanairship.preferencecenter.compose.ui.item.SectionBreakItem
@@ -34,21 +37,35 @@ import com.urbanairship.preferencecenter.compose.ui.item.SectionItem
 import com.urbanairship.preferencecenter.compose.ui.theme.PrefCenterTheme
 import com.urbanairship.preferencecenter.compose.ui.theme.PreferenceCenterTheme
 import com.urbanairship.preferencecenter.core.R
+import com.urbanairship.preferencecenter.data.Button
 import com.urbanairship.preferencecenter.data.CommonDisplay
 import com.urbanairship.preferencecenter.data.Condition
+import com.urbanairship.preferencecenter.data.IconDisplay
 import com.urbanairship.preferencecenter.data.Item
+import com.urbanairship.preferencecenter.data.Options
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.Section
 import kotlinx.coroutines.flow.Flow
+import kotlin.collections.emptyList
 
 @Composable
 public fun PreferenceCenterScreen(
     identifier: String,
+    modifier: Modifier = Modifier,
     topBar: @Composable ((title: String, onNavigateUp: () -> Unit) -> Unit)? = null,
-    onNavigateUp: () -> Unit
+    onNavigateUp: () -> Unit = {}
 ) {
+    // If in preview mode, show a preview state
+    if (LocalInspectionMode.current) {
+        PreferenceCenterScreen(
+            rememberPreferenceCenterState(PreferenceCenterViewModel.forPreview(previewState))
+        )
+        return
+    }
+
     PreferenceCenterScreen(
         state = rememberPreferenceCenterState(identifier),
+        modifier = modifier,
         topBar = topBar,
         onNavigateUp = onNavigateUp
     )
@@ -57,12 +74,12 @@ public fun PreferenceCenterScreen(
 @Composable
 public fun PreferenceCenterScreen(
     state: PreferenceCenterState,
+    modifier: Modifier = Modifier,
     topBar: @Composable ((title: String, onNavigateUp: () -> Unit) -> Unit)? = null,
-    onNavigateUp: () -> Unit
+    onNavigateUp: () -> Unit = { }
 ) {
-    LaunchedEffect(true) { state.onAction(Action.Refresh) }
-
     Scaffold(
+        modifier = modifier,
         topBar = {
             // Show the provided topBar if available, otherwise use the default
             topBar?.invoke(state.title, onNavigateUp)
@@ -72,17 +89,31 @@ public fun PreferenceCenterScreen(
                 )
         },
     ) { padding ->
-        PreferenceCenterContent(state, padding)
+        PreferenceCenterContent(state, Modifier.fillMaxSize(), padding)
     }
 }
 
 @Composable
 public fun PreferenceCenterContent(
     identifier: String,
+    modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
+
+    // If in preview mode, show a preview state
+    if (LocalInspectionMode.current) {
+        Surface(
+            color = PrefCenterTheme.colors.surface,
+            modifier = modifier.padding(contentPadding)
+        ) {
+            ContentView(previewState) {}
+        }
+        return
+    }
+
     PreferenceCenterContent(
         state = rememberPreferenceCenterState(identifier),
+        modifier = modifier,
         contentPadding = contentPadding
     )
 }
@@ -90,11 +121,29 @@ public fun PreferenceCenterContent(
 @Composable
 public fun PreferenceCenterContent(
     state: PreferenceCenterState,
+    modifier: Modifier = Modifier,
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
+    // If in preview mode, show a preview state
+    if (LocalInspectionMode.current) {
+        Surface(
+            color = PrefCenterTheme.colors.surface,
+            modifier = modifier.padding(contentPadding)
+        ) {
+            when (state.viewState) {
+                is ViewState.Loading -> LoadingView()
+                is ViewState.Error -> ErrorView {}
+                is ViewState.Content -> ContentView(previewState) {}
+            }
+        }
+        return
+    }
+
+    LaunchedEffect(Unit) { state.onAction(Action.Refresh) }
+
     Surface(
         color = PrefCenterTheme.colors.surface,
-        modifier = Modifier.padding(contentPadding)
+        modifier = modifier.padding(contentPadding)
     ) {
         val viewState = state.viewState
         val dialog = state.dialogs
@@ -271,53 +320,9 @@ private fun ContactAddDialog(
 @Preview("Content")
 @Composable
 internal fun PreviewPreferenceCenterContent() {
-    val state =  ViewState.Content(
-        config = PreferenceCenterConfig(
-            id = "test-id",
-            display = CommonDisplay(name = "Display name", description = "Display description"),
-            sections = listOf(
-                Section.Common(
-                    id = "test-section-id",
-                    display = CommonDisplay(name = null, description = null),
-                    items = listOf(
-                        Item.ChannelSubscription(
-                            id = "test-item-id-1",
-                            subscriptionId = "subscription-id-1",
-                            display = CommonDisplay(name = "Item 1", description = "The first item"),
-                            conditions = listOf()
-                        ),
-                        Item.ChannelSubscription(
-                            id = "test-item-id-2",
-                            subscriptionId = "subscription-id-2",
-                            display = CommonDisplay(name = "Item 2", description = "The second item"),
-                            conditions = listOf()
-                        ),
-                        Item.ChannelSubscription(
-                            id = "test-item-id-3",
-                            subscriptionId = "subscription-id-3",
-                            display = CommonDisplay(name = "Item 3", description = "The first item"),
-                            conditions = listOf()
-                        )
-                    ),
-                    conditions = listOf()
-                )
-            ),
-        ),
-        conditionState = Condition.State(false),
-        title = null,
-        subtitle = null,
-        channelSubscriptions = emptySet(),
-        contactSubscriptions = emptyMap(),
-        contactChannelState = emptyMap(),
-        contactChannels = emptySet()
-    )
-
     PreferenceCenterTheme {
         PreferenceCenterScreen(
-            state = rememberPreferenceCenterState(
-                PreferenceCenterViewModel.forPreview(state)
-            ),
-            onNavigateUp = {}
+            rememberPreferenceCenterState(PreferenceCenterViewModel.forPreview(previewState))
         )
     }
 }
@@ -327,10 +332,7 @@ internal fun PreviewPreferenceCenterContent() {
 internal fun PreviewPreferenceCenterError() {
     PreferenceCenterTheme {
         PreferenceCenterScreen(
-            state = rememberPreferenceCenterState(
-                PreferenceCenterViewModel.forPreview(ViewState.Error())
-            ),
-            onNavigateUp = {}
+            rememberPreferenceCenterState(PreferenceCenterViewModel.forPreview(ViewState.Error()))
         )
     }
 }
@@ -340,10 +342,155 @@ internal fun PreviewPreferenceCenterError() {
 internal fun PreviewPreferenceCenterLoading() {
     PreferenceCenterTheme {
         PreferenceCenterScreen(
-            state = rememberPreferenceCenterState(
-                PreferenceCenterViewModel.forPreview(ViewState.Loading)
-            ),
-            onNavigateUp = {}
+            rememberPreferenceCenterState(PreferenceCenterViewModel.forPreview(ViewState.Loading))
         )
     }
 }
+
+/** Sample Content state for use in Compose previews. */
+private val previewState =  ViewState.Content(
+    title = "Preference Center",
+    subtitle = "Manage your notification preferences",
+    config = PreferenceCenterConfig(
+        id = "test-id",
+        display = CommonDisplay(name = null, description = null),
+        sections = listOf(
+            Section.Common(
+                id = "test-section-id",
+                display = CommonDisplay(name = null, description = null),
+                conditions = emptyList(),
+                items = listOf(
+                    Item.Alert(
+                        id = "alert-1",
+                        iconDisplay = IconDisplay(
+                            icon = "placeholder",
+                            name = "Push notifications are disabled",
+                            description = "Enable push notifications to stay up to date.",
+                        ),
+                        conditions = emptyList(),
+                        button = Button(
+                            text = "Enable notifications",
+                            contentDescription = null,
+                            actions = emptyMap()
+                        )
+                    ),
+                ),
+            ),
+            Section.Common(
+                id = "test-section-id-2",
+                display = CommonDisplay(name = "Subscription items", description = "Toggles for single delivery types"),
+                conditions = emptyList(),
+                items = listOf(
+                    Item.ChannelSubscription(
+                        id = "channel-subscription-1",
+                        subscriptionId = "channel-subscription-1",
+                        display = CommonDisplay(name = "Channel subscription", description = "Subscription scoped to a channel"),
+                        conditions = emptyList()
+                    ),
+                    Item.ContactSubscription(
+                        id = "contact-subscription-1",
+                        subscriptionId = "contact-subscription-1",
+                        display = CommonDisplay(name = "Contact subscription", description = "Subscription scoped to a contact"),
+                        scopes = setOf(Scope.APP),
+                        conditions = emptyList()
+                    ),
+                ),
+            ),
+            Section.Common(
+                id = "test-section-id-3",
+                display = CommonDisplay(name = "Subscription groups", description = "Toggles for multiple delivery types"),
+                conditions = emptyList(),
+                items = listOf(
+                    Item.ContactSubscriptionGroup(
+                        id = "contact-subscription-group-1",
+                        subscriptionId = "contact-subscription-group-1",
+                        display = CommonDisplay(name = "Contact subscription group", description = "Subscription group scoped to a contact"),
+                        conditions = emptyList(),
+                        components = listOf(
+                            Item.ContactSubscriptionGroup.Component(
+                                scopes = setOf(Scope.APP),
+                                display = CommonDisplay(name = "App", description = null),
+                            ),
+                            Item.ContactSubscriptionGroup.Component(
+                                scopes = setOf(Scope.EMAIL),
+                                display = CommonDisplay(name = "Email", description = null),
+                            ),
+                            Item.ContactSubscriptionGroup.Component(
+                                scopes = setOf(Scope.WEB),
+                                display = CommonDisplay(name = "Web", description = null),
+                            ),
+                            Item.ContactSubscriptionGroup.Component(
+                                scopes = setOf(Scope.SMS),
+                                display = CommonDisplay(name = "SMS", description = null),
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+            Section.Common(
+                id = "test-section-id-3",
+                display = CommonDisplay(name = "Contact management", description = "Add or remove contact addresses"),
+                conditions = emptyList(),
+                items = listOf(
+                    Item.ContactManagement(
+                        id = "contact-management-email",
+                        platform = Item.ContactManagement.Platform.Email(
+                            Item.ContactManagement.RegistrationOptions.Email(
+                                placeholder = "Email address",
+                                addressLabel = "Email address",
+                                properties = jsonMapOf(),
+                                resendOptions = Item.ContactManagement.ResendOptions(
+                                    interval = 60,
+                                    message = "",
+                                    button = Item.ContactManagement.LabeledButton(text = "Resend", contentDescription = null),
+                                    onSuccess = Item.ContactManagement.ActionableMessage(
+                                        title = "Email sent",
+                                        button = Item.ContactManagement.LabeledButton(text = "OK", contentDescription = null),
+                                        description = "A confirmation email has been sent to your address.",
+                                        contentDescription = ""
+                                    ),
+                                ),
+                                errorMessages = Item.ContactManagement.ErrorMessages(
+                                    invalidMessage = "",
+                                    defaultMessage = ""
+                                )
+                            )
+                        ),
+                        display = CommonDisplay(name = "Email addresses", description = "Manage your email addresses"),
+                        addPrompt = Item.ContactManagement.AddPrompt(
+                            prompt = Item.ContactManagement.AddChannelPrompt(
+                                type = "",
+                                display = Item.ContactManagement.PromptDisplay("Add your email address", null, null),
+                                submitButton = Item.ContactManagement.LabeledButton("Add", null),
+                                closeButton = null,
+                                cancelButton = null,
+                                onSubmit = null
+                            ),
+                            button = Item.ContactManagement.LabeledButton(text = "Add email address", contentDescription = null)
+                        ),
+                        removePrompt = Item.ContactManagement.RemovePrompt(
+                            prompt = Item.ContactManagement.RemoveChannelPrompt(
+                                type = "",
+                                display = Item.ContactManagement.PromptDisplay("Add your email address", null, null),
+                                submitButton = Item.ContactManagement.LabeledButton("Add", null),
+                                closeButton = null,
+                                cancelButton = null,
+                                onSubmit = null
+                            ),
+                            button = Item.ContactManagement.IconButton(null)
+                        ),
+                        conditions = emptyList(),
+                        emptyLabel = "There are no email addresses opted-in."
+                    ),
+                )
+            )
+        ),
+    ),
+    conditionState = Condition.State(false),
+    channelSubscriptions = setOf("channel-subscription-1"),
+    contactSubscriptions = mapOf(
+        "contact-subscription-group-1" to setOf(Scope.APP, Scope.WEB)
+    ),
+    contactChannelState = emptyMap(),
+    contactChannels = emptySet()
+)

@@ -48,7 +48,7 @@ internal fun AlertItem.Content(
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.fillMaxWidth()
-            .padding(PrefCenterTheme.dimens.alertItemPadding),
+            .padding(PrefCenterTheme.dimens.itemPadding),
     ) {
 
         icon?.let { url ->

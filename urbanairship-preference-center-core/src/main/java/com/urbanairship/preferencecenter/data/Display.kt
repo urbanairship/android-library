@@ -5,7 +5,6 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
-import kotlin.jvm.Throws
 
 /**
  * Common display attributes.

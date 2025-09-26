@@ -7,7 +7,6 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
-import kotlin.jvm.Throws
 import kotlinx.parcelize.Parcelize
 
 /**

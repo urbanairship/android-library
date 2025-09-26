@@ -2,6 +2,7 @@ package com.urbanairship.preferencecenter.compose.ui.theme
 
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
+import com.urbanairship.preferencecenter.PreferenceCenter
 
 @Immutable
 public data class PreferenceCenterColors(

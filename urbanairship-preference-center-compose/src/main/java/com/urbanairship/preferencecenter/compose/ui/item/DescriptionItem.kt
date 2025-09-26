@@ -56,7 +56,7 @@ internal fun DescriptionItem.Content() {
 @Composable
 private fun preview() {
     PreferenceCenterTheme(
-        options = PreferenceCenterOptions(showTitleItem = true)
+        options = PreferenceCenterOptions.defaults().copy(showTitleItem = true)
     ) {
         Surface {
             DescriptionItem(title = "title", description = "description").Content()

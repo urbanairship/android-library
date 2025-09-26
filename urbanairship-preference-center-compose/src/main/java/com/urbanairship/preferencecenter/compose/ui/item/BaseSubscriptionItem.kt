@@ -31,6 +31,7 @@ import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import com.urbanairship.preferencecenter.compose.ui.theme.PrefCenterTheme
+import com.urbanairship.preferencecenter.compose.ui.theme.PreferenceCenterTheme
 import com.urbanairship.preferencecenter.core.R
 
 @Composable
@@ -105,13 +106,15 @@ internal fun BaseSubscriptionItem(
                     uncheckedTrackColor = PrefCenterTheme.colors.subscriptionSwitchUncheckedTrackColor,
                 ),
                 thumbContent = {
-                    Crossfade(targetState = isChecked()) { state ->
-                        Icon(
-                            imageVector =  if (state) Icons.Default.Check else Icons.Default.Clear,
-                            contentDescription = null,
-                            tint = PrefCenterTheme.colors.surface,
-                            modifier = Modifier.padding(4.dp)
-                        )
+                    if (PrefCenterTheme.options.showSwitchIcons) {
+                        Crossfade(targetState = isChecked()) { state ->
+                            Icon(
+                                imageVector =  if (state) Icons.Default.Check else Icons.Default.Clear,
+                                contentDescription = null,
+                                tint = PrefCenterTheme.colors.surface,
+                                modifier = Modifier.padding(4.dp)
+                            )
+                        }
                     }
                 },
                 modifier = Modifier.sizeIn(minWidth = PrefCenterTheme.dimens.subscriptionSwitchMinWidth)
