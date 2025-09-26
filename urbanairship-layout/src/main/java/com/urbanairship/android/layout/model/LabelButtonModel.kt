@@ -28,7 +28,7 @@ internal class LabelButtonModel(
         context: Context,
         viewEnvironment: ViewEnvironment,
         itemProperties: ItemProperties?
-    ) = LabelButtonView(context, this).apply {
+    ) = LabelButtonView(context, this, viewEnvironment, itemProperties).apply {
         id = viewId
     }
 }

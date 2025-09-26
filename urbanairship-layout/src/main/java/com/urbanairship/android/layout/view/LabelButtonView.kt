@@ -1,204 +1,158 @@
 /* Copyright Airship and Contributors */
+
 package com.urbanairship.android.layout.view
 
-import android.R
 import android.content.Context
-import android.content.res.ColorStateList
-import android.graphics.drawable.Drawable
-import android.text.Spannable
-import android.text.SpannableString
-import android.text.TextUtils
-import androidx.core.graphics.ColorUtils
+import android.graphics.drawable.RippleDrawable
+import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
+import android.widget.Button
+import android.widget.FrameLayout
 import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ThomasState
-import com.urbanairship.android.layout.info.LabelInfo
+import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ButtonModel
+import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.LabelButtonModel
-import com.urbanairship.android.layout.property.Color
-import com.urbanairship.android.layout.property.HorizontalPosition
-import com.urbanairship.android.layout.property.Image.CenteredImageSpan
 import com.urbanairship.android.layout.property.TapEffect
-import com.urbanairship.android.layout.util.ColorStateListBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
-import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
-import com.urbanairship.android.layout.util.ResourceUtils.spToPx
+import com.urbanairship.android.layout.util.LayoutUtils.dpToPx
+import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.debouncedClicks
-import com.urbanairship.android.layout.util.ifNotEmpty
-import com.urbanairship.android.layout.util.isLayoutRtl
+import com.urbanairship.android.layout.util.findTargetDescendant
+import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.TappableView
-import com.urbanairship.util.UAStringUtil
-import com.google.android.material.button.MaterialButton
-import com.google.android.material.shape.CornerFamily
-import com.google.android.material.shape.ShapeAppearanceModel
+import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
 
 internal class LabelButtonView(
     context: Context,
-    private var model: LabelButtonModel
-) : MaterialButton(context, null, androidx.appcompat.R.attr.borderlessButtonStyle), BaseView, TappableView {
+    val model: LabelButtonModel,
+    viewEnvironment: ViewEnvironment,
+    itemProperties: ItemProperties?
+) : FrameLayout(context), BaseView, TappableView, ShrinkableView {
+
+    private val view: View = model.label.createView(context, viewEnvironment, itemProperties)
+    private val rippleAnimationDuration =
+        resources.getInteger(android.R.integer.config_shortAnimTime).milliseconds
 
     init {
-        isAllCaps = false
-        minHeight = 0
-        minimumHeight = 0
-        insetTop = 0
-        insetBottom = 0
+        isClickable = true
+        isFocusable = true
 
-        LayoutUtils.applyLabelModel(this, model.label, model.viewInfo.label.text)
-        var lastText: String = model.viewInfo.label.text
-        var lastStartDrawable: Drawable? = null
-
-        isSingleLine = false
-        includeFontPadding = false
-        ellipsize = TextUtils.TruncateAt.END
-
-        model.contentDescription(context)?.ifNotEmpty {
-            contentDescription = it
+        val params = LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
+            gravity = Gravity.CENTER
         }
 
-        model.listener = object : ButtonModel.Listener {
-            override fun setEnabled(enabled: Boolean) {
-                this@LabelButtonView.isEnabled = enabled
-            }
+        addView(view, params)
 
+        val horizontalPaddingPx = if (itemProperties?.size?.width?.isAuto == true) {
+            dpToPx(context, 12)
+        } else {
+            0
+        }
+
+        val verticalPaddingPx = if (itemProperties?.size?.height?.isAuto == true) {
+            dpToPx(context, 12)
+        } else {
+            0
+        }
+        setPaddingRelative(horizontalPaddingPx, verticalPaddingPx, horizontalPaddingPx, verticalPaddingPx)
+
+        view.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+
+        val border = model.viewInfo.border
+        var radii = border?.radii { dp: Int -> ResourceUtils.dpToPx(context, dp) }
+
+        if (border != null && radii != null) {
+            LayoutUtils.applyRippleEffect(this, radii)
+        }
+        updateContentDescription(null)
+
+        val baseBackground = this.background
+        model.listener = object : ButtonModel.Listener {
             override fun setVisibility(visible: Boolean) {
                 this@LabelButtonView.isVisible = visible
             }
-
-            override fun onStateUpdated(state: ThomasState) {
-                val resolvedText = resolveText(state)
-
-                if (resolvedText != lastText) {
-                    LayoutUtils.applyLabelModel(this@LabelButtonView, model.label, resolvedText)
-                    lastText = resolvedText
-                }
-
-                val resolvedIconStart = state.resolveOptional(
-                    overrides = model.viewInfo.label.viewOverrides?.iconStart,
-                    default = model.viewInfo.label.iconStart
-                )
-
-                val drawableStart = when (resolvedIconStart) {
-                    is LabelInfo.IconStart.Floating ->
-                        resolvedIconStart.icon.getDrawable(context, isEnabled, if (isLayoutRtl) HorizontalPosition.END else HorizontalPosition.START)
-                    else -> null
-                }
-
-                if (drawableStart == null && lastStartDrawable != null) {
-                    LayoutUtils.applyLabelModel(this@LabelButtonView, model.label, resolvedText)
-                }
-                lastStartDrawable = drawableStart
-
-                drawableStart?.let {
-                    val size = spToPx(context, model.viewInfo.label.textAppearance.fontSize).toInt()
-                    val space = resolvedIconStart?.let { icon -> spToPx(context, icon.space).toInt() } ?: 0
-                    it.setBounds(
-                        0,
-                        0,
-                        size + space,
-                        size
-                    )
-
-                    val imageSpan = CenteredImageSpan(it)
-                    if (isLayoutRtl) {
-                        val spannableString = SpannableString("$resolvedText ").apply {
-                            setSpan(imageSpan, length - 1, length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        }
-                        text = spannableString
-                    } else {
-                        val spannableString = SpannableString(" $resolvedText").apply {
-                            setSpan(imageSpan, 0, 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        }
-                        text = spannableString
-                    }
-                }
+            override fun setEnabled(enabled: Boolean) {
+                this@LabelButtonView.isEnabled = enabled
+            }
+            override fun dismissSoftKeyboard() {
+                LayoutUtils.dismissSoftKeyboard(this@LabelButtonView)
+            }
+            override fun setBackground(old: Background?, new: Background) {
+                LayoutUtils.updateBackground(this@LabelButtonView, baseBackground, old, new)
             }
 
-            override fun dismissSoftKeyboard() =
-                LayoutUtils.dismissSoftKeyboard(this@LabelButtonView)
-
-            override fun setBackground(old: Background?, new: Background) {
-                val border = new.border
-                val color = new.color
-
-                val textAppearance = model.label.viewInfo.textAppearance
-                val textColor = textAppearance.color.resolve(context)
-                val backgroundColor = color?.resolve(context) ?: Color.TRANSPARENT
-                val pressedColor = if (model.viewInfo.tapEffect is TapEffect.None) {
-                    Color.TRANSPARENT
-                } else {
-                    ColorUtils.setAlphaComponent(
-                        textColor,
-                        Math.round(Color.alpha(textColor) * LayoutUtils.PRESSED_ALPHA_PERCENT)
-                    )
-                }
-                val disabledColor = LayoutUtils.generateDisabledColor(backgroundColor)
-                val strokeWidth = border?.strokeWidth ?: LayoutUtils.DEFAULT_STROKE_WIDTH_DPS
-                val strokeColor = border?.strokeColor?.resolve(context) ?: backgroundColor
-                val disabledStrokeColor = LayoutUtils.generateDisabledColor(strokeColor)
-
-                val borderShape = ShapeAppearanceModel.builder()
-                if (border?.applyToShape(borderShape) { dpToPx(context, it).toInt() } != true) {
-                    borderShape.setAllCorners(CornerFamily.ROUNDED, dpToPx(context, LayoutUtils.DEFAULT_BORDER_RADIUS))
-                }
-                clipToOutline = true
-
-                this@LabelButtonView.backgroundTintList =
-                    ColorStateListBuilder().add(disabledColor, -R.attr.state_enabled)
-                        .add(backgroundColor).build()
-
-                this@LabelButtonView.rippleColor = ColorStateList.valueOf(pressedColor)
-                this@LabelButtonView.strokeWidth =
-                    dpToPx(context, strokeWidth).toInt()
-                this@LabelButtonView.strokeColor =
-                    ColorStateListBuilder().add(disabledStrokeColor, -R.attr.state_enabled)
-                        .add(strokeColor).build()
-
-                this@LabelButtonView.shapeAppearanceModel = borderShape.build()
-                this@LabelButtonView.invalidate()
+            override fun onStateUpdated(state: ThomasState) {
+                super.onStateUpdated(state)
+                updateContentDescription(state)
             }
         }
     }
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        val strokeWidthPixels = strokeWidth
+    private fun updateContentDescription(state: ThomasState?) {
+        contentDescription = model.contentDescription(context) ?: model.label.contentDescription(context)
+                ?: model.label.resolveState(context, state).text
+    }
 
-        val autoHeight = MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY
-        val autoWidth = MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.EXACTLY
-        if (autoHeight || autoWidth) {
-            val twelveDp = dpToPx(context, 12).toInt()
-            val horizontal = if (autoWidth) twelveDp else 0
-            val vertical = if (autoHeight) twelveDp else 0
-            setPadding(
-                horizontal + strokeWidthPixels,
-                vertical + strokeWidthPixels,
-                horizontal + strokeWidthPixels,
-                vertical + strokeWidthPixels
-            )
-        } else {
-            setPadding(strokeWidthPixels, strokeWidthPixels, strokeWidthPixels, strokeWidthPixels)
+    /**
+     * Listen for touch events and perform a click on this view if the touch up event isn't within
+     * a clickable descendant of this view.
+     */
+    override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
+        if (context.isTouchExplorationEnabled) {
+            return false
         }
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+
+        if (event.action == MotionEvent.ACTION_UP && !event.isWithinClickableDescendantOf(view)) {
+            when (model.viewInfo.tapEffect) {
+                TapEffect.Default -> triggerDefaultAnimation()
+                TapEffect.None -> Unit
+            }
+
+            performClick()
+        }
+
+        // We're just snooping, so always let the event pass through.
+        return false
     }
 
     override fun taps(): Flow<Unit> = debouncedClicks()
 
-    private fun resolveText(state: ThomasState): String {
-        val ref = state.resolveOptional(
-            overrides = model.viewInfo.label.viewOverrides?.ref,
-            default = model.viewInfo.label.ref
-        )
+    /** Tell talkback that we're a button. **/
+    override fun getAccessibilityClassName(): CharSequence = Button::class.java.name
 
-        val text =  state.resolveRequired(
-            overrides = model.viewInfo.label.viewOverrides?.text,
-            default = model.viewInfo.label.text
-        )
+    /** Button layouts may be shrunk if they contain a media view. */
+    override fun isShrinkable(): Boolean = model.isShrinkable
 
-        return if (ref != null) {
-            UAStringUtil.namedStringResource(context, ref, text)
-        } else {
-            text
+    private fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean {
+        return findTargetDescendant(view) { it.isClickable && it.isEnabled } != null
+    }
+
+    private fun triggerDefaultAnimation(event: MotionEvent? = null) {
+        model.viewScope.launch {
+            showRipple(event)
+            delay(rippleAnimationDuration)
+            clearRipple()
         }
+    }
+
+    private fun showRipple(event: MotionEvent? = null) {
+        val ripple = this.foreground ?: return
+        if (ripple is RippleDrawable) {
+            event?.let { ripple.setHotspot(it.x, it.y) }
+        }
+        this.isPressed = true
+    }
+
+    private fun clearRipple() {
+        this.isPressed = false
     }
 }

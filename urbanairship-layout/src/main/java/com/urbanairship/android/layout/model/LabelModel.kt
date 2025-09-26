@@ -3,9 +3,12 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LabelInfo
+import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.view.LabelView
+import com.urbanairship.util.UAStringUtil
 
 internal class LabelModel(
     viewInfo: LabelInfo,
@@ -31,4 +34,56 @@ internal class LabelModel(
             }
         }
     }
+
+    private fun resolveText(context: Context, state: ThomasState): String {
+        val ref = state.resolveOptional(
+            overrides = viewInfo.viewOverrides?.ref,
+            default = viewInfo.ref
+        )
+
+        val text =  state.resolveRequired(
+            overrides = viewInfo.viewOverrides?.text,
+            default = viewInfo.text
+        )
+
+        return if (ref != null) {
+            UAStringUtil.namedStringResource(context, ref, text)
+        } else {
+            text
+        }
+    }
+
+    fun resolveState(context: Context, state: ThomasState?): ResolvedState {
+        return if (state != null) {
+            ResolvedState(
+                text = resolveText(context, state),
+                iconStart = state.resolveOptional(
+                    overrides = viewInfo.viewOverrides?.iconStart,
+                    default = viewInfo.iconStart
+                ),
+                iconEnd = state.resolveOptional(
+                    overrides = viewInfo.viewOverrides?.iconEnd,
+                    default = viewInfo.iconEnd
+                ),
+                textAppearance = state.resolveRequired(
+                    overrides = viewInfo.viewOverrides?.textAppearance,
+                    default = viewInfo.textAppearance
+                )
+            )
+        } else {
+            ResolvedState(
+                text = viewInfo.text,
+                iconStart = viewInfo.iconStart,
+                iconEnd = viewInfo.iconEnd,
+                textAppearance = viewInfo.textAppearance
+            )
+        }
+    }
+
+    data class ResolvedState(
+        val text: String,
+        val iconStart: LabelInfo.LabelIcon?,
+        val iconEnd: LabelInfo.LabelIcon?,
+        val textAppearance: TextAppearance
+    )
 }

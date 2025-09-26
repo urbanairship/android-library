@@ -556,7 +556,10 @@ internal class LabelInfo(
 ) : ViewInfo(), View by view(json), Accessible by accessible(json) {
     val text: String = json.requireField("text")
     val ref: String? = json.optionalField("ref")
-    val iconStart: IconStart? = json.optionalMap("icon_start")?.let { IconStart.fromJson(it) }
+    val iconStart: LabelIcon? = json.optionalMap("icon_start")?.let { LabelIcon.fromJson(it) }
+    val iconEnd: LabelIcon? = json.optionalMap("icon_end")?.let {
+        LabelIcon.fromJson(it)
+    }
     val textAppearance: TextAppearance =
         TextAppearance.fromJson(json.requireField("text_appearance"))
     val markdownOptions: MarkdownOptions? = json.optionalMap("markdown")?.let { MarkdownOptions(it) }
@@ -581,12 +584,12 @@ internal class LabelInfo(
             }
         }
     }
-    internal sealed class IconStart(
+    internal sealed class LabelIcon(
         val type: Type
     ) {
         abstract val space: Int
 
-        data class Floating(val icon: Image.Icon, override val space: Int): IconStart(Type.FLOATING)
+        data class Floating(val icon: Image.Icon, override val space: Int): LabelIcon(Type.FLOATING)
 
         internal enum class Type(val value: String) {
             FLOATING("floating");
@@ -602,7 +605,7 @@ internal class LabelInfo(
 
         internal companion object {
             @Throws(JsonException::class)
-            fun fromJson(json: JsonMap): IconStart {
+            fun fromJson(json: JsonMap): LabelIcon {
                 val type = json.requireField<String>("type").let { Type.fromJson(it) }
                 val space = json.requireField<Int>("space")
 
@@ -654,8 +657,17 @@ internal class LabelInfo(
             ViewPropertyOverride(it, valueParser = { value -> value.optString() })
         }
         val iconStart = json.optionalList("icon_start")?.map {
-            ViewPropertyOverride(it) { value -> IconStart.fromJson(value.optMap()) }
+            ViewPropertyOverride(it) { value -> LabelIcon.fromJson(value.optMap()) }
         }
+
+        val iconEnd = json.optionalList("icon_end")?.map {
+            ViewPropertyOverride(it) { value -> LabelIcon.fromJson(value.optMap()) }
+        }
+
+        val textAppearance = json.optionalList("text_appearance")?.map {
+            ViewPropertyOverride(it) { value -> TextAppearance.fromJson(value.optMap()) }
+        }
+
         val ref = json.optionalList("ref")?.map {
             ViewPropertyOverride(it, valueParser = { value -> value.optString() })
         }

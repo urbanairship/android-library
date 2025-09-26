@@ -43,6 +43,7 @@ import com.urbanairship.android.layout.property.MarkdownOptionsKt;
 import com.urbanairship.android.layout.property.SwitchStyle;
 import com.urbanairship.android.layout.property.TapEffect;
 import com.urbanairship.android.layout.property.TextAppearance;
+import com.urbanairship.android.layout.property.TextInputTextAppearance;
 import com.urbanairship.android.layout.property.TextStyle;
 import com.urbanairship.android.layout.widget.Clippable;
 import com.urbanairship.util.UAStringUtil;
@@ -284,7 +285,7 @@ public final class LayoutUtils {
         return new RippleDrawable(colors, null, mask);
     }
 
-    private static void applyRippleEffect(@NonNull FrameLayout frameLayout, float[] radii) {
+    public static void applyRippleEffect(@NonNull FrameLayout frameLayout, float[] radii) {
         RippleDrawable ripple = generateRippleDrawable(frameLayout.getContext(), radii);
         frameLayout.setForeground(ripple);
     }
@@ -337,10 +338,14 @@ public final class LayoutUtils {
     }
 
 
-    public static void applyLabelModel(@NonNull TextView textView, @NonNull LabelModel label, @NonNull String text) {
-        TextAppearance appearance = label.getViewInfo().getTextAppearance();
+    public static void applyLabel(
+            @NonNull TextView textView,
+            @NonNull TextAppearance textAppearance,
+            @Nullable MarkdownOptions markdownOptions,
+            @NonNull String text
+    ) {
 
-        applyTextAppearance(textView, appearance);
+        applyTextAppearance(textView, textAppearance);
 
         // Work around TextView rendering issues that cause ends of lines to be clipped off when using certain
         // fancy custom fonts that aren't measured properly. We use a full non-breaking space for italic text and a
@@ -349,13 +354,13 @@ public final class LayoutUtils {
         // we'll consider it an edge-case for now.
         Fonts fonts = Fonts.shared(textView.getContext());
         boolean isCustomFont = false;
-        for (String font : appearance.getFontFamilies()) {
+        for (String font : textAppearance.getFontFamilies()) {
             if (!fonts.isSystemFont(font)) {
                 isCustomFont = true;
                 break;
             }
         }
-        boolean isItalic = appearance.getTextStyles().contains(TextStyle.ITALIC);
+        boolean isItalic = textAppearance.getTextStyles().contains(TextStyle.ITALIC);
         if (isCustomFont && isItalic) {
             text += NBSP;
         } else if (isCustomFont || isItalic) {
@@ -363,12 +368,11 @@ public final class LayoutUtils {
         }
 
         Context context = textView.getContext();
-        MarkdownOptions markdown = label.getViewInfo().getMarkdownOptions();
-        boolean isMarkdownEnabled = MarkdownOptionsKt.isEnabled(markdown);
+        boolean isMarkdownEnabled = MarkdownOptionsKt.isEnabled(markdownOptions);
 
         if (isMarkdownEnabled) {
-            boolean underlineLinks = MarkdownOptionsKt.getUnderlineLinks(markdown);
-            @Nullable Integer linkColor = MarkdownOptionsKt.resolvedLinkColor(markdown, context);
+            boolean underlineLinks = MarkdownOptionsKt.getUnderlineLinks(markdownOptions);
+            @Nullable Integer linkColor = MarkdownOptionsKt.resolvedLinkColor(markdownOptions, context);
 
             Spanned html = Html.fromHtml(StringExtensionsKt.markdownToHtml(text));
             ViewExtensionsKt.setHtml(textView, html, underlineLinks, linkColor);
