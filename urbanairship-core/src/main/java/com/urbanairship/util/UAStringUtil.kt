@@ -199,6 +199,25 @@ public object UAStringUtil {
     }
 
     /**
+     * Retrieves a string resource dynamically by its name.
+     * If the resource is not found, it returns the provided default value.
+     *
+     * @param context The context to access resources.
+     * @param name The name of the string resource.
+     * @return The localized string or the default value if not found.
+     */
+    public fun namedStringResource(context: Context, name: String): String? {
+        val resourceId = context.resources
+            .getIdentifier(name, "string", context.applicationInfo.packageName)
+
+        return if (resourceId == 0) {
+            null
+        } else {
+            context.getString(resourceId)
+        }
+    }
+
+    /**
      * Generates a base64 encoded HmacSHA256 signed value.
      * @param secret The secret
      * @param values A list of values that will be concatenated by ":"

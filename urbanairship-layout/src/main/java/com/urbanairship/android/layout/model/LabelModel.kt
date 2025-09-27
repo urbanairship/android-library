@@ -36,21 +36,34 @@ internal class LabelModel(
     }
 
     private fun resolveText(context: Context, state: ThomasState): String {
+        val refs = state.resolveOptional(
+            overrides = viewInfo.viewOverrides?.refs,
+            default = viewInfo.refs
+        )
+
         val ref = state.resolveOptional(
             overrides = viewInfo.viewOverrides?.ref,
             default = viewInfo.ref
         )
 
-        val text =  state.resolveRequired(
+        if (refs != null) {
+            for (ref in refs) {
+                val string = UAStringUtil.namedStringResource(context, ref)
+                if (string != null) {
+                    return string
+                }
+            }
+        } else if (ref != null) {
+            val string = UAStringUtil.namedStringResource(context, ref)
+            if (string != null) {
+                return string
+            }
+        }
+
+        return state.resolveRequired(
             overrides = viewInfo.viewOverrides?.text,
             default = viewInfo.text
         )
-
-        return if (ref != null) {
-            UAStringUtil.namedStringResource(context, ref, text)
-        } else {
-            text
-        }
     }
 
     fun resolveState(context: Context, state: ThomasState?): ResolvedState {

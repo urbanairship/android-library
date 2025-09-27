@@ -556,6 +556,10 @@ internal class LabelInfo(
 ) : ViewInfo(), View by view(json), Accessible by accessible(json) {
     val text: String = json.requireField("text")
     val ref: String? = json.optionalField("ref")
+    val refs: List<String>? = json.optionalField<JsonList>("refs")?.let { list ->
+        list.map { it.requireString() }
+    }
+
     val iconStart: LabelIcon? = json.optionalMap("icon_start")?.let { LabelIcon.fromJson(it) }
     val iconEnd: LabelIcon? = json.optionalMap("icon_end")?.let {
         LabelIcon.fromJson(it)
@@ -670,6 +674,10 @@ internal class LabelInfo(
 
         val ref = json.optionalList("ref")?.map {
             ViewPropertyOverride(it, valueParser = { value -> value.optString() })
+        }
+
+        val refs = json.optionalList("refs")?.map {
+            ViewPropertyOverride(json = it, valueParser = { value -> value.requireList().map { value -> value.requireString() } })
         }
     }
 }
@@ -818,6 +826,9 @@ internal enum class AccessibilityActionType {
 
 internal class LocalizedContentDescription(json: JsonMap) {
     val ref: String? = json.optionalField("ref")
+    val refs: List<String>? = json.optionalField<JsonList>("refs")?.let { list ->
+        list.map { it.requireString() }
+    }
     val fallback: String = json.requireField("fallback")
 }
 

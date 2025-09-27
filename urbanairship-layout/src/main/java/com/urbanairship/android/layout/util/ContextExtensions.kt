@@ -16,11 +16,21 @@ internal fun Context.resolveContentDescription(
 ) : String? {
     if (contentDescription != null) { return contentDescription }
     if (localizedContentDescription != null) {
-        return localizedContentDescription.ref?.let { ref ->
-            UAStringUtil.namedStringResource(
-                this, ref, localizedContentDescription.fallback
-            )
-        } ?: localizedContentDescription.fallback
+        if (localizedContentDescription.refs != null) {
+            for (ref in localizedContentDescription.refs) {
+                val string = UAStringUtil.namedStringResource(this, ref)
+                if (string != null) {
+                    return string
+                }
+            }
+        } else if (localizedContentDescription.ref != null) {
+            val string = UAStringUtil.namedStringResource(this, localizedContentDescription.ref)
+            if (string != null) {
+                return string
+            }
+        }
+
+        return localizedContentDescription.fallback
     }
     return null
 }
