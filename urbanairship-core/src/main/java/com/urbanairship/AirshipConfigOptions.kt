@@ -47,7 +47,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         PRIVATE, PUBLIC
     }
 
-    public enum class Site(private val site: String) {
+    public enum class Site(internal val site: String) {
         /**
          * US data site. In order to use this site, your project must be created at go.airship.com
          */
@@ -1820,7 +1820,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
             val content = value?.uppercase()
                 ?: throw IllegalArgumentException("Site cannot be null")
 
-            return Site.entries.firstOrNull { it.name == value }
+            return Site.entries.firstOrNull { it.site == value }
                 ?: throw IllegalArgumentException("Invalid site: $content")
         }
 
