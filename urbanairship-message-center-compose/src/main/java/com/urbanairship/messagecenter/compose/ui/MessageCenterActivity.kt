@@ -9,9 +9,6 @@ import com.urbanairship.Airship
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.MessageCenter
-import com.urbanairship.messagecenter.compose.MessageCenterNavigationHost
-import com.urbanairship.messagecenter.compose.theme.MessageCenterListConfig
-import com.urbanairship.messagecenter.compose.theme.MessageCenterListConfig.ListItemConfig
 import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -39,7 +36,7 @@ public class MessageCenterActivity: ComponentActivity() {
 
         setContent {
             MessageCenterTheme {
-                MessageCenterNavigationHost(
+                MessageCenterPanesView(
                     messageIdToDisplay = messageIdToOpen.asStateFlow(),
                     onNavigateUp = { finish() }
                 )

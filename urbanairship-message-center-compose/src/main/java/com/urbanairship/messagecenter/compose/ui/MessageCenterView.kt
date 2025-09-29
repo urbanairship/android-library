@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -43,18 +43,17 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.urbanairship.AirshipDispatchers
-import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.compose.R
 import com.urbanairship.messagecenter.compose.theme.MessageCenterListConfig
 import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.ui.view.MessageListAction
 import com.urbanairship.messagecenter.ui.view.MessageListState
 import com.urbanairship.messagecenter.ui.view.MessageListViewModel
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import com.urbanairship.R as CoreR
@@ -73,31 +72,28 @@ public interface MessageCenterListViewModel {
 public fun MessageCenterView(
     title: String? = null,
     messageIdToDisplay: StateFlow<String?> = MutableStateFlow(null),
-    viewModelFactory: MessageCenterViewModelFactory = MessageCenterViewModelFactory(
-        predicate = MessageCenter.shared().predicate
+    viewModel: MessageListViewModel = viewModel(
+        modelClass = MessageListViewModel::class.java,
+        factory = MessageListViewModel.factory()
     ),
+    backButtonVisibility: BackButtonVisibility = BackButtonVisibility.Hidden,
     navigateToMessageId: (String) -> Unit,
 ) {
-    val coreViewModel: MessageListViewModel = viewModel(
-        modelClass = MessageListViewModel::class.java,
-        key = "core view model",
-        factory = viewModelFactory.factory
-    )
 
     val eventsListener = MessageCenterTheme.listConfig.listener
     val listViewModel: MessageCenterListViewModel = viewModel {
         DefaultMessageCenterListViewModel(
-            coreViewModel = coreViewModel,
+            coreViewModel = viewModel,
             listener = eventsListener,
-            selectedMessageFlow = messageIdToDisplay,
-            onNavigateToMessageId = navigateToMessageId
+            messageIdToDisplay = messageIdToDisplay,
+            navigateToMessageId = navigateToMessageId
         )
     }
 
     val contentViewModel: MessageListContentViewModel = viewModel {
         DefaultListContentViewModel(
             isEditing = listViewModel.editing,
-            viewModel = coreViewModel,
+            viewModel = viewModel,
         )
     }
 
@@ -114,6 +110,21 @@ public fun MessageCenterView(
             TopAppBar(
                 title = { title?.let { Text(it) } },
                 colors = MessageCenterTheme.listConfig.topBarColors(),
+                navigationIcon = {
+                    when(backButtonVisibility) {
+                        is BackButtonVisibility.Visible -> {
+                            IconButton(
+                                onClick = backButtonVisibility.handler
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(CoreR.string.ua_back)
+                                )
+                            }
+                        }
+                        else -> {}
+                    }
+                },
                 actions = {
                     IconButton(
                         modifier = Modifier.semantics {
@@ -166,7 +177,7 @@ public fun MessageCenterView(
                     state = viewState,
                     viewModel = contentViewModel,
                     onMessageClick = {
-                        coreViewModel.setHighlighted(it)
+                        viewModel.setHighlighted(it)
                         navigateToMessageId(it.id)
                     }
                 )
@@ -238,9 +249,9 @@ private fun LoadingView() {
 
 internal class DefaultMessageCenterListViewModel(
     private val coreViewModel: MessageListViewModel,
+    private val messageIdToDisplay: StateFlow<String?>,
     private val listener: MessageCenterListConfig.Listener? = null,
-    selectedMessageFlow: StateFlow<String?>,
-    onNavigateToMessageId: (String) -> Unit,
+    navigateToMessageId: (String) -> Unit
 ): ViewModel(), MessageCenterListViewModel {
 
     private val _isEditing = MutableStateFlow(false)
@@ -249,10 +260,23 @@ internal class DefaultMessageCenterListViewModel(
     override val editing: StateFlow<Boolean> = _isEditing.asStateFlow()
 
     init {
+        val selectMessage: (String) -> Unit = { messageId ->
+            coreViewModel.setHighlighted(messageId)
+            navigateToMessageId(messageId)
+        }
+
+        var waitForContent = true
+
         viewModelScope.launch {
-            selectedMessageFlow.collect {
-                coreViewModel.setHighlighted(it)
-                it?.let { onNavigateToMessageId(it) }
+            messageIdToDisplay.collect {
+                if (waitForContent) {
+                    states
+                        .filterIsInstance<MessageListState.Content>()
+                        .first()
+                    waitForContent = false
+                }
+
+                it?.let(selectMessage)
             }
         }
     }

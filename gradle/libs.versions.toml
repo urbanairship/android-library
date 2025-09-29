@@ -21,6 +21,7 @@ kotlinx-serialization = '1.9.0'
 
 # Compose
 compose-bom = '2025.06.01'
+adaptiveNavigation = "1.1.0"
 
 # Androidx
 androidx-activity = '1.10.1'
@@ -125,6 +126,7 @@ compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-materialicons-extended = { module = "androidx.compose.material:material-icons-extended" }
 compose-googlefonts = { module = "androidx.compose.ui:ui-text-google-fonts" }
 compose-material = { module = "androidx.compose.material:material" }
+compose-adaptive-navigation = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation", version.ref = "adaptiveNavigation" }
 
 # Glance
 glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "androidx-glance" }
@@ -218,5 +220,4 @@ mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 # Dokka
-
 dokka-android = { module = "org.jetbrains.dokka:android-documentation-plugin", version.ref = "dokka" }

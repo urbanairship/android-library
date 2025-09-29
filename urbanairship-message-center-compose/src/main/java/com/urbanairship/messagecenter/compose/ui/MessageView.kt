@@ -26,7 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
@@ -61,28 +60,29 @@ internal interface ComposeMessageViewModel {
     fun deleteMessage()
     fun markRead()
     fun retryLoad()
+
+    fun showMessage(id: String?)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 public fun MessageView(
     messageId: String?,
-    viewModelFactory: MessageViewModelFactory = MessageViewModelFactory(),
-    onNavigateUp: () -> Unit
-) {
-
-    val coreViewModel: MessageViewModel = viewModel(
+    messageViewModel: MessageViewModel = viewModel(
         modelClass = MessageViewModel::class.java,
-        key = "core view model",
-        factory = viewModelFactory.factory
-    )
+        factory = MessageViewModel.factory()
+    ),
+    backButtonVisibility: BackButtonVisibility = BackButtonVisibility.Hidden
+) {
 
     val viewModel: ComposeMessageViewModel = viewModel {
         DefaultMessageViewModel(
             messageId = messageId,
-            coreViewModel
+            coreViewModel = messageViewModel
         )
     }
+
+    viewModel.showMessage(messageId)
 
     val title = when(val state = viewModel.states.collectAsState().value) {
         is ViewState.MessageRetrieved -> state.message.title
@@ -100,20 +100,29 @@ public fun MessageView(
                 title = { title?.let { Text(text = it) } },
                 colors = MessageCenterTheme.messageViewConfig.topAppBarColors(),
                 navigationIcon = {
-                    IconButton(
-                        onClick = onNavigateUp
-                    ) {
-                        Icon(
-                           imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(CoreR.string.ua_back)
-                        )
+                    when(backButtonVisibility) {
+                        is BackButtonVisibility.Visible -> {
+                            IconButton(
+                                onClick = backButtonVisibility.handler
+                            ) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(CoreR.string.ua_back)
+                                )
+                            }
+                        }
+                        else -> {}
                     }
                 },
                 actions = {
                     IconButton(
                         onClick = {
                             viewModel.deleteMessage()
-                            onNavigateUp()
+                            messageViewModel.clearMessage()
+                            when(backButtonVisibility) {
+                                is BackButtonVisibility.Visible -> backButtonVisibility.handler()
+                                else -> {}
+                            }
                         }
                     ) {
                         Icon(
@@ -128,7 +137,12 @@ public fun MessageView(
         val state = viewModel.states.collectAsState().value
 
         when(state) {
-            ViewState.Empty -> EmptyView()
+            ViewState.Empty -> {
+                showError.value = null
+                showLoading.value = false
+
+                EmptyView()
+            }
             is ViewState.Error -> showError.value = state.error
             ViewState.Loading -> showLoading.value = true
             is ViewState.MessageRetrieved -> {
@@ -145,7 +159,6 @@ public fun MessageView(
                     },
                     onPageLoaded = {
                         showLoading.value = false
-                        showError.value = null
                         eventsListener?.onMessageLoaded(state.message)
                     }
                 )
@@ -207,6 +220,10 @@ private fun MessageContentView(
                 loadMessage(message)
             }
         },
+        update = { view ->
+            onStartLoading()
+            view.loadMessage(message)
+        }
     )
 }
 
@@ -292,7 +309,7 @@ private fun EmptyView() {
 }
 
 private class DefaultMessageViewModel(
-    private val messageId: String?,
+    private var messageId: String?,
     private val coreViewModel: MessageViewModel
 ): ViewModel(), ComposeMessageViewModel {
 
@@ -318,6 +335,13 @@ private class DefaultMessageViewModel(
     }
 
     override val states: StateFlow<ViewState> = _states.asStateFlow()
+
+    override fun showMessage(id: String?) {
+        if (id == messageId) return
+
+        messageId = id
+        refresh()
+    }
 
     private fun refresh() {
         messageId?.let(coreViewModel::loadMessage)

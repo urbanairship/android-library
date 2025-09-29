@@ -43,6 +43,9 @@ dependencies {
     implementation(libs.androidx.lifecycle.common.java8)
     implementation(libs.androidx.activity.compose)
 
+    // List-details layout
+    implementation libs.compose.adaptive.navigation
+
     // Compose Preview Support
     implementation(libs.compose.ui.tooling.preview)
     debugImplementation(libs.compose.ui.tooling)

@@ -24,11 +24,8 @@ import kotlinx.parcelize.Parcelize
 /** `ViewModel` for [MessageView]. */
 public class MessageViewModel(
     private val inbox: Inbox = MessageCenter.shared().inbox,
-    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    private val restoredState: MessageViewState.Content? =
-        savedStateHandle.get<MessageViewState.Content>("state")
 
     /**
      * Internal chanel for States (information consumed by the view, in order to display the message view).
@@ -38,7 +35,7 @@ public class MessageViewModel(
      *
      * @see MessageViewState
      */
-    private val _states: MutableStateFlow<MessageViewState> = MutableStateFlow(restoredState ?: MessageViewState.Empty)
+    private val _states: MutableStateFlow<MessageViewState> = MutableStateFlow(/*restoredState ?:*/ MessageViewState.Empty)
 
     /**
      * A `Flow` of MessageView [States][MessageViewState] (data consumed by the view in order to display the message).
@@ -63,9 +60,6 @@ public class MessageViewModel(
         viewModelScope.launch {
             states.collect { state ->
                 UALog.v("> $state")
-
-                // Save state if we're showing content
-                (state as? MessageViewState.Content)?.let { savedStateHandle["state"] = it }
             }
         }
     }
@@ -147,7 +141,6 @@ public class MessageViewModel(
             initializer {
                 MessageViewModel(
                     inbox = MessageCenter.shared().inbox,
-                    savedStateHandle = createSavedStateHandle(),
                 )
             }
         }
