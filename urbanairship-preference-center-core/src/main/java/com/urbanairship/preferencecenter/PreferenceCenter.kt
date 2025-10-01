@@ -119,13 +119,28 @@ public class PreferenceCenter internal constructor(
             return
         }
 
+        var missingXmlModule = false
+        var missingComposeModule = false
+
+        try {
+            val clazz = Class.forName("com.urbanairship.preferencecenter.compose.ui.PreferenceCenterActivity")
+            intent.setClass(context, clazz)
+            context.startActivity(intent)
+        } catch (e: ClassNotFoundException) {
+            missingComposeModule = true
+        }
+
         // Fallback to the message center activity, if available
         try {
             val clazz = Class.forName("com.urbanairship.preferencecenter.ui.PreferenceCenterActivity")
             intent.setClass(context, clazz)
             context.startActivity(intent)
         } catch (e: ClassNotFoundException) {
-            UALog.w { "Unable to start PreferenceCenterActivity, the preference-center module is not available"}
+            missingXmlModule = true
+        }
+
+        if (missingXmlModule || missingComposeModule) {
+            UALog.w { "Unable to start PreferenceCenterActivity, the preference-center or preference-center-compose module is required." }
         }
     }
 

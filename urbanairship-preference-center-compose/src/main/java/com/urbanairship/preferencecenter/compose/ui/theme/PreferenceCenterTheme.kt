@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
+import com.urbanairship.preferencecenter.PreferenceCenter
 
 // non-@composable version of the theme, used for configuring the activity before compose is set up
 // TODO: need to be able to set this globally somehow, and have the activity use it
@@ -20,8 +21,7 @@ public data class PreferenceCenterTheme(
 // @Composable function that applies the theme to its children, used for embedding the PC UI in a compose hierarchy
 @Composable
 public fun PreferenceCenterTheme(
-    isInDarkMode: Boolean = isSystemInDarkTheme(),
-    colors: PreferenceCenterColors = if (isInDarkMode) PreferenceCenterColors.darkDefaults() else PreferenceCenterColors.lightDefaults(),
+    colors: PreferenceCenterColors = if (isSystemInDarkTheme()) PreferenceCenterColors.darkDefaults() else PreferenceCenterColors.lightDefaults(),
     typography: PreferenceCenterTypography = PreferenceCenterTypography.defaults(),
     dimens: PreferenceCenterDimens = PreferenceCenterDimens.defaults(),
     shapes: PreferenceCenterShapes = PreferenceCenterShapes.defaults(),
