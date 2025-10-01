@@ -168,8 +168,13 @@ internal class PagerView(
             }
         }
 
-        // We're just snooping, so always let the event pass through.
-        return super.onInterceptTouchEvent(event)
+        return if (model.viewInfo.isSwipeDisabled) {
+            // prevent touches to stop the scroll animation
+            view.onInterceptTouchEvent(event)
+        } else {
+            // We're just snooping, so always let the event pass through.
+            super.onInterceptTouchEvent(event)
+        }
     }
 
     override fun onAttachedToWindow() {

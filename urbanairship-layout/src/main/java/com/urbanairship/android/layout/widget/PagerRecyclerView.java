@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.widget;
 
 import android.content.Context;
 import android.util.DisplayMetrics;
+import android.view.MotionEvent;
 import android.view.View;
 
 import com.urbanairship.android.layout.environment.ViewEnvironment;
@@ -131,6 +132,12 @@ public class PagerRecyclerView extends RecyclerView {
             }
         }
     };
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent e) {
+        // Prevent touch events while animating a programmatic scroll to avoid conflicts.
+        return isInternalScroll || super.onInterceptTouchEvent(e);
+    }
 
     private static class ThomasLinearLayoutManager extends LinearLayoutManager {
         public ThomasLinearLayoutManager(Context context, int orientation) {
