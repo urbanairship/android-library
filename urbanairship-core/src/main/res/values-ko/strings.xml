@@ -91,6 +91,9 @@
     <string name="ua_play">재생</string>
     <string name="ua_pause">일시중지</string>
     <string name="ua_stop">정지</string>
+    <string name="ua_close">닫기</string>
+    <string name="ua_mute">음소거</string>
+    <string name="ua_unmute">음소거 해제</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">닫기</string>
@@ -104,6 +107,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">양식 처리 중 오류가 발생했습니다. 다시 시도해 주세요</string>
+    <string name="ua_required_field">* 필수</string>
+    <string name="ua_invalid_form_message">계속하려면 잘못된 필드를 수정하세요</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">라디오 그룹</string>

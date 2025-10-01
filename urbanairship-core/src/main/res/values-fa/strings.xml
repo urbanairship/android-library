@@ -92,6 +92,9 @@
     <string name="ua_play">پخش</string>
     <string name="ua_pause">توقف موقت</string>
     <string name="ua_stop">توقف</string>
+    <string name="ua_close">بستن</string>
+    <string name="ua_mute">قطع صدا</string>
+    <string name="ua_unmute">وصل صدا</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">بستن</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">خطا در پردازش فرم. لطفا دوباره تلاش کنید</string>
+    <string name="ua_required_field">* اجباری</string>
+    <string name="ua_invalid_form_message">لطفاً فیلدهای نامعتبر را برای ادامه اصلاح کنید</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">گروه رادیویی</string>

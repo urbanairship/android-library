@@ -94,6 +94,9 @@
     <string name="ua_play">Leisti</string>
     <string name="ua_pause">Pristabdyti</string>
     <string name="ua_stop">Sustabdyti</string>
+    <string name="ua_close">Uždaryti</string>
+    <string name="ua_mute">Nutildyti</string>
+    <string name="ua_unmute">Įjungti garsą</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Uždaryti</string>
@@ -107,6 +110,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Klaida apdorojant formą. Bandykite dar kartą</string>
+    <string name="ua_required_field">* Privaloma</string>
+    <string name="ua_invalid_form_message">Ištaisykite netinkamus laukus, kad galėtumėte tęsti</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Radijo grupė</string>

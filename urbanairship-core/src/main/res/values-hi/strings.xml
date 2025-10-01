@@ -92,6 +92,9 @@
     <string name="ua_play">चलाएं</string>
     <string name="ua_pause">विराम</string>
     <string name="ua_stop">रोकें</string>
+    <string name="ua_close">बंद करें</string>
+    <string name="ua_mute">म्यूट करें</string>
+    <string name="ua_unmute">अनम्यूट करें</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">बंद करें</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">फॉर्म प्रोसेसिंग में त्रुटि। कृपया पुनः प्रयास करें</string>
+    <string name="ua_required_field">* आवश्यक</string>
+    <string name="ua_invalid_form_message">जारी रखने के लिए कृपया अमान्य फ़ील्ड ठीक करें</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">रेडियो समूह</string>

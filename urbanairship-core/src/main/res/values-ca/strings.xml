@@ -92,6 +92,9 @@
     <string name="ua_play">Reproduir</string>
     <string name="ua_pause">Pausa</string>
     <string name="ua_stop">Aturar</string>
+    <string name="ua_close">Tanca</string>
+    <string name="ua_mute">Silencia</string>
+    <string name="ua_unmute">Activa el so</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Tancar</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Error en processar el formulari. Si us plau, torneu-ho a provar</string>
+    <string name="ua_required_field">* Obligatori</string>
+    <string name="ua_invalid_form_message">Corregiu els camps no vàlids per continuar</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Grup d\'opcions</string>

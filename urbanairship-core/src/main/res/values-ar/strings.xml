@@ -96,6 +96,9 @@
     <string name="ua_play">تشغيل</string>
     <string name="ua_pause">إيقاف مؤقت</string>
     <string name="ua_stop">إيقاف</string>
+    <string name="ua_close">إغلاق</string>
+    <string name="ua_mute">كتم الصوت</string>
+    <string name="ua_unmute">إلغاء كتم الصوت</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">إغلاق</string>
@@ -109,6 +112,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">خطأ في معالجة النموذج. يرجى المحاولة مرة أخرى</string>
+    <string name="ua_required_field">* مطلوب</string>
+    <string name="ua_invalid_form_message">يرجى تصحيح الحقول غير الصالحة للمتابعة</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">مجموعة أزرار الاختيار</string>

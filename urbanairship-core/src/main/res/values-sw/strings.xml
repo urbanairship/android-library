@@ -92,6 +92,9 @@
     <string name="ua_play">Cheza</string>
     <string name="ua_pause">Sitisha</string>
     <string name="ua_stop">Simamisha</string>
+    <string name="ua_close">Funga</string>
+    <string name="ua_mute">Zima sauti</string>
+    <string name="ua_unmute">Washa sauti</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Funga</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Hitilafu katika kusindika fomu. Tafadhali jaribu tena</string>
+    <string name="ua_required_field">* Inahitajika</string>
+    <string name="ua_invalid_form_message">Tafadhali rekebisha sehemu zisizo sahihi ili kuendelea</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Kikundi cha redio</string>

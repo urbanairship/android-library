@@ -93,6 +93,9 @@
     <string name="ua_play">Репродукуј</string>
     <string name="ua_pause">Пауза</string>
     <string name="ua_stop">Заустави</string>
+    <string name="ua_close">Затвори</string>
+    <string name="ua_mute">Искључи звук</string>
+    <string name="ua_unmute">Укључи звук</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Затвори</string>
@@ -106,6 +109,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Грешка приликом обраде обрасца. Молимо покушајте поново</string>
+    <string name="ua_required_field">* Обавезно</string>
+    <string name="ua_invalid_form_message">Исправите неважећа поља да бисте наставили</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Група радио дугмића</string>

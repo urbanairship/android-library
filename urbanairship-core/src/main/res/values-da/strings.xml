@@ -92,6 +92,9 @@
     <string name="ua_play">Afspil</string>
     <string name="ua_pause">Pause</string>
     <string name="ua_stop">Stop</string>
+    <string name="ua_close">Luk</string>
+    <string name="ua_mute">Slå lyden fra</string>
+    <string name="ua_unmute">Slå lyden til</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Luk</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Fejl ved behandling af formular. Prøv venligst igen</string>
+    <string name="ua_required_field">* Påkrævet</string>
+    <string name="ua_invalid_form_message">Ret de ugyldige felter for at fortsætte</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Radiogruppe</string>

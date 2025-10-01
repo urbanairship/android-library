@@ -92,6 +92,9 @@
     <string name="ua_play">Speel</string>
     <string name="ua_pause">Pouseer</string>
     <string name="ua_stop">Stop</string>
+    <string name="ua_close">Sluit</string>
+    <string name="ua_mute">Demp</string>
+    <string name="ua_unmute">Ontdemp</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Sluit</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Fout met die verwerking van vorm. Probeer asseblief weer</string>
+    <string name="ua_required_field">* Verplig</string>
+    <string name="ua_invalid_form_message">Maak asseblief die ongeldige velde reg om voort te gaan</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Radiogroep</string>

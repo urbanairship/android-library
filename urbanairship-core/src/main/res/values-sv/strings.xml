@@ -92,6 +92,9 @@
     <string name="ua_play">Spela</string>
     <string name="ua_pause">Paus</string>
     <string name="ua_stop">Stopp</string>
+    <string name="ua_close">Stäng</string>
+    <string name="ua_mute">Ljud av</string>
+    <string name="ua_unmute">Ljud på</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Stäng</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Fel vid bearbetning av formulär. Försök igen</string>
+    <string name="ua_required_field">* Obligatoriskt</string>
+    <string name="ua_invalid_form_message">Åtgärda de ogiltiga fälten för att fortsätta</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Alternativgrupp</string>

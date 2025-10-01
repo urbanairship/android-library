@@ -92,6 +92,9 @@
     <string name="ua_play">ለመጫወት</string>
     <string name="ua_pause">ለተቆም</string>
     <string name="ua_stop">ለማስቆም</string>
+    <string name="ua_close">ዝጋ</string>
+    <string name="ua_mute">ድምጽ አጥፋ</string>
+    <string name="ua_unmute">ድምጽ አብራ</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">መዝጊያ</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">ቅጹን በማስኬድ ላይ ስህተት። እባክዎ እንደገና ይሞክሩ</string>
+    <string name="ua_required_field">* ያስፈልጋል</string>
+    <string name="ua_invalid_form_message">ለመቀጠል እባክዎ ልክ ያልሆኑ መስኮችን ያስተካክሉ</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">የሬዲዮ ቡድን</string>

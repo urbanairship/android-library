@@ -94,6 +94,9 @@
     <string name="ua_play">Грати</string>
     <string name="ua_pause">Пауза</string>
     <string name="ua_stop">Стоп</string>
+    <string name="ua_close">Закрити</string>
+    <string name="ua_mute">Вимкнути звук</string>
+    <string name="ua_unmute">Увімкнути звук</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Закрити</string>
@@ -107,6 +110,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Помилка обробки форми. Будь ласка, спробуйте ще раз</string>
+    <string name="ua_required_field">* Обов\'язково</string>
+    <string name="ua_invalid_form_message">Виправте недійсні поля, щоб продовжити</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Група перемикачів</string>
