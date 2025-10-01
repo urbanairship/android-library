@@ -67,7 +67,8 @@ internal fun ContactAddDialog(
 ) {
     var isValid by remember { mutableStateOf(false) }
     var inputValue by remember { mutableStateOf("") }
-    var senderInfo: SmsSenderInfo? = null
+    var senderInfo: SmsSenderInfo? =
+        (platform as? Platform.Sms)?.registrationOptions?.senders?.first()
     val errorText = viewModel.errors.collectAsStateWithLifecycle(null).value
 
     BasicAlertDialog(
