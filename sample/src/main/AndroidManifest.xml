@@ -35,9 +35,6 @@
             android:windowSoftInputMode="adjustPan"
             android:exported="true">
 
-            <nav-graph android:value="@navigation/nav_inbox" />
-            <nav-graph android:value="@navigation/nav_home" />
-
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

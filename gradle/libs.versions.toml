@@ -86,6 +86,16 @@ mockk = '1.14.2'
 # Doc Dependencies
 dokka = '2.0.0'
 
+# Navigation 3
+nav3Core = "1.0.0-alpha01"
+lifecycleViewmodelNav3 = "1.0.0-alpha01"
+uiViewbinding = "1.9.1"
+fragmentCompose = "1.8.9"
+uiToolingPreview = "1.9.1"
+uiTooling = "1.9.1"
+uiToolingPreviewVersion = "1.9.2"
+uiToolingVersion = "1.9.2"
+
 [plugins]
 
 android-application = { id = 'com.android.application', version.ref = "androidGradlePlugin" }
@@ -122,6 +132,7 @@ compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+compose-ui-viewbinding = { group = "androidx.compose.ui", name = "ui-viewbinding" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-materialicons-extended = { module = "androidx.compose.material:material-icons-extended" }
 compose-googlefonts = { module = "androidx.compose.ui:ui-text-google-fonts" }
@@ -144,6 +155,7 @@ androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constr
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-corektx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-customview = { module = "androidx.customview:customview", version.ref = "androidx-customview" }
+androidx-fragment-compose = { group = "androidx.fragment", name = "fragment-compose", version.ref = "fragmentCompose" }
 androidx-fragment-fragment = { module = "androidx.fragment:fragment", version.ref = "androidx-fragment" }
 androidx-fragment-fragmentktx = { module = "androidx.fragment:fragment-ktx", version.ref = "androidx-fragment" }
 androidx-fragment-testing = { module = "androidx.fragment:fragment-testing", version.ref = "androidx-fragment" }
@@ -153,7 +165,10 @@ androidx-lifecycle-runtimektx = { module = "androidx.lifecycle:lifecycle-runtime
 androidx-lifecycle-runtime-compose = { group = "androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref="androidx-lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref="androidx-lifecycle" }
+androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycleViewmodelNav3" }
 androidx-lifecycle-viewmodelktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref="androidx-lifecycle" }
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3Core" }
 androidx-navigation-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "androidx-navigation" }
 androidx-navigation-fragmentktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "androidx-navigation" }
 androidx-navigation-testing = { module = "androidx.navigation:navigation-testing", version.ref = "androidx-navigation" }
