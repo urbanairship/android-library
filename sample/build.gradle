@@ -63,6 +63,7 @@ dependencies {
     // Jetpack
     implementation(libs.androidx.appcompat)
     implementation(libs.androidx.activityktx)
+    implementation(libs.compose.ui.viewbinding)
     implementation(libs.google.material)
     implementation(libs.androidx.preference)
     implementation(libs.androidx.lifecycle.viewmodel)
@@ -70,7 +71,16 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
+    implementation(libs.androidx.fragment.compose)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
     implementation(libs.playservices.location)
+
+    // Compose
+    androidTestImplementation(platform(libs.compose.bom))
+    implementation(libs.compose.material3)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
 
     // Jetpack Glance
     implementation(libs.glance.appwidget)
@@ -100,9 +110,7 @@ dependencies {
     implementation project(':urbanairship-debug')
 
     implementation libs.glide
-    implementation libs.androidx.ui.viewbinding
-    implementation libs.androidx.fragment.compose
-    implementation libs.androidx.ui.tooling.preview
+    implementation libs.compose.ui.tooling.preview
 
     // Testing-only dependencies
 
@@ -117,6 +125,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.espresso.idling.concurrent)
 
     // AndroidJUnitRunner and JUnit Rules
+    debugImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.rules)
@@ -132,18 +141,9 @@ dependencies {
     androidTestImplementation(libs.mockito.core)
     androidTestImplementation(libs.mockito.android)
 
-    // Compose
-    implementation(libs.compose.material3)
-    implementation(libs.androidx.lifecycle.viewmodel.compose)
-
-    // Navigation 3
-    implementation(libs.androidx.navigation3.ui)
-    implementation(libs.androidx.navigation3.runtime)
-    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
-
     androidTestImplementation(libs.androidx.navigation.testing)
     debugImplementation(libs.androidx.fragment.testing)
-    debugImplementation libs.androidx.ui.tooling
+    debugImplementation(libs.compose.ui.tooling.preview)
 }
 
 

@@ -43,7 +43,6 @@ import kotlinx.serialization.Serializable
  * Main application entry point.
  */
 class MainActivity : AppCompatActivity() {
-    private var navController: NavController? = null
 
     @Serializable
     data object Home : NavKey, BottomNavItem {
@@ -74,7 +73,6 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
 
         setContent {
-            enableEdgeToEdge()
             val context = LocalContext.current
             val navItems = listOf(MainActivity.Home, MainActivity.Message, PreferenceCenter,
                 MainActivity.Settings)
@@ -120,7 +118,7 @@ class MainActivity : AppCompatActivity() {
                                         PreferenceCenterScreen(modifier = screenModifier, context = context)
                                     }
                                     is Settings -> NavEntry(key) {
-                                        DebugScreen(modifier= screenModifier)
+                                        DebugScreen(modifier = screenModifier)
                                     }
                                     else -> {
                                         error("Unknown route: $key")
@@ -137,7 +135,7 @@ class MainActivity : AppCompatActivity() {
         val icon: ImageVector
     }
 
-    class TopLevelBackStack<T : NavKey>(private val startKey: T) {
+    open class TopLevelBackStack<T : NavKey>(private val startKey: T) {
 
         internal var topLevelBackStacks: HashMap<T, SnapshotStateList<T>> = hashMapOf(
             startKey to mutableStateListOf(startKey)
@@ -160,7 +158,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        internal fun switchTopLevel(key: T) {
+        internal open fun switchTopLevel(key: T) {
             if (topLevelBackStacks[key] == null) {
                 topLevelBackStacks[key] = mutableStateListOf(key)
             }
@@ -186,7 +184,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        navController!!.handleDeepLink(intent)
     }
 
     public override fun onSaveInstanceState(outState: Bundle) {

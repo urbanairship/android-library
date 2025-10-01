@@ -24,13 +24,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavKey
+import com.urbanairship.messagecenter.Message
 import com.urbanairship.sample.MainActivity
 import com.urbanairship.sample.R
 import com.urbanairship.sample.ui.theme.AirshipColors
 import AirshipTheme
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flowOf
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,14 +46,14 @@ internal fun HomeScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val channelId by viewModel.channelId.collectAsState()
-    val unreadCount by viewModel.unreadMessageCount.collectAsStateWithLifecycle()
+    val unreadCount by viewModel.unreadMessageCount.collectAsState(initial = emptyList())
     val context = LocalContext.current
 
     LaunchedEffect(unreadCount) {
-        if (unreadCount > 0) {
+        if (unreadCount.isNotEmpty()) {
             val result = snackbarHostState.showSnackbar(
                 message = context.resources.getQuantityString
-                    (R.plurals.mc_indicator_text, unreadCount, unreadCount),
+                    (R.plurals.mc_indicator_text, unreadCount.size, unreadCount.size),
                 actionLabel = "View",
                 duration = SnackbarDuration.Long
             )
@@ -89,4 +94,24 @@ internal fun HomeScreen(
             }
         }
     }
+}
+
+@Preview
+@Composable
+private fun HomeScreenPreview() {
+    val homeViewModel = object : HomeViewModel() {
+        override var channelId: StateFlow<String?> = MutableStateFlow("preview-channel-id-12345")
+        override var unreadMessageCount: Flow<List<Message>> = flowOf(emptyList())
+        override fun copyToClipboard(context: android.content.Context) {
+        }
+    }
+    val backStack = object : MainActivity.TopLevelBackStack<NavKey>(MainActivity.Home) {
+        override fun switchTopLevel(key: NavKey) {
+        }
+    }
+
+    HomeScreen(
+        backStack = backStack,
+        viewModel = homeViewModel
+    )
 }

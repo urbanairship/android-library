@@ -92,6 +92,8 @@ uiViewbinding = "1.9.1"
 fragmentCompose = "1.8.9"
 uiToolingPreview = "1.9.1"
 uiTooling = "1.9.1"
+uiToolingPreviewVersion = "1.9.2"
+uiToolingVersion = "1.9.2"
 
 [plugins]
 
@@ -129,6 +131,7 @@ compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 compose-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest" }
 compose-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4" }
+compose-ui-viewbinding = { group = "androidx.compose.ui", name = "ui-viewbinding" }
 compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-materialicons-extended = { module = "androidx.compose.material:material-icons-extended" }
 compose-googlefonts = { module = "androidx.compose.ui:ui-text-google-fonts" }
@@ -150,6 +153,7 @@ androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constr
 androidx-core = { module = "androidx.core:core", version.ref = "androidx-core" }
 androidx-corektx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-customview = { module = "androidx.customview:customview", version.ref = "androidx-customview" }
+androidx-fragment-compose = { group = "androidx.fragment", name = "fragment-compose", version.ref = "fragmentCompose" }
 androidx-fragment-fragment = { module = "androidx.fragment:fragment", version.ref = "androidx-fragment" }
 androidx-fragment-fragmentktx = { module = "androidx.fragment:fragment-ktx", version.ref = "androidx-fragment" }
 androidx-fragment-testing = { module = "androidx.fragment:fragment-testing", version.ref = "androidx-fragment" }
@@ -231,7 +235,3 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 # Dokka
 
 dokka-android = { module = "org.jetbrains.dokka:android-documentation-plugin", version.ref = "dokka" }
-androidx-ui-viewbinding = { group = "androidx.compose.ui", name = "ui-viewbinding", version.ref = "uiViewbinding" }
-androidx-fragment-compose = { group = "androidx.fragment", name = "fragment-compose", version.ref = "fragmentCompose" }
-androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview", version.ref = "uiToolingPreview" }
-androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling", version.ref = "uiTooling" }
