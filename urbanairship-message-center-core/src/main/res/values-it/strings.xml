@@ -36,4 +36,9 @@
     <string name="ua_mc_action_unselect">Deseleziona messaggio</string>
     <!-- Custom message item tap action. Will be spoken as "Tap to read message" in EN-US. -->
     <string name="ua_mc_action_click">Leggi messaggio</string>
+
+    <!-- Accessibility -->
+    <string name="ua_score_selected_state_description">%1$d di %2$d</string>
+    <string name="ua_selected">Selezionato</string>
+    <string name="ua_not_selected">Non selezionato</string>
 </resources>

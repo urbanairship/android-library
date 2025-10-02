@@ -24,7 +24,7 @@ internal class RadioInputToggleLayoutModel(
 
     override fun onCreateView(
         context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?
-    ) = ToggleLayoutView(context, this, viewEnvironment, itemProperties).apply {
+    ) = ToggleLayoutView(context, this, viewEnvironment, itemProperties, ToggleLayoutView.ToggleLayoutType.RADIO).apply {
         id = viewId
     }
 

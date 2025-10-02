@@ -964,7 +964,7 @@ internal class PagerControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(
     val branching = json["branching"]?.let(PagerControllerBranching::from)
 }
 
-internal open class BaseToggleLayoutInfo(json: JsonMap) :  ViewGroupInfo<ViewItemInfo>(), Identifiable by identifiable(json), View by view(json) {
+internal open class BaseToggleLayoutInfo(json: JsonMap) :  ViewGroupInfo<ViewItemInfo>(), Identifiable by identifiable(json), View by view(json), Accessible by accessible(json) {
     val onToggleOn: ToggleActions = ToggleActions(
         stateActions = json.requireMap("on_toggle_on")
             .optionalList("state_actions")

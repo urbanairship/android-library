@@ -36,4 +36,9 @@
     <string name="ua_mc_action_unselect">Noņemiet ziņojuma atlasi</string>
     <!-- Custom message item tap action. Will be spoken as "Tap to read message" in EN-US. -->
     <string name="ua_mc_action_click">Lasīt ziņojumu</string>
+
+    <!-- Accessibility -->
+    <string name="ua_score_selected_state_description">%1$d no %2$d</string>
+    <string name="ua_selected">Atlasīts</string>
+    <string name="ua_not_selected">Nav atlasīts</string>
 </resources>

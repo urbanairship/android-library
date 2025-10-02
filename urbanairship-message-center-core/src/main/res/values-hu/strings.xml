@@ -32,4 +32,9 @@
     <string name="ua_mc_action_unselect">Törölje az üzenet kijelölését</string>
     <!-- Custom message item tap action. Will be spoken as "Tap to read message" in EN-US. -->
     <string name="ua_mc_action_click">Olvassa el az üzenetet</string>
+
+    <!-- Accessibility -->
+    <string name="ua_score_selected_state_description">%1$d / %2$d</string>
+    <string name="ua_selected">Kiválasztva</string>
+    <string name="ua_not_selected">Nincs kiválasztva</string>
 </resources>

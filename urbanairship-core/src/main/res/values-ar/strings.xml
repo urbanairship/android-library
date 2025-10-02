@@ -112,4 +112,8 @@
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">مجموعة أزرار الاختيار</string>
+
+    <string name="ua_score_selected_state_description">%1$d من %2$d</string>
+    <string name="ua_selected">محدد</string>
+    <string name="ua_not_selected">غير محدد</string>
 </resources>

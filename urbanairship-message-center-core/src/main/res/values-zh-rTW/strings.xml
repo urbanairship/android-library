@@ -28,4 +28,9 @@
     <string name="ua_mc_action_unselect">取消選擇消息</string>
     <!-- Custom message item tap action. Will be spoken as "Tap to read message" in EN-US. -->
     <string name="ua_mc_action_click">閱讀留言</string>
+
+    <!-- Accessibility -->
+    <string name="ua_score_selected_state_description">%1$d / %2$d</string>
+    <string name="ua_selected">已選擇</string>
+    <string name="ua_not_selected">未選擇</string>
 </resources>

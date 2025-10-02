@@ -28,4 +28,9 @@
     <string name="ua_mc_action_unselect">Bỏ chọn tin nhắn</string>
     <!-- Custom message item tap action. Will be spoken as "Tap to read message" in EN-US. -->
     <string name="ua_mc_action_click">Đọc tin nhắn</string>
+
+    <!-- Accessibility -->
+    <string name="ua_score_selected_state_description">%1$d trong số %2$d</string>
+    <string name="ua_selected">Đã chọn</string>
+    <string name="ua_not_selected">Chưa chọn</string>
 </resources>

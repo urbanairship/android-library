@@ -109,4 +109,8 @@
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Grup de butoane radio</string>
+
+    <string name="ua_score_selected_state_description">%1$d din %2$d</string>
+    <string name="ua_selected">Selectat</string>
+    <string name="ua_not_selected">Neselectat</string>
 </resources>

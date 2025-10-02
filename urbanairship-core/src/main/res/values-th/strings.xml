@@ -107,4 +107,8 @@
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">กลุ่มปุ่มตัวเลือก</string>
+
+    <string name="ua_score_selected_state_description">%1$d จาก %2$d</string>
+    <string name="ua_selected">เลือกแล้ว</string>
+    <string name="ua_not_selected">ยังไม่เลือก</string>
 </resources>

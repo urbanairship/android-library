@@ -108,4 +108,8 @@
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Ομάδα επιλογών</string>
+
+    <string name="ua_score_selected_state_description">%1$d από %2$d</string>
+    <string name="ua_selected">Επιλεγμένο</string>
+    <string name="ua_not_selected">Μη επιλεγμένο</string>
 </resources>

@@ -108,4 +108,8 @@
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Raadionuppude rühm</string>
+
+    <string name="ua_score_selected_state_description">%1$d %2$d-st</string>
+    <string name="ua_selected">Valitud</string>
+    <string name="ua_not_selected">Valimata</string>
 </resources>

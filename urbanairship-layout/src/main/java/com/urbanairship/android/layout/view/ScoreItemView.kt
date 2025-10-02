@@ -5,7 +5,7 @@ import android.graphics.drawable.Drawable
 import android.os.Build
 import android.widget.Checkable
 import androidx.annotation.Dimension
-import androidx.appcompat.widget.AppCompatButton
+import androidx.appcompat.widget.AppCompatRadioButton
 import androidx.core.content.ContextCompat
 import androidx.core.view.updatePadding
 import com.urbanairship.android.layout.R
@@ -19,13 +19,11 @@ internal class ScoreItemView(
     private val bindings: ScoreStyle.Bindings,
     @Dimension(unit = Dimension.DP)
     private val padding: Int
-) : AppCompatButton(
+) : AppCompatRadioButton(
     context,
     null,
     androidx.appcompat.R.style.Widget_AppCompat_Button_Borderless
 ), Checkable {
-
-    private var isChecked = false
 
     init {
         id = generateViewId()
@@ -81,24 +79,15 @@ internal class ScoreItemView(
 
     override fun setChecked(checked: Boolean) {
         if (checked != isChecked) {
-            isChecked = checked
+            super.setChecked(checked)
             refreshDrawableState()
-
             updateTextState()
         }
     }
 
-    override fun isChecked(): Boolean {
-        return isChecked
-    }
-
-    override fun toggle() {
-        setChecked(!isChecked)
-    }
-
     override fun onCreateDrawableState(extraSpace: Int): IntArray {
         val drawableState = super.onCreateDrawableState(extraSpace + 1)
-        if (isChecked()) {
+        if (isChecked) {
             mergeDrawableStates(drawableState, CHECKED_STATE_SET)
         }
         return drawableState

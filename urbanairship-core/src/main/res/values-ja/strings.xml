@@ -107,4 +107,8 @@
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">ラジオグループ</string>
+
+    <string name="ua_score_selected_state_description">%2$d個中%1$d個</string>
+    <string name="ua_selected">選択済み</string>
+    <string name="ua_not_selected">未選択</string>
 </resources>

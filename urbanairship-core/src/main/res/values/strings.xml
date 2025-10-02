@@ -122,4 +122,7 @@
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Radio group</string>
+    <string name="ua_score_selected_state_description">%1$d of %2$d</string>
+    <string name="ua_selected">Selected</string>
+    <string name="ua_not_selected">Not selected</string>
 </resources>

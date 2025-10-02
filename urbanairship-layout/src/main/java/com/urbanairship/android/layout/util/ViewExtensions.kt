@@ -157,11 +157,8 @@ internal fun CheckableView<*>.checkedChanges(): Flow<Boolean> =
 internal fun ScoreView.scoreChanges(): Flow<Int> =
     callbackFlow {
         checkMainThread()
-
-        val listener = ScoreView.OnScoreSelectedListener { score -> trySend(score) }
-
-        scoreSelectedListener = listener
-        awaitClose { scoreSelectedListener = null }
+        onScoreSelectedListener = { score -> trySend(score) }
+        awaitClose { onScoreSelectedListener = null }
     }.conflate()
 
 internal fun PagerView.pagerScrolls(): Flow<PagerScrollEvent> =

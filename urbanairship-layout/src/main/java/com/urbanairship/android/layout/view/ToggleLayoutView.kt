@@ -7,10 +7,13 @@ import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.Checkable
 import android.widget.FrameLayout
+import android.widget.RadioButton
+import android.widget.ToggleButton
 import androidx.core.view.AccessibilityDelegateCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.core.view.isVisible
+import com.urbanairship.R
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
@@ -30,8 +33,16 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
     context: Context,
     val model: T,
     viewEnvironment: ViewEnvironment,
-    val itemProperties: ItemProperties?
+    val itemProperties: ItemProperties?,
+    val type: ToggleLayoutType
 ) : FrameLayout(context), BaseView, TappableView, Checkable {
+
+    enum class ToggleLayoutType {
+        SCORE,
+        RADIO,
+        CHECKBOX,
+        BASIC
+    }
 
     private val view = model.view.createView(context, viewEnvironment, itemProperties)
 
@@ -45,9 +56,7 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
         LayoutUtils.applyToggleLayoutRippleEffect(this, model.viewInfo)
 
         addView(view, MATCH_PARENT, MATCH_PARENT)
-
         view.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
-        model.contentDescription(context)?.ifNotEmpty { contentDescription = it }
 
         ViewCompat.setAccessibilityDelegate(this, object : AccessibilityDelegateCompat() {
             override fun onInitializeAccessibilityNodeInfo(
@@ -56,11 +65,26 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
             ) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
 
-                info.className = android.widget.ToggleButton::class.java.name
+                info.className = accessibilityClassName
                 info.isCheckable = host.isEnabled
+                model.contentDescription(host.context)?.ifNotEmpty { info.contentDescription = it }
 
                 if (host.isEnabled) {
                     info.isChecked = model.isOn.value
+                }
+
+                var useSelected = when(type) {
+                    ToggleLayoutType.SCORE -> true
+                    ToggleLayoutType.RADIO -> true
+                    ToggleLayoutType.CHECKBOX -> false
+                    ToggleLayoutType.BASIC -> false
+                }
+                if (useSelected) {
+                    info.stateDescription = if (isChecked) {
+                        host.context.getString(R.string.ua_selected)
+                    } else {
+                        host.context.getString(R.string.ua_not_selected)
+                    }
                 }
             }
         })
@@ -104,6 +128,10 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
     override fun taps(): Flow<Unit> = debouncedClicks()
 
     private fun updateToggleVisualState(isOn: Boolean) {
+        if (isActivated == isOn) {
+            return
+        }
+
         isActivated = isOn
     }
 
@@ -120,7 +148,12 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
     }
 
     override fun getAccessibilityClassName(): CharSequence {
-        return android.widget.ToggleButton::class.java.name
+        return when (type) {
+            ToggleLayoutType.SCORE -> RadioButton::class.java.name
+            ToggleLayoutType.RADIO -> RadioButton::class.java.name
+            ToggleLayoutType.CHECKBOX -> ToggleButton::class.java.name
+            ToggleLayoutType.BASIC -> ToggleButton::class.java.name
+        }
     }
 
     private fun showRipple(event: MotionEvent? = null) {

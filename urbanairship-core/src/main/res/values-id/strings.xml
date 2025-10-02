@@ -108,4 +108,8 @@
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Grup radio</string>
+
+    <string name="ua_score_selected_state_description">%1$d dari %2$d</string>
+    <string name="ua_selected">Dipilih</string>
+    <string name="ua_not_selected">Tidak dipilih</string>
 </resources>

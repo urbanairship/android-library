@@ -24,7 +24,7 @@ internal class CheckboxToggleLayoutModel(
 
     override fun onCreateView(
         context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?
-    ) = ToggleLayoutView(context, this, viewEnvironment, itemProperties).apply {
+    ) = ToggleLayoutView(context, this, viewEnvironment, itemProperties, ToggleLayoutView.ToggleLayoutType.CHECKBOX).apply {
         id = viewId
     }
 

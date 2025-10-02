@@ -2,6 +2,10 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import android.view.View
+import android.widget.RadioGroup
+import androidx.core.view.AccessibilityDelegateCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
@@ -63,6 +67,8 @@ internal class ScoreController(
     override fun onViewAttached(view: View) {
         super.onViewAttached(view)
 
+        setupAccessibility(view)
+
         // Listen to radio input state updates and push them into form state.
         viewScope.launch {
             scoreState.changes.collect { score ->
@@ -87,5 +93,26 @@ internal class ScoreController(
                 }
             }
         }
+    }
+
+    private fun setupAccessibility(containerView: View) {
+        // Make the container focusable so TalkBack can select it
+        containerView.isFocusable = true
+        // Ensure the container is important for accessibility
+        containerView.importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_YES
+        // Set up accessibility for the radio button group
+        ViewCompat.setAccessibilityDelegate(containerView, object : AccessibilityDelegateCompat() {
+            override fun onInitializeAccessibilityNodeInfo(
+                host: View,
+                info: AccessibilityNodeInfoCompat
+            ) {
+                super.onInitializeAccessibilityNodeInfo(host, info)
+                info.className = RadioGroup::class.java.name
+                info.contentDescription =
+                    contentDescription(host.context) ?: host.context.getString(
+                        com.urbanairship.R.string.ua_accessibility_radio_group
+                    )
+            }
+        })
     }
 }

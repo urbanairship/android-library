@@ -28,4 +28,9 @@
     <string name="ua_mc_action_unselect">메시지 선택 해제</string>
     <!-- Custom message item tap action. Will be spoken as "Tap to read message" in EN-US. -->
     <string name="ua_mc_action_click">메시지 읽기</string>
+
+    <!-- Accessibility -->
+    <string name="ua_score_selected_state_description">%2$d 중 %1$d</string>
+    <string name="ua_selected">선택됨</string>
+    <string name="ua_not_selected">선택 안 됨</string>
 </resources>

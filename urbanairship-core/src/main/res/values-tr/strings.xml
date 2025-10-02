@@ -108,4 +108,8 @@
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Radyo grubu</string>
+
+    <string name="ua_score_selected_state_description">%2$d içinden %1$d</string>
+    <string name="ua_selected">Seçildi</string>
+    <string name="ua_not_selected">Seçilmedi</string>
 </resources>
