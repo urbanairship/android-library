@@ -571,6 +571,8 @@ internal class LabelInfo(
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
     val labels: AssociatedLabel? = json.optionalMap("labels")?.let { AssociatedLabel(it) }
 
+    val isAccessibilityAlert: Boolean? = json.optionalField("is_accessibility_alert")
+
     internal class AssociatedLabel(json: JsonMap) {
         val type: Type = Type.fromJson(json.requireField("type"))
         val viewId: String = json.requireField("view_id")
