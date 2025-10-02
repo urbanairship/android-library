@@ -3,9 +3,11 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.graphics.drawable.RippleDrawable
+import android.os.Bundle
 import android.view.MotionEvent
 import android.view.View
 import android.view.accessibility.AccessibilityManager
+import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
@@ -38,11 +40,11 @@ internal class ButtonLayoutView(
 ) : FrameLayout(context), BaseView, TappableView, ShrinkableView {
 
     private val isButtonForAccessibility: Boolean
-    get() = when (model.viewInfo.accessibilityRole) {
-        ButtonLayoutInfo.AccessibilityRole.Button -> true
-        ButtonLayoutInfo.AccessibilityRole.Container -> false
-        null -> true /// defaults to button
-    }
+        get() = when (model.viewInfo.accessibilityRole) {
+            ButtonLayoutInfo.AccessibilityRole.Button -> true
+            ButtonLayoutInfo.AccessibilityRole.Container -> false
+            null -> true /// defaults to button
+        }
 
     private val view = model.view.createView(context, viewEnvironment, itemProperties)
 
@@ -50,20 +52,35 @@ internal class ButtonLayoutView(
         resources.getInteger(android.R.integer.config_shortAnimTime).milliseconds
 
     init {
-        isClickable = true
-        isFocusable = true
-
         LayoutUtils.applyButtonLayoutModel(this, model)
 
         addView(view, MATCH_PARENT, MATCH_PARENT)
 
         if (isButtonForAccessibility) {
-            view.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+            this.isClickable = true
+            this.isFocusable = true
             model.contentDescription(context)?.ifNotEmpty {
-                contentDescription = it
+                this.contentDescription = it
             }
-        }  else {
-            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+            // To make it a single unit, the child view MUST be hidden from accessibility.
+            view.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+        } else if (model.viewInfo.contentDescription != null || model.viewInfo.localizedContentDescription != null) {
+            // We are a container with a set content description instead of generated, expose it
+            this.isClickable = true
+            this.isFocusable = true
+            model.contentDescription(context)?.ifNotEmpty {
+                this.contentDescription = it
+            }
+
+            // As a group, the children inside can still be individually focusable.
+            // We leave the child view's accessibility as default (AUTO).
+            view.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_AUTO
+        } else {
+            this.isClickable = false
+            this.isFocusable = false
+
+            // Hide the parent and allow focus to pass through to its children.
+            this.importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
         }
 
         val baseBackground = this.background
@@ -107,11 +124,36 @@ internal class ButtonLayoutView(
 
     override fun taps(): Flow<Unit> = debouncedClicks()
 
-    /** Tell talkback that we're a button. **/
-    override fun getAccessibilityClassName(): CharSequence = Button::class.java.name
+    override fun getAccessibilityClassName(): CharSequence {
+        return if (isButtonForAccessibility) {
+            Button::class.java.name
+        } else {
+            FrameLayout::class.java.name
+        }
+    }
 
     /** Button layouts may be shrunk if they contain a media view. */
     override fun isShrinkable(): Boolean = model.isShrinkable
+
+    override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
+        super.onInitializeAccessibilityNodeInfo(info)
+        if (!isButtonForAccessibility) {
+            info.addAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK)
+        }
+    }
+
+    override fun performAccessibilityAction(action: Int, arguments: Bundle?): Boolean {
+        if (action == AccessibilityNodeInfo.ACTION_CLICK && !isButtonForAccessibility) {
+            // Replicate the behavior from onInterceptTouchEvent for a11y clicks.
+            when (model.viewInfo.tapEffect) {
+                TapEffect.Default -> triggerDefaultAnimation()
+                TapEffect.None -> Unit
+            }
+            performClick()
+            return true
+        }
+        return super.performAccessibilityAction(action, arguments)
+    }
 
     private fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean {
         return findTargetDescendant(view) { it.isClickable && it.isEnabled } != null
