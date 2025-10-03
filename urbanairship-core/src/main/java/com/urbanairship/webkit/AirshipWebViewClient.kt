@@ -120,7 +120,7 @@ public constructor(
      *
      * @param webView The web view.
      */
-    internal fun onClose(webView: WebView) {
+    public open fun onClose(webView: WebView) {
         var handled = false
         for (listener in listeners) {
             handled = handled || listener.onClose(webView)
