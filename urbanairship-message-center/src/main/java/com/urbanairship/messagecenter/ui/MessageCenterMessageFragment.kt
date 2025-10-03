@@ -49,6 +49,15 @@ public open class MessageCenterMessageFragment(
     /** Message deletion listener. */
     public var onMessageDeletedListener: OnMessageDeletedListener? = null
 
+    /** Listener interface for message closure. */
+    public fun interface OnMessageCloseListener {
+        /** Called when a message requests to be closed. */
+        public fun onCloseMessage()
+    }
+
+    /** Message close listener. */
+    public var onMessageCloseListener: OnMessageCloseListener? = null
+
     private var collapseToolbar: CollapsingToolbarLayout? = null
 
     override fun onGetLayoutInflater(savedInstanceState: Bundle?): LayoutInflater {
@@ -80,6 +89,10 @@ public open class MessageCenterMessageFragment(
 
     override fun onMessageLoadError(error: MessageViewState.Error.Type) {
         setToolbarTitle(null)
+    }
+
+    override fun onCloseMessage() {
+        onMessageCloseListener?.onCloseMessage()
     }
 
     /** Sets the toolbar title. */

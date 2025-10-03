@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.13.3 - September 26, 2025
+Patch release that fixes an issue with handling `uairship://close` in Message Center and improves Scene accessibility.
+
+### Changes
+- Fixed handling of `uairship://close` links in Message Center
+- Improved accessibility for Scene pager indicators
+- Improved `DeferredResult` logging
+ 
 ## Version 19.13.2 - September 17, 2025
 Patch release that adds more logs to the deferred schedules preparing process.
 

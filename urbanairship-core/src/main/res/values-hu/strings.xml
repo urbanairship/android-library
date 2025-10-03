@@ -92,6 +92,9 @@
     <string name="ua_play">Lejátszás</string>
     <string name="ua_pause">Szünet</string>
     <string name="ua_stop">Leállítás</string>
+    <string name="ua_close">Bezárás</string>
+    <string name="ua_mute">Némítás</string>
+    <string name="ua_unmute">Némítás feloldása</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Bezárás</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Hiba az űrlap feldolgozása során. Kérjük, próbálja újra</string>
+    <string name="ua_required_field">* Kötelező</string>
+    <string name="ua_invalid_form_message">A folytatáshoz javítsa ki az érvénytelen mezőket</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Választógomb-csoport</string>

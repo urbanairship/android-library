@@ -91,6 +91,9 @@
     <string name="ua_play">再生</string>
     <string name="ua_pause">一時停止</string>
     <string name="ua_stop">停止</string>
+    <string name="ua_close">閉じる</string>
+    <string name="ua_mute">ミュート</string>
+    <string name="ua_unmute">ミュート解除</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">閉じる</string>
@@ -104,6 +107,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">フォームの処理中にエラーが発生しました。もう一度お試しください</string>
+    <string name="ua_required_field">* 必須</string>
+    <string name="ua_invalid_form_message">続行するには、無効なフィールドを修正してください</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">ラジオグループ</string>

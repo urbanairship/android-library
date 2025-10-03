@@ -25,11 +25,9 @@ internal class PagerIndicatorView(
         orientation = HORIZONTAL
         gravity = Gravity.CENTER
 
-        if (model.announcePage) {
-            isFocusable = true
-            isFocusableInTouchMode = true
-            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
-        }
+        isFocusable = false
+        isFocusableInTouchMode = false
+        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
 
         model.listener = object : PagerIndicatorModel.Listener {
             private var itemsCount = 0

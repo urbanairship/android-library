@@ -92,6 +92,9 @@
     <string name="ua_play">Spill av</string>
     <string name="ua_pause">Pause</string>
     <string name="ua_stop">Stopp</string>
+    <string name="ua_close">Lukk</string>
+    <string name="ua_mute">Demp</string>
+    <string name="ua_unmute">Opphev demping</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Lukk</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Feil ved behandling av skjema. Vennligst prøv igjen</string>
+    <string name="ua_required_field">* Obligatorisk</string>
+    <string name="ua_invalid_form_message">Rett opp de ugyldige feltene for å fortsette</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Radiogruppe</string>

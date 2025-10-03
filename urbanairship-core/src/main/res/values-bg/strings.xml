@@ -92,6 +92,9 @@
     <string name="ua_play">Пусни</string>
     <string name="ua_pause">Пауза</string>
     <string name="ua_stop">Спри</string>
+    <string name="ua_close">Затвори</string>
+    <string name="ua_mute">Заглуши</string>
+    <string name="ua_unmute">Включи звука</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Затвори</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Грешка при обработка на формуляра. Моля, опитайте отново</string>
+    <string name="ua_required_field">* Задължително</string>
+    <string name="ua_invalid_form_message">Моля, коригирайте невалидните полета, за да продължите</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Радио група</string>

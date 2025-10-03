@@ -94,6 +94,9 @@
     <string name="ua_play">Predvajaj</string>
     <string name="ua_pause">Pavziraj</string>
     <string name="ua_stop">Ustavi</string>
+    <string name="ua_close">Zapri</string>
+    <string name="ua_mute">Izklopi zvok</string>
+    <string name="ua_unmute">Vklopi zvok</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Zapri</string>
@@ -107,6 +110,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Napaka pri obdelavi obrazca. Poskusite znova</string>
+    <string name="ua_required_field">* Obvezno</string>
+    <string name="ua_invalid_form_message">Popravite neveljavna polja, da nadaljujete</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Radijska skupina</string>

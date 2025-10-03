@@ -93,6 +93,9 @@
     <string name="ua_play">Redă</string>
     <string name="ua_pause">Pauză</string>
     <string name="ua_stop">Oprește</string>
+    <string name="ua_close">Închide</string>
+    <string name="ua_mute">Dezactivează sunetul</string>
+    <string name="ua_unmute">Activează sunetul</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Închide</string>
@@ -106,6 +109,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Eroare la procesarea formularului. Vă rugăm să încercați din nou</string>
+    <string name="ua_required_field">* Obligatoriu</string>
+    <string name="ua_invalid_form_message">Corectați câmpurile nevalide pentru a continua</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Grup de butoane radio</string>

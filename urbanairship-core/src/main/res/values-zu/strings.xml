@@ -92,6 +92,9 @@
     <string name="ua_play">Dlala</string>
     <string name="ua_pause">Misa</string>
     <string name="ua_stop">Yeka</string>
+    <string name="ua_close">Vala</string>
+    <string name="ua_mute">Thulisa</string>
+    <string name="ua_unmute">Susa ukuthulisa</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Vala</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Iphutha lokuqhubeka lokuhlela ifomu. Sicela uzame futhi</string>
+    <string name="ua_required_field">* Kuyadingeka</string>
+    <string name="ua_invalid_form_message">Sicela ulungise izinkambu ezingavumelekile ukuze uqhubeke</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Iqoqo lerediyo</string>

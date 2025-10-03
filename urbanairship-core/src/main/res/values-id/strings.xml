@@ -92,6 +92,9 @@
     <string name="ua_play">Putar</string>
     <string name="ua_pause">Jeda</string>
     <string name="ua_stop">Berhenti</string>
+    <string name="ua_close">Tutup</string>
+    <string name="ua_mute">Bisukan</string>
+    <string name="ua_unmute">Bunyikan</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Tutup</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Kesalahan memproses formulir. Silakan coba lagi</string>
+    <string name="ua_required_field">* Wajib diisi</string>
+    <string name="ua_invalid_form_message">Perbaiki kolom yang tidak valid untuk melanjutkan</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Grup radio</string>

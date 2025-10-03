@@ -92,6 +92,9 @@
     <string name="ua_play">Toista</string>
     <string name="ua_pause">Tauko</string>
     <string name="ua_stop">Pysäytä</string>
+    <string name="ua_close">Sulje</string>
+    <string name="ua_mute">Mykistä</string>
+    <string name="ua_unmute">Poista mykistys</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Sulje</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Virhe lomakkeen käsittelyssä. Yritä uudelleen</string>
+    <string name="ua_required_field">* Pakollinen</string>
+    <string name="ua_invalid_form_message">Korjaa virheelliset kentät jatkaaksesi</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Valintanapit</string>

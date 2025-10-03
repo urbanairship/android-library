@@ -40,6 +40,9 @@ public open class MessageFragment @JvmOverloads constructor(
 
         /** Called when the message load fails. */
         public fun onMessageLoadError(error: MessageViewState.Error.Type)
+
+        /** Called when the message requests to be closed. */
+        public fun onCloseMessage()
     }
 
     /** Listener for `MessageFragment` events. */
@@ -103,6 +106,11 @@ public open class MessageFragment @JvmOverloads constructor(
                 this@MessageFragment.onMessageLoadError(error)
                 listener?.onMessageLoadError(error)
             }
+
+            override fun onCloseMessage() {
+                this@MessageFragment.onCloseMessage()
+                listener?.onCloseMessage()
+            }
         }
 
         if (savedInstanceState == null) {
@@ -152,16 +160,21 @@ public open class MessageFragment @JvmOverloads constructor(
      *
      * Subclasses can override this method to perform additional actions when a message is loaded.
      */
-    protected open fun onMessageLoaded(message: Message) {
-    }
+    protected open fun onMessageLoaded(message: Message) {}
 
     /**
      * Called when a message load fails.
      *
      * Subclasses can override this method to perform additional actions when a message load fails.
      */
-    protected open fun onMessageLoadError(error: MessageViewState.Error.Type) {
-    }
+    protected open fun onMessageLoadError(error: MessageViewState.Error.Type) {}
+
+    /**
+     * Called when a message requests to be closed.
+     *
+     * Subclasses can override this method to perform additional actions when a message requests to be closed.
+     */
+    protected open fun onCloseMessage() {}
 
     public companion object {
         /** Argument key to specify the Message ID to display. */

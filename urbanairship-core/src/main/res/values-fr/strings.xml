@@ -93,6 +93,9 @@
     <string name="ua_play">Lancer</string>
     <string name="ua_pause">Mettre en pause</string>
     <string name="ua_stop">Arrêter</string>
+    <string name="ua_close">Fermer</string>
+    <string name="ua_mute">Désactiver le son</string>
+    <string name="ua_unmute">Activer le son</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Fermer</string>
@@ -106,6 +109,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Erreur lors du traitement du formulaire. Veuillez réessayer</string>
+    <string name="ua_required_field">* Obligatoire</string>
+    <string name="ua_invalid_form_message">Veuillez corriger les champs non valides pour continuer</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Groupe de boutons radio</string>

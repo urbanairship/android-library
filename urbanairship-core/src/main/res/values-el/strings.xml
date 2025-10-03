@@ -92,6 +92,9 @@
     <string name="ua_play">Αναπαραγωγή</string>
     <string name="ua_pause">Παύση</string>
     <string name="ua_stop">Στοπ</string>
+    <string name="ua_close">Κλείσιμο</string>
+    <string name="ua_mute">Σίγαση</string>
+    <string name="ua_unmute">Κατάργηση σίγασης</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Κλείσιμο</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Σφάλμα επεξεργασίας φόρμας. Παρακαλώ δοκιμάστε ξανά</string>
+    <string name="ua_required_field">* Υποχρεωτικό</string>
+    <string name="ua_invalid_form_message">Διορθώστε τα μη έγκυρα πεδία για να συνεχίσετε</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Ομάδα επιλογών</string>

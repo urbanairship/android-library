@@ -92,6 +92,9 @@
     <string name="ua_play">Spielen</string>
     <string name="ua_pause">Pausieren</string>
     <string name="ua_stop">Stoppen</string>
+    <string name="ua_close">Schließen</string>
+    <string name="ua_mute">Stummschalten</string>
+    <string name="ua_unmute">Stummschaltung aufheben</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Schließen</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Fehler bei der Verarbeitung des Formulars. Bitte versuchen Sie es erneut</string>
+    <string name="ua_required_field">* Erforderlich</string>
+    <string name="ua_invalid_form_message">Bitte korrigieren Sie die ungültigen Felder, um fortzufahren</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Optionsfeldgruppe</string>

@@ -92,6 +92,9 @@
     <string name="ua_play">Esita</string>
     <string name="ua_pause">Paus</string>
     <string name="ua_stop">Peata</string>
+    <string name="ua_close">Sulge</string>
+    <string name="ua_mute">Vaigista</string>
+    <string name="ua_unmute">Lülita heli sisse</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Sulge</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Viga vormi töötlemisel. Palun proovige uuesti</string>
+    <string name="ua_required_field">* Nõutav</string>
+    <string name="ua_invalid_form_message">Jätkamiseks parandage vigased väljad</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Raadionuppude rühm</string>

@@ -94,6 +94,9 @@
     <string name="ua_play">Prehrať</string>
     <string name="ua_pause">Pauza</string>
     <string name="ua_stop">Zastaviť</string>
+    <string name="ua_close">Zavrieť</string>
+    <string name="ua_mute">Stlmiť</string>
+    <string name="ua_unmute">Zapnúť zvuk</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Zavrieť</string>
@@ -107,6 +110,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Chyba pri spracovaní formulára. Skúste to znova</string>
+    <string name="ua_required_field">* Povinné</string>
+    <string name="ua_invalid_form_message">Ak chcete pokračovať, opravte neplatné polia</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Skupina prepínačov</string>

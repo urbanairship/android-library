@@ -37,6 +37,8 @@ public class MessageView @JvmOverloads constructor(
         public fun onMessageLoadError(error: MessageViewState.Error.Type)
         /** Called when the retry button is clicked. */
         public fun onRetryClicked()
+        /** Called when the message web view requests to be closed. */
+        public fun onCloseMessage()
     }
 
     /** Listener for `MessageView` events. */
@@ -81,6 +83,10 @@ public class MessageView @JvmOverloads constructor(
                     if (message != null && failingUrl != null && failingUrl == message?.bodyUrl) {
                         error = errorCode
                     }
+                }
+
+                override fun onClose(webView: WebView) {
+                    listener?.onCloseMessage() ?: super.onClose(webView)
                 }
             })
 

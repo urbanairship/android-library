@@ -106,6 +106,9 @@
     <string name="ua_play">Play</string>
     <string name="ua_pause">Pause</string>
     <string name="ua_stop">Stop</string>
+    <string name="ua_close">Close</string>
+    <string name="ua_mute">Mute</string>
+    <string name="ua_unmute">Unmute</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Close</string>
@@ -119,6 +122,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Error processing form. Please try again</string>
+    <string name="ua_required_field">* Required</string>
+    <string name="ua_invalid_form_message">Please fix the invalid fields to continue</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Radio group</string>

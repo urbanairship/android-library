@@ -93,6 +93,9 @@
     <string name="ua_play">Atskaņot</string>
     <string name="ua_pause">Pauze</string>
     <string name="ua_stop">Apturēt</string>
+    <string name="ua_close">Aizvērt</string>
+    <string name="ua_mute">Izslēgt skaņu</string>
+    <string name="ua_unmute">Ieslēgt skaņu</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Aizvērt</string>
@@ -106,6 +109,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Kļūda, apstrādājot veidlapu. Lūdzu, mēģiniet vēlreiz</string>
+    <string name="ua_required_field">* Obligāts</string>
+    <string name="ua_invalid_form_message">Lūdzu, labojiet nederīgos laukus, lai turpinātu</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Radio grupa</string>

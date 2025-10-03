@@ -92,6 +92,9 @@
     <string name="ua_play">Oynat</string>
     <string name="ua_pause">Duraklat</string>
     <string name="ua_stop">Durdur</string>
+    <string name="ua_close">Kapat</string>
+    <string name="ua_mute">Sesi kapat</string>
+    <string name="ua_unmute">Sesi aç</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">Kapat</string>
@@ -105,6 +108,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">Form işlenirken hata oluştu. Lütfen tekrar deneyin</string>
+    <string name="ua_required_field">* Zorunlu</string>
+    <string name="ua_invalid_form_message">Devam etmek için geçersiz alanları düzeltin</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">Radyo grubu</string>

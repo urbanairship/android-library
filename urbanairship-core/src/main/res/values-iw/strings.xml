@@ -94,6 +94,9 @@
     <string name="ua_play">לנגן</string>
     <string name="ua_pause">עצור</string>
     <string name="ua_stop">עצור</string>
+    <string name="ua_close">סגור</string>
+    <string name="ua_mute">השתק</string>
+    <string name="ua_unmute">בטל השתקה</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">סגור</string>
@@ -107,6 +110,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">שגיאה בעיבוד הטופס. אנא נסה שוב</string>
+    <string name="ua_required_field">* שדה חובה</string>
+    <string name="ua_invalid_form_message">תקן את השדות הלא חוקיים כדי להמשיך</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">קבוצת רדיו</string>

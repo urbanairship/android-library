@@ -91,6 +91,9 @@
     <string name="ua_play">เล่น</string>
     <string name="ua_pause">หยุดชั่วคราว</string>
     <string name="ua_stop">หยุด</string>
+    <string name="ua_close">ปิด</string>
+    <string name="ua_mute">ปิดเสียง</string>
+    <string name="ua_unmute">เปิดเสียง</string>
 
     <!-- Icon button accessibility labels -->
     <string name="ua_icon_button_close">ปิด</string>
@@ -104,6 +107,8 @@
     
     <!-- Form processing -->
     <string name="ua_form_processing_error">ข้อผิดพลาดในการประมวลผลฟอร์ม กรุณาลองอีกครั้ง</string>
+    <string name="ua_required_field">* จำเป็น</string>
+    <string name="ua_invalid_form_message">โปรดแก้ไขฟิลด์ที่ไม่ถูกต้องเพื่อดำเนินการต่อ</string>
     
     <!-- Accessibility -->
     <string name="ua_accessibility_radio_group">กลุ่มปุ่มตัวเลือก</string>
