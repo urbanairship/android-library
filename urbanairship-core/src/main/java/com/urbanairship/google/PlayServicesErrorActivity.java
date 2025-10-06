@@ -71,7 +71,7 @@ public class PlayServicesErrorActivity extends FragmentActivity {
     protected void onStop() {
         super.onStop();
 
-        if (isFinishing()) {
+        if (isFinishing() && UAirship.isFlying()) {
             // Check if we still have an error
             int error = GooglePlayServicesUtilWrapper.isGooglePlayServicesAvailable(this);
             if (error == ConnectionResult.SUCCESS && UAirship.shared().getPushManager().isPushEnabled()) {
