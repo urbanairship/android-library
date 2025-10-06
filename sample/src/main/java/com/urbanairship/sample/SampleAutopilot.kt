@@ -42,11 +42,21 @@ class SampleAutopilot : Autopilot() {
 
         NotificationManagerCompat.from(context).createNotificationChannel(sportsChannel)
 
+        val deliveryChannel =
+            NotificationChannelCompat.Builder("delivery", NotificationManagerCompat.IMPORTANCE_HIGH)
+                .setDescription("Delivery updates!")
+                .setName("Delivery")
+                .setVibrationEnabled(false)
+                .build()
+
+        NotificationManagerCompat.from(context).createNotificationChannel(deliveryChannel)
+
         // Register handlers for Live Updates.
         with(LiveUpdateManager.shared()) {
             register("sports", SampleLiveUpdate())
             register("sports-async", SampleAsyncLiveUpdate())
             register("medals-widget", SampleAppWidgetLiveUpdate())
+            register("delivery", SampleDeliveryLiveUpdate())
         }
 
         MessageCenter.shared().setOnShowMessageCenterListener { messageId: String? ->
