@@ -104,7 +104,6 @@ public class UAirship private constructor(private val airship: Airship) {
         public val applicationContext: Context
             get() = Airship.applicationContext
 
-        // PROXY COMPANION METHODS
         @JvmStatic
         @Throws(IllegalStateException::class)
         public fun shared(): UAirship = UAirship(Airship.shared())
@@ -151,8 +150,8 @@ public class UAirship private constructor(private val airship: Airship) {
             options: AirshipConfigOptions?,
             readyCallback: OnReadyCallback?
         ) {
-            Airship.takeOff(application, options, readyCallback?.let { cb ->
-                Airship.OnReadyCallback { airship -> cb.onAirshipReady(UAirship(airship)) }
+            Airship.takeOff(application, options, readyCallback?.let { callback ->
+                Airship.OnReadyCallback { airship -> callback.onAirshipReady(UAirship(airship)) }
             })
         }
 
