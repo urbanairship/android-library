@@ -6,7 +6,7 @@
 
     <fragment
         android:id="@+id/inboxFragment"
-        android:name="com.urbanairship.sample.inbox.InboxFragment"
+        android:name="com.urbanairship.devapp.inbox.InboxFragment"
         android:label="@string/inbox" >
         <deepLink
             android:id="@+id/inboxMessageDeepLink"

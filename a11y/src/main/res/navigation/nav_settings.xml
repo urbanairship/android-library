@@ -6,7 +6,7 @@
 
     <fragment
         android:id="@+id/settingsFragment"
-        android:name="com.urbanairship.sample.preference.SettingsFragment"
+        android:name="com.urbanairship.devapp.preference.SettingsFragment"
         android:label="@string/settings">
         <argument
             android:name="pref_center_id"

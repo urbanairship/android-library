@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace 'com.urbanairship.sample'
+    namespace 'com.urbanairship.devapp'
 
     compileSdk rootProject.compileSdkVersion
 

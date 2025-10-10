@@ -6,7 +6,7 @@
         app:iconSpaceReserved="false"
         app:title="@string/user_preference_category_title">
 
-        <com.urbanairship.sample.preference.NamedUserPreference
+        <com.urbanairship.devapp.preference.NamedUserPreference
             app:key="named user"
             app:iconSpaceReserved="false"
             app:persistent="false"

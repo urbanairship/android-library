@@ -87,8 +87,8 @@ mockk = '1.14.2'
 dokka = '2.0.0'
 
 # Navigation 3
-nav3Core = "1.0.0-alpha01"
-lifecycleViewmodelNav3 = "1.0.0-alpha01"
+nav3Core = "1.0.0-alpha10"
+lifecycleViewmodelNav3 = "1.0.0-alpha04"
 uiViewbinding = "1.9.1"
 fragmentCompose = "1.8.9"
 uiToolingPreview = "1.9.1"
