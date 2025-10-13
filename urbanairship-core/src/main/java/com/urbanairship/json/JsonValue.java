@@ -15,6 +15,7 @@ import org.json.JSONStringer;
 import org.json.JSONTokener;
 
 import java.lang.reflect.Array;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -782,6 +783,15 @@ public class JsonValue implements Parcelable, JsonSerializable {
             Double d = (Double) object;
             if (d.isInfinite() || d.isNaN()) {
                 throw new JsonException("Invalid Double value: " + d);
+            }
+
+            return new JsonValue(object);
+        }
+
+        if (object instanceof Number) {
+            double d = ((Number) object).doubleValue();
+            if (Double.isInfinite(d) || Double.isNaN(d)) {
+                throw new JsonException("Invalid number value: " + d);
             }
 
             return new JsonValue(object);

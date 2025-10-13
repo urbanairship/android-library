@@ -14,6 +14,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -230,6 +231,17 @@ public class JsonValueTest extends BaseTestCase {
 
         assertEquals(1.0d, JsonValue.wrap(1.0d).getDouble(0));
         assertTrue(JsonValue.wrap(1.0d).getValue() instanceof Double);
+    }
+
+    /**
+     * Test wrapping BigDecimals.
+     */
+    @Test
+    public void testWrapBigDecimal() throws JsonException {
+        BigDecimal bigDecimal = BigDecimal.valueOf(20.0);
+        // floats are converted to doubles
+        assertEquals(20.0d, JsonValue.wrap(bigDecimal).getDouble(0));
+        assertTrue(JsonValue.wrap(20.0d).getValue() instanceof Double);
     }
 
     /**
