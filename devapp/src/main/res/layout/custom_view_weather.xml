@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:maxHeight="250dp"
+    android:padding="16dp"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <TextView
+        android:id="@+id/location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Portland, OR"
+        android:textAppearance="@style/TextAppearance.Material3.DisplaySmall"
+        android:textColor="#000000"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:paddingBottom="16dp"
+        app:layout_constraintBottom_toTopOf="@id/temp_flow"
+        />
+
+    <androidx.constraintlayout.helper.widget.Flow
+        android:id="@+id/temp_flow"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+       app:layout_constraintTop_toBottomOf="@id/location"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/condition_flow"
+        app:layout_constraintWidth_percent="0.5"
+        android:orientation="vertical"
+        app:constraint_referenced_ids="temp_high,temp_low"
+        />
+
+    <androidx.constraintlayout.helper.widget.Flow
+        android:id="@+id/condition_flow"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/location"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/temp_flow"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintWidth_percent="0.5"
+        android:orientation="vertical"
+        app:constraint_referenced_ids="icon,condition"
+        />
+
+    <TextView
+        android:id="@+id/temp_high"
+        android:textAppearance="@style/TextAppearance.Material3.HeadlineLarge"
+        android:textColor="#000000"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="70°F"
+        />
+
+    <TextView
+        android:id="@+id/temp_low"
+        android:textAppearance="@style/TextAppearance.Material3.HeadlineMedium"
+        android:textColor="#000000"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="63°F"
+        />
+
+    <ImageView
+        android:id="@+id/icon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_thunderstorm_24"
+        />
+
+    <TextView
+        android:id="@+id/condition"
+        android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+        android:textColor="#000000"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stormy"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -15,6 +15,9 @@
     <string name="start_live_activity">Start Live Activity</string>
     <string name="thomas_layouts">Thomas Layouts</string>
 
+    <!-- Thomas Layouts -->
+    <string name="layout_viewer_title">Layout Viewer</string>
+
     <!-- Message Center Indicator -->
     <string name="view">View</string>
 
@@ -27,4 +30,12 @@
     <string name="live_update_team_foxes">Foxes</string>
     <string name="live_update_team_tigers">Tigers</string>
     <string name="live_update_vs">VS</string>
+
+    <!-- Thomas Layout -->
+    <string name="vanilla_activity_title">android.app.Activity</string>
+    <string name="activity_finish">finish activity</string>
+    <string name="layout_picker_label">Pick a layout file</string>
+    <string name="render_button_label">Render it!</string>
+    <string name="thomas_recent_title">Recent</string>
+
 </resources>

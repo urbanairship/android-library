@@ -1,0 +1,21 @@
+{
+    "display_type" : "banner",
+    "name" : "woot",
+    "source": "app-defined",
+    "display" : {
+        "background_color" : "#ffffff",
+        "border_radius" : 5,
+        "dismiss_button_color" : "#000000",
+        "body" : {
+            "alignment" : "center",
+            "color" : "#63aff2",
+            "font_family" : [
+                "sans-serif"
+            ],
+            "text" : "Text body, text body, text body, text body, text body"
+        },
+        "template" : "media_left",
+        "placement" : "bottom",
+        "duration" : 3.0
+    }
+}

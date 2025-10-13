@@ -74,6 +74,9 @@ landscapist-glide = '2.5.2'
 # LeakCanary (for dev/debug builds)
 leakcanary = '2.14'
 
+# Yaml
+snameYaml = '2.5'
+
 # Test
 google-truth = '1.1.3'
 junit = '4.13.2'
@@ -214,6 +217,8 @@ firebase-messaging = { module = "com.google.firebase:firebase-messaging", versio
 
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
 landscapist-glide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist-glide" }
+
+snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snameYaml" }
 
 leakcanary-android = { module = "com.squareup.leakcanary:leakcanary-android", version.ref = "leakcanary"}
 

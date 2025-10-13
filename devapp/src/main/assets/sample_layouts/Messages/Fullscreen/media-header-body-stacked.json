@@ -1,0 +1,48 @@
+{
+    "source": "app-defined",
+    "name": "myMessage",
+    "display_type": "fullscreen",
+    "display": {
+        "dismiss_button_color": "#00FF00",
+        "background_color": "#FF0000",
+        "button_layout": "joined",
+        "template": "media_header_body",
+        "media": {
+            "description": "Wide space",
+            "type": "image",
+            "url": "https://images.pexels.com/photos/207529/pexels-photo-207529.jpeg"
+        },
+        "heading": {
+            "text": "Media header body with stacked buttons no footer long header. Media header body with stacked buttons no footer long header.",
+            "color": "#A52A2A",
+            "size": 11
+        },
+        "body": {
+            "text": "short body text.",
+            "color": "#00FF00",
+            "size": 11
+        },
+        "buttons": [
+            {
+                "id": "button-one",
+                "label": {
+                    "text": "48p Dismiss",
+                    "color": "#0FFFFF",
+                    "size": 48
+                },
+                "background_color": "#0000FF"
+            },
+            {
+                "id": "button-two",
+                "label": {
+                    "text": "24p Cancel",
+                    "color": "#F0FFFF",
+                    "size": 24
+                },
+                "background_color": "#0000FF",
+                "border_radius": 10,
+                "behavior": "cancel"
+            }
+        ]
+    }
+}

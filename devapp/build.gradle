@@ -69,6 +69,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.viewmodelktx)
     implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.constraintlayout.compose)
     implementation(libs.androidx.navigation.fragment)
     implementation(libs.androidx.navigation.ui)
     implementation(libs.androidx.fragment.compose)
@@ -99,6 +100,7 @@ dependencies {
 
     // Airship Automation (In-App)
     implementation project(':urbanairship-automation')
+    implementation project(":urbanairship-automation-compose")
 
     // Airship Live Updates
     implementation project(':urbanairship-live-update')
@@ -112,8 +114,9 @@ dependencies {
     implementation libs.glide
     implementation libs.compose.ui.tooling.preview
 
-    // Testing-only dependencies
+    implementation libs.snakeyaml
 
+    // Testing-only dependencies
     // Espresso
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.androidx.test.espresso.contrib) {

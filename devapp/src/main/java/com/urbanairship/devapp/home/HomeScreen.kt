@@ -126,8 +126,8 @@ internal fun HomeScreen(
 
                     QuickSettingItem(
                         title = stringResource(R.string.thomas_layouts),
-                        subtitle = "Not implemented",
-                        onClick = {}
+                        subtitle = "Tap to preview layouts",
+                        onClick = { onNavigate(QuickAccess.ThomasLayoutsHome) }
                     )
                     HorizontalDivider()
 

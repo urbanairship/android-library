@@ -16,6 +16,7 @@ import com.urbanairship.devapp.home.HomeScreen
 import com.urbanairship.devapp.home.QuickAccess
 import com.urbanairship.devapp.inbox.InboxScreen
 import com.urbanairship.devapp.preferencecenter.PreferenceCenterScreen
+import com.urbanairship.devapp.thomas.ThomasLayoutNavigation
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,7 +37,8 @@ class AppRouterViewModel(
 
     private val deserializers: List<(String) -> Destination?> = listOf(
         TopLevelDestination::restore,
-        QuickAccess::restore
+        QuickAccess::restore,
+        ThomasLayoutNavigation::restore
     )
 
     private val backStacks: MutableStateFlow<Map<TopLevelDestination, SnapshotStateList<Destination>>>

@@ -1,0 +1,53 @@
+{
+    "source": "app-defined",
+    "name": "240515_CRM_CRMOther_Salvatore_Ferragamo_Afines - FINAL",
+    "display_type": "modal",
+    "display": {
+        "template": "media_header_body",
+        "background_color": "#F7F7F7",
+        "dismiss_button_color": "#000000",
+        "border_radius": 12,
+        "heading": {
+            "text": "UP TO 60 FREE  MINUTES",
+            "color": "#222222",
+            "alignment": "center",
+            "size": 20,
+            "style": ["bold"],
+            "font_family": ["sans-serif"]
+        },
+        "body": {
+            "text": "Share your invite code with your friends and receive up to 60 min of calls!",
+            "color": "#222222",
+            "alignment": "center",
+            "size": 16,
+            "font_family": ["sans-serif"]
+        },
+        "media": {
+            "url": "https://dl.asnapieu.com/binary/public/MeyaP1anT0yhEsDDaOrmWw/4ff29f47-6eaf-463e-b66c-f4619976e367",
+            "type": "image",
+            "description": "Image"
+        },
+        "buttons": [
+            {
+                "label": {
+                    "text": "I SHARE",
+                    "style": ["bold"],
+                    "color": "#FFFFFF",
+                    "font_family": ["sans-serif"],
+                    "size": 16
+                },
+                "id": "808b94dc-5e1e-4e1d-93cf-f74cd8cd4b29",
+                "actions": {
+                    "add_tags_action": {
+                        "device": ["click_inapp_referral_parrain"]
+                    },
+                    "deep_link_action": "libon://referrer"
+                },
+                "background_color": "#1CB877",
+                "border_color": "#1CB877",
+                "border_radius": 12,
+                "behavior": "cancel"
+            }
+        ]
+    }
+}

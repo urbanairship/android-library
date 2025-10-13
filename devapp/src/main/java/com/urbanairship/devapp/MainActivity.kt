@@ -1,7 +1,9 @@
 package com.urbanairship.devapp
 
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.os.Bundle
+import android.webkit.WebView
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -19,30 +21,23 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.NavEntry
-import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.urbanairship.android.layout.AirshipCustomViewManager
+import com.urbanairship.devapp.thomas.LayoutPreferenceManager
+import com.urbanairship.devapp.thomas.customviews.CustomAdView
+import com.urbanairship.devapp.thomas.customviews.CustomMapView
+import com.urbanairship.devapp.thomas.customviews.CustomWeatherView
+import com.urbanairship.devapp.thomas.customviews.CustomWeatherViewXml
+import com.urbanairship.devapp.thomas.customviews.SceneControllerCustomView
 import com.urbanairship.google.PlayServicesUtils.handleAnyPlayServicesError
 import com.urbanairship.google.PlayServicesUtils.isGooglePlayStoreAvailable
-import com.urbanairship.devapp.debug.DebugScreen
-import com.urbanairship.devapp.home.HomeScreen
-import com.urbanairship.devapp.inbox.InboxScreen
-import com.urbanairship.devapp.preferencecenter.PreferenceCenterScreen
 import AirshipTheme
-import kotlinx.serialization.Serializable
 
 /**
  * Main application entry point.
@@ -108,6 +103,26 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        LayoutPreferenceManager.init(this)
+
+        // Enable webview debugging via Chrome for debug builds.
+        if (0 != applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) {
+            WebView.setWebContentsDebuggingEnabled(true)
+        }
+
+        // Register custom XML views
+        AirshipCustomViewManager.register("weather_custom_view_xml") { data ->
+            CustomWeatherViewXml(this).apply {
+                bind(data)
+            }
+        }
+
+        // Register custom composable views
+        AirshipCustomViewManager.register("weather_custom_view", CustomWeatherView())
+        AirshipCustomViewManager.register("ad_custom_view", CustomAdView())
+        AirshipCustomViewManager.register("map_custom_view", CustomMapView())
+        AirshipCustomViewManager.register("scene_controller_test", SceneControllerCustomView())
     }
 
     override fun onPostCreate(savedInstanceState: Bundle?) {
