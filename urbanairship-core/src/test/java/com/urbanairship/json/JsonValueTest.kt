@@ -3,6 +3,7 @@ package com.urbanairship.json
 
 import android.os.Parcel
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import java.math.BigDecimal
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Assert
@@ -58,6 +59,18 @@ public class JsonValueTest {
 
         Assert.assertEquals(jsonObject.length(), jsonMap?.size())
     }
+
+    /**
+     * Test wrapping BigDecimals.
+     */
+    @Test
+    public fun testWrapBigDecimal() {
+        val bigDecimal = BigDecimal.valueOf(20.0);
+        // floats are converted to doubles
+        Assert.assertEquals(20.0, JsonValue.wrap(bigDecimal).getDouble(0.0), 0.01)
+        Assert.assertTrue(JsonValue.wrap(bigDecimal).value is Double)
+    }
+
 
     /**
      * Test wrapping a JSONArray.
@@ -220,7 +233,8 @@ public class JsonValueTest {
      */
     @Test
     public fun testWrapNull() {
-        Assert.assertTrue(JsonValue.wrap(`object` = null).isNull)
+        val nullString: String? = null
+        Assert.assertTrue(JsonValue.wrap(nullString).isNull)
     }
 
     /**

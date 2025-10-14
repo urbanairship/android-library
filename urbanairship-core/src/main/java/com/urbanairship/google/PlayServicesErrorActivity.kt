@@ -71,7 +71,7 @@ public class PlayServicesErrorActivity public constructor() : FragmentActivity()
     override fun onStop() {
         super.onStop()
 
-        if (isFinishing) {
+        if (isFinishing && Airship.isFlying) {
             // Check if we still have an error
             val error = isGooglePlayServicesAvailable(this)
             if (error == ConnectionResult.SUCCESS && Airship.shared().pushManager.isPushEnabled) {

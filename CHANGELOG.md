@@ -4,6 +4,19 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.13.5 - October 13, 2025
+Patch release that handles BigDecimal in our JSON parsing. This prevents parse exceptions if the default Android org.json package is replaced by the org.json maven package. 
+
+### Changes
+- Handle BigDecimal and other number values when parsing JSON from a string.
+
+## Version 19.13.4 - October 6, 2025
+Patch release that addresses an issue with handling Play Services errors before `takeOff` and fixes a Scene pager transition bug.
+
+### Changes
+- Updated `PlayServiceErrorActivity` to handle play services errors before `takeOff` is called.
+- Fixed Scene pager issue where tapping the scene during a transition from one page to another would interrupt the transition.
+
 ## Version 19.13.3 - September 26, 2025
 Patch release that fixes an issue with handling `uairship://close` in Message Center and improves Scene accessibility.
 

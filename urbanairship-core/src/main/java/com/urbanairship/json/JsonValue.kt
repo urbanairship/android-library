@@ -25,7 +25,7 @@ import org.json.JSONTokener
 public class JsonValue private constructor(
     /**
      * Gets the raw value of the JsonValue. Will be either a [String], [Boolean], [Long], [Double], [Integer],
-     * [JsonMap], [JsonArray], or null.
+     * [JsonMap], [JsonList], or null.
      */
     @JvmField public val value: Any?
 ) : Parcelable, JsonSerializable {
@@ -612,26 +612,26 @@ public class JsonValue private constructor(
          * Wraps any valid object into a [JsonValue]. If the object is unable to be wrapped, [JsonValue.NULL]
          * will be returned instead.
          *
-         * @param object The object to wrap.
+         * @param value The object to wrap.
          * @return The object wrapped in a [JsonValue] or [JsonValue.NULL].
          */
         @JvmStatic
-        public fun wrapOpt(`object`: Any?): JsonValue {
-            return wrap(`object`, NULL)
+        public fun wrapOpt(value: Any?): JsonValue {
+            return wrap(value, NULL)
         }
 
         /**
          * Wraps any valid object into a [JsonValue]. If the object is unable to be wrapped, the default
          * value will be returned. See [wrap] for rules on object wrapping.
          *
-         * @param object The object to wrap.
+         * @param value The object to wrap.
          * @param defaultValue The default value if the object is unable to be wrapped.
          * @return The object wrapped in a [JsonValue] or the default value if the object is unable to be wrapped.
          */
-        public fun wrap(`object`: Any?, defaultValue: JsonValue): JsonValue {
+        public fun wrap(value: Any?, defaultValue: JsonValue): JsonValue {
             return try {
-                wrap(`object`)
-            } catch (ex: JsonException) {
+                wrap(value)
+            } catch (_: JsonException) {
                 defaultValue
             }
         }
@@ -645,48 +645,48 @@ public class JsonValue private constructor(
          *  * [JSONObject.NULL] or null will result in [JsonValue.NULL].
          *  * Collections, arrays, [JSONArray] values will be wrapped into a [JsonList]
          *  * Maps with String keys will be wrapped into a [JsonMap].
-         *  * Strings, primitive wrapper objects, [JsonMaps], and [JsonLists] will be wrapped directly into a [JsonValue]
+         *  * Strings, primitive wrapper objects, [JsonMap], and [JsonList] will be wrapped directly into a [JsonValue]
          *  * Objects that implement [JsonSerializable] will return [JsonSerializable.toJsonValue] or [JsonValue.NULL].
          *  * JsonValues will be unmodified.
          *
          *
-         * @param object The object to wrap.
+         * @param value The object to wrap.
          * @return The object wrapped in a [JsonValue].
          * @throws JsonException If the object is not a supported type or contains an unsupported type.
          */
         @JvmStatic
         @Throws(JsonException::class)
-        public fun wrap(`object`: Any?): JsonValue {
-            if (`object` == null || `object` === JSONObject.NULL) {
+        public fun wrap(value: Any?): JsonValue {
+            if (value == null || value === JSONObject.NULL) {
                 return NULL
             }
 
-            if (`object` is JsonValue) {
-                return `object`
+            if (value is JsonValue) {
+                return value
             }
 
-            if (`object` is JsonMap || `object` is JsonList || `object` is Boolean || `object` is Int || `object` is Long || `object` is String) {
-                return JsonValue(`object`)
+            if (value is JsonMap || value is JsonList || value is Boolean || value is Int || value is Long || value is String) {
+                return JsonValue(value)
             }
 
-            if (`object` is JsonSerializable) {
-                return `object`.toJsonValue()
+            if (value is JsonSerializable) {
+                return value.toJsonValue()
             }
 
-            if (`object` is Byte || `object` is Short) {
-                return JsonValue((`object` as Number).toInt())
+            if (value is Byte || value is Short) {
+                return JsonValue((value as Number).toInt())
             }
 
-            if (`object` is Char) {
-                return JsonValue(`object`.toString())
+            if (value is Char) {
+                return JsonValue(value.toString())
             }
 
-            if (`object` is Float) {
-                return JsonValue((`object` as Number).toDouble())
+            if (value is Float) {
+                return JsonValue((value as Number).toDouble())
             }
 
-            if (`object` is Double) {
-                val d = `object`
+            if (value is Double) {
+                val d = value
                 if (d.isInfinite() || d.isNaN()) {
                     throw JsonException("Invalid Double value: $d")
                 }
@@ -694,25 +694,33 @@ public class JsonValue private constructor(
                 return JsonValue(d)
             }
 
+            if (value is Number) {
+                return JsonValue(value.toDouble())
+            }
+
+            if (value is java.lang.Number) {
+                return JsonValue(value.doubleValue())
+            }
+
             try {
-                if (`object` is JSONArray) {
-                    return wrapJSONArray(`object`)
+                if (value is JSONArray) {
+                    return wrapJSONArray(value)
                 }
 
-                if (`object` is JSONObject) {
-                    return wrapJSONObject(`object`)
+                if (value is JSONObject) {
+                    return wrapJSONObject(value)
                 }
 
-                if (`object` is Collection<*>) {
-                    return wrapCollection(`object`)
+                if (value is Collection<*>) {
+                    return wrapCollection(value)
                 }
 
-                if (`object`.javaClass.isArray) {
-                    return wrapArray(`object`)
+                if (value.javaClass.isArray) {
+                    return wrapArray(value)
                 }
 
-                if (`object` is Map<*, *>) {
-                    return wrapMap(`object`)
+                if (value is Map<*, *>) {
+                    return wrapMap(value)
                 }
             } catch (exception: JsonException) {
                 throw exception
@@ -720,7 +728,7 @@ public class JsonValue private constructor(
                 throw JsonException("Failed to wrap value.", exception)
             }
 
-            throw JsonException("Illegal object: $`object`")
+            throw JsonException("Illegal object: $value")
         }
 
         /**
