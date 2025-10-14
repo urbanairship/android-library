@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.urbanairship.Airship
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
@@ -17,7 +18,8 @@ import kotlinx.coroutines.flow.update
 /** Activity to display a message center */
 public class MessageCenterActivity: ComponentActivity() {
 
-    private val messageIdToOpen = MutableStateFlow<String?>(null)
+    private val _messageIdToOpen = MutableStateFlow<String?>(null)
+    private val messageIdToOpen = _messageIdToOpen.asStateFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -32,12 +34,14 @@ public class MessageCenterActivity: ComponentActivity() {
             return
         }
 
-        messageIdToOpen.update { MessageCenter.parseMessageId(intent) }
+        _messageIdToOpen.update { MessageCenter.parseMessageId(intent) }
 
         setContent {
+            val messageId = messageIdToOpen.collectAsStateWithLifecycle()
+
             MessageCenterTheme {
-                MessageCenterPanesView(
-                    messageIdToDisplay = messageIdToOpen.asStateFlow(),
+                MessageCenterScreen(
+                    state = rememberMessageCenterState(messageId = messageId.value),
                     onNavigateUp = { finish() }
                 )
             }
@@ -46,8 +50,9 @@ public class MessageCenterActivity: ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+
         MessageCenter.parseMessageId(intent)?.let { id ->
-            messageIdToOpen.update { id }
+            _messageIdToOpen.update { id }
         }
     }
 }

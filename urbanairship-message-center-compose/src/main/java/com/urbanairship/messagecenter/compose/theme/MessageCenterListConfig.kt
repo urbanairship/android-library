@@ -3,15 +3,12 @@ package com.urbanairship.messagecenter.compose.theme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.BottomAppBarDefaults
 import androidx.compose.material3.CheckboxColors
 import androidx.compose.material3.CheckboxDefaults
-import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -19,6 +16,7 @@ import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -40,7 +38,7 @@ public class MessageCenterListConfig constructor(
     public val overrideEmptyListMessage: (@Composable () -> Unit)? = null,
 
     /** Whether to show dividers between items in the Message Center list */
-    public val itemDividersEnabled: Boolean = true,
+    public val itemDividersEnabled: Boolean = false,
 
     /** Message Center list item divider inset start */
     public val itemDividerInset: Inset = Inset(),
@@ -80,32 +78,30 @@ public class MessageCenterListConfig constructor(
         public val showThumbnails: Boolean = true,
         /** Placeholder for messages, shown while loading or if no thumbnail is set */
         public val placeholderIcon: @Composable () -> Unit = {
-            Icon(
-                painter = painterResource(R.drawable.ua_ic_thumbnail_placeholder_36),
-                contentDescription = "Message")
+            Box(
+                modifier = Modifier.size(56.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Color.Gray.copy(alpha = 0.3f))
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ua_ic_thumbnail_placeholder_36),
+                    contentDescription = null,
+                    modifier = Modifier.size(36.dp).align(Alignment.Center)
+                )
+            }
         },
         public val unreadIndicator: @Composable (Boolean) -> Unit = { read ->
-            Box(Modifier.padding(top = 8.dp)) {
-                if (read) {
-                    Spacer(Modifier.size(14.dp))
-                } else {
-                    Box(
-                        modifier = Modifier
-                            .size(14.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary)
-                    )
-                }
-
+            if (!read) {
+                Box(
+                    modifier = Modifier
+                        .size(14.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                )
             }
         },
         public val checkBoxStyle: @Composable () -> CheckboxColors = { CheckboxDefaults.colors() },
-        public val padding: PaddingValues = PaddingValues(
-            start = 16.dp,
-            end = 16.dp,
-            top = 8.dp,
-            bottom = 8.dp
-        ),
+        public val padding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
         public val titleStyle: @Composable () -> TextStyle = { MaterialTheme.typography.titleMedium },
         public val subtitleStyle: @Composable () -> TextStyle = { MaterialTheme.typography.bodyMedium },
         public val dateStyle: @Composable () -> TextStyle = { MaterialTheme.typography.bodySmall },

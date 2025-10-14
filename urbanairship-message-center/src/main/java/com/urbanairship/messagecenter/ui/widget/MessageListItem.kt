@@ -49,7 +49,7 @@ public class MessageListItem @JvmOverloads constructor(
     defStyleAttr,
     defStyleRes
 ) {
-    private var showThumbnails: Boolean = false
+    private var showThumbnails: Boolean = true
     private var placeholderRes: Int = R.drawable.ua_message_item_thumbnail_placeholder
 
     private var boundMessage: Message? = null

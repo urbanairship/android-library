@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -29,6 +30,7 @@ import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.urbanairship.android.layout.AirshipCustomViewManager
+import com.urbanairship.devapp.AppRouterViewModel.TopLevelDestination
 import com.urbanairship.devapp.thomas.LayoutPreferenceManager
 import com.urbanairship.devapp.thomas.customviews.CustomAdView
 import com.urbanairship.devapp.thomas.customviews.CustomMapView
@@ -43,6 +45,21 @@ import AirshipTheme
  * Main application entry point.
  */
 class MainActivity : AppCompatActivity() {
+
+    fun TopLevelDestination.title(): String = when(this) {
+        TopLevelDestination.HOME -> "Home"
+        TopLevelDestination.MESSAGE -> "Messages"
+        TopLevelDestination.PREFERENCE_CENTER -> "Preferences"
+        TopLevelDestination.SETTINGS -> "Settings"
+    }
+
+    fun TopLevelDestination.icon(): ImageVector = when(this) {
+        TopLevelDestination.HOME -> Icons.Filled.Home
+        TopLevelDestination.MESSAGE -> Icons.Filled.MailOutline
+        TopLevelDestination.PREFERENCE_CENTER -> Icons.Filled.Notifications
+        TopLevelDestination.SETTINGS -> Icons.Filled.Settings
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         this.enableEdgeToEdge()
         super.onCreate(savedInstanceState)
@@ -60,81 +77,36 @@ class MainActivity : AppCompatActivity() {
                 Scaffold(
                     bottomBar = {
                         NavigationBar {
-                            AppRouterViewModel.TopLevelDestination.entries.forEach { item ->
-                                val selected = activeTab == item
-
+                            TopLevelDestination.entries.forEach { item ->
                                 NavigationBarItem(
-                                    selected = selected,
+                                    selected = activeTab == item,
                                     onClick = { appRouter.navigate(item) },
                                     label = { Text(text = item.title()) },
-                                    alwaysShowLabel = false,
-                                    icon = {
-                                        Icon(
-                                            imageVector = item.icon(),
-                                            contentDescription = item.title()
-                                        )
-                                    }
+                                    icon = { Icon(item.icon(), contentDescription = null) },
+                                    alwaysShowLabel = true,
                                 )
-
                             }
                         }
                     },
                 ) { innerPadding ->
-                    Box(
-                        modifier = Modifier
-                            .padding(bottom = innerPadding.calculateBottomPadding())
-                            .fillMaxSize()
-                    ) {
-                        NavDisplay(
-                            backStack = backstack,
-                            onBack = { appRouter.pop() },
-                            entryDecorators = listOf(
-                                // Add the default decorators for managing scenes and saving state
-                                rememberSceneSetupNavEntryDecorator(),
-                                rememberSavedStateNavEntryDecorator(),
-                                // Then add the view model store decorator
-                                rememberViewModelStoreNavEntryDecorator()
-                            ),
-                            entryProvider = { key ->
-                                appRouter.navigationEntry(key)
-                            })
-                    }
-
+                    NavDisplay(
+                        modifier = Modifier.fillMaxSize()
+                            .padding(innerPadding)
+                            .consumeWindowInsets(innerPadding),
+                        backStack = backstack,
+                        onBack = { appRouter.pop() },
+                        entryDecorators = listOf(
+                            // Add the default decorators for managing scenes and saving state
+                            rememberSceneSetupNavEntryDecorator(),
+                            rememberSavedStateNavEntryDecorator(),
+                            // Then add the view model store decorator
+                            rememberViewModelStoreNavEntryDecorator()
+                        ),
+                        entryProvider = appRouter::navigationEntry
+                    )
                 }
             }
         }
-
-        LayoutPreferenceManager.init(this)
-
-        // Enable webview debugging via Chrome for debug builds.
-        if (0 != applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE) {
-            WebView.setWebContentsDebuggingEnabled(true)
-        }
-
-        // Register custom XML views
-        AirshipCustomViewManager.register("weather_custom_view_xml") { data ->
-            CustomWeatherViewXml(this).apply {
-                bind(data)
-            }
-        }
-
-        // Register custom composable views
-        AirshipCustomViewManager.register("weather_custom_view", CustomWeatherView())
-        AirshipCustomViewManager.register("ad_custom_view", CustomAdView())
-        AirshipCustomViewManager.register("map_custom_view", CustomMapView())
-        AirshipCustomViewManager.register("scene_controller_test", SceneControllerCustomView())
-    }
-
-    override fun onPostCreate(savedInstanceState: Bundle?) {
-        super.onPostCreate(savedInstanceState)
-    }
-
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-    }
-
-    public override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
     }
 
     public override fun onResume() {
@@ -143,28 +115,6 @@ class MainActivity : AppCompatActivity() {
         // Handle any Google Play services errors
         if (isGooglePlayStoreAvailable(this)) {
             handleAnyPlayServicesError(this)
-        }
-    }
-
-    public override fun onPause() {
-        super.onPause()
-    }
-
-    fun AppRouterViewModel.TopLevelDestination.title(): String {
-        return when(this) {
-            AppRouterViewModel.TopLevelDestination.HOME -> "Home"
-            AppRouterViewModel.TopLevelDestination.MESSAGE -> "Messages"
-            AppRouterViewModel.TopLevelDestination.PREFERENCE_CENTER -> "Preferences"
-            AppRouterViewModel.TopLevelDestination.SETTINGS -> "Settings"
-        }
-    }
-
-    fun AppRouterViewModel.TopLevelDestination.icon(): ImageVector {
-        return when(this) {
-            AppRouterViewModel.TopLevelDestination.HOME -> Icons.Filled.Home
-            AppRouterViewModel.TopLevelDestination.MESSAGE -> Icons.Filled.MailOutline
-            AppRouterViewModel.TopLevelDestination.PREFERENCE_CENTER -> Icons.Filled.Notifications
-            AppRouterViewModel.TopLevelDestination.SETTINGS -> Icons.Filled.Settings
         }
     }
 }

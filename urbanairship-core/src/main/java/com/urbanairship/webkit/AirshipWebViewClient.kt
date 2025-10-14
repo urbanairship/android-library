@@ -65,7 +65,15 @@ public constructor(
     override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
         super.onReceivedError(view, request, error)
 
-        if (view != null && request != null && error != null) {
+        if (view == null || request == null || error == null) {
+            return
+        }
+
+        // onReceivedError is called for any resource on the page,
+        // but we only want to forward main frame errors to listeners.
+        // This matches the behavior of the deprecated onReceivedError
+        // method that we were previously overriding.
+        if (request.isForMainFrame) {
             for (listener in listeners) {
                 listener.onReceivedError(view, request, error)
             }

@@ -18,18 +18,18 @@ import com.urbanairship.devapp.databinding.FragmentPreferenceCenterBinding
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PreferenceCenterScreen(
-    modifier: Modifier = Modifier,
-    context: Context
-) {
-    Scaffold(topBar = {
-        TopAppBar(
-            title = {
-                Text(text = "Preference Center")
-            }
-        )
-    }, modifier = modifier) { paddingValues ->
-        Surface(Modifier.padding(paddingValues)) {
+fun PreferenceCenterScreen(modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text(text = "Preference Center") })
+        },
+        modifier = modifier
+    ) { paddingValues ->
+        Surface(
+            modifier = Modifier.padding(paddingValues)
+        ) {
             AndroidViewBinding(FragmentPreferenceCenterBinding::inflate) {
                 val fragmentManager = (context as FragmentActivity).supportFragmentManager
 

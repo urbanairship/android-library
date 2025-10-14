@@ -14,9 +14,9 @@ import androidx.navigation3.runtime.NavKey
 import com.urbanairship.devapp.debug.DebugScreen
 import com.urbanairship.devapp.home.HomeScreen
 import com.urbanairship.devapp.home.QuickAccess
-import com.urbanairship.devapp.inbox.InboxScreen
 import com.urbanairship.devapp.preferencecenter.PreferenceCenterScreen
 import com.urbanairship.devapp.thomas.ThomasLayoutNavigation
+import com.urbanairship.messagecenter.compose.ui.MessageCenterScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -159,10 +159,15 @@ class AppRouterViewModel(
                     HomeScreen(onNavigate)
                 }
                 MESSAGE -> NavEntry(this) {
-                    InboxScreen(onMessageSelected = {})
+                    // TODO: make it possible to open a specific message
+                    //  This should be doable by creating the MessageCenterState by
+                    //  calling rememberMessageCenterState with a messageId, which
+                    //  will highlight the message in the list and display it in the
+                    //  message view.
+                    MessageCenterScreen()
                 }
                 PREFERENCE_CENTER -> NavEntry(this) {
-                    PreferenceCenterScreen(context = LocalContext.current)
+                    PreferenceCenterScreen()
                 }
                 SETTINGS -> NavEntry(this) {
                     DebugScreen()

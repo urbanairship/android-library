@@ -18,7 +18,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
-        android:enableOnBackInvokedCallback="true" tools:targetApi="33">
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="33">
 
         <!-- Autopilot calls takeOff without the need to override the Application -->
         <meta-data
