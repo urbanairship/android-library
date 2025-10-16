@@ -37,7 +37,7 @@ internal class DebugManager(
 
     companion object {
         fun shared(): DebugManager {
-            return Airship.shared().requireComponent(DebugManager::class.java)
+            return Airship.requireComponent(DebugManager::class.java)
         }
     }
 

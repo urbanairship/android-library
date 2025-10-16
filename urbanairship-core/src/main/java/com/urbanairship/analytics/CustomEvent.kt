@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
+import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.Size
 import com.urbanairship.UALog
@@ -58,7 +59,7 @@ public class CustomEvent private constructor(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun getEventData(conversionData: ConversionData): JsonMap {
+    override fun getEventData(context: Context, conversionData: ConversionData): JsonMap {
         val data = JsonMap.newBuilder()
 
         val conversionSendId = conversionData.conversionSendId
@@ -161,7 +162,7 @@ public class CustomEvent private constructor(
      * @return The tracked custom event.
      */
     public fun track(): CustomEvent {
-        Airship.shared().analytics.recordCustomEvent(this)
+        Airship.analytics.recordCustomEvent(this)
         return this
     }
 
@@ -684,4 +685,101 @@ private fun String.isLengthValid(): Boolean {
 
 private fun JsonMap.sizeInBytes(): Int {
     return toJsonValue().toString().toByteArray().size
+}
+
+/**
+ * Creates a new [CustomEvent].
+ *
+ * @param name The event name.
+ * @param block A lambda function that configures the `Builder`.
+ * @return A new `CustomEvent` instance.
+ */
+@JvmSynthetic
+public fun customEvent(
+    name: String,
+    block: CustomEvent.Builder.() -> Unit
+): CustomEvent {
+    val builder = CustomEvent.newBuilder(name)
+    builder.block()
+    return builder.build()
+}
+
+/**
+ * Creates a new [CustomEvent] from a [MediaEventTemplate].
+ *
+ * @param type The media event type.
+ * @param properties The media event properties.
+ * @param block A lambda function that configures the `Builder`.
+ * @return A new `CustomEvent` instance.
+ */
+@JvmSynthetic
+@JvmOverloads
+public fun customEvent(
+    type: MediaEventTemplate.Type,
+    properties: MediaEventTemplate.Properties = MediaEventTemplate.Properties(),
+    block: CustomEvent.Builder.() -> Unit
+): CustomEvent {
+    val builder = CustomEvent.newBuilder(type, properties)
+    builder.block()
+    return builder.build()
+}
+
+/**
+ * Creates a new [CustomEvent] from a [AccountEventTemplate].
+ *
+ * @param type The account event type.
+ * @param properties The account event properties.
+ * @param block A lambda function that configures the `Builder`.
+ * @return A new `CustomEvent` instance.
+ */
+@JvmSynthetic
+@JvmOverloads
+public fun customEvent(
+    type: AccountEventTemplate.Type,
+    properties: AccountEventTemplate.Properties = AccountEventTemplate.Properties(),
+    block: CustomEvent.Builder.() -> Unit
+): CustomEvent {
+    val builder = CustomEvent.newBuilder(type, properties)
+    builder.block()
+    return builder.build()
+}
+
+/**
+ * Creates a new [CustomEvent] from a [RetailEventTemplate].
+ *
+ * @param type The retail event type.
+ * @param properties The retail event properties.
+ * @param block A lambda function that configures the `Builder`.
+ * @return A new `CustomEvent` instance.
+ */
+@JvmSynthetic
+@JvmOverloads
+public fun customEvent(
+    type: RetailEventTemplate.Type,
+    properties: RetailEventTemplate.Properties = RetailEventTemplate.Properties(),
+    block: CustomEvent.Builder.() -> Unit
+): CustomEvent {
+    val builder = CustomEvent.newBuilder(type, properties)
+    builder.block()
+    return builder.build()
+}
+
+/**
+ * Creates a new [CustomEvent] from a [SearchEventTemplate].
+ *
+ * @param type The search event type.
+ * @param properties The search event properties.
+ * @param block A lambda function that configures the `Builder`.
+ * @return A new `CustomEvent` instance.
+ */
+@JvmSynthetic
+@JvmOverloads
+public fun customEvent(
+    type: SearchEventTemplate.Type,
+    properties: SearchEventTemplate.Properties = SearchEventTemplate.Properties(),
+    block: CustomEvent.Builder.() -> Unit
+): CustomEvent {
+    val builder = CustomEvent.newBuilder(type, properties)
+    builder.block()
+    return builder.build()
 }

@@ -62,9 +62,9 @@ public class ModifyTagsAction internal constructor(
 ): Action() {
 
     public constructor() : this(
-        channelTagEditor = { Airship.shared().channel.editTags() },
-        channelTagGroupEditor = { Airship.shared().channel.editTagGroups() },
-        contactTagGroupEditor = { Airship.shared().contact.editTagGroups() },
+        channelTagEditor = { Airship.channel.editTags() },
+        channelTagGroupEditor = { Airship.channel.editTagGroups() },
+        contactTagGroupEditor = { Airship.contact.editTagGroups() },
     )
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {

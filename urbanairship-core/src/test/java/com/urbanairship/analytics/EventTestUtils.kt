@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
+import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.json.JsonMap
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -177,6 +178,6 @@ public object EventTestUtils {
      */
     public fun getEventData(event: Event): JsonMap {
         val conversionData = ConversionData(null, null, null)
-        return event.getEventData(conversionData)
+        return event.getEventData(ApplicationProvider.getApplicationContext(), conversionData)
     }
 }

@@ -414,7 +414,7 @@ public class PushMessage : Parcelable, JsonSerializable {
     internal fun isChannelIdNullOrMatching(): Boolean {
         val apid = data[EXTRA_APID]
         return if (apid != null) {
-            apid == Airship.shared().channel.id
+            apid == Airship.channel.id
         } else {
             true
         }

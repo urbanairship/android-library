@@ -83,8 +83,8 @@ internal class NamedUserViewModel: ViewModel() {
     val userId = mutableStateOf("")
 
     init {
-        Airship.shared {
-            userId.value = it.contact.namedUserId ?: ""
+        Airship.onReady {
+            userId.value = contact.namedUserId ?: ""
         }
     }
 
@@ -96,9 +96,9 @@ internal class NamedUserViewModel: ViewModel() {
         val update = userId.value.trim()
 
         if (update.isEmpty()) {
-            Airship.shared().contact.reset()
+            Airship.contact.reset()
         } else {
-            Airship.shared().contact.identify(update)
+            Airship.contact.identify(update)
         }
     }
 }

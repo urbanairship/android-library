@@ -99,7 +99,7 @@ internal class CreateSmsChannelViewModel: ViewModel() {
             return
         }
 
-        Airship.shared().contact.registerSms(msisdn.value, SmsRegistrationOptions.options(senderId.value))
+        Airship.contact.registerSms(msisdn.value, SmsRegistrationOptions.options(senderId.value))
     }
 }
 

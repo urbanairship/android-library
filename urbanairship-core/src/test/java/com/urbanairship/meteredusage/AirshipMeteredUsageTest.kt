@@ -7,6 +7,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.Airship
+import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.contacts.Contact
 import com.urbanairship.http.RequestResult
@@ -41,6 +42,7 @@ public class AirshipMeteredUsageTest {
     private val apiClient: MeteredUsageApiClient = mockk()
     private val mockJobDispatcher: JobDispatcher = mockk(relaxed = true)
     private val contact: Contact = mockk(relaxed = true)
+    private val channel: AirshipChannel = mockk(relaxed = true)
 
     private lateinit var eventsStore: EventsDao
     private lateinit var manager: AirshipMeteredUsage
@@ -57,6 +59,7 @@ public class AirshipMeteredUsageTest {
             store = eventsStore,
             client = apiClient,
             contact = contact,
+            channel = channel,
             jobDispatcher = mockJobDispatcher
         )
 
@@ -218,7 +221,7 @@ public class AirshipMeteredUsageTest {
     public fun testPerformJobDoesNothing(): TestResult = runTest {
         var jobInfo = makeJobInfo()
         // disabled in config
-        var jobResult = manager.onPerformJob(mockk(), jobInfo)
+        var jobResult = manager.onPerformJob(jobInfo)
         coVerify(exactly = 0) { apiClient.uploadEvents(any(), any()) }
         assertEquals(JobResult.SUCCESS, jobResult)
 
@@ -230,13 +233,13 @@ public class AirshipMeteredUsageTest {
 
         // invalid job id
         jobInfo = makeJobInfo(jobId = "invalid.job.id")
-        jobResult = manager.onPerformJob(mockk(), jobInfo)
+        jobResult = manager.onPerformJob(jobInfo)
         coVerify(exactly = 0) { apiClient.uploadEvents(any(), any()) }
         assertEquals(JobResult.SUCCESS, jobResult)
 
         // no stored events
         jobInfo = makeJobInfo()
-        jobResult = manager.onPerformJob(mockk(), jobInfo)
+        jobResult = manager.onPerformJob(jobInfo)
         coVerify(exactly = 0) { apiClient.uploadEvents(any(), any()) }
         assertEquals(JobResult.SUCCESS, jobResult)
     }
@@ -261,15 +264,12 @@ public class AirshipMeteredUsageTest {
 
         eventsStore.addEvent(event)
 
-        val airship: Airship = mockk()
-        val channel: AirshipChannel = mockk()
-        every { airship.channel } returns channel
         every { channel.id } returns "test-channel-id"
 
         every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns true
         coEvery { apiClient.uploadEvents(any(), any()) } returns RequestResult(200, null, null, null)
 
-        val jobResult = manager.onPerformJob(airship, makeJobInfo())
+        val jobResult = manager.onPerformJob(makeJobInfo())
         coVerify(exactly = 1) { apiClient.uploadEvents(listOf(event), "test-channel-id") }
         assertEquals(JobResult.SUCCESS, jobResult)
         assert(eventsStore.getAllEvents().isEmpty())
@@ -295,15 +295,12 @@ public class AirshipMeteredUsageTest {
 
         eventsStore.addEvent(event)
 
-        val airship: Airship = mockk()
-        val channel: AirshipChannel = mockk()
-        every { airship.channel } returns channel
         every { channel.id } returns "test-channel-id"
 
         every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns false
         coEvery { apiClient.uploadEvents(any(), any()) } returns RequestResult(200, null, null, null)
 
-        val jobResult = manager.onPerformJob(airship, makeJobInfo())
+        val jobResult = manager.onPerformJob(makeJobInfo())
         coVerify(exactly = 1) { apiClient.uploadEvents(listOf(event.withAnalyticsDisabled()), null) }
         assertEquals(JobResult.SUCCESS, jobResult)
         assert(eventsStore.getAllEvents().isEmpty())
@@ -329,15 +326,12 @@ public class AirshipMeteredUsageTest {
 
         eventsStore.addEvent(event)
 
-        val airship: Airship = mockk()
-        val channel: AirshipChannel = mockk()
-        every { airship.channel } returns channel
         every { channel.id } returns "test-channel-id"
 
         every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns false
         coEvery { apiClient.uploadEvents(any(), any()) } returns RequestResult(Throwable())
 
-        val jobResult = manager.onPerformJob(airship, makeJobInfo())
+        val jobResult = manager.onPerformJob(makeJobInfo())
         coVerify(exactly = 1) { apiClient.uploadEvents(listOf(event.withAnalyticsDisabled()), null) }
         assertEquals(JobResult.FAILURE, jobResult)
         assertEquals(1, eventsStore.getAllEvents().size)

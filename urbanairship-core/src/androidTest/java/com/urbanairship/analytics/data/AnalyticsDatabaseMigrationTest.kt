@@ -7,9 +7,7 @@ import androidx.room.testing.MigrationTestHelper
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
-import com.urbanairship.analytics.data.AnalyticsDatabase
 import com.urbanairship.json.JsonMap.Companion.newBuilder
-import java.io.IOException
 import org.junit.Assert
 import org.junit.Rule
 import org.junit.Test

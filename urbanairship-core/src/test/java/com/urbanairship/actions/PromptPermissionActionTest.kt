@@ -6,7 +6,6 @@ import android.os.Looper
 import androidx.core.os.bundleOf
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.actions.Action.Situation
-import com.urbanairship.base.Supplier
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionPromptFallback
@@ -27,7 +26,7 @@ public class PromptPermissionActionTest {
 
     private val mockPermissionManager: PermissionsManager = mockk()
     private val action = PromptPermissionAction(
-        permissionsManagerSupplier = { mockPermissionManager }
+        permissionsManagerProvider = { mockPermissionManager }
     )
 
     @Test

@@ -50,7 +50,7 @@ public class WalletLoadingActivity public constructor() : ThemedActivity() {
             try {
                 UALog.d("Runner starting")
 
-                val session = Airship.shared().runtimeConfig.requestSession
+                val session = Airship.runtimeConfig.requestSession
 
                 val request = Request(url, "GET", false)
 

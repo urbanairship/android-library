@@ -10,8 +10,9 @@ import com.urbanairship.PendingResult
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.TestApplication
 import com.urbanairship.Airship
+import com.urbanairship.Platform
+import com.urbanairship.PreferenceDataStore
 import com.urbanairship.analytics.Analytics.AnalyticsHeaderDelegate
 import com.urbanairship.analytics.data.EventManager
 import com.urbanairship.analytics.location.RegionEvent
@@ -55,7 +56,7 @@ public class AnalyticsTest {
     private val mockPermissionsManager: PermissionsManager = mockk(relaxed = true)
     private val mockEventFeed: AirshipEventFeed = mockk(relaxed = true)
 
-    private val dataStore = TestApplication.getApplication().getPreferenceDataStore()
+    private val dataStore = PreferenceDataStore.inMemoryStore(context)
     private val localeManager = LocaleManager(context, dataStore)
     private val executor = Executor { obj: Runnable -> obj.run() }
     private val runtimeConfig = TestAirshipRuntimeConfig()
@@ -173,7 +174,7 @@ public class AnalyticsTest {
                 AirshipEventData(
                     event.eventId,
                     analytics.sessionId,
-                    event.getEventData(ConversionData()).toJsonValue(),
+                    event.getEventData(context, ConversionData()).toJsonValue(),
                     event.type,
                     event.timeMilliseconds
                 ),
@@ -378,7 +379,7 @@ public class AnalyticsTest {
         every { mockEventManager.uploadEvents(any(), any()) } returns true
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
-        assertThat(analytics.onPerformJob(mockk(), jobInfo)).isEqualTo(JobResult.SUCCESS)
+        assertThat(analytics.onPerformJob( jobInfo)).isEqualTo(JobResult.SUCCESS)
 
         verify { mockEventManager.uploadEvents("some channel", any()) }
     }
@@ -392,7 +393,7 @@ public class AnalyticsTest {
         every { mockChannel.id } returns null
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
-        assertThat(analytics.onPerformJob(mockk(), jobInfo)).isEqualTo(JobResult.SUCCESS)
+        assertThat(analytics.onPerformJob(jobInfo)).isEqualTo(JobResult.SUCCESS)
 
         verify(exactly = 0) { mockEventManager.uploadEvents(any(), any()) }
     }
@@ -406,7 +407,7 @@ public class AnalyticsTest {
         every { mockChannel.id } returns "channel"
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
-        assertThat(analytics.onPerformJob(mockk(), jobInfo)).isEqualTo(JobResult.SUCCESS)
+        assertThat(analytics.onPerformJob(jobInfo)).isEqualTo(JobResult.SUCCESS)
 
         verify(exactly = 0) { mockEventManager.uploadEvents(any(), any()) }
     }
@@ -420,7 +421,7 @@ public class AnalyticsTest {
         every { mockEventManager.uploadEvents(any(), any()) } returns false
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
-        assertThat(analytics.onPerformJob(mockk(), jobInfo)).isEqualTo(JobResult.RETRY)
+        assertThat(analytics.onPerformJob(jobInfo)).isEqualTo(JobResult.RETRY)
 
         verify(exactly = 1) { mockEventManager.uploadEvents(any(), any()) }
     }
@@ -439,8 +440,8 @@ public class AnalyticsTest {
         val expectedHeaders = mapOf(
             "X-UA-Device-Family" to "android",
             "X-UA-Package-Name" to context.packageName,
-            "X-UA-Package-Version" to (Airship
-                .applicationContext
+            "X-UA-Package-Version" to (
+                context
                 .packageManager
                 .getPackageInfo(context.packageName, 0)
                 ?.versionName
@@ -450,7 +451,7 @@ public class AnalyticsTest {
             "X-UA-In-Production" to  runtimeConfig.configOptions.inProduction.toString(),
             "X-UA-Device-Model" to  Build.MODEL,
             "X-UA-Android-Version-Code" to  Build.VERSION.SDK_INT.toString(),
-            "X-UA-Lib-Version" to Airship.getVersion(),
+            "X-UA-Lib-Version" to Airship.version,
             "X-UA-Timezone" to TimeZone.getDefault().id,
             "X-UA-Locale-Language" to "en",
             "X-UA-Locale-Country" to "US",
@@ -462,7 +463,7 @@ public class AnalyticsTest {
         )
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
-        analytics.onPerformJob(mockk(), jobInfo)
+        analytics.onPerformJob(jobInfo)
 
         verify {
             mockEventManager.uploadEvents("channel", expectedHeaders)
@@ -475,10 +476,10 @@ public class AnalyticsTest {
     @Test
     public fun testAmazonDeviceFamily() {
         every { mockChannel.id } returns "channel"
-        runtimeConfig.setPlatform(Airship.Platform.AMAZON)
+        runtimeConfig.setPlatform(Platform.AMAZON)
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
-        analytics.onPerformJob(mockk(), jobInfo)
+        analytics.onPerformJob(jobInfo)
 
         verify {
             mockEventManager.uploadEvents("channel", match {
@@ -497,7 +498,7 @@ public class AnalyticsTest {
         every { mockChannel.id } returns "channel"
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
-        analytics.onPerformJob(mockk(), jobInfo)
+        analytics.onPerformJob(jobInfo)
 
         verify {
             mockEventManager.uploadEvents("channel", match {
@@ -517,7 +518,7 @@ public class AnalyticsTest {
         every { mockChannel.id } returns "channel"
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
-        analytics.onPerformJob(mockk(), jobInfo)
+        analytics.onPerformJob(jobInfo)
 
         verify {
             mockEventManager.uploadEvents("channel", match {
@@ -537,7 +538,7 @@ public class AnalyticsTest {
         every { mockChannel.id } returns "channel"
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
-        analytics.onPerformJob(mockk(), jobInfo)
+        analytics.onPerformJob(jobInfo)
 
         verify {
             mockEventManager.uploadEvents("channel", match {
@@ -568,7 +569,7 @@ public class AnalyticsTest {
         every { mockChannel.id } returns "channel"
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
-        analytics.onPerformJob(mockk(), jobInfo)
+        analytics.onPerformJob(jobInfo)
 
         verify {
             mockEventManager.uploadEvents("channel", match {
@@ -582,16 +583,16 @@ public class AnalyticsTest {
         every { mockChannel.id } returns "channel"
 
         every { mockPermissionsManager.configuredPermissions } returns setOf(Permission.LOCATION, Permission.DISPLAY_NOTIFICATIONS)
-        every { mockPermissionsManager.checkPermissionStatus(Permission.LOCATION) } returns PendingResult<PermissionStatus?>().apply {
+        every { mockPermissionsManager.checkPermissionStatusPendingResult(Permission.LOCATION) } returns PendingResult<PermissionStatus?>().apply {
             setResult(PermissionStatus.NOT_DETERMINED)
         }
 
-        every { mockPermissionsManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) } returns PendingResult<PermissionStatus?>().apply {
+        every { mockPermissionsManager.checkPermissionStatusPendingResult(Permission.DISPLAY_NOTIFICATIONS) } returns PendingResult<PermissionStatus?>().apply {
             setResult(PermissionStatus.GRANTED)
         }
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
-        analytics.onPerformJob(mockk(), jobInfo)
+        analytics.onPerformJob(jobInfo)
 
         verify {
             mockEventManager.uploadEvents("channel", match {
@@ -620,7 +621,7 @@ public class AnalyticsTest {
         })
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
-        analytics.onPerformJob(mockk(), jobInfo)
+        analytics.onPerformJob(jobInfo)
 
         verify {
             mockEventManager.uploadEvents("channel", match {
@@ -700,7 +701,7 @@ public class AnalyticsTest {
             mockEventFeed.emit(
                 AirshipEventFeed.Event.Analytics(
                     EventType.REGION_ENTER,
-                    regionEnter.getEventData(ConversionData(null, null, null)).toJsonValue(),
+                    regionEnter.getEventData(context, ConversionData(null, null, null)).toJsonValue(),
                     null
                 )
             )
@@ -715,7 +716,7 @@ public class AnalyticsTest {
             mockEventFeed.emit(
                 AirshipEventFeed.Event.Analytics(
                     EventType.REGION_EXIT,
-                    regionExit.getEventData(ConversionData(null, null, null)).toJsonValue(),
+                    regionExit.getEventData(context, ConversionData(null, null, null)).toJsonValue(),
                     null
                 )
             )

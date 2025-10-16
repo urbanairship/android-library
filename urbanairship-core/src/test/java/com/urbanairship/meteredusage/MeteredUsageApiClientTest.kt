@@ -77,7 +77,7 @@ public class MeteredUsageApiClientTest {
         assertEquals("POST", request.method)
         assertEquals(RequestAuth.GeneratedAppToken, request.auth)
         assertEquals(mapOf(
-            "X-UA-Lib-Version" to Airship.getVersion(),
+            "X-UA-Lib-Version" to Airship.version,
             "X-UA-Device-Family" to "android",
             "Content-Type" to "application/json",
             "X-UA-Channel-ID" to channelId,

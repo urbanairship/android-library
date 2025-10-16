@@ -13,36 +13,6 @@ import com.urbanairship.Airship
  * @hide
  */
 internal object NotificationChannelUtils {
-
-    /**
-     * Returns the provided channel if it exists or the default channel.
-     *
-     * @param channelId The notification channel.
-     * @param defaultChannel The default notification channel.
-     * @return The channelId if it exists, or the default channel.
-     */
-    @WorkerThread
-    fun getActiveChannel(channelId: String?, defaultChannel: String): String {
-        if (channelId == null) {
-            return defaultChannel
-        }
-
-        if (defaultChannel == channelId) {
-            return channelId
-        }
-
-        val registered = Airship.shared().pushManager.notificationChannelRegistry.getNotificationChannelSync(channelId)
-
-        if (registered == null) {
-            UALog.e(
-                "Notification channel $channelId does not exist. Falling back to $defaultChannel",
-            )
-            return defaultChannel
-        }
-
-        return channelId
-    }
-
     /**
      * Helper method to apply channel compat settings to a notification on Pre-O devices.
      *

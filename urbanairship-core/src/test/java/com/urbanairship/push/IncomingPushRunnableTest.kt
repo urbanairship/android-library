@@ -12,7 +12,6 @@ import androidx.core.os.bundleOf
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
-import com.urbanairship.TestApplication
 import com.urbanairship.TestPushProvider
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.job.JobDispatcher
@@ -49,12 +48,6 @@ public class IncomingPushRunnableTest {
         PushMessage.EXTRA_NOTIFICATION_TAG to "testNotificationTag"
     )
     private var message = PushMessage(pushBundle)
-    private var accengageMessage = PushMessage(
-        pushBundle = bundleOf(
-            "a4scontent" to "neat",
-            "a4sid" to 77
-        )
-    )
 
     private var testPushProvider = TestPushProvider()
     private var mockChannelRegistry: NotificationChannelRegistry = mockk(relaxed = true)
@@ -67,10 +60,9 @@ public class IncomingPushRunnableTest {
         every { notificationProvider } answers { this@IncomingPushRunnableTest.notificationProvider }
     }
 
-    private var notificationManager: NotificationManagerCompat = mockk(relaxed = true)
-    private var analytics: Analytics = mockk()
+    private val context = ApplicationProvider.getApplicationContext<Context>()
 
-    private var accengageNotificationProvider: TestNotificationProvider? = null
+    private var notificationManager: NotificationManagerCompat = mockk(relaxed = true)
 
     private var jobDispatcher: JobDispatcher = mockk(relaxed = true)
     private lateinit var pushRunnable: IncomingPushRunnable
@@ -79,10 +71,7 @@ public class IncomingPushRunnableTest {
 
     @Before
     public fun setup() {
-        TestApplication.getApplication().setPushManager(pushManager)
-        TestApplication.getApplication().setAnalytics(analytics)
-
-        pushRunnable = IncomingPushRunnable.Builder(TestApplication.getApplication())
+        pushRunnable = IncomingPushRunnable.Builder(context, { pushManager })
             .setProviderClass(testPushProvider.javaClass.toString())
             .setMessage(PushMessage(pushBundle))
             .setNotificationManager(notificationManager)
@@ -91,7 +80,7 @@ public class IncomingPushRunnableTest {
             .setActivityMonitor(activityMonitor)
             .build()
 
-        displayRunnable = IncomingPushRunnable.Builder(TestApplication.getApplication())
+        displayRunnable = IncomingPushRunnable.Builder(context, { pushManager })
             .setProviderClass(testPushProvider.javaClass.toString())
             .setMessage(PushMessage(pushBundle))
             .setNotificationManager(notificationManager)
@@ -153,7 +142,7 @@ public class IncomingPushRunnableTest {
         notificationProvider.notification = createNotification()
         notificationProvider.tag = "testNotificationTag"
 
-        pushRunnable = IncomingPushRunnable.Builder(TestApplication.getApplication())
+        pushRunnable = IncomingPushRunnable.Builder(context, { pushManager })
             .setProviderClass("wrong  class")
             .setMessage(PushMessage(pushBundle))
             .setLongRunning(true)
@@ -174,7 +163,7 @@ public class IncomingPushRunnableTest {
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
 
-        pushRunnable = IncomingPushRunnable.Builder(TestApplication.getApplication())
+        pushRunnable = IncomingPushRunnable.Builder(context, { pushManager })
             .setProviderClass("wrong  class")
             .setMessage(PushMessage(pushBundle))
             .setLongRunning(true)
@@ -217,7 +206,7 @@ public class IncomingPushRunnableTest {
         pushBundle.putString("com.urbanairship.foreground_display", "false")
         message = PushMessage(pushBundle)
 
-        pushRunnable = IncomingPushRunnable.Builder(TestApplication.getApplication())
+        pushRunnable = IncomingPushRunnable.Builder(context, { pushManager })
             .setProviderClass(testPushProvider.javaClass.toString())
             .setMessage(message)
             .setNotificationManager(notificationManager)
@@ -249,7 +238,7 @@ public class IncomingPushRunnableTest {
         pushBundle.putString("com.urbanairship.foreground_display", "true")
         message = PushMessage(pushBundle)
 
-        pushRunnable = IncomingPushRunnable.Builder(TestApplication.getApplication())
+        pushRunnable = IncomingPushRunnable.Builder(context, { pushManager })
             .setProviderClass(testPushProvider.javaClass.toString())
             .setMessage(message)
             .setNotificationManager(notificationManager)
@@ -276,7 +265,7 @@ public class IncomingPushRunnableTest {
         notificationProvider.tag = "testNotificationTag"
         message = PushMessage(pushBundle)
 
-        pushRunnable = IncomingPushRunnable.Builder(TestApplication.getApplication())
+        pushRunnable = IncomingPushRunnable.Builder(context, { pushManager })
             .setProviderClass(testPushProvider.javaClass.toString())
             .setMessage(message)
             .setNotificationManager(notificationManager)
@@ -545,7 +534,7 @@ public class IncomingPushRunnableTest {
 
         val message = PushMessage(pushBundle)
 
-        IncomingPushRunnable.Builder(TestApplication.getApplication())
+        IncomingPushRunnable.Builder(context, { pushManager })
             .setProviderClass(testPushProvider.javaClass.toString())
             .setMessage(message)
             .setNotificationManager(notificationManager)
@@ -566,7 +555,7 @@ public class IncomingPushRunnableTest {
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
 
-        notificationProvider.notification = NotificationCompat.Builder(TestApplication.getApplication())
+        notificationProvider.notification = NotificationCompat.Builder(context)
                 .setContentTitle("Test NotificationBuilder Title")
                 .setContentText("Test NotificationBuilder Text")
                 .setAutoCancel(true)
@@ -583,7 +572,7 @@ public class IncomingPushRunnableTest {
     }
 
     private fun createNotification(): Notification = NotificationCompat
-        .Builder(TestApplication.getApplication(), "some-channel")
+        .Builder(context, "some-channel")
         .setContentTitle("Test NotificationBuilder Title")
         .setContentText("Test NotificationBuilder Text")
         .setAutoCancel(true)

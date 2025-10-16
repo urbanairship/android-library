@@ -8,7 +8,6 @@ import androidx.core.os.bundleOf
 import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 import com.urbanairship.actions.ActionResult.Companion.newErrorResult
-import com.urbanairship.base.Supplier
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
@@ -43,13 +42,13 @@ import kotlinx.coroutines.launch
  * Default Registration Names: [DEFAULT_REGISTRY_NAME], [DEFAULT_REGISTRY_SHORT_NAME]
  */
 public open class PromptPermissionAction public constructor(
-    private val permissionsManagerSupplier: Supplier<PermissionsManager>
+    private val permissionsManagerProvider: () -> PermissionsManager
 ): Action() {
 
     private val scope = CoroutineScope(Dispatchers.Main.immediate)
 
     @Keep
-    public constructor() : this(Supplier<PermissionsManager> { Airship.shared().permissionsManager })
+    public constructor() : this({ Airship.permissionsManager })
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
         // Validate situation
@@ -84,7 +83,7 @@ public open class PromptPermissionAction public constructor(
 
     @Throws(ExecutionException::class, InterruptedException::class)
     protected fun prompt(args: Args, resultReceiver: ResultReceiver?) {
-        val permissionsManager = requireNotNull(permissionsManagerSupplier.get())
+        val permissionsManager = requireNotNull(permissionsManagerProvider())
 
         scope.launch {
             val before = permissionsManager.suspendingCheckPermissionStatus(args.permission)

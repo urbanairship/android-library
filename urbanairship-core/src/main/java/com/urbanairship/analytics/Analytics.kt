@@ -45,7 +45,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
-
 /**
  * This class is the primary interface to the Airship Analytics API.
  */
@@ -249,7 +248,7 @@ public constructor(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(jobInfo: JobInfo): JobResult {
         return when(jobInfo.action) {
             EventManager.ACTION_SEND -> {
                 if (!isEnabled) {
@@ -337,7 +336,7 @@ public constructor(
         val eventData = AirshipEventData(
             id = event.eventId,
             sessionId = sessionId,
-            body = event.getEventData(conversionData).toJsonValue(),
+            body = event.getEventData(context, conversionData).toJsonValue(),
             type = event.type,
             timeMs = event.timeMilliseconds
         )
@@ -468,6 +467,7 @@ public constructor(
      * Edit the currently stored associated identifiers.
      * Automatically calls [AssociatedIdentifiers.Editor.apply]
      */
+    @JvmSynthetic
     public fun editAssociatedIdentifiers(block: AssociatedIdentifiers.Editor.() -> Unit) {
         val editor = editAssociatedIdentifiers()
         block.invoke(editor)
@@ -552,7 +552,7 @@ public constructor(
             }
             for (permission: Permission in permissionsManager.configuredPermissions) {
                 try {
-                    val currentStatus = permissionsManager.checkPermissionStatus(permission).get()
+                    val currentStatus = permissionsManager.checkPermissionStatusPendingResult(permission).get()
                     if (currentStatus != null) {
                         headers["X-UA-Permission-" + permission.value] = currentStatus.value
                     }
@@ -568,7 +568,7 @@ public constructor(
 
             // Airship info
             headers["X-UA-Device-Family"] = runtimeConfig.platform.stringValue
-            headers["X-UA-Lib-Version"] = Airship.getVersion()
+            headers["X-UA-Lib-Version"] = Airship.version
             headers["X-UA-App-Key"] = runtimeConfig.configOptions.appKey
             headers["X-UA-In-Production"] = runtimeConfig.configOptions.inProduction.toString()
             headers["X-UA-Channel-ID"] = airshipChannel.id ?: ""

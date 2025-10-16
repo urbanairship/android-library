@@ -356,6 +356,7 @@ public class Contact internal constructor(
     /**
      * Edit the tags associated with this Contact. Automatically calls [TagGroupsEditor.apply].
      */
+    @JvmSynthetic
     public fun editTagGroups(block: TagGroupsEditor.() -> Unit) {
         val editor = editTagGroups()
         block(editor)
@@ -504,6 +505,7 @@ public class Contact internal constructor(
     /**
      * Edits the attributes associated with this channel. Automatically calls [AttributeEditor.apply].
      */
+    @JvmSynthetic
     public fun editAttributes(block: AttributeEditor.() -> Unit) {
         val editor = editAttributes()
         block.invoke(editor)
@@ -536,6 +538,7 @@ public class Contact internal constructor(
     /**
      * Edits the subscription lists associated with this Contact. Automatically calls [ScopedSubscriptionListEditor.apply].
      */
+    @JvmSynthetic
     public fun editSubscriptionLists(block: ScopedSubscriptionListEditor.() -> Unit) {
         val editor = editSubscriptionLists()
         block(editor)
@@ -547,7 +550,7 @@ public class Contact internal constructor(
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(jobInfo: JobInfo): JobResult {
         return if (ACTION_UPDATE_CONTACT == jobInfo.action) {
             val result = runBlocking { contactManager.performNextOperation() }
             return if (result) JobResult.SUCCESS else JobResult.FAILURE
@@ -561,9 +564,27 @@ public class Contact internal constructor(
         return subscriptionsProvider.updates.first()
     }
 
-    public val channelContacts: Flow<Result<List<ContactChannel>>> = contactChannelsProvider.updates
+    /**
+     * A flow of contact channels for the contact.
+     */
+    public val contactChannelsFlow: Flow<Result<List<ContactChannel>>> = contactChannelsProvider.updates
 
-    public val subscriptions: Flow<Result<Map<String, Set<Scope>>>> = subscriptionsProvider.updates
+    /**
+     * @suppress
+     */
+    @Deprecated("Use contactChannelsFlow instead", replaceWith = ReplaceWith("contactChannelsFlow"))
+    public val channelContacts: Flow<Result<List<ContactChannel>>> = contactChannelsFlow
+
+    /**
+     * A flow of subscription list updates for the contact.
+     */
+    public val subscriptionListsFlow: Flow<Result<Map<String, Set<Scope>>>> = subscriptionsProvider.updates
+
+    /**
+     * @suppress
+     */
+    @Deprecated("Use subscriptionListsFlow instead", replaceWith = ReplaceWith("subscriptionListsFlow"))
+    public val subscriptions: Flow<Result<Map<String, Set<Scope>>>> = subscriptionListsFlow
 
     /**
      * Returns the current set of subscription lists for the current contact.
@@ -574,23 +595,6 @@ public class Contact internal constructor(
      * @return A [PendingResult] of the current set of subscription lists.
      */
     public fun fetchSubscriptionListsPendingResult(): PendingResult<Map<String, Set<Scope>>?> {
-        val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
-        subscriptionsScope.launch {
-            pendingResult.setResult(fetchSubscriptionLists().getOrNull())
-        }
-        return pendingResult
-    }
-
-    /**
-     * Returns the current set of subscription lists for the current contact.
-     *
-     *
-     * An empty set indicates that this contact is not subscribed to any lists.
-     *
-     * @return A [PendingResult] of the current set of subscription lists.
-     */
-    @Deprecated("Use fetchSubscriptionListsPendingResult() instead")
-    public fun getSubscriptionLists(): PendingResult<Map<String, Set<Scope>>?> {
         val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
         subscriptionsScope.launch {
             pendingResult.setResult(fetchSubscriptionLists().getOrNull())

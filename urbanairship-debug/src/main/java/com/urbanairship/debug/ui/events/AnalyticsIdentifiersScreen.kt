@@ -160,7 +160,7 @@ internal class DefaultAnalyticsIdentifierViewModel: AnalyticsIdentifierViewModel
     override val identifiers: Flow<List<Identifier>> = _identifiersFlow.asStateFlow()
 
     init {
-        Airship.shared {
+        Airship.onReady {
             refresh()
         }
     }
@@ -170,7 +170,7 @@ internal class DefaultAnalyticsIdentifierViewModel: AnalyticsIdentifierViewModel
             return
         }
 
-        Airship.shared().analytics.editAssociatedIdentifiers {
+        Airship.analytics.editAssociatedIdentifiers {
             addIdentifier(item.name, item.value)
         }
 
@@ -182,7 +182,7 @@ internal class DefaultAnalyticsIdentifierViewModel: AnalyticsIdentifierViewModel
             return
         }
 
-        Airship.shared().analytics.editAssociatedIdentifiers {
+        Airship.analytics.editAssociatedIdentifiers {
             removeIdentifier(item.name)
         }
 
@@ -194,7 +194,7 @@ internal class DefaultAnalyticsIdentifierViewModel: AnalyticsIdentifierViewModel
             return
         }
 
-        val analytics = Airship.shared().analytics
+        val analytics = Airship.analytics
         _identifiersFlow.update { analytics.associatedIdentifiers.ids.map { Identifier(it.key, it.value) } }
     }
 }

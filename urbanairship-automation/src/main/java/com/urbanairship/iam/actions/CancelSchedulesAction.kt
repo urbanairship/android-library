@@ -2,11 +2,13 @@
 
 package com.urbanairship.iam.actions
 
+import com.urbanairship.Airship
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.InAppAutomation
+import com.urbanairship.automation.inAppAutomation
 import com.urbanairship.json.JsonValue
 import kotlinx.coroutines.runBlocking
 
@@ -30,7 +32,7 @@ import kotlinx.coroutines.runBlocking
 public class CancelSchedulesAction
 @JvmOverloads
 constructor(
-    private val automationGetter: () -> InAppAutomation = { InAppAutomation.shared() }
+    private val automationGetter: () -> InAppAutomation = { Airship.inAppAutomation }
 ) : Action() {
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {

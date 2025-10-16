@@ -247,10 +247,10 @@ public object Modules {
         try {
             val clazz = Class.forName(className).asSubclass(factoryClass)
             val instance = clazz.getDeclaredConstructor().newInstance()
-            if (Airship.getVersion() != instance?.airshipVersion) {
+            if (Airship.version != instance?.airshipVersion) {
                 UALog.e(
                     "Unable to load module with factory $factoryClass, versions do not match. " +
-                            "Core Version: ${Airship.getVersion()}, Module Version: ${instance?.airshipVersion}.",
+                            "Core Version: ${Airship.version}, Module Version: ${instance?.airshipVersion}.",
                 )
                 return null
             }

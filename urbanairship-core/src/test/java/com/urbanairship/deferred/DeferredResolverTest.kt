@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestRequestSession
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonValue
@@ -41,7 +42,7 @@ public class DeferredResolverTest {
 
         val config: AirshipRuntimeConfig = mockk()
         every { config.requestSession } returns requestSession
-        every { config.platform } returns Airship.Platform.ANDROID
+        every { config.platform } returns Platform.ANDROID
 
         resolver = DeferredResolver(config, AudienceOverridesProvider())
     }

@@ -3,8 +3,12 @@ package com.urbanairship.actions
 
 import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newResult
+import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.contacts.Contact
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.push.PushManager
+import java.nio.channels.spi.AsynchronousChannelProvider
 
 /**
  * Action to fetch a map of device properties.
@@ -35,16 +39,20 @@ import com.urbanairship.json.JsonValue
  * Default Registration Predicate: only accepts [Action.Situation.WEB_VIEW_INVOCATION]
  * and [Action.Situation.MANUAL_INVOCATION]
  */
-public class FetchDeviceInfoAction public constructor() : Action() {
+public class FetchDeviceInfoAction public constructor(
+    private val channelProvider: () -> AirshipChannel = { Airship.channel },
+    private val pushManagerProvider: () -> PushManager = { Airship.push },
+    private val contactProvider: () -> Contact = { Airship.contact }
+) : Action() {
 
     override fun perform(arguments: ActionArguments): ActionResult {
 
         val properties = JsonMap.newBuilder()
-            .put(CHANNEL_ID_KEY, Airship.shared().channel.id)
-            .put(PUSH_OPT_IN_KEY, Airship.shared().pushManager.isOptIn)
-            .putOpt(NAMED_USER_ID_KEY, Airship.shared().contact.namedUserId)
+            .put(CHANNEL_ID_KEY, channelProvider().id)
+            .put(PUSH_OPT_IN_KEY, pushManagerProvider().isOptIn)
+            .putOpt(NAMED_USER_ID_KEY, contactProvider().namedUserId)
 
-        val tags = Airship.shared().channel.tags
+        val tags = channelProvider().tags
         if (tags.isNotEmpty()) {
             properties.put(TAGS_KEY, JsonValue.wrapOpt(tags))
         }

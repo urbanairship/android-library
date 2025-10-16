@@ -75,7 +75,7 @@ public class SmsValidatorApiClientTest {
         assertEquals(mapOf(
             "Accept" to  "application/vnd.urbanairship+json; version=3;",
             "Content-Type" to "application/json",
-            "X-UA-Lib-Version" to Airship.getVersion(),
+            "X-UA-Lib-Version" to Airship.version,
             "X-UA-Device-Family" to "android"
         ), request.headers)
         assertEquals("POST", request.method)
@@ -100,7 +100,7 @@ public class SmsValidatorApiClientTest {
         assertEquals(mapOf(
             "Accept" to  "application/vnd.urbanairship+json; version=3;",
             "Content-Type" to "application/json",
-            "X-UA-Lib-Version" to Airship.getVersion(),
+            "X-UA-Lib-Version" to Airship.version,
             "X-UA-Device-Family" to "android"
         ), request.headers)
         assertEquals("POST", request.method)

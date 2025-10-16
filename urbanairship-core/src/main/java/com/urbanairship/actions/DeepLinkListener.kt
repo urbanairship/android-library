@@ -4,7 +4,7 @@ package com.urbanairship.actions
 /**
  * Listener interface used to notify app when deep link is received.
  */
-public interface DeepLinkListener {
+public fun interface DeepLinkListener {
 
     /**
      * Called when a new deep link is received. If the deep link is handled by the listener,

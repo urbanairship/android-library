@@ -8,18 +8,27 @@ import android.os.Build
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.annotation.WorkerThread
 import androidx.core.app.NotificationCompat
+import com.urbanairship.Airship
 import com.urbanairship.AirshipConfigOptions
+import com.urbanairship.UALog
 import com.urbanairship.push.PushMessage
 import com.urbanairship.util.NotificationIdGenerator
 
 /**
  * Default notification provider.
  */
-public open class AirshipNotificationProvider public constructor(
+public open class AirshipNotificationProvider internal constructor(
     context: Context,
-    configOptions: AirshipConfigOptions
+    configOptions: AirshipConfigOptions,
+    private val notificationChannelRegistry: NotificationChannelRegistry?
 ) : NotificationProvider {
+
+    public constructor(
+        context: Context,
+        configOptions: AirshipConfigOptions
+    ): this(context, configOptions, null)
 
     /**
      * The default notification title string resource.
@@ -76,9 +85,7 @@ public open class AirshipNotificationProvider public constructor(
         message: PushMessage
     ): NotificationArguments {
         val requestedChannelId = message.getNotificationChannel(defaultNotificationChannelId)
-        val activeChannelId = NotificationChannelUtils.getActiveChannel(
-            requestedChannelId, NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL
-        )
+        val activeChannelId = getActiveChannel(requestedChannelId)
 
         return NotificationArguments.newBuilder(message)
             .setNotificationChannelId(activeChannelId)
@@ -164,6 +171,11 @@ public open class AirshipNotificationProvider public constructor(
         builder: NotificationCompat.Builder,
         arguments: NotificationArguments
     ): NotificationCompat.Builder {
+        if (!Airship.isFlyingOrTakingOff) {
+            UALog.e("Unable to extend notification. Takeoff not called!")
+            return builder
+        }
+
         val message = arguments.message
 
         // Public notification
@@ -202,7 +214,7 @@ public open class AirshipNotificationProvider public constructor(
             return TAG_NOTIFICATION_ID
         }
 
-        return NotificationIdGenerator.nextID()
+        return NotificationIdGenerator.nextId(context)
     }
 
     /**
@@ -222,6 +234,26 @@ public open class AirshipNotificationProvider public constructor(
         }
 
         return null
+    }
+
+
+    @WorkerThread
+    private fun getActiveChannel(channelId: String?): String {
+        if (channelId == null || channelId == NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL) {
+            return NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL
+        }
+
+        val registry  = notificationChannelRegistry ?: Airship.push.notificationChannelRegistry
+        val registered = registry.getNotificationChannelSync(channelId)
+
+        if (registered == null) {
+            UALog.e(
+                "Notification channel $channelId does not exist. Falling back to ${NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL}",
+            )
+            return NotificationProvider.DEFAULT_NOTIFICATION_CHANNEL
+        }
+
+        return channelId
     }
 
     public companion object {

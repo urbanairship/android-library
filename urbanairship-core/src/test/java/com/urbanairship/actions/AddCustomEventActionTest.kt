@@ -4,7 +4,6 @@ package com.urbanairship.actions
 import androidx.core.os.bundleOf
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.BaseTestCase
-import com.urbanairship.TestApplication
 import com.urbanairship.actions.Action.Situation
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.CustomEvent
@@ -27,7 +26,10 @@ import org.mockito.ArgumentCaptor
 @RunWith(AndroidJUnit4::class)
 public class AddCustomEventActionTest {
 
-    private val action = AddCustomEventAction()
+    private val events = mutableListOf<CustomEvent>()
+    private val action = AddCustomEventAction {
+        events.add(it)
+    }
 
     private val acceptedSituations = arrayOf(
         Situation.PUSH_OPENED,
@@ -38,12 +40,6 @@ public class AddCustomEventActionTest {
         Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON,
         Situation.AUTOMATION
     )
-    private val analytics: Analytics = mockk()
-
-    @Before
-    public fun setup() {
-        TestApplication.getApplication().setAnalytics(analytics)
-    }
 
     /**
      * Test custom event action accepts all the situations.
@@ -120,25 +116,16 @@ public class AddCustomEventActionTest {
 
         val args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map)
 
-        // Validate the resulting event
-        every { analytics.recordCustomEvent(any()) } answers {
-            val event: CustomEvent = firstArg()
-            EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id")
-            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 123450000L)
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type")
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id")
-            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name")
-        }
-
         val result = action.perform(args)
         assertEquals("Action should've completed", ActionResult.Status.COMPLETED, result.status)
 
-        // Verify the event was added
-        val argumentCaptor = ArgumentCaptor.forClass(
-            CustomEvent::class.java
-        )
-
-        verify { analytics.recordCustomEvent(any()) }
+        assertEquals(1, events.size)
+        val event: CustomEvent = events.first()
+        EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id")
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 123450000L)
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type")
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id")
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name")
     }
 
     @Test
@@ -155,26 +142,16 @@ public class AddCustomEventActionTest {
         )
 
         val args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map)
+        action.perform(args)
 
-        // Validate the resulting event
-        every { analytics.recordCustomEvent(any()) } answers {
-            val event: CustomEvent = firstArg()
-            EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id")
-            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 321210000L)
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type")
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id")
-            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "new event name")
-        }
+        assertEquals(1, events.size)
+        val event: CustomEvent = events.first()
 
-        val result = action.perform(args)
-        assertEquals("Action should've completed", ActionResult.Status.COMPLETED, result.status)
-
-        // Verify the event was added
-        val argumentCaptor = ArgumentCaptor.forClass(
-            CustomEvent::class.java
-        )
-
-        verify { analytics.recordCustomEvent(any()) }
+        EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id")
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 321210000L)
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type")
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id")
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "new event name")
     }
 
     @Test
@@ -192,22 +169,18 @@ public class AddCustomEventActionTest {
         )
 
         val args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map, metadata)
-
-        every { analytics.recordCustomEvent(any()) } answers {
-            val event: CustomEvent = firstArg()
-
-            EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id")
-            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 123450000L)
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type")
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id")
-            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name")
-            EventTestUtils.validateEventValue(event, "in_app", "some-context")
-        }
-
         val result = action.perform(args)
         assertEquals("Action should've completed", ActionResult.Status.COMPLETED, result.status)
 
-        verify { analytics.recordCustomEvent(any()) }
+        assertEquals(1, events.size)
+        val event: CustomEvent = events.first()
+
+        EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id")
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 123450000L)
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type")
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id")
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name")
+        EventTestUtils.validateEventValue(event, "in_app", "some-context")
     }
 
     /**
@@ -225,19 +198,15 @@ public class AddCustomEventActionTest {
         )
 
         val args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map, metadata)
-
-        every { analytics.recordCustomEvent(any()) } answers {
-            val event: CustomEvent = firstArg()
-
-            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name")
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "ua_mcrap")
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "message id")
-        }
-
         val result = action.perform(args)
         assertEquals("Action should've completed", ActionResult.Status.COMPLETED, result.status)
 
-        verify { analytics.recordCustomEvent(any()) }
+        assertEquals(1, events.size)
+        val event: CustomEvent = events.first()
+
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name")
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "ua_mcrap")
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "message id")
     }
 
     /**
@@ -256,22 +225,18 @@ public class AddCustomEventActionTest {
         )
 
         val args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map, metadata)
-
-        every { analytics.recordCustomEvent(any()) } answers {
-            val event: CustomEvent = firstArg()
-
-            EventTestUtils.validateEventValue(
-                event,
-                CustomEvent.INTERACTION_TYPE,
-                "interaction type"
-            )
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, null)
-        }
-
         val result = action.perform(args)
         assertEquals("Action should've completed", ActionResult.Status.COMPLETED, result.status)
 
-        verify { analytics.recordCustomEvent(any()) }
+        assertEquals(1, events.size)
+        val event: CustomEvent = events.first()
+
+        EventTestUtils.validateEventValue(
+            event,
+            CustomEvent.INTERACTION_TYPE,
+            "interaction type"
+        )
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, null)
     }
 
     /**
@@ -281,7 +246,7 @@ public class AddCustomEventActionTest {
     public fun testRunInvalidCustomEventValue() {
         val map = mapOf(
             CustomEvent.EVENT_NAME to "event name",
-            CustomEvent.EVENT_VALUE to Double.MAX_VALUE.toString()
+            CustomEvent.EVENT_VALUE to Double.MAX_VALUE
         )
 
         val args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map)
@@ -311,21 +276,18 @@ public class AddCustomEventActionTest {
 
         val args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map, metadata)
 
-        every { analytics.recordCustomEvent(any()) } answers {
-            val event: CustomEvent = firstArg()
-
-            EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id")
-            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 123450000L)
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type")
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id")
-            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name")
-            EventTestUtils.validateEventValue(event, CustomEvent.CONVERSION_SEND_ID, "send id")
-        }
-
         val result = action.perform(args)
         assertEquals("Action should've completed", ActionResult.Status.COMPLETED, result.status)
 
-        verify { analytics.recordCustomEvent(any()) }
+        assertEquals(1, events.size)
+        val event: CustomEvent = events.first()
+
+        EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id")
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 123450000L)
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type")
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id")
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name")
+        EventTestUtils.validateEventValue(event, CustomEvent.CONVERSION_SEND_ID, "send id")
     }
 
     /**
@@ -352,33 +314,30 @@ public class AddCustomEventActionTest {
 
         val args = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, map)
 
-        every { analytics.recordCustomEvent(any()) } answers {
-            val event: CustomEvent = firstArg()
-
-            EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id")
-            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 123450000L)
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type")
-            EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id")
-            EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name")
-
-            EventTestUtils.validateNestedEventValue(event, "properties", "boolean", "true")
-            EventTestUtils.validateNestedEventValue(event, "properties", "double", "124.49")
-            EventTestUtils.validateNestedEventValue(event, "properties", "string", "some string value")
-            EventTestUtils.validateNestedEventValue(event, "properties", "int", "-2147483648")
-            EventTestUtils.validateNestedEventValue(event, "properties", "long", "9223372036854775807")
-
-            // Validate the custom JsonList property
-            val array = EventTestUtils.getEventData(event)["properties"]?.map?.get("array")?.list ?: JsonList.EMPTY_LIST
-
-            assertEquals(3, array.size())
-            assertEquals("string value", array[0].string)
-            assertTrue(array[1].getBoolean(false))
-            assertEquals(124.0, array[2].getDouble(0.0))
-        }
-
         val result = action.perform(args)
         assertEquals("Action should've completed", ActionResult.Status.COMPLETED, result.status)
 
-        verify { analytics.recordCustomEvent(any()) }
+        assertEquals(1, events.size)
+        val event: CustomEvent = events.first()
+
+        EventTestUtils.validateEventValue(event, CustomEvent.TRANSACTION_ID, "transaction id")
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_VALUE, 123450000L)
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_TYPE, "interaction type")
+        EventTestUtils.validateEventValue(event, CustomEvent.INTERACTION_ID, "interaction id")
+        EventTestUtils.validateEventValue(event, CustomEvent.EVENT_NAME, "event name")
+
+        EventTestUtils.validateNestedEventValue(event, "properties", "boolean", "true")
+        EventTestUtils.validateNestedEventValue(event, "properties", "double", "124.49")
+        EventTestUtils.validateNestedEventValue(event, "properties", "string", "some string value")
+        EventTestUtils.validateNestedEventValue(event, "properties", "int", "-2147483648")
+        EventTestUtils.validateNestedEventValue(event, "properties", "long", "9223372036854775807")
+
+        // Validate the custom JsonList property
+        val array = EventTestUtils.getEventData(event)["properties"]?.map?.get("array")?.list ?: JsonList.EMPTY_LIST
+
+        assertEquals(3, array.size())
+        assertEquals("string value", array[0].string)
+        assertTrue(array[1].getBoolean(false))
+        assertEquals(124.0, array[2].getDouble(0.0))
     }
 }

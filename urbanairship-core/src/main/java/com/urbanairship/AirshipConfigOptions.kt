@@ -1833,3 +1833,16 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         }
     }
 }
+
+/**
+ * Creates a new [AirshipConfigOptions] with the given options.
+ *
+ * @param block A lambda function that configures the `Builder`.
+ * @return A new `AirshipConfigOptions` instance.
+ */
+@JvmSynthetic
+public fun airshipConfigOptions(block: AirshipConfigOptions.Builder.() -> Unit): AirshipConfigOptions {
+    val builder = AirshipConfigOptions.newBuilder()
+    builder.block()
+    return builder.build()
+}

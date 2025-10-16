@@ -11,18 +11,17 @@ import androidx.core.util.Consumer
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.AirshipExecutors
+import com.urbanairship.Platform
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.R
 import com.urbanairship.UALog
-import com.urbanairship.Airship
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor.Companion.shared
 import com.urbanairship.app.SimpleApplicationListener
-import com.urbanairship.base.Supplier
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.ChannelRegistrationPayload
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -36,6 +35,10 @@ import com.urbanairship.permission.PermissionDelegate
 import com.urbanairship.permission.PermissionPromptFallback
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
+import com.urbanairship.push.PushManager.Companion.EXTRA_NOTIFICATION_BUTTON_FOREGROUND
+import com.urbanairship.push.PushManager.Companion.EXTRA_NOTIFICATION_BUTTON_ID
+import com.urbanairship.push.PushManager.Companion.EXTRA_NOTIFICATION_ID
+import com.urbanairship.push.PushManager.Companion.EXTRA_PUSH_MESSAGE_BUNDLE
 import com.urbanairship.push.PushProvider.PushProviderUnavailableException
 import com.urbanairship.push.PushProvider.RegistrationException
 import com.urbanairship.push.PushProviderType.Companion.from
@@ -44,8 +47,6 @@ import com.urbanairship.push.notifications.NotificationActionButtonGroup
 import com.urbanairship.push.notifications.NotificationChannelRegistry
 import com.urbanairship.push.notifications.NotificationProvider
 import com.urbanairship.util.UAStringUtil
-import java.util.Calendar
-import java.util.Date
 import java.util.concurrent.ExecutorService
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
@@ -62,7 +63,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     internal val preferenceDataStore: PreferenceDataStore,
     private val config: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
-    private val pushProvidersSupplier: Supplier<PushProviders>,
+    private val pushProvidersSupplier: () -> PushProviders,
     private val airshipChannel: AirshipChannel,
     private val analytics: Analytics,
     internal val permissionsManager: PermissionsManager,
@@ -71,6 +72,9 @@ public open class PushManager @VisibleForTesting internal constructor(
     private val activityMonitor: ActivityMonitor,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) : AirshipComponent(context, preferenceDataStore) {
+
+    public var notificationChannelRegistry: NotificationChannelRegistry =
+        NotificationChannelRegistry(context, config.configOptions)
 
     /**
      * Sets the notification provider used to build notifications from a push message
@@ -84,10 +88,9 @@ public open class PushManager @VisibleForTesting internal constructor(
      * @see com.urbanairship.push.notifications.CustomLayoutNotificationProvider
      */
     public var notificationProvider: NotificationProvider =
-        AirshipNotificationProvider(context, config.configOptions)
+        AirshipNotificationProvider(context, config.configOptions, notificationChannelRegistry)
     private val actionGroupMap = mutableMapOf<String, NotificationActionButtonGroup>()
-    public var notificationChannelRegistry: NotificationChannelRegistry =
-        NotificationChannelRegistry(context, config.configOptions)
+
     public var notificationListener: NotificationListener? = null
     private val pushTokenListeners = mutableListOf<PushTokenListener>()
     private val pushListeners = mutableListOf<PushListener>()
@@ -159,7 +162,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         preferenceDataStore: PreferenceDataStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
-        pushProvidersSupplier: Supplier<PushProviders>,
+        pushProvidersSupplier: () -> PushProviders,
         airshipChannel: AirshipChannel,
         analytics: Analytics,
         permissionsManager: PermissionsManager
@@ -247,7 +250,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         }
 
         val status =
-            permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+            permissionsManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
         when (status) {
             PermissionStatus.GRANTED -> {
                 preferenceDataStore.put(REQUEST_PERMISSION_KEY, false)
@@ -257,7 +260,7 @@ public open class PushManager @VisibleForTesting internal constructor(
             else -> {
                 if (shouldRequestNotificationPermission()) {
                     preferenceDataStore.put(REQUEST_PERMISSION_KEY, false)
-                    permissionsManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS)
+                    permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS)
                     onCheckComplete?.run()
                 } else {
                     onCheckComplete?.run()
@@ -319,7 +322,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
     private fun resolvePushProvider(): PushProvider? {
         // Existing provider class
-        val pushProviders = pushProvidersSupplier.get() ?: return null
+        val pushProviders = pushProvidersSupplier()
         val existingProviderClass = preferenceDataStore.getString(PROVIDER_CLASS_KEY, null)
 
         // Try to use the same provider
@@ -348,7 +351,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
                 builder.setPushAddress(pushToken)
                 val provider = pushProvider
-                if (pushToken != null && provider?.platform == Airship.Platform.ANDROID) {
+                if (pushToken != null && provider?.platform == Platform.ANDROID) {
                     builder.setDeliveryType(provider.deliveryType)
                 }
 
@@ -361,7 +364,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(jobInfo: JobInfo): JobResult {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             return JobResult.SUCCESS
         }
@@ -390,17 +393,6 @@ public open class PushManager @VisibleForTesting internal constructor(
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val isPushEnabled: Boolean
         get() = privacyManager.isEnabled(PrivacyManager.Feature.PUSH)
-
-    /**
-     * Enables user notifications on Airship and tries to prompt for the notification permission.
-     *
-     * @note This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
-     *
-     * @param consumer A consumer that will be passed the success of the permission prompt.
-     */
-    public fun enableUserNotifications(consumer: Consumer<Boolean>) {
-        enableUserNotifications(PermissionPromptFallback.None, consumer)
-    }
 
     /**
      * Whether user-facing push notifications are enabled.
@@ -436,117 +428,48 @@ public open class PushManager @VisibleForTesting internal constructor(
      *
      * @note This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
      *
+     * @param consumer A consumer that will be passed the success of the permission prompt.
+     */
+    public fun enableUserNotifications(
+        consumer: Consumer<Boolean>
+    ) {
+        enableUserNotifications(promptFallback = PermissionPromptFallback.None, consumer = consumer)
+    }
+
+    /**
+     * Enables user notifications on Airship and tries to prompt for the notification permission.
+     *
+     * @note This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
+     *
+     * @param promptFallback Prompt fallback if the the notification permission is silently denied.
+     */
+    public fun enableUserNotifications(
+        promptFallback: PermissionPromptFallback = PermissionPromptFallback.None
+    ) {
+        enableUserNotifications(promptFallback = promptFallback, consumer = null)
+    }
+
+    /**
+     * Enables user notifications on Airship and tries to prompt for the notification permission.
+     *
+     * @note This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
+     *
      * @param promptFallback Prompt fallback if the the notification permission is silently denied.
      * @param consumer A consumer that will be passed the success of the permission prompt.
      */
     public fun enableUserNotifications(
         promptFallback: PermissionPromptFallback,
-        consumer: Consumer<Boolean>
+        consumer: Consumer<Boolean>?
     ) {
         scope.launch {
             preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
-            val status = permissionsManager.suspendingRequestPermission(
+            val status = permissionsManager.requestPermission(
                 permission = Permission.DISPLAY_NOTIFICATIONS,
                 fallback = promptFallback
             )
-            consumer.accept(status.permissionStatus == PermissionStatus.GRANTED)
+            consumer?.accept(status.permissionStatus == PermissionStatus.GRANTED)
             updateStatusObserver()
         }
-    }
-
-
-    @Deprecated(
-        """This setting does not work on Android O+. Applications are encouraged to
-      use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
-    )
-    /** Whether sound is enabled. */
-    public var isSoundEnabled: Boolean
-        get() {
-            return preferenceDataStore.getBoolean(SOUND_ENABLED_KEY, true)
-        }
-        set(enabled) {
-            preferenceDataStore.put(SOUND_ENABLED_KEY, enabled)
-        }
-
-    @Deprecated(
-        """This setting does not work on Android O+. Applications are encouraged to
-      use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
-    )
-    /** Whether vibration is enabled. */
-    public var isVibrateEnabled: Boolean
-        get() {
-            return preferenceDataStore.getBoolean(VIBRATE_ENABLED_KEY, true)
-        }
-        set(enabled) {
-            preferenceDataStore.put(VIBRATE_ENABLED_KEY, enabled)
-        }
-
-    /** Controls whether "Quiet Time" is enabled. */
-    @Deprecated(
-        """This setting does not work on Android O+. Applications are encouraged to
-      use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
-    )
-    public var isQuietTimeEnabled: Boolean
-        get() {
-            return preferenceDataStore.getBoolean(QUIET_TIME_ENABLED, false)
-        }
-        set(enabled) {
-            preferenceDataStore.put(QUIET_TIME_ENABLED, enabled)
-        }
-
-    /** Whether the app is currently inside of "Quiet Time". */
-    @Deprecated(
-        """This setting does not work on Android O+. Applications are encouraged to
-      use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
-    )
-    public val isInQuietTime: Boolean
-        get() {
-            @Suppress("DEPRECATION")
-            if (!this.isQuietTimeEnabled) {
-                return false
-            }
-
-            return try {
-                QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL))
-                    .isInQuietTime(Calendar.getInstance())
-            } catch (e: JsonException) {
-                UALog.e(e, "Failed to parse quiet time interval")
-                false
-            }
-        }
-
-    /** The Quiet Time interval set by the user. */
-    @Deprecated(
-        """This setting does not work on Android O+. Applications are encouraged to
-      use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
-    )
-    public val quietTimeInterval: Array<Date>?
-        get() {
-
-            return try {
-                QuietTimeInterval.fromJson(preferenceDataStore.getJsonValue(QUIET_TIME_INTERVAL))
-                    .quietTimeIntervalDateArray
-            } catch (e: JsonException) {
-                UALog.e(e, "Failed to parse quiet time interval")
-                null
-            }
-        }
-
-    /**
-     * Sets the Quiet Time interval.
-     *
-     * @param startTime A Date instance indicating when Quiet Time should start.
-     * @param endTime A Date instance indicating when Quiet Time should end.
-     */
-    @Deprecated(
-        """This setting does not work on Android O+. Applications are encouraged to
-      use `com.urbanairship.push.notifications.NotificationChannelCompat` instead."""
-    )
-    public fun setQuietTimeInterval(startTime: Date, endTime: Date) {
-        val quietTimeInterval = QuietTimeInterval.newBuilder()
-            .setQuietTimeInterval(startTime, endTime)
-            .build()
-        preferenceDataStore.put(QUIET_TIME_INTERVAL, quietTimeInterval.toJsonValue())
     }
 
     /** Whether the app is capable of receiving push (`true` if a push token is present). */
@@ -1104,10 +1027,6 @@ public open class PushManager @VisibleForTesting internal constructor(
         public const val PUSH_DELIVERY_TYPE: String = "$KEY_PREFIX.PUSH_DELIVERY_TYPE"
         public const val PROVIDER_CLASS_KEY: String =
             "com.urbanairship.application.device.PUSH_PROVIDER"
-        public const val SOUND_ENABLED_KEY: String = "$KEY_PREFIX.SOUND_ENABLED"
-        public const val VIBRATE_ENABLED_KEY: String = "$KEY_PREFIX.VIBRATE_ENABLED"
-        public const val QUIET_TIME_ENABLED: String = "$KEY_PREFIX.QUIET_TIME_ENABLED"
-        public const val QUIET_TIME_INTERVAL: String = "$KEY_PREFIX.QUIET_TIME_INTERVAL"
         public const val PUSH_TOKEN_KEY: String = "$KEY_PREFIX.REGISTRATION_TOKEN_KEY"
         public const val REQUEST_PERMISSION_KEY: String = "$KEY_PREFIX.REQUEST_PERMISSION_KEY"
         private const val UA_NOTIFICATION_BUTTON_GROUP_PREFIX: String = "ua_"

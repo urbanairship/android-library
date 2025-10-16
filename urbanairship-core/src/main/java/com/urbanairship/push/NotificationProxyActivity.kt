@@ -33,7 +33,13 @@ public class NotificationProxyActivity public constructor() : Activity() {
 
         UALog.v("Received intent: %s", intent.action)
 
-        NotificationIntentProcessor(context = this, intent = intent)
+        NotificationIntentProcessor(
+            analytics = Airship.analytics,
+            pushManager = Airship.push,
+            autoLaunchApplication = Airship.airshipConfigOptions.autoLaunchApplication,
+            context = this,
+            intent = intent
+        )
             .process()
             .addResultCallback {
                 UALog.v("Finished processing notification intent with result $it.")

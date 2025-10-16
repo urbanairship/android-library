@@ -11,6 +11,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.Airship
 import com.urbanairship.annotation.OpenForTesting
+import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.contacts.Contact
 import com.urbanairship.http.RequestResult
@@ -33,6 +34,7 @@ import kotlinx.coroutines.runBlocking
 public class AirshipMeteredUsage internal constructor(
     context: Context,
     dataStore: PreferenceDataStore,
+    private val channel: AirshipChannel,
     private val config: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val store: EventsDao = EventsDatabase.persistent(context).eventsDao(),
@@ -105,7 +107,7 @@ public class AirshipMeteredUsage internal constructor(
         scheduleUpload(delay = 0.seconds)
     }
 
-    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(jobInfo: JobInfo): JobResult {
         if (!usageConfig.get().isEnabled) {
             UALog.v { "Config disabled, skipping upload." }
             return JobResult.SUCCESS
@@ -117,7 +119,7 @@ public class AirshipMeteredUsage internal constructor(
             return JobResult.SUCCESS
         }
 
-        var channelId = airship.channel.id
+        var channelId = channel.id
         if (!privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
             channelId = null
             events = events.map { it.withAnalyticsDisabled() }

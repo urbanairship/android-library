@@ -6,6 +6,7 @@ import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestRequestSession
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.config.AirshipRuntimeConfig.ConfigChangeListener
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
@@ -23,7 +24,7 @@ public class AirshipRuntimeConfigTest {
     )
 
     private var configOptions = AirshipConfigOptions.newBuilder().build()
-    private var platform = Airship.Platform.UNKNOWN
+    private var platform = Platform.UNKNOWN
     private var runtimeConfig = AirshipRuntimeConfig(
         configOptionsProvider = { configOptions },
         requestSession = TestRequestSession(),
@@ -33,14 +34,14 @@ public class AirshipRuntimeConfigTest {
 
     @Test
     public fun testAndroidPlatform() {
-        platform = Airship.Platform.ANDROID
-        Assert.assertEquals(Airship.Platform.ANDROID, runtimeConfig.platform)
+        platform = Platform.ANDROID
+        Assert.assertEquals(Platform.ANDROID, runtimeConfig.platform)
     }
 
     @Test
     public fun testAmazonPlatform() {
-        platform = Airship.Platform.AMAZON
-        Assert.assertEquals(Airship.Platform.AMAZON, runtimeConfig.platform)
+        platform = Platform.AMAZON
+        Assert.assertEquals(Platform.AMAZON, runtimeConfig.platform)
     }
 
     @Test

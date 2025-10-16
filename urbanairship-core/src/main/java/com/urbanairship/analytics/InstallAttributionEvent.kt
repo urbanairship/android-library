@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
+import android.content.Context
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 
@@ -9,12 +10,12 @@ import com.urbanairship.json.jsonMapOf
  *
  * @param referrer The Play Store install referrer.
  */
-internal class InstallAttributionEvent(private val referrer: String) : Event() {
+internal data class InstallAttributionEvent(private val referrer: String) : Event() {
 
     override val type: EventType = EventType.INSTALL_ATTRIBUTION
 
     @Throws(com.urbanairship.json.JsonException::class)
-    override fun getEventData(conversionData: ConversionData): JsonMap = jsonMapOf(
+    override fun getEventData(context: Context, conversionData: ConversionData): JsonMap = jsonMapOf(
         PLAY_STORE_REFERRER to referrer
     )
 

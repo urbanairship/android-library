@@ -162,7 +162,7 @@ internal class DefaultTagsScreenViewModel: TagsScreenViewModel, ViewModel() {
     override val isLoaded: Flow<Boolean> = isLoadedState
 
     init {
-        Airship.shared { airship ->
+        Airship.onReady {
             isLoadedState.update { true }
             refresh()
         }
@@ -173,7 +173,7 @@ internal class DefaultTagsScreenViewModel: TagsScreenViewModel, ViewModel() {
             return
         }
 
-        tagsState.update { Airship.shared().channel.tags.sorted() }
+        tagsState.update { Airship.channel.tags.sorted() }
     }
 
     override fun add(tag: String) {
@@ -181,7 +181,7 @@ internal class DefaultTagsScreenViewModel: TagsScreenViewModel, ViewModel() {
             return
         }
 
-        Airship.shared().channel.editTags { addTag(tag) }
+        Airship.channel.editTags { addTag(tag) }
 
         refresh()
     }
@@ -191,7 +191,7 @@ internal class DefaultTagsScreenViewModel: TagsScreenViewModel, ViewModel() {
             return
         }
 
-        Airship.shared().channel.editTags { removeTag(tag) }
+        Airship.channel.editTags { removeTag(tag) }
 
         refresh()
     }

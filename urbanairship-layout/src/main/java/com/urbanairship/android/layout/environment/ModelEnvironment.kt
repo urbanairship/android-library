@@ -100,9 +100,9 @@ internal sealed class LayoutEvent {
 
 internal class AttributeHandler(
     private val contactEditorFactory: () -> AttributeEditor =
-        { Airship.shared().contact.editAttributes() },
+        { Airship.contact.editAttributes() },
     private val channelEditorFactory: () -> AttributeEditor =
-        { Airship.shared().channel.editAttributes() }
+        { Airship.channel.editAttributes() }
 ) {
 
     fun update(attributes: Map<AttributeName, AttributeValue>) {

@@ -8,7 +8,6 @@ import android.os.Bundle
 import androidx.annotation.MainThread
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
-import com.urbanairship.Airship
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.UALog
@@ -16,6 +15,7 @@ import com.urbanairship.actions.Action.Situation
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionRunRequest
 import com.urbanairship.actions.ActionValue
+import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.InteractiveNotificationEvent
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
@@ -24,13 +24,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Processes notification intents.
  */
 internal class NotificationIntentProcessor(
-    private val airship: Airship = Airship.shared(),
+    private val analytics: Analytics,
+    private val pushManager: PushManager,
+    private val autoLaunchApplication: Boolean,
     private val context: Context,
     private val intent: Intent,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
@@ -91,26 +92,23 @@ internal class NotificationIntentProcessor(
         return result
     }
 
-    /**
-     * Handles the opened notification without an action.
-     * @param completionHandler The completion handler.
-     */
+    /** Handles the opened notification without an action. */
     private suspend fun onNotificationResponse() {
         UALog.i("Notification response: $notificationInfo, $actionButtonInfo")
         if (notificationInfo == null) { return }
 
         if (actionButtonInfo == null || actionButtonInfo.isForeground) {
             // Set the conversion push id and metadata
-            airship.analytics.conversionSendId = notificationInfo.message.sendId
-            airship.analytics.conversionMetadata = notificationInfo.message.metadata
+            analytics.conversionSendId = notificationInfo.message.sendId
+            analytics.conversionMetadata = notificationInfo.message.metadata
         }
 
-        val listener = airship.pushManager.notificationListener
+        val listener = pushManager.notificationListener
 
         if (actionButtonInfo != null) {
             // Add the interactive notification event
             val event = InteractiveNotificationEvent(notificationInfo, actionButtonInfo)
-            airship.analytics.addEvent(event)
+            analytics.addEvent(event)
 
             // Dismiss the notification
             NotificationManagerCompat.from(context)
@@ -129,7 +127,7 @@ internal class NotificationIntentProcessor(
             }
         }
 
-        for (internalNotificationListener in airship.pushManager.getInternalNotificationListeners()) {
+        for (internalNotificationListener in pushManager.getInternalNotificationListeners()) {
             internalNotificationListener.onNotificationResponse(notificationInfo, actionButtonInfo)
         }
 
@@ -150,7 +148,7 @@ internal class NotificationIntentProcessor(
         }
 
         if (notificationInfo != null) {
-            airship.pushManager.notificationListener?.onNotificationDismissed(notificationInfo)
+            pushManager.notificationListener?.onNotificationDismissed(notificationInfo)
         }
     }
 
@@ -166,7 +164,7 @@ internal class NotificationIntentProcessor(
             }
         }
 
-        if (!airship.airshipConfigOptions.autoLaunchApplication) {
+        if (!autoLaunchApplication) {
             return
         }
 
@@ -182,11 +180,7 @@ internal class NotificationIntentProcessor(
         }
     }
 
-    /**
-     * Helper method to run the actions.
-     *
-     * @param completionHandler Callback when finished.
-     */
+    /** Helper method to run the actions. */
     private suspend fun runNotificationResponseActions() {
         var actions: Map<String, ActionValue>? = null
         var situation = Situation.MANUAL_INVOCATION
@@ -224,7 +218,6 @@ internal class NotificationIntentProcessor(
      * @param actions The actions payload.
      * @param situation The situation.
      * @param metadata The metadata.
-     * @param completionHandler The completion handler.
      */
     private suspend fun runActions(
         actions: Map<String, ActionValue>,

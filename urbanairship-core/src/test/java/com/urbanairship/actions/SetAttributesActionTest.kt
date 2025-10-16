@@ -1,7 +1,6 @@
 package com.urbanairship.actions
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestApplication
 import com.urbanairship.TestClock
 import com.urbanairship.actions.ActionValue.Companion.wrap
 import com.urbanairship.channel.AirshipChannel
@@ -27,16 +26,14 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class SetAttributesActionTest {
 
-    private val action: SetAttributesAction = SetAttributesAction()
     private val channel: AirshipChannel = mockk()
     private val contact: Contact = mockk()
     private val clock = TestClock().apply { currentTimeMillis = 1000 }
 
-    @Before
-    public fun setup() {
-        TestApplication.getApplication().setChannel(channel)
-        TestApplication.getApplication().setContact(contact)
-    }
+    private val action: SetAttributesAction = SetAttributesAction(
+        { channel },
+        { contact }
+    )
 
     @Test
     public fun testAcceptsArguments() {

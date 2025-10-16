@@ -2,11 +2,13 @@
 package com.urbanairship.util
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.pm.ActivityInfo
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.annotation.RestrictTo
 import com.urbanairship.Airship
+import com.urbanairship.UALog
 
 /**
  * Utility methods for validating the AndroidManifest.xml file.
@@ -44,29 +46,28 @@ public object ManifestUtils {
      * @return `true` if the permission is granted, otherwise `false`.
      */
     public fun isPermissionGranted(permission: String): Boolean {
-        return PackageManager.PERMISSION_GRANTED == Airship.applicationContext.packageManager
-            .checkPermission(permission, Airship.applicationContext.packageName)
+        return PackageManager.PERMISSION_GRANTED == Airship.application.packageManager.checkPermission(
+            permission, Airship.application.packageName
+        )
     }
 
     /**
      * Gets the ComponentInfo for an activity
      *
+     * @param context The context.
      * @param activity The activity to look up
      * @return The activity's ComponentInfo, or null if the activity
      * is not listed in the manifest
      */
-    public fun getActivityInfo(activity: Class<*>): ActivityInfo? {
-        if (activity.canonicalName == null) {
-            return null
-        }
-
-        val componentName = ComponentName(Airship.applicationContext.packageName, activity.canonicalName)
+    public fun getActivityInfo(context: Context, activity: Class<*>): ActivityInfo? {
+        val name = activity.canonicalName ?: return null
+        val componentName = ComponentName(Airship.application.packageName, name)
         return try {
-            Airship
-                .applicationContext
-                .packageManager
-                .getActivityInfo(componentName, PackageManager.GET_META_DATA)
+            context.applicationContext.packageManager.getActivityInfo(
+                componentName, PackageManager.GET_META_DATA
+            )
         } catch (ex: Exception) {
+            UALog.w(ex) { "Failed to get activity info" }
             null
         }
     }
@@ -74,15 +75,16 @@ public object ManifestUtils {
     /**
      * Gets the ApplicationInfo for the application.
      *
+     * @param context The application context.
      * @return An instance of ApplicationInfo, or null if the info is unavailable.
      */
-    public fun getApplicationInfo(): ApplicationInfo? {
+    public fun getApplicationInfo(context: Context): ApplicationInfo? {
         return try {
-            Airship
-                .applicationContext
-                .packageManager
-                .getApplicationInfo(Airship.applicationContext.packageName, PackageManager.GET_META_DATA)
+            context.applicationContext.packageManager.getApplicationInfo(
+                Airship.application.packageName, PackageManager.GET_META_DATA
+            )
         } catch (ex: Exception) {
+            UALog.w(ex) { "Failed to get application info" }
             null
         }
     }
@@ -90,20 +92,22 @@ public object ManifestUtils {
     /**
      * Helper method to check if local storage should be used.
      *
+     * @param context The application context.
      * @return `true` if local storage should be used, otherwise `false`.
      */
-    public fun shouldEnableLocalStorage(): Boolean {
-        val info = getApplicationInfo()
+    public fun shouldEnableLocalStorage(context: Context): Boolean {
+        val info = getApplicationInfo(context)
         return info?.metaData?.getBoolean(ENABLE_LOCAL_STORAGE, false) == true
     }
 
     /**
      * Helper method to check if the network security provider should be installed.
      *
+     * @param context The application context.
      * @return `true` if the provider should be installed, otherwise `false`.
      */
-    public fun shouldInstallNetworkSecurityProvider(): Boolean {
-        val info = getApplicationInfo()
+    public fun shouldInstallNetworkSecurityProvider(context: Context): Boolean {
+        val info = getApplicationInfo(context)
         return info?.metaData?.getBoolean(INSTALL_NETWORK_SECURITY_PROVIDER, false) == true
     }
 
@@ -115,8 +119,8 @@ public object ManifestUtils {
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun isWebViewSafeBrowsingEnabled(): Boolean {
-        val metadata = getApplicationInfo()?.metaData ?: return true
+    public fun isWebViewSafeBrowsingEnabled(context: Context): Boolean {
+        val metadata = getApplicationInfo(context)?.metaData ?: return true
         if (!metadata.containsKey(ENABLE_WEBVIEW_SAFE_BROWSING)) {
             return true
         }

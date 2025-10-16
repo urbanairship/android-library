@@ -32,7 +32,7 @@ internal class SystemSettingsLauncher {
             context.applicationContext.startActivity(
                 Intent("android.settings.APP_NOTIFICATION_SETTINGS")
                     .putExtra("app_package", context.packageName)
-                    .putExtra("app_uid", Airship.applicationContext.applicationInfo.uid)
+                    .putExtra("app_uid", Airship.application.applicationInfo.uid)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             )
             return true

@@ -176,9 +176,7 @@ public open class ActionRunRequest {
     }
 
     /**
-     * Executes the action asynchronously with a callback.
-     *
-     * @param callback The action completion callback.
+     * Executes the action.
      */
     public open suspend fun runSuspending(): ActionRunResult {
         val arguments = createActionArguments()
@@ -235,8 +233,16 @@ public open class ActionRunRequest {
      * @return The action registry entry if found, or null.
      */
     private fun lookUpAction(actionName: String): ActionRegistry.Entry? {
-        return registry?.getEntry(actionName)
-            ?: Airship.shared().actionRegistry.getEntry(actionName)
+
+        val entry = registry?.getEntry(actionName)
+        if (entry != null) {
+            return entry
+        }
+        return if (Airship.isFlyingOrTakingOff) {
+            Airship.actionRegistry.getEntry(actionName)
+        } else {
+            null
+        }
     }
 
     private fun getExecutionScope(arguments: ActionArguments): CoroutineScope {
@@ -319,7 +325,7 @@ public open class ActionRunRequest {
          *
          * @param actionName The action name in the registry.
          * @param registry Optional - The action registry to look up the action. If null, the registry
-         * from [com.urbanairship.Airship.getActionRegistry] will be used.
+         * from [com.urbanairship.Airship.actionRegistry] will be used.
          * @return An action run request.
          */
         @JvmStatic
@@ -337,7 +343,6 @@ public open class ActionRunRequest {
          * @throws java.lang.IllegalArgumentException if the action is null.
          */
         @JvmStatic
-        @JvmOverloads
         public fun createRequest(action: Action): ActionRunRequest = ActionRunRequest(action)
     }
 }

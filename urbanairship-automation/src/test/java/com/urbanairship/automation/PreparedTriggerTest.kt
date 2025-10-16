@@ -2,6 +2,7 @@ package com.urbanairship.automation
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.BaseTestCase
+import com.urbanairship.Platform
 import com.urbanairship.TestClock
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.automation.engine.AutomationEvent
@@ -12,6 +13,7 @@ import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import java.util.UUID
 import kotlin.time.Duration
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
@@ -799,7 +801,8 @@ public class PreparedTriggerTest: BaseTestCase() {
         val triggerData: TriggerData?
         val automationTrigger = trigger ?: AutomationTrigger.Event(
             EventAutomationTrigger(
-                type = EventAutomationTriggerType.APP_INIT, goal = 1.0
+                type = EventAutomationTriggerType.APP_INIT,
+                goal = 1.0
             )
         )
 

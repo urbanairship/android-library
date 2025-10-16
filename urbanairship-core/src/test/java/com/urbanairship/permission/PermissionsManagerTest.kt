@@ -406,7 +406,7 @@ public class PermissionsManagerTest {
         permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
 
         val job = async(Dispatchers.Default) {
-            permissionsManager.suspendingRequestPermission(
+            permissionsManager.requestPermission(
                 Permission.DISPLAY_NOTIFICATIONS,
                 fallback = PermissionPromptFallback.Callback {
                     mockDelegateStatus = PermissionRequestResult.granted()

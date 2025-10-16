@@ -2,7 +2,6 @@
 package com.urbanairship.actions
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestApplication
 import com.urbanairship.actions.Action.Situation
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.contacts.Contact
@@ -23,7 +22,11 @@ public class FetchDeviceInfoActionTest {
     private var airshipChannel: AirshipChannel = mockk()
     private var pushManager: PushManager = mockk()
     private var contact: Contact = mockk()
-    private var action = FetchDeviceInfoAction()
+    private var action = FetchDeviceInfoAction(
+        { airshipChannel },
+        { pushManager },
+        { contact }
+    )
 
     private val acceptedSituations = arrayOf(
         Situation.PUSH_OPENED,
@@ -34,15 +37,6 @@ public class FetchDeviceInfoActionTest {
         Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON,
         Situation.AUTOMATION
     )
-
-    @Before
-    public fun setUp() {
-        TestApplication.getApplication().apply {
-            setChannel(airshipChannel)
-            setPushManager(pushManager)
-            setContact(contact)
-        }
-    }
 
     /**
      * Test accepts arguments.

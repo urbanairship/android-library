@@ -42,7 +42,7 @@ internal object ConnectionUtils {
             return isInstalled
         }
 
-        if (!ManifestUtils.shouldInstallNetworkSecurityProvider()) {
+        if (!ManifestUtils.shouldInstallNetworkSecurityProvider(context)) {
             skipInstall = true
             return isInstalled
         }

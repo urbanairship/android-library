@@ -42,7 +42,7 @@ internal interface PrivacyViewModel {
 }
 
 internal class DefaultPrivacyViewModel(
-    private val privacyManager: PrivacyManager = Airship.shared().privacyManager
+    private val privacyManager: PrivacyManager = Airship.privacyManager
 ): PrivacyViewModel, ViewModel() {
 
     override val features: Flow<List<PrivacyFeature>> = callbackFlow {

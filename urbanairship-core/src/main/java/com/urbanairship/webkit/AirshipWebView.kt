@@ -110,7 +110,7 @@ public open class AirshipWebView : WebView {
         settings.javaScriptEnabled = true
         settings.cacheMode = WebSettings.LOAD_DEFAULT
 
-        if (ManifestUtils.shouldEnableLocalStorage()) {
+        if (ManifestUtils.shouldEnableLocalStorage(context)) {
             UALog.v("Application contains metadata to enable local storage")
             settings.domStorageEnabled = true
             settings.databaseEnabled = true
@@ -201,7 +201,7 @@ public open class AirshipWebView : WebView {
         }
 
         // Try to start Safe Browsing
-        if (!isStartSafeBrowsingAttempted && shouldStartSafeBrowsing()) {
+        if (!isStartSafeBrowsingAttempted && shouldStartSafeBrowsing(context)) {
             WebViewCompat.startSafeBrowsing(context.applicationContext) { started ->
                 if (!started) {
                     UALog.d("Unable to start Safe Browsing. Feature is not supported or disabled in the manifest.")
@@ -244,10 +244,10 @@ public open class AirshipWebView : WebView {
         return "Basic " + Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
     }
 
-    private fun shouldStartSafeBrowsing(): Boolean {
+    private fun shouldStartSafeBrowsing(context: Context): Boolean {
         return WebViewFeature.isFeatureSupported(WebViewFeature.START_SAFE_BROWSING)
                 && WebViewFeature.isFeatureSupported(WebViewFeature.SAFE_BROWSING_ENABLE)
                 && WebSettingsCompat.getSafeBrowsingEnabled(settings)
-                && ManifestUtils.isWebViewSafeBrowsingEnabled()
+                && ManifestUtils.isWebViewSafeBrowsingEnabled(context)
     }
 }

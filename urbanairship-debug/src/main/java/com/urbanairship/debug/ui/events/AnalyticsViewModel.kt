@@ -20,7 +20,7 @@ internal class DefaultAnalyticsViewModel: AnalyticsViewModel, ViewModel() {
             return if (!Airship.isFlying) {
                 null
             } else {
-                Airship.shared().analytics
+                Airship.analytics
             }
         }
 

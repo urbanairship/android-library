@@ -12,6 +12,7 @@ import com.urbanairship.Cancelable
 import com.urbanairship.PrivacyManager
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
+import com.urbanairship.messagecenter.messageCenter
 import com.urbanairship.permission.PermissionPromptFallback
 import com.urbanairship.push.pushNotificationStatusFlow
 import kotlinx.coroutines.flow.Flow
@@ -39,24 +40,24 @@ internal class DefaultHomeViewModel() : HomeViewModel, ViewModel() {
     override val isOptedInForPushes: StateFlow<Boolean> = _notificationStatus.asStateFlow()
 
     init {
-        Airship.shared { instance ->
-            _notificationStatus.update { instance.pushManager.isOptIn }
+        Airship.onReady {
+            _notificationStatus.update { push.isOptIn }
 
             viewModelScope.launch {
-                instance.pushManager.pushNotificationStatusFlow.collect { status ->
+                push.pushNotificationStatusFlow.collect { status ->
                     _notificationStatus.update { status.isOptIn }
                 }
             }
         }
     }
     override val channelId: StateFlow<String?>
-        get() = Airship.shared().channel.channelIdFlow
+        get() = Airship.channel.channelIdFlow
 
     override val namedUserId: StateFlow<String?>
-        get() = Airship.shared().contact.namedUserIdFlow
+        get() = Airship.contact.namedUserIdFlow
 
     override val unreadMessageCount: Flow<List<Message>>
-        get() = MessageCenter.shared().inbox.getUnreadMessagesFlow()
+        get() = Airship.messageCenter.inbox.getUnreadMessagesFlow()
 
     override fun copyToClipboard(context: Context) {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
@@ -70,10 +71,10 @@ internal class DefaultHomeViewModel() : HomeViewModel, ViewModel() {
 
         when(newValue) {
             true -> {
-                Airship.shared().privacyManager.enable(PrivacyManager.Feature.PUSH)
-                Airship.shared().pushManager.enableUserNotifications(PermissionPromptFallback.SystemSettings) {}
+                Airship.privacyManager.enable(PrivacyManager.Feature.PUSH)
+                Airship.push.enableUserNotifications(PermissionPromptFallback.SystemSettings) {}
             }
-            false -> Airship.shared().pushManager.userNotificationsEnabled = false
+            false -> Airship.push.userNotificationsEnabled = false
         }
     }
 

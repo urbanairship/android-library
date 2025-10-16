@@ -137,3 +137,18 @@ public sealed class SearchEventTemplate {
         const val TEMPLATE_NAME = "search"
     }
 }
+
+/**
+ * Creates a new [SearchEventTemplate.Properties].
+ *
+ * @param block A lambda function that configures the `Builder`.
+ * @return A new `SearchEventTemplate.Properties` instance.
+ */
+@JvmSynthetic
+public fun searchEventProperties(
+    block: SearchEventTemplate.Properties.Builder.() -> Unit
+): SearchEventTemplate.Properties {
+    val builder = SearchEventTemplate.Properties.newBuilder()
+    builder.block()
+    return builder.build()
+}

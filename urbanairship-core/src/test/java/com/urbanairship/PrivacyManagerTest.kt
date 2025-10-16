@@ -2,7 +2,6 @@ package com.urbanairship
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.base.Supplier
 import com.urbanairship.config.RemoteConfigObserver
 import com.urbanairship.remoteconfig.RemoteConfig
 import app.cash.turbine.test
@@ -12,20 +11,15 @@ import io.mockk.verify
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito
-import org.mockito.kotlin.never
 
 @RunWith(AndroidJUnit4::class)
 public class PrivacyManagerTest {

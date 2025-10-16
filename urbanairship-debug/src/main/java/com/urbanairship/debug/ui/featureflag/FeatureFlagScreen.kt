@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.urbanairship.Airship
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.debug.DebugManager
 import com.urbanairship.debug.ui.components.DebugScreen
@@ -31,6 +32,7 @@ import com.urbanairship.debug.ui.components.TopBarNavigation
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import com.urbanairship.featureflag.FeatureFlag
 import com.urbanairship.featureflag.FeatureFlagManager
+import com.urbanairship.featureflag.featureFlagManager
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalMap
 import com.urbanairship.remotedata.RemoteData
@@ -199,14 +201,14 @@ internal class DefaultFeatureFlagModel(
         errorsFlow.update { null }
 
         scope.launch {
-            val result = FeatureFlagManager.shared().flag(name)
+            val result = Airship.featureFlagManager.flag(name)
             evaluatedFlagState.update { result.getOrNull() }
             errorsFlow.update { result.exceptionOrNull()?.message }
         }
     }
 
     override fun trackInteraction(flag: FeatureFlag) {
-        FeatureFlagManager.shared().trackInteraction(flag)
+        Airship.featureFlagManager.trackInteraction(flag)
     }
 
     override fun shareJson(context: Context, content: JsonValue) {

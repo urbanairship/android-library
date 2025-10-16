@@ -52,7 +52,7 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
             return if (!Airship.isFlying) {
                 emptyFlow()
             } else {
-                Airship.shared().contact.namedUserIdFlow
+                Airship.contact.namedUserIdFlow
             }
         }
 
@@ -61,7 +61,7 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
             return if (!Airship.isFlying) {
                 emptyFlow()
             } else {
-                flowOf(Airship.shared().channel.tags)
+                flowOf(Airship.channel.tags)
             }
         }
 
@@ -70,7 +70,7 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
             return if (!Airship.isFlying) {
                 emptyFlow()
             } else {
-                Airship.shared().channel.channelIdFlow
+                Airship.channel.channelIdFlow
             }
         }
 
@@ -79,17 +79,13 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
             return if (!Airship.isFlying) {
                 emptyFlow()
             } else {
-                flowOf(Airship.shared().contact.lastContactId)
+                flowOf(Airship.contact.lastContactId)
             }
         }
 
 
     init {
-        if (!Airship.isFlying) {
-            Airship.shared { refresh() }
-        } else {
-            refresh()
-        }
+        Airship.onReady { refresh() }
     }
 
     override fun togglePushEnabled() {
@@ -98,7 +94,7 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
             return
         }
 
-        Airship.shared().pushManager.userNotificationsEnabled = !_pushStatus.value
+        Airship.push.userNotificationsEnabled = !_pushStatus.value
         refresh()
     }
 
@@ -108,12 +104,12 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
     }
 
     override fun copyChannelId(context: Context) {
-        val id = Airship.shared().channel.id ?: return
+        val id = Airship.channel.id ?: return
         copyToClipboard(context, id, "Channel Id")
     }
 
     override fun copyUserId(context: Context) {
-        val id = Airship.shared().contact.lastContactId ?: return
+        val id = Airship.contact.lastContactId ?: return
         copyToClipboard(context, id, "User Id")
     }
 
@@ -125,13 +121,13 @@ internal class DefaultDeviceInfoViewModel: DeviceInfoViewModel, ViewModel() {
     }
 
     private fun refresh() {
-        if (!Airship.isFlying) {
+        if (!Airship.isFlyingOrTakingOff) {
             return
         }
 
-        _pushStatus.update { Airship.shared().pushManager.userNotificationsEnabled }
-        _optInStatus.update { Airship.shared().pushManager.isOptIn }
-        _pushToken.update { Airship.shared().pushManager.pushToken }
-        _pushProvider.update { Airship.shared().pushManager.pushProvider?.deliveryType }
+        _pushStatus.update { Airship.push.userNotificationsEnabled }
+        _optInStatus.update { Airship.push.isOptIn }
+        _pushToken.update { Airship.push.pushToken }
+        _pushProvider.update { Airship.push.pushProvider?.deliveryType }
     }
 }

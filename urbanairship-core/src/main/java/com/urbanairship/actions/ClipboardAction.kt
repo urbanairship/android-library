@@ -29,7 +29,11 @@ import com.urbanairship.json.optionalField
  *
  * Default Registration Names: [DEFAULT_REGISTRY_SHORT_NAME], [DEFAULT_REGISTRY_NAME]
  */
-public class ClipboardAction public constructor() : Action() {
+public class ClipboardAction public constructor(
+    private  val contextProvider: () -> Context = {
+        Airship.application
+    }
+) : Action() {
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
         when (arguments.situation) {
@@ -60,7 +64,7 @@ public class ClipboardAction public constructor() : Action() {
             label = null
         }
 
-        val clipboardManager = Airship.applicationContext
+        val clipboardManager = contextProvider()
             .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val clip = ClipData.newPlainText(label, text)
         clipboardManager.setPrimaryClip(clip)

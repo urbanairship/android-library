@@ -74,9 +74,9 @@ public class PlayServicesErrorActivity public constructor() : FragmentActivity()
         if (isFinishing && Airship.isFlying) {
             // Check if we still have an error
             val error = isGooglePlayServicesAvailable(this)
-            if (error == ConnectionResult.SUCCESS && Airship.shared().pushManager.isPushEnabled) {
+            if (error == ConnectionResult.SUCCESS && Airship.push.isPushEnabled) {
                 // Resolved the error, make sure the service is started
-                Airship.shared().channel.updateRegistration()
+                Airship.channel.updateRegistration()
             }
         }
     }

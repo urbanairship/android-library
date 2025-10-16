@@ -5,6 +5,7 @@ package com.urbanairship.channel
 import android.net.Uri
 import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
@@ -60,8 +61,8 @@ internal class ChannelBatchUpdateApiClient(
             .appendPath(channelId)
 
         val platformName = when (config.platform) {
-            Airship.Platform.ANDROID -> PLATFORM_ANDROID
-            Airship.Platform.AMAZON -> PLATFORM_AMAZON
+            Platform.ANDROID -> PLATFORM_ANDROID
+            Platform.AMAZON -> PLATFORM_AMAZON
             else -> null
         }
 

@@ -20,6 +20,6 @@ public object AirshipComponentUtils {
      * @return A callable that returns the Airship Component when called.
      */
     public fun <T : AirshipComponent> callableForComponent(clazz: Class<T>): Callable<T> {
-        return Callable<T> { Airship.shared().requireComponent(clazz) }
+        return Callable<T> { Airship.requireComponent(clazz) }
     }
 }

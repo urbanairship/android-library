@@ -237,3 +237,18 @@ public sealed class RetailEventTemplate {
         const val TEMPLATE_NAME = "retail"
     }
 }
+
+/**
+ * Creates a new [RetailEventTemplate.Properties].
+ *
+ * @param block A lambda function that configures the `Builder`.
+ * @return A new `RetailEventTemplate.Properties` instance.
+ */
+@JvmSynthetic
+public fun retailEventProperties(
+    block: RetailEventTemplate.Properties.Builder.() -> Unit
+): RetailEventTemplate.Properties {
+    val builder = RetailEventTemplate.Properties.newBuilder()
+    builder.block()
+    return builder.build()
+}

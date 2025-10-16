@@ -5,10 +5,12 @@ package com.urbanairship.automation.engine
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.ApplicationMetrics
+import com.urbanairship.Platform
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.EventType
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.automation.EventAutomationTriggerType
+import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue

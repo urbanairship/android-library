@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics.location
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.analytics.ConversionData
 import com.urbanairship.analytics.EventTestUtils
@@ -17,6 +19,8 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 public class RegionEventTest {
+
+    private val context: Context = ApplicationProvider.getApplicationContext()
 
     /**
      * Test region event data formatting directly.
@@ -62,7 +66,7 @@ public class RegionEventTest {
         )
 
         // test isValid returns true for valid region event
-        assertEquals(expectedData.map, event.getEventData(ConversionData(null, null, null)))
+        assertEquals(expectedData.map, event.getEventData(context, ConversionData(null, null, null)))
     }
 
     /**

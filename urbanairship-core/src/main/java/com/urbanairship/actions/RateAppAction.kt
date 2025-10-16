@@ -1,9 +1,15 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
+import android.content.Context
 import android.content.Intent
 import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
+import com.urbanairship.actions.RateAppAction.Companion.BODY_KEY
+import com.urbanairship.actions.RateAppAction.Companion.DEFAULT_REGISTRY_NAME
+import com.urbanairship.actions.RateAppAction.Companion.DEFAULT_REGISTRY_SHORT_NAME
+import com.urbanairship.actions.RateAppAction.Companion.SHOW_LINK_PROMPT_KEY
+import com.urbanairship.actions.RateAppAction.Companion.TITLE_KEY
 import com.urbanairship.json.optionalField
 import com.urbanairship.util.AppStoreUtils
 
@@ -31,7 +37,20 @@ import com.urbanairship.util.AppStoreUtils
  *
  *
  */
-public class RateAppAction public constructor() : Action() {
+public class RateAppAction public constructor(
+    private val appStoreIntentProvider: () -> Intent,
+    private val contextProvider: () -> Context
+) : Action() {
+
+    public constructor(): this(
+        appStoreIntentProvider = {
+            AppStoreUtils
+                .getAppStoreIntent(
+                    Airship.application, Airship.platform, Airship.airshipConfigOptions
+                )
+        },
+        contextProvider = { Airship.application }
+    )
 
     override fun perform(arguments: ActionArguments): ActionResult {
 
@@ -44,26 +63,21 @@ public class RateAppAction public constructor() : Action() {
         if (shouldShowLinkPrompt) {
             startRateAppActivity(arguments)
         } else {
-            val airship = Airship.shared()
-            val openLinkIntent = AppStoreUtils
-                .getAppStoreIntent(
-                    Airship.applicationContext, airship.platformType, airship.airshipConfigOptions
-                )
-                .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-
-            Airship.applicationContext.startActivity(openLinkIntent)
+            contextProvider().startActivity(
+                appStoreIntentProvider().setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
         }
 
         return newEmptyResult()
     }
 
     private fun startRateAppActivity(arguments: ActionArguments) {
-        val context = Airship.applicationContext
+        val context = contextProvider()
         val argMap = arguments.value.toJsonValue().optMap()
 
         val intent = Intent(SHOW_RATE_APP_INTENT_ACTION)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            .setPackage(Airship.applicationContext.packageName)
+            .setPackage(context.packageName)
 
         argMap.optionalField<String>(TITLE_KEY)?.let {
             intent.putExtra(TITLE_KEY, it)

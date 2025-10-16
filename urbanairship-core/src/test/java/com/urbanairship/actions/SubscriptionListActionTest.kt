@@ -5,8 +5,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.actions.Action.Situation
 import com.urbanairship.actions.ActionValue.Companion.wrap
-import com.urbanairship.base.Supplier
-import com.urbanairship.channel.ChannelSubscriptions
 import com.urbanairship.channel.SubscriptionListEditor
 import com.urbanairship.channel.SubscriptionListMutation
 import com.urbanairship.contacts.Scope
@@ -34,14 +32,14 @@ public class SubscriptionListActionTest {
     private val channelMutations = mutableListOf<SubscriptionListMutation>()
     private val contactEditor: ScopedSubscriptionListEditor =
         object : ScopedSubscriptionListEditor(clock) {
-            override fun onApply(collapsedMutations: List<ScopedSubscriptionListMutation>) {
-                contactMutations.addAll(collapsedMutations)
+            override fun onApply(mutations: List<ScopedSubscriptionListMutation>) {
+                contactMutations.addAll(mutations)
             }
         }
 
     private val action = SubscriptionListAction(
-        channelEditorSupplier = { channelEditor },
-        contactEditorSupplier = { contactEditor }
+        channelEditorProvider = { channelEditor },
+        contactEditorProvider = { contactEditor }
     )
 
     @Test

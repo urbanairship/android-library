@@ -4,6 +4,8 @@ package com.urbanairship.actions
 import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
+import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.contacts.Contact
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
@@ -33,7 +35,10 @@ import java.util.Date
  *  }
  * ```
  */
-public class SetAttributesAction public constructor() : Action() {
+public class SetAttributesAction public constructor(
+    private val channelProvider: () -> AirshipChannel = { Airship.channel },
+    private val contactProvider: () -> Contact = { Airship.contact }
+) : Action() {
 
     override fun perform(arguments: ActionArguments): ActionResult {
         val actions = try {
@@ -43,8 +48,8 @@ public class SetAttributesAction public constructor() : Action() {
             return newEmptyResult()
         }
 
-        val channelEditor = Airship.shared().channel.editAttributes()
-        val contactEditor = Airship.shared().contact.editAttributes()
+        val channelEditor = channelProvider().editAttributes()
+        val contactEditor = contactProvider().editAttributes()
 
         val targets = actions.map { it.editor }.toSet()
 
@@ -97,7 +102,7 @@ public class SetAttributesAction public constructor() : Action() {
         try {
             val actions = parseActions(arguments.value.toJsonValue())
             return actions.isNotEmpty()
-        } catch (_: kotlin.Exception) {
+        } catch (_: Exception) {
             return false
         }
     }

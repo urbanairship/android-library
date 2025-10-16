@@ -150,7 +150,7 @@ public constructor(
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(jobInfo: JobInfo): JobResult {
         return if (privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
             runBlocking {
                 inbox.performUpdate().fold(onSuccess = { result ->
@@ -291,11 +291,17 @@ public constructor(
         /**
          * Gets the shared Message Center instance.
          *
-         * @return The shared Message Center instance.
+         * This method is the static entry point for Java clients. It delegates
+         * access to the primary [Airship] singleton, ensuring the component is available
+         * and fully initialized before returning.
+         *
+         * @return The MessageCenter instance.
+         * @throws IllegalStateException if [Airship.takeOff] has not been called.
+         *
+         * @see Airship.messageCenter For the corresponding Kotlin extension property.
          */
         @JvmStatic
-        public fun shared(): MessageCenter =
-            Airship.shared().requireComponent(MessageCenter::class.java)
+        public fun shared(): MessageCenter = Airship.messageCenter
 
         /**
          * Parses the message Id from a message center intent.
@@ -336,3 +342,21 @@ internal fun JobDispatcher.scheduleInboxUpdateJob(reason: Inbox.UpdateType) {
         .build()
     this.dispatch(jobInfo)
 }
+
+
+/**
+ * Provides access to the [MessageCenter] module features via the main [Airship] singleton.
+ *
+ *
+ * Access is thread-safe. Calling this property before Airship is finished taking off
+ * will block the calling thread until initialization is complete.
+ *
+ * @return The MessageCenter instance.
+ * @throws IllegalStateException if [Airship.takeOff] has not been called.
+ *
+ * @see MessageCenter.shared For the corresponding Java static access pattern.
+ */
+public val Airship.messageCenter: MessageCenter
+    get() {
+        return Airship.requireComponent(MessageCenter::class.java)
+    }

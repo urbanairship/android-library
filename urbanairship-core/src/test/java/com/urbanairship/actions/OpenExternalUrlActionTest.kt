@@ -19,7 +19,10 @@ import org.robolectric.Shadows
 public class OpenExternalUrlActionTest {
 
     private val urlAllowList: UrlAllowList = mockk()
-    private val action = OpenExternalUrlAction { urlAllowList }
+    private val action = OpenExternalUrlAction(
+        allowListProvider = { urlAllowList },
+        contextProvider = { ApplicationProvider.getApplicationContext() }
+    )
 
     /**
      * Test accepts arguments

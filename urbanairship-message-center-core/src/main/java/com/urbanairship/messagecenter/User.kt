@@ -2,6 +2,7 @@
 package com.urbanairship.messagecenter
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.Airship
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import java.io.UnsupportedEncodingException
@@ -152,7 +153,7 @@ public class User internal constructor(
          */
         @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public val isCreated: Boolean
-            get() = MessageCenter.shared().user.isUserCreated
+            get() = Airship.messageCenter.user.isUserCreated
 
         /**
          * Encode the string with the key.

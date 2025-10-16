@@ -25,6 +25,7 @@ import com.urbanairship.push.notifications.NotificationProvider
 import com.urbanairship.push.notifications.NotificationResult
 import com.urbanairship.util.PendingIntentCompat
 import java.util.UUID
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -40,6 +41,8 @@ internal class IncomingPushRunnable private constructor(
     private val isLongRunning = builder.isLongRunning
     private val isProcessed = builder.isProcessed
 
+    private val pushManagerProvider: (Duration) -> PushManager? = builder.pushManagerProvider
+
     private val notificationManager = builder.notificationManager
         ?: NotificationManagerCompat.from(context)
     private val jobDispatcher = builder.jobDispatcher
@@ -50,10 +53,11 @@ internal class IncomingPushRunnable private constructor(
     override fun run() {
         Autopilot.automaticTakeOff(context)
 
-        val airshipWaitTime = if (isLongRunning) LONG_AIRSHIP_WAIT_TIME else AIRSHIP_WAIT_TIME
-        val airship = Airship.waitForTakeOff(airshipWaitTime.inWholeMilliseconds)
+        val push = pushManagerProvider(
+            if (isLongRunning) LONG_AIRSHIP_WAIT_TIME else AIRSHIP_WAIT_TIME
+        )
 
-        if (airship == null) {
+        if (push == null) {
             UALog.e("Unable to process push, Airship is not ready. Make sure takeOff " +
                     "is called by either using autopilot or by calling takeOff in the application's onCreate method.")
             return
@@ -64,30 +68,25 @@ internal class IncomingPushRunnable private constructor(
             return
         }
 
-        if (checkProvider(airship, providerClass)) {
+        if (checkProvider(push, providerClass)) {
             // If we've already processed the push, proceed to notification display
             if (isProcessed) {
-                postProcessPush(airship)
+                postProcessPush(push)
             } else {
-                processPush(airship)
+                processPush(push)
             }
         }
     }
 
-    /**
-     * Starts processing the push.
-     *
-     * @param airship The airship instance.
-     */
-    private fun processPush(airship: Airship) {
+    private fun processPush(push: PushManager) {
         UALog.i("Processing push: $message")
 
-        if (!airship.pushManager.isPushEnabled) {
+        if (!push.isPushEnabled) {
             UALog.d("Push disabled, ignoring message")
             return
         }
 
-        if (!airship.pushManager.isUniqueCanonicalId(message.canonicalPushId)) {
+        if (!push.isUniqueCanonicalId(message.canonicalPushId)) {
             UALog.d("Received a duplicate push with canonical ID: %s", message.canonicalPushId)
             return
         }
@@ -99,7 +98,7 @@ internal class IncomingPushRunnable private constructor(
 
         if (message.isPing || message.isRemoteDataUpdate) {
             UALog.v("Received internal push.")
-            airship.pushManager.onPushReceived(message, false)
+            push.onPushReceived(message, false)
             return
         }
 
@@ -112,25 +111,19 @@ internal class IncomingPushRunnable private constructor(
         runActions()
 
         // Set last received metadata
-        airship.pushManager.lastReceivedMetadata = message.metadata
+        push.lastReceivedMetadata = message.metadata
 
         // Finish processing the push
-        postProcessPush(airship)
+        postProcessPush(push)
     }
 
-    /**
-     * Finishes processing the push. This step builds the notification if applicable and
-     * notifies the airship receiver if the notification was posted or cancelled.
-     *
-     * @param airship The airship instance.
-     */
     @Throws(IllegalArgumentException::class)
-    private fun postProcessPush(airship: Airship) {
-        if (!airship.pushManager.isOptIn) {
+    private fun postProcessPush(push: PushManager) {
+        if (!push.isOptIn) {
             UALog.i(
                 "User notifications opted out. Unable to display notification for message: $message",
             )
-            postProcessPushFinished(airship, message, false)
+            postProcessPushFinished(push, message, false)
             return
         }
 
@@ -139,25 +132,25 @@ internal class IncomingPushRunnable private constructor(
                 UALog.i(
                     "Push message flagged as not able to be displayed in the foreground: $message",
                 )
-                postProcessPushFinished(airship, message, false)
+                postProcessPushFinished(push, message, false)
                 return
             }
 
-            val displayForegroundPredicate = airship.pushManager.foregroundNotificationDisplayPredicate
+            val displayForegroundPredicate = push.foregroundNotificationDisplayPredicate
             if (displayForegroundPredicate?.apply(message) == false) {
                 UALog.i(
                     "Foreground notification display predicate prevented the display of message: $message",
                 )
-                postProcessPushFinished(airship, message, false)
+                postProcessPushFinished(push, message, false)
                 return
             }
         }
 
-        val provider = getNotificationProvider(airship) ?: run {
+        val provider = getNotificationProvider(push) ?: run {
             UALog.e(
                 "Notification provider is null. Unable to display notification for message: $message",
             )
-            postProcessPushFinished(airship, message, false)
+            postProcessPushFinished(push, message, false)
             return
         }
 
@@ -165,7 +158,7 @@ internal class IncomingPushRunnable private constructor(
             provider.onCreateNotificationArguments(context, message)
         } catch (e: Exception) {
             UALog.e(e, "Failed to generate notification arguments for message. Skipping.")
-            postProcessPushFinished(airship, message, false)
+            postProcessPushFinished(push, message, false)
             return
         }
 
@@ -189,16 +182,16 @@ internal class IncomingPushRunnable private constructor(
                 val notification = result.notification
                     ?: throw IllegalArgumentException("Invalid notification result. Missing notification.")
 
-                val notificationChannel = getNotificationChannel(airship, notification, arguments)
+                val notificationChannel = getNotificationChannel(push, notification, arguments)
 
-                // Apply legacy settings
-                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                    if (notificationChannel != null) {
-                        NotificationChannelUtils.applyLegacySettings(notification, notificationChannel)
-                    } else {
-                        applyDeprecatedSettings(airship, notification)
+                if (notificationChannel != null) {
+                    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+                        NotificationChannelUtils.applyLegacySettings(
+                            notification,
+                            notificationChannel
+                        )
                     }
-                } else if (notificationChannel == null) {
+                } else {
                     UALog.e("Missing required notification channel. Notification will most likely not display.")
                 }
 
@@ -208,16 +201,16 @@ internal class IncomingPushRunnable private constructor(
                 // Post the notification
                 val posted = postNotification(notification, arguments)
 
-                postProcessPushFinished(airship, message, posted)
+                postProcessPushFinished(push, message, posted)
 
                 if (posted) {
-                    airship.pushManager.onNotificationPosted(
+                    push.onNotificationPosted(
                         message, arguments.notificationId, arguments.notificationTag
                     )
                 }
             }
 
-            NotificationResult.Status.CANCEL -> postProcessPushFinished(airship, message, false)
+            NotificationResult.Status.CANCEL -> postProcessPushFinished(push, message, false)
 
             NotificationResult.Status.RETRY -> {
                 UALog.d("Scheduling notification to be retried for a later time: %s", message)
@@ -227,42 +220,21 @@ internal class IncomingPushRunnable private constructor(
     }
 
     private fun postProcessPushFinished(
-        airship: Airship,
+        push: PushManager,
         message: PushMessage,
         notificationPosted: Boolean
-    ) = airship.pushManager.onPushReceived(message, notificationPosted)
+    ) = push.onPushReceived(message, notificationPosted)
 
-    private fun getNotificationProvider(airship: Airship): NotificationProvider? {
+    private fun getNotificationProvider(push: PushManager): NotificationProvider? {
         if (message.isAirshipPush) {
-            return airship.pushManager.notificationProvider
+            return push.notificationProvider
         }
 
         return null
     }
 
-    /**
-     * Applies deprecated sound, vibration, and quiet time settings to the notification.
-     *
-     * @param airship The airship instance.
-     * @param notification The notification.
-     */
-    @Suppress("deprecation")
-    private fun applyDeprecatedSettings(airship: Airship, notification: Notification) {
-        if (!airship.pushManager.isVibrateEnabled || airship.pushManager.isInQuietTime) {
-            // Remove both the vibrate and the DEFAULT_VIBRATE flag
-            notification.vibrate = null
-            notification.defaults = notification.defaults and Notification.DEFAULT_VIBRATE.inv()
-        }
-
-        if (!airship.pushManager.isSoundEnabled || airship.pushManager.isInQuietTime) {
-            // Remove both the sound and the DEFAULT_SOUND flag
-            notification.sound = null
-            notification.defaults = notification.defaults and Notification.DEFAULT_SOUND.inv()
-        }
-    }
-
     private fun getNotificationChannel(
-        airship: Airship,
+        push: PushManager,
         notification: Notification,
         arguments: NotificationArguments
     ): NotificationChannelCompat? {
@@ -273,7 +245,7 @@ internal class IncomingPushRunnable private constructor(
         }
 
         return channelId?.let {
-            airship.pushManager.notificationChannelRegistry.getNotificationChannelSync(it)
+            push.notificationChannelRegistry.getNotificationChannelSync(it)
         }
     }
 
@@ -345,12 +317,12 @@ internal class IncomingPushRunnable private constructor(
     /**
      * Checks if the message should be processed for the given provider.
      *
-     * @param airship The airship instance.
+     * @param push The [PushManager] instance.
      * @param providerClass The provider class.
      * @return `true` if the message should be processed, otherwise `false`.
      */
-    private fun checkProvider(airship: Airship, providerClass: String?): Boolean {
-        val provider = airship.pushManager.pushProvider
+    private fun checkProvider(push: PushManager, providerClass: String?): Boolean {
+        val provider = push.pushProvider
 
         if (provider == null || provider.javaClass.toString() != providerClass) {
             UALog.e("Received message callback from unexpected provider %s. Ignoring.", providerClass)
@@ -362,7 +334,7 @@ internal class IncomingPushRunnable private constructor(
             return false
         }
 
-        if (!airship.pushManager.isPushAvailable || !airship.pushManager.isPushEnabled) {
+        if (!push.isPushAvailable || !push.isPushEnabled) {
             UALog.e("Received message when push is disabled. Ignoring.")
             return false
         }
@@ -394,8 +366,16 @@ internal class IncomingPushRunnable private constructor(
     /**
      * IncomingPushRunnable builder.
      */
-    internal class Builder(context: Context) {
-
+    internal class Builder(
+        context: Context,
+        val pushManagerProvider: (Duration) -> PushManager? = {
+            if (Airship.waitForReadyBlocking(duration = it)) {
+                Airship.push
+            } else {
+                null
+            }
+        }
+    ) {
         internal val context: Context = context.applicationContext
         var message: PushMessage? = null
             private set

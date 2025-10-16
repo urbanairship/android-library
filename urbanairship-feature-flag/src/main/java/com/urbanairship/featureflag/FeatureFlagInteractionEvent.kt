@@ -2,6 +2,7 @@
 
 package com.urbanairship.featureflag
 
+import android.content.Context
 import com.urbanairship.analytics.ConversionData
 import com.urbanairship.analytics.Event
 import com.urbanairship.analytics.EventType
@@ -30,5 +31,5 @@ internal class FeatureFlagInteractionEvent private constructor(
     )
 
     override val type: EventType = EventType.FEATURE_FLAG_INTERACTION
-    override fun getEventData(conversionData: ConversionData): JsonMap = data
+    override fun getEventData(context: Context, conversionData: ConversionData): JsonMap = data
 }

@@ -22,20 +22,21 @@ public interface JobRunner {
 
         override fun run(jobInfo: JobInfo, resultConsumer: Consumer<JobResult>) {
             executor.execute {
-                val airship = Airship.waitForTakeOff(AIRSHIP_WAIT_TIME.inWholeMilliseconds) ?: run {
+                if (!Airship.waitForReadyBlocking(AIRSHIP_WAIT_TIME)) {
                     UALog.e("Airship not ready. Rescheduling job: $jobInfo")
                     resultConsumer.accept(JobResult.RETRY)
                     return@execute
                 }
 
-                val component = findAirshipComponent(airship, jobInfo.airshipComponentName) ?: run {
+
+                val component = findAirshipComponent( jobInfo.airshipComponentName) ?: run {
                     UALog.e("Unavailable to find airship components for jobInfo: $jobInfo")
                     resultConsumer.accept(JobResult.SUCCESS)
                     return@execute
                 }
 
                 component.getJobExecutor(jobInfo).execute {
-                    val result = component.onPerformJob(airship, jobInfo)
+                    val result = component.onPerformJob(jobInfo)
                     UALog.v("Finished: $jobInfo with result: $result")
                     resultConsumer.accept(result)
                 }
@@ -46,18 +47,16 @@ public interface JobRunner {
          * Finds the [AirshipComponent]s for a given job.
          *
          * @param componentClassName The component's class name.
-         * @param airship The airship instance.
          * @return The airship component.
          */
         private fun findAirshipComponent(
-            airship: Airship,
             componentClassName: String
         ): AirshipComponent? {
             if (componentClassName.isEmpty()) {
                 return null
             }
 
-            return airship.getComponentsList().firstOrNull { it.javaClass.name == componentClassName }
+            return Airship.components.firstOrNull { it.javaClass.name == componentClassName }
         }
 
         private companion object {

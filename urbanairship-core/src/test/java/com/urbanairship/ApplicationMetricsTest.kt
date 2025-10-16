@@ -1,21 +1,23 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship
 
+import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert
 import org.junit.Test
 import org.robolectric.Shadows
 
 public class ApplicationMetricsTest : BaseTestCase() {
+    private val context = ApplicationProvider.getApplicationContext<Context>()
 
     private val activityMonitor = TestActivityMonitor()
     private val dataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext())
-    private val packageManager = Shadows.shadowOf(TestApplication.getApplication().packageManager)
+    private val packageManager = Shadows.shadowOf(context.packageManager)
     private val privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL)
 
-    private val metrics = ApplicationMetrics(
-        context = TestApplication.getApplication(),
-        preferenceDataStore = dataStore,
+    private var metrics = ApplicationMetrics(
+        context = context,
+        dataStore = dataStore,
         privacyManager = privacyManager,
         activityMonitor = activityMonitor
     )
@@ -26,7 +28,6 @@ public class ApplicationMetricsTest : BaseTestCase() {
      */
     @Test
     public fun testGetLastOpenNotSet() {
-        metrics.init()
         Assert.assertEquals("Last open time should default to -1", -1, metrics.lastOpenTimeMillis)
     }
 
@@ -36,8 +37,6 @@ public class ApplicationMetricsTest : BaseTestCase() {
      */
     @Test
     public fun testLastOpenTimeTracking() {
-        metrics.init()
-
         // Foreground the app to update last open time
         activityMonitor.foreground(1000)
 
@@ -50,7 +49,13 @@ public class ApplicationMetricsTest : BaseTestCase() {
         dataStore.put("com.urbanairship.application.metrics.APP_VERSION", 1L)
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 2
-        metrics.init()
+
+        metrics = ApplicationMetrics(
+            context = context,
+            dataStore = dataStore,
+            privacyManager = privacyManager,
+            activityMonitor = activityMonitor
+        )
 
         // Version should be counted as updated
         Assert.assertTrue(metrics.appVersionUpdated)
@@ -66,9 +71,23 @@ public class ApplicationMetricsTest : BaseTestCase() {
     public fun testGetAppVersionUpdatedNoLastVersion() {
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 2
-        metrics.init()
 
-        // Version should not be counted as updated
+        metrics = ApplicationMetrics(
+            context = context,
+            dataStore = dataStore,
+            privacyManager = privacyManager,
+            activityMonitor = activityMonitor
+        )
+
+        Assert.assertTrue(metrics.appVersionUpdated)
+
+        metrics = ApplicationMetrics(
+            context = context,
+            dataStore = dataStore,
+            privacyManager = privacyManager,
+            activityMonitor = activityMonitor
+        )
+
         Assert.assertFalse(metrics.appVersionUpdated)
 
         // Last app version should now be 2
@@ -83,7 +102,14 @@ public class ApplicationMetricsTest : BaseTestCase() {
         dataStore.put("com.urbanairship.application.metrics.APP_VERSION", 2L)
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 2L
-        metrics.init()
+
+
+        metrics = ApplicationMetrics(
+            context = context,
+            dataStore = dataStore,
+            privacyManager = privacyManager,
+            activityMonitor = activityMonitor
+        )
 
         // Version should not be counted as updated
         Assert.assertFalse(metrics.appVersionUpdated)
@@ -100,7 +126,13 @@ public class ApplicationMetricsTest : BaseTestCase() {
         dataStore.put("com.urbanairship.application.metrics.APP_VERSION", 2L)
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 1L
-        metrics.init()
+
+        metrics = ApplicationMetrics(
+            context = context,
+            dataStore = dataStore,
+            privacyManager = privacyManager,
+            activityMonitor = activityMonitor
+        )
 
         // Version should not be counted as updated
         Assert.assertFalse(metrics.appVersionUpdated)

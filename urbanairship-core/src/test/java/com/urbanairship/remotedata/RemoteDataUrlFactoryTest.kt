@@ -6,6 +6,7 @@ import android.content.Context
 import com.urbanairship.PushProviders
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.http.RequestException
 import com.urbanairship.push.PushProvider
 import io.mockk.every
@@ -29,7 +30,7 @@ public class RemoteDataUrlFactoryTest {
 
     private val factory: RemoteDataUrlFactory = RemoteDataUrlFactory(
         runtimeConfig,
-        pushProvidersSupplier = { pushProviders }
+        { pushProviders }
     )
 
     /**
@@ -39,7 +40,7 @@ public class RemoteDataUrlFactoryTest {
     @Throws(RequestException::class)
     public fun testSdkVersion() {
         val uri = factory.createAppUrl(Locale("en"), 555)!!
-        Assert.assertEquals(uri.getQueryParameter("sdk_version"), Airship.getVersion())
+        Assert.assertEquals(uri.getQueryParameter("sdk_version"), Airship.version)
     }
 
     /**
@@ -125,7 +126,7 @@ public class RemoteDataUrlFactoryTest {
     @Test
     public fun testAppUrl() {
         val uri = factory.createAppUrl(Locale.CANADA_FRENCH, 555)!!
-        val sdkVersion = Airship.getVersion()
+        val sdkVersion = Airship.version
 
         Assert.assertEquals(
             "https://remote-data.urbanairship.com/api/remote-data/app/appKey/android?sdk_version=$sdkVersion&random_value=555&language=fr&country=CA",
@@ -137,7 +138,7 @@ public class RemoteDataUrlFactoryTest {
     public fun testContactUrl() {
         val uri = factory.createContactUrl("some-contact-id", Locale.CANADA_FRENCH, 555)!!
 
-        val sdkVersion = Airship.getVersion()
+        val sdkVersion = Airship.version
         Assert.assertEquals(
             "https://remote-data.urbanairship.com/api/remote-data-contact/android/some-contact-id?sdk_version=$sdkVersion&random_value=555&language=fr&country=CA",
             uri.toString()
@@ -146,7 +147,7 @@ public class RemoteDataUrlFactoryTest {
 
     private class TestPushProvider(override val deliveryType: PushProvider.DeliveryType) : PushProvider {
 
-        override val platform: Airship.Platform
+        override val platform: Platform
             get() = throw RuntimeException("Not implemented")
 
 

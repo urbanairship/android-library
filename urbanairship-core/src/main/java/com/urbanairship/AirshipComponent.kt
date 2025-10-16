@@ -69,14 +69,13 @@ public abstract class AirshipComponent @RestrictTo(RestrictTo.Scope.LIBRARY_GROU
     /**
      * Called when a scheduled [JobInfo] is ready to perform.
      *
-     * @param airship The airship instance.
      * @param jobInfo The JobInfo.
      * @return The result of the jobInfo.
      * @hide
      */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public open fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
+    public open fun onPerformJob(jobInfo: JobInfo): JobResult {
         return JobResult.SUCCESS
     }
 

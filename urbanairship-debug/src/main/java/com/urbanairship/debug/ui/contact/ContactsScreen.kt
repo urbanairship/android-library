@@ -38,7 +38,7 @@ private fun ScreenContent(onNavigate: (String) -> Unit = {}) {
         RowItem(
             modifier = Modifier.clickable { onNavigate(ContactScreens.NamedUser.route) },
             title = "Named User",
-            details = if (Airship.isFlying) { Airship.shared().contact.namedUserId } else { null },
+            details = if (Airship.isFlying) { Airship.contact.namedUserId } else { null },
             accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
         )
 

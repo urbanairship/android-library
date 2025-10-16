@@ -1,15 +1,14 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestApplication
-import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.UrlAllowList
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -21,13 +20,12 @@ public class WalletActionTest {
         value = "https://some.example.com")
 
     private val urlAllowList: UrlAllowList = mockk(relaxed = true)
-    private val action = WalletAction { urlAllowList }
-
-    @Before
-    public fun setup() {
-        // Default the platform to Android
-        TestApplication.getApplication().setPlatform(Airship.Platform.ANDROID)
-    }
+    private var platformProvider: () -> Platform = { Platform.ANDROID }
+    private val action = WalletAction(
+        allowListProvider =  { urlAllowList },
+        contextProvider = { ApplicationProvider.getApplicationContext() },
+        platformProvider = platformProvider
+    )
 
     /**
      * Test action accepts kitkat+ devices.
@@ -43,7 +41,7 @@ public class WalletActionTest {
      */
     @Test
     public fun testRejectsAdmPlatform() {
-        TestApplication.getApplication().setPlatform(Airship.Platform.ANDROID)
+        platformProvider = { Platform.AMAZON }
         assertFalse(action.acceptsArguments(testArgs))
     }
 

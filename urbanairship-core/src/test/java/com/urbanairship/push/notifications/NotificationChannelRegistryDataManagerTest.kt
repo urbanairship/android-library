@@ -3,8 +3,8 @@ package com.urbanairship.push.notifications
 import android.app.Notification
 import android.app.NotificationManager
 import android.net.Uri
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestApplication
 import org.junit.After
 import org.junit.Assert
 import org.junit.Test
@@ -14,7 +14,7 @@ import org.junit.runner.RunWith
 public class NotificationChannelRegistryDataManagerTest {
 
     private var dataManager = NotificationChannelRegistryDataManager(
-        context = TestApplication.getApplication(),
+        context = ApplicationProvider.getApplicationContext(),
         appKey = "appKey",
         dbName = "test")
 

@@ -27,7 +27,7 @@ internal class AutomationRemoteDataSubscriber (
     private val remoteDataAccess: AutomationRemoteDataAccessInterface,
     private val engine: AutomationEngineInterface,
     private val frequencyLimitManager: FrequencyLimitManager,
-    private val airshipSDKVersion: String = Airship.getVersion(),
+    private val airshipSDKVersion: String = Airship.version,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 )  {
 

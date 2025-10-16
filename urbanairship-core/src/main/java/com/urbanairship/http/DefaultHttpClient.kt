@@ -11,6 +11,7 @@ import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.MalformedURLException
 import java.net.URL
+import java.net.URLConnection
 import java.util.zip.GZIPOutputStream
 
 internal class DefaultHttpClient : HttpClient {
@@ -31,9 +32,7 @@ internal class DefaultHttpClient : HttpClient {
         var conn: HttpURLConnection? = null
 
         return try {
-            conn = ConnectionUtils.openSecureConnection(
-                Airship.applicationContext, actualUrl
-            ) as HttpURLConnection
+            conn = openConnection(actualUrl) as HttpURLConnection
 
             conn.apply {
                 requestMethod = method
@@ -86,6 +85,17 @@ internal class DefaultHttpClient : HttpClient {
             conn?.disconnect()
         }
     }
+
+    private fun openConnection(url: URL): URLConnection {
+        return if (Airship.isFlyingOrTakingOff) {
+            ConnectionUtils.openSecureConnection(
+                context = Airship.application, url = url
+            )
+        } else {
+            url.openConnection()
+        }
+    }
+
 
     private fun mapHeaders(headers: Map<String, List<String>>): Map<String, String> {
         return headers.mapValues { (_, value) ->

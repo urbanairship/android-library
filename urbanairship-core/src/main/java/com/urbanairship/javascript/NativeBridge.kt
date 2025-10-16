@@ -18,6 +18,7 @@ import com.urbanairship.actions.ActionRunRequestExtender
 import com.urbanairship.actions.ActionRunner
 import com.urbanairship.actions.ActionValue
 import com.urbanairship.actions.DefaultActionRunner
+import com.urbanairship.contacts.Contact
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.UriUtils
@@ -35,7 +36,8 @@ import org.json.JSONObject
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class NativeBridge @VisibleForTesting public constructor(
     private val actionRunner: ActionRunner = DefaultActionRunner,
-    private val executor: Executor = newSerialExecutor()
+    private val executor: Executor = newSerialExecutor(),
+    private val contactProvider: () -> Contact = { Airship.contact }
 ) {
 
     private val callback = MutableStateFlow<ActionCompletionCallback?>(null)
@@ -318,9 +320,9 @@ public class NativeBridge @VisibleForTesting public constructor(
     private fun setNamedUserCommand(namedUser: String?) {
         val trimmedName = namedUser?.trim { it <= ' ' }
         if (trimmedName.isNullOrEmpty()) {
-            Airship.shared().contact.reset()
+            contactProvider().reset()
         } else {
-            Airship.shared().contact.identify(trimmedName)
+            contactProvider().identify(trimmedName)
         }
     }
 

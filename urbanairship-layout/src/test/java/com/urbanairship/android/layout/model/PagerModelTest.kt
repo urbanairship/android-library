@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.SharedState
@@ -18,8 +19,10 @@ import com.urbanairship.json.JsonValue
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.spyk
+import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
@@ -95,10 +98,8 @@ public class PagerModelTest {
         }
 
         mockkStatic(Airship::class)
-        every { Airship.shared() } returns mockk {
-            every { platformType } returns Airship.Platform.ANDROID
-        }
-        every { Airship.applicationContext } returns mockk()
+        every { Airship.platform } returns Platform.ANDROID
+        every { Airship.application } returns mockk()
 
         mockkStatic(PagerView::pagerScrolls)
         every { mockView.pagerScrolls() } returns scrollsFlow
@@ -108,8 +109,8 @@ public class PagerModelTest {
     public fun tearDown() {
         Dispatchers.resetMain()
 
-        unmockkStatic(PagerView::pagerScrolls)
         unmockkStatic(Airship::class)
+        unmockkStatic(PagerView::pagerScrolls)
     }
 
     @Test

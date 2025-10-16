@@ -4,18 +4,17 @@ package com.urbanairship.channel
 import android.content.Context
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
+import com.urbanairship.Airship
 import com.urbanairship.PendingResult
+import com.urbanairship.Platform
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
-import com.urbanairship.Airship
-import com.urbanairship.Airship.Companion.applicationContext
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
-import com.urbanairship.locale.LocaleChangedListener
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
@@ -27,9 +26,7 @@ import java.util.TimeZone
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -129,8 +126,7 @@ public class AirshipChannelTest {
         }
 
         coEvery { mockPermissionsManager.checkPermissionStatus(any()) } answers {
-            val status = configuredPermissions[firstArg()] ?: PermissionStatus.NOT_DETERMINED
-            PendingResult<PermissionStatus?>().also { it.setResult(status) }
+            configuredPermissions[firstArg()] ?: PermissionStatus.NOT_DETERMINED
         }
 
         coEvery { mockRegistrar.payloadBuilder } coAnswers {
@@ -305,7 +301,7 @@ public class AirshipChannelTest {
 
     @Test
     public fun testEditSubscriptionsClosure(): TestResult = runTest {
-        channel.editSubscriptionLists { it.subscribe("some list") }
+        channel.editSubscriptionLists { subscribe("some list") }
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
             mockBatchUpdateManager.addUpdate(
@@ -396,7 +392,7 @@ public class AirshipChannelTest {
         assertEquals(result, channel.fetchSubscriptionLists())
     }
 
-    private val versionName: String? = applicationContext.packageManager.getPackageInfo(context.packageName, 0)?.versionName
+    private val versionName: String? = context.packageManager.getPackageInfo(context.packageName, 0)?.versionName
 
     @Test
     public fun testCraPayloadAndroid(): TestResult = runTest {
@@ -420,7 +416,7 @@ public class AirshipChannelTest {
             .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setSdkVersion(Airship.getVersion())
+            .setSdkVersion(Airship.version)
             .setIsActive(false)
             .setPermissions(mapOf(
                 "location" to "granted",
@@ -434,7 +430,7 @@ public class AirshipChannelTest {
 
     @Test
     public fun testCraPayloadAmazon(): TestResult = runTest {
-        testConfig.setPlatform(Airship.Platform.AMAZON)
+        testConfig.setPlatform(Platform.AMAZON)
 
         every {
             mockLocaleManager.locale
@@ -451,7 +447,7 @@ public class AirshipChannelTest {
             .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setSdkVersion(Airship.getVersion())
+            .setSdkVersion(Airship.version)
             .setIsActive(false)
             .build()
 
@@ -475,7 +471,7 @@ public class AirshipChannelTest {
             .setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
             .setTags(true, setOf("cool_tag"))
             .setTimezone(TimeZone.getDefault().id)
-            .setSdkVersion(Airship.getVersion())
+            .setSdkVersion(Airship.version)
             .setIsActive(false)
             .build()
 
@@ -524,7 +520,7 @@ public class AirshipChannelTest {
             .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setSdkVersion(Airship.getVersion())
+            .setSdkVersion(Airship.version)
             .setIsActive(false)
             .build()
 
@@ -552,7 +548,7 @@ public class AirshipChannelTest {
             .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setSdkVersion(Airship.getVersion())
+            .setSdkVersion(Airship.version)
             .build()
 
         val payload = channel.buildCraPayload()
@@ -581,7 +577,7 @@ public class AirshipChannelTest {
             .setAppVersion(versionName)
             .setDeviceModel(Build.MODEL)
             .setApiVersion(Build.VERSION.SDK_INT)
-            .setSdkVersion(Airship.getVersion())
+            .setSdkVersion(Airship.version)
             .setIsActive(false)
             .setPermissions(mapOf(
                 "location" to "granted",
@@ -623,7 +619,7 @@ public class AirshipChannelTest {
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns true
         coEvery { mockBatchUpdateManager.hasPending } returns false
 
-        assertEquals(JobResult.SUCCESS, channel.onPerformJob(mockk(), replaceJob))
+        assertEquals(JobResult.SUCCESS, channel.onPerformJob( replaceJob))
 
         coVerify { mockBatchUpdateManager.uploadPending("some channel id") }
         coVerify { mockRegistrar.updateRegistration() }
@@ -636,7 +632,7 @@ public class AirshipChannelTest {
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns true
         coEvery { mockBatchUpdateManager.hasPending } returns false
 
-        assertEquals(JobResult.SUCCESS, channel.onPerformJob(mockk(), keepJob))
+        assertEquals(JobResult.SUCCESS, channel.onPerformJob(keepJob))
 
         coVerify { mockBatchUpdateManager.uploadPending("some channel id") }
         coVerify { mockRegistrar.updateRegistration() }
@@ -651,7 +647,7 @@ public class AirshipChannelTest {
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns true
         coEvery { mockBatchUpdateManager.hasPending } returns true
 
-        assertEquals(JobResult.SUCCESS, channel.onPerformJob(mockk(), keepJob))
+        assertEquals(JobResult.SUCCESS, channel.onPerformJob(keepJob))
 
         coVerify { mockBatchUpdateManager.uploadPending("some channel id") }
         coVerify { mockRegistrar.updateRegistration() }
@@ -664,7 +660,7 @@ public class AirshipChannelTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.FAILED
 
-        assertEquals(JobResult.FAILURE, channel.onPerformJob(mockk(), keepJob))
+        assertEquals(JobResult.FAILURE, channel.onPerformJob(keepJob))
 
         coVerify(exactly = 0) { mockBatchUpdateManager.uploadPending("some channel id") }
         coVerify { mockRegistrar.updateRegistration() }
@@ -677,7 +673,7 @@ public class AirshipChannelTest {
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns false
         coEvery { mockBatchUpdateManager.hasPending } returns false
 
-        assertEquals(JobResult.FAILURE, channel.onPerformJob(mockk(), keepJob))
+        assertEquals(JobResult.FAILURE, channel.onPerformJob(keepJob))
 
         coVerify { mockBatchUpdateManager.uploadPending("some channel id") }
         coVerify { mockRegistrar.updateRegistration() }

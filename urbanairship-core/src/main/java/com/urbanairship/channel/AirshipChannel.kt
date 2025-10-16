@@ -3,6 +3,7 @@ package com.urbanairship.channel
 
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RestrictTo
@@ -15,7 +16,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.UALog.logLevel
 import com.urbanairship.Airship
-import com.urbanairship.Airship.Companion.applicationContext
+import com.urbanairship.Platform
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
@@ -145,9 +146,10 @@ public class AirshipChannel internal constructor(
     init {
         channelRegistrar.channelId?.let {
             if (logLevel < Log.ASSERT && it.isNotEmpty()) {
-                val appName = applicationContext.packageManager.getApplicationLabel(
-                    applicationContext.applicationInfo).toString()
-                Log.d(appName + " Channel ID", it)
+                val appName = context.packageManager
+                    .getApplicationLabel(context.applicationInfo)
+
+                Log.d("$appName Channel ID", it)
             }
         }
 
@@ -240,7 +242,7 @@ public class AirshipChannel internal constructor(
      * @hide
      */
     @WorkerThread
-    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(jobInfo: JobInfo): JobResult {
         if (!isRegistrationAllowed) {
             UALog.d { "Channel registration is currently disabled." }
             return JobResult.SUCCESS
@@ -324,6 +326,7 @@ public class AirshipChannel internal constructor(
     /**
      * Edits channel Tags. Automatically calls [TagEditor.apply].
      */
+    @JvmSynthetic
     public fun editTags(block: TagEditor.() -> Unit) {
         val editor = editTags()
         block.invoke(editor)
@@ -362,6 +365,7 @@ public class AirshipChannel internal constructor(
     /**
      * Edits channel tag groups. Automatically calls [TagGroupsEditor.apply].
      */
+    @JvmSynthetic
     public fun editTagGroups(block: TagGroupsEditor.() -> Unit) {
         val editor = editTagGroups()
         block.invoke(editor)
@@ -392,6 +396,7 @@ public class AirshipChannel internal constructor(
     /**
      * Edits the attributes associated with this channel. Automatically calls [AttributeEditor.apply].
      */
+    @JvmSynthetic
     public fun editAttributes(block: AttributeEditor.() -> Unit) {
         val editor = editAttributes()
         block.invoke(editor)
@@ -490,7 +495,8 @@ public class AirshipChannel internal constructor(
     /**
      * Edits the channel subscription lists. Automatically calls [SubscriptionListEditor.apply].
      */
-    public fun editSubscriptionLists(block: (SubscriptionListEditor) -> Unit) {
+    @JvmSynthetic
+    public fun editSubscriptionLists(block: SubscriptionListEditor.() -> Unit) {
         val editor = editSubscriptionLists()
         block.invoke(editor)
         editor.apply()
@@ -545,26 +551,23 @@ public class AirshipChannel internal constructor(
         jobDispatcher.dispatch(jobInfo)
     }
 
+    @Throws(PackageManager.NameNotFoundException::class, IllegalStateException::class)
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public suspend fun buildCraPayload(): ChannelRegistrationPayload {
         var builder = ChannelRegistrationPayload.Builder()
 
         when (runtimeConfig.platform) {
-            Airship.Platform.ANDROID -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
-            Airship.Platform.AMAZON -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.AMAZON)
+            Platform.ANDROID -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
+            Platform.AMAZON -> builder.setDeviceType(ChannelRegistrationPayload.DeviceType.AMAZON)
             else -> throw IllegalStateException("Unable to get platform")
         }
 
         if (!privacyManager.isAnyFeatureEnabled) {
-            return builder.setOptIn(false)
-                .setBackgroundEnabled(false)
-                .setTags(true, emptySet())
-                .build()
+            return builder.setOptIn(false).setBackgroundEnabled(false).setTags(true, emptySet()).build()
         }
 
         val shouldSetTags = channelTagRegistrationEnabled
-        builder.setTags(shouldSetTags, if (shouldSetTags) tags else null)
-            .setIsActive(activityMonitor.isAppForegrounded)
+        builder.setTags(shouldSetTags, if (shouldSetTags) tags else null).setIsActive(activityMonitor.isAppForegrounded)
 
         for (extender in channelRegistrationPayloadExtenders) {
             builder = when (extender) {
@@ -574,11 +577,9 @@ public class AirshipChannel internal constructor(
         }
 
         if (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
-            Airship
-                .applicationContext
-                .packageManager
-                .getPackageInfo(context.packageName, 0)
-                ?.versionName?.let { builder.setAppVersion(it) }
+            context.packageManager.getPackageInfo(context.packageName, 0)
+                ?.versionName
+                ?.let { builder.setAppVersion(it) }
             builder.setDeviceModel(Build.MODEL)
             builder.setApiVersion(Build.VERSION.SDK_INT)
         }
@@ -592,22 +593,14 @@ public class AirshipChannel internal constructor(
             if (!UAStringUtil.isEmpty(locale.language)) {
                 builder.setLanguage(locale.language)
             }
-            builder.setSdkVersion(Airship.getVersion())
+            builder.setSdkVersion(Airship.version)
         }
 
         if (privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
             val permissions = buildMap {
                 permissionsManager.configuredPermissions.forEach { permission ->
-                    try {
-                        permissionsManager
-                            .checkPermissionStatus(permission)
-                            .get()
-                            ?.let { status ->
-                                if (status != PermissionStatus.NOT_DETERMINED) {
-                                    put(permission.value, status.value)
-                                }
-                            }
-                    } catch (_: Exception) {}
+                    val status = permissionsManager.checkPermissionStatus(permission)
+                    put(permission.value, status.value)
                 }
             }
 

@@ -2,6 +2,7 @@ package com.urbanairship.automation.audiencecheck
 
 import android.net.Uri
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
@@ -28,8 +29,8 @@ internal class AdditionalAudienceCheckApiClient(
     @Throws(InvalidParameterException::class)
     suspend fun resolve(info: Info): RequestResult<Result> {
         val platform = when (config.platform) {
-            Airship.Platform.ANDROID -> "android"
-            Airship.Platform.AMAZON -> "amazon"
+            Platform.ANDROID -> "android"
+            Platform.AMAZON -> "amazon"
             else -> null
         } ?: return RequestResult(exception = InvalidParameterException("Invalid platform"))
 

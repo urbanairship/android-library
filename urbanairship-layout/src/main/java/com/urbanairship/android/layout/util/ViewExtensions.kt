@@ -203,7 +203,7 @@ internal val View.localBounds: RectF
     get() = RectF(0f, 0f, width.toFloat(), height.toFloat())
 
 internal val View.isLayoutRtl: Boolean
-    get() = TextUtilsCompat.getLayoutDirectionFromLocale(Airship.shared().locale) == View.LAYOUT_DIRECTION_RTL
+    get() = TextUtilsCompat.getLayoutDirectionFromLocale(Airship.localeManager.locale) == View.LAYOUT_DIRECTION_RTL
 
 
 internal fun MotionEvent.findTargetDescendant(

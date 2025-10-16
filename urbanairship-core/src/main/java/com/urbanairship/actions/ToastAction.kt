@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
+import android.content.Context
 import android.widget.Toast
 import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newResult
@@ -27,7 +28,9 @@ import com.urbanairship.actions.ActionResult.Companion.newResult
  *
  * Default Registration Names: [DEFAULT_REGISTRY_NAME]
  */
-public class ToastAction public constructor() : Action() {
+public class ToastAction(
+    private val contextProvider: () -> Context = { Airship.application }
+): Action() {
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
         return when (arguments.situation) {
@@ -52,9 +55,9 @@ public class ToastAction public constructor() : Action() {
             ?: arguments.value.string
 
         if (length == Toast.LENGTH_LONG) {
-            Toast.makeText(Airship.applicationContext, text, Toast.LENGTH_LONG).show()
+            Toast.makeText(contextProvider(), text, Toast.LENGTH_LONG).show()
         } else {
-            Toast.makeText(Airship.applicationContext, text, Toast.LENGTH_SHORT).show()
+            Toast.makeText(contextProvider(), text, Toast.LENGTH_SHORT).show()
         }
 
         return newResult(arguments.value)

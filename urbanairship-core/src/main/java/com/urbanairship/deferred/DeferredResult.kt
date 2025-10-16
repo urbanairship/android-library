@@ -55,6 +55,7 @@ public data class DeferredTriggerContext(
         }
     }
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue {
         return jsonMapOf(
             KEY_TYPE to type,
@@ -76,5 +77,5 @@ public data class DeferredRequest(
     val locale: Locale,
     val notificationOptIn: Boolean,
     val appVersionName: String,
-    val sdkVersion: String = Airship.getVersion()
+    val sdkVersion: String = Airship.version
 )

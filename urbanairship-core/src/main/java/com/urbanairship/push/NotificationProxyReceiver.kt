@@ -35,7 +35,13 @@ public class NotificationProxyReceiver public constructor() : BroadcastReceiver(
         UALog.v("Received intent: %s", intent.action)
 
         val pendingResult = goAsync()
-        val future = NotificationIntentProcessor(context = context, intent = intent).process()
+        val future = NotificationIntentProcessor(
+            analytics = Airship.analytics,
+            pushManager = Airship.push,
+            autoLaunchApplication = Airship.airshipConfigOptions.autoLaunchApplication,
+            context = context,
+            intent = intent
+        ).process()
 
         AirshipExecutors.threadPoolExecutor().execute {
             try {

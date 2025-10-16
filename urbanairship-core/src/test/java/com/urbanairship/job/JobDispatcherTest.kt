@@ -1,9 +1,11 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.job
 
+import android.app.Application
+import android.content.Context
 import androidx.core.util.Consumer
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestApplication
 import com.urbanairship.push.PushManager
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.days
@@ -22,7 +24,7 @@ public class JobDispatcherTest {
     private val mockRateLimiter: RateLimiter = mockk(relaxed = true)
     private val jobRunner = TestJobRunner()
     private val mockScheduler: Scheduler = mockk(relaxed = true)
-    private val context: TestApplication = TestApplication.getApplication()
+    private val context: Context = ApplicationProvider.getApplicationContext<Context>()
     private val dispatcher = JobDispatcher(context, mockScheduler, jobRunner, mockRateLimiter)
     private val mockConsumer: Consumer<JobResult> = mockk(relaxed = true)
 

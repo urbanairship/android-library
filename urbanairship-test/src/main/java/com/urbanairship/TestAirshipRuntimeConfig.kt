@@ -12,7 +12,7 @@ import com.urbanairship.remoteconfig.RemoteConfig
 public class TestAirshipRuntimeConfig private constructor(
     private val configProvider: SettableProvider<AirshipConfigOptions>,
     dataStore: PreferenceDataStore,
-    private val platformProvider: SettableProvider<Airship.Platform>,
+    private val platformProvider: SettableProvider<Platform>,
     remoteConfig: RemoteConfig?,
     session: RequestSession? = null
 ) : AirshipRuntimeConfig(
@@ -24,7 +24,7 @@ public class TestAirshipRuntimeConfig private constructor(
             AirshipConfigOptions.Builder().setAppKey("appKey").setAppSecret("appSecret").build()
         ),
         PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext<Context>()),
-        SettableProvider(Airship.Platform.ANDROID),
+        SettableProvider(Platform.ANDROID),
         remoteConfig,
         session
     )
@@ -33,7 +33,7 @@ public class TestAirshipRuntimeConfig private constructor(
         remoteConfig?.let { updateRemoteConfig(it) }
     }
 
-    public fun setPlatform(platform: Airship.Platform) {
+    public fun setPlatform(platform: Platform) {
         platformProvider.value = platform
     }
 

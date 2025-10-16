@@ -226,3 +226,18 @@ public sealed class MediaEventTemplate {
         internal const val TEMPLATE_NAME = "media"
     }
 }
+
+/**
+ * Creates a new [MediaEventTemplate.Properties].
+ *
+ * @param block A lambda function that configures the `Builder`.
+ * @return A new `MediaEventTemplate.Properties` instance.
+ */
+@JvmSynthetic
+public fun mediaEventProperties(
+    block: MediaEventTemplate.Properties.Builder.() -> Unit
+): MediaEventTemplate.Properties {
+    val builder = MediaEventTemplate.Properties.newBuilder()
+    builder.block()
+    return builder.build()
+}

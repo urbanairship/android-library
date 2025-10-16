@@ -1,8 +1,9 @@
 package com.urbanairship.liveupdate
 
+import android.content.Context
 import androidx.core.app.NotificationManagerCompat
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestApplication
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.liveupdate.LiveUpdateProcessor.Operation
 import com.urbanairship.liveupdate.data.LiveUpdateDao
@@ -27,7 +28,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class LiveUpdateRegistrarTest {
 
-    private val context = TestApplication.getApplication()
+    private val context: Context = ApplicationProvider.getApplicationContext()
     private val testDispatcher = StandardTestDispatcher()
     private val channel: AirshipChannel = mockk(relaxed = true)
 

@@ -13,10 +13,10 @@ import java.util.Date
 internal class ThomasChannelRegistrar(
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val registerEmail: (String, com.urbanairship.contacts.EmailRegistrationOptions) -> Unit = { address, options ->
-        Airship.shared().contact.registerEmail(address, options)
+        Airship.contact.registerEmail(address, options)
     },
     private val registerSms: (String, SmsRegistrationOptions) -> Unit = { msisdn, options ->
-        Airship.shared().contact.registerSms(msisdn, options)
+        Airship.contact.registerSms(msisdn, options)
     }
 ) {
     fun register(channels: List<ThomasChannelRegistration>) {

@@ -126,7 +126,7 @@ internal class WebViewView(
         @Suppress("DEPRECATION")
         wv.settings.run {
             javaScriptEnabled = true
-            if (ManifestUtils.shouldEnableLocalStorage()) {
+            if (ManifestUtils.shouldEnableLocalStorage(context)) {
                 domStorageEnabled = true
                 databaseEnabled = true
             }
@@ -164,7 +164,7 @@ internal class WebViewView(
 
         addView(frameLayout)
 
-        if (!Airship.shared().urlAllowList.isAllowed(model.viewInfo.url, UrlAllowList.Scope.OPEN_URL)) {
+        if (!Airship.urlAllowList.isAllowed(model.viewInfo.url, UrlAllowList.Scope.OPEN_URL)) {
             UALog.e("URL not allowed. Unable to load: %s", model.viewInfo.url)
             return
         }

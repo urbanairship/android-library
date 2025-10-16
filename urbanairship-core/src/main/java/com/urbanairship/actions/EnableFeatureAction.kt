@@ -2,7 +2,6 @@
 package com.urbanairship.actions
 
 import com.urbanairship.Airship
-import com.urbanairship.base.Supplier
 import com.urbanairship.json.JsonException
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionsManager
@@ -27,13 +26,8 @@ import com.urbanairship.permission.PermissionsManager
  * Default Registration Names: [DEFAULT_REGISTRY_NAME], [DEFAULT_REGISTRY_SHORT_NAME]
  */
 public class EnableFeatureAction @JvmOverloads public constructor(
-    permissionsManagerSupplier: Supplier<PermissionsManager> = object :
-        Supplier<PermissionsManager> {
-        override fun get(): PermissionsManager {
-            return Airship.shared().permissionsManager
-        }
-    }
-) : PromptPermissionAction(permissionsManagerSupplier) {
+    permissionsManagerProvider: () -> PermissionsManager = { Airship.permissionsManager }
+) : PromptPermissionAction(permissionsManagerProvider) {
 
     @Throws(JsonException::class, IllegalArgumentException::class)
     public override fun parseArg(arguments: ActionArguments): Args {

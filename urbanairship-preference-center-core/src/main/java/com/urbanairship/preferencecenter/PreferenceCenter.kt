@@ -38,11 +38,18 @@ public class PreferenceCenter internal constructor(
         /**
          * Gets the shared `PreferenceCenter` instance.
          *
+         * This method is the static entry point for Java clients. It delegates
+         * access to the primary [Airship] singleton, ensuring the component is available
+         * and fully initialized before returning.
+         *
          * @return an instance of `PreferenceCenter`.
+         * @throws IllegalStateException if [Airship.takeOff] has not been called.
+         *
+         * @see Airship.preferenceCenter For the corresponding Kotlin extension property.
          */
         @JvmStatic
         public fun shared(): PreferenceCenter =
-            Airship.shared().requireComponent(PreferenceCenter::class.java)
+            Airship.preferenceCenter
 
         /**
          * Parses the Preference Center ID from the given [Intent].
@@ -228,3 +235,20 @@ public class PreferenceCenter internal constructor(
         }
     }
 }
+
+/**
+ * Provides access to the [PreferenceCenter] module features via the main [Airship] singleton.
+ *
+ *
+ * Access is thread-safe. Calling this property before Airship is finished taking off
+ * will block the calling thread until initialization is complete.
+ *
+ * @return The PreferenceCenter instance.
+ * @throws IllegalStateException if [Airship.takeOff] has not been called.
+ *
+ * @see PreferenceCenter.shared For the corresponding Java static access pattern.
+ */
+public val Airship.preferenceCenter: PreferenceCenter
+    get() {
+        return Airship.requireComponent(PreferenceCenter::class.java)
+    }

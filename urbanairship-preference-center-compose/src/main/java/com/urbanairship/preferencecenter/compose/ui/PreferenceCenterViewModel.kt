@@ -105,8 +105,8 @@ internal sealed class ContactManagerDialog {
 internal class DefaultPreferenceCenterViewModel(
     override val identifier: String,
     private val preferenceCenter: PreferenceCenter = PreferenceCenter.shared(),
-    private val channel: AirshipChannel = Airship.shared().channel,
-    private val contact: Contact = Airship.shared().contact,
+    private val channel: AirshipChannel = Airship.channel,
+    private val contact: Contact = Airship.contact,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val actionRunner: ActionRunner = DefaultActionRunner,
     private val conditionMonitor: ConditionStateMonitor = ConditionStateMonitor(),
@@ -503,7 +503,7 @@ internal class DefaultPreferenceCenterViewModel(
         when (item) {
             is Item.ChannelSubscription -> with(item) {
                 channel.editSubscriptionLists {
-                    it.mutate(subscriptionId, isEnabled)
+                    mutate(subscriptionId, isEnabled)
                 }
                 emit(Change.UpdateSubscriptions(subscriptionId, isEnabled))
             }

@@ -16,7 +16,7 @@ public class EnableFeatureActionTest {
 
     private val mockPermissionManager: PermissionsManager = mockk()
     private val action = EnableFeatureAction(
-        permissionsManagerSupplier = { mockPermissionManager }
+        { mockPermissionManager }
     )
 
     @Test

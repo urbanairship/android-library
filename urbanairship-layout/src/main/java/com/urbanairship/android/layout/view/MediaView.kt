@@ -239,7 +239,7 @@ internal class MediaView(
                     }
                     .build()
 
-                Airship.shared().getImageLoader().load(context, iv, options)
+                Airship.imageLoader.load(context, iv, options)
             }
 
             loadImage(url)
@@ -332,7 +332,7 @@ internal class MediaView(
 
             javaScriptEnabled = true
 
-            if (ManifestUtils.shouldEnableLocalStorage()) {
+            if (ManifestUtils.shouldEnableLocalStorage(context)) {
                 domStorageEnabled = true
                 databaseEnabled = true
             }

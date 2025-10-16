@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
+import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonMap
 import com.urbanairship.util.Clock
@@ -45,12 +46,13 @@ public abstract class Event @JvmOverloads public constructor(
     /**
      * Override in `Event` sub-classes to create the event data.
      *
+     * @param context The context.
      * @param conversionData The conversion data.
      * @return The event data.
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public abstract fun getEventData(conversionData: ConversionData): JsonMap
+    public abstract fun getEventData(context: Context, conversionData: ConversionData): JsonMap
 
     /**
      * Returns the current time zone.

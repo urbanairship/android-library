@@ -360,19 +360,19 @@ public class RemoteDataTest {
     @Test
     public fun testJobDispatchSuccess(): TestResult = runTest {
         coEvery { mockRefreshManager.performRefresh(any(), any(), any()) } returns JobResult.SUCCESS
-        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(mockk(), jobInfo))
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(jobInfo))
     }
 
     @Test
     public fun testJobDispatchFailure(): TestResult = runTest {
         coEvery { mockRefreshManager.performRefresh(any(), any(), any()) } returns JobResult.FAILURE
-        assertEquals(JobResult.FAILURE, remoteData.onPerformJob(mockk(), jobInfo))
+        assertEquals(JobResult.FAILURE, remoteData.onPerformJob(jobInfo))
     }
 
     @Test
     public fun testRefresh(): TestResult = runTest {
         coEvery { mockRefreshManager.performRefresh(any(), any(), any()) } returns JobResult.SUCCESS
-        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(mockk(), jobInfo))
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(jobInfo))
 
         coVerify {
             mockRefreshManager.performRefresh(
@@ -388,10 +388,10 @@ public class RemoteDataTest {
         coEvery { mockRefreshManager.performRefresh(any(), any(), any()) } returns JobResult.SUCCESS
 
         privacyManager.setEnabledFeatures(PrivacyManager.Feature.NONE)
-        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(mockk(), jobInfo))
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(jobInfo))
 
         privacyManager.setEnabledFeatures(PrivacyManager.Feature.ANALYTICS)
-        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(mockk(), jobInfo))
+        assertEquals(JobResult.SUCCESS, remoteData.onPerformJob(jobInfo))
 
         coVerify(exactly = 3) { mockRefreshManager.performRefresh(any(), any(), any()) }
     }

@@ -20,13 +20,21 @@ import org.robolectric.Shadows
 @RunWith(AndroidJUnit4::class)
 public class DeepLinkActionTest {
 
-    private val mockShip: Airship = mockk()
-    private val action = DeepLinkAction(airshipSupplier = { mockShip })
+    var deepLinks = mutableListOf<String>()
+    var defaultResult: Boolean = false
+
+    private val action = DeepLinkAction(
+        onDeepLink = {
+            deepLinks.add(it)
+            defaultResult
+        },
+        contextProvider = { ApplicationProvider.getApplicationContext() }
+    )
 
     @Test
     public fun testPerform() {
         val deepLink = "http://example.com"
-        every { mockShip.deepLink(deepLink) } returns true
+        defaultResult = true
 
         val args = ActionTestUtils.createArgs(Action.Situation.WEB_VIEW_INVOCATION, deepLink)
         val result = action.perform(args)
@@ -34,7 +42,7 @@ public class DeepLinkActionTest {
         assertEquals(result.status, ActionResult.Status.COMPLETED)
         assertEquals(deepLink, result.value.getString(""))
 
-        verify { mockShip.deepLink(any()) }
+        assertEquals(deepLinks, listOf("http://example.com"))
     }
 
     @Test
@@ -53,7 +61,7 @@ public class DeepLinkActionTest {
     @Test
     public fun testPerformFallback() {
         val deepLink = "http://example.com"
-        every { mockShip.deepLink(deepLink) } returns false
+        defaultResult = false
 
         val args = ActionTestUtils.createArgs(Action.Situation.WEB_VIEW_INVOCATION, deepLink)
         val result = action.perform(args)
@@ -65,7 +73,7 @@ public class DeepLinkActionTest {
     @Test
     public fun testPerformFallbackAnyString() {
         val deepLink = "adfadfafdsaf adfa dsfadfsa example"
-        every { mockShip.deepLink(deepLink) } returns false
+        defaultResult = false
 
         val args = ActionTestUtils.createArgs(Action.Situation.WEB_VIEW_INVOCATION, deepLink)
         val result = action.perform(args)
@@ -76,13 +84,13 @@ public class DeepLinkActionTest {
 
     @Test
     public fun testFallbackPushMessage() {
+        defaultResult = false
+
         val message = PushMessage(bundleOf("oh" to "hi"))
 
         val metadata = bundleOf(
             ActionArguments.PUSH_MESSAGE_METADATA to message
         )
-
-        every { mockShip.deepLink(any()) } returns false
 
         val args =
             ActionTestUtils.createArgs(Action.Situation.PUSH_OPENED, "http://example.com", metadata)

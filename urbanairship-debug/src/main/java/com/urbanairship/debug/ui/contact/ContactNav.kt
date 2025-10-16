@@ -33,7 +33,7 @@ internal fun NavGraphBuilder.contactsNav(navController: NavController) {
             TagGroupsScreen(
                 editorProvider = {
                     if (Airship.isFlying) {
-                        Airship.shared().contact.editTagGroups()
+                        Airship.contact.editTagGroups()
                     } else {
                         null
                     }
@@ -46,7 +46,7 @@ internal fun NavGraphBuilder.contactsNav(navController: NavController) {
             AttributeEditScreen(
                 editorProvider = {
                     if (Airship.isFlying) {
-                        Airship.shared().contact.editAttributes()
+                        Airship.contact.editAttributes()
                     } else {
                         null
                     }
@@ -60,14 +60,14 @@ internal fun NavGraphBuilder.contactsNav(navController: NavController) {
                 provider = object : ScopedSubscriptionListProvider {
                     override fun getEditor(): ScopedSubscriptionListEditor? {
                         return if (Airship.isFlying) {
-                            Airship.shared().contact.editSubscriptionLists()
+                            Airship.contact.editSubscriptionLists()
                         } else {
                             null
                         }
                     }
 
                     override suspend fun fetch(): Result<Map<String, Set<Scope>>> {
-                        return Airship.shared().contact.fetchSubscriptionLists()
+                        return Airship.contact.fetchSubscriptionLists()
                     }
                 },
                 onNavigateUp = { navController.popBackStack() }

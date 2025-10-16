@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
+import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonMap
@@ -39,7 +40,7 @@ internal class ScreenTrackingEvent(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun getEventData(conversionData: ConversionData): JsonMap = jsonMapOf(
+    override fun getEventData(context: Context, conversionData: ConversionData): JsonMap = jsonMapOf(
         SCREEN_KEY to screen,
         PREVIOUS_SCREEN_KEY to previousScreen,
         START_TIME_KEY to startTime.milliseconds.toSecondsString(),

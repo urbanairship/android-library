@@ -6,7 +6,6 @@ import com.urbanairship.UALog
 import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newErrorResult
 import com.urbanairship.actions.ActionResult.Companion.newResult
-import com.urbanairship.base.Supplier
 import com.urbanairship.channel.SubscriptionListEditor
 import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListEditor
@@ -49,21 +48,21 @@ import com.urbanairship.json.requireField
  */
 
 public class SubscriptionListAction @VisibleForTesting internal constructor(
-    private val channelEditorSupplier: Supplier<SubscriptionListEditor?>,
-    private val contactEditorSupplier: Supplier<ScopedSubscriptionListEditor?>
+    private val channelEditorProvider: () -> SubscriptionListEditor,
+    private val contactEditorProvider: () -> ScopedSubscriptionListEditor
 ) : Action() {
 
     /**
      * Default constructor.
      */
     public constructor() : this(
-        channelEditorSupplier = Supplier<SubscriptionListEditor?> { Airship.shared().channel.editSubscriptionLists() },
-        contactEditorSupplier = Supplier<ScopedSubscriptionListEditor?> { Airship.shared().contact.editSubscriptionLists() }
+        channelEditorProvider = { Airship.channel.editSubscriptionLists() },
+        contactEditorProvider = { Airship.contact.editSubscriptionLists() }
     )
 
     override fun perform(arguments: ActionArguments): ActionResult {
-        val channelEditor = requireNotNull(channelEditorSupplier.get())
-        val contactEditor = requireNotNull(contactEditorSupplier.get())
+        val channelEditor = channelEditorProvider()
+        val contactEditor = contactEditorProvider()
 
         arguments.value
             .toJsonValue()

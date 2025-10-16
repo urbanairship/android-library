@@ -35,9 +35,23 @@ import java.util.WeakHashMap
 public open class AirshipWebViewClient
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public constructor(
-    private val nativeBridge: NativeBridge
+internal constructor(
+    private val nativeBridge: NativeBridge,
+    private val allowListProvider: () -> UrlAllowList,
+    private val javaScriptExtender: (JavaScriptEnvironment.Builder) -> JavaScriptEnvironment.Builder
 ) : WebViewClient() {
+
+    public  constructor(nativeBridge: NativeBridge) : this(
+        nativeBridge,
+        allowListProvider = { Airship.urlAllowList },
+        javaScriptExtender = { builder ->
+            builder.addGetter("getDeviceModel", Build.MODEL)
+                .addGetter("getChannelId", Airship.channel.id)
+                .addGetter("getAppKey", Airship.airshipConfigOptions.appKey)
+                .addGetter("getNamedUser", Airship.contact.namedUserId)
+        }
+    )
+
 
     private val authRequestCredentials = mutableMapOf<String, Credentials>()
     private val pendingNativeBridgeLoads: MutableMap<WebView, Cancelable> = WeakHashMap()
@@ -104,10 +118,7 @@ public constructor(
     @CallSuper
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     protected open fun extendJavascriptEnvironment(builder: JavaScriptEnvironment.Builder, webView: WebView): JavaScriptEnvironment.Builder {
-        return builder.addGetter("getDeviceModel", Build.MODEL)
-            .addGetter("getChannelId", Airship.shared().channel.id)
-            .addGetter("getAppKey", Airship.shared().airshipConfigOptions.appKey)
-            .addGetter("getNamedUser", Airship.shared().contact.namedUserId)
+        return javaScriptExtender(builder)
     }
 
     /**
@@ -314,7 +325,8 @@ public constructor(
      * @return `true` if the URL is allowed, otherwise `false`.
      */
     protected fun isAllowed(url: String?): Boolean {
-        return Airship.shared().urlAllowList.isAllowed(url, UrlAllowList.Scope.JAVASCRIPT_INTERFACE)
+        if (url == null) { return false }
+        return allowListProvider().isAllowed(url, UrlAllowList.Scope.JAVASCRIPT_INTERFACE)
     }
 
     @CallSuper

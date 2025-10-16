@@ -4,6 +4,7 @@ package com.urbanairship.audience
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.Platform
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.cache.AirshipCache
 import com.urbanairship.contacts.StableContactInfo
@@ -29,7 +30,10 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class AudienceEvaluatorTest {
 
-    private val deviceInfo: DeviceInfoProvider = mockk(relaxed = true)
+    private val deviceInfo: DeviceInfoProvider = mockk(relaxed = true) {
+        every { platform } returns Platform.ANDROID
+    }
+
     private val audienceChecker = AudienceEvaluator(
         cache = AirshipCache(
             context = ApplicationProvider.getApplicationContext(),
@@ -364,7 +368,7 @@ public class AudienceEvaluatorTest {
 
     @Test
     public fun testDeviceTypes(): TestResult = runTest {
-        every { deviceInfo.platform } returns "android"
+        every { deviceInfo.platform } returns Platform.ANDROID
 
         val audienceMatch = AudienceSelector.newBuilder().setDeviceTypes(listOf("android", "ios")).build()
         assert(audienceMatch, isMatch = true)
@@ -375,7 +379,7 @@ public class AudienceEvaluatorTest {
 
     @Test
     public fun testEmtpyDeviceTypes(): TestResult = runTest {
-        every { deviceInfo.platform } returns "android"
+        every { deviceInfo.platform } returns Platform.ANDROID
 
         val audience = AudienceSelector.newBuilder().setDeviceTypes(listOf()).build()
         assert(audience, isMatch = false)

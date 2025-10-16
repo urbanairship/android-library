@@ -2,6 +2,7 @@ package com.urbanairship.push
 
 import com.urbanairship.TestPushProvider
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -28,8 +29,8 @@ public class PushProviderTypeTest {
     }
 
     private companion object {
-        private val PROVIDER_ADM = TestPushProvider(Airship.Platform.AMAZON, PushProvider.DeliveryType.ADM)
-        private val PROVIDER_FCM = TestPushProvider(Airship.Platform.ANDROID, PushProvider.DeliveryType.FCM)
-        private val PROVIDER_HMS = TestPushProvider(Airship.Platform.ANDROID, PushProvider.DeliveryType.HMS)
+        private val PROVIDER_ADM = TestPushProvider(Platform.AMAZON, PushProvider.DeliveryType.ADM)
+        private val PROVIDER_FCM = TestPushProvider(Platform.ANDROID, PushProvider.DeliveryType.FCM)
+        private val PROVIDER_HMS = TestPushProvider(Platform.ANDROID, PushProvider.DeliveryType.HMS)
     }
 }

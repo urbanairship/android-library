@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
+import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonMap
 import com.urbanairship.push.NotificationActionButtonInfo
@@ -29,7 +30,7 @@ internal class InteractiveNotificationEvent(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun getEventData(conversionData: ConversionData): JsonMap {
+    override fun getEventData(context: Context, conversionData: ConversionData): JsonMap {
         val builder = JsonMap.newBuilder()
             .put(SEND_ID_KEY, sendId)
             .put(BUTTON_GROUP_KEY, buttonGroupId)

@@ -219,7 +219,7 @@ private fun DeviceInfoSection(
 
         RowItem(
             title = "Airship SDK Version",
-            details = Airship.getVersion())
+            details = Airship.version)
 
         RowItem(
             title = "Current Locale",

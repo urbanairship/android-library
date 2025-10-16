@@ -1,10 +1,12 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.ApplicationMetrics
 import com.urbanairship.BaseTestCase
-import com.urbanairship.TestApplication
+import com.urbanairship.contacts.Contact
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
@@ -19,19 +21,14 @@ public class ActionRegistryTest {
 
     private val registry = ActionRegistry()
 
-    private val metrics: ApplicationMetrics = mockk()
-
-    @Before
-    public fun setup() {
-        TestApplication.getApplication().setApplicationMetrics(metrics)
-    }
+    private val context: Context = ApplicationProvider.getApplicationContext<Context>()
 
     /**
      * Tests that the default actions are registered under the correct names
      */
     @Test
     public fun testDefaultActions() {
-        registry.registerDefaultActions(TestApplication.getApplication())
+        registry.registerDefaultActions(context)
         assertEquals("Default entries changed", 16, registry.entries.size)
 
         validateEntry(registry.getEntry("^d"), "^d", "deep_link_action")
@@ -63,7 +60,7 @@ public class ActionRegistryTest {
      */
     @Test
     public fun testAddCustomEventDefaultPredicateReject() {
-        registry.registerDefaultActions(TestApplication.getApplication())
+        registry.registerDefaultActions(context)
 
         val entry = registry.getEntry("add_custom_event_action")
         assertNotNull("Add custom event should have a default predicate", entry?.predicate)
@@ -81,7 +78,7 @@ public class ActionRegistryTest {
      */
     @Test
     public fun testFetchDeviceInfoDefaultPredicateReject() {
-        registry.registerDefaultActions(TestApplication.getApplication())
+        registry.registerDefaultActions(context)
 
         val entry = registry.getEntry("fetch_device_info")
         assertNotNull("Fetch device info should have a default predicate", entry?.predicate)
@@ -107,7 +104,7 @@ public class ActionRegistryTest {
      */
     @Test
     public fun testFetchDeviceInfoDefaultPredicateAccepts() {
-        registry.registerDefaultActions(TestApplication.getApplication())
+        registry.registerDefaultActions(context)
 
         val entry = registry.getEntry("fetch_device_info")
         assertNotNull("Fetch device info should have a default predicate", entry?.predicate)

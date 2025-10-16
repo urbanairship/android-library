@@ -113,3 +113,18 @@ public sealed class AccountEventTemplate {
         internal const val TEMPLATE_NAME = "account"
     }
 }
+
+/**
+ * Creates a new [AccountEventTemplate.Properties].
+ *
+ * @param block A lambda function that configures the `Builder`.
+ * @return A new `AccountEventTemplate.Properties` instance.
+ */
+@JvmSynthetic
+public fun accountEventProperties(
+    block: AccountEventTemplate.Properties.Builder.() -> Unit
+): AccountEventTemplate.Properties {
+    val builder = AccountEventTemplate.Properties.newBuilder()
+    builder.block()
+    return builder.build()
+}

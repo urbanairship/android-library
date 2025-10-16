@@ -1,11 +1,14 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.push
 
+import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.content.res.Resources
 import android.net.Uri
 import android.os.Parcel
 import androidx.core.os.bundleOf
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.Airship
@@ -17,6 +20,7 @@ import io.mockk.spyk
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.junit.runner.manipulation.Ordering
 
 @RunWith(AndroidJUnit4::class)
 public class PushMessageTest {
@@ -523,7 +527,7 @@ public class PushMessageTest {
      */
     @Test
     public fun testGetSound() {
-        val context = spyk(Airship.applicationContext)
+        val context = spyk(ApplicationProvider.getApplicationContext<Context>())
         val resources: Resources = mockk {
             every { getIdentifier("test_sound", any(), any()) } returns 5
         }
@@ -544,7 +548,7 @@ public class PushMessageTest {
      */
     @Test
     public fun testGetSoundNull() {
-        val context = Airship.applicationContext
+        val context = ApplicationProvider.getApplicationContext<Context>()
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_SOUND to "test_sound")
         )
@@ -559,7 +563,7 @@ public class PushMessageTest {
      */
     @Test
     public fun testGetIcon() {
-        val context = spyk(Airship.applicationContext)
+        val context = spyk(ApplicationProvider.getApplicationContext<Context>())
         val resources: Resources = mockk {
             every { getIdentifier("icon", any(), any()) } returns 5
         }

@@ -7,7 +7,6 @@ import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.AirshipConfigOptions
-import com.urbanairship.TestApplication
 import com.urbanairship.actions.Action.Situation
 import com.urbanairship.actions.ActionValue.Companion.wrap
 import com.urbanairship.json.JsonMap
@@ -22,7 +21,12 @@ import org.robolectric.Shadows
 @RunWith(AndroidJUnit4::class)
 public class RateAppActionTest {
 
-    private var action = RateAppAction()
+    private var appStoreIntent = Intent("test")
+
+    private var action = RateAppAction(
+        appStoreIntentProvider = { appStoreIntent },
+        contextProvider = { ApplicationProvider.getApplicationContext() }
+    )
 
     private val checkSituations = arrayOf(
         Situation.PUSH_OPENED,
@@ -32,16 +36,6 @@ public class RateAppActionTest {
         Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON
     )
 
-    @Before
-    public fun setup() {
-        val configOptions = AirshipConfigOptions.Builder()
-            .setAppStoreUri(Uri.parse("cool://link"))
-            .setDevelopmentAppKey("appKey")
-            .setDevelopmentAppSecret("appSecret")
-            .build()
-
-        TestApplication.getApplication().setOptions(configOptions)
-    }
 
     /**
      * Test accepted arguments
@@ -77,16 +71,12 @@ public class RateAppActionTest {
         val linkPayload = jsonMapOf(RateAppAction.SHOW_LINK_PROMPT_KEY to false)
 
         verifyPerform(linkPayload) {
-            assertEquals(Intent.ACTION_VIEW, it.action)
-            assertEquals("cool://link", it.dataString)
-            assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, it.flags)
+            assertEquals(appStoreIntent, it)
         }
 
         // Test empty payload
         verifyPerform(null) {
-            assertEquals(Intent.ACTION_VIEW, it.action)
-            assertEquals("cool://link", it.dataString)
-            assertEquals(Intent.FLAG_ACTIVITY_NEW_TASK, it.flags)
+            assertEquals(appStoreIntent, it)
         }
     }
 

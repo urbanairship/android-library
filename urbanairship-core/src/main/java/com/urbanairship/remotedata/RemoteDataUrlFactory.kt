@@ -4,9 +4,9 @@ package com.urbanairship.remotedata
 
 import android.net.Uri
 import android.os.Build
-import com.urbanairship.PushProviders
 import com.urbanairship.Airship
-import com.urbanairship.base.Supplier
+import com.urbanairship.Platform
+import com.urbanairship.PushProviders
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.config.UrlBuilder
 import com.urbanairship.util.UAStringUtil
@@ -17,13 +17,13 @@ import java.util.Locale
  */
 internal class RemoteDataUrlFactory(
     private val runtimeConfig: AirshipRuntimeConfig,
-    private val pushProvidersSupplier: Supplier<PushProviders>,
+    private val pushProvidersProvider: () -> PushProviders
 ) {
 
     private val platform: String
     get() {
         return when(runtimeConfig.platform) {
-            Airship.Platform.AMAZON -> AMAZON
+            Platform.AMAZON -> AMAZON
             else -> ANDROID
         }
     }
@@ -34,7 +34,7 @@ internal class RemoteDataUrlFactory(
     private val pushProviders: String?
     get() {
         val deliveryTypes: MutableSet<String> = HashSet()
-        val providers: PushProviders = pushProvidersSupplier.get() ?: return null
+        val providers: PushProviders = pushProvidersProvider()
         for (provider in providers.getAvailableProviders()) {
             deliveryTypes.add(provider.deliveryType.value)
         }
@@ -66,7 +66,7 @@ internal class RemoteDataUrlFactory(
             .appendEncodedPath(path)
             .appendQueryParameter(
                 SDK_VERSION_QUERY_PARAM,
-                Airship.getVersion()
+                Airship.version
             ).appendQueryParameter(
                 RANDOM_VALUE_QUERY_PARAM,
                 randomValue.toString()

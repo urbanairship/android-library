@@ -10,11 +10,13 @@ import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Inbox
 import com.urbanairship.messagecenter.InboxListener
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
+import com.urbanairship.messagecenter.messageCenter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,7 +25,7 @@ import kotlinx.parcelize.Parcelize
 
 /** `ViewModel` for [MessageView]. */
 public class MessageViewModel(
-    private val inbox: Inbox = MessageCenter.shared().inbox,
+    private val inbox: Inbox = Airship.messageCenter.inbox,
 ) : ViewModel() {
 
 
@@ -140,7 +142,7 @@ public class MessageViewModel(
         public fun factory(): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 MessageViewModel(
-                    inbox = MessageCenter.shared().inbox,
+                    inbox = Airship.messageCenter.inbox,
                 )
             }
         }

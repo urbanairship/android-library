@@ -4,8 +4,8 @@ import android.util.Base64
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.TestApplication
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.cache.AirshipCache
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMatcher
@@ -31,7 +31,10 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class AudienceSelectorTest {
 
-    private val infoProvider: DeviceInfoProvider = mockk()
+    private val infoProvider: DeviceInfoProvider = mockk {
+        every { platform } returns Platform.ANDROID
+    }
+
     private val hashChecker = HashChecker(AirshipCache(
         context = ApplicationProvider.getApplicationContext(),
         runtimeConfig = TestAirshipRuntimeConfig(),
@@ -47,7 +50,7 @@ public class AudienceSelectorTest {
                 .setNewUser(true)
                 .setLocationOptIn(false)
                 .setNotificationsOptIn(true)
-                .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
+                .setVersionMatcher(Platform.ANDROID, ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
                 .setTagSelector(DeviceTagSelector.tag("some tag")).addTestDevice("cool story")
                 .setMissBehavior(AudienceSelector.MissBehavior.CANCEL).build()
         val fromJson = AudienceSelector.fromJson(original.toJsonValue())
@@ -57,9 +60,8 @@ public class AudienceSelectorTest {
 
     @Test
     public fun testAndroidVersionMatcher() {
-        TestApplication.getApplication().setPlatform(Airship.Platform.ANDROID)
         val audience = AudienceSelector.newBuilder()
-                .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
+                .setVersionMatcher(Platform.ANDROID, ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
                 .build()
 
         val predicate = JsonPredicate.newBuilder()
@@ -75,9 +77,10 @@ public class AudienceSelectorTest {
 
     @Test
     public fun testAmazonVersionMatcher() {
-        TestApplication.getApplication().setPlatform(Airship.Platform.AMAZON)
+        every { infoProvider.platform } returns Platform.AMAZON
+
         val audience = AudienceSelector.newBuilder()
-            .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
+            .setVersionMatcher(Platform.AMAZON, ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
             .build()
 
         val predicate = JsonPredicate.newBuilder()
@@ -98,7 +101,7 @@ public class AudienceSelectorTest {
             .setNewUser(true)
             .setLocationOptIn(false)
             .setNotificationsOptIn(true)
-            .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
+            .setVersionMatcher(Platform.ANDROID, ValueMatcher.newNumberRangeMatcher(1.0, 100.0))
             .setTagSelector(DeviceTagSelector.tag("some tag")).addTestDevice("cool story")
             .setMissBehavior(AudienceSelector.MissBehavior.parse("bad behavior")!!).build()
 
@@ -258,7 +261,7 @@ public class AudienceSelectorTest {
     @Test
     public fun testAppVersion(): TestResult = runTest {
         val audience = AudienceSelector.newBuilder()
-            .setVersionMatcher(ValueMatcher.newNumberRangeMatcher(1.0, 2.0))
+            .setVersionMatcher(Platform.ANDROID, ValueMatcher.newNumberRangeMatcher(1.0, 2.0))
             .build()
 
         every { infoProvider.appVersionCode } returns 1
@@ -274,21 +277,21 @@ public class AudienceSelectorTest {
 
     @Test
     public fun testDeviceTypes(): TestResult = runTest {
-        every { infoProvider.platform } returns "android"
+        every { infoProvider.platform } returns Platform.ANDROID
         val audience = AudienceSelector.newBuilder().setDeviceTypes(listOf("ios", "android")).build()
         assert(checkAudience(audience))
     }
 
     @Test
     public fun testDeviceTypesNoAndroid(): TestResult = runTest {
-        every { infoProvider.platform } returns "android"
+        every { infoProvider.platform } returns Platform.ANDROID
         val audience = AudienceSelector.newBuilder().setDeviceTypes(listOf("ios")).build()
         assertFalse(checkAudience(audience))
     }
 
     @Test
     public fun testDeviceTypesEmpty(): TestResult = runTest {
-        every { infoProvider.platform } returns "android"
+        every { infoProvider.platform } returns Platform.ANDROID
         val audience = AudienceSelector.newBuilder().setDeviceTypes(listOf()).build()
         assertFalse(checkAudience(audience))
     }

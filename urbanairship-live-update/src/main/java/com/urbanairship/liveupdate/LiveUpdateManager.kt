@@ -16,6 +16,10 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.liveupdate.data.LiveUpdateDatabase
 import com.urbanairship.liveupdate.notification.LiveUpdatePayload
 import com.urbanairship.push.PushManager
+import com.urbanairship.AirshipDispatchers
+import com.urbanairship.PendingResult
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 /**
  * Airship Live Updates.
@@ -134,6 +138,19 @@ internal constructor(
     public suspend fun getAllActiveUpdates(): List<LiveUpdate> = registrar.getAllActiveUpdates()
 
     /**
+     * Returns a list with all active live updates
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun getAllActiveUpdatesPendingResult(): PendingResult<List<LiveUpdate>> {
+        val pendingResult = PendingResult<List<LiveUpdate>>()
+        CoroutineScope(AirshipDispatchers.IO).launch {
+            pendingResult.setResult(getAllActiveUpdates())
+        }
+        return pendingResult
+    }
+
+    /**
      * Cancels the notification associated with the given Live Update [name].
      *
      * This will not end tracking the Live Update and is a no-op for live updates that use custom
@@ -185,10 +202,34 @@ internal constructor(
         /**
          * Gets the shared [LiveUpdateManager] instance.
          *
+         * This method is the static entry point for Java clients. It delegates
+         * access to the primary [Airship] singleton, ensuring the component is available
+         * and fully initialized before returning.
+         *
          * @return the shared instance of `LiveUpdateManager`.
+         * @throws IllegalStateException if [Airship.takeOff] has not been called.
+         *
+         * @see Airship.liveUpdateManager For the corresponding Kotlin extension property.
          */
         @JvmStatic
         public fun shared(): LiveUpdateManager =
-            Airship.shared().requireComponent(LiveUpdateManager::class.java)
+            Airship.liveUpdateManager
     }
 }
+
+/**
+ * Provides access to the [LiveUpdateManager] module features via the main [Airship] singleton.
+ *
+ *
+ * Access is thread-safe. Calling this property before Airship is finished taking off
+ * will block the calling thread until initialization is complete.
+ *
+ * @return The LiveUpdateManager instance.
+ * @throws IllegalStateException if [Airship.takeOff] has not been called.
+ *
+ * @see LiveUpdateManager.shared For the corresponding Java static access pattern.
+ */
+public val Airship.liveUpdateManager: LiveUpdateManager
+    get() {
+        return Airship.requireComponent(LiveUpdateManager::class.java)
+    }

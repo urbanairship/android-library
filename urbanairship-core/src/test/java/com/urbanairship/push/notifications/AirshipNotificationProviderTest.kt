@@ -5,9 +5,9 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import androidx.core.os.bundleOf
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.AirshipConfigOptions
-import com.urbanairship.TestApplication
 import com.urbanairship.Airship
 import com.urbanairship.push.PushMessage
 import io.mockk.every
@@ -30,8 +30,13 @@ public class AirshipNotificationProviderTest {
         .setNotificationChannel("test_channel")
         .build()
 
-    private val context = Airship.applicationContext
-    private var provider = AirshipNotificationProvider(context, configOptions)
+    private val context: Context = ApplicationProvider.getApplicationContext()
+    private val notificationChannelRegistry: NotificationChannelRegistry = mockk(relaxed = true)
+    private var provider = AirshipNotificationProvider(
+        context = context,
+        configOptions = configOptions,
+        notificationChannelRegistry = notificationChannelRegistry
+    )
 
     private var defaultPushMessage = PushMessage(
         bundleOf(
@@ -85,6 +90,7 @@ public class AirshipNotificationProviderTest {
      */
     @Test
     public fun testArgumentsDefaultChannel() {
+        every { notificationChannelRegistry.getNotificationChannelSync("does not exist") } returns null
         provider.defaultNotificationChannelId = "does not exist"
         val arguments = provider.onCreateNotificationArguments(context, defaultPushMessage)
 
@@ -153,7 +159,7 @@ public class AirshipNotificationProviderTest {
     }
 
     private fun createChannel(channelId: String) {
-        val manager = TestApplication.getApplication()
+        val manager = ApplicationProvider.getApplicationContext<Context>()
             .getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
         manager.createNotificationChannel(

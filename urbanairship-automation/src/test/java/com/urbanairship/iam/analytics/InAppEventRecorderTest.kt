@@ -1,5 +1,7 @@
 package com.urbanairship.iam.analytics
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.ConversionData
@@ -23,6 +25,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 public class InAppEventRecorderTest {
+    private val context: Context = ApplicationProvider.getApplicationContext()
     private val analytics: Analytics = mockk(relaxed = true)
     private val meteredUsage: AirshipMeteredUsage = mockk(relaxed = true)
     private val eventRecorder = InAppEventRecorder(analytics, meteredUsage)
@@ -84,7 +87,7 @@ public class InAppEventRecorderTest {
             }
         """.trimIndent()
         val expectedData = JsonValue.parseString(json)
-        assertEquals(expectedData.toString(true), recordedEvent.getEventData(ConversionData()).toString(true))
+        assertEquals(expectedData.toString(true), recordedEvent.getEventData(context, ConversionData()).toString(true))
     }
 
     @Test
@@ -140,7 +143,7 @@ public class InAppEventRecorderTest {
             }
         """.trimIndent()
         val expectedData = JsonValue.parseString(json)
-        assertEquals(expectedData.toString(true), recordedEvent.getEventData(conversionData).toString(true))
+        assertEquals(expectedData.toString(true), recordedEvent.getEventData(context, conversionData).toString(true))
     }
 
     @Test

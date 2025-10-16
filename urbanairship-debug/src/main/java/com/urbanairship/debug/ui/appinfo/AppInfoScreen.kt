@@ -46,7 +46,7 @@ internal fun AppInfoScreenContent(
 
     val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
 
-    val sdkVersion = Airship.getVersion()
+    val sdkVersion = Airship.version
     val appVersionName = packageInfo.versionName
     val appVersionCode = PackageInfoCompat.getLongVersionCode(packageInfo)
 

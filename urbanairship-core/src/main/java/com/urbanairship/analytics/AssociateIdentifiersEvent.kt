@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
+import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonMap
@@ -40,5 +41,5 @@ internal class AssociateIdentifiersEvent(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun getEventData(conversionData: ConversionData): JsonMap = JsonValue.wrapOpt(identifiers).optMap()
+    override fun getEventData(context: Context, conversionData: ConversionData): JsonMap = JsonValue.wrapOpt(identifiers).optMap()
 }

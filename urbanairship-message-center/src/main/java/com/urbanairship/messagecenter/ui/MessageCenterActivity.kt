@@ -13,6 +13,7 @@ import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.Airship
 import com.urbanairship.messagecenter.MessageCenter
+import com.urbanairship.messagecenter.messageCenter
 
 /** `Activity` that displays the Message Center list and message view. */
 public open class MessageCenterActivity : FragmentActivity() {
@@ -54,7 +55,7 @@ public open class MessageCenterActivity : FragmentActivity() {
         messageCenterFragment = fragment
 
         // Apply the default message center predicate
-        messageCenterFragment.listPredicate = MessageCenter.shared().predicate
+        messageCenterFragment.listPredicate = Airship.messageCenter.predicate
 
         val contentView = findViewById<ViewGroup>(android.R.id.content)
 

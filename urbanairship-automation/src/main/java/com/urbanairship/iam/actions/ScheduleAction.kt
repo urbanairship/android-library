@@ -2,12 +2,14 @@
 
 package com.urbanairship.iam.actions
 
+import com.urbanairship.Airship
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
 import com.urbanairship.actions.ActionValue
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.InAppAutomation
+import com.urbanairship.automation.inAppAutomation
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -26,7 +28,7 @@ public class ScheduleAction
 @JvmOverloads
 constructor(
     private val scheduler: suspend (AutomationSchedule) -> Unit = {
-        InAppAutomation.shared().upsertSchedules(listOf(it))
+        Airship.inAppAutomation.upsertSchedules(listOf(it))
     }
 ) : Action() {
 

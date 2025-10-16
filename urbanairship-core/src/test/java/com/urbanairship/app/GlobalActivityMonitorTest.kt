@@ -2,8 +2,10 @@
 package com.urbanairship.app
 
 import android.app.Activity
+import android.app.Application
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestApplication
 import org.junit.After
 import org.junit.Assert
 import org.junit.Assert.assertFalse
@@ -24,8 +26,7 @@ public class GlobalActivityMonitorTest {
     private var activityMonitor = GlobalActivityMonitor()
     private var isForeground = false
 
-    private val application: TestApplication
-        get() = TestApplication.getApplication()
+    private val application: Context = ApplicationProvider.getApplicationContext<Context>()
 
     @Before
     public fun setUp() {

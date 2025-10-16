@@ -221,7 +221,7 @@ internal class BannerDisplayDelegate(
     }
 
     private fun handleBannerInsetsIfNeeded(activity: Activity, view: BannerView) {
-        val insetEdgeToEdge = ManifestUtils.getActivityInfo(activity.javaClass)?.metaData
+        val insetEdgeToEdge = ManifestUtils.getActivityInfo(activity, activity.javaClass)?.metaData
             ?.getBoolean(BANNER_INSET_EDGE_TO_EDGE, false) ?: false
 
         if (insetEdgeToEdge) {
@@ -252,7 +252,7 @@ internal class BannerDisplayDelegate(
                 return cachedId
             }
             val containerId = ManifestUtils
-                .getActivityInfo(activity.javaClass)
+                .getActivityInfo(activity, activity.javaClass)
                 ?.metaData
                 ?.getInt(BANNER_CONTAINER_ID, 0)
                 ?: 0

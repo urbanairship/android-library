@@ -10,7 +10,6 @@ import java.util.Locale
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -18,12 +17,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 
 /**
- * Locale manager. Handles listening for locale changes.
+ * Locale manager.
  *
- * @hide
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class LocaleManager public constructor(
+public class LocaleManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)  constructor(
     context: Context,
     private val preferenceDataStore: PreferenceDataStore,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
@@ -52,8 +49,10 @@ public class LocaleManager public constructor(
 
     /**
      * Called by [LocaleChangeReceiver] to notify the device's locale changed.
+     * @hide
      */
-    public fun onDeviceLocaleChanged() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    internal fun onDeviceLocaleChanged() {
         synchronized(this) {
             val locale = ConfigurationCompat.getLocales(context.resources.configuration).get(0) ?: return
             UALog.d("Device Locale changed. Locale: $locale.")
@@ -67,12 +66,13 @@ public class LocaleManager public constructor(
     /**
      * Called by [LocaleChangeReceiver] to notify the override locale changed.
      */
-    public fun notifyLocaleChanged(locale: Locale) {
+    internal fun notifyLocaleChanged(locale: Locale) {
         updateScope.launch { localeUpdatesFlow.emit(locale) }
     }
 
     /**
      * Sets the locale to override the device's locale.
+     * @param locale The locale. Pass null to reset the override.
      */
     public fun setLocaleOverride(locale: Locale?) {
         synchronized(this) {

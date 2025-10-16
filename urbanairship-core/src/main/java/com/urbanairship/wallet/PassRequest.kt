@@ -5,20 +5,21 @@ import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Looper
 import androidx.annotation.Size
+import com.urbanairship.Airship
 import com.urbanairship.AirshipExecutors.newSerialExecutor
 import com.urbanairship.UALog
-import com.urbanairship.Airship
+import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.config.UrlBuilder
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth.BasicAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestException
-import com.urbanairship.http.RequestSession
 import com.urbanairship.http.ResponseParser
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.UAHttpStatusUtil
+import java.lang.Exception
 import java.util.concurrent.Executor
 
 /**
@@ -28,7 +29,7 @@ public class PassRequest internal constructor(
     private val apiKey: String,
     private val templateId: String,
     builder: Builder,
-    private val session: RequestSession = Airship.shared().runtimeConfig.requestSession,
+    private val runtimeConfigProvider: () -> AirshipRuntimeConfig,
     private val requestExecutor: Executor = DEFAULT_REQUEST_EXECUTOR
 ) {
 
@@ -97,7 +98,7 @@ public class PassRequest internal constructor(
 
                 UALog.d("Requesting pass %s with payload: %s", url, body)
                 try {
-                    val response = session.execute(
+                    val response = runtimeConfigProvider().requestSession.execute(
                         request = httpRequest,
                         parser = ResponseParser { status: Int, _, responseBody ->
                             if (!UAHttpStatusUtil.inSuccessRange(status)) {
@@ -133,17 +134,21 @@ public class PassRequest internal constructor(
      * Gets the pass request URL.
      */
     public fun getPassUrl(): Uri? {
-        val urlBuilder: UrlBuilder = Airship.shared().runtimeConfig.walletUrl
-            .appendEncodedPath(PASS_PATH)
-            .appendEncodedPath(templateId)
+        try {
+            val urlBuilder: UrlBuilder =
+                runtimeConfigProvider().walletUrl.appendEncodedPath(PASS_PATH)
+                    .appendEncodedPath(templateId)
 
-        // User name support requires apiKey to be set on the URL.
-        if (userName == null) {
-            urlBuilder.appendQueryParameter(API_KEY_QUERY_PARAM, apiKey)
+            // User name support requires apiKey to be set on the URL.
+            if (userName == null) {
+                urlBuilder.appendQueryParameter(API_KEY_QUERY_PARAM, apiKey)
+            }
+
+            return urlBuilder.build()
+        } catch(e: Exception) {
+            UALog.e(e) { "Failed to get the pass URL"}
+            return null
         }
-
-        return urlBuilder.build()
-
     }
 
     override fun toString(): String {
@@ -154,7 +159,15 @@ public class PassRequest internal constructor(
     /**
      * Builds the [PassRequest] object.
      */
-    public class Builder public constructor() {
+    public class Builder internal constructor(
+        private val executor: Executor,
+        private val runtimeConfigProvider: () -> AirshipRuntimeConfig
+    ) {
+
+        internal constructor(): this(
+            executor = DEFAULT_REQUEST_EXECUTOR,
+            runtimeConfigProvider = { Airship.runtimeConfig }
+        )
 
         public var apiKey: String? = null
             private set
@@ -294,7 +307,9 @@ public class PassRequest internal constructor(
             return PassRequest(
                 apiKey = apiKey,
                 templateId = templateId,
-                builder = this
+                runtimeConfigProvider = runtimeConfigProvider,
+                builder = this,
+                requestExecutor = executor
             )
         }
 
@@ -329,5 +344,15 @@ public class PassRequest internal constructor(
         public fun newBuilder(): Builder {
             return Builder()
         }
+
+        internal fun newBuilder(
+            executor: Executor,
+            runtimeConfigProvider: () -> AirshipRuntimeConfig
+        ): Builder {
+            return Builder(executor, runtimeConfigProvider)
+        }
+
+
+
     }
 }

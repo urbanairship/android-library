@@ -6,6 +6,7 @@ import android.view.View.OnAttachStateChangeListener
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Provider
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
@@ -60,7 +61,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     val viewInfo: I,
     protected val environment: ModelEnvironment,
     protected val properties: ModelProperties,
-    private val platformProvider: Provider<Airship.Platform> = Provider { Airship.shared().platformType }
+    private val platformProvider: Provider<Platform> = Provider { Airship.platform }
 ) {
 
     internal interface Listener {

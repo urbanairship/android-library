@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
+import android.content.Context
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import androidx.core.util.Supplier
@@ -30,14 +31,15 @@ import com.urbanairship.util.UriUtils
  *
  * Default Registration Predicate: none
  */
-public open class OpenExternalUrlAction @VisibleForTesting internal constructor(
-    private val allowListSupplier: Supplier<UrlAllowList>
+public open class OpenExternalUrlAction internal constructor(
+    private val allowListProvider: () -> UrlAllowList = { Airship.urlAllowList },
+    private val contextProvider: () -> Context = { Airship.application }
 ) : Action() {
 
-    /**
-     * Default constructor.
-     */
-    public constructor() : this(Supplier<UrlAllowList> { Airship.shared().urlAllowList })
+    public constructor(): this(
+        allowListProvider = { Airship.urlAllowList },
+        contextProvider  = { Airship.application }
+    )
 
     override fun perform(arguments: ActionArguments): ActionResult {
         val uri = UriUtils.parse(arguments.value.string) ?: throw IllegalArgumentException("Invalid URL")
@@ -47,7 +49,7 @@ public open class OpenExternalUrlAction @VisibleForTesting internal constructor(
         val intent = Intent(Intent.ACTION_VIEW, uri)
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-        Airship.applicationContext.startActivity(intent)
+        contextProvider().startActivity(intent)
         return newResult(arguments.value)
     }
 
@@ -69,7 +71,7 @@ public open class OpenExternalUrlAction @VisibleForTesting internal constructor(
                     return false
                 }
 
-                return allowListSupplier.get()
+                return allowListProvider()
                     .isAllowed(arguments.value.string, UrlAllowList.Scope.OPEN_URL)
             }
 

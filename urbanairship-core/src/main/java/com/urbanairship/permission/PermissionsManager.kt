@@ -78,7 +78,7 @@ public class PermissionsManager internal constructor(
         permissionsScope.launch {
             activityMonitor.resumedActivities().collect { activity ->
                 if (activity.javaClass != PermissionsActivity::class.java) {
-                    configuredPermissions.forEach { suspendingCheckPermissionStatus(it) }
+                    configuredPermissions.forEach { requestPermissionPendingResult(it) }
                 }
             }
         }
@@ -126,7 +126,9 @@ public class PermissionsManager internal constructor(
     public fun setPermissionDelegate(permission: Permission, delegate: PermissionDelegate?) {
         synchronized(permissionDelegateMap) {
             permissionDelegateMap[permission] = delegate
-            checkPermissionStatus(permission)
+            permissionsScope.launch {
+                checkPermissionStatus(permission)
+            }
         }
     }
 
@@ -162,12 +164,14 @@ public class PermissionsManager internal constructor(
      * @param permission The permission.
      * @param callback The callback with the result.
      */
+    @JvmSynthetic
     public fun checkPermissionStatus(
         permission: Permission,
         callback: Consumer<PermissionStatus?>
     ) {
-        checkPermissionStatus(permission).addResultCallback {
-            callback.accept(it)
+        permissionsScope.launch {
+            val result = checkPermissionStatus(permission)
+            callback.accept(result)
         }
     }
 
@@ -177,10 +181,10 @@ public class PermissionsManager internal constructor(
      * @param permission The permission.
      * @return A pending result.
      */
-    public fun checkPermissionStatus(permission: Permission): PendingResult<PermissionStatus?> {
+    public fun checkPermissionStatusPendingResult(permission: Permission): PendingResult<PermissionStatus?> {
         val pendingResult = PendingResult<PermissionStatus?>()
         permissionsScope.launch {
-            pendingResult.setResult(suspendingCheckPermissionStatus(permission))
+            pendingResult.setResult(checkPermissionStatus(permission))
         }
         return pendingResult
     }
@@ -194,6 +198,7 @@ public class PermissionsManager internal constructor(
     public fun permissionsUpdate(permission: Permission): Flow<PermissionStatus> {
         return permissionStatusMap.map { it[permission] }.filterNotNull().distinctUntilChanged()
     }
+
 
     /**
      * Requests a permission.
@@ -213,10 +218,10 @@ public class PermissionsManager internal constructor(
         callback: Consumer<PermissionRequestResult?>
     ) {
         permissionsScope.launch {
-            suspendingRequestPermission(permission, enableAirshipUsageOnGrant)
+            requestPermission(permission, enableAirshipUsageOnGrant)
         }
 
-        requestPermission(permission, enableAirshipUsageOnGrant, fallback).addResultCallback {
+        requestPermissionPendingResult(permission, enableAirshipUsageOnGrant, fallback).addResultCallback {
             callback.accept(it)
         }
     }
@@ -228,12 +233,12 @@ public class PermissionsManager internal constructor(
      * @param permission The permission.
      * @param enableAirshipUsageOnGrant If granted, any Airship features that need the permission will
      * be enabled, e.g., enabling [com.urbanairship.PrivacyManager.Feature.PUSH] and
-     * [com.urbanairship.push.PushManager.setUserNotificationsEnabled] if the push permission
+     * [com.urbanairship.push.PushManager.userNotificationsEnabled] if the push permission
      * is granted.
      * @return A pending result.
      */
     @JvmOverloads
-    public fun requestPermission(
+    public fun requestPermissionPendingResult(
         permission: Permission,
         enableAirshipUsageOnGrant: Boolean = false,
         fallback: PermissionPromptFallback = PermissionPromptFallback.None,
@@ -241,7 +246,7 @@ public class PermissionsManager internal constructor(
         val pendingResult = PendingResult<PermissionRequestResult?>()
         permissionsScope.launch {
             pendingResult.setResult(
-                result = suspendingRequestPermission(permission, enableAirshipUsageOnGrant, fallback)
+                result = requestPermission(permission, enableAirshipUsageOnGrant, fallback)
             )
 
         }
@@ -255,11 +260,11 @@ public class PermissionsManager internal constructor(
      * @param permission The permission.
      * @param enableAirshipUsageOnGrant If granted, any Airship features that need the permission will
      * be enabled, e.g., enabling [com.urbanairship.PrivacyManager.Feature.PUSH] and
-     * [com.urbanairship.push.PushManager.setUserNotificationsEnabled] if the push permission
+     * [com.urbanairship.push.PushManager.userNotificationsEnabled] if the push permission
      * is granted.
      * @return a [PermissionRequestResult].
      */
-    public suspend fun suspendingRequestPermission(
+    public suspend fun requestPermission(
         permission: Permission,
         enableAirshipUsageOnGrant: Boolean = false,
         fallback: PermissionPromptFallback = PermissionPromptFallback.None
@@ -302,7 +307,7 @@ public class PermissionsManager internal constructor(
             is PermissionPromptFallback.None -> result
             is PermissionPromptFallback.Callback -> {
                 fallback.callback()
-                val updatedStatus = suspendingCheckPermissionStatus(permission)
+                val updatedStatus = checkPermissionStatus(permission)
                 if (updatedStatus == PermissionStatus.GRANTED) {
                     PermissionRequestResult.granted()
                 } else {
@@ -312,7 +317,7 @@ public class PermissionsManager internal constructor(
             is PermissionPromptFallback.SystemSettings -> {
                 if (launchSettingsForPermission(permission)) {
                     waitForResume()
-                    if (suspendingCheckPermissionStatus(permission) == PermissionStatus.GRANTED) {
+                    if (checkPermissionStatus(permission) == PermissionStatus.GRANTED) {
                         PermissionRequestResult.granted()
                     } else {
                         result
@@ -325,12 +330,24 @@ public class PermissionsManager internal constructor(
     }
 
     /**
+     * @suppress
+     */
+    @Deprecated("Use requestPermission instead", replaceWith = ReplaceWith("requestPermission(permission, enableAirshipUsageOnGrant, fallback)"))
+    public suspend fun suspendingRequestPermission(
+        permission: Permission,
+        enableAirshipUsageOnGrant: Boolean = false,
+        fallback: PermissionPromptFallback = PermissionPromptFallback.None
+    ): PermissionRequestResult {
+        return requestPermission(permission, enableAirshipUsageOnGrant, fallback)
+    }
+
+    /**
      * Checks the current permission status.
      *
      * @param permission The permission.
      * @return A [PermissionStatus].
      */
-    public suspend fun suspendingCheckPermissionStatus(
+    public suspend fun checkPermissionStatus(
         permission: Permission,
     ): PermissionStatus {
         return withContext(Dispatchers.Main.immediate) {
@@ -358,6 +375,16 @@ public class PermissionsManager internal constructor(
 
             return@withContext result
         }
+    }
+
+    /**
+     * @suppress
+     */
+    @Deprecated("Use checkPermissionStatus instead", replaceWith = ReplaceWith("checkPermissionStatus(permission)"))
+    public suspend fun suspendingCheckPermissionStatus(
+        permission: Permission,
+    ): PermissionStatus {
+        return checkPermissionStatus(permission)
     }
 
     private fun getDelegate(permission: Permission): PermissionDelegate? {

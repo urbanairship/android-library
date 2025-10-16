@@ -16,13 +16,13 @@ import com.urbanairship.app.SimpleApplicationListener
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ApplicationMetrics(
-    context: Context,
-    preferenceDataStore: PreferenceDataStore,
+    private val context: Context,
+    private val dataStore: PreferenceDataStore,
     private val privacyManager: PrivacyManager,
     private val activityMonitor: ActivityMonitor = GlobalActivityMonitor.shared(context)
-) : AirshipComponent(context, preferenceDataStore) {
+) {
 
-    private val listener: ApplicationListener = object : SimpleApplicationListener() {
+    private val applicationListener: ApplicationListener = object : SimpleApplicationListener() {
         override fun onForeground(time: Long) {
             if (privacyManager.isAnyEnabled(
                     PrivacyManager.Feature.ANALYTICS, PrivacyManager.Feature.IN_APP_AUTOMATION
@@ -31,6 +31,10 @@ public class ApplicationMetrics(
                 dataStore.put(LAST_OPEN_KEY, time)
             }
         }
+    }
+
+    private val privacyManagerListener = {
+        updateData()
     }
 
     /**
@@ -43,17 +47,15 @@ public class ApplicationMetrics(
     public var appVersionUpdated: Boolean = false
         private set
 
-    override fun init() {
-        super.init()
-
+    init {
         updateData()
-        privacyManager.addListener { updateData() }
-        activityMonitor.addApplicationListener(listener)
+        privacyManager.addListener(privacyManagerListener)
+        activityMonitor.addApplicationListener(applicationListener)
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun tearDown() {
-        activityMonitor.removeApplicationListener(listener)
+    internal fun tearDown() {
+        privacyManager.removeListener(privacyManagerListener)
+        activityMonitor.removeApplicationListener(applicationListener)
     }
 
     /**

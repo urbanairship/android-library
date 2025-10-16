@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
+import android.content.Context
 import android.content.Intent
 import com.urbanairship.R
 import com.urbanairship.Airship
@@ -23,7 +24,9 @@ import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
  *
  * Default Registration Names: [DEFAULT_REGISTRY_SHORT_NAME], [DEFAULT_REGISTRY_NAME]
  */
-public class ShareAction public constructor() : Action() {
+public class ShareAction(
+    private val contextProvider: () -> Context = { Airship.application }
+): Action() {
 
     override fun acceptsArguments(arguments: ActionArguments): Boolean {
         return when (arguments.situation) {
@@ -39,7 +42,7 @@ public class ShareAction public constructor() : Action() {
     }
 
     override fun perform(arguments: ActionArguments): ActionResult {
-        val context = Airship.applicationContext
+        val context = contextProvider()
 
         val sharingIntent = Intent(Intent.ACTION_SEND)
             .setType("text/plain")

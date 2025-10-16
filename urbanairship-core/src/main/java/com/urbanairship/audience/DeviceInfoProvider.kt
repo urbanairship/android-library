@@ -6,7 +6,7 @@ import android.content.pm.PackageInfo
 import androidx.annotation.RestrictTo
 import androidx.core.content.pm.PackageInfoCompat
 import com.urbanairship.Airship
-import com.urbanairship.Airship.Companion.applicationContext
+import com.urbanairship.Platform
 import com.urbanairship.contacts.StableContactInfo
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
@@ -33,7 +33,7 @@ public interface DeviceInfoProvider {
     public val channelTags: Set<String>
     public val appVersionName: String
     public val appVersionCode: Long
-    public val platform: String
+    public val platform: Platform
     public val channelCreated: Boolean
     public val analyticsEnabled: Boolean
     public val installDateMilliseconds: Long
@@ -58,10 +58,10 @@ public interface DeviceInfoProvider {
 
 internal class DeviceInfoProviderImpl(private val contactId: String? = null) : DeviceInfoProvider {
 
-    private val packageName = applicationContext.packageName
-    private val packageInfo: PackageInfo? = applicationContext.packageManager
+    private val packageName = Airship.application.packageName
+    private val packageInfo: PackageInfo? = Airship.application.packageManager
         .getPackageInfo(packageName, 0)
-    private val appVersion: Long = applicationContext
+    private val appVersion: Long = Airship.application
         .packageManager
         .getPackageInfo(packageName, 0)
         ?.let { PackageInfoCompat.getLongVersionCode(it) }
@@ -71,39 +71,34 @@ internal class DeviceInfoProviderImpl(private val contactId: String? = null) : D
         get() = packageInfo?.firstInstallTime ?: 0
 
     override val isNotificationsOptedIn: Boolean
-        get() = Airship.shared().pushManager.areNotificationsOptedIn()
+        get() = Airship.push.areNotificationsOptedIn()
 
     override val channelTags: Set<String>
-        get() = Airship.shared().channel.tags
+        get() = Airship.channel.tags
     override val appVersionName: String
         get() = packageInfo?.versionName ?: ""
     override val appVersionCode: Long
         get() = appVersion
 
-    override val platform: String
-        get() = Airship.shared().platformType.stringValue
+    override val platform: Platform
+        get() = Airship.platform
 
     override val channelCreated: Boolean
-        get() = Airship.shared().channel.id != null
+        get() = Airship.channel.id != null
     override val analyticsEnabled: Boolean
-        get() = Airship.shared().analytics.isEnabled
+        get() = Airship.analytics.isEnabled
 
     override val locale: Locale
-        get() = Airship.shared().localeManager.locale
+        get() = Airship.localeManager.locale
 
     override suspend fun getPermissionStatuses(): Map<Permission, PermissionStatus> {
-        val resolver: suspend (Permission) -> PermissionStatus = {
-            suspendCoroutine { continuation ->
-                val result = Airship.shared().permissionsManager.checkPermissionStatus(it).getResult()
-                continuation.resume(result ?: PermissionStatus.NOT_DETERMINED)
-            }
+        return Airship.permissionsManager.configuredPermissions.associateWith {
+            Airship.permissionsManager.checkPermissionStatus(it)
         }
-
-        return Airship.shared().permissionsManager.configuredPermissions.associateWith { resolver(it) }
     }
 
     override suspend fun getStableContactInfo(): StableContactInfo {
-        return Airship.shared().contact.stableContactInfo().let {
+        return Airship.contact.stableContactInfo().let {
             if (contactId != null && it.contactId != contactId) {
                 StableContactInfo(contactId, null)
             } else {
@@ -113,7 +108,7 @@ internal class DeviceInfoProviderImpl(private val contactId: String? = null) : D
     }
 
     override suspend fun getChannelId(): String {
-        return Airship.shared().channel.channelIdFlow.filterNotNull().first()
+        return Airship.channel.channelIdFlow.filterNotNull().first()
     }
 }
 
@@ -181,7 +176,7 @@ internal class CachingDeviceInfoProvider(
         get() = cachedAppVersionName.getValue()
     override val appVersionCode: Long
         get() = cachedAppVersionCode.getValue()
-    override val platform: String
+    override val platform: Platform
         get() = cachedPlatform.getValue()
     override val channelCreated: Boolean
         get() = cachedChannelCreated.getValue()

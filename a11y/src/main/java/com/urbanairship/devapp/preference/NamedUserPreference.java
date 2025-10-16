@@ -23,9 +23,9 @@ public class NamedUserPreference extends EditTextPreference {
     public void setText(String text) {
         String namedUser = UAStringUtil.isEmpty(text) ? null : text;
         if (UAStringUtil.isEmpty(text)) {
-            Airship.shared().getContact().reset();
+            Airship.getContact().reset();
         } else {
-            Airship.shared().getContact().identify(text);
+            Airship.getContact().identify(text);
         }
 
         notifyChanged();
@@ -33,12 +33,12 @@ public class NamedUserPreference extends EditTextPreference {
 
     @Override
     public String getText() {
-        return Airship.shared().getContact().getNamedUserId();
+        return Airship.getContact().getNamedUserId();
     }
 
     @Override
     public String getSummary() {
-        return Airship.shared().getContact().getNamedUserId();
+        return Airship.getContact().getNamedUserId();
     }
 
     @Override

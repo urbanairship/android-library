@@ -38,8 +38,8 @@ import com.urbanairship.Autopilot.Companion.automaticTakeOff
  *
  *
  *
- * Autopilot can be customized in order to load config from a different source or to customize the Airship
- * instance when it is ready. To customize Autopilot, extend the class and override either [allowEarlyTakeOff],
+ * Autopilot can be customized in order to load config from a different source or to customize Airship
+ * i when it is ready. To customize Autopilot, extend the class and override either [allowEarlyTakeOff],
  * [onAirshipReady], or [createAirshipConfigOptions] methods. The class
  * must be non-abstract, public, and it should only have a single public, no-argument constructor.
  * Register the class by adding an entry to the application block of your manifest containing the
@@ -93,29 +93,29 @@ public open class Autopilot public constructor() {
     }
 
     /**
-     * Called before the airship instance is returned in [Airship.shared]. Use this method
-     * to perform any Airship customizations. This method is called on a background thread, but if airship
+     * Called before the airship instance is used. Use this method to perform any Airship customizations.
+     * This method is called on a background thread, but if airship
      * takes longer than 5 seconds to be ready it could cause ANRs within the application.
      *
      * @param airship The Airship instance.
      */
-    @Deprecated("Use onAirshipReady(airship: Airship, context: Context) instead.", ReplaceWith("onAirshipReady(airship, context)"))
-    public open fun onAirshipReady(airship: Airship) {
+    @Deprecated("Use onAirshipReady(context: Context) instead.", ReplaceWith("onAirshipReady(context: Context)"))
+    @Suppress("DEPRECATION")
+    public open fun onAirshipReady(airship: UAirship) {
         UALog.d("Airship ready!")
     }
 
     /**
-     * Called before the airship instance is returned in [UAirship.shared]. Use this method
-     * to perform any Airship customizations. This method is called on a background thread, but if airship
-     * takes longer than 5 seconds to be ready it could cause ANRs within the application.y.
+     * Called before the airship instance is used. Use this method to perform any Airship customizations.
+     * This method is called on a background thread, but if airship takes longer than 5 seconds to be
+     * ready it could cause ANRs within the application.y.
      *
-     * @param airship The UAirship instance.
      * @param context The application context.
      */
-    public open fun onAirshipReady(airship: Airship, context: Context) {
+    public open fun onAirshipReady(context: Context) {
         // For backward compatibility, call the old method.
         @Suppress("DEPRECATION")
-        onAirshipReady(airship)
+        onAirshipReady(UAirship.shared())
     }
 
     public companion object {
@@ -162,7 +162,7 @@ public open class Autopilot public constructor() {
          */
         @Synchronized
         public fun automaticTakeOff(application: Application, earlyTakeoff: Boolean) {
-            if (Airship.isFlying || Airship.isTakingOff) {
+            if (Airship.status != AirshipStatus.TAKEOFF_NOT_CALLED) {
                 return
             }
 
@@ -202,7 +202,7 @@ public open class Autopilot public constructor() {
 
             val options = instance?.createAirshipConfigOptions(application)
 
-            if (Airship.isFlying || Airship.isTakingOff) {
+            if (Airship.isFlyingOrTakingOff) {
                 Log.e(
                     TAG,
                     "Airship is flying before autopilot is able to take off. Make sure" + "Autopilot.onCreateAirshipConfig is not calling takeOff directly."
@@ -210,8 +210,8 @@ public open class Autopilot public constructor() {
             }
 
             val callbackInstance = instance
-            Airship.takeOff(application, options) { airship ->
-                callbackInstance?.onAirshipReady(airship, application)
+            Airship.takeOff(application, options) {
+                callbackInstance?.onAirshipReady(application)
             }
             instance = null
         }

@@ -246,7 +246,7 @@ internal class BannerLayout(
                 return cachedId
             }
             var containerId = 0
-            val info = ManifestUtils.getActivityInfo(activity.javaClass)
+            val info = ManifestUtils.getActivityInfo(context, activity.javaClass)
             if (info?.metaData != null) {
                 containerId = info.metaData.getInt(BANNER_CONTAINER_ID, containerId)
             }

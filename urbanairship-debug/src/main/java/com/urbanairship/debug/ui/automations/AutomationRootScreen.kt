@@ -26,6 +26,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.Airship
 import com.urbanairship.automation.InAppAutomation
+import com.urbanairship.automation.inAppAutomation
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.Section
@@ -109,8 +110,8 @@ internal class DefaultAutomationRootScreenViewModel: AutomationRootScreenViewMod
     override val displayInterval: State<Long> = mutableState
 
     init {
-        Airship.shared {
-            mutableState.value = InAppAutomation.shared().inAppMessaging.displayInterval
+        Airship.onReady {
+            mutableState.value = inAppAutomation.inAppMessaging.displayInterval
         }
     }
 
@@ -119,7 +120,7 @@ internal class DefaultAutomationRootScreenViewModel: AutomationRootScreenViewMod
             return
         }
 
-        InAppAutomation.shared().inAppMessaging.displayInterval = value
+        Airship.inAppAutomation.inAppMessaging.displayInterval = value
         mutableState.value = value
     }
 }

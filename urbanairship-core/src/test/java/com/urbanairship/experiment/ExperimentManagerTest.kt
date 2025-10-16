@@ -3,10 +3,10 @@
 package com.urbanairship.experiment
 
 import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.TestApplication
 import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.audience.DeviceInfoProvider
 import com.urbanairship.cache.AirshipCache
@@ -39,7 +39,8 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class ExperimentManagerTest {
 
-    private val context: Context = TestApplication.getApplication()
+    private val context: Context = ApplicationProvider.getApplicationContext<Context>()
+
     private val dataStore = PreferenceDataStore.inMemoryStore(context)
 
     private val remoteData: RemoteData = mockk()

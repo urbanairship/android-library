@@ -5,6 +5,7 @@ package com.urbanairship.audience
 import androidx.annotation.RestrictTo
 import androidx.core.os.LocaleListCompat
 import androidx.core.util.ObjectsCompat
+import com.urbanairship.Platform
 import com.urbanairship.UALog
 import com.urbanairship.actions.FetchDeviceInfoAction
 import com.urbanairship.json.JsonException
@@ -440,13 +441,14 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         /**
          * Value matcher to be used to match the app's version int.
          *
+         * @param platform The platform.
          * @param valueMatcher Value matcher to be applied to the app's version int.
          * @return The builder.
          */
-        public fun setVersionMatcher(valueMatcher: ValueMatcher?): Builder {
+        public fun setVersionMatcher(platform: Platform, valueMatcher: ValueMatcher?): Builder {
             return setVersionPredicate(
                 if (valueMatcher == null) null else VersionUtils.createVersionPredicate(
-                    valueMatcher
+                    platform, valueMatcher
                 )
             )
         }
@@ -500,8 +502,6 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
     /**
      * Evaluation
      */
-
-
     public suspend fun evaluate(
         newEvaluationDate: Long,
         infoProvider: DeviceInfoProvider,
@@ -527,7 +527,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
     }
 
     private fun checkDeviceType(infoProvider: DeviceInfoProvider): Boolean {
-        return deviceTypes?.contains(infoProvider.platform) ?: true
+        return deviceTypes?.contains(infoProvider.platform.stringValue) ?: true
     }
 
     private suspend fun checkTestDevice(infoProvider: DeviceInfoProvider): Boolean {
@@ -631,7 +631,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
 
     private fun checkVersion(infoProvider: DeviceInfoProvider): Boolean {
         val required = versionPredicate ?: return true
-        val version = VersionUtils.createVersionObject(infoProvider.appVersionCode)
+        val version = VersionUtils.createVersionObject(infoProvider.platform, infoProvider.appVersionCode)
         return required.apply(version)
     }
 

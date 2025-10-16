@@ -29,15 +29,15 @@ public class A11yAutopilot extends Autopilot {
     private static final String FIRST_RUN_KEY = "first_run";
 
     @Override
-    public void onAirshipReady(@NonNull Airship airship) {
-        SharedPreferences preferences = Airship.getApplicationContext().getSharedPreferences(NO_BACKUP_PREFERENCES, Context.MODE_PRIVATE);
+    public void onAirshipReady(@NonNull Context context) {
+        SharedPreferences preferences = context.getSharedPreferences(NO_BACKUP_PREFERENCES, Context.MODE_PRIVATE);
 
         boolean isFirstRun = preferences.getBoolean(FIRST_RUN_KEY, true);
         if (isFirstRun) {
             preferences.edit().putBoolean(FIRST_RUN_KEY, false).apply();
 
             // Enable user notifications on first run
-            airship.getPushManager().setUserNotificationsEnabled(true);
+            Airship.getPush().setUserNotificationsEnabled(true);
         }
 
         // Create notification channel for Live Updates.
@@ -48,7 +48,6 @@ public class A11yAutopilot extends Autopilot {
                         .setVibrationEnabled(false)
                         .build();
 
-        Context context = Airship.getApplicationContext();
         NotificationManagerCompat.from(context).createNotificationChannel(sportsChannel);
 
         MessageCenter.shared().setOnShowMessageCenterListener(messageId -> {
@@ -65,15 +64,15 @@ public class A11yAutopilot extends Autopilot {
                     .setPackage(context.getPackageName())
                     .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
-            Airship.getApplicationContext().startActivity(intent);
+            context.startActivity(intent);
             return true;
         });
 
         AirshipListener airshipListener = new AirshipListener();
-        airship.getPushManager().addPushListener(airshipListener);
-        airship.getPushManager().addPushTokenListener(airshipListener);
-        airship.getPushManager().setNotificationListener(airshipListener);
-        airship.getChannel().addChannelListener(airshipListener);
+        Airship.getPush().addPushListener(airshipListener);
+        Airship.getPush().addPushTokenListener(airshipListener);
+        Airship.getPush().setNotificationListener(airshipListener);
+        Airship.getChannel().addChannelListener(airshipListener);
     }
 
     @Nullable

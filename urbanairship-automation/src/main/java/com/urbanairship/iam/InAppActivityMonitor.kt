@@ -93,7 +93,7 @@ public class InAppActivityMonitor(
      * @return `true` if the activity should be ignored for in-app messaging, otherwise `false`.
      */
     private fun shouldIgnoreActivity(activity: Activity): Boolean {
-        val metadata = ManifestUtils.getActivityInfo(activity.javaClass)?.metaData ?: return false
+        val metadata = ManifestUtils.getActivityInfo(activity, activity.javaClass)?.metaData ?: return false
         if (metadata.getBoolean(EXCLUDE_FROM_AUTO_SHOW, false)) {
             UALog.v { "Activity contains metadata to exclude it from auto showing an in-app message" }
             return true

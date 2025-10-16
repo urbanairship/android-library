@@ -2,6 +2,7 @@
 
 package com.urbanairship.iam.analytics
 
+import android.content.Context
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.analytics.Analytics
@@ -83,12 +84,12 @@ private data class AnalyticsEvent(
 
     override val type: EventType = eventType
 
-    override fun getEventData(conversionData: ConversionData): JsonMap {
+    override fun getEventData(context: Context, conversionData: ConversionData): JsonMap {
         return JsonMap.newBuilder()
             .putAll(baseData?.toJsonValue()?.requireMap() ?: jsonMapOf())
             .put(IDENTIFIER, identifier)
             .put(SOURCE, source)
-            .putOpt(CONTEXT, context)
+            .putOpt(CONTEXT, this.context)
             .putOpt(CONVERSION_SEND_ID, conversionData.conversionSendId)
             .putOpt(CONVERSION_PUSH_METADATA, conversionData.conversionMetadata)
             .putOpt(RENDERED_LOCALE, renderedLocale)

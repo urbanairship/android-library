@@ -54,11 +54,18 @@ public class FeatureFlagManager internal constructor(
         /**
          * Gets the shared `FeatureFlagManager` instance.
          *
+         * This method is the static entry point for Java clients. It delegates
+         * access to the primary [Airship] singleton, ensuring the component is available
+         * and fully initialized before returning.
+         *
          * @return an instance of `FeatureFlagManager`.
+         * @throws IllegalStateException if [Airship.takeOff] has not been called.
+         *
+         * @see Airship.featureFlagManager For the corresponding Kotlin extension property.
          */
         @JvmStatic
         public fun shared(): FeatureFlagManager =
-            Airship.shared().requireComponent(FeatureFlagManager::class.java)
+            Airship.featureFlagManager
     }
 
     private val pendingResultScope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
@@ -72,8 +79,23 @@ public class FeatureFlagManager internal constructor(
      * or is not found.
      * @return an instance of `PendingResult<FeatureFlag>`.
      */
+    @Deprecated("Use flagPendingResult instead", replaceWith = ReplaceWith("flagPendingResult(name, useResultCache)"))
     @JvmOverloads
     public fun flagAsPendingResult(name: String, useResultCache: Boolean = true): PendingResult<FeatureFlag> {
+        return flagPendingResult(name, useResultCache)
+    }
+
+    /**
+     * Gets and evaluates a feature flag and returns it as a PendingResult. The [PrivacyManager.Feature.FEATURE_FLAGS]
+     * must be enabled or this method will return null.
+     *
+     * @param name The flag name
+     * @param useResultCache If the result cache should be used or not when the flag fails to resolve
+     * or is not found.
+     * @return an instance of `PendingResult<FeatureFlag>`.
+     */
+    @JvmOverloads
+    public fun flagPendingResult(name: String, useResultCache: Boolean = true): PendingResult<FeatureFlag> {
         val result = PendingResult<FeatureFlag>()
         pendingResultScope.launch {
             result.setResult(flag(name, useResultCache).getOrNull())
@@ -403,6 +425,23 @@ public class FeatureFlagManager internal constructor(
         )
     }
 }
+
+/**
+ * Provides access to the [FeatureFlagManager] module features via the main [Airship] singleton.
+ *
+ *
+ * Access is thread-safe. Calling this property before Airship is finished taking off
+ * will block the calling thread until initialization is complete.
+ *
+ * @return The FeatureFlagManager instance.
+ * @throws IllegalStateException if [Airship.takeOff] has not been called.
+ *
+ * @see FeatureFlagManager.shared For the corresponding Java static access pattern.
+ */
+public val Airship.featureFlagManager: FeatureFlagManager
+    get() {
+        return Airship.requireComponent(FeatureFlagManager::class.java)
+    }
 
 private suspend fun FeatureFlagVariables.evaluate(
     isEligible: Boolean,

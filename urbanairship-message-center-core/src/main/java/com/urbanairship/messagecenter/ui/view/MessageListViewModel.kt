@@ -2,19 +2,18 @@ package com.urbanairship.messagecenter.ui.view
 
 import android.os.Parcelable
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import com.urbanairship.Airship
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Inbox
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.MessageCenter
+import com.urbanairship.messagecenter.messageCenter
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -28,7 +27,7 @@ import kotlinx.parcelize.Parcelize
 /** `ViewModel` for [MessageListView]. */
 public class MessageListViewModel(
     private var predicate: Predicate<Message>?,
-    private val inbox: Inbox = MessageCenter.shared().inbox,
+    private val inbox: Inbox = Airship.messageCenter.inbox,
 //    private val savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -144,7 +143,7 @@ public class MessageListViewModel(
             initializer {
                 MessageListViewModel(
                     predicate = predicate,
-                    inbox = MessageCenter.shared().inbox,
+                    inbox = Airship.messageCenter.inbox,
 //                    savedStateHandle = createSavedStateHandle(),
                 )
             }

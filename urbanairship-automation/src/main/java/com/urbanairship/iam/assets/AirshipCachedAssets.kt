@@ -244,9 +244,14 @@ internal class DefaultAirshipCachedAssets(
                 return null
             }
 
+            if (!Airship.isFlyingOrTakingOff) {
+                UALog.e { "Failed to restore cached asset! $path, takeOff not called!" }
+                return null
+            }
+
             val result = DefaultAirshipCachedAssets(
                 directory = directory,
-                fileManager = DefaultAssetFileManager(Airship.applicationContext)
+                fileManager = DefaultAssetFileManager(Airship.application)
             )
             result.metadataCache.putAll(metadata.map)
 

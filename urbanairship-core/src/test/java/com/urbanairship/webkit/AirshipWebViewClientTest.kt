@@ -6,10 +6,14 @@ import android.net.Uri
 import android.view.KeyEvent
 import android.view.View
 import android.webkit.WebView
+import androidx.core.os.bundleOf
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestApplication
 import com.urbanairship.Airship
+import com.urbanairship.UrlAllowList
 import com.urbanairship.contacts.Contact
+import com.urbanairship.contacts.Scope
+import com.urbanairship.javascript.JavaScriptEnvironment
 import com.urbanairship.javascript.JavaScriptExecutor
 import com.urbanairship.javascript.NativeBridge
 import com.urbanairship.javascript.NativeBridge.CommandDelegate
@@ -23,6 +27,7 @@ import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.mock
 
 @RunWith(AndroidJUnit4::class)
 public class AirshipWebViewClientTest {
@@ -32,25 +37,31 @@ public class AirshipWebViewClientTest {
     private val webView: WebView = mockk(relaxed = true) {
         every { rootView } answers { this@AirshipWebViewClientTest.rootView }
         every { url } answers { this@AirshipWebViewClientTest.webViewUrl }
-        every { context } answers { TestApplication.getApplication() }
+        every { context } answers { ApplicationProvider.getApplicationContext() }
     }
     private val nativeBridge: NativeBridge = mockk()
-    private val mockContact: Contact = mockk(relaxed = true)
 
-    private lateinit var client: AirshipWebViewClient
-
-    @Before
-    public fun setup() {
-        TestApplication.getApplication().setContact(mockContact)
-        Airship.shared().urlAllowList.addEntry("http://test-client")
-        client = AirshipWebViewClient(nativeBridge)
+    private val allowList: UrlAllowList = mockk {
+        every { isAllowed("http://test-client", UrlAllowList.Scope.JAVASCRIPT_INTERFACE) } returns true
     }
+
+    private var javaScriptExtender: (JavaScriptEnvironment.Builder) -> JavaScriptEnvironment.Builder  = { builder ->
+        builder
+    }
+
+    private var client: AirshipWebViewClient = AirshipWebViewClient(
+        nativeBridge = nativeBridge,
+        allowListProvider = { allowList },
+        javaScriptExtender = javaScriptExtender
+    )
 
     /**
      * Test any uairship scheme does not get intercepted when the webview's url is not allowed.
      */
     @Test
     public fun testHandleCommandNotAllowed() {
+        every { allowList.isAllowed("http://not-allowed", any()) } returns false
+
         webViewUrl = "http://not-allowed"
         val url = "uairship://run-actions?action"
         Assert.assertFalse(client.shouldOverrideUrlLoading(webView, url))
@@ -83,6 +94,7 @@ public class AirshipWebViewClientTest {
     @Test
     @SuppressLint("NewApi")
     public fun testOnPageFinishedNotAllowed() {
+        every { allowList.isAllowed("http://notallowed", any()) } returns false
         webViewUrl = "http://notallowed"
         client.onPageFinished(webView, webViewUrl)
         verify { nativeBridge wasNot Called }

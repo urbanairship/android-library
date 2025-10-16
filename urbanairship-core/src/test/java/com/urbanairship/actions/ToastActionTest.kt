@@ -3,6 +3,7 @@ package com.urbanairship.actions
 
 import android.annotation.SuppressLint
 import android.widget.Toast
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.actions.Action.Situation
 import com.urbanairship.actions.ActionTestUtils.createArgs
@@ -16,7 +17,7 @@ import org.robolectric.shadows.ShadowToast
 @RunWith(AndroidJUnit4::class)
 public class ToastActionTest {
 
-    private var action = ToastAction()
+    private var action = ToastAction { ApplicationProvider.getApplicationContext() }
 
     // Accepted situations (All - PUSH_RECEIVED)
     private val acceptedSituations: Array<Situation> = arrayOf(

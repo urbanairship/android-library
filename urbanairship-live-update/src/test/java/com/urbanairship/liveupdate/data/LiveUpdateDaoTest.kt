@@ -1,7 +1,8 @@
 package com.urbanairship.liveupdate.data
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.BaseTestCase
-import com.urbanairship.TestApplication
 import com.urbanairship.liveupdate.util.jsonMapOf
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -14,7 +15,7 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 public class LiveUpdateDaoTest : BaseTestCase() {
-    private val context = TestApplication.getApplication()
+    private val context: Context = ApplicationProvider.getApplicationContext()
     private val testDispatcher = StandardTestDispatcher()
 
     private lateinit var db: LiveUpdateDatabase

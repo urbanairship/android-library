@@ -12,6 +12,7 @@ import com.urbanairship.actions.ActionResult
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.AutomationTrigger
 import com.urbanairship.automation.InAppAutomation
+import com.urbanairship.automation.inAppAutomation
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.HTML
 import com.urbanairship.iam.content.InAppMessageDisplayContent
@@ -60,10 +61,10 @@ public class LandingPageAction(
         scheduleExtender: ScheduleExtender? = null) :
             this(
                 allowListChecker = { url: String ->
-                    Airship.shared().urlAllowList.isAllowed(url, UrlAllowList.Scope.OPEN_URL)
+                    Airship.urlAllowList.isAllowed(url, UrlAllowList.Scope.OPEN_URL)
                 },
                 scheduler = { schedule: AutomationSchedule ->
-                    InAppAutomation.shared().upsertSchedules(listOf(schedule))
+                    Airship.inAppAutomation.upsertSchedules(listOf(schedule))
                 },
                 scheduleExtender = scheduleExtender,
                 borderRadius = borderRadius)

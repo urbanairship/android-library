@@ -46,6 +46,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.spyk
+import io.mockk.unmockkStatic
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
@@ -54,6 +55,7 @@ import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -121,6 +123,11 @@ public class AutomationPreparerTest {
             additionalAudienceResolver = audienceResolver,
             audienceEvaluator = audienceEvaluator
         )
+    }
+
+    @After
+    public fun tearDown() {
+        unmockkStatic(Airship::class)
     }
 
     @Test
@@ -646,7 +653,7 @@ public class AutomationPreparerTest {
         }
 
         mockkStatic(Airship::class)
-        every { Airship.getVersion() } returns "1"
+        every { Airship.version } returns "1"
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
         if (result is SchedulePrepareResult.Prepared) {
@@ -700,8 +707,8 @@ public class AutomationPreparerTest {
             )
         }
 
-        mockkObject(Airship)
-        every { Airship.getVersion() } returns "1"
+        mockkStatic(Airship::class)
+        every { Airship.version } returns "1"
 
         assertEquals(SchedulePrepareResult.Skip, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
     }

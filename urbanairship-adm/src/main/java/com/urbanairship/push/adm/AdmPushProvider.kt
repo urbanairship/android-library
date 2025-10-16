@@ -11,6 +11,7 @@ import android.os.Looper
 import com.urbanairship.AirshipVersionInfo
 import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.push.PushProvider
 import com.urbanairship.push.PushProvider.RegistrationException
 import kotlin.time.Duration.Companion.seconds
@@ -23,7 +24,7 @@ import com.amazon.device.messaging.ADMConstants
  */
 public class AdmPushProvider public constructor() : PushProvider, AirshipVersionInfo {
 
-    override val platform: Airship.Platform = Airship.Platform.AMAZON
+    override val platform: Platform = Platform.AMAZON
     override val deliveryType: PushProvider.DeliveryType = PushProvider.DeliveryType.ADM
     override fun isAvailable(context: Context): Boolean = true
     override val airshipVersion: String = BuildConfig.AIRSHIP_VERSION
@@ -72,7 +73,7 @@ public class AdmPushProvider public constructor() : PushProvider, AirshipVersion
             result
         }
 
-        return isAdmAvailable && AdmWrapper.isSupported()
+        return isAdmAvailable && AdmWrapper.isSupported(context)
     }
 
     override fun toString(): String {

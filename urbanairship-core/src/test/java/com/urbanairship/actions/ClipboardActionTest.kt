@@ -17,7 +17,9 @@ import org.junit.runner.RunWith
 public class ClipboardActionTest {
 
     private val clipboardManager = ApplicationProvider.getApplicationContext<Context>().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    private var action = ClipboardAction()
+    private var action = ClipboardAction {
+        ApplicationProvider.getApplicationContext()
+    }
 
     private val acceptedSituations = arrayOf(
         Situation.PUSH_OPENED,

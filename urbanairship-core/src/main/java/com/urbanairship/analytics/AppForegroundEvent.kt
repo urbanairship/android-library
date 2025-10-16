@@ -1,8 +1,11 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
+import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Build
 import com.urbanairship.Airship
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 
@@ -12,14 +15,14 @@ internal class AppForegroundEvent(
 
     override val type: EventType = EventType.APP_FOREGROUND
 
-    @Throws(com.urbanairship.json.JsonException::class)
-    override fun getEventData(conversionData: ConversionData): JsonMap = jsonMapOf(
+    @Throws(JsonException::class, PackageManager.NameNotFoundException::class)
+    override fun getEventData(context: Context, conversionData: ConversionData): JsonMap = jsonMapOf(
         TIME_ZONE_KEY to timezone,
         DAYLIGHT_SAVINGS_KEY to isDaylightSavingsTime,
         OS_VERSION_KEY to Build.VERSION.RELEASE,
-        LIB_VERSION_KEY to Airship.getVersion(),
-        PACKAGE_VERSION_KEY to Airship.applicationContext.packageManager
-            .getPackageInfo(Airship.applicationContext.packageName, 0)?.versionName,
+        LIB_VERSION_KEY to Airship.version,
+        PACKAGE_VERSION_KEY to context.packageManager
+            .getPackageInfo(context.packageName, 0)?.versionName,
         PUSH_ID_KEY to conversionData.conversionSendId,
         METADATA_KEY to conversionData.conversionMetadata,
         LAST_METADATA_KEY to conversionData.lastReceivedMetadata

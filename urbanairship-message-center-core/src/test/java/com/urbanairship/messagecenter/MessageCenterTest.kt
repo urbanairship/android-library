@@ -201,11 +201,11 @@ public class MessageCenterTest {
 
     @Test
     public fun testPerformJobWhenEnabled() {
-        val (airship, jobInfo) = mockk<Airship>() to mockk<JobInfo>()
+        val jobInfo = mockk<JobInfo>()
         coEvery { inbox.performUpdate() } returns Result.success(true)
         every { privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns true
 
-        val result = messageCenter.onPerformJob(airship, jobInfo)
+        val result = messageCenter.onPerformJob(jobInfo)
 
         assertEquals(JobResult.SUCCESS, result)
         coVerify { inbox.performUpdate() }
@@ -215,7 +215,7 @@ public class MessageCenterTest {
     public fun testPerformJobWhenDisabled() {
         every { privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns false
 
-        val result = messageCenter.onPerformJob(mockk<Airship>(), mockk<JobInfo>())
+        val result = messageCenter.onPerformJob(mockk<JobInfo>())
 
         assertEquals(JobResult.SUCCESS, result)
         coVerify(exactly = 0) { inbox.performUpdate() }

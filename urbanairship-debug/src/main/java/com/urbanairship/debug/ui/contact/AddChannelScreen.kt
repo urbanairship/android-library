@@ -104,8 +104,8 @@ internal class CreateChannelViewModel: ViewModel() {
     var subscribedChannels: Flow<List<ContactChannel>> = flowOf(emptyList())
 
     init {
-        Airship.shared { airship ->
-            subscribedChannels = airship.contact.channelContacts.mapNotNull { it.getOrNull() }
+        Airship.onReady {
+            subscribedChannels = contact.channelContacts.mapNotNull { it.getOrNull() }
         }
     }
 }

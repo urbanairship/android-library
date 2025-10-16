@@ -12,7 +12,7 @@ public open class AirshipInitializer : Initializer<Boolean> {
 
     override fun create(context: Context): Boolean {
         Autopilot.automaticTakeOff((context.applicationContext as Application), true)
-        return Airship.isTakingOff || Airship.isFlying
+        return Airship.isFlyingOrTakingOff
     }
 
     override fun dependencies(): List<Class<out Initializer<*>?>> {

@@ -1,14 +1,17 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.annotation.VisibleForTesting
-import androidx.core.util.Supplier
-import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.Platform
+import com.urbanairship.UALog
 import com.urbanairship.UrlAllowList
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
+import com.urbanairship.actions.OpenExternalUrlAction
+import com.urbanairship.actions.WalletAction.Companion.DEFAULT_REGISTRY_NAME
+import com.urbanairship.actions.WalletAction.Companion.DEFAULT_REGISTRY_SHORT_NAME
 
 /**
  * Action for opening Android Pay deep links.
@@ -30,33 +33,36 @@ import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
  *
  * Default Registration Predicate: none
  */
-public class WalletAction : OpenExternalUrlAction {
+public class WalletAction internal constructor(
+    allowListProvider: () -> UrlAllowList,
+    private val contextProvider: () -> Context ,
+    private val platformProvider: () -> Platform
+) : OpenExternalUrlAction(allowListProvider, contextProvider) {
 
-    /**
-     * Default constructor.
-     */
-    public constructor() : super()
-
-    @VisibleForTesting
-    internal constructor(allowListSupplier: Supplier<UrlAllowList>) : super(allowListSupplier)
+    public constructor(): this(
+        allowListProvider = { Airship.urlAllowList },
+        contextProvider = { Airship.application },
+        platformProvider = { Airship.platform }
+    )
 
     public override fun perform(arguments: ActionArguments): ActionResult {
         UALog.i("Processing Wallet adaptive link.")
 
-        val intent = Intent(Airship.applicationContext, WalletLoadingActivity::class.java)
+        val context = contextProvider()
+        val intent = Intent(context, WalletLoadingActivity::class.java)
             .apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 setData(Uri.parse(arguments.value.string))
             }
 
-        Airship.applicationContext.startActivity(intent)
+        context.startActivity(intent)
 
         return newEmptyResult()
     }
 
     public override fun acceptsArguments(arguments: ActionArguments): Boolean {
         // Only support Android platform
-        if (Airship.shared().platformType != Airship.Platform.ANDROID) {
+        if (platformProvider() != Platform.ANDROID) {
             return false
         }
 

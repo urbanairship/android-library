@@ -4,10 +4,10 @@ package com.urbanairship.featureflag
 
 import android.content.Context
 import android.net.Uri
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
-import com.urbanairship.TestApplication
 import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.audience.AirshipDeviceAudienceResult
 import com.urbanairship.audience.AudienceSelector
@@ -39,7 +39,8 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class FeatureFlagManagerTest {
 
-    private val context: Context = TestApplication.getApplication()
+    private val context: Context = ApplicationProvider.getApplicationContext()
+
     private val featureFlagAnalytics: FeatureFlagAnalytics = mockk()
     private val deferredResolver: FlagDeferredResolver = mockk()
     private val privacyManager: PrivacyManager = mockk {

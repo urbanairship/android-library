@@ -206,7 +206,7 @@ internal class CreateOpenChannelViewModel: ViewModel() {
         }
 
         val options = OpenChannelRegistrationOptions.options(platform.value, identifiers.value)
-        Airship.shared().contact.registerOpenChannel(address.value, options)
+        Airship.contact.registerOpenChannel(address.value, options)
     }
 
     fun addIdentifier(key: String, value: String) {

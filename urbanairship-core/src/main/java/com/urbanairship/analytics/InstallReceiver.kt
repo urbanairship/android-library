@@ -31,15 +31,22 @@ import com.urbanairship.Airship
  * new OtherReceiver().onReceive(context, intent);
  * ```
  */
-public class InstallReceiver public constructor() : BroadcastReceiver() {
+public class InstallReceiver internal constructor(
+    private val eventRecorder: (InstallAttributionEvent) -> Unit =  { event ->
+        Airship.onReady {
+            analytics.addEvent(event)
+        }
+    }
+) : BroadcastReceiver() {
+
+    public constructor(): this(eventRecorder = { event ->
+        Airship.onReady {
+            analytics.addEvent(event)
+        }
+    })
 
     override fun onReceive(context: Context, intent: Intent?) {
         Autopilot.automaticTakeOff(context)
-        if (!Airship.isTakingOff && !Airship.isFlying) {
-            UALog.e("InstallReceiver - unable to track install referrer, takeOff not called.")
-            return
-        }
-
         if (intent == null) {
             return
         }
@@ -50,8 +57,7 @@ public class InstallReceiver public constructor() : BroadcastReceiver() {
             return
         }
 
-        val event = InstallAttributionEvent(referrer)
-        Airship.shared().analytics.addEvent(event)
+        eventRecorder(InstallAttributionEvent(referrer))
     }
 
     private companion object {

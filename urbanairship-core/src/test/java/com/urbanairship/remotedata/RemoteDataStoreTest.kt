@@ -1,9 +1,9 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.remotedata
 
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.BaseTestCase
-import com.urbanairship.TestApplication
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 import java.util.Arrays
@@ -16,7 +16,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class RemoteDataStoreTest {
 
-    private var dataStore = RemoteDataStore(TestApplication.getApplication(), "appKey", "test")
+    private var dataStore = RemoteDataStore(ApplicationProvider.getApplicationContext(), "appKey", "test")
     private var payloads = setOf(
         RemoteDataPayload(
             type = "type",

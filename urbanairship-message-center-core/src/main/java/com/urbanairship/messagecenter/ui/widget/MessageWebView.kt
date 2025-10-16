@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.webkit.WebView
 import androidx.annotation.CallSuper
 import androidx.annotation.MainThread
+import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionRunRequest
@@ -14,6 +15,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
+import com.urbanairship.messagecenter.messageCenter
 import com.urbanairship.webkit.AirshipWebViewClient
 import com.urbanairship.webkit.NestedScrollAirshipWebView
 import java.text.SimpleDateFormat
@@ -38,7 +40,7 @@ public open class MessageWebView @JvmOverloads constructor(
      */
     public open fun loadMessage(message: Message) {
         UALog.v { "Loading message: ${message.id}" }
-        val user = MessageCenter.shared().user
+        val user = Airship.messageCenter.user
 
         // Send authorization in the headers if the web view supports it
         val headers = HashMap<String, String>()
@@ -86,7 +88,7 @@ public open class MessageWebViewClient : AirshipWebViewClient() {
             .addGetter("getMessageId", message?.id)
             .addGetter("getMessageTitle", message?.title)
             .addGetter("getMessageSentDate", formattedSentDate)
-            .addGetter("getUserId", MessageCenter.shared().user.id)
+            .addGetter("getUserId", Airship.messageCenter.user.id)
             .addGetter("getMessageExtras", extras)
     }
 
@@ -100,7 +102,7 @@ public open class MessageWebViewClient : AirshipWebViewClient() {
     @MainThread
     private fun getMessage(webView: WebView): Message? = runBlocking {
         val url = webView.url
-        MessageCenter.shared().inbox.getMessageByUrl(url)
+        Airship.messageCenter.inbox.getMessageByUrl(url)
     }
 
     private companion object {

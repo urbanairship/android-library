@@ -88,7 +88,7 @@ internal class MediaView @JvmOverloads constructor(
                 imageView.contentDescription = mediaInfo.description
                 val url = cachedMediaUrl ?: mediaInfo.url
                 imageView.doOnPreDraw {
-                    Airship.shared().getImageLoader().load(
+                    Airship.imageLoader.load(
                         context,
                         imageView,
                         ImageRequestOptions.newBuilder(url).build()
@@ -125,7 +125,7 @@ internal class MediaView @JvmOverloads constructor(
         val settings = webView.settings
         settings.mediaPlaybackRequiresUserGesture = true
         settings.javaScriptEnabled = true
-        if (ManifestUtils.shouldEnableLocalStorage()) {
+        if (ManifestUtils.shouldEnableLocalStorage(context)) {
             settings.domStorageEnabled = true
             settings.databaseEnabled = true
         }

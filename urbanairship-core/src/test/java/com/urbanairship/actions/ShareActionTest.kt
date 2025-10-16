@@ -3,8 +3,6 @@ package com.urbanairship.actions
 
 import android.app.Application
 import android.content.Intent
-import android.content.pm.ActivityInfo
-import android.content.pm.ResolveInfo
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
@@ -20,8 +18,7 @@ public class ShareActionTest {
     private val application: Application
         get() = ApplicationProvider.getApplicationContext()
 
-    private var action = ShareAction()
-    private var packageManager = Shadows.shadowOf(application.packageManager)
+    private var action = ShareAction { application }
 
     /**
      * Test the share action accepts Strings in foreground situations.
@@ -74,19 +71,5 @@ public class ShareActionTest {
         assertEquals(chooserIntent.action, Intent.ACTION_SEND)
         assertEquals(null, chooserIntent.getPackage())
         assertFalse(chooserIntent.hasExtra(Intent.EXTRA_INITIAL_INTENTS))
-    }
-
-    /**
-     * Helper method to create a resolve info with the specified package name.
-     *
-     * @param packageName The package name.
-     * @return The resolve info with the package name.
-     */
-    private fun createResolverInfo(packageName: String): ResolveInfo {
-        return ResolveInfo().apply {
-            activityInfo = ActivityInfo()
-            activityInfo.packageName = packageName
-            activityInfo.name = "packageName"
-        }
     }
 }

@@ -1,33 +1,30 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.push
 
+import android.content.Context
 import androidx.core.os.bundleOf
 import androidx.core.util.Consumer
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.AirshipConfigOptions
+import com.urbanairship.Platform
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.R
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.TestApplication
-import com.urbanairship.Airship
 import com.urbanairship.analytics.Analytics
-import com.urbanairship.base.Supplier
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.ChannelRegistrationPayload
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
-import com.urbanairship.permission.OnPermissionStatusChangedListener
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionPromptFallback
 import com.urbanairship.permission.PermissionRequestResult
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.push.notifications.NotificationActionButtonGroup
-import app.cash.turbine.test
 import io.mockk.Called
 import io.mockk.clearMocks
 import io.mockk.coEvery
@@ -35,15 +32,11 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -71,9 +64,9 @@ public class PushManagerTest {
     private val mockAnalytics: Analytics = mockk(relaxed = true)
     private var notificationStatus = PermissionStatus.NOT_DETERMINED
     private val mockPermissionManager: PermissionsManager = mockk(relaxed = true) {
-        coEvery { suspendingCheckPermissionStatus(any()) } answers { notificationStatus }
+        coEvery { checkPermissionStatus(any()) } answers { notificationStatus }
     }
-    private val pushProvidersSupplier = Supplier<PushProviders> { mockPushProviders }
+    private val pushProvidersProvider: () -> PushProviders = { mockPushProviders }
     private val mockNotificationManager: AirshipNotificationManager = mockk {
         every { areNotificationsEnabled() } returns false
     }
@@ -81,11 +74,11 @@ public class PushManagerTest {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private var pushManager = PushManager(
-        TestApplication.getApplication(),
+        ApplicationProvider.getApplicationContext<Context>(),
         preferenceDataStore,
         runtimeConfig,
         privacyManager,
-        pushProvidersSupplier,
+        pushProvidersProvider,
         mockAirshipChannel,
         mockAnalytics,
         mockPermissionManager,
@@ -124,11 +117,11 @@ public class PushManagerTest {
 
         // Init to verify token does not clear if the delivery type is the same
         pushManager = PushManager(
-            TestApplication.getApplication(),
+            ApplicationProvider.getApplicationContext<Context>(),
             preferenceDataStore!!,
             runtimeConfig,
             privacyManager,
-            pushProvidersSupplier,
+            pushProvidersProvider,
             mockAirshipChannel,
             mockAnalytics,
             mockPermissionManager,
@@ -142,11 +135,11 @@ public class PushManagerTest {
         // Change the delivery type, should clear the token on init
         every { mockPushProvider.deliveryType } returns PushProvider.DeliveryType.ADM
         pushManager = PushManager(
-            TestApplication.getApplication(),
+            ApplicationProvider.getApplicationContext<Context>(),
             preferenceDataStore,
             runtimeConfig,
             privacyManager,
-            pushProvidersSupplier,
+            pushProvidersProvider,
             mockAirshipChannel,
             mockAnalytics,
             mockPermissionManager,
@@ -341,7 +334,7 @@ public class PushManagerTest {
         pushManager.userNotificationsEnabled = true
         every { mockNotificationManager.areNotificationsEnabled() } returns true
 
-        every { mockPushProvider.platform } returns Airship.Platform.ANDROID
+        every { mockPushProvider.platform } returns Platform.ANDROID
 
         val builder = ChannelRegistrationPayload.Builder()
         val payload = extender?.extend(builder)?.build()
@@ -396,7 +389,7 @@ public class PushManagerTest {
         Assert.assertNotNull(extender)
 
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.platform } returns Airship.Platform.ANDROID
+        every { mockPushProvider.platform } returns Platform.ANDROID
         every { mockPushProvider.deliveryType } returns PushProvider.DeliveryType.FCM
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
 
@@ -571,7 +564,7 @@ public class PushManagerTest {
         pushManager.userNotificationsEnabled = true
 
         activityMonitor.foreground()
-        coVerify { mockPermissionManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) }
+        coVerify { mockPermissionManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) }
     }
 
     @Test
@@ -580,14 +573,14 @@ public class PushManagerTest {
 
         this.notificationStatus = PermissionStatus.NOT_DETERMINED
         pushManager.userNotificationsEnabled = true
-        coVerify { mockPermissionManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) }
+        coVerify { mockPermissionManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) }
     }
 
     @Test
     public fun testEnableUserNotifications() {
         val consumer = TestConsumer<Boolean>()
 
-        coEvery { mockPermissionManager.suspendingRequestPermission(
+        coEvery { mockPermissionManager.requestPermission(
             permission = Permission.DISPLAY_NOTIFICATIONS,
             enableAirshipUsageOnGrant = false,
             fallback = PermissionPromptFallback.None
@@ -603,7 +596,7 @@ public class PushManagerTest {
     public fun testEnableUserNotificationsDenied() {
         val consumer = TestConsumer<Boolean>()
 
-        coEvery { mockPermissionManager.suspendingRequestPermission(
+        coEvery { mockPermissionManager.requestPermission(
             permission = Permission.DISPLAY_NOTIFICATIONS,
             enableAirshipUsageOnGrant = false,
             fallback = PermissionPromptFallback.None
@@ -619,7 +612,7 @@ public class PushManagerTest {
     public fun testEnableUserNotificationsFallback() {
         val consumer = TestConsumer<Boolean>()
 
-        coEvery { mockPermissionManager.suspendingRequestPermission(
+        coEvery { mockPermissionManager.requestPermission(
             permission = Permission.DISPLAY_NOTIFICATIONS,
             enableAirshipUsageOnGrant = false,
             fallback = PermissionPromptFallback.SystemSettings
@@ -643,7 +636,7 @@ public class PushManagerTest {
         pushManager.userNotificationsEnabled = true
 
         privacyManager.enable(PrivacyManager.Feature.PUSH)
-        coVerify { mockPermissionManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) }
+        coVerify { mockPermissionManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS) }
     }
 
     @Test
@@ -681,7 +674,7 @@ public class PushManagerTest {
         pushManager.userNotificationsEnabled = true
 
         coVerify {
-            mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS)
+            mockPermissionManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS)
         }
     }
 
@@ -697,7 +690,7 @@ public class PushManagerTest {
 
     @Test
     public fun testUpdateRegistrationAfterPrompt() {
-        coEvery { mockPermissionManager.suspendingRequestPermission(any()) } returns PermissionRequestResult.granted()
+        coEvery { mockPermissionManager.requestPermission(any()) } returns PermissionRequestResult.granted()
 
         pushManager.init()
         privacyManager.enable(PrivacyManager.Feature.PUSH)
@@ -718,11 +711,11 @@ public class PushManagerTest {
         pushManager.userNotificationsEnabled = true
         clearMocks(mockPermissionManager, answers = false)
 
-        coVerify(exactly = 0) { mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
+        coVerify(exactly = 0) { mockPermissionManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
 
         pushManager.onAirshipReady()
 
-        coVerify(exactly = 1) { mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
+        coVerify(exactly = 1) { mockPermissionManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
     }
 
     @Test
@@ -733,20 +726,20 @@ public class PushManagerTest {
         activityMonitor.foreground()
         pushManager.onAirshipReady()
 
-        coVerify(exactly = 0) { mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
+        coVerify(exactly = 0) { mockPermissionManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS) }
 
         pushManager.userNotificationsEnabled = true
-        coVerify(exactly = 1) { mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
+        coVerify(exactly = 1) { mockPermissionManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS) }
 
         activityMonitor.background()
         activityMonitor.foreground()
 
-        coVerify(exactly = 1) { mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
+        coVerify(exactly = 1) { mockPermissionManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS) }
 
         pushManager.userNotificationsEnabled = false
         pushManager.userNotificationsEnabled = true
 
-        coVerify(exactly = 2) { mockPermissionManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any()) }
+        coVerify(exactly = 2) { mockPermissionManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS) }
     }
 
     @Test
@@ -765,7 +758,7 @@ public class PushManagerTest {
         activityMonitor.foreground()
         pushManager.onAirshipReady()
         pushManager.userNotificationsEnabled = true
-        verify(exactly = 0) { mockPermissionManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS, any(), any(), any()) }
+        coVerify(exactly = 0) { mockPermissionManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS, any()) }
     }
 
     @Test
@@ -818,7 +811,7 @@ public class PushManagerTest {
 
         val consumer = TestConsumer<Boolean>()
 
-        coEvery { mockPermissionManager.suspendingRequestPermission(
+        coEvery { mockPermissionManager.requestPermission(
             permission = Permission.DISPLAY_NOTIFICATIONS,
             enableAirshipUsageOnGrant = false,
             fallback = PermissionPromptFallback.None

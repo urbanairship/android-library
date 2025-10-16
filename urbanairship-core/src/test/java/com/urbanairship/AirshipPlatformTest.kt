@@ -8,38 +8,38 @@ public class AirshipPlatformTest {
 
     @Test
     public fun testPlatformValues() {
-        assertEquals(1, Airship.Platform.AMAZON.rawValue)
-        assertEquals(2, Airship.Platform.ANDROID.rawValue)
-        assertEquals(-1, Airship.Platform.UNKNOWN.rawValue)
+        assertEquals(1, Platform.AMAZON.rawValue)
+        assertEquals(2, Platform.ANDROID.rawValue)
+        assertEquals(-1, Platform.UNKNOWN.rawValue)
     }
 
     @Test
     public fun testStringValue() {
-        assertEquals("amazon", Airship.Platform.AMAZON.stringValue)
-        assertEquals("android", Airship.Platform.ANDROID.stringValue)
-        assertEquals("unknown", Airship.Platform.UNKNOWN.stringValue)
+        assertEquals("amazon", Platform.AMAZON.stringValue)
+        assertEquals("android", Platform.ANDROID.stringValue)
+        assertEquals("unknown", Platform.UNKNOWN.stringValue)
     }
 
     @Test
     public fun testDeviceType() {
-        assertEquals("amazon", Airship.Platform.AMAZON.deviceType)
-        assertEquals("android", Airship.Platform.ANDROID.deviceType)
+        assertEquals("amazon", Platform.AMAZON.deviceType)
+        assertEquals("android", Platform.ANDROID.deviceType)
     }
 
     @Test(expected = RequestException::class)
     public fun testDeviceTypeUnknown() {
         // This should throw RequestException as "unknown" is not a valid device type
-        Airship.Platform.UNKNOWN.deviceType
+        Platform.UNKNOWN.deviceType
     }
 
     @Test
     public fun testFromRawValue() {
-        assertEquals(Airship.Platform.AMAZON, Airship.Platform.fromRawValue(1))
-        assertEquals(Airship.Platform.ANDROID, Airship.Platform.fromRawValue(2))
-        assertEquals(Airship.Platform.UNKNOWN, Airship.Platform.fromRawValue(-1))
+        assertEquals(Platform.AMAZON, Platform.fromRawValue(1))
+        assertEquals(Platform.ANDROID, Platform.fromRawValue(2))
+        assertEquals(Platform.UNKNOWN, Platform.fromRawValue(-1))
         assertEquals(
-            Airship.Platform.UNKNOWN,
-            Airship.Platform.fromRawValue(100)
+            Platform.UNKNOWN,
+            Platform.fromRawValue(100)
         ) // Test with an invalid raw value
     }
 }

@@ -1,13 +1,13 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics.location
 
+import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.Size
 import com.urbanairship.UALog
 import com.urbanairship.analytics.ConversionData
 import com.urbanairship.analytics.Event
 import com.urbanairship.analytics.EventType
-import com.urbanairship.analytics.location.RegionEvent.Boundary
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -70,7 +70,7 @@ public class RegionEvent private constructor(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun getEventData(conversionData: ConversionData): JsonMap {
+    override fun getEventData(context: Context, conversionData: ConversionData): JsonMap {
         return createEventData()
     }
 

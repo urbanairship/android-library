@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.map
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ConditionStateMonitor(
-    private val pushManager: PushManager = Airship.shared().pushManager,
+    private val pushManager: PushManager = Airship.push,
 ) {
 
     public val states: Flow<Condition.State> = pushManager.pushNotificationStatusFlow

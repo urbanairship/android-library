@@ -4,7 +4,6 @@ package com.urbanairship
 import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.base.Supplier
 import com.urbanairship.push.PushProvider
 
 /**
@@ -43,12 +42,12 @@ public open class PushProviders @VisibleForTesting protected constructor(
 
     private fun isValid(provider: PushProvider): Boolean {
         if (provider is AirshipVersionInfo) {
-            if (Airship.getVersion() != provider.airshipVersion) {
+            if (Airship.version != provider.airshipVersion) {
                 UALog.e(
                     "Provider: %s version %s does not match the SDK version %s. Make sure all Airship dependencies are the same version.",
                     provider,
                     provider.airshipVersion,
-                    Airship.getVersion()
+                    Airship.version
                 )
                 return false
             }
@@ -56,14 +55,14 @@ public open class PushProviders @VisibleForTesting protected constructor(
 
         when (provider.deliveryType) {
             PushProvider.DeliveryType.ADM -> {
-                if (provider.platform != Airship.Platform.AMAZON) {
+                if (provider.platform != Platform.AMAZON) {
                     UALog.e("Invalid Provider: $provider. ADM delivery is only available for Amazon platforms.")
                     return false
                 }
             }
             PushProvider.DeliveryType.FCM,
             PushProvider.DeliveryType.HMS -> {
-                if (provider.platform != Airship.Platform.ANDROID) {
+                if (provider.platform != Platform.ANDROID) {
                     UALog.e(
                         "Invalid Provider: %s. %s delivery is only available for Android platforms.",
                         provider.deliveryType,
@@ -117,7 +116,7 @@ public open class PushProviders @VisibleForTesting protected constructor(
      * @param platform The specified platform.
      * @return The best provider for the platform, or `null` if no provider is found.
      */
-    public open fun getBestProvider(platform: Airship.Platform): PushProvider? {
+    public open fun getBestProvider(platform: Platform): PushProvider? {
         return availableProviders.firstOrNull { it.platform == platform }
             ?: supportedProviders.firstOrNull { it.platform == platform }
     }
@@ -139,7 +138,7 @@ public open class PushProviders @VisibleForTesting protected constructor(
      * @return The provider or `null` if the specified provider is not available.
      */
     public open fun getProvider(
-        platform: Airship.Platform,
+        platform: Platform,
         providerClass: String
     ): PushProvider? {
         return supportedProviders.firstOrNull {
@@ -167,12 +166,12 @@ public open class PushProviders @VisibleForTesting protected constructor(
     private class LazyLoader(
         private val context: Context,
         private val config: AirshipConfigOptions
-    ) : Supplier<PushProviders> {
+    ) {
 
         var pushProviders: PushProviders? = null
 
         @Synchronized
-        override fun get(): PushProviders {
+        fun get(): PushProviders {
             return pushProviders ?: run {
                 val provider = load(context, config)
                 pushProviders = provider
@@ -202,8 +201,11 @@ public open class PushProviders @VisibleForTesting protected constructor(
 
         public fun lazyLoader(
             context: Context, config: AirshipConfigOptions
-        ): Supplier<PushProviders> {
-            return LazyLoader(context, config)
+        ): () -> PushProviders {
+            val loader = LazyLoader(context, config)
+            return {
+                loader.get()
+            }
         }
     }
 }

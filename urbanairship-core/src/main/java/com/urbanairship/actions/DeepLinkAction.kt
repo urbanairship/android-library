@@ -1,13 +1,14 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.annotation.VisibleForTesting
-import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.UALog
 import com.urbanairship.actions.ActionResult.Companion.newResult
-import com.urbanairship.base.Supplier
+import com.urbanairship.actions.DeepLinkAction.Companion.DEFAULT_REGISTRY_NAME
+import com.urbanairship.actions.DeepLinkAction.Companion.DEFAULT_REGISTRY_SHORT_NAME
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 
@@ -30,31 +31,35 @@ import com.urbanairship.push.PushMessage
  *
  * Default Registration Predicate: none
  */
-public class DeepLinkAction @VisibleForTesting internal constructor(
-    private val airshipSupplier: Supplier<Airship>
+public class DeepLinkAction(
+    private val onDeepLink: (String) -> Boolean = {
+        Airship.deepLink(deepLink = it)
+    },
+    private val contextProvider: () -> Context = {
+        Airship.application
+    }
 ): Action() {
-
-    public constructor() : this(Supplier<Airship> { Airship.shared() })
 
     override fun perform(arguments: ActionArguments): ActionResult {
         val deepLink = arguments.value.string ?: throw IllegalArgumentException("Missing deep link.")
-        val airship = airshipSupplier.get() ?: throw IllegalArgumentException("Missing airship.")
 
         UALog.i("Deep linking: $deepLink")
-        if (airship.deepLink(deepLink)) {
+        if (onDeepLink(deepLink)) {
             return newResult(arguments.value)
         }
+
+        val context = contextProvider()
 
         // Fallback to intent launching
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            .setPackage(Airship.applicationContext.packageName)
+            .setPackage(context.packageName)
 
         arguments.metadata.getParcelable<PushMessage>(ActionArguments.PUSH_MESSAGE_METADATA)?.let {
             intent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, it.getPushBundle())
         }
 
-        Airship.applicationContext.startActivity(intent)
+        context.startActivity(intent)
 
         return newResult(arguments.value)
     }

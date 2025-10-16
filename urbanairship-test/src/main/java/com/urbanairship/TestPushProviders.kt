@@ -5,7 +5,7 @@ import com.urbanairship.push.PushProvider
 public class TestPushProviders public constructor(config: AirshipConfigOptions) :
     PushProviders(config) {
 
-    override fun getProvider(platform: Airship.Platform, providerClass: String): PushProvider? {
+    override fun getProvider(platform: Platform, providerClass: String): PushProvider? {
         return null
     }
 
@@ -13,7 +13,7 @@ public class TestPushProviders public constructor(config: AirshipConfigOptions) 
         return emptyList()
     }
 
-    override fun getBestProvider(platform: Airship.Platform): PushProvider? {
+    override fun getBestProvider(platform: Platform): PushProvider? {
         return null
     }
 

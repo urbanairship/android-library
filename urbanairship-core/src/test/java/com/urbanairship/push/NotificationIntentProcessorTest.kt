@@ -6,11 +6,8 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.os.bundleOf
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestApplication
-import com.urbanairship.Airship
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.InteractiveNotificationEvent
-import java.util.concurrent.Executor
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -31,7 +28,13 @@ public class NotificationIntentProcessorTest {
     private var context: Context = mockk(relaxed = true)
     private var notificationManager: NotificationManager = mockk(relaxed = true)
     private var analytics: Analytics = mockk(relaxed = true)
+
     private var notificationListener: NotificationListener = mockk(relaxed = true)
+
+    private val pushManager: PushManager = mockk(relaxed = true) {
+        every { this@mockk.notificationListener } returns this@NotificationIntentProcessorTest.notificationListener
+    }
+
     private val dispatcher = StandardTestDispatcher()
 
     private lateinit var responseIntent: Intent
@@ -41,12 +44,7 @@ public class NotificationIntentProcessorTest {
 
     @Before
     public fun before() {
-        val pushManager: PushManager = mockk(relaxed = true) {
-            every { notificationListener } returns this@NotificationIntentProcessorTest.notificationListener
-        }
 
-        TestApplication.getApplication().setAnalytics(analytics)
-        TestApplication.getApplication().setPushManager(pushManager)
 
         every { context.getSystemService(Context.NOTIFICATION_SERVICE) } returns notificationManager
 
@@ -103,7 +101,7 @@ public class NotificationIntentProcessorTest {
     public fun testNotificationResponseSuspending(): TestResult = runTest {
         every { notificationListener.onNotificationOpened(any()) } returns false
 
-        val result = NotificationIntentProcessor(Airship.shared(), context, responseIntent, dispatcher)
+        val result = NotificationIntentProcessor(analytics, pushManager, true, context, responseIntent, dispatcher)
             .processSuspending()
 
         Assert.assertTrue(result)
@@ -249,7 +247,7 @@ public class NotificationIntentProcessorTest {
     }
 
     private fun processIntent(intent: Intent): Boolean? {
-        return NotificationIntentProcessor(Airship.shared(), context, intent, dispatcher)
+        return NotificationIntentProcessor(analytics, pushManager, true, context, intent, dispatcher)
             .process()
             .also { dispatcher.scheduler.advanceUntilIdle() }
             .get()

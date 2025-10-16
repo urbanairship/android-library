@@ -21,9 +21,9 @@ class AdmWrapper {
      *
      * @return The value returned by {@link ADM#isSupported()}.
      */
-    static boolean isSupported() {
+    static boolean isSupported(Context context) {
         try {
-            return new ADM(Airship.getApplicationContext()).isSupported();
+            return new ADM(context).isSupported();
         } catch (RuntimeException ex) {
             UALog.w("Failed to call ADM. Make sure ADM jar is not bundled with the APK.");
             return false;

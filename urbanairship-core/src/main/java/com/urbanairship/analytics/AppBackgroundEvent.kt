@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
+import android.content.Context
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 
@@ -11,7 +12,7 @@ internal class AppBackgroundEvent(
     override val type: EventType = EventType.APP_BACKGROUND
 
     @Throws(com.urbanairship.json.JsonException::class)
-    override fun getEventData(conversionData: ConversionData): JsonMap = jsonMapOf(
+    override fun getEventData(context: Context, conversionData: ConversionData): JsonMap = jsonMapOf(
         PUSH_ID_KEY to conversionData.conversionSendId,
         METADATA_KEY to conversionData.conversionMetadata
     )

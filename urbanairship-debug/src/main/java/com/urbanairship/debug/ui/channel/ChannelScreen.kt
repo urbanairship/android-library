@@ -108,7 +108,7 @@ internal interface ChannelViewModel {
 }
 
 internal class DefaultChannelViewModel: ChannelViewModel, ViewModel() {
-    override var channelId = Airship.shared()
+    override var channelId = Airship
         .channel
         .channelIdFlow
         .map { it?.uppercase() }

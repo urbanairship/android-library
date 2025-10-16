@@ -2,9 +2,12 @@
 package com.urbanairship.actions
 
 import android.os.Parcelable
+import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 import com.urbanairship.actions.ActionResult.Companion.newErrorResult
+import com.urbanairship.actions.AddCustomEventAction.Companion.DEFAULT_REGISTRY_NAME
+import com.urbanairship.actions.AddCustomEventAction.Companion.DEFAULT_REGISTRY_SHORT_NAME
 import com.urbanairship.analytics.CustomEvent
 import com.urbanairship.analytics.CustomEvent.Companion.newBuilder
 import com.urbanairship.json.JsonMap
@@ -41,7 +44,11 @@ import com.urbanairship.push.PushMessage
  *
  * Default Registration Predicate: Rejects [Action.Situation.PUSH_RECEIVED]
  */
-public class AddCustomEventAction public constructor() : Action() {
+public class AddCustomEventAction(
+    private val eventRecord: (CustomEvent) -> Unit = {
+        Airship.analytics.recordCustomEvent(it)
+    }
+) : Action() {
 
     override fun perform(arguments: ActionArguments): ActionResult {
         val customEventMap = arguments.value.toJsonValue().optMap()
@@ -80,9 +87,9 @@ public class AddCustomEventAction public constructor() : Action() {
         eventBuilder.setProperties(customEventMap.optionalMap(CustomEvent.PROPERTIES))
 
         val event = eventBuilder.build()
-        event.track()
 
         return if (event.isValid()) {
+            eventRecord(event)
             newEmptyResult()
         } else {
             newErrorResult(IllegalArgumentException("Unable to add custom event. Event is invalid."))

@@ -7,14 +7,9 @@ import androidx.annotation.VisibleForTesting
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
-import java.util.concurrent.Executor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -160,7 +155,7 @@ public class PreferenceDataStore internal constructor(
 
         return try {
             value.toLong()
-        } catch (e: NumberFormatException) {
+        } catch (_ : NumberFormatException) {
             defaultValue
         }
     }
@@ -178,7 +173,7 @@ public class PreferenceDataStore internal constructor(
 
         return try {
             value.toInt()
-        } catch (e: NumberFormatException) {
+        } catch (_ : NumberFormatException) {
             defaultValue
         }
     }
@@ -418,6 +413,7 @@ public class PreferenceDataStore internal constructor(
 
     public companion object {
 
+
         private val OBSOLETE_KEYS = arrayOf(
             "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS",
             "com.urbanairship.push.iam.PENDING_IN_APP_MESSAGE",
@@ -435,7 +431,11 @@ public class PreferenceDataStore internal constructor(
             "com.urbanairship.remotedata.LAST_REFRESH_TIME",
             "com.urbanairship.iam.data.last_payload_info",
             "com.urbanairship.iam.data.LAST_PAYLOAD_METADATA",
-            "com.urbanairship.iam.data.contact_last_payload_info"
+            "com.urbanairship.iam.data.contact_last_payload_info",
+            "com.urbanairship.push.SOUND_ENABLED",
+            "com.urbanairship.push.VIBRATE_ENABLED",
+            "com.urbanairship.push.QUIET_TIME_ENABLED",
+            "com.urbanairship.push.QUIET_TIME_INTERVAL"
         )
 
         /** @hide

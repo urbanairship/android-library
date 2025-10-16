@@ -3,6 +3,7 @@ package com.urbanairship.push
 
 import android.content.Context
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -71,7 +72,7 @@ public interface PushProvider {
         }
     }
 
-    public val platform: Airship.Platform
+    public val platform: Platform
 
     public val deliveryType: DeliveryType
 

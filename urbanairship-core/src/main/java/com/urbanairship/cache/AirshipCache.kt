@@ -25,32 +25,30 @@ public class AirshipCache(
     runtimeConfig: AirshipRuntimeConfig,
     isPersistent: Boolean = true,
     appVersion: String? = null,
-    private val sdkVersion: String = Airship.getVersion(),
+    private val sdkVersion: String = Airship.version,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) {
 
-    private val store: CacheDao
+    private val store: CacheDao = if (isPersistent) {
+        CacheDatabase.persistent(context, runtimeConfig.configOptions.appKey).cacheDao()
+    } else {
+        CacheDatabase.inMemory(context).cacheDao()
+    }
+
     private val dbScope = CoroutineScope(dispatcher + SupervisorJob())
-    private val appVersion = appVersion ?: context
-        .packageManager
-        .getPackageInfo(context.packageName, 0)
+
+    private val appVersion = appVersion
+        ?: context.packageManager.getPackageInfo(context.packageName, 0)
         ?.let { PackageInfoCompat.getLongVersionCode(it) }
-        ?.toString()
-        ?: "-1"
+        ?.toString() ?: "-1"
 
     init {
-        store = if (isPersistent) {
-            CacheDatabase.persistent(context, runtimeConfig.configOptions.appKey).cacheDao()
-        } else {
-            CacheDatabase.inMemory(context).cacheDao()
-        }
-
         dbScope.launch {
             try {
                 deleteExpired()
-            } catch (ex: Exception) {
-                UALog.e(ex) { "Failed to clear expired cache items" }
+            } catch (e: Exception) {
+                UALog.e(e) { "Failed to clear expired cache items" }
             }
         }
     }
@@ -66,8 +64,8 @@ public class AirshipCache(
 
         return try {
             converter.invoke(stored.data)
-        } catch (ex: Exception) {
-            UALog.e(ex) { "Failed to restore data from cache" }
+        } catch (e: Exception) {
+            UALog.e(e) { "Failed to restore data from cache" }
             null
         }
     }

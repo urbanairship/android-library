@@ -12,18 +12,15 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.UALog
-import com.urbanairship.Airship
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.app.SimpleApplicationListener
-import com.urbanairship.base.Supplier
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.contacts.Contact
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
-import com.urbanairship.locale.LocaleChangedListener
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
@@ -39,7 +36,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -113,13 +109,13 @@ public class RemoteData @VisibleForTesting internal constructor(
         privacyManager: PrivacyManager,
         localeManager: LocaleManager,
         pushManager: PushManager,
-        pushProviders: Supplier<PushProviders>,
+        pushProviders: () -> PushProviders,
         contact: Contact,
         providers: List<RemoteDataProvider> = createProviders(
             context = context,
             preferenceDataStore = preferenceDataStore,
             config = config,
-            pushProviders = pushProviders,
+            pushProvidersProvider = pushProviders,
             contact = contact
         )
     ) : this(
@@ -242,7 +238,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     /** @hide */
     @WorkerThread
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(airship: Airship, jobInfo: JobInfo): JobResult {
+    override fun onPerformJob(jobInfo: JobInfo): JobResult {
         if (ACTION_REFRESH == jobInfo.action) {
             return runBlocking {
                 refreshManager.performRefresh(
@@ -448,11 +444,11 @@ public class RemoteData @VisibleForTesting internal constructor(
             context: Context,
             preferenceDataStore: PreferenceDataStore,
             config: AirshipRuntimeConfig,
-            pushProviders: Supplier<PushProviders>,
+            pushProvidersProvider: () -> PushProviders,
             contact: Contact
         ): List<RemoteDataProvider> {
             val apiClient = RemoteDataApiClient(config)
-            val urlFactory = RemoteDataUrlFactory(config, pushProvidersSupplier = pushProviders)
+            val urlFactory = RemoteDataUrlFactory(config, pushProvidersProvider = pushProvidersProvider)
             return listOf(
                 AppRemoteDataProvider(
                     context = context,

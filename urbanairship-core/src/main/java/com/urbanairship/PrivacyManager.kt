@@ -3,7 +3,6 @@ package com.urbanairship
 
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.PrivacyManager.Feature
 import com.urbanairship.config.RemoteConfigObserver
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -28,7 +27,7 @@ import kotlinx.coroutines.launch
  *
  * Some features might offer additional opt-in settings directly on the module. For instance, enabling
  * [Feature.PUSH] will only enable push message delivery, however you still need to opt-in to
- * [com.urbanairship.push.PushManager.setUserNotificationsEnabled] before notifications
+ * [com.urbanairship.push.PushManager.userNotificationsEnabled] before notifications
  * will be allowed.
  *
  * If any feature is enabled, the SDK will collect and send the following data:
@@ -400,7 +399,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
             /**
              * Enables push.
              *
-             * User notification still must be enabled using [com.urbanairship.push.PushManager.setUserNotificationsEnabled].
+             * User notification still must be enabled using [com.urbanairship.push.PushManager.userNotificationsEnabled].
              *
              * In addition to the default data collection, push will collect:
              * - Push tokens

@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonValue
 import org.junit.Assert.assertEquals
@@ -11,6 +13,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 public class ScreenTrackingEventTest {
+    private val context: Context = ApplicationProvider.getApplicationContext()
 
     /**
      * Test screen tracking event data formatting directly
@@ -31,7 +34,7 @@ public class ScreenTrackingEventTest {
         )
 
         // Test isValid returns true for valid region event with expected data
-        assertEquals(expected.map, event.getEventData(ConversionData(null, null, null)))
+        assertEquals(expected.map, event.getEventData(context, ConversionData(null, null, null)))
     }
 
     /**

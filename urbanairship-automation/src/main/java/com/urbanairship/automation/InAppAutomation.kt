@@ -146,14 +146,36 @@ internal constructor(
         /**
          * The shared InAppAutomation instance.
          *
-         * `Airship.takeOff` must be called before accessing this instance.
+         * This method is the static entry point for Java clients. It delegates
+         * access to the primary [Airship] singleton, ensuring the component is available
+         * and fully initialized before returning.
+         *
+         * @return The InAppAutomation instance.
+         * @throws IllegalStateException if [Airship.takeOff] has not been called.
+         *
+         * @see Airship.inAppAutomation For the corresponding Kotlin extension property.
          */
         @JvmStatic
-        public fun shared(): InAppAutomation {
-            return Airship.shared().requireComponent(InAppAutomationComponent::class.java).automation
-        }
+        public fun shared(): InAppAutomation = Airship.inAppAutomation
     }
 }
+
+/**
+ * Provides access to the [InAppAutomation] module features via the main [Airship] singleton.
+ *
+ *
+ * Access is thread-safe. Calling this property before Airship is finished taking off
+ * will block the calling thread until initialization is complete.
+ *
+ * @return The InAppAutomation instance.
+ * @throws IllegalStateException if [Airship.takeOff] has not been called.
+ *
+ * @see InAppAutomation.shared For the corresponding Java static access pattern.
+ */
+public val Airship.inAppAutomation: InAppAutomation
+    get() {
+        return this.requireComponent(InAppAutomationComponent::class.java).automation
+    }
 
 /**
  * InAppAutomation remote data status

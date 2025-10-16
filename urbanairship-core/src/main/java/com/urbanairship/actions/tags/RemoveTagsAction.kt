@@ -48,9 +48,9 @@ public class RemoveTagsAction(
 ) : BaseTagsAction() {
 
     public constructor() : this(
-        channelTagEditor = { Airship.shared().channel.editTags() },
-        channelTagGroupEditor = { Airship.shared().channel.editTagGroups() },
-        contactTagGroupEditor = { Airship.shared().contact.editTagGroups() },
+        channelTagEditor = { Airship.channel.editTags() },
+        channelTagGroupEditor = { Airship.channel.editTagGroups() },
+        contactTagGroupEditor = { Airship.contact.editTagGroups() },
     )
 
     @CallSuper

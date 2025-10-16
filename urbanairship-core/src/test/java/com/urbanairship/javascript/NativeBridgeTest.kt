@@ -3,7 +3,6 @@ package com.urbanairship.javascript
 
 import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestApplication
 import com.urbanairship.actions.Action.Situation
 import com.urbanairship.actions.ActionCompletionCallback
 import com.urbanairship.actions.ActionResult
@@ -45,12 +44,8 @@ public class NativeBridgeTest {
 
     private val executor = Executor { obj: Runnable -> obj.run() }
 
-    private var nativeBridge = NativeBridge(actionRunner, executor)
+    private var nativeBridge = NativeBridge(actionRunner, executor, { contact })
 
-    @Before
-    public fun setup() {
-        TestApplication.getApplication().setContact(contact)
-    }
 
     /**
      * Test run basic actions command

@@ -33,7 +33,7 @@ internal fun NavGraphBuilder.channelNav(navController: NavController) {
             TagGroupsScreen(
                 editorProvider = {
                     if (Airship.isFlying) {
-                        Airship.shared().channel.editTagGroups()
+                        Airship.channel.editTagGroups()
                     } else {
                         null
                     }
@@ -46,7 +46,7 @@ internal fun NavGraphBuilder.channelNav(navController: NavController) {
             AttributeEditScreen(
                 editorProvider = {
                     if (Airship.isFlying) {
-                        Airship.shared().channel.editAttributes()
+                        Airship.channel.editAttributes()
                     } else {
                         null
                     }
@@ -60,14 +60,14 @@ internal fun NavGraphBuilder.channelNav(navController: NavController) {
                 provider = object : SubscriptionListProvider {
                     override fun getEditor(): SubscriptionListEditor? {
                         return if (Airship.isFlying) {
-                            Airship.shared().channel.editSubscriptionLists()
+                            Airship.channel.editSubscriptionLists()
                         } else {
                             null
                         }
                     }
 
                     override suspend fun fetch(): Result<Set<String>> {
-                        return Airship.shared().channel.fetchSubscriptionLists()
+                        return Airship.channel.fetchSubscriptionLists()
                     }
                 },
                 onNavigateUp = { navController.popBackStack() }

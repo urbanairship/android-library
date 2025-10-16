@@ -216,7 +216,7 @@ internal class CreateEmailChannelViewModel: ViewModel() {
             }
         }
 
-        Airship.shared().contact.registerEmail(email.value, options)
+        Airship.contact.registerEmail(email.value, options)
     }
 
     sealed class PropertyValue(val key: String): Serializable {

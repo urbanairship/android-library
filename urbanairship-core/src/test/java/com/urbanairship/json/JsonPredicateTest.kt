@@ -2,6 +2,7 @@
 package com.urbanairship.json
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.Platform
 import com.urbanairship.util.VersionUtils
 import org.junit.Assert
 import org.junit.Test
@@ -409,7 +410,7 @@ public class JsonPredicateTest {
 
     @Test
     public fun testAndroidVersionTest() {
-        val versionObject = VersionUtils.createVersionObject(2008200331)
+        val versionObject = VersionUtils.createVersionObject(Platform.ANDROID,2008200331)
         val predicate = JsonPredicate.newBuilder()
             .addMatcher(
                 matcher =  JsonMatcher.newBuilder()

@@ -14,9 +14,9 @@ internal fun TextView.setTextOrHide(text: String?) {
 }
 
 internal fun ImageView.loadImage(url: String, options: ImageRequestOptions.Builder.() -> Unit = {}) {
-    Airship.shared { airship ->
+    Airship.onReady {
         val requestOptions = ImageRequestOptions.newBuilder(url).apply(options).build()
-        airship.getImageLoader().load(context, this, requestOptions)
+        imageLoader.load(context, this@loadImage, requestOptions)
     }
 }
 

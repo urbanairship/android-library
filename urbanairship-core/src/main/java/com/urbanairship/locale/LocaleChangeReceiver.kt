@@ -27,6 +27,6 @@ public class LocaleChangeReceiver public constructor() : BroadcastReceiver() {
         }
 
         Autopilot.automaticTakeOff(context)
-        Airship.shared().localeManager.onDeviceLocaleChanged()
+        Airship.localeManager.onDeviceLocaleChanged()
     }
 }

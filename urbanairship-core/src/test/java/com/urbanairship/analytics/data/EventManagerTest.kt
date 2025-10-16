@@ -1,9 +1,9 @@
 package com.urbanairship.analytics.data
 
+import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.BaseTestCase
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.TestApplication
 import com.urbanairship.TestClock
 import com.urbanairship.analytics.AirshipEventData
 import com.urbanairship.analytics.Event
@@ -36,7 +36,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
     private val clock = TestClock()
 
     private val testAirshipRuntimeConfig = TestAirshipRuntimeConfig()
-    private val dataStore: PreferenceDataStore = TestApplication.getApplication().getPreferenceDataStore()
+    private val dataStore: PreferenceDataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext())
 
     private val eventManager: EventManager = EventManager(
         preferenceDataStore = dataStore,

@@ -113,7 +113,7 @@ public class MessageListItem @JvmOverloads constructor(
     private val views = Views(this)
 
     private val imageLoader: ImageLoader
-        get() = Airship.shared().getImageLoader()
+        get() = Airship.imageLoader
 
     private val messageListItemAnimator = MessageListItemAnimator(
         context = context,

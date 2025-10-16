@@ -2,6 +2,8 @@
 
 package com.urbanairship.featureflag
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
@@ -23,6 +25,7 @@ public class FeatureFlagAnalyticsTest {
     private val analytics: Analytics = mockk()
     private val feed: AirshipEventFeed = mockk(relaxed = true)
     private val featureFlagAnalytics = FeatureFlagAnalytics(analytics)
+    private val context: Context = ApplicationProvider.getApplicationContext()
 
     @Test
     public fun testTrackInteraction(): TestResult = runTest {
@@ -34,7 +37,7 @@ public class FeatureFlagAnalyticsTest {
         verify {
             analytics.addEvent(withArg {
                 // The event has a different time stamp so we are just comparing the data
-                assert(it.getEventData(ConversionData()) == FeatureFlagInteractionEvent(flag).data)
+                assert(it.getEventData(context, ConversionData()) == FeatureFlagInteractionEvent(flag).data)
             })
         }
     }
@@ -69,7 +72,7 @@ public class FeatureFlagAnalyticsTest {
                             "contact_id" to "contact-id",
                         )
                     ),
-                    it.getEventData(ConversionData())
+                    it.getEventData(context, ConversionData())
                 )
             })
         }
@@ -85,7 +88,7 @@ public class FeatureFlagAnalyticsTest {
         verify {
             analytics.addEvent(withArg {
                 // The event has a different time stamp so we are just comparing the data
-                assert(it.getEventData(ConversionData()) == FeatureFlagInteractionEvent(flag).data)
+                assert(it.getEventData(context, ConversionData()) == FeatureFlagInteractionEvent(flag).data)
             })
         }
     }

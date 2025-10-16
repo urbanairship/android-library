@@ -4,6 +4,7 @@ package com.urbanairship.messagecenter
 import android.net.Uri
 import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
@@ -160,8 +161,8 @@ internal class InboxApiClient(
     /** The payload channels key based on the platform. */
     private val payloadChannelsKey: String?
         get() = when (runtimeConfig.platform) {
-            Airship.Platform.AMAZON -> PAYLOAD_AMAZON_CHANNELS_KEY
-            Airship.Platform.ANDROID -> PAYLOAD_ANDROID_CHANNELS_KEY
+            Platform.AMAZON -> PAYLOAD_AMAZON_CHANNELS_KEY
+            Platform.ANDROID -> PAYLOAD_ANDROID_CHANNELS_KEY
             else -> null
         }
 

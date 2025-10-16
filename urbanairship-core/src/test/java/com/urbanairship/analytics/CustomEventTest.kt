@@ -1,35 +1,27 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics
 
+import android.content.Context
 import androidx.core.os.bundleOf
+import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.BaseTestCase
-import com.urbanairship.TestApplication
 import com.urbanairship.analytics.CustomEvent.Companion.newBuilder
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.requireField
-import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import java.math.BigDecimal
-import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 
 public class CustomEventTest public constructor() : BaseTestCase() {
 
-    private var pushManager: PushManager = mockk()
-    private var analytics: Analytics = mockk(relaxed = true)
+    private val context: Context = ApplicationProvider.getApplicationContext()
 
-    @Before
-    public fun setup() {
-        TestApplication.getApplication().setAnalytics(analytics)
-        TestApplication.getApplication().setPushManager(pushManager)
-    }
 
     /**
      * Test creating a custom event.
@@ -114,17 +106,6 @@ public class CustomEventTest public constructor() : BaseTestCase() {
     }
 
     /**
-     * Test track adds the event to analytics.
-     */
-    @Test
-    public fun testTrack() {
-        val event = newBuilder("event name").build()
-        event.track()
-
-        verify { analytics.recordCustomEvent(event) }
-    }
-
-    /**
      * Test creating a custom event includes the hard conversion send id if set.
      */
     @Test
@@ -132,7 +113,7 @@ public class CustomEventTest public constructor() : BaseTestCase() {
         val event = newBuilder("event name").build()
         val conversionData = ConversionData("send id", "send metadata", "last metadata")
 
-        val eventData = event.getEventData(conversionData)
+        val eventData = event.getEventData(context, conversionData)
         assertEquals("send id", eventData.requireField<String>("conversion_send_id"))
     }
 
@@ -144,7 +125,7 @@ public class CustomEventTest public constructor() : BaseTestCase() {
         val event = newBuilder("event name").build()
         val conversionData = ConversionData("send id", "send metadata", "last metadata")
 
-        val eventData = event.getEventData(conversionData)
+        val eventData = event.getEventData(context, conversionData)
         assertEquals(
             eventData.requireField<String>("conversion_metadata"),
             "send metadata"
@@ -159,7 +140,7 @@ public class CustomEventTest public constructor() : BaseTestCase() {
         val event = newBuilder("event name").build()
         val conversionData = ConversionData("send id", null, "last metadata")
 
-        val eventData = event.getEventData(conversionData)
+        val eventData = event.getEventData(context, conversionData)
         assertEquals(
             eventData.requireField<String>("last_received_metadata"),
             "last metadata"
@@ -174,7 +155,7 @@ public class CustomEventTest public constructor() : BaseTestCase() {
         val event = newBuilder("event name").build()
         val conversionData = ConversionData("send id", "send metadata", "last metadata")
 
-        val eventData = event.getEventData(conversionData)
+        val eventData = event.getEventData(context, conversionData)
         assertNull(eventData["last_received_metadata"])
         assertEquals(
             eventData.requireField<String>("conversion_metadata"),
@@ -240,8 +221,6 @@ public class CustomEventTest public constructor() : BaseTestCase() {
      */
     @Test
     public fun testCustomInteractionEmpty() {
-        every { pushManager.lastReceivedMetadata } returns "last metadata"
-
         val event = newBuilder("event name").build()
 
         EventTestUtils.validateEventValue(event, "interaction_type", null)
@@ -463,7 +442,7 @@ public class CustomEventTest public constructor() : BaseTestCase() {
 
         // Validate the custom String[] property
         val array = event
-            .getEventData(ConversionData(null, null, null))
+            .getEventData(context, ConversionData(null, null, null))
             .get("properties")
             ?.map
             ?.get("array")

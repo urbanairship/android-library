@@ -1,6 +1,8 @@
 package com.urbanairship.devapp
 
+import com.urbanairship.Airship
 import com.urbanairship.automation.InAppAutomation
+import com.urbanairship.automation.inAppAutomation
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.InAppMessageContentExtender
 import com.urbanairship.iam.content.InAppMessageDisplayContent
@@ -32,7 +34,7 @@ class SampleInAppMessageContentExtender : InAppMessageContentExtender {
         private const val DEFAULT_SIZE = 350L
 
         fun register() {
-            InAppAutomation.shared().inAppMessaging.messageContentExtender = SampleInAppMessageContentExtender()
+            Airship.inAppAutomation.inAppMessaging.messageContentExtender = SampleInAppMessageContentExtender()
         }
     }
 }

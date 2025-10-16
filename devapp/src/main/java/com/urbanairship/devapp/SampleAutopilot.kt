@@ -21,13 +21,14 @@ import com.urbanairship.devapp.thomas.customviews.CustomMapView
 import com.urbanairship.devapp.thomas.customviews.CustomWeatherView
 import com.urbanairship.devapp.thomas.customviews.CustomWeatherViewXml
 import com.urbanairship.devapp.thomas.customviews.SceneControllerCustomView
+import com.urbanairship.messagecenter.messageCenter
 
 /**
  * Autopilot that enables user notifications on first run.
  */
 class SampleAutopilot : Autopilot() {
 
-    override fun onAirshipReady(airship: Airship, context: Context) {
+    override fun onAirshipReady(context: Context) {
 
         val preferences = context.getSharedPreferences(NO_BACKUP_PREFERENCES, MODE_PRIVATE)
 
@@ -36,7 +37,7 @@ class SampleAutopilot : Autopilot() {
             preferences.edit { putBoolean(FIRST_RUN_KEY, false) }
 
             // Enable user notifications on first run
-            airship.pushManager.userNotificationsEnabled = true
+            Airship.push.userNotificationsEnabled = true
         }
 
         // Create notification channel for Live Updates.
@@ -77,7 +78,7 @@ class SampleAutopilot : Autopilot() {
         AirshipCustomViewManager.register("scene_controller_test", SceneControllerCustomView())
 
         // Set up message center deep link handling
-        MessageCenter.shared().setOnShowMessageCenterListener { messageId: String? ->
+        Airship.messageCenter.setOnShowMessageCenterListener { messageId: String? ->
             // Use an implicit navigation deep link for now as explicit deep links are broken
             // with multi navigation host fragments
             val uri = if (messageId != null) {
@@ -89,19 +90,19 @@ class SampleAutopilot : Autopilot() {
             val intent = Intent(Intent.ACTION_VIEW, uri)
                 .setPackage(context.packageName)
                 .setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            Airship.applicationContext.startActivity(intent)
+            Airship.application.startActivity(intent)
             true
         }
 
         val airshipListener = AirshipListener()
 
-        with(airship.pushManager) {
+        with(Airship.push) {
             addPushListener(airshipListener)
             addPushTokenListener(airshipListener)
             notificationListener = airshipListener
         }
 
-        airship.channel.addChannelListener(airshipListener)
+        Airship.channel.addChannelListener(airshipListener)
 
         // Register the "squareview" InApp Message Content Extender
         SampleInAppMessageContentExtender.register()

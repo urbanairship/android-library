@@ -37,7 +37,7 @@ public class WearableNotificationExtender public constructor(
         }
 
         if (!actionGroupId.isNullOrEmpty()) {
-            Airship.shared().pushManager
+            Airship.push
                 .getNotificationActionGroup(actionGroupId)
                 ?.let {
                     extender.addActions(it.createAndroidActions(context, arguments, actionsPayload))

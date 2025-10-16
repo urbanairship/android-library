@@ -1,11 +1,13 @@
 package com.urbanairship.liveupdate
 
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
-import com.urbanairship.TestApplication
 import com.urbanairship.TestRequestSession
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.liveupdate.data.LiveUpdateDao
@@ -21,9 +23,11 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class LiveUpdateManagerTest {
 
+    private val context: Context = ApplicationProvider.getApplicationContext()
+
     private val config: AirshipRuntimeConfig = mockk {
         every { configOptions } returns mockk()
-        every { platform } returns Airship.Platform.ANDROID
+        every { platform } returns Platform.ANDROID
         every { requestSession } returns TestRequestSession()
     }
     private val pushManager: PushManager = mockk(relaxUnitFun = true)
@@ -41,11 +45,11 @@ public class LiveUpdateManagerTest {
 
     @Before
     public fun setUp() {
-        dataStore = PreferenceDataStore.inMemoryStore(TestApplication.getApplication())
+        dataStore = PreferenceDataStore.inMemoryStore(context)
         privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL)
 
         liveUpdateManager = LiveUpdateManager(
-            context = TestApplication.getApplication(),
+            context = context,
             dataStore = dataStore,
             config = config,
             privacyManager = privacyManager,

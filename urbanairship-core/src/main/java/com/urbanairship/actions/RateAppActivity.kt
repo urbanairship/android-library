@@ -28,7 +28,7 @@ public class RateAppActivity public constructor() : ThemedActivity() {
         super.onCreate(savedInstanceState)
         Autopilot.automaticTakeOff(application)
 
-        if (!Airship.isTakingOff && !Airship.isFlying) {
+        if (!Airship.isFlyingOrTakingOff) {
             UALog.e("RateAppActivity - unable to create activity, takeOff not called.")
             finish()
         }
@@ -93,9 +93,8 @@ public class RateAppActivity public constructor() : ThemedActivity() {
             context.getString(R.string.ua_rate_app_action_default_rate_positive_button)
         ) { dialog, _ ->
             try {
-                val airship = Airship.shared()
                 val openLinkIntent = AppStoreUtils.getAppStoreIntent(
-                    context, airship.platformType, airship.airshipConfigOptions
+                    context, Airship.platform, Airship.airshipConfigOptions
                 )
                 startActivity(openLinkIntent)
             } catch (e: ActivityNotFoundException) {
@@ -145,8 +144,8 @@ public class RateAppActivity public constructor() : ThemedActivity() {
 
     private val appName: String
         get() {
-            val packageName = Airship.applicationContext.packageName
-            val packageManager = Airship.applicationContext.packageManager
+            val packageName = Airship.application.packageName
+            val packageManager = Airship.application.packageManager
 
             try {
                 val info =

@@ -2,6 +2,9 @@
 
 package com.urbanairship.automation
 
+import com.urbanairship.Airship
+import com.urbanairship.Platform
+import com.urbanairship.UALog
 import com.urbanairship.automation.engine.AutomationEvent
 import com.urbanairship.automation.engine.TriggerableState
 import com.urbanairship.automation.engine.triggerprocessor.MatchResult
@@ -365,7 +368,7 @@ public class EventAutomationTrigger internal constructor(
                     return null
                 }
 
-                if (!isPredicatedMatching(VersionUtils.createVersionObject(updatedVersion.toLong()))) {
+                if (!isPredicatedMatching(VersionUtils.createVersionObject(platform, updatedVersion.toLong()))) {
                     return null
                 }
 
@@ -384,6 +387,16 @@ public class EventAutomationTrigger internal constructor(
             else -> null
         }
     }
+
+    private val platform: Platform
+        get() {
+            return if (Airship.isFlyingOrTakingOff) {
+                Airship.platform
+            } else {
+                UALog.e("Unable to determine platform, Airship takeoff not called!")
+                Platform.UNKNOWN
+            }
+        }
 
     private fun isPredicatedMatching(value: JsonSerializable): Boolean {
         return this.predicate?.apply(value) ?: true

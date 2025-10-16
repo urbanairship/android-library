@@ -4,17 +4,17 @@ package com.urbanairship.wallet
 import android.net.Uri
 import android.os.Looper
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.TestApplication
 import com.urbanairship.TestRequestSession
+import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.config.UrlBuilder
 import com.urbanairship.http.RequestBody
 import com.urbanairship.json.JsonValue.Companion.parseString
-import com.urbanairship.remoteconfig.RemoteAirshipConfig
-import com.urbanairship.remoteconfig.RemoteConfig
 import java.net.HttpURLConnection
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executor
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.Assert
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Shadows.shadowOf
@@ -23,21 +23,16 @@ import org.robolectric.Shadows.shadowOf
 public class PassRequestTest {
 
     private val requestSession = TestRequestSession()
+    val executor = Executor { command -> command.run() }
 
-    @Before
-    public fun setup() {
-        TestApplication.getApplication().testRuntimeConfig?.updateRemoteConfig(
-            config = RemoteConfig(
-                RemoteAirshipConfig(
-                    null, null, "https://wallet-api.urbanairship.com", null
-                )
-            )
-        )
+    private val mockConfig: AirshipRuntimeConfig = mockk {
+        every { this@mockk.requestSession } returns this@PassRequestTest.requestSession
+        every { this@mockk.walletUrl } returns UrlBuilder("https://wallet-api.urbanairship.com")
     }
 
     @Test
     public fun testDefaultUrl() {
-        val request = PassRequest.newBuilder()
+        val request = PassRequest.newBuilder(executor, { mockConfig })
             .setAuth("test_user_name", "test_api_key")
             .setTemplateId("test_template_id")
             .build()
@@ -97,7 +92,7 @@ public class PassRequestTest {
             .setLabel("Text Label")
             .build()
 
-        val passRequestBuilder = PassRequest.newBuilder()
+        val passRequestBuilder = PassRequest.newBuilder(executor, { mockConfig })
             .setAuth("test_user_name", "test_api_key")
             .setTemplateId("test_template_id")
             .setExpirationDate("2014-08-20T9:41-08:00", null)
@@ -107,7 +102,6 @@ public class PassRequestTest {
             .setExternalId("id123")
             .addField(field)
 
-        val executor = Executor { command -> command.run() }
 
         val latch = CountDownLatch(1)
         val callback = object : Callback {
@@ -125,14 +119,7 @@ public class PassRequestTest {
             }
         }
 
-        val passRequest = PassRequest(
-            apiKey = "test_api_key",
-            templateId = "test_template_id",
-            builder = passRequestBuilder,
-            session = requestSession,
-            requestExecutor = executor
-        )
-
+        val passRequest = passRequestBuilder.build()
         passRequest.execute(callback, null)
         shadowOf(Looper.getMainLooper()).idle()
 
@@ -147,18 +134,12 @@ public class PassRequestTest {
     @Test
     public fun testExecuteFail() {
         requestSession.addResponse(HttpURLConnection.HTTP_BAD_REQUEST, null)
-        val passRequestBuilder = PassRequest.newBuilder()
+        val passRequestBuilder = PassRequest.newBuilder(executor, { mockConfig })
             .setAuth("test_user_name", "test_api_key")
             .setTemplateId("test_template_id")
 
-        val executor = Executor { command -> command.run() }
 
-        val passRequest = PassRequest(
-            apiKey = "test_api_key",
-            templateId = "test_template_id",
-            builder = passRequestBuilder,
-            session = requestSession,
-            requestExecutor = executor)
+        val passRequest = passRequestBuilder.build()
 
         val latch = CountDownLatch(1)
         val callback: Callback = object : Callback {
