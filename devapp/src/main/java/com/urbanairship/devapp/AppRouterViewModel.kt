@@ -16,6 +16,7 @@ import com.urbanairship.devapp.home.HomeScreen
 import com.urbanairship.devapp.home.QuickAccess
 import com.urbanairship.devapp.preferencecenter.PreferenceCenterScreen
 import com.urbanairship.devapp.thomas.ThomasLayoutNavigation
+import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.MessageCenterScreen
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -164,7 +165,9 @@ class AppRouterViewModel(
                     //  calling rememberMessageCenterState with a messageId, which
                     //  will highlight the message in the list and display it in the
                     //  message view.
-                    MessageCenterScreen()
+                    MessageCenterTheme {
+                        MessageCenterScreen()
+                    }
                 }
                 PREFERENCE_CENTER -> NavEntry(this) {
                     PreferenceCenterScreen()

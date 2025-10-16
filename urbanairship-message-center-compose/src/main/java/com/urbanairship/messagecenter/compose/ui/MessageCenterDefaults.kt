@@ -10,11 +10,9 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MediumTopAppBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -27,6 +25,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.urbanairship.messagecenter.compose.R
+import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
+import com.urbanairship.messagecenter.compose.theme.TopAppBarColors
 import com.urbanairship.R as CoreR
 import com.urbanairship.messagecenter.core.R as MessageCenterR
 
@@ -55,12 +55,7 @@ public object MessageCenterDefaults {
             },
             scrollBehavior = scrollBehavior,
             actions = actions,
-            // TODO: Add custom theming support
-//            colors = TopAppBarDefaults.topAppBarColors(
-//                containerColor = MessageCenterTheme.colors.topBarBackground,
-//                titleContentColor = MessageCenterTheme.colors.topBarTitleText,
-//                navigationIconContentColor = MessageCenterTheme.colors.topBarIconTint
-//            ),
+            colors = MessageCenterTheme.colors.listTopBar.toMaterials()
         )
     }
 
@@ -126,7 +121,7 @@ public object MessageCenterDefaults {
                 title?.let {
                     Text(
                         text = it,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MessageCenterTheme.typography.itemTitle,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -141,14 +136,7 @@ public object MessageCenterDefaults {
             },
             actions = actions,
             scrollBehavior = scrollBehavior,
-            // TODO: Add custom theming support
-            colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-                scrolledContainerColor = MaterialTheme.colorScheme.surface
-//                containerColor = MessageCenterTheme.colors.topBarBackground,
-//                titleContentColor = MessageCenterTheme.colors.topBarTitleText,
-//                navigationIconContentColor = MessageCenterTheme.colors.topBarIconTint
-            ),
+            colors = MessageCenterTheme.colors.messageTopBar.toMaterials()
         )
     }
 
@@ -171,4 +159,15 @@ public object MessageCenterDefaults {
             )
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+private fun TopAppBarColors.toMaterials(): androidx.compose.material3.TopAppBarColors {
+    return androidx.compose.material3.TopAppBarColors(
+        containerColor = containerColor,
+        scrolledContainerColor = scrolledContainerColor,
+        navigationIconContentColor = navigationIconContentColor,
+        titleContentColor = titleContentColor,
+        actionIconContentColor = actionIconContentColor
+    )
 }

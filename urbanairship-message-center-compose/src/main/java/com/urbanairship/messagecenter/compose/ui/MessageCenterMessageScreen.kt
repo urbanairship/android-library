@@ -1,10 +1,10 @@
 package com.urbanairship.messagecenter.compose.ui
 
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -14,7 +14,6 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -29,7 +28,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.urbanairship.actions.ActionResult
 import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State
@@ -88,7 +89,6 @@ public fun MessageCenterMessage(
     onClose: () -> Unit,
 ) {
     Surface(
-        color = Color.Red,
         modifier = modifier
     ) {
         when (val viewState = state.viewState) {
@@ -145,11 +145,13 @@ private fun ErrorView(error: State.Error.Type, onRefresh: (() -> Unit)? = null) 
         State.Error.Type.LOAD_FAILED -> stringResource(CoreR.string.ua_mc_failed_to_load)
     }
 
+    val colors = MessageCenterTheme.colors
+    val typography = MessageCenterTheme.typography
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(MessageCenterTheme.errorViewConfig.padding ?: PaddingValues(0.dp))
-            .background(MessageCenterTheme.errorViewConfig.backgroundColor ?: MaterialTheme.colorScheme.background),
+            .background(colors.messageErrorBackground),
 
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -159,7 +161,7 @@ private fun ErrorView(error: State.Error.Type, onRefresh: (() -> Unit)? = null) 
             Icon(
                 modifier = Modifier.size(96.dp, 96.dp),
                 imageVector = Icons.Outlined.Info,
-                tint = MaterialTheme.colorScheme.secondary,
+                tint = MessageCenterTheme.colors.accent,
                 contentDescription = ""
             )
         }
@@ -169,9 +171,8 @@ private fun ErrorView(error: State.Error.Type, onRefresh: (() -> Unit)? = null) 
                 modifier = Modifier
                     .padding(top = 16.dp, bottom = 48.dp),
                 text = text,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.secondary
-                ),
+                style = typography.messageError,
+                color = colors.messageError,
                 textAlign = TextAlign.Center
             )
         }
@@ -190,17 +191,19 @@ private fun ErrorView(error: State.Error.Type, onRefresh: (() -> Unit)? = null) 
 
 @Composable
 private fun LoadingView() {
+    val colors = MessageCenterTheme.colors
+
     Box(Modifier
         .fillMaxSize()
-        .background(MessageCenterTheme.loadingViewConfig.backgroundColor ?: MaterialTheme.colorScheme.background)
+        .background(colors.messageLoadingBackground)
     ) {
-        val content = MessageCenterTheme.loadingViewConfig.spinner
+        val content = MessageCenterTheme.options.messageLoadingView
         if (content != null) {
             content()
         } else {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center),
-                color = MaterialTheme.colorScheme.primary
+                color = colors.accent
             )
         }
     }
@@ -210,11 +213,30 @@ private fun LoadingView() {
 private fun EmptyView() {
     Box(Modifier
         .fillMaxSize()
-        .background(MessageCenterTheme.loadingViewConfig.backgroundColor ?: MaterialTheme.colorScheme.background)
+        .background(MessageCenterTheme.colors.messageEmptyBackground)
     ) {
         Text(
             modifier = Modifier.align(Alignment.Center),
-            text = stringResource(CoreR.string.ua_message_not_selected)
+            text = stringResource(CoreR.string.ua_message_not_selected),
+            color = MessageCenterTheme.colors.messageEmptyLabel
         )
+    }
+}
+
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun previewError() {
+    MessageCenterTheme {
+        ErrorView(State.Error.Type.UNAVAILABLE)
+    }
+}
+
+@Preview
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES)
+@Composable
+private fun previewEmpty() {
+    MessageCenterTheme {
+        EmptyView()
     }
 }

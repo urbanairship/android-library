@@ -14,10 +14,11 @@ import com.urbanairship.Predicate
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.compose.ui.MessageCenterListViewModel.Action
 import com.urbanairship.messagecenter.compose.ui.MessageCenterListViewModel.State
+import com.urbanairship.messagecenter.ui.view.MessageListAction
 
 @Stable
 public class MessageCenterListState internal constructor(
-    private val onAction: (Action) -> Unit,
+    private val onAction: (Action) -> Unit
 ) {
     internal var viewState by mutableStateOf<State>(State.Loading)
 
@@ -41,7 +42,7 @@ public class MessageCenterListState internal constructor(
 @Composable
 public fun rememberMessageCenterListState(
     predicate: Predicate<Message>? = null,
-    highlightedMessageId: String? = null,
+    highlightedMessageId: String? = null
 ): MessageCenterListState {
     val viewModel: DefaultMessageCenterListViewModel = viewModel(
         factory = DefaultMessageCenterListViewModel.Factory,
@@ -56,7 +57,7 @@ public fun rememberMessageCenterListState(
 
 @Composable
 internal fun rememberMessageCenterListState(
-    viewModel: MessageCenterListViewModel,
+    viewModel: MessageCenterListViewModel
 ): MessageCenterListState {
     val state = remember { MessageCenterListState(viewModel::handle) }
 

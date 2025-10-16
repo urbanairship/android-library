@@ -1,36 +1,26 @@
 package com.urbanairship.messagecenter.compose.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
 
-private val LocalColors = compositionLocalOf { MessageCenterColors() }
-@OptIn(ExperimentalMaterial3Api::class)
-private val LocalListConfig = compositionLocalOf { MessageCenterListConfig() }
-private val LocalErrorViewConfig = compositionLocalOf { MessageCenterErrorViewConfig() }
-private val LocalLoadingViewConfig = compositionLocalOf { MessageCenterLoadingViewConfig() }
-
-@OptIn(ExperimentalMaterial3Api::class)
-private val LocalMessageViewConfig = compositionLocalOf { MessageViewConfig() }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 public fun MessageCenterTheme(
-    colors: MessageCenterColors = MessageCenterColors(),
-    listConfig: MessageCenterListConfig = MessageCenterListConfig(),
-    messageViewConfig: MessageViewConfig = MessageViewConfig(),
-    errorViewConfig: MessageCenterErrorViewConfig = MessageCenterErrorViewConfig(),
-    loadingViewConfig: MessageCenterLoadingViewConfig = MessageCenterLoadingViewConfig(),
+    colors: MessageCenterColors = if(isSystemInDarkTheme()) MessageCenterColors.darkDefaults() else MessageCenterColors.lightDefaults(),
+    options: MessageCenterOptions = MessageCenterOptions.defaults(),
+    typography: MessageCenterTypography = MessageCenterTypography.defaults(),
+    dimens: MessageCenterDimens = MessageCenterDimens.defaults(),
     content: @Composable () -> Unit
 ) {
     CompositionLocalProvider(
         LocalColors provides colors,
-        LocalListConfig provides listConfig,
-        LocalErrorViewConfig provides errorViewConfig,
-        LocalLoadingViewConfig provides loadingViewConfig,
-        LocalMessageViewConfig provides messageViewConfig
+        LocalOptions provides options,
+        LocalTypography provides typography,
+        LocalDimens provides dimens
     ) {
         content()
     }
@@ -43,23 +33,34 @@ public object MessageCenterTheme {
         @ReadOnlyComposable
         get() = LocalColors.current
 
-    public val listConfig: MessageCenterListConfig
+    public val dimensions: MessageCenterDimens
         @Composable
         @ReadOnlyComposable
-        get() = LocalListConfig.current
+        get() = LocalDimens.current
 
-    public val errorViewConfig: MessageCenterErrorViewConfig
+    public val options: MessageCenterOptions
         @Composable
         @ReadOnlyComposable
-        get() = LocalErrorViewConfig.current
+        get() = LocalOptions.current
 
-    public val loadingViewConfig: MessageCenterLoadingViewConfig
+    public val typography: MessageCenterTypography
         @Composable
         @ReadOnlyComposable
-        get() = LocalLoadingViewConfig.current
+        get() = LocalTypography.current
+}
 
-    public val messageViewConfig: MessageViewConfig
-        @Composable
-        @ReadOnlyComposable
-        get() = LocalMessageViewConfig.current
+private val LocalColors = compositionLocalOf<MessageCenterColors> {
+    error("No Message Center colors provided! Message Center UI components must be wrapped in a MessageCenterTheme.")
+}
+
+private val LocalDimens = compositionLocalOf<MessageCenterDimens> {
+    error("No Message Center dimensions provided! Message Center UI components must be wrapped in a MessageCenterTheme.")
+}
+
+private val LocalOptions = compositionLocalOf<MessageCenterOptions> {
+    error("No Message Center options provided! Message Center UI components must be wrapped in a MessageCenterTheme.")
+}
+
+private val LocalTypography = compositionLocalOf<MessageCenterTypography> {
+    error("No Message Center typography provided! Message Center UI components must be wrapped in a MessageCenterTheme.")
 }

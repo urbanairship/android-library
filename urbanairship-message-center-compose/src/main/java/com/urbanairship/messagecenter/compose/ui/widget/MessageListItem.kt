@@ -1,6 +1,7 @@
 package com.urbanairship.messagecenter.compose.ui.widget
 
 import android.content.Context
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -15,7 +16,6 @@ import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -30,6 +30,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.Message
+import com.urbanairship.messagecenter.compose.theme.CheckboxColors
+import com.urbanairship.messagecenter.compose.theme.MessageCenterDimens
 import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.MessageCenterListViewModel.Action
 import java.text.DateFormat
@@ -47,23 +49,22 @@ internal fun MessageListItem(
     isHighlighted: Boolean,
     onAction: (Action) -> Unit
 ) {
-    val theme = MessageCenterTheme.listConfig.listItemConfig
+    val colors = MessageCenterTheme.colors
+    val dimens = MessageCenterTheme.dimensions
+    val options = MessageCenterTheme.options
+    val typography = MessageCenterTheme.typography
 
-    val background = if (isHighlighted) {
-        theme.highlightBackground ?: MaterialTheme.colorScheme.surfaceContainerHigh
-    } else {
-        theme.background ?: MaterialTheme.colorScheme.background
-    }
+    val background = if (isHighlighted) colors.messageListHighlight else colors.background
 
     val context = LocalContext.current
 
     Row(
         modifier = modifier
-            .sizeIn(minHeight = theme.minHeight)
+            .sizeIn(minHeight = dimens.messageListItemMinHeight)
             .wrapContentHeight()
             .fillMaxWidth()
             .background(background)
-            .padding(theme.padding)
+            .padding(dimens.messageListItemPadding)
             .semantics {
                 customActions = accessibilityActions(
                     context = context,
@@ -83,55 +84,57 @@ internal fun MessageListItem(
             if (targetState) {
                 Box(
                     modifier = Modifier.size(
-                        if (theme.showThumbnails) 64.dp else 20.dp
+                        if (options.showMessageListThumbnail) 64.dp else 20.dp
                     )
                 ) {
                     Checkbox(
                         checked = isSelected,
                         onCheckedChange = { onAction(Action.SetSelected(message, it)) },
-                        colors = theme.checkBoxStyle(),
+                        colors = colors.messageListItemCheckbox.toMaterial(),
                         modifier = Modifier.align(Alignment.Center)
-                            .padding(top = if (theme.showThumbnails) 0.dp else 4.dp)
+                            .padding(top = if (options.showMessageListThumbnail) 0.dp else 4.dp)
                     )
                 }
             } else {
                 Box(
-                    modifier = Modifier.size(if (theme.showThumbnails) 64.dp else 20.dp)
+                    modifier = Modifier.size(if (options.showMessageListThumbnail) 64.dp else 20.dp)
                         .padding(
-                            top = if (theme.showThumbnails) 0.dp else 4.dp,
-                            start = if (theme.showThumbnails) 0.dp else 2.dp
+                            top = if (options.showMessageListThumbnail) 0.dp else 4.dp,
+                            start = if (options.showMessageListThumbnail) 0.dp else 2.dp
                         )
                 ) {
-                    if (theme.showThumbnails) {
+                    if (options.showMessageListThumbnail) {
                         GlideImage(
                             modifier = Modifier.size(56.dp)
                                 .align(Alignment.Center)
                                 .clip(RoundedCornerShape(8.dp)),
                             imageModel = { message.listIconUrl },
-                            loading = { theme.placeholderIcon() },
-                            failure = { theme.placeholderIcon() })
+                            loading = { options.messageListPlaceholderIcon() },
+                            failure = { options.messageListPlaceholderIcon() })
 
                     }
 
-                    theme.unreadIndicator(message.isRead)
+                    options.messageListUnreadIndicator(message.isRead)
                 }
             }
         }
 
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(2.dp)
+            verticalArrangement = Arrangement.spacedBy(dimens.messageListItemsSpace)
         ) {
             Text(
-                style = theme.titleStyle(),
+                style = typography.itemTitle,
                 text = message.title,
+                color = colors.messageListItemTitle,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
 
             message.subtitle?.let { text ->
                 Text(
-                    style = theme.subtitleStyle(),
+                    style = typography.itemDescription,
+                    color = colors.messageListItemSubtitle,
                     text = text,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
@@ -139,14 +142,13 @@ internal fun MessageListItem(
             }
 
             Text(
-                style = theme.dateStyle(),
-                color = MaterialTheme.colorScheme.secondary,
+                style = typography.itemDate,
+                color = colors.messageListItemDate,
                 text = DateFormat.getDateInstance(DateFormat.LONG).format(message.sentDate)
             )
         }
     }
 }
-
 
 private fun accessibilityActions(
     context: Context,
@@ -222,7 +224,8 @@ private fun contentDescription(
     return sb.toString()
 }
 
-@Preview
+@Preview("Light")
+@Preview("Dark", uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
 private fun PreviewMessageListItem() {
     val message = Message(
@@ -241,12 +244,31 @@ private fun PreviewMessageListItem() {
         isDeletedClient = false,
     )
 
-    MessageListItem(
-        modifier = Modifier.padding(8.dp),
-        message = message,
-        isSelected = false,
-        isEditing = false,
-        isHighlighted = true,
-        onAction = {}
+    MessageCenterTheme {
+        MessageListItem(
+            modifier = Modifier.padding(8.dp),
+            message = message,
+            isSelected = false,
+            isEditing = false,
+            isHighlighted = true,
+            onAction = {}
+        )
+    }
+}
+
+internal fun CheckboxColors.toMaterial(): androidx.compose.material3.CheckboxColors {
+    return androidx.compose.material3.CheckboxColors(
+        checkedCheckmarkColor = checkedCheckmarkColor,
+        uncheckedCheckmarkColor = uncheckedCheckmarkColor,
+        checkedBoxColor = checkedBoxColor,
+        uncheckedBoxColor = uncheckedBoxColor,
+        disabledCheckedBoxColor = disabledCheckedBoxColor,
+        disabledUncheckedBoxColor = disabledUncheckedBoxColor,
+        disabledIndeterminateBoxColor = disabledIndeterminateBoxColor,
+        checkedBorderColor = checkedBorderColor,
+        uncheckedBorderColor = uncheckedBorderColor,
+        disabledBorderColor = disabledBorderColor,
+        disabledUncheckedBorderColor = disabledUncheckedBorderColor,
+        disabledIndeterminateBorderColor = disabledIndeterminateBorderColor
     )
 }

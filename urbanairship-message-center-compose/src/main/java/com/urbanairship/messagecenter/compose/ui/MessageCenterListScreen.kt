@@ -25,7 +25,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -35,9 +34,11 @@ import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
@@ -141,11 +142,12 @@ private fun ContentView(
     onMessageClick: (Message) -> Unit,
     onAction: (Action) -> Unit,
 ) {
+    val colors = MessageCenterTheme.colors
+    val options = MessageCenterTheme.options
+    val dimens = MessageCenterTheme.dimensions
     @OptIn(ExperimentalMaterial3Api::class)
     PullToRefreshBox(
-        modifier = Modifier.background(
-            MessageCenterTheme.listConfig.background ?: MaterialTheme.colorScheme.background
-        ),
+        modifier = Modifier.background(colors.messageListBackground),
         isRefreshing = viewState.isRefreshing,
         onRefresh = { onAction(Action.Refresh()) }
     ) {
@@ -167,13 +169,12 @@ private fun ContentView(
                         onAction = onAction
                     )
 
-                    val theme = MessageCenterTheme.listConfig
-                    if (theme.itemDividersEnabled && index < viewState.messages.size - 1) {
+                    if (options.messageCenterDividerEnabled && index < viewState.messages.size - 1) {
                         HorizontalDivider(
                             modifier = Modifier.padding(
-                                start = theme.itemDividerInset.start,
-                                end = theme.itemDividerInset.end
-                            )
+                                start = dimens.messageCenterDividerInset.start,
+                                end = dimens.messageCenterDividerInset.end
+                            ).background(MessageCenterTheme.colors.divider)
                         )
                     }
                 }
@@ -185,6 +186,9 @@ private fun ContentView(
 
 @Composable
 private fun ErrorView(onRefresh: () -> Unit) {
+    val typography = MessageCenterTheme.typography
+    val colors = MessageCenterTheme.colors
+
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -206,8 +210,8 @@ private fun ErrorView(onRefresh: () -> Unit) {
                     .padding(top = 16.dp, bottom = 36.dp)
                     .padding(horizontal = 56.dp),
                 text = stringResource(CoreR.string.ua_mc_failed_to_load),
-                //style = MessageCenterTheme.typography.alertTitle,
-                //color = MessageCenterTheme.colors.alertTitleText,
+                style = typography.messageCenterError,
+                color = colors.messageCenterError,
                 textAlign = TextAlign.Center
             )
         }
@@ -216,8 +220,8 @@ private fun ErrorView(onRefresh: () -> Unit) {
             OutlinedButton(onRefresh) {
                 Text(
                     text = stringResource(CoreR.string.ua_retry_button),
-                    //style = MessageCenterTheme.typography.alertButtonLabel,
-                    //color = MessageCenterTheme.colors.accent
+                    style = typography.alertButtonLabel,
+                    color = colors.accent
                 )
             }
         }
@@ -236,7 +240,7 @@ private fun LoadingView() {
 
 @Composable
 private fun EmptyView() {
-    val override = MessageCenterTheme.listConfig.overrideEmptyListMessage
+    val override = MessageCenterTheme.options.messageCenterEmptyListMessage
     if (override != null) {
         override()
     } else {
@@ -247,7 +251,7 @@ private fun EmptyView() {
         ) {
             Text(
                 modifier = Modifier.padding(16.dp),
-                style = MaterialTheme.typography.bodyMedium,
+                style = MessageCenterTheme.typography.emptyViewMessage,
                 text = stringResource(CoreR.string.ua_empty_message_list),
             )
         }
@@ -261,6 +265,7 @@ private fun EditToolbar(
     selectedCount: Int,
     onAction: (Action) -> Unit
 ) {
+    val colors = MessageCenterTheme.colors
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(initialOffsetY = { it }),
@@ -268,10 +273,10 @@ private fun EditToolbar(
     ) {
         val context = LocalContext.current
 
-        Box(modifier = Modifier.fillMaxWidth()) {
+        Box(modifier = Modifier.fillMaxWidth().background(colors.messageCenterEditBar)) {
             Surface(
-                color = MessageCenterTheme.listConfig.editBarContainerColor(),
-                contentColor = MessageCenterTheme.listConfig.editBarContentColor(),
+                color = colors.messageCenterEditBar,
+                contentColor = colors.messageCenterEditBarContent,
                 shape = CircleShape,
                 modifier = Modifier.align(Alignment.Center)
                     .padding(
@@ -331,3 +336,11 @@ private fun toolbarItemLabel(context: Context, @StringRes titleResId: Int, count
             count
         )
     }
+
+@Preview
+@Composable
+private fun preview() {
+    MessageCenterTheme {
+        MessageCenterListScreen {  }
+    }
+}
