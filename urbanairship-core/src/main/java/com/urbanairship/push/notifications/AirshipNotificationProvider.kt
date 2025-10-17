@@ -171,11 +171,6 @@ public open class AirshipNotificationProvider internal constructor(
         builder: NotificationCompat.Builder,
         arguments: NotificationArguments
     ): NotificationCompat.Builder {
-        if (!Airship.isFlyingOrTakingOff) {
-            UALog.e("Unable to extend notification. Takeoff not called!")
-            return builder
-        }
-
         val message = arguments.message
 
         // Public notification

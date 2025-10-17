@@ -4,6 +4,7 @@ package com.urbanairship.push.notifications
 import android.content.Context
 import androidx.core.app.NotificationCompat
 import com.urbanairship.Airship
+import com.urbanairship.UALog
 
 /**
  * Notification builder extender to add UA notification action buttons to a
@@ -17,6 +18,11 @@ public class ActionsNotificationExtender public constructor(
     private val context: Context = context.applicationContext
 
     override fun extend(builder: NotificationCompat.Builder): NotificationCompat.Builder {
+        if (!Airship.isFlyingOrTakingOff) {
+            UALog.e("Unable to extend notification. Takeoff not called!")
+            return builder
+        }
+
         val group = arguments.message.interactiveNotificationType
 
         val actionGroup = Airship.push.getNotificationActionGroup(group)
