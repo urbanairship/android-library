@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -31,6 +32,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults.Indicator
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -81,7 +84,7 @@ public fun MessageCenterListScreen(
         MessageCenterListContent(
             state = state,
             onMessageSelected = onMessageSelected,
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier.padding(paddingValues.withoutBottomPadding()),
         )
     }
 }
@@ -119,7 +122,8 @@ private fun MessageCenterListContent(
     modifier: Modifier = Modifier,
 ) {
     Surface(
-        modifier = modifier
+        modifier = modifier,
+        color = MessageCenterTheme.colors.surface
     ) {
         when (val viewState = state.viewState) {
             is State.Loading -> LoadingView()
@@ -145,12 +149,12 @@ private fun ContentView(
     val colors = MessageCenterTheme.colors
     val options = MessageCenterTheme.options
     val dimens = MessageCenterTheme.dimensions
-    @OptIn(ExperimentalMaterial3Api::class)
-    PullToRefreshBox(
-        modifier = Modifier.background(colors.messageListBackground),
-        isRefreshing = viewState.isRefreshing,
-        onRefresh = { onAction(Action.Refresh()) }
-    ) {
+
+    PullToRefresh(
+        viewState = viewState,
+        onAction = onAction
+    )
+     {
         if (viewState.messages.isEmpty()) {
             EmptyView()
         } else {
@@ -183,6 +187,31 @@ private fun ContentView(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PullToRefresh(
+    viewState: State.Content,
+    onAction: (Action) -> Unit,
+    content: @Composable BoxScope.() -> Unit
+) {
+    val state = rememberPullToRefreshState()
+
+    PullToRefreshBox(
+        isRefreshing = viewState.isRefreshing,
+        onRefresh = { onAction(Action.Refresh()) },
+        state = state,
+        content = content,
+        indicator = {
+            Indicator(
+                modifier = Modifier.align(Alignment.TopCenter),
+                isRefreshing = viewState.isRefreshing,
+                state = state,
+                containerColor = MessageCenterTheme.colors.messageCenterPullToRefreshBackground,
+                color = MessageCenterTheme.colors.messageCenterPullToRefresh
+            )
+        },
+    )
+}
 
 @Composable
 private fun ErrorView(onRefresh: () -> Unit) {
@@ -190,7 +219,7 @@ private fun ErrorView(onRefresh: () -> Unit) {
     val colors = MessageCenterTheme.colors
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().background(colors.surface),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -230,7 +259,7 @@ private fun ErrorView(onRefresh: () -> Unit) {
 
 @Composable
 private fun LoadingView() {
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().background(MessageCenterTheme.colors.surface)) {
         CircularProgressIndicator(
             modifier = Modifier.align(Alignment.Center),
             //color = MessageCenterTheme.colors.loadingIndicator
@@ -245,7 +274,7 @@ private fun EmptyView() {
         override()
     } else {
         Row(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().background(MessageCenterTheme.colors.surface),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {

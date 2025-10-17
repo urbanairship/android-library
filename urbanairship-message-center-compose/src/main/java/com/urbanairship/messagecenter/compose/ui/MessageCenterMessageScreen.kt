@@ -76,7 +76,7 @@ public fun MessageCenterMessageScreen(
     ) { paddingValues ->
         MessageCenterMessage(
             state = state,
-            modifier = Modifier.padding(paddingValues),
+            modifier = Modifier.padding(paddingValues.withoutBottomPadding()),
             onClose = onClose
         )
     }

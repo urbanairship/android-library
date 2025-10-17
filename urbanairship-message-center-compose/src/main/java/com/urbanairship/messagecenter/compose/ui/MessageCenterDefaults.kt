@@ -91,7 +91,8 @@ public object MessageCenterDefaults {
 
         DropdownMenu(
             expanded = showMenu,
-            onDismissRequest = { showMenu = false }
+            onDismissRequest = { showMenu = false },
+            containerColor = MessageCenterTheme.colors.listTopBar.containerColor
         ) {
             DropdownMenuItem(
                 enabled = isShowingContent,

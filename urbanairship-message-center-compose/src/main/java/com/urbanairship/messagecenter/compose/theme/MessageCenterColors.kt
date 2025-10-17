@@ -7,6 +7,8 @@ import androidx.compose.ui.graphics.Color
 public data class MessageCenterColors(
     /** Message Center background color */
     val background: Color,
+    /** Message Center surface color */
+    val surface: Color,
     /** Message Center accent color */
     val accent: Color,
     /** Message Center divider color */
@@ -33,6 +35,10 @@ public data class MessageCenterColors(
     val messageCenterAlertLabel: Color,
     /** Message Center list edit bar colors */
     val messageCenterEditBar: Color,
+    /** Message Center pull to refresh background color */
+    val messageCenterPullToRefreshBackground: Color,
+    /** Message Center pull to refresh color */
+    val messageCenterPullToRefresh: Color,
     /** Message Center list edit bar content color */
     val messageCenterEditBarContent: Color,
     /** Background color for error messages on the message screen*/
@@ -58,13 +64,14 @@ public data class MessageCenterColors(
             error: Color = Color(0xFFB00020)
         ): MessageCenterColors = MessageCenterColors(
             background = background,
+            surface = surface,
             accent = accent,
             divider = divider,
             messageListHighlight = Color.Gray.copy(alpha = 0.3f),
             messageListItemTitle = textPrimary,
             messageListItemSubtitle = textSecondary,
             messageListItemDate = textSecondary,
-            messageListBackground = background,
+            messageListBackground = surface,
             messageListItemCheckbox = CheckboxColors(
                 checkedCheckmarkColor = Color.White,
                 uncheckedCheckmarkColor = Color.Transparent,
@@ -80,14 +87,14 @@ public data class MessageCenterColors(
                 disabledIndeterminateBorderColor = Color.Gray.copy(alpha = 0.7f)
             ),
             listTopBar = TopAppBarColors(
-                containerColor = background,
-                scrolledContainerColor = background,
+                containerColor = surface,
+                scrolledContainerColor = surface,
                 navigationIconContentColor = textPrimary,
                 titleContentColor = textPrimary,
                 actionIconContentColor = textPrimary
             ),
             messageTopBar = TopAppBarColors(
-                containerColor = background,
+                containerColor = surface,
                 scrolledContainerColor = background,
                 navigationIconContentColor = textPrimary,
                 titleContentColor = textPrimary,
@@ -95,12 +102,14 @@ public data class MessageCenterColors(
             ),
             messageCenterError = error,
             messageCenterAlertLabel = textPrimary,
-            messageCenterEditBar = background,
+            messageCenterEditBar = surface,
             messageCenterEditBarContent = textPrimary,
-            messageErrorBackground = background,
+            messageCenterPullToRefreshBackground = surface,
+            messageCenterPullToRefresh = textPrimary,
+            messageErrorBackground = surface,
             messageError = error,
-            messageLoadingBackground = background,
-            messageEmptyBackground = background,
+            messageLoadingBackground = surface,
+            messageEmptyBackground = surface,
             messageEmptyLabel = textPrimary,
         )
 
@@ -114,6 +123,7 @@ public data class MessageCenterColors(
             error: Color = Color(0xFFB00020)
         ): MessageCenterColors = MessageCenterColors(
             background = background,
+            surface = surface,
             accent = accent,
             divider = divider,
             messageListItemTitle = textPrimary,
@@ -135,28 +145,30 @@ public data class MessageCenterColors(
                 disabledIndeterminateBorderColor = Color.Gray.copy(alpha = 0.7f)
             ),
             listTopBar = TopAppBarColors(
-                containerColor = background,
-                scrolledContainerColor = background,
+                containerColor = surface,
+                scrolledContainerColor = surface,
                 navigationIconContentColor = textPrimary,
                 titleContentColor = textPrimary,
                 actionIconContentColor = textPrimary
             ),
             messageTopBar = TopAppBarColors(
-                containerColor = background,
+                containerColor = surface,
                 scrolledContainerColor = background,
                 navigationIconContentColor = textPrimary,
                 titleContentColor = textPrimary,
                 actionIconContentColor = textPrimary
             ),
-            messageListBackground = background,
+            messageListBackground = surface,
             messageCenterError = error,
             messageCenterAlertLabel = textPrimary,
-            messageCenterEditBar = background,
+            messageCenterEditBar = surface,
             messageCenterEditBarContent = textPrimary,
-            messageErrorBackground = background,
+            messageCenterPullToRefreshBackground = surface,
+            messageCenterPullToRefresh = textPrimary,
+            messageErrorBackground = surface,
             messageError = error,
-            messageLoadingBackground = background,
-            messageEmptyBackground = background,
+            messageLoadingBackground = surface,
+            messageEmptyBackground = surface,
             messageEmptyLabel = textPrimary,
         )
     }
