@@ -108,3 +108,10 @@ jobs:
       version: ${{ needs.release.outputs.version }}
     secrets:
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  deploy-to-github-pages:
+    if: github.repository == 'urbanairship/android-library'
+    needs: release
+    uses: ./.github/workflows/deploy-docs-to-pages.yml
+    with:
+      version: ${{ needs.release.outputs.version }}

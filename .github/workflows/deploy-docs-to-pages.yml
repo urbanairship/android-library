@@ -1,0 +1,96 @@
+name: Deploy Docs to GitHub Pages
+
+# Set permissions for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The tag/version to deploy to GitHub Pages'
+        required: true
+        type: string
+
+  workflow_call:
+    inputs:
+      version:
+        description: 'The tag/version to deploy to GitHub Pages'
+        required: true
+        type: string
+
+jobs:
+  deploy-to-pages:
+    if: github.repository == 'urbanairship/android-library'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version
+        id: extract_version
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
+          echo "VERSION_DIR=v$MAJOR_VERSION" >> $GITHUB_ENV
+
+      - name: Download packaged docs artifacts
+        id: download_docs
+        env:
+          VERSION: ${{ inputs.version }}
+        uses: actions/download-artifact@v4
+        with:
+          name: packaged-docs-$VERSION
+          path: build/docs
+
+      - name: Extract documentation for GitHub Pages
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          # Verify the artifact was downloaded
+          set -euo pipefail
+
+          DOC_PATH="build/docs/${VERSION}-kdoc.tar.gz"
+
+          if [ ! -f "$DOC_PATH" ]; then
+            echo "Error: Documentation artifact not found!"
+            echo "Expected: $DOC_PATH"
+            echo "Available files:"
+            find build/docs -type f 2>/dev/null || echo "No build/docs directory found"
+            exit 1
+          fi
+          
+          # Create a directory for extracted docs
+          mkdir -p ./pages-docs
+          
+          # Extract the tar.gz file
+          tar -xzf "$DOC_PATH" -C ./pages-docs
+          
+          # Verify extraction was successful
+          if [ -z "$(ls -A ./pages-docs)" ]; then
+            echo "Error: Documentation extraction failed - directory is empty"
+            exit 1
+          fi
+          
+          # List contents to verify extraction
+          echo "Successfully extracted documentation:"
+          ls -la ./pages-docs
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        env:
+          VERSION: ${{ inputs.version }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./pages-docs
+          destination_dir: $VERSION
+          keep_files: true
+          enable_jekyll: false
