@@ -5,6 +5,8 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.BuildConfig
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
+import com.urbanairship.actions.ActionRegistry
+import com.urbanairship.actions.ActionsManifest
 import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.preferencecenter.PreferenceCenterModuleFactory
@@ -27,7 +29,7 @@ public class PreferenceCenterModuleFactoryImpl : PreferenceCenterModuleFactory {
         inputValidator: AirshipInputValidation.Validator
     ): Module {
         val preferenceCenter = PreferenceCenter(context, dataStore, privacyManager, remoteData, inputValidator)
-        return Module.singleComponent(preferenceCenter, R.xml.ua_preference_center_actions)
+        return Module.singleComponent(preferenceCenter, PreferenceCenterActionsManifest())
     }
 
     override val airshipVersion: String
@@ -35,4 +37,16 @@ public class PreferenceCenterModuleFactoryImpl : PreferenceCenterModuleFactory {
 
     override val packageVersion: String
         get() = BuildConfig.SDK_VERSION
+}
+
+
+private class PreferenceCenterActionsManifest: ActionsManifest {
+
+    override val manifest: Map<Set<String>, () -> ActionRegistry.Entry> = mapOf(
+        OpenPreferenceCenterAction.DEFAULT_NAMES to {
+            ActionRegistry.Entry(
+                action = OpenPreferenceCenterAction()
+            )
+        }
+    )
 }

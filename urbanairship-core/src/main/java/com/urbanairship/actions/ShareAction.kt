@@ -22,7 +22,7 @@ import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
  * Result value: `null`
  *
  *
- * Default Registration Names: [DEFAULT_REGISTRY_SHORT_NAME], [DEFAULT_REGISTRY_NAME]
+ * Default Registration Names: [DEFAULT_NAMES]
  */
 public class ShareAction(
     private val contextProvider: () -> Context = { Airship.application }
@@ -64,13 +64,8 @@ public class ShareAction(
     public companion object {
 
         /**
-         * Default registry name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "share_action"
-
-        /**
-         * Default registry short name
-         */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^s"
+        public val DEFAULT_NAMES: Set<String> = setOf("share_action", "^s")
     }
 }

@@ -6,8 +6,6 @@ import android.content.Intent
 import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 import com.urbanairship.actions.RateAppAction.Companion.BODY_KEY
-import com.urbanairship.actions.RateAppAction.Companion.DEFAULT_REGISTRY_NAME
-import com.urbanairship.actions.RateAppAction.Companion.DEFAULT_REGISTRY_SHORT_NAME
 import com.urbanairship.actions.RateAppAction.Companion.SHOW_LINK_PROMPT_KEY
 import com.urbanairship.actions.RateAppAction.Companion.TITLE_KEY
 import com.urbanairship.json.optionalField
@@ -33,7 +31,7 @@ import com.urbanairship.util.AppStoreUtils
  * Result value: `null`
  *
  *
- * Default Registration Names: [DEFAULT_REGISTRY_SHORT_NAME], [DEFAULT_REGISTRY_NAME]
+ * Default Registration Names: [DEFAULT_NAMES]
  *
  *
  */
@@ -115,14 +113,9 @@ public class RateAppAction public constructor(
     public companion object {
 
         /**
-         * Default registry name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "rate_app_action"
-
-        /**
-         * Default registry short name
-         */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^ra"
+        public val DEFAULT_NAMES: Set<String> = setOf("rate_app_action", "^ra")
 
         /**
          * Key for the showing link prompt option.

@@ -329,7 +329,7 @@ public class SetAttributesAction public constructor(
     /**
      * Default [SetAttributesAction.SetAttributesPredicate] predicate.
      */
-    public class SetAttributesPredicate public constructor() : ActionRegistry.Predicate {
+    public class SetAttributesPredicate public constructor() : ActionPredicate {
 
         override fun apply(arguments: ActionArguments): Boolean {
             return Situation.PUSH_RECEIVED != arguments.situation
@@ -339,15 +339,9 @@ public class SetAttributesAction public constructor(
     public companion object {
 
         /**
-         * Default registry name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "set_attributes_action"
-        private const val DEFAULT_REGISTRY_NAME_IOS: String = "modify_attributes_action"
-
-        /**
-         * Default registry short name
-         */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^a"
+        public val DEFAULT_NAMES: Set<String> = setOf("set_attributes_action", "modify_attributes_action", "^a")
 
         /**
          * JSON key for channel attributes changes.

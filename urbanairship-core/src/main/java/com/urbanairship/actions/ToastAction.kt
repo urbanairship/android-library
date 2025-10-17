@@ -26,7 +26,7 @@ import com.urbanairship.actions.ActionResult.Companion.newResult
  * Result value: The arguments value.
  *
  *
- * Default Registration Names: [DEFAULT_REGISTRY_NAME]
+ * Default Registration Names: [DEFAULT_NAMES]
  */
 public class ToastAction(
     private val contextProvider: () -> Context = { Airship.application }
@@ -72,7 +72,7 @@ public class ToastAction(
         /**
          * Default registry name
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "toast_action"
+        public val DEFAULT_NAMES: Set<String> = setOf("toast_action")
 
         /**
          * Key to define the Toast's text when providing the action's value as a map.

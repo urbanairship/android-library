@@ -3,12 +3,11 @@ package com.urbanairship.actions
 
 import android.content.Context
 import android.content.Intent
-import androidx.annotation.VisibleForTesting
-import androidx.core.util.Supplier
-import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.UALog
 import com.urbanairship.UrlAllowList
 import com.urbanairship.actions.ActionResult.Companion.newResult
+import com.urbanairship.actions.OpenExternalUrlAction.Companion.DEFAULT_NAMES
 import com.urbanairship.util.UriUtils
 
 /**
@@ -26,7 +25,7 @@ import com.urbanairship.util.UriUtils
  * Result value: The URI that was opened.
  *
  *
- * Default Registration Names: [DEFAULT_REGISTRY_SHORT_NAME], [DEFAULT_REGISTRY_NAME]
+ * Default Registration Names: [DEFAULT_NAMES]
  *
  *
  * Default Registration Predicate: none
@@ -86,13 +85,8 @@ public open class OpenExternalUrlAction internal constructor(
     public companion object {
 
         /**
-         * Default registry name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "open_external_url_action"
-
-        /**
-         * Default registry short name
-         */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^u"
+        public val DEFAULT_NAMES: Set<String> = setOf("open_external_url_action", "^u")
     }
 }

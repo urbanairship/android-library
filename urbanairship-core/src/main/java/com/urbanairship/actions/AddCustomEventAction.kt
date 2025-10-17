@@ -2,12 +2,11 @@
 package com.urbanairship.actions
 
 import android.os.Parcelable
+import androidx.annotation.RestrictTo
 import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 import com.urbanairship.actions.ActionResult.Companion.newErrorResult
-import com.urbanairship.actions.AddCustomEventAction.Companion.DEFAULT_REGISTRY_NAME
-import com.urbanairship.actions.AddCustomEventAction.Companion.DEFAULT_REGISTRY_SHORT_NAME
 import com.urbanairship.analytics.CustomEvent
 import com.urbanairship.analytics.CustomEvent.Companion.newBuilder
 import com.urbanairship.json.JsonMap
@@ -39,7 +38,7 @@ import com.urbanairship.push.PushMessage
  * Result value: `null`
  *
  *
- * Default Registration Name: [DEFAULT_REGISTRY_NAME], [DEFAULT_REGISTRY_SHORT_NAME]
+ * Default Registration Name: [DEFAULT_NAMES]
  *
  *
  * Default Registration Predicate: Rejects [Action.Situation.PUSH_RECEIVED]
@@ -123,7 +122,7 @@ public class AddCustomEventAction(
     /**
      * Default [AddCustomEventAction] predicate.
      */
-    public class AddCustomEventActionPredicate public constructor() : ActionRegistry.Predicate {
+    public class AddCustomEventActionPredicate public constructor() : ActionPredicate {
 
         override fun apply(arguments: ActionArguments): Boolean {
             return Situation.PUSH_RECEIVED != arguments.situation
@@ -132,19 +131,18 @@ public class AddCustomEventAction(
 
     public companion object {
 
-        public const val KEY_NAME: String = "name"
-        public const val KEY_VALUE: String = "value"
+        internal const val KEY_NAME: String = "name"
+        internal const val KEY_VALUE: String = "value"
 
         /**
-         * Default registry name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "add_custom_event_action"
+        public val DEFAULT_NAMES: Set<String> = setOf("add_custom_event_action", "^+e")
 
         /**
-         * Default registry short name
+         * @hide
          */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^+ce"
-
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public const val IN_APP_CONTEXT_METADATA_KEY: String = "in_app_metadata"
     }
 }

@@ -23,7 +23,7 @@ import com.urbanairship.permission.PermissionsManager
  * Result value: `true` if the feature was enabled, otherwise `false`.
  *
  *
- * Default Registration Names: [DEFAULT_REGISTRY_NAME], [DEFAULT_REGISTRY_SHORT_NAME]
+ * Default Registration Names: [DEFAULT_NAMES]
  */
 public class EnableFeatureAction @JvmOverloads public constructor(
     permissionsManagerProvider: () -> PermissionsManager = { Airship.permissionsManager }
@@ -59,14 +59,9 @@ public class EnableFeatureAction @JvmOverloads public constructor(
     public companion object {
 
         /**
-         * Default registry name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "enable_feature"
-
-        /**
-         * Default registry short name
-         */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^ef"
+        public val DEFAULT_NAMES: Set<String> = setOf("enable_feature", "^ef")
 
         /**
          * Action value to enable user notifications. See [com.urbanairship.push.PushManager.setUserNotificationsEnabled]

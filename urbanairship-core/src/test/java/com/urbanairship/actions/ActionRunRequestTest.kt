@@ -4,15 +4,10 @@ package com.urbanairship.actions
 import android.os.Bundle
 import android.os.Looper
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.BaseTestCase
 import com.urbanairship.ShadowAirshipExecutorsLegacy
-import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 import com.urbanairship.actions.ActionResult.Companion.newResult
 import com.urbanairship.actions.ActionRunRequest.Companion.createRequest
 import com.urbanairship.actions.ActionValue.Companion.wrap
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
@@ -118,7 +113,7 @@ public class ActionRunRequestTest {
         val action = TestAction(true, result)
 
         // Register the action
-        actionRegistry.registerAction(action, "action!")
+        actionRegistry.registerEntry(setOf("action!")) { ActionRegistry.Entry(action) }
 
         // Run the action without a callback
         createRequest("action!", actionRegistry)
@@ -145,7 +140,7 @@ public class ActionRunRequestTest {
         val callback = TestActionCompletionCallback()
 
         // Register the action
-        actionRegistry.registerAction(action, "action!")
+        actionRegistry.registerEntry(setOf("action!")) { ActionRegistry.Entry(action) }
 
         // Run the action with a callback
         createRequest("action!", actionRegistry)
@@ -188,7 +183,7 @@ public class ActionRunRequestTest {
         val action = TestAction()
 
         // Register the action
-        actionRegistry.registerAction(action, "action!")
+        actionRegistry.registerEntry(setOf("action!")) { ActionRegistry.Entry(action) }
 
         // Run the action by name
         val result = createRequest("action!", actionRegistry).runSync()
@@ -225,14 +220,14 @@ public class ActionRunRequestTest {
         val callback = TestActionCompletionCallback()
 
         // Register the action
-        val entry = actionRegistry.registerAction(action, "action!")
+        actionRegistry.registerEntry(setOf("action!")) { ActionRegistry.Entry(action) }
 
         // Set a predicate that rejects all arguments
-        entry.predicate = object : ActionRegistry.Predicate {
+        actionRegistry.updateEntry("action!", object : ActionPredicate {
             override fun apply(arguments: ActionArguments): Boolean {
                 return false
             }
-        }
+        })
 
         createRequest("action!", actionRegistry)
             .setValue("val")
@@ -339,7 +334,7 @@ public class ActionRunRequestTest {
     @Test
     public fun testMetadata() {
         val action = TestAction()
-        actionRegistry.registerAction(action, "action!")
+        actionRegistry.registerEntry(setOf("action!")) { ActionRegistry.Entry(action) }
 
         // Create metadata
         val metadata = Bundle()

@@ -1,63 +1,58 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.modules
 
-import android.content.Context
 import androidx.annotation.RestrictTo
-import androidx.annotation.XmlRes
 import com.urbanairship.AirshipComponent
-import com.urbanairship.actions.ActionRegistry
+import com.urbanairship.actions.ActionsManifest
 
 /**
  * Airship Module.
+ *
+ * This class represents a logical grouping of one or more [AirshipComponent] instances
+ * and an optional [ActionsManifest]. Modules are created by internal Airship
+ * libraries to bundle related functionality.
  *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public open class Module protected constructor(
+    /**
+     * The set of components belonging to this module.
+     */
     public val components: Set<AirshipComponent>,
-    @field:XmlRes private val actionsXmlId: Int = 0
-) {
 
     /**
-     * Called to register actions.
-     *
-     * @param context The context.
-     * @param registry The registry.
+     * An optional manifest describing actions provided by this module.
      */
-    public fun registerActions(context: Context, registry: ActionRegistry) {
-        if (actionsXmlId != 0) {
-            registry.registerActions(context, actionsXmlId)
-        }
-    }
+    public val actionsManifest: ActionsManifest?
+) {
 
     public companion object {
 
         /**
-         * Factory method to create a module for a single component.
+         * Creates a [Module] containing a single [AirshipComponent].
          *
-         * @param component The component.
-         * @param actionsXmlId The actions XML resource ID, or 0 if not available.
-         * @return The module.
+         * @param component The single component for the module.
+         * @param actionsManifest An optional manifest of actions provided by the component.
+         * @return A new [Module] instance.
          */
         public fun singleComponent(
-            component: AirshipComponent,
-            @XmlRes actionsXmlId: Int
+            component: AirshipComponent, actionsManifest: ActionsManifest? = null
         ): Module {
-            return Module(setOf(component), actionsXmlId)
+            return Module(setOf(component), actionsManifest)
         }
 
         /**
-         * Factory method to create a module for multiple component.
+         * Creates a [Module] containing multiple [AirshipComponent] instances.
          *
-         * @param components The components.
-         * @param actionsXmlId The actions XML resource ID, or 0 if not available.
-         * @return The module.
+         * @param components A collection of components for the module.
+         * @param actionsManifest An optional manifest of actions provided by these components.
+         * @return A new [Module] instance.
          */
         public fun multipleComponents(
-            components: Collection<AirshipComponent>,
-            @XmlRes actionsXmlId: Int
+            components: Collection<AirshipComponent>, actionsManifest: ActionsManifest? = null
         ): Module {
-            return Module(HashSet(components), actionsXmlId)
+            return Module(components.toSet(), actionsManifest)
         }
     }
 }

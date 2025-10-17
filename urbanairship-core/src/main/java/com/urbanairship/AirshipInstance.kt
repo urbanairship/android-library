@@ -11,6 +11,7 @@ import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.DeepLinkListener
+import com.urbanairship.actions.DefaultActionsManifest
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.GlobalActivityMonitor
@@ -189,7 +190,7 @@ internal class AirshipInstance(
         val localComponents = mutableListOf<AirshipComponent>(channel)
 
         this.urlAllowList = UrlAllowList.createDefaultUrlAllowList(airshipConfigOptions)
-        this.actionRegistry = ActionRegistry().also { it.registerDefaultActions(application) }
+        this.actionRegistry = ActionRegistry().also { it.registerActions(DefaultActionsManifest()) }
 
         val eventFeed = AirshipEventFeed(
             privacyManager = privacyManager,
@@ -388,7 +389,9 @@ internal class AirshipInstance(
     private fun processModule(module: Module?) {
         if (module == null) { return }
         components.update { it + module.components }
-        module.registerActions(application, this.actionRegistry)
+        module.actionsManifest?.let {
+            actionRegistry.registerActions(it)
+        }
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

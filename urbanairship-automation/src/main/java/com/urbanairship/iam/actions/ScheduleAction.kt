@@ -53,6 +53,6 @@ constructor(
     public companion object {
         /** Default registry name */
         @JvmStatic
-        public val DEFAULT_NAMES: List<String> = listOf("schedule_actions", "^sa")
+        public val DEFAULT_NAMES: Set<String> = setOf("schedule_actions", "^sa")
     }
 }

@@ -65,8 +65,8 @@ public class PromptPermissionActionTest {
     @Test
     public fun testPermissions() {
 
-        coEvery { mockPermissionManager.suspendingCheckPermissionStatus(any()) } returns PermissionStatus.DENIED
-        coEvery { mockPermissionManager.suspendingRequestPermission(any(), any(), any()) } returns PermissionRequestResult.granted()
+        coEvery { mockPermissionManager.checkPermissionStatus(any()) } returns PermissionStatus.DENIED
+        coEvery { mockPermissionManager.requestPermission(any(), any(), any()) } returns PermissionRequestResult.granted()
 
         Permission.entries.forEach { permission ->
             val value = jsonMapOf(
@@ -76,15 +76,15 @@ public class PromptPermissionActionTest {
             val actionArguments = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, value)
             action.perform(actionArguments)
 
-            coVerify { mockPermissionManager.suspendingCheckPermissionStatus(permission) }
-            coVerify { mockPermissionManager.suspendingRequestPermission(permission, false, PermissionPromptFallback.None) }
+            coVerify { mockPermissionManager.checkPermissionStatus(permission) }
+            coVerify { mockPermissionManager.requestPermission(permission, false, PermissionPromptFallback.None) }
         }
     }
 
     @Test
     public fun testEnableAirshipUsage() {
-        coEvery { mockPermissionManager.suspendingCheckPermissionStatus(any()) } returns PermissionStatus.DENIED
-        coEvery { mockPermissionManager.suspendingRequestPermission(any(), any(), any()) } returns PermissionRequestResult.granted()
+        coEvery { mockPermissionManager.checkPermissionStatus(any()) } returns PermissionStatus.DENIED
+        coEvery { mockPermissionManager.requestPermission(any(), any(), any()) } returns PermissionRequestResult.granted()
 
         val value = jsonMapOf(
             PromptPermissionAction.PERMISSION_ARG_KEY to Permission.DISPLAY_NOTIFICATIONS,
@@ -94,7 +94,7 @@ public class PromptPermissionActionTest {
         val actionArguments = ActionTestUtils.createArgs(Situation.MANUAL_INVOCATION, value)
         action.perform(actionArguments)
 
-        coVerify { mockPermissionManager.suspendingRequestPermission(
+        coVerify { mockPermissionManager.requestPermission(
             permission = Permission.DISPLAY_NOTIFICATIONS,
             enableAirshipUsageOnGrant = true,
             fallback = PermissionPromptFallback.None)
@@ -104,11 +104,11 @@ public class PromptPermissionActionTest {
     @Test
     public fun testResult() {
         coEvery {
-            mockPermissionManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+            mockPermissionManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
         } returns PermissionStatus.DENIED
 
         coEvery {
-            mockPermissionManager.suspendingRequestPermission(
+            mockPermissionManager.requestPermission(
                 permission = Permission.DISPLAY_NOTIFICATIONS,
                 enableAirshipUsageOnGrant = false,
                 fallback = PermissionPromptFallback.None

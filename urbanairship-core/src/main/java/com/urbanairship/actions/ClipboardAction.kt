@@ -27,7 +27,7 @@ import com.urbanairship.json.optionalField
  * Result value: The arguments value.
  *
  *
- * Default Registration Names: [DEFAULT_REGISTRY_SHORT_NAME], [DEFAULT_REGISTRY_NAME]
+ * Default Registration Name: [DEFAULT_NAMES]
  */
 public class ClipboardAction public constructor(
     private  val contextProvider: () -> Context = {
@@ -80,14 +80,9 @@ public class ClipboardAction public constructor(
     public companion object {
 
         /**
-         * Default registry name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "clipboard_action"
-
-        /**
-         * Default registry short name
-         */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^c"
+        public val DEFAULT_NAMES: Set<String> = setOf("clipboard_action", "^c")
 
         /**
          * Key to define the ClipData's label when providing the action's value as a map.

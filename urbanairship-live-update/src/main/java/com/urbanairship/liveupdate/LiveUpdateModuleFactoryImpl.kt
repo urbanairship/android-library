@@ -40,6 +40,6 @@ public class LiveUpdateModuleFactoryImpl : LiveUpdateModuleFactory {
             channel = airshipChannel,
             pushManager = pushManager
         )
-        return Module.singleComponent(manager, 0)
+        return Module.singleComponent(manager)
     }
 }

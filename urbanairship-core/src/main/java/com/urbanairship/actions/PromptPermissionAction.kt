@@ -8,6 +8,7 @@ import androidx.core.os.bundleOf
 import com.urbanairship.Airship
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
 import com.urbanairship.actions.ActionResult.Companion.newErrorResult
+import com.urbanairship.actions.PromptPermissionAction.Companion.DEFAULT_NAMES
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
@@ -39,7 +40,7 @@ import kotlinx.coroutines.launch
  * Default Result: empty. The actual permission result can be received using a ResultReceiver in the metadata.
  *
  *
- * Default Registration Names: [DEFAULT_REGISTRY_NAME], [DEFAULT_REGISTRY_SHORT_NAME]
+ * Default Registration Name: [DEFAULT_NAMES]
  */
 public open class PromptPermissionAction public constructor(
     private val permissionsManagerProvider: () -> PermissionsManager
@@ -86,8 +87,8 @@ public open class PromptPermissionAction public constructor(
         val permissionsManager = requireNotNull(permissionsManagerProvider())
 
         scope.launch {
-            val before = permissionsManager.suspendingCheckPermissionStatus(args.permission)
-            val current = permissionsManager.suspendingRequestPermission(
+            val before = permissionsManager.checkPermissionStatus(args.permission)
+            val current = permissionsManager.requestPermission(
                 permission = args.permission,
                 enableAirshipUsageOnGrant = args.enableAirshipUsage,
                 fallback = if (args.fallbackSystemSettings) PermissionPromptFallback.SystemSettings else PermissionPromptFallback.None
@@ -150,15 +151,11 @@ public open class PromptPermissionAction public constructor(
         public const val RECEIVER_METADATA: String =
             "com.urbanairship.actions.PromptPermissionActionReceiver"
 
-        /**
-         * Default registry name
-         */
-        public const val DEFAULT_REGISTRY_NAME: String = "prompt_permission_action"
 
         /**
-         * Default registry short name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^pp"
+        public val DEFAULT_NAMES: Set<String> = setOf("prompt_permission_action", "^pp")
 
         /**
          * Permission argument key.

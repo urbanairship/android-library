@@ -32,6 +32,6 @@ public class DebugModuleFactoryImpl : DebugModuleFactory {
         analytics: Analytics
     ): Module {
         val debugManager = DebugManager(context, dataStore, remoteData, pushManager, analytics)
-        return Module.singleComponent(debugManager, 0)
+        return Module.singleComponent(debugManager)
     }
 }

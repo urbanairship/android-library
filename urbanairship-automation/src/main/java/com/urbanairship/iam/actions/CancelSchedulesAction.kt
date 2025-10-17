@@ -24,7 +24,7 @@ import kotlinx.coroutines.runBlocking
  *
  * Result value: null.
  *
- * Default Registration Names: [CancelSchedulesAction.DEFAULT_NAMES]
+ * Default Registration Names: [DEFAULT_NAMES]
  *
  * Default Registration Predicate: none
  */
@@ -72,7 +72,7 @@ constructor(
     public companion object {
         /** Default registry name */
         @JvmStatic
-        public val DEFAULT_NAMES: List<String> = listOf("cancel_scheduled_actions", "^csa")
+        public val DEFAULT_NAMES: Set<String> = setOf("cancel_scheduled_actions", "^csa")
 
         /** Used as the key in the action's value map to specify schedule groups to cancel. */
         @JvmStatic

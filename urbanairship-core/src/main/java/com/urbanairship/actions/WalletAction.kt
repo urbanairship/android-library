@@ -9,9 +9,6 @@ import com.urbanairship.Platform
 import com.urbanairship.UALog
 import com.urbanairship.UrlAllowList
 import com.urbanairship.actions.ActionResult.Companion.newEmptyResult
-import com.urbanairship.actions.OpenExternalUrlAction
-import com.urbanairship.actions.WalletAction.Companion.DEFAULT_REGISTRY_NAME
-import com.urbanairship.actions.WalletAction.Companion.DEFAULT_REGISTRY_SHORT_NAME
 
 /**
  * Action for opening Android Pay deep links.
@@ -28,7 +25,7 @@ import com.urbanairship.actions.WalletAction.Companion.DEFAULT_REGISTRY_SHORT_NA
  * Result value: The URI that was opened.
  *
  *
- * Default Registration Names: [DEFAULT_REGISTRY_SHORT_NAME], [DEFAULT_REGISTRY_NAME]
+ * Default Registration Names: [DEFAULT_NAMES]
  *
  *
  * Default Registration Predicate: none
@@ -72,13 +69,8 @@ public class WalletAction internal constructor(
     public companion object {
 
         /**
-         * Default registry name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "wallet_action"
-
-        /**
-         * Default registry short name
-         */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^w"
+        public val DEFAULT_NAMES: Set<String> = setOf("wallet_action", "^w")
     }
 }

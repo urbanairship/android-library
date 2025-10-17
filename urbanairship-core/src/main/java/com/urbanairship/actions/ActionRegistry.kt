@@ -1,271 +1,206 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
-import android.content.Context
-import androidx.annotation.RestrictTo
-import androidx.annotation.XmlRes
-import com.urbanairship.R
 import com.urbanairship.actions.Action.Situation
-import com.urbanairship.util.UAStringUtil
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
+import androidx.annotation.RestrictTo
 
 /**
  * Class responsible for runtime-persisting actions and associating them
  * with names and predicates.
  */
 public class ActionRegistry {
+    private val lock: ReentrantLock = ReentrantLock()
+    private val actionsMap = mutableMapOf<String, EntryHolder>()
 
     /**
-     * ActionArgument predicate
-     */
-    public interface Predicate {
-
-        /**
-         * Applies the predicate to the action arguments.
-         *
-         * @param arguments The action arguments.
-         * @return `true` to accept the arguments, otherwise `false`.
-         */
-        public fun apply(arguments: ActionArguments): Boolean
-    }
-
-    private val actionsMap = MutableStateFlow(mapOf<String, Entry>())
-
-    /**
-     * Registers an action.
+     * Registers a new [Entry] with one or more names.
      *
-     *
-     * If another entry is registered under specified name, it will be removed from that
-     * entry and used for the new action.
-     *
-     * @param action The action to register
-     * @param names The names the action will be registered under
-     * @return The entry.
-     * @throws IllegalArgumentException If no names were provided, or if th one of the names is an empty string.
+     * @param names One or more names to associate with the action entry.
+     * @param entry The action entry instance.
+     * @throws IllegalArgumentException if no valid (non-empty) names are provided.
      */
     @Throws(IllegalArgumentException::class)
-    public fun registerAction(action: Action, vararg names: String): Entry {
-        require(names.isNotEmpty()) { "Unable to register an action without a name." }
-
-        return registerEntry(Entry(
-            defaultAction =  action,
-            names = listOf(*names)
-        ))
+    public fun registerEntry(names: Set<String>, entry: Entry) {
+        registerEntry(names) { entry }
     }
 
     /**
-     * Registers an action by class.
+     * Registers a new [Entry] using an initialization block for lazy creation.
      *
-     * @param clazz The class to register
-     * @param names The names the action will be registered under
-     * @return The entry.
-     * @throws IllegalArgumentException If no names were provided, or if th one of the names is an empty string.
+     * @param names One or more names to associate with the action entry.
+     * @param entryBlock A lambda that returns the [Entry] when first executed.
+     * @throws IllegalArgumentException if no valid (non-empty) names are provided.
      */
     @Throws(IllegalArgumentException::class)
-    public fun registerAction(clazz: Class<out Action?>, vararg names: String): Entry {
-        require(names.isNotEmpty()) { "Unable to register an action without a name." }
+    public fun registerEntry(names: Set<String>, entryBlock: () -> Entry) {
+        val namesToRegister = names.filter { it.isNotEmpty() }
+        require(namesToRegister.isNotEmpty()) { "Invalid names: $names. At least one name is required" }
 
-        return registerEntry(Entry(
-            defaultActionClass = clazz,
-            names = listOf(*names)))
-    }
+        val holder = EntryHolder(entryBlock)
 
-    private fun registerEntry(entry: Entry): Entry {
-        val names = entry.getNames()
-
-        // Validate all the names
-        for (name in names) {
-            require(!UAStringUtil.isEmpty(name)) { "Unable to register action because one or more of the names was null or empty." }
+        lock.withLock {
+            actionsMap.putAll(namesToRegister.associateWith { holder })
         }
+    }
 
-        actionsMap.update { actions ->
-            val result = actions.toMutableMap()
-
-            for (name in names) {
-                if (UAStringUtil.isEmpty(name)) {
-                    continue
-                }
-
-                result.remove(name)?.removeName(name)
-
-                result[name] = entry
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    internal fun registerActions(manifest: ActionsManifest) {
+        lock.withLock {
+            manifest.manifest.forEach { (names, entryBlock) ->
+                registerEntry(names = names, entryBlock = entryBlock)
             }
-
-            result.toMap()
         }
+    }
 
-        return entry
+    /**
+     * Unregisters an action entry.
+     *
+     * All names currently mapped to the same internal entry object as the provided [name]
+     * will also be removed.
+     *
+     * @param name The name of the action entry to remove.
+     */
+    public fun removeEntry(name: String) {
+        lock.withLock {
+            val entryHolderToRemove = actionsMap[name] ?: return
+
+            val keysToRemove = actionsMap.filterValues { value ->
+                entryHolderToRemove === value
+            }.keys.toList()
+
+            keysToRemove.forEach { key ->
+                actionsMap.remove(key)
+            }
+        }
+    }
+
+    /**
+     * Updates the default action or a situation-specific action override for a registered entry.
+     *
+     * @param name The name of the action entry to update.
+     * @param action The new [Action].
+     * @param situation The optional [Situation] to override. If `null` (default), the
+     * default action is updated.
+     * @return `true` if the entry was found and updated, `false` otherwise.
+     */
+    @JvmOverloads
+    public fun updateEntry(name: String, action: Action, situation: Situation? = null): Boolean {
+        return lock.withLock {
+            val entry = actionsMap[name]?.entry ?: return false
+            entry.updateAction(action, situation)
+            true
+        }
+    }
+
+    /**
+     * Updates the predicate for a registered action entry.
+     *
+     * @param name The name of the action entry to update.
+     * @param predicate The new [ActionPredicate]. Can be `null` to remove the predicate.
+     * @return `true` if the entry was found and updated, `false` otherwise.
+     */
+    public fun updateEntry(name: String, predicate: ActionPredicate?): Boolean {
+        return lock.withLock {
+            val entry = actionsMap[name]?.entry ?: return false
+            entry.updatePredicate(predicate)
+            true
+        }
     }
 
     /**
      * Gets an action entry for a given name.
      *
-     * @param name The name of the action
-     * @return An Entry for the name, or null if no entry exists for
-     * the given name
+     * @param name The name of the action.
+     * @return An [Entry] for the name, or `null` if no entry exists for the given name or if the name is empty.
      */
     public fun getEntry(name: String): Entry? {
-        if (UAStringUtil.isEmpty(name)) {
-            return null
+        if (name.isEmpty()) return null
+        return lock.withLock {
+            actionsMap[name]?.entry
         }
-
-        return actionsMap.value[name]
     }
 
     /**
-     * Gets the set of registry entries that are currently registered.
+     * Gets the set of all unique action entries that are currently registered.
+     *
+     * Note: Accessing this property may trigger lazy initialization for any entries
+     * that have not yet been accessed.
      */
     public val entries: Set<Entry>
         get() {
-            return actionsMap.value.values.toSet()
-        }
-
-    /**
-     * Unregister an action from the registry.
-     *
-     * @param name The name of the action.
-     */
-    public fun unregisterAction(name: String) {
-        if (UAStringUtil.isEmpty(name)) {
-            return
-        }
-
-        val entry = getEntry(name) ?: return
-        actionsMap.update { current ->
-            val result = current.toMutableMap()
-
-            for (registeredName in entry.getNames()) {
-                result.remove(registeredName)
+            return lock.withLock {
+                actionsMap.values
+                    .asSequence()
+                    .map { it.entry }
+                    .toSet()
             }
-
-            result.toMap()
         }
-    }
 
     /**
-     * Registers default actions.
-     *
-     * @param context The application context.
+     * A private holder class used to achieve lazy, thread-safe initialization of an [Entry].
      */
-    public fun registerDefaultActions(context: Context) {
-        registerActions(context, R.xml.ua_default_actions)
-    }
-
-    /**
-     * Registers actions from a resource.
-     * @param context The context.
-     * @param actionsXml The actions XML resource ID.
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun registerActions(context: Context, @XmlRes actionsXml: Int) {
-        val entries = ActionEntryParser.fromXml(context, actionsXml)
-
-        for (entry in entries) {
-            registerEntry(entry)
-        }
-    }
-
-    /**
-     * An entry in the action registry.
-     */
-    public class Entry internal constructor(
-        private var defaultAction: Action? = null,
-        names: List<String>,
-        private var defaultActionClass: Class<*>? = null
+    private class EntryHolder(
+        entryBlock: () -> Entry
     ) {
+        val entry: Entry by lazy(entryBlock)
+    }
 
-        private val names = MutableStateFlow(names)
+    /**
+     * An entry in the action registry, holding the action, its overrides, and its predicate.
+     */
+    public class Entry @JvmOverloads public constructor(
+        action: Action,
+        situationOverrides: Map<Situation, Action> = emptyMap(),
+        predicate: ActionPredicate? = null
+    ) {
+        private var _action: Action = action
+        private val _situationOverrides: MutableMap<Situation, Action> = situationOverrides.toMutableMap()
+        private var _predicate: ActionPredicate? = predicate
 
-        @JvmField
-        public var predicate: Predicate? = null
+        internal fun updateAction(action: Action, situation: Situation? = null) {
+            if (situation != null) {
+                _situationOverrides[situation] = action
+            } else {
+                _action = action
+            }
+        }
 
-        private val situationOverrides = mutableMapOf<Situation, Action>()
+        internal fun updatePredicate(predicate: ActionPredicate?) {
+            _predicate = predicate
+        }
 
         /**
-         * Returns an action for a given situation.
+         * The default [Action] instance.
+         */
+        public val action: Action
+            get() = this._action
+
+        /**
+         * Read-only map of action overrides for specific [Situation]s.
+         */
+        public val situationOverrides: Map<Situation, Action>
+            get() = this._situationOverrides.toMap()
+
+
+        /**
+         * The optional [ActionPredicate] controlling when the action may be executed.
+         */
+        public val predicate: ActionPredicate?
+            get() = this._predicate
+
+        /**
+         * Returns the action applicable for a given [Situation].
          *
-         * @param situation Situation for the entry
-         * @return The action defined for the situation override, or the
-         * default action
+         * @param situation The situation for which to retrieve the action.
+         * @return The action defined for the situation override, or the default action if no override exists.
          */
         public fun getActionForSituation(situation: Situation?): Action {
-            return situationOverrides[situation] ?: getDefaultAction()
-        }
-
-        /**
-         * Gets the default action
-         *
-         * @return The default action
-         */
-        @Throws(IllegalArgumentException::class)
-        public fun getDefaultAction(): Action {
-            return defaultAction ?: run {
-                val actionClass = defaultActionClass ?: throw IllegalArgumentException("Unable to instantiate action class.")
-                try {
-                    val result = actionClass.newInstance() as Action
-                    defaultAction = result
-                    result
-                } catch (e: Exception) {
-                    throw IllegalArgumentException("Unable to instantiate action class.")
-                }
-            }
-        }
-
-        /**
-         * Sets the default action.
-         *
-         * @param action The default action for the entry
-         */
-        public fun setDefaultAction(action: Action) {
-            this.defaultAction = action
-        }
-
-        /**
-         * Adds an action to be used instead of the default action for a
-         * given situation.
-         *
-         * @param situation The situation to override
-         * @param action Action for the situation
-         */
-        public fun setSituationOverride(situation: Situation, action: Action?) {
-            if (action == null) {
-                situationOverrides.remove(situation)
-            } else {
-                situationOverrides[situation] = action
-            }
-        }
-
-        /**
-         * Gets the list of registered names for the entry
-         *
-         * @return A list of names
-         */
-        public fun getNames(): List<String> {
-            return names.value
-        }
-
-        /**
-         * Removes a name from the entry
-         *
-         * @param name Name to remove
-         */
-        public fun removeName(name: String) {
-            names.update { it - name }
-        }
-
-        /**
-         * Adds a name to the entry
-         *
-         * @param name Name to add
-         */
-        private fun addName(name: String) {
-            names.update { it + name }
-        }
-
-        override fun toString(): String {
-            return "Action Entry: ${names.value}"
+            return _situationOverrides[situation] ?: _action
         }
     }
 }

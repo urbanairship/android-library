@@ -36,4 +36,12 @@ public class OpenPreferenceCenterAction(
     }
 
     override fun shouldRunOnMainThread(): Boolean = true
+
+    public companion object {
+
+        /**
+         * Default action names.
+         */
+        public val DEFAULT_NAMES: Set<String> = setOf("open_preference_center_action")
+    }
 }

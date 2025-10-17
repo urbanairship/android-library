@@ -3,15 +3,14 @@
 package com.urbanairship.iam.actions
 
 import android.net.Uri
-import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.UALog
 import com.urbanairship.UrlAllowList
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionArguments
 import com.urbanairship.actions.ActionResult
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.AutomationTrigger
-import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.inAppAutomation
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.HTML
@@ -27,9 +26,9 @@ import kotlinx.coroutines.runBlocking
 /**
  * Schedules a landing page to display ASAP.
  *
- * Accepted situations: [Action.SITUATION_PUSH_OPENED], [Action.SITUATION_WEB_VIEW_INVOCATION],
- * [Action.SITUATION_MANUAL_INVOCATION], [Action.SITUATION_AUTOMATION],
- * and [Action.SITUATION_FOREGROUND_NOTIFICATION_ACTION_BUTTON].
+ * Accepted situations: [Action.Situation.PUSH_OPENED], [Action.Situation.WEB_VIEW_INVOCATION],
+ * [Action.Situation.MANUAL_INVOCATION], [Action.Situation.AUTOMATION],
+ * and [Action.Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON].
  *
  * Accepted argument value types: URL defined as either a String or a Map containing the key
  * "url" that defines the URL, an optional "width", "height" in dps as an int or "fill" string,
@@ -131,7 +130,7 @@ public class LandingPageAction(
     public companion object {
         /** Default registry name */
         @JvmStatic
-        public val DEFAULT_NAMES: List<String> = listOf("landing_page_action", "^p")
+        public val DEFAULT_NAMES: Set<String> = setOf("landing_page_action", "^p")
 
         /** Default border radius. */
         private const val DEFAULT_BORDER_RADIUS = 2f

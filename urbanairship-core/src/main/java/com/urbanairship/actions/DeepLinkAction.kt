@@ -7,8 +7,7 @@ import android.net.Uri
 import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionResult.Companion.newResult
-import com.urbanairship.actions.DeepLinkAction.Companion.DEFAULT_REGISTRY_NAME
-import com.urbanairship.actions.DeepLinkAction.Companion.DEFAULT_REGISTRY_SHORT_NAME
+import com.urbanairship.actions.DeepLinkAction.Companion.DEFAULT_NAMES
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 
@@ -26,7 +25,7 @@ import com.urbanairship.push.PushMessage
  * Result value: The URI that was opened.
  *
  *
- * Default Registration Names: [DEFAULT_REGISTRY_SHORT_NAME], [DEFAULT_REGISTRY_NAME]
+ * Default Registration Name: [DEFAULT_NAMES]
  *
  *
  * Default Registration Predicate: none
@@ -84,13 +83,8 @@ public class DeepLinkAction(
     public companion object {
 
         /**
-         * Default registry name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "deep_link_action"
-
-        /**
-         * Default registry short name
-         */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^d"
+        public val DEFAULT_NAMES: Set<String> = setOf("deep_link_action", "^d")
     }
 }

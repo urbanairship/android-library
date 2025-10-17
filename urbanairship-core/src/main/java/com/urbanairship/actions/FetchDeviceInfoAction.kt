@@ -33,7 +33,7 @@ import java.nio.channels.spi.AsynchronousChannelProvider
  * ```
  *
  *
- * Default Registration Names: [DEFAULT_REGISTRY_NAME], [DEFAULT_REGISTRY_SHORT_NAME]
+ * Default Registration Names: [DEFAULT_NAMES]
  *
  *
  * Default Registration Predicate: only accepts [Action.Situation.WEB_VIEW_INVOCATION]
@@ -63,7 +63,7 @@ public class FetchDeviceInfoAction public constructor(
     /**
      * Default [FetchDeviceInfoAction] predicate.
      */
-    public class FetchDeviceInfoPredicate public constructor() : ActionRegistry.Predicate {
+    public class FetchDeviceInfoPredicate public constructor() : ActionPredicate {
 
         override fun apply(arguments: ActionArguments): Boolean {
             return when(arguments.situation) {
@@ -75,16 +75,10 @@ public class FetchDeviceInfoAction public constructor(
     }
 
     public companion object {
-
         /**
-         * Default registry name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "fetch_device_info"
-
-        /**
-         * Default registry short name
-         */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^fdi"
+        public val DEFAULT_NAMES: Set<String> = setOf("fetch_device_info", "^fdi")
 
         /**
          * Channel ID response key.

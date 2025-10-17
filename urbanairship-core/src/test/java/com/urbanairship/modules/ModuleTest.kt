@@ -20,22 +20,12 @@ public class ModuleTest {
 
     private var context: Context = ApplicationProvider.getApplicationContext()
     private var dataStore = PreferenceDataStore.inMemoryStore(context)
-    private var actionRegistry: ActionRegistry = mockk(relaxed = true)
 
     @Test
     public fun testGetComponents() {
         val component = TestComponent(context, dataStore)
-        val module = singleComponent(component, 0)
+        val module = singleComponent(component)
         TestCase.assertEquals(setOf(component), module.components)
-    }
-
-    @Test
-    public fun testRegisterActions() {
-        val component = TestComponent(context, dataStore)
-        val module = singleComponent(component, 100)
-
-        module.registerActions(context, actionRegistry)
-        verify { actionRegistry.registerActions(context, 100) }
     }
 
     public class TestComponent(context: Context, dataStore: PreferenceDataStore) :

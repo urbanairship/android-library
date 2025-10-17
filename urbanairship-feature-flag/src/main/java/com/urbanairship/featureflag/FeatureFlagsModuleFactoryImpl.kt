@@ -40,7 +40,7 @@ public class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
             privacyManager = privacyManager,
             resultCache = FeatureFlagResultCache(cache)
         )
-        return Module.singleComponent(manager, 0)
+        return Module.singleComponent(manager)
     }
 
     override val airshipVersion: String = BuildConfig.AIRSHIP_VERSION

@@ -1,254 +1,108 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.ApplicationMetrics
 import com.urbanairship.BaseTestCase
-import com.urbanairship.contacts.Contact
-import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
-import junit.framework.TestCase.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class ActionRegistryTest {
+public class ActionRegistryTest : BaseTestCase() {
 
     private val registry = ActionRegistry()
 
-    private val context: Context = ApplicationProvider.getApplicationContext<Context>()
-
-    /**
-     * Tests that the default actions are registered under the correct names
-     */
     @Test
-    public fun testDefaultActions() {
-        registry.registerDefaultActions(context)
-        assertEquals("Default entries changed", 16, registry.entries.size)
-
-        validateEntry(registry.getEntry("^d"), "^d", "deep_link_action")
-        validateEntry(registry.getEntry("^+t"), "^+t", "add_tags_action")
-        validateEntry(registry.getEntry("^t"), "^t", "tag_action")
-        validateEntry(registry.getEntry("^-t"), "^-t", "remove_tags_action")
-        validateEntry(registry.getEntry("^u"), "^u", "open_external_url_action")
-        validateEntry(registry.getEntry("add_custom_event_action"), "^+ce", "add_custom_event_action")
-        validateEntry(registry.getEntry("^s"), "^s", "share_action")
-        validateEntry(registry.getEntry("^c"), "^c", "clipboard_action")
-        validateEntry(registry.getEntry("toast_action"), "toast_action")
-        validateEntry(registry.getEntry("^w"), "^w", "wallet_action")
-        validateEntry(registry.getEntry("^fdi"), "^fdi", "fetch_device_info")
-        validateEntry(registry.getEntry("^ef"), "^ef", "enable_feature")
-        validateEntry(registry.getEntry("^ra"), "^ra", "rate_app_action")
-        validateEntry(registry.getEntry("^a"), "^a", "set_attributes_action", "modify_attributes_action")
-        validateEntry(
-            registry.getEntry("^sla"),
-            "^sla",
-            "subscription_list_action",
-            "^sl",
-            "edit_subscription_list_action"
-        )
-        validateEntry(registry.getEntry("^pp"), "^pp", "prompt_permission_action")
+    public fun testRegister() {
+        val entry = ActionRegistry.Entry(action = TestAction())
+        registry.registerEntry(names = setOf("who", "are", "we?"), entry = entry)
+        assertEquals(entry, registry.getEntry("who"))
+        assertEquals(entry, registry.getEntry("are"))
+        assertEquals(entry, registry.getEntry("we?"))
     }
 
-    /**
-     * Test the add custom event default predicate rejects [Action.Situation.PUSH_RECEIVED]
-     */
     @Test
-    public fun testAddCustomEventDefaultPredicateReject() {
-        registry.registerDefaultActions(context)
+    public fun testRegisterNameConflict() {
+        val someAction = TestAction()
+        registry.registerEntry(names = setOf("action!"), entry = ActionRegistry.Entry(action = someAction))
 
-        val entry = registry.getEntry("add_custom_event_action")
-        assertNotNull("Add custom event should have a default predicate", entry?.predicate)
+        val someOtherAction = TestAction()
+        registry.registerEntry(names = setOf("action!", "operation!"), entry = ActionRegistry.Entry(action = someOtherAction))
 
-        assert(
-            entry?.predicate?.apply(
-                ActionTestUtils.createArgs(Action.Situation.PUSH_RECEIVED, "value", null)
-            ) == false
-        ) { "Add custom event should reject PUSH_RECEIVED." }
-    }
-
-    /**
-     * Test that the fetch device info default predicate rejects [Action.Situation.PUSH_RECEIVED] and
-     * [Action.Situation.PUSH_OPENED].
-     */
-    @Test
-    public fun testFetchDeviceInfoDefaultPredicateReject() {
-        registry.registerDefaultActions(context)
-
-        val entry = registry.getEntry("fetch_device_info")
-        assertNotNull("Fetch device info should have a default predicate", entry?.predicate)
-
-        assert(
-            entry?.predicate?.apply(
-                ActionTestUtils.createArgs(Action.Situation.PUSH_RECEIVED, "value", null)
-            ) == false
-        ) { "Fetch device info should reject PUSH_RECEIVED." }
-
-        assert(
-            entry?.predicate?.apply(
-                ActionTestUtils.createArgs(
-                    Action.Situation.PUSH_OPENED, "value", null
-                )
-            ) == false
-        ) { "Fetch device info should reject PUSH_OPENED." }
-    }
-
-    /**
-     * Test the add custom event default predicate accepts [Action.Situation.MANUAL_INVOCATION] and
-     * [Action.Situation.WEB_VIEW_INVOCATION].
-     */
-    @Test
-    public fun testFetchDeviceInfoDefaultPredicateAccepts() {
-        registry.registerDefaultActions(context)
-
-        val entry = registry.getEntry("fetch_device_info")
-        assertNotNull("Fetch device info should have a default predicate", entry?.predicate)
-
-        assertTrue(
-            "Fetch device info should accept MANUAL_INVOCATION.", entry?.predicate?.apply(
-                ActionTestUtils.createArgs(
-                    Action.Situation.MANUAL_INVOCATION, "value", null
-                )
-            ) == true
-        )
-
-        assertTrue(
-            "Fetch device info should accept WEB_VIEW_INVOCATION.", entry?.predicate?.apply(
-                ActionTestUtils.createArgs(
-                    Action.Situation.WEB_VIEW_INVOCATION, "value", null
-                )
-            ) == true
-        )
-    }
-
-    /**
-     * Test registering an action.
-     */
-    @Test
-    public fun testRegisterAction() {
-        // Register without a predicate
-        val entry = registry.registerAction(TestAction(), "who", "are", "we?")
-        validateEntry(entry, "who", "are", "we?")
-    }
-
-    /**
-     * Test registering an action with a an existing
-     * registered name.
-     */
-    @Test
-    public fun testRegisterActionNameConflict() {
-        val someAction: Action = TestAction()
-        registry.registerAction(someAction, "action!")
-
-        val someOtherAction: Action = TestAction()
-        registry.registerAction(someOtherAction, "action!", "operation!")
-
-        validateEntry(registry.getEntry("action!"), someOtherAction, "action!", "operation!")
+        assertEquals(someOtherAction, registry.getEntry("action!")?.action)
+        assertEquals(someOtherAction, registry.getEntry("operation!")?.action)
 
         // Register the original action that conflicts with one of the registered names
-        registry.registerAction(someAction, "action!")
-        validateEntry(registry.getEntry("action!"), someAction, "action!")
-        validateEntry(registry.getEntry("operation!"), someOtherAction, "operation!")
+        registry.registerEntry(names = setOf("action!"), entry = ActionRegistry.Entry(action = someAction))
+        assertEquals(someAction, registry.getEntry("action!")?.action)
+        assertEquals(someOtherAction, registry.getEntry("operation!")?.action)
     }
 
-    /**
-     * Test registering a empty action name
-     */
     @Test(expected = IllegalArgumentException::class)
     public fun testRegisterEmptyActionNames() {
-        registry.registerAction(TestAction(), "")
+        registry.registerEntry(names = emptySet(), entry = ActionRegistry.Entry(action = TestAction()))
     }
 
-    /**
-     * Test trying to register multiple names where one is empty.
-     */
-    @Test(expected = IllegalArgumentException::class)
-    public fun testRegisterMultipleEmptyActionNames() {
-        registry.registerAction(TestAction(), "what", "")
-    }
-
-    /**
-     * Test unregistering an action.
-     */
     @Test
-    public fun testUnregisterAction() {
-        registry.registerAction(TestAction(), "actionName", "anotherName")
-
-        validateEntry(registry.getEntry("actionName"), "actionName", "anotherName")
-
-        registry.unregisterAction("actionName")
-        assertNull(
-            "Unregister should remove all names for the entry", registry.getEntry("actionName")
-        )
-
-        assertNull(
-            "Unregister should remove all names for the entry", registry.getEntry("anotherName")
-        )
+    public fun testRegisterMultipleEmptyActionNames() {
+        val entry = ActionRegistry.Entry(action = TestAction())
+        registry.registerEntry(names = setOf("what", ""), entry = entry)
+        assertEquals(entry, registry.getEntry("what"))
+        assertNull(registry.getEntry(""))
     }
 
-    /**
-     * Test situation overrides for an action entry
-     */
+    @Test
+    public fun testUnregister() {
+        registry.registerEntry(names = setOf("actionName", "anotherName"), entry = ActionRegistry.Entry(action = TestAction()))
+        assertNotNull(registry.getEntry("actionName"))
+        assertNotNull(registry.getEntry("anotherName"))
+
+        registry.removeEntry("actionName")
+        assertNull(registry.getEntry("actionName"))
+        assertNull(registry.getEntry("anotherName"))
+    }
+
     @Test
     public fun testEntryActionForSituation() {
-        val defaultAction: Action = TestAction()
-        val openAction: Action = TestAction()
-        val receiveAction: Action = TestAction()
+        val defaultAction = TestAction()
+        val openAction = TestAction()
+        val receiveAction = TestAction()
 
-        registry.registerAction(defaultAction, "action")
+        val entry = ActionRegistry.Entry(
+            action = defaultAction,
+            situationOverrides = mapOf(
+                Action.Situation.PUSH_OPENED to openAction,
+                Action.Situation.PUSH_RECEIVED to receiveAction
+            )
+        )
+        registry.registerEntry(names = setOf("action"), entry = entry)
 
-        val entry = registry.registerAction(defaultAction, "action")
-        entry.setSituationOverride(Action.Situation.PUSH_OPENED, openAction)
-        entry.setSituationOverride(Action.Situation.PUSH_RECEIVED, receiveAction)
-
-        assertEquals(
-            "Should return situation override action",
-            entry.getActionForSituation(Action.Situation.PUSH_OPENED),
-            openAction
-        )
-        assertEquals(
-            "Should return situation override action",
-            entry.getActionForSituation(Action.Situation.PUSH_RECEIVED),
-            receiveAction
-        )
-        assertEquals(
-            "Should return default action when no situation overrides exist",
-            entry.getActionForSituation(Action.Situation.MANUAL_INVOCATION),
-            defaultAction
-        )
+        assertEquals(openAction, entry.getActionForSituation(Action.Situation.PUSH_OPENED))
+        assertEquals(receiveAction, entry.getActionForSituation(Action.Situation.PUSH_RECEIVED))
+        assertEquals(defaultAction, entry.getActionForSituation(Action.Situation.MANUAL_INVOCATION))
     }
 
-    /**
-     * Validates an entry
-     *
-     * @param entry Entry to validate
-     * @param names Expected names
-     */
-    private fun validateEntry(entry: ActionRegistry.Entry?, vararg names: String) {
-        requireNotNull(entry)
-        val entryNames = entry.getNames()
+    @Test
+    public fun testUpdateEntry() {
+        val testAction = TestAction()
+        val entry = ActionRegistry.Entry(action = testAction)
+        registry.registerEntry(names = setOf("action"), entry = entry)
 
-        assertEquals("Entry's name count is unexpected", entryNames.size, names.size)
+        // Update predicate
+        val predicate = ActionPredicate { true }
+        registry.updateEntry("action", predicate)
+        assertEquals(predicate, registry.getEntry("action")?.predicate)
 
-        for (name in names) {
-            assertTrue("Entry does not contain: $name", entryNames.contains(name) == true)
-        }
-    }
+        // Update action
+        val anotherAction = TestAction()
+        registry.updateEntry("action", anotherAction)
+        assertEquals(anotherAction, registry.getEntry("action")?.action)
 
-    /**
-     * Validates an entry
-     *
-     * @param entry Entry to validate
-     * @param action Expected default action
-     * @param names Expected names
-     */
-    private fun validateEntry(entry: ActionRegistry.Entry?, action: Action, vararg names: String) {
-        validateEntry(entry, *names)
-        assertEquals("Default action is unexpected", entry?.getDefaultAction(), action)
+        // Update situation override
+        val situationAction = TestAction()
+        registry.updateEntry("action", situationAction, Action.Situation.AUTOMATION)
+        assertEquals(situationAction, registry.getEntry("action")?.getActionForSituation(Action.Situation.AUTOMATION))
     }
 }

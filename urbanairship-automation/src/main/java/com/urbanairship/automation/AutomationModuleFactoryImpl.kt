@@ -7,6 +7,8 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.ApplicationMetrics
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
+import com.urbanairship.actions.ActionRegistry
+import com.urbanairship.actions.ActionsManifest
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.GlobalActivityMonitor
@@ -37,6 +39,9 @@ import com.urbanairship.experiment.ExperimentManager
 import com.urbanairship.iam.InAppMessageAutomationExecutor
 import com.urbanairship.iam.InAppMessageAutomationPreparer
 import com.urbanairship.iam.InAppMessaging
+import com.urbanairship.iam.actions.CancelSchedulesAction
+import com.urbanairship.iam.actions.LandingPageAction
+import com.urbanairship.iam.actions.ScheduleAction
 import com.urbanairship.iam.adapter.DisplayAdapterFactory
 import com.urbanairship.iam.analytics.DefaultInAppDisplayImpressionRuleProvider
 import com.urbanairship.iam.analytics.InAppEventRecorder
@@ -59,6 +64,10 @@ import com.urbanairship.remotedata.RemoteData
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AutomationModuleFactoryImpl : AutomationModuleFactory {
+
+
+    override val airshipVersion: String = BuildConfig.AIRSHIP_VERSION
+    override val packageVersion: String = BuildConfig.SDK_VERSION
 
     override fun build(
         context: Context,
@@ -175,12 +184,27 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         )
 
         val component = InAppAutomationComponent(context, dataStore, automation)
-        return Module.singleComponent(component, R.xml.ua_automation_actions)
+        return Module.singleComponent(component, AutomationActionsManifest())
     }
+}
 
-    override val airshipVersion: String
-        get() = BuildConfig.AIRSHIP_VERSION
+private class AutomationActionsManifest: ActionsManifest {
 
-    override val packageVersion: String
-        get() = BuildConfig.SDK_VERSION
+    override val manifest: Map<Set<String>, () -> ActionRegistry.Entry> = mapOf(
+        CancelSchedulesAction.DEFAULT_NAMES to {
+            ActionRegistry.Entry(
+                action = CancelSchedulesAction()
+            )
+        },
+        ScheduleAction.DEFAULT_NAMES to {
+            ActionRegistry.Entry(
+                action = ScheduleAction()
+            )
+        },
+        LandingPageAction.DEFAULT_NAMES to {
+            ActionRegistry.Entry(
+                action = LandingPageAction()
+            )
+        }
+    )
 }

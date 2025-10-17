@@ -2,10 +2,11 @@
 package com.urbanairship.actions.tags
 
 import androidx.annotation.CallSuper
-import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.UALog
 import com.urbanairship.actions.ActionArguments
-import com.urbanairship.actions.ActionRegistry
+import com.urbanairship.actions.ActionPredicate
+import com.urbanairship.actions.tags.RemoveTagsAction.Companion.DEFAULT_NAMES
 import com.urbanairship.channel.TagEditor
 import com.urbanairship.channel.TagGroupsEditor
 
@@ -35,11 +36,9 @@ import com.urbanairship.channel.TagGroupsEditor
  *
  * Result value: `null`
  *
- * Default Registration Names:
- * - ^-t
- * - remove_tags_action
+ * Default Registration Names: [DEFAULT_NAMES]
  *
- * Default Registration Predicate: Rejects [com.urbanairship.actions.Action.SITUATION_PUSH_RECEIVED]
+ * Default Registration Predicate: Rejects [com.urbanairship.actions.Action.Situation.PUSH_RECEIVED]
  */
 public class RemoveTagsAction(
     private val channelTagEditor: () -> TagEditor,
@@ -82,7 +81,7 @@ public class RemoveTagsAction(
     /**
      * Default [RemoveTagsPredicate] predicate.
      */
-    public class RemoveTagsPredicate public constructor() : ActionRegistry.Predicate {
+    public class RemoveTagsPredicate public constructor() : ActionPredicate {
 
         override fun apply(arguments: ActionArguments): Boolean {
             return Situation.PUSH_RECEIVED != arguments.situation
@@ -92,13 +91,8 @@ public class RemoveTagsAction(
     public companion object {
 
         /**
-         * Default registry name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "remove_tags_action"
-
-        /**
-         * Default registry short name
-         */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^-t"
+        public val DEFAULT_NAMES: Set<String> = setOf("remove_tags_action", "^-t")
     }
 }

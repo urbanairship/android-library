@@ -3,10 +3,11 @@ package com.urbanairship.actions.tags
 
 import androidx.annotation.CallSuper
 import androidx.annotation.OpenForTesting
-import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.UALog
 import com.urbanairship.actions.ActionArguments
-import com.urbanairship.actions.ActionRegistry
+import com.urbanairship.actions.ActionPredicate
+import com.urbanairship.actions.tags.AddTagsAction.Companion.DEFAULT_NAMES
 import com.urbanairship.channel.TagEditor
 import com.urbanairship.channel.TagGroupsEditor
 
@@ -36,11 +37,9 @@ import com.urbanairship.channel.TagGroupsEditor
  *
  * Result value: `null`
  *
- * Default Registration Names:
- * - ^+t
- * - add_tags_action
+ * Default Registration Name: [DEFAULT_NAMES]
  *
- * Default Registration Predicate: Rejects [com.urbanairship.actions.Action.SITUATION_PUSH_RECEIVED]
+ * Default Registration Predicate: Rejects [com.urbanairship.actions.Action.Situation.PUSH_RECEIVED]
  */
 @OpenForTesting
 public class AddTagsAction internal constructor(
@@ -84,7 +83,7 @@ public class AddTagsAction internal constructor(
     /**
      * Default [AddTagsAction] predicate.
      */
-    public class AddTagsPredicate public constructor() : ActionRegistry.Predicate {
+    public class AddTagsPredicate public constructor() : ActionPredicate {
 
         override fun apply(arguments: ActionArguments): Boolean {
             return Situation.PUSH_RECEIVED != arguments.situation
@@ -94,13 +93,8 @@ public class AddTagsAction internal constructor(
     public companion object {
 
         /**
-         * Default registry name
+         * Default action names.
          */
-        public const val DEFAULT_REGISTRY_NAME: String = "add_tags_action"
-
-        /**
-         * Default registry short name
-         */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^+t"
+        public val DEFAULT_NAMES: Set<String> = setOf("add_tags_action", "^+t")
     }
 }

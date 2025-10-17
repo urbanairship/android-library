@@ -40,8 +40,7 @@ import com.urbanairship.json.requireField
  * Result value: The payload used.
  *
  *
- * Default Registration Names: [DEFAULT_REGISTRY_SHORT_NAME], [ALT_DEFAULT_REGISTRY_SHORT_NAME],
- * [DEFAULT_REGISTRY_NAME], [ALT_DEFAULT_REGISTRY_NAME]
+ * Default Registration Names: [DEFAULT_NAMES]
  *
  *
  * Default Registration Predicate: none
@@ -125,6 +124,11 @@ public class SubscriptionListAction @VisibleForTesting internal constructor(
 
     public companion object {
 
+        /**
+         * Default action names.
+         */
+        public val DEFAULT_NAMES: Set<String> = setOf("subscription_list_action", "edit_subscription_list_action", "^sla", "^sl")
+
         // Arg keys
         private const val TYPE_KEY = "type"
         private const val LIST_KEY = "list"
@@ -134,25 +138,5 @@ public class SubscriptionListAction @VisibleForTesting internal constructor(
         private const val UNSUBSCRIBE_KEY = "unsubscribe"
         private const val CHANNEL_KEY = "channel"
         private const val CONTACT_KEY = "contact"
-
-        /**
-         * Default registry name
-         */
-        public const val DEFAULT_REGISTRY_NAME: String = "subscription_list_action"
-
-        /**
-         * Default registry short name
-         */
-        public const val DEFAULT_REGISTRY_SHORT_NAME: String = "^sla"
-
-        /**
-         * Default registry short name
-         */
-        public const val ALT_DEFAULT_REGISTRY_SHORT_NAME: String = "^sl"
-
-        /**
-         * Default registry short name
-         */
-        public const val ALT_DEFAULT_REGISTRY_NAME: String = "edit_subscription_list_action"
     }
 }

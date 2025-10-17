@@ -25,6 +25,7 @@ The Airship SDK 20.0 introduces major architectural changes including the renami
   - [NotificationIdGenerator API Changes](#notificationidgenerator-api-changes)
   - [Minor Push Notification Changes](#minor-push-notification-changes)
   - [Permissions Manager API Changes](#permissions-manager-api-changes)
+  - [Action Framework Changes](#action-framework-changes)
 - [Deprecated APIs](#deprecated-apis)
   - [UAirship Deprecated](#uairship-deprecated)
   - [Autopilot Signature Change](#autopilot-signature-change)
@@ -192,6 +193,51 @@ permissionsManager.requestPermissionPendingResult(permission)
     });
 ```
 
+### Action Framework Changes
+The `ActionRegistry` and its related classes have been refactored for better clarity and lazy initialization of actions.
+
+- **Action Name Constants**: The public constants `DEFAULT_REGISTRY_NAME` and `DEFAULT_REGISTRY_SHORT_NAME` on action classes have been removed and replaced with a single `public static final Set<String> DEFAULT_NAMES`. If you were referencing the old constants, you will need to update your code to check for the presence of a name within the new `DEFAULT_NAMES` set.
+
+- **`ActionRegistry.Predicate` Renamed**: The nested predicate interface `ActionRegistry.Predicate` has been moved and renamed to a top-level interface, `ActionPredicate`. All custom predicates must be updated to implement `ActionPredicate`.
+
+- **Action Registration**: The `registerAction` methods on `ActionRegistry` have been removed and replaced with a new `registerEntry` method that accepts an `ActionRegistry.Entry`.
+
+- **`ActionEntry` Modification**: The `ActionEntry` class is now modified through `ActionRegistry.updateEntry` instead of direct setters on the entry itself. The `setDefaultAction`, `setSituationOverride`, and `setPredicate` methods on `ActionEntry` have been removed.
+
+**Example (Java):**
+```java
+// SDK 19.x
+ActionRegistry registry = UAirship.shared().getActionRegistry();
+Action myAction = new MyAction();
+registry.registerAction(myAction, "my_action");
+ActionRegistry.Entry entry = registry.getEntry("my_action");
+entry.setPredicate(new MyPredicate());
+
+
+// SDK 20.x
+ActionRegistry registry = Airship.getActionRegistry();
+Action myAction = new MyAction();
+ActionRegistry.Entry entry = new ActionRegistry.Entry(myAction);
+registry.registerEntry("my_action", entry);
+registry.updateEntry("my_action", new MyPredicate());
+```
+
+###### Kotlin
+```kotlin
+// SDK 19.x
+val registry = UAirship.shared().actionRegistry
+val myAction = MyAction()
+registry.registerAction(myAction, "my_action")
+val entry = registry.getEntry("my_action")
+entry.predicate = MyPredicate()
+
+// SDK 20.x
+val registry = Airship.actionRegistry
+val myAction = MyAction()
+val entry = ActionRegistry.Entry(myAction)
+registry.registerEntry("my_action", entry)
+registry.updateEntry("my_action", MyPredicate())
+```
 
 ## Deprecated APIs
 
