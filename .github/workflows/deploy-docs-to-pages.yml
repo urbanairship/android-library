@@ -34,16 +34,20 @@ jobs:
     steps:
       - name: Extract version
         id: extract_version
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
-          VERSION=${{ inputs.version }}
+          set -euo pipefail
           MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
           echo "VERSION_DIR=v$MAJOR_VERSION" >> $GITHUB_ENV
 
       - name: Download packaged docs artifacts
         id: download_docs
+        env:
+          VERSION: ${{ inputs.version }}
         uses: actions/download-artifact@v4
         with:
-          name: packaged-docs-${{ inputs.version }}
+          name: packaged-docs-$VERSION
           path: build/docs
 
       - name: Extract documentation for GitHub Pages
@@ -51,9 +55,13 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           # Verify the artifact was downloaded
-          if [ ! -f "build/docs/$VERSION-kdoc.tar.gz" ]; then
+          set -euo pipefail
+
+          DOC_PATH="build/docs/${VERSION}-kdoc.tar.gz"
+
+          if [ ! -f "$DOC_PATH" ]; then
             echo "Error: Documentation artifact not found!"
-            echo "Expected: build/docs/$VERSION-kdoc.tar.gz"
+            echo "Expected: $DOC_PATH"
             echo "Available files:"
             find build/docs -type f 2>/dev/null || echo "No build/docs directory found"
             exit 1
@@ -63,7 +71,7 @@ jobs:
           mkdir -p ./pages-docs
           
           # Extract the tar.gz file
-          tar -xzf build/docs/$VERSION-kdoc.tar.gz -C ./pages-docs
+          tar -xzf "$DOC_PATH" -C ./pages-docs
           
           # Verify extraction was successful
           if [ -z "$(ls -A ./pages-docs)" ]; then
@@ -77,10 +85,12 @@ jobs:
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
+        env:
+          VERSION: ${{ inputs.version }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./pages-docs
-          destination_dir: ${{ inputs.version }}
+          destination_dir: $VERSION
           keep_files: true
           enable_jekyll: false
