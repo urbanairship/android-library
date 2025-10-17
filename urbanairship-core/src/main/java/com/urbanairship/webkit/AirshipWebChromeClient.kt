@@ -25,7 +25,7 @@ import java.lang.ref.WeakReference
 /**
  * Web Chrome Client that enables full screen video.
  */
-public class AirshipWebChromeClient public constructor(activity: Activity?) : WebChromeClient() {
+public open class AirshipWebChromeClient public constructor(activity: Activity?) : WebChromeClient() {
 
     private val weakActivity = WeakReference(activity)
     private var customView: View? = null

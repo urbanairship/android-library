@@ -3,14 +3,9 @@
 package com.urbanairship.inputvalidation
 
 import com.urbanairship.UALog
-import com.urbanairship.channel.SmsValidationHandler
 import com.urbanairship.config.AirshipRuntimeConfig
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.yield
 
 /**
@@ -29,15 +24,6 @@ internal class DefaultInputValidator(
         ),
         overrides = config.configOptions.validationOverride
     )
-
-    private val _smsDelegate = MutableStateFlow<SmsValidationHandler?>(null)
-
-    override val legacySmsDelegate: StateFlow<SmsValidationHandler?>
-        get() = _smsDelegate.asStateFlow()
-
-    override fun setLegacySmsDelegate(delegate: SmsValidationHandler?) {
-        _smsDelegate.update { delegate }
-    }
 
     /**
      *
@@ -114,17 +100,6 @@ internal class DefaultInputValidator(
 
         val response = when(val option = sms.validationOptions) {
             is AirshipInputValidation.Request.Sms.ValidationOptions.Sender -> {
-                _smsDelegate.value?.let {
-                    // Legacy delegate validation
-                    UALog.v { "Using deprecated SmsValidatorDelegate for $request" }
-                    return legacySmsValidation(
-                        address = sms.rawInput,
-                        senderId = option.senderId,
-                        prefix = option.prefix,
-                        delegate = it
-                    )
-                }
-
                 apiClient.validateSmsWithSender(
                     msisdn = sms.rawInput,
                     sender = option.senderId
@@ -152,39 +127,6 @@ internal class DefaultInputValidator(
         return when(result) {
             SmsValidatorApiClient.Result.Invalid -> AirshipInputValidation.Result.Invalid
             is SmsValidatorApiClient.Result.Valid -> AirshipInputValidation.Result.Valid(result.address)
-        }
-    }
-
-    /**
-     * Performs legacy SMS validation using a deprecated delegate.
-     *
-     * @param address The phone number to be validated.
-     * @param senderId The sender ID for validation.
-     * @param prefix An optional prefix for the validation.
-     * @param delegate The legacy delegate that will handle the SMS validation.
-     *
-     * @return The result of the validation, either valid or invalid.
-     */
-    private suspend fun legacySmsValidation(
-        address: String,
-        senderId: String,
-        prefix: String?,
-        delegate: SmsValidationHandler
-    ): AirshipInputValidation.Result {
-        val trimmed = address.trimSpaceAndNewLine()
-        var cleanedNumber = trimmed.replace("[^0-9]".toRegex(), "")
-
-        if (prefix != null) {
-            val countryCode = prefix.replace("[^0-9]".toRegex(), "")
-            if (!cleanedNumber.startsWith(countryCode)) {
-                cleanedNumber = countryCode + cleanedNumber
-            }
-        }
-
-        return if (delegate.validateSms(cleanedNumber, senderId)) {
-            AirshipInputValidation.Result.Valid(cleanedNumber)
-        } else {
-            AirshipInputValidation.Result.Invalid
         }
     }
 

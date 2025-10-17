@@ -1,16 +1,22 @@
 
+
 # Airship Android SDK Migration Guides
-* [SDK 18.x to 19.x](migration-guide-18-19.md)
-* [SDK 17.x to 18.x](migration-guide-17-18.md)
-* [SDK 16.x to 17.x](migration-guide-16-17.md)
-* [SDK 15.x to 16.x](migration-guide-15-16.md)
-* [SDK 14.x to 15.x](migration-guide-14-15.md)
-* [SDK 14.x to 14.5](migration-guide-14.5.md)
-* [SDK 13.x to 14.x](migration-guide-13-14.md)
-* [SDK 12.x to 13.x](migration-guide-12-13.md)
-* [SDK 11.x to 12.x](migration-guide-11-12.md)
-* [SDK 10.x to 11.x](migration-guide-10-11.md)
-* [SDK 9.x to 10.x](migration-guide-9-10.md)
-* [SDK 8.x to 9.x](migration-guide-8-9.md)
-* [Older versions](migration-guide-legacy.md)
-* [FCM Migration Guide](migration-guide-fcm.md)
+
+Comprehensive migration guides with code examples, troubleshooting, and clear migration paths.
+
+## Migration Guides
+
+- **[SDK 19.x → 20.0](migration-guide-19-20.md)**
+- **[SDK 18.x → 19.x](migration-guide-18-19.md)**
+- **[SDK 17.x → 18.x](migration-guide-17-18.md)**
+- **[SDK 16.x → 17.x](migration-guide-16-17.md)**
+
+## Older Migration Guides
+
+Migration guides for older SDK versions available in the [16.0.0 release](https://github.com/urbanairship/android-library/tree/16.0.0/Documentation/Migration).
+
+## Support
+
+- [Full Documentation](https://docs.airship.com/)
+- [Report Issues](https://github.com/urbanairship/android-library/issues)
+

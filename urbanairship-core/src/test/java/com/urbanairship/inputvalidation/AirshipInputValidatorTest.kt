@@ -4,7 +4,6 @@ package com.urbanairship.inputvalidation
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PendingResult
-import com.urbanairship.channel.SmsValidationHandler
 import com.urbanairship.http.RequestResult
 import java.util.UUID
 import io.mockk.coEvery
@@ -383,130 +382,6 @@ public class AirshipInputValidatorTest {
         )
 
         coVerify(exactly = 1) { mockApiClient.validateSmsWithSender(any(), any()) }
-    }
-
-    @Test
-    public fun testSMSLegacyDelegate(): TestResult = runTest {
-        val mockLegacyDelegate: SmsValidationHandler = mockk()
-        defaultValidator.setLegacySmsDelegate(mockLegacyDelegate)
-
-        coEvery { mockLegacyDelegate.validateSms(any(), any()) } answers {
-            assertEquals("15558675309", firstArg())
-            assertEquals("some sender", secondArg())
-
-            true
-        }
-
-        listOf(
-            "1 555 867 5309",
-            "1.555.867.5309",
-            "1-555-867-5309",
-            "5 5 5 8 6  7 5309"
-        )
-            .map { number ->
-                AirshipInputValidation.Request.ValidateSms(
-                    sms = AirshipInputValidation.Request.Sms(
-                        rawInput = number,
-                        validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(
-                            senderId = "some sender",
-                            prefix = "+1"
-                        )
-                    )
-                )
-            }
-            .map { defaultValidator.validate(it) }
-            .forEach { result ->
-                assertEquals(AirshipInputValidation.Result.Valid("15558675309"), result)
-            }
-
-        coVerify(exactly = 4) { mockLegacyDelegate.validateSms(any(), any()) }
-    }
-
-    @Test
-    public fun testLegacySMSDelegateInvalidates(): TestResult = runTest {
-        val request = AirshipInputValidation.Request.ValidateSms(
-            sms = AirshipInputValidation.Request.Sms(
-                rawInput = "123456",
-                validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(
-                    senderId = "some sender",
-                    prefix = "+1"
-                )
-            )
-        )
-
-        val legacyDelegate: SmsValidationHandler = mockk()
-        defaultValidator.setLegacySmsDelegate(legacyDelegate)
-
-        coEvery { legacyDelegate.validateSms(any(), any()) } answers {
-            assertEquals("123456", firstArg())
-            assertEquals("some sender", secondArg())
-
-            false
-        }
-
-        assertEquals(AirshipInputValidation.Result.Invalid, defaultValidator.validate(request))
-        coVerify(exactly = 1) { legacyDelegate.validateSms(any(), any()) }
-    }
-
-    @Test
-    public fun testLegacySMSDelegateNoPrefix(): TestResult = runTest {
-        val request = AirshipInputValidation.Request.ValidateSms(
-            sms = AirshipInputValidation.Request.Sms(
-                rawInput = "123456",
-                validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Sender(
-                    senderId = "some sender"
-                )
-            )
-        )
-
-        val legacyDelegate: SmsValidationHandler = mockk()
-        defaultValidator.setLegacySmsDelegate(legacyDelegate)
-
-        coEvery { legacyDelegate.validateSms(any(), any()) } answers {
-            assertEquals("123456", firstArg())
-            assertEquals("some sender", secondArg())
-
-            false
-        }
-
-        assertEquals(AirshipInputValidation.Result.Invalid, defaultValidator.validate(request))
-        coVerify(exactly = 1) { legacyDelegate.validateSms(any(), any()) }
-    }
-
-    @Test
-    public fun testLegacySMSDelegatePrefix(): TestResult = runTest {
-        val request = AirshipInputValidation.Request.ValidateSms(
-            sms = AirshipInputValidation.Request.Sms(
-                rawInput = "123456",
-                validationOptions = AirshipInputValidation.Request.Sms.ValidationOptions.Prefix(
-                    prefix = "+1"
-                )
-            )
-        )
-
-        val legacyDelegate: SmsValidationHandler = mockk()
-        defaultValidator.setLegacySmsDelegate(legacyDelegate)
-
-        coEvery { legacyDelegate.validateSms(any(), any()) } returns false
-
-        coEvery { mockApiClient.validateSmsWithPrefix(any(), any()) } answers {
-            assertEquals("123456", firstArg())
-            assertEquals("+1", secondArg())
-
-            RequestResult(
-                status = 200,
-                value = SmsValidatorApiClient.Result.Valid("api result"),
-                headers = emptyMap(),
-                body = null
-            )
-        }
-
-        assertEquals(
-            AirshipInputValidation.Result.Valid("api result"),
-            defaultValidator.validate(request)
-        )
-
-        coVerify(exactly = 0) { legacyDelegate.validateSms(any(), any()) }
     }
 
     private val defaultSmsRequest: AirshipInputValidation.Request = AirshipInputValidation.Request.ValidateSms(

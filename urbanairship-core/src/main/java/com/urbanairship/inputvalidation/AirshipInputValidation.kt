@@ -4,7 +4,6 @@ package com.urbanairship.inputvalidation
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.PendingResult
-import com.urbanairship.channel.SmsValidationHandler
 import kotlinx.coroutines.flow.StateFlow
 
 /** A closure type used for overriding validation logic. */
@@ -135,9 +134,6 @@ public class AirshipInputValidation private constructor(){
      * */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public interface Validator {
-
-        public val legacySmsDelegate: StateFlow<SmsValidationHandler?>
-        public fun setLegacySmsDelegate(delegate: SmsValidationHandler?)
 
         /**
          * Validates the provided request and returns a result.

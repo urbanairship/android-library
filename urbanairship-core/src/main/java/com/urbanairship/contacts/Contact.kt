@@ -12,7 +12,6 @@ import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.Airship
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
@@ -23,7 +22,6 @@ import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.channel.AttributeEditor
 import com.urbanairship.channel.AttributeMutation
-import com.urbanairship.channel.SmsValidationHandler
 import com.urbanairship.channel.TagGroupsEditor
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -471,15 +469,6 @@ public class Contact internal constructor(
     }
 
     /**
-     * Sets the SMS validation handler, to allow overriding of the default Airship validation.
-     *
-     * @param handler An implementation of [SmsValidationHandler], or `null` to remove the existing handler.
-     */
-    public fun setSmsValidationHandler(handler: SmsValidationHandler?) {
-        smsValidator.setLegacySmsDelegate(handler)
-    }
-
-    /**
      * Edit the attributes associated with this Contact.
      *
      * @return An [AttributeEditor].
@@ -629,11 +618,6 @@ public class Contact internal constructor(
         private val CONTACT_UPDATE_PUSH_KEY = "com.urbanairship.contact.update"
 
     }
-
-    private data class Subscriptions(
-        val contactId: String,
-        val subscriptions: Map<String, Set<Scope>>
-    )
 }
 
 internal  val PrivacyManager.isContactsEnabled get() = this.isEnabled(PrivacyManager.Feature.CONTACTS)

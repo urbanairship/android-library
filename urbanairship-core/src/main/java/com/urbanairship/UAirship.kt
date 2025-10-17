@@ -13,6 +13,7 @@ import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.push.PushManager
 import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
+import com.urbanairship.ChannelCapture;
 
 /**
  * UAirship has been renamed to [Airship]. This class is a temporary compatibility layer and will be
@@ -99,6 +100,13 @@ public class UAirship {
      */
     @Deprecated("Use Airship.permissionsManager instead.", replaceWith = ReplaceWith("Airship.permissionsManager"))
     public val permissionsManager: PermissionsManager get() = Airship.permissionsManager
+
+    /**
+     * @see Airship.channelCapture
+     * @deprecated Use [Airship.channelCapture] instead.
+     */
+    @Deprecated("Use Airship.channelCapture instead.", replaceWith = ReplaceWith("Airship.channelCapture"))
+    public val channelCapture: ChannelCapture get() = Airship.channelCapture
 
     /**
      * @see Airship.platform

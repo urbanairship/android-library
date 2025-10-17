@@ -14,7 +14,9 @@ import javax.crypto.spec.SecretKeySpec
 
 /**
  * A class containing utility methods related to strings.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public object UAStringUtil {
 
     /**

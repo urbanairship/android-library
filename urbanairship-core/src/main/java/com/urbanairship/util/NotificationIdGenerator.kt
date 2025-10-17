@@ -35,6 +35,7 @@ public object NotificationIdGenerator {
      *
      * @param value The integer value
      */
+    @JvmStatic
     public fun setStart(context: Context, value: Int) {
         lock.withLock {
             preferences(context).edit {
@@ -49,6 +50,7 @@ public object NotificationIdGenerator {
      *
      * @param newRange The number of notifications to display
      */
+    @JvmStatic
     public fun setRange(context: Context, @IntRange(from = 0, to = MAX_RANGE.toLong()) newRange: Int) {
         lock.withLock {
             var newRange = newRange
@@ -73,6 +75,7 @@ public object NotificationIdGenerator {
      *
      * @return The int start.
      */
+    @JvmStatic
     public fun getStart(): Int {
         lock.withLock {
             return start
@@ -84,6 +87,7 @@ public object NotificationIdGenerator {
      *
      * @return The int range.
      */
+    @JvmStatic
     public fun getRange(): Int {
         lock.withLock {
             return range

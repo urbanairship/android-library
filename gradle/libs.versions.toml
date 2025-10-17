@@ -87,7 +87,7 @@ turbine = '0.10.0'
 mockk = '1.14.2'
 
 # Doc Dependencies
-dokka = '2.0.0'
+dokka = '2.1.0'
 
 # Navigation 3
 nav3Core = "1.0.0-alpha10"

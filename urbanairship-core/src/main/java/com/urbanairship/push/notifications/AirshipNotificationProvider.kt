@@ -209,7 +209,7 @@ public open class AirshipNotificationProvider internal constructor(
      * @param message The push message.
      * @return The notification Id.
      */
-    protected fun getNextId(context: Context, message: PushMessage): Int {
+    protected open fun getNextId(context: Context, message: PushMessage): Int {
         if (message.notificationTag != null) {
             return TAG_NOTIFICATION_ID
         }
@@ -224,7 +224,7 @@ public open class AirshipNotificationProvider internal constructor(
      * @param message The push message.
      * @return The notification title.
      */
-    protected fun getTitle(context: Context, message: PushMessage): String? {
+    protected open fun getTitle(context: Context, message: PushMessage): String? {
         if (message.title != null) {
             return message.title
         }

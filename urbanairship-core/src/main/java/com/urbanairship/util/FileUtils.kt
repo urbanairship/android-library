@@ -12,10 +12,13 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLConnection
+import androidx.annotation.RestrictTo
 
 /**
  * File utility methods.
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public object FileUtils {
 
     private const val NETWORK_TIMEOUT_MS = 2000
