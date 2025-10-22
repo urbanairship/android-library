@@ -50,9 +50,11 @@ dependencies {
     implementation("com.urbanairship.android:urbanairship-preference-center:$airshipVersion")  // View-based UI
     implementation("com.urbanairship.android:urbanairship-preference-center-compose:$airshipVersion") // Compose UI
     
-    // --- Other Features ---
-    implementation("com.urbanairship.android:urbanairship-feature-flag:$airshipVersion")       // Feature Flags
-    implementation("com.urbanairship.android:urbanairship-live-update:$airshipVersion")        // Live Updates
+    // --- Feature Flags ---
+    implementation("com.urbanairship.android:urbanairship-feature-flag:$airshipVersion")
+
+    // --- Live Updates ---
+    implementation("com.urbanairship.android:urbanairship-live-update:$airshipVersion")
 
     // --- Debug ---
     // Optional - For development builds only

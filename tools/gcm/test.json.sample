@@ -1,7 +1,0 @@
-
-{ 
-  "api-key" : "YOUR_API_KEY",
-  "recipient" :  "YOUR_RECIPIENT_REGISTRATION_ID",
-  "alert" : "YOUR_ALERT_MESSAGE",
-  "extras" : {"foo" : "bar"}
-}

@@ -8,7 +8,7 @@ plugins {
 description = "Airship Android Debug Tools"
 
 airshipModule {
-    published = false
+    published = true
 }
 
 android {
