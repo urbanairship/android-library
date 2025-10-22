@@ -1,12 +1,12 @@
 [versions]
 
 # Gradle plugins
-androidGradlePlugin = '8.11.1'
-googleServicesPlugin = '4.4.3'
-spotlessPlugin = '7.1.0'
+androidGradlePlugin = '8.12.3'
+googleServicesPlugin = '4.4.4'
+spotlessPlugin = '8.0.0'
 nexusPublishPlugin = '1.1.0'
-gradle-versions =  '0.52.0'
-kspPlugin = '2.2.0-2.0.2'
+gradle-versions =  '0.53.0'
+kspPlugin = '2.2.20-2.0.3'
 binary-compatibility-validator = '0.18.1'
 
 # Spotless plugins
@@ -15,61 +15,60 @@ ktlint = '1.1.1'
 # Dependencies
 
 # Kotlin
-kotlin = '2.2.0'
+kotlin = '2.2.20'
 kotlinx-coroutines = '1.10.2'
 kotlinx-serialization = '1.9.0'
 
 # Compose
-compose-bom = '2025.06.01'
+compose-bom = '2025.10.00'
 adaptiveNavigation = "1.1.0"
 
 # Androidx
-androidx-activity = '1.10.1'
+androidx-activity = '1.11.0'
 androidx-annotation = '1.9.1'
 androidx-appcompat = '1.7.1'
-androidx-concurrentfutures = '1.2.0'
+androidx-concurrentfutures = '1.3.0'
 androidx-constraintlayout-xml = '2.2.1'
 androidx-constraintlayout-compose = '1.1.1'
-androidx-core = '1.16.0'
+androidx-core = '1.17.0'
 androidx-customview = '1.2.0'
-androidx-fragment = '1.8.8'
-androidx-lifecycle = '2.9.1'
-androidx-navigation = '2.9.1'
+androidx-fragment = '1.8.9'
+androidx-lifecycle = '2.9.4'
+androidx-navigation = '2.9.5'
 androidx-slidingpanelayout = '1.2.0'
 
 androidx-glance = '1.1.1' # Only used in Sample app
 
-androidx-activity-compose = '1.10.1'
+androidx-activity-compose = '1.11.0'
 
 androidx-preference = '1.2.1'
 androidx-recyclerview = "1.4.0"
-androidx-room = '2.7.2'
+androidx-room = '2.8.2'
 androidx-startup = '1.2.0'
 androidx-swiperefreshlayout = '1.1.0'
-androidx-test-core = '1.6.1'
-androidx-test-espresso = '3.6.1'
-androidx-test-junit = '1.2.1'
-androidx-test-rules = '1.6.1'
-androidx-test-runner = '1.6.2'
-androidx-test-truth = '1.6.0'
+androidx-test-core = '1.7.0'
+androidx-test-espresso = '3.7.0'
+androidx-test-junit = '1.3.0'
+androidx-test-rules = '1.7.0'
+androidx-test-runner = '1.7.0'
+androidx-test-truth = '1.7.0'
 androidx-vectordrawable = '1.2.0'
 androidx-webkit = '1.14.0'
-androidx-work = '2.10.2'
+androidx-work = '2.10.5'
 
 # Material
-google-material = '1.12.0'
+google-material = '1.13.0'
 
 # Google Play Services
 playservices-adsidentifier = '18.2.0'
-playservices-base = '18.7.2'
+playservices-base = '18.9.0'
 playservices-location = '21.3.0'
 
 # Firebase
-firebase-messaging = '24.1.2'
+firebase-messaging = '25.0.1'
 
 # Glide (image loader)
 glide = '5.0.5'
-glide-compose = '1.0.0-beta08'
 landscapist-glide = '2.6.1'
 
 # LeakCanary (for dev/debug builds)
@@ -79,13 +78,14 @@ leakcanary = '2.14'
 snameYaml = '2.5'
 
 # Test
-google-truth = '1.1.3'
+google-truth = '1.4.5'
 junit = '4.13.2'
-mockito = '4.6.1'
-mockito-kotlin = '4.0.0'
-robolectric = '4.15-beta-1'
-turbine = '0.10.0'
-mockk = '1.14.2'
+mockito = '5.20.0'
+mockito-inline = '5.2.0'
+mockito-kotlin = '6.1.0'
+robolectric = '4.16'
+turbine = '1.2.1'
+mockk = '1.14.6'
 
 # Doc Dependencies
 dokka = '2.1.0'
@@ -217,7 +217,6 @@ playservices-adsidentifier = { module = "com.google.android.gms:play-services-ad
 firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebase-messaging"}
 
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
-glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glide-compose" }
 landscapist-glide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist-glide" }
 
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snameYaml" }
@@ -232,7 +231,7 @@ google-truth = { module = "com.google.truth:truth", version.ref = "google-truth"
 robolectric-core = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 robolectric-annotations = { module = "org.robolectric:annotations", version.ref = "robolectric"}
 
-mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito" }
+mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockito-inline" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
 mockito-android = { module = "org.mockito:mockito-android", version.ref = "mockito" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockito-kotlin" }
