@@ -1,7 +1,7 @@
 [versions]
 
 # Gradle plugins
-androidGradlePlugin = '8.12.3'
+androidGradlePlugin = '8.13.0'
 googleServicesPlugin = '4.4.4'
 spotlessPlugin = '8.0.0'
 nexusPublishPlugin = '1.1.0'
@@ -20,8 +20,8 @@ kotlinx-coroutines = '1.10.2'
 kotlinx-serialization = '1.9.0'
 
 # Compose
-compose-bom = '2025.10.00'
-adaptiveNavigation = "1.1.0"
+compose-bom = '2025.10.01'
+adaptiveNavigation = "1.2.0"
 
 # Androidx
 androidx-activity = '1.11.0'
@@ -43,7 +43,7 @@ androidx-activity-compose = '1.11.0'
 
 androidx-preference = '1.2.1'
 androidx-recyclerview = "1.4.0"
-androidx-room = '2.8.2'
+androidx-room = '2.8.3'
 androidx-startup = '1.2.0'
 androidx-swiperefreshlayout = '1.1.0'
 androidx-test-core = '1.7.0'
@@ -54,7 +54,7 @@ androidx-test-runner = '1.7.0'
 androidx-test-truth = '1.7.0'
 androidx-vectordrawable = '1.2.0'
 androidx-webkit = '1.14.0'
-androidx-work = '2.10.5'
+androidx-work = '2.11.0'
 
 # Material
 google-material = '1.13.0'
