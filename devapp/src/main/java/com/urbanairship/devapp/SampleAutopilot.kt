@@ -7,20 +7,19 @@ import android.content.Intent
 import androidx.core.app.NotificationChannelCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_HIGH
+import androidx.core.content.edit
 import androidx.core.net.toUri
+import com.urbanairship.Airship
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.Autopilot
-import com.urbanairship.Airship
-import com.urbanairship.liveupdate.LiveUpdateManager
-import com.urbanairship.messagecenter.MessageCenter
-import com.urbanairship.devapp.glance.SampleAppWidgetLiveUpdate
-import androidx.core.content.edit
 import com.urbanairship.android.layout.AirshipCustomViewManager
+import com.urbanairship.devapp.glance.SampleAppWidgetLiveUpdate
 import com.urbanairship.devapp.thomas.customviews.CustomAdView
 import com.urbanairship.devapp.thomas.customviews.CustomMapView
 import com.urbanairship.devapp.thomas.customviews.CustomWeatherView
 import com.urbanairship.devapp.thomas.customviews.CustomWeatherViewXml
 import com.urbanairship.devapp.thomas.customviews.SceneControllerCustomView
+import com.urbanairship.liveupdate.LiveUpdateManager
 import com.urbanairship.messagecenter.messageCenter
 
 /**
@@ -39,6 +38,8 @@ class SampleAutopilot : Autopilot() {
             // Enable user notifications on first run
             Airship.push.userNotificationsEnabled = true
         }
+
+
 
         // Create notification channel for Live Updates.
         val sportsChannel = NotificationChannelCompat.Builder("sports", IMPORTANCE_HIGH)

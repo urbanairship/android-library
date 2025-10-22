@@ -53,6 +53,8 @@ dependencies {
     // Support libraries
     implementation(libs.androidx.appcompat)
     implementation(libs.google.material)
+    implementation(libs.compose.materialicons.extended)
+
 
     //Compose
     implementation platform(libs.compose.bom)

@@ -68,8 +68,9 @@ playservices-location = '21.3.0'
 firebase-messaging = '24.1.2'
 
 # Glide (image loader)
-glide = '4.16.0'
-landscapist-glide = '2.5.2'
+glide = '5.0.5'
+glide-compose = '1.0.0-beta08'
+landscapist-glide = '2.6.1'
 
 # LeakCanary (for dev/debug builds)
 leakcanary = '2.14'
@@ -90,7 +91,7 @@ mockk = '1.14.2'
 dokka = '2.1.0'
 
 # Navigation 3
-nav3Core = "1.0.0-alpha10"
+nav3Core = "1.0.0-alpha11"
 lifecycleViewmodelNav3 = "1.0.0-alpha04"
 uiViewbinding = "1.9.1"
 fragmentCompose = "1.8.9"
@@ -216,6 +217,7 @@ playservices-adsidentifier = { module = "com.google.android.gms:play-services-ad
 firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebase-messaging"}
 
 glide = { module = "com.github.bumptech.glide:glide", version.ref = "glide" }
+glide-compose = { module = "com.github.bumptech.glide:compose", version.ref = "glide-compose" }
 landscapist-glide = { module = "com.github.skydoves:landscapist-glide", version.ref = "landscapist-glide" }
 
 snakeyaml = { module = "org.yaml:snakeyaml", version.ref = "snameYaml" }

@@ -71,6 +71,7 @@ internal class DefaultHomeViewModel() : HomeViewModel, ViewModel() {
 
         when(newValue) {
             true -> {
+                Airship.push.userNotificationsEnabled = true
                 Airship.privacyManager.enable(PrivacyManager.Feature.PUSH)
                 Airship.push.enableUserNotifications(PermissionPromptFallback.SystemSettings) {}
             }

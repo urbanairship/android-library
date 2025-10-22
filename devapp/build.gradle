@@ -82,6 +82,7 @@ dependencies {
     androidTestImplementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation libs.compose.materialicons.extended
 
     // Jetpack Glance
     implementation(libs.glance.appwidget)
@@ -149,7 +150,7 @@ dependencies {
 }
 
 
-def googleServicesFile = rootProject.file('sample/google-services.json')
+def googleServicesFile = rootProject.file('devapp/google-services.json')
 if (googleServicesFile.exists()) {
     apply plugin: 'com.google.gms.google-services'  // Google Play services Gradle plugin
 }

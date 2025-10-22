@@ -278,7 +278,7 @@ public final class LayoutUtils {
     private static RippleDrawable generateRippleDrawable(@NonNull Context context, float[] radii) {
         ShapeDrawable mask = new ShapeDrawable(new RoundRectShape(radii, null, null));
         ColorStateList colors = MaterialColors.getColorStateList(context,
-                com.google.android.material.R.attr.colorControlHighlight,
+                androidx.appcompat.R.attr.colorControlHighlight,
                 ColorStateList.valueOf(Color.TRANSPARENT)
         );
 

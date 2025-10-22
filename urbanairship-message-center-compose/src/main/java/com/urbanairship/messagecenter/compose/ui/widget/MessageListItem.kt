@@ -21,7 +21,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.customActions
@@ -32,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.compose.theme.CheckboxColors
-import com.urbanairship.messagecenter.compose.theme.MessageCenterDimens
 import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.MessageCenterListViewModel.Action
 import java.text.DateFormat
@@ -111,8 +109,8 @@ internal fun MessageListItem(
                                 .clip(RoundedCornerShape(8.dp)),
                             imageModel = { message.listIconUrl },
                             loading = { options.messageListPlaceholderIcon() },
-                            failure = { options.messageListPlaceholderIcon() })
-
+                            failure = { options.messageListPlaceholderIcon() }
+                        )
                     }
 
                     options.messageListUnreadIndicator(message.isRead)
