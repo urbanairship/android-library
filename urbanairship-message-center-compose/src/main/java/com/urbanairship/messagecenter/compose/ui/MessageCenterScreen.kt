@@ -25,6 +25,9 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.urbanairship.messagecenter.Message
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action as MessageAction
 
@@ -43,6 +46,16 @@ public fun MessageCenterScreen(
 
     val isTwoPane = paneState.primary == PaneAdaptedValue.Expanded &&
                         paneState.secondary == PaneAdaptedValue.Expanded
+
+    if (!isTwoPane && state.messageState.messageId != null) {
+        LaunchedEffect(state.messageState.messageId) {
+            delay(300.milliseconds) // wait for display animation
+            scaffoldNavigator.navigateTo(
+                ListDetailPaneScaffoldRole.Detail,
+                contentKey = state.messageState.messageId
+            )
+        }
+    }
 
     NavigableListDetailPaneScaffold(
         modifier = modifier,

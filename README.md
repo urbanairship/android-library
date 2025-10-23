@@ -50,9 +50,11 @@ dependencies {
     implementation("com.urbanairship.android:urbanairship-preference-center:$airshipVersion")  // View-based UI
     implementation("com.urbanairship.android:urbanairship-preference-center-compose:$airshipVersion") // Compose UI
     
-    // --- Other Features ---
-    implementation("com.urbanairship.android:urbanairship-feature-flag:$airshipVersion")       // Feature Flags
-    implementation("com.urbanairship.android:urbanairship-live-update:$airshipVersion")        // Live Updates
+    // --- Feature Flags ---
+    implementation("com.urbanairship.android:urbanairship-feature-flag:$airshipVersion")
+
+    // --- Live Updates ---
+    implementation("com.urbanairship.android:urbanairship-live-update:$airshipVersion")
 
     // --- Debug ---
     // Optional - For development builds only
@@ -67,18 +69,13 @@ dependencies {
 Create an `Autopilot` class to automatically initialize Airship:
 
 ```kotlin
-import android.content.Context
-import com.urbanairship.Autopilot
-import com.urbanairship.Airship
-import com.urbanairship.AirshipConfigOptions
-
 class MyAutopilot : Autopilot() {
     override fun createAirshipConfigOptions(context: Context): AirshipConfigOptions {
-        return AirshipConfigOptions.newBuilder()
-            .setDefaultAppKey("YOUR_DEFAULT_APP_KEY")
-            .setDefaultAppSecret("YOUR_DEFAULT_APP_SECRET")
-            .setInProduction(!BuildConfig.DEBUG)
-            .build()
+        return airshipConfigOptions {
+            setAppKey("YOUR_DEFAULT_APP_KEY")
+            setAppSecret("YOUR_DEFAULT_APP_SECRET")
+            setInProduction(!BuildConfig.DEBUG)
+        }
     }
 
     override fun onAirshipReady(context: Context) {

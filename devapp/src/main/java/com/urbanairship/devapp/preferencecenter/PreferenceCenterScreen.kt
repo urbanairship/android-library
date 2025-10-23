@@ -9,9 +9,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidViewBinding
 import androidx.fragment.app.FragmentActivity
-import androidx.glance.LocalContext
 import com.urbanairship.preferencecenter.ui.PreferenceCenterFragment
 import com.urbanairship.devapp.R
 import com.urbanairship.devapp.databinding.FragmentPreferenceCenterBinding

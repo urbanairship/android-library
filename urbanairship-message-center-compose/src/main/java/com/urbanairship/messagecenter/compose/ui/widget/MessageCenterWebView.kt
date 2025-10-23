@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import com.urbanairship.UALog
@@ -74,7 +75,7 @@ internal fun MessageCenterWebView(
     }
 
     AndroidView(
-        modifier = modifier,
+        modifier = modifier.graphicsLayer(alpha = 0.99f, clip = true), //fixes a weird web view crash
         factory = { webView }
     )
 }

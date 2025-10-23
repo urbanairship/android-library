@@ -34,11 +34,20 @@
         <activity
             android:name=".MainActivity"
             android:windowSoftInputMode="adjustPan"
+            android:launchMode="singleTop"
             android:exported="true">
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <data
+                    android:scheme="vnd.urbanairship.sample"
+                    android:host="deepLink" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
 

@@ -1,2 +1,0 @@
-#!/bin/bash
-adb logcat -v time | grep "$@" --line-buffered | lc

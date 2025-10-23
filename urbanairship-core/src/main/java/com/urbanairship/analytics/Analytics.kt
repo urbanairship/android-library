@@ -87,12 +87,12 @@ public constructor(
     public val events: SharedFlow<AirshipEventData> = _events.asSharedFlow()
 
     private val listener: ApplicationListener =  object : ApplicationListener {
-        override fun onForeground(time: Long) {
-            this@Analytics.onForeground(time)
+        override fun onForeground(milliseconds: Long) {
+            this@Analytics.onForeground(milliseconds)
         }
 
-        override fun onBackground(time: Long) {
-            this@Analytics.onBackground(time)
+        override fun onBackground(milliseconds: Long) {
+            this@Analytics.onBackground(milliseconds)
         }
     }
 
