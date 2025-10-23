@@ -5,16 +5,16 @@ package com.urbanairship.debug.ui.events
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.urbanairship.debug.R
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.TopBarNavigation
@@ -60,19 +60,19 @@ private fun ScreenContent(
         RowItem(
             modifier = Modifier.clickable { onNavigate(AnalyticsScreens.Events.route) },
             title = "Events",
-            accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
+            accessory = { Icon(painter = painterResource(id = R.drawable.ic_chevron), contentDescription = "display") }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(AnalyticsScreens.AddCustom.route) },
             title = "Add Custom Event",
-            accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
+            accessory = { Icon(painter = painterResource(id = R.drawable.ic_chevron), contentDescription = "display") }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(AnalyticsScreens.AssociatedIdentifiers.route) },
             title = "Associated Identifiers",
-            accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
+            accessory = { Icon(painter = painterResource(id = R.drawable.ic_chevron), contentDescription = "display") }
         )
     }
 }

@@ -6,8 +6,6 @@ import android.content.res.Configuration
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -17,6 +15,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,8 +24,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.Airship
-import com.urbanairship.automation.InAppAutomation
 import com.urbanairship.automation.inAppAutomation
+import com.urbanairship.debug.R
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.Section
@@ -59,13 +58,13 @@ private fun ScreenContent(
             RowItem(
                 modifier = Modifier.clickable { onNavigate(AutomationScreens.Automations.route) },
                 title = "Automations",
-                accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
+                accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
             )
 
             RowItem(
                 modifier = Modifier.clickable { onNavigate(AutomationScreens.Experiments.route) },
                 title = "Experiments",
-                accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
+                accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
             )
 
             ListItem(

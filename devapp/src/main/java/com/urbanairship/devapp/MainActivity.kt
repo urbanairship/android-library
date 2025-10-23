@@ -1,42 +1,28 @@
 package com.urbanairship.devapp
 
-import android.content.Intent
-import android.content.pm.ApplicationInfo
 import android.os.Bundle
-import android.webkit.WebView
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MailOutline
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
 import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
-import com.urbanairship.android.layout.AirshipCustomViewManager
 import com.urbanairship.devapp.AppRouterViewModel.TopLevelDestination
-import com.urbanairship.devapp.thomas.LayoutPreferenceManager
-import com.urbanairship.devapp.thomas.customviews.CustomAdView
-import com.urbanairship.devapp.thomas.customviews.CustomMapView
-import com.urbanairship.devapp.thomas.customviews.CustomWeatherView
-import com.urbanairship.devapp.thomas.customviews.CustomWeatherViewXml
-import com.urbanairship.devapp.thomas.customviews.SceneControllerCustomView
 import com.urbanairship.google.PlayServicesUtils.handleAnyPlayServicesError
 import com.urbanairship.google.PlayServicesUtils.isGooglePlayStoreAvailable
 import AirshipTheme
@@ -53,11 +39,12 @@ class MainActivity : AppCompatActivity() {
         TopLevelDestination.SETTINGS -> "Settings"
     }
 
-    fun TopLevelDestination.icon(): ImageVector = when(this) {
-        TopLevelDestination.HOME -> Icons.Filled.Home
-        TopLevelDestination.MESSAGE -> Icons.Filled.MailOutline
-        TopLevelDestination.PREFERENCE_CENTER -> Icons.Filled.Notifications
-        TopLevelDestination.SETTINGS -> Icons.Filled.Settings
+    @Composable
+    fun TopLevelDestination.icon(): Painter = when(this) {
+        TopLevelDestination.HOME -> painterResource(id = R.drawable.ic_home)
+        TopLevelDestination.MESSAGE -> painterResource(id = R.drawable.ic_inbox)
+        TopLevelDestination.PREFERENCE_CENTER -> painterResource(id = R.drawable.ic_pref_center)
+        TopLevelDestination.SETTINGS -> painterResource(id = R.drawable.ic_settings)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

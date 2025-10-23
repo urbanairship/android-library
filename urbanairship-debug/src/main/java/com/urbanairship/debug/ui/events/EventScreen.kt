@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -19,9 +17,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.urbanairship.debug.R
 import com.urbanairship.debug.ServiceLocator
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.TopBarNavigation
@@ -44,7 +44,8 @@ internal fun EventScreen(
                 onClick = { onNavigate(AnalyticsScreens.AddCustom.route) },
                 shape = CircleShape
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add custom event")
+                Icon(painter = painterResource(id = R.drawable.ic_add),
+                    contentDescription = "Add custom event")
             }
         }
     ) {

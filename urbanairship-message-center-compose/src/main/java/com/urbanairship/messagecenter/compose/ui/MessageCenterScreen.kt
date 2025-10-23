@@ -22,6 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.urbanairship.messagecenter.Message
 import kotlinx.coroutines.launch
@@ -101,7 +102,7 @@ private fun ListPane(
             MessageCenterDefaults.listTopBar(
                 title = "Messages",
                 isEditing = state.isEditing,
-                navIcon = if (showNavigateUp) Icons.AutoMirrored.Filled.ArrowBack else null,
+                navIcon = if (showNavigateUp) painterResource(com.urbanairship.messagecenter.core.R.drawable.ua_ic_message_center_arrow_back) else null,
                 onNavigateUp = onNavigateUp,
                 actions = { MessageCenterDefaults.listTopBarActions(state) }
             )
@@ -127,7 +128,7 @@ private fun MessagePane(
             topBar = { title, scrollBehavior, onNavigateUp ->
                 MessageCenterDefaults.messageTopBar(
                     title = title,
-                    navIcon = if (showNavigateUp) Icons.AutoMirrored.Filled.ArrowBack else null,
+                    navIcon = if (showNavigateUp) painterResource(com.urbanairship.messagecenter.core.R.drawable.ua_ic_message_center_arrow_back) else null,
                     onNavigateUp = onNavigateUp,
                     actions = { MessageCenterDefaults.messageTopBarActions(state) },
                     scrollBehavior = scrollBehavior

@@ -10,9 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -26,6 +23,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.input.KeyboardType
@@ -36,6 +34,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.Airship
 import com.urbanairship.contacts.EmailRegistrationOptions
+import com.urbanairship.debug.R
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.Section
@@ -135,7 +134,7 @@ private fun ScreenContent(
                 RowItem(
                     modifier = Modifier.clickable { onNavigate(ContactChannelScreens.EmailChannelAddProperty.route) },
                     title = "Add Property",
-                    accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
+                    accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
                 )
 
                 viewModel.properties.value.forEach { entry ->
@@ -143,7 +142,7 @@ private fun ScreenContent(
                         title = "${entry.key}:${entry.value.stringValue}",
                         accessory = {
                             IconButton(onClick = { viewModel.removeProperty(entry.value) }) {
-                                Icon(Icons.Default.Delete, contentDescription = "delete")
+                                Icon(painterResource(R.drawable.ic_delete), contentDescription = "delete")
                             }
                         }
                     )

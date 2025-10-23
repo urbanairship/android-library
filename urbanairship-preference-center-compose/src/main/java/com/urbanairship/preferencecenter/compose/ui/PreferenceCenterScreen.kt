@@ -10,8 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -24,6 +22,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,11 +41,9 @@ import com.urbanairship.preferencecenter.data.CommonDisplay
 import com.urbanairship.preferencecenter.data.Condition
 import com.urbanairship.preferencecenter.data.IconDisplay
 import com.urbanairship.preferencecenter.data.Item
-import com.urbanairship.preferencecenter.data.Options
 import com.urbanairship.preferencecenter.data.PreferenceCenterConfig
 import com.urbanairship.preferencecenter.data.Section
 import kotlinx.coroutines.flow.Flow
-import kotlin.collections.emptyList
 
 @Composable
 public fun PreferenceCenterScreen(
@@ -216,7 +213,7 @@ private fun ErrorView(onRefresh: () -> Unit) {
         Row {
             Icon(
                 modifier = Modifier.size(PrefCenterTheme.dimens.errorIconSize),
-                imageVector = Icons.Outlined.Info,
+                painter = painterResource(R.drawable.ua_ic_preference_center_info_circle),
                 tint = PrefCenterTheme.colors.alertIconTint,
                 contentDescription = null
             )

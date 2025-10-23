@@ -10,7 +10,7 @@ import com.urbanairship.debug.ui.DebugScreen
 internal enum class ContactScreens(
     override val titleRes: Int,
     override val descRes: Int? = null,
-    override val icon: ImageVector? = null,
+    override val icon: Int? = null,
     override val isRoot: Boolean = false,
 ) : Screen {
     // Root screen
@@ -32,7 +32,7 @@ internal enum class ContactScreens(
 internal enum class ContactChannelScreens(
     override val titleRes: Int,
     override val descRes: Int? = null,
-    override val icon: ImageVector? = null,
+    override val icon: Int? = null,
     override val isRoot: Boolean = false,
 ) : Screen {
     // Root screen

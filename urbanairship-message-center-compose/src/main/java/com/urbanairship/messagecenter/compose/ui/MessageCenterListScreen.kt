@@ -39,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -227,7 +228,7 @@ private fun ErrorView(onRefresh: () -> Unit) {
         Row {
             Icon(
                 modifier = Modifier.size(96.dp),
-                imageVector = Icons.Outlined.Info,
+                painter = painterResource(com.urbanairship.messagecenter.core.R.drawable.ua_ic_message_center_info),
                 //tint = MessageCenterTheme.colors.alertIconTint,
                 contentDescription = null
             )

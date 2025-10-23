@@ -12,8 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Switch
@@ -25,6 +23,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.Airship
+import com.urbanairship.debug.R
 import com.urbanairship.debug.ui.DebugScreen
 import com.urbanairship.debug.ui.channel.ChannelInfoScreens
 import com.urbanairship.debug.ui.components.DebugScreen
@@ -137,7 +137,7 @@ private fun PushContent(
             RowItem(
                 modifier = Modifier.clickable { onNavigate(DebugScreen.Pushes.route) },
                 title = "Received Pushes",
-                accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
+                accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
             )
         }
     }
@@ -159,28 +159,28 @@ private fun UserSettingsContent(
             DebugSettingItem(
                 title = "Named User",
                 currentValue = userId.value,
-                icon = Icons.Default.ChevronRight,
+                icon = R.drawable.ic_chevron,
                 onClick = { onNavigate(ContactScreens.NamedUser.route) }
             )
 
             DebugSettingItem(
                 title = "Attributes",
                 description = "Manage Channel & Contact attributes",
-                icon = Icons.Default.ChevronRight,
+                icon = R.drawable.ic_chevron,
                 onClick = { onNavigate(DeviceInfoScreens.EditAttributes.route) }
             )
 
             DebugSettingItem(
                 title = "Tags",
                 description = formattedChannelTags,
-                icon = Icons.Default.ChevronRight,
+                icon = R.drawable.ic_chevron,
                 onClick = { onNavigate(ChannelInfoScreens.Tags.route) }
             )
 
             DebugSettingItem(
                 title = "Tag Groups",
                 description = "Manage Channel & Contact tag groups",
-                icon = Icons.Default.ChevronRight,
+                icon = R.drawable.ic_chevron,
                 onClick = { onNavigate(DeviceInfoScreens.EditTagGroups.route) }
             )
         }

@@ -9,8 +9,6 @@ import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -19,12 +17,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.Airship
+import com.urbanairship.debug.R
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.TopBarNavigation
@@ -69,25 +69,25 @@ private fun ScreenContent(viewModel: ChannelViewModel, onNavigate: (String) -> U
         RowItem(
             modifier = Modifier.clickable { onNavigate(ChannelInfoScreens.Tags.route) },
             title = "Tags",
-            accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
+            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(ChannelInfoScreens.TagGroups.route) },
             title = "Tag Groups",
-            accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
+            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(ChannelInfoScreens.Attributes.route) },
             title = "Attributes",
-            accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
+            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(ChannelInfoScreens.SubscriptionLists.route) },
             title = "Subscription Lists",
-            accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
+            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
         )
     }
 }

@@ -12,9 +12,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -26,9 +23,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.urbanairship.debug.R
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.JsonItem
 import com.urbanairship.debug.ui.components.LoadingView
@@ -95,12 +94,12 @@ internal fun FeatureFlagDetailsScreenContent(
                                     viewModel.shareJson(context, content)
                                 }) {
 
-                                Icon(Icons.Default.Share, contentDescription = "Share")
+                                Icon(painterResource(R.drawable.ic_share), contentDescription = "Share")
                             }
                             IconButton(
                                 enabled = flag != null,
                                 onClick = { flag?.name?.let(viewModel::evaluateFlag) }) {
-                                Icon(Icons.Default.Refresh, contentDescription = "Re-evaluate")
+                                Icon(painterResource(R.drawable.ic_refresh), contentDescription = "Re-evaluate")
                             }
                         }
                     }) {
@@ -142,7 +141,7 @@ internal fun FeatureFlagDetailsScreenContent(
                             modifier = Modifier.height(20.dp),
                             enabled = flag != null,
                             onClick = { viewModel.shareJson(context, info.payload) }) {
-                            Icon(Icons.Default.Share, contentDescription = "Share")
+                            Icon(painterResource(R.drawable.ic_share), contentDescription = "Share")
                         }
                     }
                     ) {

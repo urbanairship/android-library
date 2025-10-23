@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,8 +18,10 @@ import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.urbanairship.debug.R
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -46,7 +46,7 @@ internal fun DebugScreen(
                     when(navigation) {
                         is TopBarNavigation.Back -> {
                             IconButton(onClick = navigation.onBack) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                                Icon(painterResource(R.drawable.ic_arrow_back), "Back")
                             }
                         }
 
