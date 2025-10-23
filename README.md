@@ -69,18 +69,13 @@ dependencies {
 Create an `Autopilot` class to automatically initialize Airship:
 
 ```kotlin
-import android.content.Context
-import com.urbanairship.Autopilot
-import com.urbanairship.Airship
-import com.urbanairship.AirshipConfigOptions
-
 class MyAutopilot : Autopilot() {
     override fun createAirshipConfigOptions(context: Context): AirshipConfigOptions {
-        return AirshipConfigOptions.newBuilder()
-            .setDefaultAppKey("YOUR_DEFAULT_APP_KEY")
-            .setDefaultAppSecret("YOUR_DEFAULT_APP_SECRET")
-            .setInProduction(!BuildConfig.DEBUG)
-            .build()
+        return airshipConfigOptions {
+            setAppKey("YOUR_DEFAULT_APP_KEY")
+            setAppSecret("YOUR_DEFAULT_APP_SECRET")
+            setInProduction(!BuildConfig.DEBUG)
+        }
     }
 
     override fun onAirshipReady(context: Context) {
