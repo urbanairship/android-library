@@ -69,7 +69,7 @@ internal fun HomeScreen(
                 duration = SnackbarDuration.Long
             )
             if (result == SnackbarResult.ActionPerformed) {
-                onNavigate(AppRouterViewModel.TopLevelDestination.MESSAGE)
+                onNavigate(AppRouterViewModel.TopLevelDestination.Message())
             }
         }
     }

@@ -91,7 +91,6 @@ internal class AirshipInstance(
         }
     }
 
-
     private fun executeTakeOff(
         options: AirshipConfigOptions?,
         onReady: ((AirshipConfigOptions) -> Unit)
@@ -100,7 +99,6 @@ internal class AirshipInstance(
             .applyDefaultProperties(application.applicationContext).build()
 
         resolved.validate()
-
 
         UALog.logLevel = resolved.logLevel.level
         UALog.logPrivacyLevel = resolved.logPrivacyLevel
@@ -443,7 +441,7 @@ internal class AirshipInstance(
             return true
         }
 
-        UALog.d("Airship deep link not handled: %s", deepLink)
+        UALog.w("Airship deep link not handled: %s", deepLink)
 
         return true
     }
@@ -476,7 +474,6 @@ internal class AirshipInstance(
             else -> return false
         }
     }
-
 
     companion object {
         private const val APP_SETTINGS_DEEP_LINK_HOST = "app_settings"

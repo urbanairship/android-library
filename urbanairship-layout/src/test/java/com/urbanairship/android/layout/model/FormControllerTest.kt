@@ -28,6 +28,7 @@ import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.json.jsonMapOf
 import app.cash.turbine.test
 import app.cash.turbine.testIn
+import app.cash.turbine.turbineScope
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
@@ -241,30 +242,32 @@ public class FormControllerTest {
     @OptIn(DelicateLayoutApi::class)
     @Test
     public fun testChildFormInheritsParentFormEnabledState(): TestResult = runTest {
-        val parentChanges = parentFormState.changes.testIn(testScope)
-        val childChanges = childFormState.changes.testIn(testScope)
+        turbineScope {
+            val parentChanges = parentFormState.changes.testIn(testScope)
+            val childChanges = childFormState.changes.testIn(testScope)
 
-        // Sanity check initial state.
-        assertTrue(parentChanges.awaitItem().filteredFields.isEmpty())
-        assertTrue(childChanges.awaitItem().filteredFields.isEmpty())
-        assertTrue(childFormState.value.isEnabled)
+            // Sanity check initial state.
+            assertTrue(parentChanges.awaitItem().filteredFields.isEmpty())
+            assertTrue(childChanges.awaitItem().filteredFields.isEmpty())
+            assertTrue(childFormState.value.isEnabled)
 
-        initChildFormController()
-        parentFormState.update { form ->
-            form.copy(isEnabled = false)
+            initChildFormController()
+            parentFormState.update { form ->
+                form.copy(isEnabled = false)
+            }
+
+            // Skip child form init event, displayedInputs change, and the parent form state update above.
+            childChanges.skipItems(2)
+            parentChanges.skipItems(4)
+
+            // Verify that the child state was updated appropriately.
+            childChanges.awaitItem().run {
+                assertFalse(isEnabled)
+            }
+
+            parentChanges.ensureAllEventsConsumed()
+            childChanges.ensureAllEventsConsumed()
         }
-
-        // Skip child form init event, displayedInputs change, and the parent form state update above.
-        childChanges.skipItems(2)
-        parentChanges.skipItems(4)
-
-        // Verify that the child state was updated appropriately.
-        childChanges.awaitItem().run {
-            assertFalse(isEnabled)
-        }
-
-        parentChanges.ensureAllEventsConsumed()
-        childChanges.ensureAllEventsConsumed()
     }
 
     private fun initParentFormController(

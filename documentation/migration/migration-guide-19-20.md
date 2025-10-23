@@ -215,11 +215,13 @@ entry.setPredicate(new MyPredicate());
 
 
 // SDK 20.x
-ActionRegistry registry = Airship.getActionRegistry();
-Action myAction = new MyAction();
-ActionRegistry.Entry entry = new ActionRegistry.Entry(myAction);
-registry.registerEntry("my_action", entry);
-registry.updateEntry("my_action", new MyPredicate());
+Airship.getActionRegistry().registerEntry(Set.of("my_action"), () -> {
+    return new ActionRegistry.Entry(
+            new MyAction(),
+            Collections.emptyMap(),
+            new MyPredicate()
+    );
+});
 ```
 
 ###### Kotlin
@@ -232,11 +234,12 @@ val entry = registry.getEntry("my_action")
 entry.predicate = MyPredicate()
 
 // SDK 20.x
-val registry = Airship.actionRegistry
-val myAction = MyAction()
-val entry = ActionRegistry.Entry(myAction)
-registry.registerEntry("my_action", entry)
-registry.updateEntry("my_action", MyPredicate())
+Airship.actionRegistry.registerEntry(setOf("my_action")) {
+    ActionRegistry.Entry(
+        action = MyAction(), 
+        predicate = MyPredicate()
+    )
+}
 ```
 
 ## Deprecated APIs
@@ -349,12 +352,12 @@ SDK 20.0 introduces Kotlin DSL convenience methods that automatically call `appl
 
 ###### Kotlin
 ```kotlin
-// SDK 19.x and 20.0 (Explicit apply - still supported)
 Airship.channel.editTags()
     .addTag("vip")
     .apply()
 
-// SDK 20.0 (Kotlin DSL - optional, apply is automatic)
+// => 
+
 Airship.channel.editTags {
     addTag("vip")
 }
@@ -375,14 +378,14 @@ Several APIs now have suspend function alternatives for Kotlin coroutines and as
 
 ###### Kotlin
 ```kotlin
-// SDK 19.x (Callback-based - still supported)
 Airship.push.enableUserNotifications { enabled ->
     if (enabled) {
         // Notifications enabled
     }
 }
 
-// SDK 20.0 (Suspend function - optional)
+// =>
+
 CoroutineScope(Dispatchers.Main).launch {
     val enabled = Airship.push.enableUserNotifications()
     if (enabled) {
@@ -406,12 +409,12 @@ Several listener-based APIs now have Kotlin Flow alternatives for reactive progr
 
 ###### Kotlin
 ```kotlin
-// SDK 19.x (Listener-based - still supported)
 Airship.shared().privacyManager.addListener { enabledFeatures ->
     updateUI(enabledFeatures)
 }
 
-// SDK 20.0 (Flow-based - optional)
+// =>
+
 CoroutineScope(Dispatchers.Main).launch {
     Airship.shared().privacyManager.featureUpdates.collect { enabledFeatures ->
         updateUI(enabledFeatures)
@@ -424,7 +427,6 @@ The following components now provide Flow-based APIs:
 - `PrivacyManager.featureUpdates` - Flow of enabled features
 - `LocaleManager.localeUpdates` - Flow of locale changes
 - `PermissionsManager.permissionStatusUpdates` - Flow of permission status changes
-
 
 
 ## New Compose UI Modules

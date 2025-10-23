@@ -1,5 +1,6 @@
 package com.urbanairship.devapp
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -17,10 +18,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.core.util.Consumer
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
-import androidx.navigation3.runtime.rememberSavedStateNavEntryDecorator
-import androidx.navigation3.scene.rememberSceneSetupNavEntryDecorator
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import com.urbanairship.devapp.AppRouterViewModel.TopLevelDestination
 import com.urbanairship.google.PlayServicesUtils.handleAnyPlayServicesError
@@ -33,18 +38,18 @@ import AirshipTheme
 class MainActivity : AppCompatActivity() {
 
     fun TopLevelDestination.title(): String = when(this) {
-        TopLevelDestination.HOME -> "Home"
-        TopLevelDestination.MESSAGE -> "Messages"
-        TopLevelDestination.PREFERENCE_CENTER -> "Preferences"
-        TopLevelDestination.SETTINGS -> "Settings"
+        TopLevelDestination.Home -> "Home"
+        is TopLevelDestination.Message -> "Messages"
+        TopLevelDestination.PreferenceCenter -> "Preferences"
+        TopLevelDestination.Settings -> "Settings"
     }
 
     @Composable
     fun TopLevelDestination.icon(): Painter = when(this) {
-        TopLevelDestination.HOME -> painterResource(id = R.drawable.ic_home)
-        TopLevelDestination.MESSAGE -> painterResource(id = R.drawable.ic_inbox)
-        TopLevelDestination.PREFERENCE_CENTER -> painterResource(id = R.drawable.ic_pref_center)
-        TopLevelDestination.SETTINGS -> painterResource(id = R.drawable.ic_settings)
+        TopLevelDestination.Home -> painterResource(id = R.drawable.ic_home)
+        is TopLevelDestination.Message -> painterResource(id = R.drawable.ic_inbox)
+        TopLevelDestination.PreferenceCenter -> painterResource(id = R.drawable.ic_pref_center)
+        TopLevelDestination.Settings -> painterResource(id = R.drawable.ic_settings)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,6 +61,8 @@ class MainActivity : AppCompatActivity() {
                 modelClass = AppRouterViewModel::class.java,
                 factory = AppRouterViewModel.factory()
             )
+
+            DeeplinkManager.shared.setAppRouter(appRouter)
 
             val activeTab = appRouter.selectedTopLevel.collectAsState().value
             val backstack = appRouter.activeBackStack.collectAsState().value
@@ -77,21 +84,31 @@ class MainActivity : AppCompatActivity() {
                     },
                 ) { innerPadding ->
                     NavDisplay(
-                        modifier = Modifier.fillMaxSize()
-                            .padding(innerPadding)
+                        modifier = Modifier.fillMaxSize().padding(innerPadding)
                             .consumeWindowInsets(innerPadding),
                         backStack = backstack,
                         onBack = { appRouter.pop() },
                         entryDecorators = listOf(
                             // Add the default decorators for managing scenes and saving state
-                            rememberSceneSetupNavEntryDecorator(),
-                            rememberSavedStateNavEntryDecorator(),
+                            rememberSaveableStateHolderNavEntryDecorator(),
                             // Then add the view model store decorator
                             rememberViewModelStoreNavEntryDecorator()
                         ),
                         entryProvider = appRouter::navigationEntry
                     )
                 }
+            }
+
+            // Listen for new intents that may contain deep links
+            DisposableEffect(appRouter) {
+                DeeplinkManager.shared.handleDeeplink(intent)
+
+                val listener = Consumer<Intent> {
+                    DeeplinkManager.shared.handleDeeplink(it)
+                }
+
+                addOnNewIntentListener(listener)
+                onDispose { removeOnNewIntentListener(listener) }
             }
         }
     }

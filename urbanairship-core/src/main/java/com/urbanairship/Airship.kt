@@ -35,9 +35,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 
-/**
- * The Airship singleton provides access to all of the Airship services.
- */
+/** The Airship singleton provides access to all of the Airship services. */
 public object Airship {
 
     public fun interface OnReadyCallback {
@@ -49,12 +47,11 @@ public object Airship {
         public fun onAirshipReady(airship: Airship)
     }
 
-    private val _statusFlow: MutableStateFlow<AirshipStatus> = MutableStateFlow(AirshipStatus.TAKEOFF_NOT_CALLED)
-    private val _takeOffCompletedFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val takeOffCompletedFlow: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-    /**
-     * The current status of the Airship SDK.
-     */
+    private val _statusFlow: MutableStateFlow<AirshipStatus> = MutableStateFlow(AirshipStatus.TAKEOFF_NOT_CALLED)
+
+    /** The current status of the Airship SDK. */
     public val statusFlow: StateFlow<AirshipStatus> = _statusFlow.asStateFlow()
 
     /**
@@ -65,9 +62,7 @@ public object Airship {
     @Volatile
     public var logTakeOffStackTrace: Boolean = false
 
-    /**
-     * The current Airship SDK version.
-     */
+    /** The current Airship SDK version. */
     @JvmStatic
     public val version: String
         get() = BuildConfig.AIRSHIP_VERSION
@@ -77,11 +72,11 @@ public object Airship {
     private var skipWaitForReady: Boolean = false
 
     private val airshipLock = ReentrantLock()
-    private var _airshipInstance: AirshipInstance? = null
+    private var airshipInstance: AirshipInstance? = null
     internal fun requireReadyInstance(): AirshipInstance {
         airshipLock.withLock {
             val instance =
-                _airshipInstance ?: throw IllegalStateException("TakeOff must be called first.")
+                airshipInstance ?: throw IllegalStateException("TakeOff must be called first.")
 
             if (status != AirshipStatus.IS_FLYING) {
                 runBlocking {
@@ -90,6 +85,17 @@ public object Airship {
             }
             return instance
         }
+    }
+
+    internal val components: List<AirshipComponent>
+        get() = requireReadyInstance().components.value
+
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun <T : AirshipComponent?> requireComponent(clazz: Class<T>): T {
+        return requireReadyInstance().requireComponent(clazz)
     }
 
     private val onReadyScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
@@ -102,9 +108,7 @@ public object Airship {
      */
     @JvmStatic
     public val airshipConfigOptions: AirshipConfigOptions
-        get() {
-            return requireReadyInstance().airshipConfigOptions
-        }
+        get() = requireReadyInstance().airshipConfigOptions
 
     /**
      * The application instance.
@@ -118,13 +122,12 @@ public object Airship {
         get() {
             // Special handler for Application to avoid blocking for ready
             airshipLock.withLock {
-                val instance = _airshipInstance
+                val instance = airshipInstance
                     ?: throw IllegalStateException("TakeOff must be called first.")
 
                 return instance.application
             }
         }
-
 
     /**
      * The shared [Analytics] instance.
@@ -134,9 +137,7 @@ public object Airship {
      */
     @JvmStatic
     public val analytics: Analytics
-        get() {
-            return requireReadyInstance().requireComponent()
-        }
+        get() = requireReadyInstance().requireComponent()
 
     /**
      * The shared [PushManager] instance.
@@ -146,9 +147,7 @@ public object Airship {
      */
     @JvmStatic
     public val push: PushManager
-        get() {
-            return requireReadyInstance().requireComponent()
-        }
+        get() = requireReadyInstance().requireComponent()
 
     /**
      * The shared [AirshipChannel] instance.
@@ -158,9 +157,7 @@ public object Airship {
      */
     @JvmStatic
     public val channel: AirshipChannel
-        get() {
-            return requireReadyInstance().requireComponent()
-        }
+        get() = requireReadyInstance().requireComponent()
 
     /**
      * The shared [Contact] instance.
@@ -170,9 +167,7 @@ public object Airship {
      */
     @JvmStatic
     public val contact: Contact
-        get() {
-            return requireReadyInstance().requireComponent()
-        }
+        get() = requireReadyInstance().requireComponent()
 
     /**
      * The shared [PrivacyManager] instance.
@@ -182,9 +177,7 @@ public object Airship {
      */
     @JvmStatic
     public val privacyManager: PrivacyManager
-        get() {
-            return requireReadyInstance().privacyManager
-        }
+        get() = requireReadyInstance().privacyManager
 
     /**
      * The shared [PermissionsManager] instance.
@@ -194,9 +187,7 @@ public object Airship {
      */
     @JvmStatic
     public val permissionsManager: PermissionsManager
-        get() {
-            return requireReadyInstance().permissionsManager
-        }
+        get() = requireReadyInstance().permissionsManager
 
     /**
      * The shared [LocaleManager] instance.
@@ -204,42 +195,30 @@ public object Airship {
      * Access is thread-safe. This property will block until Airship is ready.
      * @throws IllegalStateException if `takeOff` has not been called.
      */
+    @JvmStatic
     public val localeManager: LocaleManager
-        get() {
-            return requireReadyInstance().localeManager
-        }
-
-    internal val components: List<AirshipComponent>
-        get() {
-            return requireReadyInstance().components.value
-        }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    @Throws(IllegalArgumentException::class)
-    public fun <T : AirshipComponent?> requireComponent(clazz: Class<T>): T {
-        return requireReadyInstance().requireComponent(clazz)
-    }
+        get() = requireReadyInstance().localeManager
 
     /**
-     * The shared [ChannelCapture] instance.
+     * The shared [AirshipInputValidation.Validator] instance.
      *
      * Access is thread-safe. This property will block until Airship is ready.
      * @throws IllegalStateException if `takeOff` has not been called.
+     *
+     * @hide
      */
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val inputValidator: AirshipInputValidation.Validator
-        get() {
-            return requireReadyInstance().inputValidator
-        }
+        get() = requireReadyInstance().inputValidator
 
     /**
      * The shared [ImageLoader] instance.
+     *
+     * @hide
      */
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val imageLoader: ImageLoader
-        get() {
-            return requireReadyInstance().imageLoader
-        }
+        get() = requireReadyInstance().imageLoader
 
     /**
      * The shared [ChannelCapture] instance.
@@ -249,9 +228,7 @@ public object Airship {
      */
     @JvmStatic
     public val channelCapture: ChannelCapture
-        get() {
-            return requireReadyInstance().requireComponent()
-        }
+        get() = requireReadyInstance().requireComponent()
 
     /**
      * The shared [UrlAllowList] instance.
@@ -261,9 +238,7 @@ public object Airship {
      */
     @JvmStatic
     public val urlAllowList: UrlAllowList
-        get() {
-            return requireReadyInstance().urlAllowList
-        }
+        get() = requireReadyInstance().urlAllowList
 
     /**
      * The shared deep link listener.
@@ -273,9 +248,7 @@ public object Airship {
      */
     @JvmStatic
     public var deepLinkListener: DeepLinkListener?
-        get() {
-            return requireReadyInstance().deepLinkListener
-        }
+        get() = requireReadyInstance().deepLinkListener
         set(value) {
             requireReadyInstance().deepLinkListener = value
         }
@@ -288,9 +261,7 @@ public object Airship {
      */
     @JvmStatic
     public val actionRegistry: ActionRegistry
-        get() {
-            return requireReadyInstance().actionRegistry
-        }
+        get() = requireReadyInstance().actionRegistry
 
     /**
      * The detected platform.
@@ -300,33 +271,23 @@ public object Airship {
      */
     @JvmStatic
     public val platform: Platform
-        get() {
-            return requireReadyInstance().runtimeConfig.platform
-        }
+        get() = requireReadyInstance().runtimeConfig.platform
 
-    /**
-     * The current status of the Airship SDK.
-     */
+    /** The current [status][AirshipStatus] of the Airship SDK. */
     public val status: AirshipStatus
         get() = statusFlow.value
 
-    /**
-     * `true` if the SDK is fully initialized and ready, `false` otherwise.
-     */
+    /** `true` if the SDK is fully initialized and ready, `false` otherwise. */
     @JvmStatic
     public val isFlying : Boolean
         get() = status == AirshipStatus.IS_FLYING
 
-    /**
-     * `true` if `takeOff` has been called but the SDK is still initializing, `false` otherwise.
-     */
+    /** `true` if `takeOff` has been called but the SDK is still initializing, `false` otherwise. */
     @JvmStatic
     public val isTakingOff : Boolean
         get() = status == AirshipStatus.TAKING_OFF
 
-    /**
-     * `true` if the SDK is either initialized or initializing, `false` otherwise.
-     */
+    /** `true` if the SDK is either initialized or initializing, `false` otherwise. */
     public val isFlyingOrTakingOff: Boolean
         get() {
             val status = status
@@ -342,7 +303,6 @@ public object Airship {
     @JvmStatic
     public val runtimeConfig: AirshipRuntimeConfig
         get() = requireReadyInstance().runtimeConfig
-
 
     /**
      * Initializes the Airship SDK.
@@ -416,13 +376,13 @@ public object Airship {
         onReady: (Airship.() -> Unit)? = null
     ) {
         val instance = airshipLock.withLock {
-            check(_airshipInstance == null) { "Takeoff can only be called once!" }
+            check(airshipInstance == null) { "Takeoff can only be called once!" }
             check(status == AirshipStatus.TAKEOFF_NOT_CALLED) { "Unexpected Airship status!" }
 
             _statusFlow.update { AirshipStatus.TAKING_OFF }
 
             AirshipInstance(application).also {
-                _airshipInstance = it
+                airshipInstance = it
             }
         }
 
@@ -444,7 +404,7 @@ public object Airship {
             sendReadyBroadcast(application, config.extendedBroadcastsEnabled)
 
             // Resume waitForReady and starts onReady callbacks
-            _takeOffCompletedFlow.update { true }
+            takeOffCompletedFlow.update { true }
         }
     }
 
@@ -455,10 +415,8 @@ public object Airship {
 
         if (extendedIntent) {
             readyIntent.putExtra(EXTRA_CHANNEL_ID_KEY, channel.id)
-            readyIntent.putExtra(
-                EXTRA_APP_KEY_KEY, runtimeConfig.configOptions.appKey
-            )
-            readyIntent.putExtra(EXTRA_PAYLOAD_VERSION_KEY, 1)
+                .putExtra(EXTRA_APP_KEY_KEY, runtimeConfig.configOptions.appKey)
+                .putExtra(EXTRA_PAYLOAD_VERSION_KEY, 1)
         }
 
         application.sendBroadcast(readyIntent)
@@ -472,17 +430,17 @@ public object Airship {
      */
     @JvmSynthetic
     public suspend fun waitForReady(duration: Duration? = null): Boolean {
-        if (_takeOffCompletedFlow.value) {
+        if (takeOffCompletedFlow.value) {
             return true
         }
 
         return if (duration != null) {
             withTimeoutOrNull(duration) {
-                _takeOffCompletedFlow.first { it }
+                takeOffCompletedFlow.first { it }
                 true
             } ?: false
         } else {
-            _takeOffCompletedFlow.first { it  }
+            takeOffCompletedFlow.first { it  }
             true
         }
     }
@@ -496,7 +454,7 @@ public object Airship {
     @JvmStatic
     @WorkerThread
     public fun waitForReadyBlocking(duration: Duration? = null): Boolean {
-        if (_takeOffCompletedFlow.value) {
+        if (takeOffCompletedFlow.value) {
             return true
         }
 
@@ -519,7 +477,7 @@ public object Airship {
     @JvmSynthetic
     public fun onReady(onReady: Airship.() -> Unit) {
         onReadyScope.launch {
-            _takeOffCompletedFlow.first { it }
+            takeOffCompletedFlow.first { it }
             onReady()
         }
     }
@@ -552,16 +510,14 @@ public object Airship {
     @VisibleForTesting
     internal fun land() {
         airshipLock.withLock {
-            _airshipInstance?.tearDown()
+            airshipInstance?.tearDown()
             _statusFlow.update {  AirshipStatus.TAKEOFF_NOT_CALLED }
-            _airshipInstance = null
-            _takeOffCompletedFlow.update { false }
+            airshipInstance = null
+            takeOffCompletedFlow.update { false }
         }
     }
 
-    /**
-     * Broadcast that is sent when Airship is finished taking off.
-     */
+    /** Broadcast that is sent when Airship is finished taking off. */
     public const val ACTION_AIRSHIP_READY: String = "com.urbanairship.AIRSHIP_READY"
 
     public const val EXTRA_CHANNEL_ID_KEY: String = "channel_id"
