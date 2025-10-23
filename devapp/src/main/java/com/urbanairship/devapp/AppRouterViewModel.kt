@@ -16,6 +16,8 @@ import com.urbanairship.devapp.home.QuickAccess
 import com.urbanairship.devapp.messagecenter.MessageCenterScreen
 import com.urbanairship.devapp.preferencecenter.PreferenceCenterScreen
 import com.urbanairship.devapp.thomas.ThomasLayoutNavigation
+import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
+import com.urbanairship.messagecenter.compose.ui.MessageCenterScreen
 import com.urbanairship.messagecenter.compose.ui.rememberMessageCenterState
 import java.io.Serializable
 import kotlinx.coroutines.flow.MutableStateFlow

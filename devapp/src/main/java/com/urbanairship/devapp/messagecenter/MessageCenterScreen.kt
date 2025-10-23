@@ -4,11 +4,11 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import com.urbanairship.messagecenter.compose.theme.MessageCenterColors
-import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.MessageCenterScreen
 import com.urbanairship.messagecenter.compose.ui.MessageCenterState
 import com.urbanairship.messagecenter.compose.ui.rememberMessageCenterState
+import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterColors
+import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

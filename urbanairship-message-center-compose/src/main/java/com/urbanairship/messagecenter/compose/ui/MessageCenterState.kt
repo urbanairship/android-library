@@ -6,6 +6,12 @@ import androidx.compose.runtime.remember
 import com.urbanairship.Predicate
 import com.urbanairship.messagecenter.Message
 
+/**
+ * State holder that combines both list and message functionality for the Message Center.
+ *
+ * @param listState The state for the message list.
+ * @param messageState The state for the message display.
+ */
 @Stable
 public class MessageCenterState internal constructor(
     public val listState: MessageCenterListState,

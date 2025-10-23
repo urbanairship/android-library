@@ -37,20 +37,29 @@ import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
+import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
+import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
 import com.urbanairship.messagecenter.compose.ui.MessageCenterListViewModel.Action
 import com.urbanairship.messagecenter.compose.ui.MessageCenterListViewModel.State
 import com.urbanairship.messagecenter.compose.ui.widget.MessageListItem
 import com.urbanairship.R as CoreR
 import com.urbanairship.messagecenter.core.R as McCoreR
 
+/**
+ * Message Center List Screen, including a top bar and edit toolbar.
+ *
+ * @param modifier The [Modifier] to be applied to this screen.
+ * @param state The [MessageCenterListState] representing the state of the screen.
+ * @param topBar Optional top bar composable. If null, a default top bar will be used.
+ * @param onNavigateUp Callback invoked when the navigate up action is triggered.
+ * @param onMessageSelected Callback invoked when a message is selected.
+ */
 @Composable
 public fun MessageCenterListScreen(
     modifier: Modifier = Modifier,
@@ -89,7 +98,13 @@ public fun MessageCenterListScreen(
     }
 }
 
-
+/**
+ * Message Center List Content (includes an edit toolbar, but no top bar).
+ *
+ * @param state The [MessageCenterListState] representing the state of the screen.
+ * @param onMessageClick Callback invoked when a message is clicked.
+ * @param modifier The [Modifier] to be applied to this screen.
+ */
 @Composable
 public fun MessageCenterList(
     state: MessageCenterListState = rememberMessageCenterListState(),
@@ -123,7 +138,7 @@ private fun MessageCenterListContent(
 ) {
     Surface(
         modifier = modifier,
-        color = MessageCenterTheme.colors.surface
+        color = MsgCenterTheme.colors.surface
     ) {
         when (val viewState = state.viewState) {
             is State.Loading -> LoadingView()
@@ -146,9 +161,9 @@ private fun ContentView(
     onMessageClick: (Message) -> Unit,
     onAction: (Action) -> Unit,
 ) {
-    val colors = MessageCenterTheme.colors
-    val options = MessageCenterTheme.options
-    val dimens = MessageCenterTheme.dimensions
+    val colors = MsgCenterTheme.colors
+    val options = MsgCenterTheme.options
+    val dimens = MsgCenterTheme.dimensions
 
     PullToRefresh(
         viewState = viewState,
@@ -178,7 +193,7 @@ private fun ContentView(
                             modifier = Modifier.padding(
                                 start = dimens.messageCenterDividerInset.start,
                                 end = dimens.messageCenterDividerInset.end
-                            ).background(MessageCenterTheme.colors.divider)
+                            ).background(MsgCenterTheme.colors.divider)
                         )
                     }
                 }
@@ -206,8 +221,8 @@ private fun PullToRefresh(
                 modifier = Modifier.align(Alignment.TopCenter),
                 isRefreshing = viewState.isRefreshing,
                 state = state,
-                containerColor = MessageCenterTheme.colors.messageCenterPullToRefreshBackground,
-                color = MessageCenterTheme.colors.messageCenterPullToRefresh
+                containerColor = MsgCenterTheme.colors.messageCenterPullToRefreshBackground,
+                color = MsgCenterTheme.colors.messageCenterPullToRefresh
             )
         },
     )
@@ -215,8 +230,8 @@ private fun PullToRefresh(
 
 @Composable
 private fun ErrorView(onRefresh: () -> Unit) {
-    val typography = MessageCenterTheme.typography
-    val colors = MessageCenterTheme.colors
+    val typography = MsgCenterTheme.typography
+    val colors = MsgCenterTheme.colors
 
     Column(
         modifier = Modifier.fillMaxSize().background(colors.surface),
@@ -259,7 +274,7 @@ private fun ErrorView(onRefresh: () -> Unit) {
 
 @Composable
 private fun LoadingView() {
-    Box(Modifier.fillMaxSize().background(MessageCenterTheme.colors.surface)) {
+    Box(Modifier.fillMaxSize().background(MsgCenterTheme.colors.surface)) {
         CircularProgressIndicator(
             modifier = Modifier.align(Alignment.Center),
             //color = MessageCenterTheme.colors.loadingIndicator
@@ -269,18 +284,18 @@ private fun LoadingView() {
 
 @Composable
 private fun EmptyView() {
-    val override = MessageCenterTheme.options.messageCenterEmptyListMessage
+    val override = MsgCenterTheme.options.messageCenterEmptyListMessage
     if (override != null) {
         override()
     } else {
         Row(
-            modifier = Modifier.fillMaxSize().background(MessageCenterTheme.colors.surface),
+            modifier = Modifier.fillMaxSize().background(MsgCenterTheme.colors.surface),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 modifier = Modifier.padding(16.dp),
-                style = MessageCenterTheme.typography.emptyViewMessage,
+                style = MsgCenterTheme.typography.emptyViewMessage,
                 text = stringResource(CoreR.string.ua_empty_message_list),
             )
         }
@@ -294,7 +309,7 @@ private fun EditToolbar(
     selectedCount: Int,
     onAction: (Action) -> Unit
 ) {
-    val colors = MessageCenterTheme.colors
+    val colors = MsgCenterTheme.colors
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInVertically(initialOffsetY = { it }),

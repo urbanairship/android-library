@@ -30,8 +30,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.compose.theme.CheckboxColors
-import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
+import com.urbanairship.messagecenter.compose.ui.theme.CheckboxColors
+import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
+import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
 import com.urbanairship.messagecenter.compose.ui.MessageCenterListViewModel.Action
 import java.text.DateFormat
 import java.util.Date
@@ -48,10 +49,10 @@ internal fun MessageListItem(
     isHighlighted: Boolean,
     onAction: (Action) -> Unit
 ) {
-    val colors = MessageCenterTheme.colors
-    val dimens = MessageCenterTheme.dimensions
-    val options = MessageCenterTheme.options
-    val typography = MessageCenterTheme.typography
+    val colors = MsgCenterTheme.colors
+    val dimens = MsgCenterTheme.dimensions
+    val options = MsgCenterTheme.options
+    val typography = MsgCenterTheme.typography
 
     val background = if (isHighlighted) colors.messageListHighlight else colors.surface
 
