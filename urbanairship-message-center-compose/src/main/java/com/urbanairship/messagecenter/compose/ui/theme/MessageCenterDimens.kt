@@ -1,4 +1,4 @@
-package com.urbanairship.messagecenter.compose.theme
+package com.urbanairship.messagecenter.compose.ui.theme
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Immutable

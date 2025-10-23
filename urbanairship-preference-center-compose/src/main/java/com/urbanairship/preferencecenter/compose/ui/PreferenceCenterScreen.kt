@@ -48,6 +48,14 @@ import com.urbanairship.preferencecenter.data.Section
 import kotlinx.coroutines.flow.Flow
 import kotlin.collections.emptyList
 
+/**
+ * Preference Center screen with a top bar.
+ *
+ * @param identifier The preference center identifier.
+ * @param modifier The modifier to be applied to the screen.
+ * @param topBar Optional top bar composable. If null, a default top bar will be used.
+ * @param onNavigateUp Optional callback to be invoked when the navigate up action is triggered.
+ */
 @Composable
 public fun PreferenceCenterScreen(
     identifier: String,
@@ -71,6 +79,14 @@ public fun PreferenceCenterScreen(
     )
 }
 
+/**
+ * Preference Center screen with a top bar.
+ *
+ * @param state The preference center [state][PreferenceCenterState].
+ * @param modifier The modifier to be applied to the screen.
+ * @param topBar Optional top bar composable. If null, a default top bar will be used.
+ * @param onNavigateUp Optional callback to be invoked when the navigate up action is triggered.
+ */
 @Composable
 public fun PreferenceCenterScreen(
     state: PreferenceCenterState,
@@ -93,6 +109,13 @@ public fun PreferenceCenterScreen(
     }
 }
 
+/**
+ * Preference Center content.
+ *
+ * @param identifier The preference center identifier.
+ * @param modifier The modifier to be applied to the content.
+ * @param contentPadding Optional padding to be applied to the content.
+ */
 @Composable
 public fun PreferenceCenterContent(
     identifier: String,
@@ -118,6 +141,13 @@ public fun PreferenceCenterContent(
     )
 }
 
+/**
+ * Preference Center content.
+ *
+ * @param state The preference center [state][PreferenceCenterState].
+ * @param modifier The modifier to be applied to the content.
+ * @param contentPadding Optional padding to be applied to the content.
+ */
 @Composable
 public fun PreferenceCenterContent(
     state: PreferenceCenterState,

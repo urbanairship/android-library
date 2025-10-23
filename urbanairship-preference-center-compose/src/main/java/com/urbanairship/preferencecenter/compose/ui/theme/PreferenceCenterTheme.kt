@@ -8,7 +8,6 @@ import androidx.compose.runtime.compositionLocalOf
 import com.urbanairship.preferencecenter.PreferenceCenter
 
 // non-@composable version of the theme, used for configuring the activity before compose is set up
-// TODO: need to be able to set this globally somehow, and have the activity use it
 public data class PreferenceCenterTheme(
     val lightColors: PreferenceCenterColors = PreferenceCenterColors.lightDefaults(),
     val darkColors: PreferenceCenterColors = PreferenceCenterColors.darkDefaults(),

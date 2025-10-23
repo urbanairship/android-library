@@ -97,7 +97,7 @@ dependencies {
     implementation project(':urbanairship-message-center-compose')
 
     // Airship Preference Center
-    implementation project(':urbanairship-preference-center')
+    implementation project(':urbanairship-preference-center-compose')
 
     // Airship Automation (In-App)
     implementation project(":urbanairship-automation-compose")

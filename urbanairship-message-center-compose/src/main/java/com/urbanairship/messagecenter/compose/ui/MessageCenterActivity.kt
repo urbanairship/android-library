@@ -5,12 +5,14 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.urbanairship.Airship
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.MessageCenter
-import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
+import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
+import com.urbanairship.messagecenter.messageCenter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -36,10 +38,18 @@ public class MessageCenterActivity: ComponentActivity() {
 
         _messageIdToOpen.update { MessageCenter.parseMessageId(intent) }
 
+        // Load the theme (or the default theme if none has been set)
+        val theme = MessageCenter.shared().theme
+
         setContent {
             val messageId = messageIdToOpen.collectAsStateWithLifecycle()
 
-            MessageCenterTheme {
+            MessageCenterTheme(
+                colors = if (isSystemInDarkTheme()) theme.darkColors else theme.lightColors,
+                typography = theme.typography,
+                dimens = theme.dimens,
+                options = theme.options
+            ) {
                 MessageCenterScreen(
                     state = rememberMessageCenterState(messageId = messageId.value),
                     onNavigateUp = { finish() }

@@ -13,16 +13,21 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State
 
+/**
+ * State holder for the Message Center message screen.
+ */
 @Stable
 public class MessageCenterMessageState internal constructor(
     private val onAction: (Action) -> Unit,
 ) {
     internal var viewState by mutableStateOf<State>(State.Empty)
 
-    public val title: String by derivedStateOf {
-        (viewState as? State.Content)?.message?.title ?: "Message"
+    /** The message title, or `null` if no message is displayed */
+    public val title: String? by derivedStateOf {
+        (viewState as? State.Content)?.message?.title
     }
 
+    /** The message ID, or `null` if no message is displayed */
     public var messageId: String?
         get() = (viewState as? State.Content)?.message?.id
         set(_) {
@@ -36,6 +41,11 @@ public class MessageCenterMessageState internal constructor(
     }
 }
 
+/**
+ * Remembers a [MessageCenterMessageState].
+ *
+ * @param messageId An optional message ID to load.
+ */
 @Composable
 public fun rememberMessageCenterMessageState(
     messageId: String? = null,

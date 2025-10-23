@@ -1,4 +1,4 @@
-package com.urbanairship.messagecenter.compose.theme
+package com.urbanairship.messagecenter.compose.ui.theme
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -54,7 +54,7 @@ public data class MessageCenterOptions(
                         modifier = Modifier
                             .size(14.dp)
                             .clip(CircleShape)
-                            .background(MessageCenterTheme.colors.accent)
+                            .background(MsgCenterTheme.colors.accent)
                     )
                 }
             },

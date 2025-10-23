@@ -16,12 +16,16 @@ import com.urbanairship.messagecenter.compose.ui.MessageCenterListViewModel.Acti
 import com.urbanairship.messagecenter.compose.ui.MessageCenterListViewModel.State
 import com.urbanairship.messagecenter.ui.view.MessageListAction
 
+/**
+ * State holder for the Message Center list screen.
+ */
 @Stable
 public class MessageCenterListState internal constructor(
     private val onAction: (Action) -> Unit
 ) {
     internal var viewState by mutableStateOf<State>(State.Loading)
 
+    /** Whether the list is in editing mode. */
     public val isEditing: Boolean by derivedStateOf {
         (viewState as? State.Content)?.isEditing == true
     }
@@ -39,6 +43,12 @@ public class MessageCenterListState internal constructor(
     }
 }
 
+/**
+ * Remembers a [MessageCenterListState].
+ *
+ * @param predicate An optional predicate to filter messages.
+ * @param highlightedMessageId An optional message ID to highlight.
+ */
 @Composable
 public fun rememberMessageCenterListState(
     predicate: Predicate<Message>? = null,

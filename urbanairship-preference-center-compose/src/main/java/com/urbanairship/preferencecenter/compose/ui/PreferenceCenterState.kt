@@ -19,6 +19,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
 
+/**
+ * State holder for the Preference Center screen.
+ */
 @Stable
 public class PreferenceCenterState internal constructor(
     private val context: Context,
@@ -32,6 +35,7 @@ public class PreferenceCenterState internal constructor(
     internal var errorsFlow: MutableStateFlow<String?> = MutableStateFlow(null)
     internal val errors: Flow<String?> = errorsFlow.asStateFlow()
 
+    /** The title of the preference center. */
     public val title: String by derivedStateOf() {
         viewState.let {
             (it as? ViewState.Content)?.title ?: context.getString(R.string.ua_preference_center_label)
@@ -43,6 +47,11 @@ public class PreferenceCenterState internal constructor(
     }
 }
 
+/**
+ * Remembers a [PreferenceCenterState].
+ *
+ * @param identifier The identifier of the preference center configuration to display.
+ */
 @Composable
 public fun rememberPreferenceCenterState(identifier: String): PreferenceCenterState {
 

@@ -25,14 +25,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.urbanairship.messagecenter.compose.R
-import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
-import com.urbanairship.messagecenter.compose.theme.TopAppBarColors
+import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
+import com.urbanairship.messagecenter.compose.ui.theme.TopAppBarColors
 import com.urbanairship.R as CoreR
 import com.urbanairship.messagecenter.core.R as MessageCenterR
 
 /* Contains defaults to be used with Message Center composables. */
 @Stable
 public object MessageCenterDefaults {
+
+    /**
+     * Top bar for the message list screen.
+     *
+     * @param title The title to display in the top bar.
+     * @param isEditing Whether the list is in editing mode.
+     * @param navIcon The navigation icon to display. If null, no navigation icon is displayed.
+     * @param navIconDescription The content description for the navigation icon.
+     * @param actions The actions to display in the top bar.
+     * @param onNavigateUp The callback to be invoked when the navigation icon is clicked.
+     * @param scrollBehavior The optional scroll behavior for the top bar.
+     */
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     public fun listTopBar(
@@ -55,10 +67,15 @@ public object MessageCenterDefaults {
             },
             scrollBehavior = scrollBehavior,
             actions = actions,
-            colors = MessageCenterTheme.colors.listTopBar.toMaterials()
+            colors = MsgCenterTheme.colors.listTopBar.toMaterials()
         )
     }
 
+    /**
+     * Actions for the message list top bar.
+     *
+     * @param state The [state][MessageCenterState] of the message list.
+     */
     @Composable
     public fun listTopBarActions(
         state: MessageCenterListState,
@@ -77,8 +94,13 @@ public object MessageCenterDefaults {
             )
 
             Icon(
-                painter = if (isEditing) painterResource(R.drawable.ua_ic_edit_off_24)
-                else painterResource(R.drawable.ua_ic_edit_24),
+                painter = painterResource(
+                    if (isEditing) {
+                        R.drawable.ua_ic_edit_off_24
+                    } else {
+                        R.drawable.ua_ic_edit_24
+                    }
+                ),
                 contentDescription = editButtonDescription
             )
         }
@@ -92,7 +114,7 @@ public object MessageCenterDefaults {
         DropdownMenu(
             expanded = showMenu,
             onDismissRequest = { showMenu = false },
-            containerColor = MessageCenterTheme.colors.listTopBar.containerColor
+            containerColor = MsgCenterTheme.colors.listTopBar.containerColor
         ) {
             DropdownMenuItem(
                 enabled = isShowingContent,
@@ -105,7 +127,16 @@ public object MessageCenterDefaults {
         }
     }
 
-
+    /**
+     * Top bar for the message screen.
+     *
+     * @param title The title to display in the top bar.
+     * @param navIcon The navigation icon to display. If null, no navigation icon is displayed.
+     * @param navIconDescription The content description for the navigation icon.
+     * @param actions The actions to display in the top bar.
+     * @param onNavigateUp The callback to be invoked when the navigation icon is clicked.
+     * @param scrollBehavior The optional scroll behavior for the top bar.
+     */
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     public fun messageTopBar(
@@ -122,7 +153,7 @@ public object MessageCenterDefaults {
                 title?.let {
                     Text(
                         text = it,
-                        style = MessageCenterTheme.typography.itemTitle,
+                        style = MsgCenterTheme.typography.itemTitle,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -137,10 +168,17 @@ public object MessageCenterDefaults {
             },
             actions = actions,
             scrollBehavior = scrollBehavior,
-            colors = MessageCenterTheme.colors.messageTopBar.toMaterials()
+            colors = MsgCenterTheme.colors.messageTopBar.toMaterials()
         )
     }
 
+    /**
+     * Actions for the message top bar.
+     *
+     * @param state The [state][MessageCenterMessageState] of the message.
+     * @param canDelete Whether the delete action is enabled.
+     * @param onMessageDeleted Optional callback invoked when the message is deleted.
+     */
     @Composable
     public fun messageTopBarActions(
         state: MessageCenterMessageState,
@@ -169,6 +207,7 @@ private fun TopAppBarColors.toMaterials(): androidx.compose.material3.TopAppBarC
         scrolledContainerColor = scrolledContainerColor,
         navigationIconContentColor = navigationIconContentColor,
         titleContentColor = titleContentColor,
+        subtitleContentColor = titleContentColor,
         actionIconContentColor = actionIconContentColor
     )
 }
