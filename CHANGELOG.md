@@ -20,7 +20,7 @@ SDK 20.x should update directly to 20.0.1 to ensure proper packaging of these mo
 
 ## Version 20.0.0 – October 23, 2025
 
-Major SDK release with several breaking changes. See the [Migration Guide](documentation/migration/migration-guide-19-20.md) for detailed instructions on upgrading.
+Major SDK release with several breaking changes. See the [Migration Guide](https://github.com/urbanairship/android-library/tree/main/documentation/migration/migration-guide-19-20.md) for detailed instructions on upgrading.
 
 ### Changes
 - compileSdkVersion updated to 36
