@@ -4,9 +4,23 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
-## Version 20.0.0 – October 14, 2025
+## Version 20.0.1 - October 23, 2025
 
-Major SDK release with several breaking changes. See the [Migration Guide](#) for detailed instructions on upgrading.
+Minor release that fixes packaging and publishing for the modules added in 20.0.0. Apps upgrading to
+SDK 20.x should update directly to 20.0.1 to ensure proper packaging of these modules.
+
+### Changes
+
+- Fixed publishing for:
+  - `urbanairship-message-center-core` 
+  - `urbanairship-message-center-compose`
+  - `urbanairship-preference-center-core`
+  - `urbanairship-preference-center-compose`
+  - `urbanairship-debug`
+
+## Version 20.0.0 – October 23, 2025
+
+Major SDK release with several breaking changes. See the [Migration Guide](documentation/migration/migration-guide-19-20.md) for detailed instructions on upgrading.
 
 ### Changes
 - compileSdkVersion updated to 36
