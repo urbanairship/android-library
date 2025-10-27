@@ -52,19 +52,20 @@ private fun ScreenContent(
     onNavigate: (String) -> Unit
 ) {
     val displayInterval = viewModel.displayInterval
+    val accessoryIcon = Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display")
 
     Section(title = "In-App Automations") {
         Column {
             RowItem(
                 modifier = Modifier.clickable { onNavigate(AutomationScreens.Automations.route) },
                 title = "Automations",
-                accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+                accessory = { accessoryIcon }
             )
 
             RowItem(
                 modifier = Modifier.clickable { onNavigate(AutomationScreens.Experiments.route) },
                 title = "Experiments",
-                accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+                accessory = { accessoryIcon }
             )
 
             ListItem(

@@ -45,6 +45,8 @@ private fun ScreenContent(
 ) {
 
     val isLimited = viewModel.trackAdvertisingId.collectAsState(true).value
+    val accessoryIcon = Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display")
+
     Column {
         RowItem(
             title = "Track Advertising ID",
@@ -60,19 +62,19 @@ private fun ScreenContent(
         RowItem(
             modifier = Modifier.clickable { onNavigate(AnalyticsScreens.Events.route) },
             title = "Events",
-            accessory = { Icon(painter = painterResource(id = R.drawable.ic_chevron), contentDescription = "display") }
+            accessory = { accessoryIcon }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(AnalyticsScreens.AddCustom.route) },
             title = "Add Custom Event",
-            accessory = { Icon(painter = painterResource(id = R.drawable.ic_chevron), contentDescription = "display") }
+            accessory = { accessoryIcon }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(AnalyticsScreens.AssociatedIdentifiers.route) },
             title = "Associated Identifiers",
-            accessory = { Icon(painter = painterResource(id = R.drawable.ic_chevron), contentDescription = "display") }
+            accessory = { accessoryIcon }
         )
     }
 }

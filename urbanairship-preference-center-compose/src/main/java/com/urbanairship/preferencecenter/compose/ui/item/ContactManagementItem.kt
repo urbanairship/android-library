@@ -143,11 +143,12 @@ private fun listView(
                             // },
                         }
                 ) {
+                    val iconRes = when(item.platform) {
+                        is Platform.Email -> R.drawable.ua_ic_preference_center_email
+                        is Platform.Sms -> R.drawable.ua_ic_preference_center_phone
+                    }
                     Icon(
-                        painter = when(item.platform) {
-                            is Platform.Email -> painterResource(R.drawable.ua_ic_preference_center_email)
-                            is Platform.Sms -> painterResource(R.drawable.ua_ic_preference_center_phone)
-                        },
+                        painter = painterResource(iconRes),
                         tint = PrefCenterTheme.colors.contactManagementItemIconTint,
                         contentDescription = null,
                         modifier = Modifier.size(PrefCenterTheme.dimens.contactManagementItemIconSize)

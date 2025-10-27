@@ -53,25 +53,27 @@ private fun ScreenContent(
     viewModel: CreateChannelViewModel,
     onNavigate: (String) -> Unit
 ) {
+    val accessoryIcon = Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display")
+
     LazyColumn {
         item {
             Section(title = "Channel Type") {
                 RowItem(
                     modifier = Modifier.clickable { onNavigate(ContactChannelScreens.OpenChannel.route) },
                     title = "Open Channel",
-                    accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+                    accessory = { accessoryIcon }
                 )
 
                 RowItem(
                     modifier = Modifier.clickable { onNavigate(ContactChannelScreens.SMSChannel.route) },
                     title = "SMS Channel",
-                    accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+                    accessory = { accessoryIcon }
                 )
 
                 RowItem(
                     modifier = Modifier.clickable { onNavigate(ContactChannelScreens.EmailChannel.route) },
                     title = "Email Channel",
-                    accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+                    accessory = { accessoryIcon }
                 )
             }
         }

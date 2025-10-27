@@ -54,6 +54,8 @@ private fun ScreenContent(viewModel: ChannelViewModel, onNavigate: (String) -> U
     val channelId = viewModel.channelId.collectAsState(null).value
 
     val context = LocalContext.current
+    val accessoryIcon = Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display")
+
 
     Column {
         ListItem(
@@ -69,25 +71,25 @@ private fun ScreenContent(viewModel: ChannelViewModel, onNavigate: (String) -> U
         RowItem(
             modifier = Modifier.clickable { onNavigate(ChannelInfoScreens.Tags.route) },
             title = "Tags",
-            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+            accessory = { accessoryIcon }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(ChannelInfoScreens.TagGroups.route) },
             title = "Tag Groups",
-            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+            accessory = { accessoryIcon }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(ChannelInfoScreens.Attributes.route) },
             title = "Attributes",
-            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+            accessory = { accessoryIcon }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(ChannelInfoScreens.SubscriptionLists.route) },
             title = "Subscription Lists",
-            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+            accessory = { accessoryIcon }
         )
     }
 }

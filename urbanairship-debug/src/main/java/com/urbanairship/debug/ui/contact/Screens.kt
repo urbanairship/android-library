@@ -2,6 +2,7 @@
 
 package com.urbanairship.debug.ui.contact
 
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.urbanairship.debug.R
 import com.urbanairship.debug.ui.Screen
@@ -10,6 +11,7 @@ import com.urbanairship.debug.ui.DebugScreen
 internal enum class ContactScreens(
     override val titleRes: Int,
     override val descRes: Int? = null,
+    @DrawableRes
     override val icon: Int? = null,
     override val isRoot: Boolean = false,
 ) : Screen {

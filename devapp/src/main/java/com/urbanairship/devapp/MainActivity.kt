@@ -42,11 +42,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     @Composable
-    fun TopLevelDestination.icon(): Painter = when(this) {
-        TopLevelDestination.Home -> painterResource(id = R.drawable.ic_home)
-        is TopLevelDestination.Message -> painterResource(id = R.drawable.ic_inbox)
-        TopLevelDestination.PreferenceCenter -> painterResource(id = R.drawable.ic_pref_center)
-        TopLevelDestination.Settings -> painterResource(id = R.drawable.ic_settings)
+    fun TopLevelDestination.icon(): Int = when(this) {
+        TopLevelDestination.Home -> R.drawable.ic_home
+        is TopLevelDestination.Message -> R.drawable.ic_inbox
+        TopLevelDestination.PreferenceCenter -> R.drawable.ic_pref_center
+        TopLevelDestination.Settings -> R.drawable.ic_settings
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                                     selected = activeTab == item,
                                     onClick = { appRouter.navigate(item) },
                                     label = { Text(text = item.title()) },
-                                    icon = { Icon(item.icon(), contentDescription = null) },
+                                    icon = { Icon(painter = painterResource(item.icon()), contentDescription = null) },
                                     alwaysShowLabel = true,
                                 )
                             }

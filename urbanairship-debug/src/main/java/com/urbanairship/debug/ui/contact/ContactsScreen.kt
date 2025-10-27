@@ -34,36 +34,38 @@ internal fun ContactsScreen(
 
 @Composable
 private fun ScreenContent(onNavigate: (String) -> Unit = {}) {
+    val accessoryIcon = Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display")
+
     Column {
         RowItem(
             modifier = Modifier.clickable { onNavigate(ContactScreens.NamedUser.route) },
             title = "Named User",
             details = if (Airship.isFlying) { Airship.contact.namedUserId } else { null },
-            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+            accessory = { accessoryIcon }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(ContactScreens.TagGroups.route) },
             title = "Tag Groups",
-            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+            accessory = { accessoryIcon }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(ContactScreens.Attributes.route) },
             title = "Attributes",
-            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+            accessory = { accessoryIcon }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(ContactScreens.SubscriptionList.route) },
             title = "Subscription Lists",
-            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+            accessory = { accessoryIcon }
         )
 
         RowItem(
             modifier = Modifier.clickable { onNavigate(ContactScreens.AddChannel.route) },
             title = "Add Channel",
-            accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
+            accessory = { accessoryIcon }
         )
     }
 }
