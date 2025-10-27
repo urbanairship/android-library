@@ -28,13 +28,23 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.urbanairship.messagecenter.compose.theme.MessageCenterTheme
+import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
+import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State.Content.WebViewState
 import com.urbanairship.messagecenter.compose.ui.widget.MessageCenterWebView
 import com.urbanairship.R as CoreR
 
+/**
+ * Message Center message screen, including a top bar.
+ *
+ * @param modifier The modifier to be applied to the screen.
+ * @param state The message center message state.
+ * @param topBar Optional top bar composable. If null, a default top bar will be used.
+ * @param onNavigateUp Optional callback to be invoked when the navigate up action is triggered.
+ * @param onClose Optional callback to be invoked when the message is closed.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 public fun MessageCenterMessageScreen(
@@ -79,6 +89,13 @@ public fun MessageCenterMessageScreen(
     }
 }
 
+/**
+ * Message Center message content.
+ *
+ * @param state The message center message state.
+ * @param modifier The modifier to be applied to the content.
+ * @param onClose Callback to be invoked when the message requests to be closed.
+ */
 @Composable
 public fun MessageCenterMessage(
     state: MessageCenterMessageState,
@@ -142,8 +159,8 @@ private fun ErrorView(error: State.Error.Type, onRefresh: (() -> Unit)? = null) 
         State.Error.Type.LOAD_FAILED -> stringResource(CoreR.string.ua_mc_failed_to_load)
     }
 
-    val colors = MessageCenterTheme.colors
-    val typography = MessageCenterTheme.typography
+    val colors = MsgCenterTheme.colors
+    val typography = MsgCenterTheme.typography
 
     Column(
         modifier = Modifier
@@ -158,7 +175,7 @@ private fun ErrorView(error: State.Error.Type, onRefresh: (() -> Unit)? = null) 
             Icon(
                 modifier = Modifier.size(96.dp, 96.dp),
                 painter = painterResource(com.urbanairship.messagecenter.core.R.drawable.ua_ic_message_center_info),
-                tint = MessageCenterTheme.colors.accent,
+                tint = MsgCenterTheme.colors.accent,
                 contentDescription = ""
             )
         }
@@ -188,13 +205,13 @@ private fun ErrorView(error: State.Error.Type, onRefresh: (() -> Unit)? = null) 
 
 @Composable
 private fun LoadingView() {
-    val colors = MessageCenterTheme.colors
+    val colors = MsgCenterTheme.colors
 
     Box(Modifier
         .fillMaxSize()
         .background(colors.messageLoadingBackground)
     ) {
-        val content = MessageCenterTheme.options.messageLoadingView
+        val content = MsgCenterTheme.options.messageLoadingView
         if (content != null) {
             content()
         } else {
@@ -210,12 +227,12 @@ private fun LoadingView() {
 private fun EmptyView() {
     Box(Modifier
         .fillMaxSize()
-        .background(MessageCenterTheme.colors.messageEmptyBackground)
+        .background(MsgCenterTheme.colors.messageEmptyBackground)
     ) {
         Text(
             modifier = Modifier.align(Alignment.Center),
             text = stringResource(CoreR.string.ua_message_not_selected),
-            color = MessageCenterTheme.colors.messageEmptyLabel
+            color = MsgCenterTheme.colors.messageEmptyLabel
         )
     }
 }

@@ -17,20 +17,31 @@ import com.urbanairship.preferencecenter.compose.ui.theme.PrefCenterTheme
 /* Contains defaults to be used with Preference Center composables. */
 @Stable
 public object PreferenceCenterDefaults {
+
+    /**
+     * Top bar for the preference center screens.
+     *
+     * @param title The title to display in the top bar.
+     * @param navIcon The navigation icon to display. If null, no navigation icon is displayed.
+     * @param navIconDescription The content description for the navigation icon.
+     * @param onNavigateUp The callback to be invoked when the navigation icon is clicked.
+     */
     @Composable
     public fun topBar(
         title: String,
         navIcon: Painter =
             painterResource(com.urbanairship.preferencecenter.core.R.drawable.ua_ic_preference_center_arrow_back),
-        navIconDescription: String = stringResource(R.string.ua_back),
+        navIconDescription: String? = stringResource(R.string.ua_back),
         onNavigateUp: () -> Unit
     ) {
         @OptIn(ExperimentalMaterial3Api::class)
         TopAppBar(
             title = { Text(text = title) },
             navigationIcon = {
-                IconButton(onClick = onNavigateUp) {
-                    Icon(navIcon, navIconDescription)
+                navIcon?.let {
+                    IconButton(onClick = onNavigateUp) {
+                        Icon(navIcon, navIconDescription)
+                    }
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(

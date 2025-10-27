@@ -31,6 +31,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action as MessageAction
 
+/**
+ * Message Center screen with a list-detail pane scaffold.
+ *
+ * @param modifier The modifier to be applied to the screen.
+ * @param state The message center [state][MessageCenterState].
+ * @param showListNavigateUpIcon Whether to show the navigate up icon in the list pane.
+ * @param onNavigateUp The callback to be invoked when the navigate up icon is clicked.
+ */
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 public fun MessageCenterScreen(
