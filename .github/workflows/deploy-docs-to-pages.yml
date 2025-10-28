@@ -47,7 +47,7 @@ jobs:
         with:
           name: packaged-docs-${{ inputs.version }}
           path: build/docs
-          
+
       - name: Extract documentation for GitHub Pages
         env:
           VERSION: ${{ inputs.version }}
@@ -81,12 +81,12 @@ jobs:
           echo "Successfully extracted documentation:"
           ls -la ./pages-docs
 
-        - name: Deploy to GitHub Pages
-          uses: peaceiris/actions-gh-pages@v4
-          with:
-            github_token: ${{ secrets.GITHUB_TOKEN }}
-            publish_branch: gh-pages
-            publish_dir: ./pages-docs
-            destination_dir: ${{ inputs.version }}
-            keep_files: true
-            enable_jekyll: false
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./pages-docs
+          destination_dir: ${{ inputs.version }}
+          keep_files: true
+          enable_jekyll: false
