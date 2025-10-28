@@ -47,7 +47,7 @@ jobs:
         with:
           name: packaged-docs-${{ inputs.version }}
           path: build/docs
-
+          
       - name: Extract documentation for GitHub Pages
         env:
           VERSION: ${{ inputs.version }}
