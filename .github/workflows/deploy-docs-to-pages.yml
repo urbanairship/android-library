@@ -20,13 +20,6 @@ on:
         required: true
         type: string
 
-  workflow_call:
-    inputs:
-      version:
-        description: 'The tag/version to deploy to GitHub Pages'
-        required: true
-        type: string
-
 jobs:
   deploy-to-pages:
     if: github.repository == 'urbanairship/android-library'

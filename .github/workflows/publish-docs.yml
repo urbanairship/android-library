@@ -8,12 +8,6 @@ on:
         required: true
         type: string
 
-  workflow_call:
-    inputs:
-      version:
-        description: 'The tag to publish'
-        required: true
-        type: string
     secrets:
       GCP_SA_KEY:
         description: 'The GCP service account key'
