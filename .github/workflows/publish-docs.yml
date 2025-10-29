@@ -27,12 +27,10 @@ jobs:
       # Download pre-packaged docs artifacts if they were published by the release workflow.
       - name: Download pre-packaged docs artifacts
         id: download_docs
-        env:
-          VERSION: ${{ inputs.version }}
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          name: packaged-docs-$VERSION
+          name: packaged-docs-${{ inputs.version }}
           path: build/docs
 
       # Fallback to building if artifacts were not previously uploaded for the given version.
@@ -88,14 +86,12 @@ jobs:
 
       - name: Upload packaged docs artifacts
         if: ${{ steps.download_docs.outcome == 'failure' }}
-        env:
-          VERSION: ${{ inputs.version }}
         uses: actions/upload-artifact@v4
         with:
-          name: packaged-docs-$VERSION
+          name: packaged-docs-${{ inputs.version }}
           retention-days: 1
           path: |
-            build/docs/$VERSION-kdoc.tar.gz
+            build/docs/${{ inputs.version }}-kdoc.tar.gz
 
   upload-docs:
     if: github.repository == 'urbanairship/android-library'
@@ -113,11 +109,9 @@ jobs:
 
       - name: Download packaged docs artifacts
         id: download_docs
-        env:
-          VERSION: ${{ inputs.version }}
         uses: actions/download-artifact@v4
         with:
-          name: packaged-docs-$VERSION
+          name: packaged-docs-${{ inputs.version }}
           path: build/docs
 
       - name: Setup GCP Auth
