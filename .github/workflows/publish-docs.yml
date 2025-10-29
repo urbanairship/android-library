@@ -1,7 +1,16 @@
 name: Publish Docs
 
 on:
+  
+  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'The tag to publish'
+        required: true
+        type: string
+
+  workflow_call:
     inputs:
       version:
         description: 'The tag to publish'

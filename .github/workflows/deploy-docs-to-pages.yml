@@ -20,58 +20,154 @@ on:
         required: true
         type: string
 
+  workflow_call:
+    inputs:
+      version:
+        description: 'The tag/version to deploy to GitHub Pages'
+        required: true
+        type: string
+
+  pull_request:
+    branches: [ main, next ]
+      paths:
+        - '.github/workflows/deploy-docs-to-pages.yml'
+        - '.github/workflows/publish-docs.yml'
+        - 'docs/**'
+        - 'documentation/**'
+        - '**/*.md'
+        - 'build.gradle'
+        - 'gradle/**'
+
 jobs:
-  deploy-to-pages:
+  prepare-docs:
     if: github.repository == 'urbanairship/android-library'
     runs-on: ubuntu-latest
     steps:
       - name: Extract version
         id: extract_version
-        env:
-          VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
-          echo "VERSION_DIR=v$MAJOR_VERSION" >> $GITHUB_ENV
+          
+          # Determine version based on trigger type
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # For PRs, use pr-<number>-<short-sha>
+            VERSION="pr-${{ github.event.number }}-${GITHUB_SHA:0:7}"
+            echo "📝 Pull Request build - using version: $VERSION"
+            echo "VERSION_DIR=pr-${{ github.event.number }}" >> $GITHUB_ENV
+          else
+            # For workflow_dispatch and workflow_call, use inputs.version
+            VERSION="${{ inputs.version }}"
+            MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
+            echo "🏷️ Release/Manual build - using version: $VERSION"
+            echo "VERSION_DIR=v$MAJOR_VERSION" >> $GITHUB_ENV
+          fi
+          
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Download packaged docs artifacts
         id: download_docs
         uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
-          name: packaged-docs-${{ inputs.version }}
+          name: packaged-docs-${{ env.VERSION }}
           path: build/docs
 
-      - name: Extract documentation for GitHub Pages
-        env:
-          VERSION: ${{ inputs.version }}
+      # Fallback to building if artifacts were not previously uploaded for the given version.
+      # NOTE: All the steps below this point will be skipped if the download step succeeds.
+      - name: Checkout repo to build docs
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'pull_request' && github.head_ref || format('refs/tags/{0}', env.VERSION) }}
+
+      - name: Setup Java Version
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Copy CI gradle.properties
+        if: ${{ steps.download_docs.outcome == 'failure' }}
         run: |
-          # Verify the artifact was downloaded
+          set -euo pipefail
+          mkdir -p ~/.gradle
+          cp .github/ci-gradle.properties ~/.gradle/gradle.properties
+
+      - name: Verify Version (Gradle equality)
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        run: |
+          set -euo pipefail
+          ACTUAL_VERSION=$(./gradlew -q getVersion)
+          if [[ "$ACTUAL_VERSION" != "$VERSION" ]]; then
+            echo "❌ Version mismatch!"
+            echo "Expected: $VERSION"
+            echo "Actual:   $ACTUAL_VERSION"
+            exit 1
+          fi
+          echo "✅ Version verified: $VERSION"
+
+      - name: Build docs packages
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        run: |
+          set -euo pipefail
+          ./gradlew packageDocs --stacktrace
+
+  upload-docs:
+    if: github.repository == 'urbanairship/android-library'
+    runs-on: ubuntu-latest
+    needs: prepare-docs
+    steps:
+      - name: Extract documentation for GitHub Pages
+        run: |
           set -euo pipefail
 
           DOC_PATH="build/docs/${VERSION}-kdoc.tar.gz"
 
+          # Check which method was used to obtain docs
+          if [[ "${{ steps.download_docs.outcome }}" == "success" ]]; then
+            echo "📦 Using pre-packaged docs artifacts from release workflow"
+          else
+            echo "🔨 Using locally built docs (pre-packaged artifacts not available)"
+          fi
+
+          # Verify the documentation file exists
           if [ ! -f "$DOC_PATH" ]; then
-            echo "Error: Documentation artifact not found!"
+            echo "❌ Error: Documentation artifact not found!"
             echo "Expected: $DOC_PATH"
-            echo "Available files:"
+            echo "Available files in build/docs:"
             find build/docs -type f 2>/dev/null || echo "No build/docs directory found"
+            if [ -d build ]; then
+              echo "Available files in build directory:"
+              find build -name "*.tar.gz" -type f 2>/dev/null || echo "No tar.gz files found in build directory"
+            fi
             exit 1
           fi
+          
+          echo "✅ Found documentation artifact: $DOC_PATH"
+          echo "📊 File size: $(du -h "$DOC_PATH" | cut -f1)"
           
           # Create a directory for extracted docs
           mkdir -p ./pages-docs
           
           # Extract the tar.gz file
+          echo "📤 Extracting documentation..."
           tar -xzf "$DOC_PATH" -C ./pages-docs
           
           # Verify extraction was successful
           if [ -z "$(ls -A ./pages-docs)" ]; then
-            echo "Error: Documentation extraction failed - directory is empty"
+            echo "❌ Error: Documentation extraction failed - directory is empty"
             exit 1
           fi
           
           # List contents to verify extraction
-          echo "Successfully extracted documentation:"
+          echo "✅ Successfully extracted documentation:"
+          echo "📂 Contents of ./pages-docs:"
           ls -la ./pages-docs
 
       - name: Deploy to GitHub Pages
@@ -80,6 +176,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./pages-docs
-          destination_dir: ${{ inputs.version }}
+          destination_dir: ${{ env.VERSION }}
           keep_files: true
           enable_jekyll: false
