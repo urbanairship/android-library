@@ -28,15 +28,15 @@ on:
         type: string
 
   pull_request:
-    branches: [ main, next ]
-      paths:
-        - '.github/workflows/deploy-docs-to-pages.yml'
-        - '.github/workflows/publish-docs.yml'
-        - 'docs/**'
-        - 'documentation/**'
-        - '**/*.md'
-        - 'build.gradle'
-        - 'gradle/**'
+    branches: [ main ]
+    paths:
+      - '.github/workflows/deploy-docs-to-pages.yml'
+      - '.github/workflows/publish-docs.yml'
+      - 'docs/**'
+      - 'documentation/**'
+      - '**/*.md'
+      - 'build.gradle'
+      - 'gradle/**'
 
 jobs:
   prepare-docs:
@@ -56,7 +56,7 @@ jobs:
             echo "VERSION_DIR=pr-${{ github.event.number }}" >> $GITHUB_ENV
           else
             # For workflow_dispatch and workflow_call, use inputs.version
-            VERSION="${{ inputs.version }}"
+            VERSION="${{ env.VERSION }}"
             MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
             echo "🏷️ Release/Manual build - using version: $VERSION"
             echo "VERSION_DIR=v$MAJOR_VERSION" >> $GITHUB_ENV
@@ -118,11 +118,6 @@ jobs:
           set -euo pipefail
           ./gradlew packageDocs --stacktrace
 
-  upload-docs:
-    if: github.repository == 'urbanairship/android-library'
-    runs-on: ubuntu-latest
-    needs: prepare-docs
-    steps:
       - name: Extract documentation for GitHub Pages
         run: |
           set -euo pipefail
