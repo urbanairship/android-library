@@ -28,14 +28,6 @@ on:
         type: string
 
   pull_request:
-    paths:
-      - '.github/workflows/deploy-docs-to-pages.yml'
-      - '.github/workflows/publish-docs.yml'
-      - 'docs/**'
-      - 'documentation/**'
-      - '**/*.md'
-      - 'build.gradle'
-      - 'gradle/**'
 
 jobs:
   prepare-docs:
