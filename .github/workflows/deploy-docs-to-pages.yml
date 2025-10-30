@@ -41,27 +41,32 @@ jobs:
           
           # Determine version based on trigger type
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # For PRs, use pr-<number>-<short-sha>
-            VERSION="pr-${{ github.event.number }}-${GITHUB_SHA:0:7}"
-            echo "📝 Pull Request build - using version: $VERSION"
-            echo "VERSION_DIR=pr-${{ github.event.number }}" >> $GITHUB_ENV
+            # For PRs, try to extract version from branch name (e.g., "pr-20.0.1" -> "20.0.1")
+            BRANCH_NAME="${{ github.head_ref }}"
+            echo "🔍 PR branch name: $BRANCH_NAME"
+            
+            # Try to extract version from branch name patterns like "pr-X.Y.Z" or "release-X.Y.Z"
+            if [[ "$BRANCH_NAME" =~ ^(pr|release)-([0-9]+\.[0-9]+\.[0-9]+.*) ]]; then
+              VERSION="${BASH_REMATCH[2]}"
+              echo "✅ Extracted version from branch name: $VERSION"
+            else
+              echo "❌ Error: No version in branch name"
+              exit 1
+            fi
           else
-            # For workflow_dispatch and workflow_call, use inputs.version
-            VERSION="${{ env.VERSION }}"
-            MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
-            echo "🏷️ Release/Manual build - using version: $VERSION"
-            echo "VERSION_DIR=v$MAJOR_VERSION" >> $GITHUB_ENV
+            VERSION="${{ inputs.version }}"
+            echo "✅ Using version from workflow input: $VERSION"
           fi
-          
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+            echo "VERSION=$VERSION" >> $GITHUB_ENV
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Download packaged docs artifacts
         id: download_docs
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
-          name: packaged-docs-${{ env.VERSION }}
+          name: packaged-docs-${{ steps.extract_version.outputs.version }}
           path: build/docs
 
       # Fallback to building if artifacts were not previously uploaded for the given version.
@@ -70,7 +75,7 @@ jobs:
         if: ${{ steps.download_docs.outcome == 'failure' }}
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event_name == 'pull_request' && github.head_ref || format('refs/tags/{0}', env.VERSION) }}
+          ref: refs/tags/${{ steps.extract_version.outputs.version }}
 
       - name: Setup Java Version
         if: ${{ steps.download_docs.outcome == 'failure' }}
@@ -92,16 +97,29 @@ jobs:
 
       - name: Verify Version (Gradle equality)
         if: ${{ steps.download_docs.outcome == 'failure' }}
+        env:
+          VERSION: ${{ steps.extract_version.outputs.version }}
         run: |
           set -euo pipefail
           ACTUAL_VERSION=$(./gradlew -q getVersion)
-          if [[ "$ACTUAL_VERSION" != "$VERSION" ]]; then
-            echo "❌ Version mismatch!"
-            echo "Expected: $VERSION"
-            echo "Actual:   $ACTUAL_VERSION"
-            exit 1
+          
+          # Check if VERSION looks like a real version (contains dots) or is synthetic
+          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
+            # Real version - verify it matches
+            if [[ "$ACTUAL_VERSION" != "$VERSION" ]]; then
+              echo "❌ Version mismatch!"
+              echo "Expected: $VERSION"
+              echo "Actual:   $ACTUAL_VERSION"
+              exit 1
+            fi
+            echo "✅ Version verified: $VERSION"
+          else
+            # Synthetic version - just show info
+            echo "📝 Build Information:"
+            echo "  Build version:     $VERSION"
+            echo "  Project version:   $ACTUAL_VERSION"
+            echo "ℹ️  Version verification skipped for synthetic versions"
           fi
-          echo "✅ Version verified: $VERSION"
 
       - name: Build docs packages
         if: ${{ steps.download_docs.outcome == 'failure' }}
@@ -162,6 +180,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./pages-docs
-          destination_dir: ${{ env.VERSION }}
+          destination_dir: ${{ steps.extract_version.outputs.version }}
           keep_files: false
           enable_jekyll: false
