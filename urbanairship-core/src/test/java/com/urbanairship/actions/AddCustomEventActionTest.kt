@@ -3,25 +3,18 @@ package com.urbanairship.actions
 
 import androidx.core.os.bundleOf
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.BaseTestCase
 import com.urbanairship.actions.Action.Situation
-import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.CustomEvent
 import com.urbanairship.analytics.EventTestUtils
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
 import com.urbanairship.push.PushMessage
-import io.mockk.every
-import io.mockk.mockk
-import io.mockk.verify
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import org.json.JSONException
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.ArgumentCaptor
 
 @RunWith(AndroidJUnit4::class)
 public class AddCustomEventActionTest {

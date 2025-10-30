@@ -6,13 +6,9 @@ import android.net.Uri
 import android.view.KeyEvent
 import android.view.View
 import android.webkit.WebView
-import androidx.core.os.bundleOf
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.Airship
 import com.urbanairship.UrlAllowList
-import com.urbanairship.contacts.Contact
-import com.urbanairship.contacts.Scope
 import com.urbanairship.javascript.JavaScriptEnvironment
 import com.urbanairship.javascript.JavaScriptExecutor
 import com.urbanairship.javascript.NativeBridge
@@ -24,10 +20,8 @@ import io.mockk.slot
 import io.mockk.spyk
 import io.mockk.verify
 import org.junit.Assert
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.mock
 
 @RunWith(AndroidJUnit4::class)
 public class AirshipWebViewClientTest {

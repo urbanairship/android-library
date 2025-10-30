@@ -27,7 +27,6 @@ dependencies {
     api project(':urbanairship-core')
     implementation(libs.junit)
     implementation(libs.androidx.test.core)
-    implementation(libs.mockito.core)
     implementation(libs.androidx.test.ext.junit)
     implementation(libs.robolectric.core)
     implementation(libs.androidx.room.runtime)
