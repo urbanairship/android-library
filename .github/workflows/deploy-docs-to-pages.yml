@@ -124,6 +124,8 @@ jobs:
 
       - name: Build docs packages
         if: ${{ steps.download_docs.outcome == 'failure' }}
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
           ./gradlew packageDocs --stacktrace
