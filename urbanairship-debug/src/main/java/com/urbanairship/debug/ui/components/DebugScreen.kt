@@ -24,9 +24,6 @@ import androidx.compose.ui.unit.dp
 import com.urbanairship.debug.R
 
 /** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public val LocalIgnoreBottomPadding: ProvidableCompositionLocal<Boolean> = compositionLocalOf { false }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun DebugScreen(
@@ -58,16 +55,7 @@ internal fun DebugScreen(
         modifier = modifier,
         floatingActionButton = actionButton
     ) { contentPadding ->
-        // Check if the bottom padding should be ignored
-        // (e.g., when the screen is embedded in a screen that already handles insets/content padding)
-        val ignoreBottomPadding = LocalIgnoreBottomPadding.current
-        val padding = if (ignoreBottomPadding) {
-            contentPadding.withoutBottomPadding()
-        } else {
-            contentPadding
-        }
-
-        Surface(modifier = Modifier.padding(padding)) {
+        Surface(modifier = Modifier.padding(contentPadding)) {
             content()
         }
     }

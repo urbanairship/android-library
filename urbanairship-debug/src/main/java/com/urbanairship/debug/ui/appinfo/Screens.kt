@@ -19,5 +19,5 @@ internal enum class AppInfoScreen(
 
     override val isTopLevel: Boolean = false
 
-    val route: String = DebugScreen.DeviceInfo.route + "/$name"
+    val route: String = DebugScreen.AppInfo.route + "/$name"
 }

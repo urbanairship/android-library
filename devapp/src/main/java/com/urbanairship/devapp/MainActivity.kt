@@ -61,7 +61,6 @@ class MainActivity : AppCompatActivity() {
 
             DeeplinkManager.shared.setAppRouter(appRouter)
 
-            val activeTab = appRouter.selectedTopLevel.collectAsState().value
             val backstack = appRouter.activeBackStack.collectAsState().value
 
             AirshipTheme {
@@ -70,7 +69,7 @@ class MainActivity : AppCompatActivity() {
                         NavigationBar {
                             TopLevelDestination.entries.forEach { item ->
                                 NavigationBarItem(
-                                    selected = activeTab == item,
+                                    selected = appRouter.selectedTopLevel.value == item,
                                     onClick = { appRouter.navigate(item) },
                                     label = { Text(text = item.title()) },
                                     icon = { Icon(painter = painterResource(item.icon()), contentDescription = null) },
@@ -84,7 +83,7 @@ class MainActivity : AppCompatActivity() {
                         modifier = Modifier.fillMaxSize().padding(innerPadding)
                             .consumeWindowInsets(innerPadding),
                         backStack = backstack,
-                        onBack = { appRouter.pop() },
+                        onBack = appRouter::pop,
                         entryDecorators = listOf(
                             // Add the default decorators for managing scenes and saving state
                             rememberSaveableStateHolderNavEntryDecorator(),
