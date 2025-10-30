@@ -31,7 +31,7 @@ on:
 
 jobs:
   prepare-docs:
-    if: github.repository == 'urbanairship/android-library'
+    #if: github.repository == 'urbanairship/android-library'
     runs-on: ubuntu-latest
     steps:
       - name: Extract version
@@ -163,5 +163,5 @@ jobs:
           publish_branch: gh-pages
           publish_dir: ./pages-docs
           destination_dir: ${{ env.VERSION }}
-          keep_files: true
+          keep_files: false
           enable_jekyll: false
