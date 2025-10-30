@@ -4,8 +4,11 @@ import android.os.Bundle
 import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.TextView
 import androidx.annotation.LayoutRes
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.children
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
@@ -79,6 +82,16 @@ public open class MessageCenterMessageFragment(
         }
 
         messageTitle?.let(::setToolbarTitle)
+
+        // Retrieve the Toolbar title TextView and set it as heading
+        toolbar?.let {
+            val titleTextView = it.children.firstOrNull { view ->
+                view is TextView && view.text == it.title
+            } as? TextView
+            titleTextView?.let { textView ->
+                ViewCompat.setAccessibilityHeading(textView, true)
+            }
+        }
 
         updateToolbarNavIcon()
     }

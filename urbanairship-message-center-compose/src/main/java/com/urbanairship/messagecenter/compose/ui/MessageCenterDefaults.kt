@@ -20,9 +20,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import com.urbanairship.messagecenter.compose.R
 import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
@@ -57,7 +60,12 @@ public object MessageCenterDefaults {
         scrollBehavior: TopAppBarScrollBehavior? = null
     ) {
         TopAppBar(
-            title = { Text(text = title) },
+            title = {
+                Text(
+                    text = title,
+                    modifier = Modifier.semantics { heading() }
+                )
+            },
             navigationIcon = {
                 navIcon?.let {
                     IconButton(onClick = onNavigateUp) {
@@ -155,7 +163,8 @@ public object MessageCenterDefaults {
                         text = it,
                         style = MsgCenterTheme.typography.itemTitle,
                         maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.semantics { heading() }
                     )
                 }
             },

@@ -6,9 +6,12 @@ import android.view.ContextThemeWrapper
 import android.view.LayoutInflater
 import android.view.View
 import android.view.accessibility.AccessibilityManager
+import android.widget.TextView
 import androidx.annotation.LayoutRes
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.withStyledAttributes
+import androidx.core.view.ViewCompat
+import androidx.core.view.children
 import androidx.core.view.isVisible
 import com.urbanairship.messagecenter.R
 import com.urbanairship.R as CoreR
@@ -64,6 +67,14 @@ public open class MessageCenterListFragment @JvmOverloads constructor(
         toolbar = view.findViewById<Toolbar>(R.id.toolbar).apply {
             setupToolbar(this)
             title = toolbarTitle
+
+            // Retrieve the Toolbar title TextView and set it as heading
+            val titleTextView = children.firstOrNull { view ->
+                view is TextView && view.text == title
+            } as? TextView
+            titleTextView?.let {
+                ViewCompat.setAccessibilityHeading(it, true)
+            }
         }
 
         verticalDivider = view.findViewById<View?>(R.id.list_vertical_divider).apply {
