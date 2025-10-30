@@ -16,7 +16,7 @@ internal enum class DeviceInfoSection {
 internal enum class DeviceInfoScreens(
     override val titleRes: Int,
     override val descRes: Int? = null,
-    override val icon: ImageVector? = null,
+    override val icon: Int? = null,
     override val isRoot: Boolean = false,
     val section: DeviceInfoSection? = null,
 ) : BaseScreen {

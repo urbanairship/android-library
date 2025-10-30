@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -43,7 +44,7 @@ internal fun DebugSettingItem(
         .fillMaxWidth()
         .wrapContentHeight(),
     description: String? = null,
-    icon: ImageVector? = null,
+    icon: Int? = null,
     currentValue: String? = null,
     onClick: (() -> Unit)? = null,
 ) {
@@ -62,7 +63,7 @@ internal fun DebugSettingItem(
             }, trailingContent = {
                 icon?.let {
                     Icon(
-                        imageVector = it,
+                        painter = painterResource(it),
                         contentDescription = null,
                         modifier = Modifier.padding(end = 12.dp)
                     )

@@ -5,9 +5,6 @@ package com.urbanairship.debug.ui.events
 import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -22,11 +19,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.Airship
+import com.urbanairship.debug.R
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.Section
@@ -52,7 +51,7 @@ internal fun AnalyticsIdentifiersScreen(
             FloatingActionButton(
                 onClick = { showAddDialog.value = true },
                 shape = CircleShape) {
-                Icon(Icons.Default.Add, contentDescription = "Add tag")
+                Icon(painterResource(R.drawable.ic_add), contentDescription = "Add tag")
             }
         }
     ) {
@@ -80,7 +79,7 @@ private fun ScreenContent(viewModel: AnalyticsIdentifierViewModel) {
                 title = "${identifier.name}: ${identifier.value}",
                 accessory = {
                     IconButton(onClick = { viewModel.remove(identifier) }) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                        Icon(painterResource(R.drawable.ic_delete), contentDescription = "Delete")
                     }
                 }
             )

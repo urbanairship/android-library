@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -30,6 +28,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -46,6 +45,7 @@ import androidx.lifecycle.viewModelScope
 import com.urbanairship.UALog
 import com.urbanairship.preferencecenter.compose.ui.theme.PrefCenterTheme
 import com.urbanairship.preferencecenter.compose.ui.theme.PreferenceCenterTheme
+import com.urbanairship.preferencecenter.core.R
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.Platform
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.PromptDisplay
@@ -141,7 +141,7 @@ internal fun ContactAddDialog(
                     trailingIcon = {
                         if (viewModel.showError) {
                             Icon(
-                                imageVector = Icons.Filled.Info,
+                                painter = painterResource(R.drawable.ua_ic_preference_center_info_circle),
                                 contentDescription = stringResource(com.urbanairship.R.string.ua_content_error),
                                 tint = PrefCenterTheme.colors.error
                             )

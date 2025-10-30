@@ -8,20 +8,17 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.MailOutline
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.core.util.Consumer
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
@@ -44,11 +41,12 @@ class MainActivity : AppCompatActivity() {
         TopLevelDestination.Settings -> "Settings"
     }
 
-    fun TopLevelDestination.icon(): ImageVector = when(this) {
-        TopLevelDestination.Home -> Icons.Filled.Home
-        is TopLevelDestination.Message -> Icons.Filled.MailOutline
-        TopLevelDestination.PreferenceCenter -> Icons.Filled.Notifications
-        TopLevelDestination.Settings -> Icons.Filled.Settings
+    @Composable
+    fun TopLevelDestination.icon(): Int = when(this) {
+        TopLevelDestination.Home -> R.drawable.ic_home
+        is TopLevelDestination.Message -> R.drawable.ic_inbox
+        TopLevelDestination.PreferenceCenter -> R.drawable.ic_pref_center
+        TopLevelDestination.Settings -> R.drawable.ic_settings
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -75,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                                     selected = activeTab == item,
                                     onClick = { appRouter.navigate(item) },
                                     label = { Text(text = item.title()) },
-                                    icon = { Icon(item.icon(), contentDescription = null) },
+                                    icon = { Icon(painter = painterResource(item.icon()), contentDescription = null) },
                                     alwaysShowLabel = true,
                                 )
                             }

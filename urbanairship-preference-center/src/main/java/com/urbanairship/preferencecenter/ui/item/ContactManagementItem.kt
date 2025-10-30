@@ -260,8 +260,8 @@ internal data class ContactManagementItem(
 
         @DrawableRes
         private fun itemIcon(item: Item.ContactManagement): Int = when (item.platform) {
-            is Platform.Email -> R.drawable.ua_ic_preference_center_email
-            is Platform.Sms -> R.drawable.ua_ic_preference_center_phone
+            is Platform.Email -> com.urbanairship.preferencecenter.core.R.drawable.ua_ic_preference_center_email
+            is Platform.Sms -> com.urbanairship.preferencecenter.core.R.drawable.ua_ic_preference_center_phone
         }
 
 

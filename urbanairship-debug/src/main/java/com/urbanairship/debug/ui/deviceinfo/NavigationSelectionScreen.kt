@@ -4,11 +4,11 @@ package com.urbanairship.debug.ui.deviceinfo
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
+import com.urbanairship.debug.R
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.RowItem
 import com.urbanairship.debug.ui.components.TopBarNavigation
@@ -30,7 +30,7 @@ internal fun NavigationSelectionScreen(
                 RowItem(
                     modifier = Modifier.clickable { onNavigate(item.route) },
                     title = item.name,
-                    accessory = { Icon(Icons.Default.ChevronRight, contentDescription = "display") }
+                    accessory = { Icon(painterResource(R.drawable.ic_chevron), contentDescription = "display") }
                 )
             }
         }
