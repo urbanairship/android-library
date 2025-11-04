@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -24,10 +22,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.urbanairship.contacts.Scope
 import com.urbanairship.preferencecenter.compose.ui.theme.PrefCenterTheme
 import com.urbanairship.preferencecenter.compose.ui.theme.PreferenceCenterTheme
+import com.urbanairship.preferencecenter.core.R
 import com.urbanairship.preferencecenter.data.CommonDisplay
 import com.urbanairship.preferencecenter.data.Conditions
 import com.urbanairship.preferencecenter.data.Item
@@ -134,7 +134,7 @@ private fun componentsSelectedMark(isChecked: Boolean) {
        if (isChecked) {
            Icon(
                modifier = Modifier.padding(PrefCenterTheme.dimens.subscriptionTypeChipCheckMarkPadding),
-               imageVector = Icons.Default.Check,
+               painter = painterResource(R.drawable.ua_ic_preference_center_circle_check),
                tint = PrefCenterTheme.colors.subscriptionTypeChipCheckMark,
                contentDescription = null
            )

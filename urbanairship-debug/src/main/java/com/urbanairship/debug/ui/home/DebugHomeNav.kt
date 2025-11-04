@@ -1,6 +1,5 @@
 package com.urbanairship.debug.ui.home
 
-import androidx.annotation.RestrictTo
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,6 +10,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.urbanairship.debug.ui.DebugScreen
 import com.urbanairship.debug.ui.appinfo.appInfoNav
 import com.urbanairship.debug.ui.automations.automationNav
@@ -23,11 +23,17 @@ import com.urbanairship.debug.ui.preferencecenter.preferenceCenterNav
 import com.urbanairship.debug.ui.privacymanager.privacyNav
 import com.urbanairship.debug.ui.push.pushNav
 
-/** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+/**
+ * Nav host for the debug screens. The view uses MaterialTheme to style the screens.
+ *
+ * @param navController The `NavHostController` for the NavHost.
+ * @param modifier The modifier to be applied to the `NavHost`.
+ * @param showNavIconOnDebugHomeScreen If `true`, the navigation icon will be shown on the debug home screen.
+ * @param onNavigateUpFromHomeScreen The action to perform when the navigation icon is clicked on the debug home screen.
+ */
 @Composable
 public fun DebugNavHost(
-    navController: NavHostController,
+    navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier.fillMaxSize(),
     showNavIconOnDebugHomeScreen: Boolean = false,
     onNavigateUpFromHomeScreen: () -> Unit = {}
@@ -56,7 +62,9 @@ internal fun NavGraphBuilder.airshipDebugNav(
         route =  DebugScreen.Root.route
     ) {
         DebugHomeScreen(
-            onNavigate = { route -> navController.navigate(route) },
+            onNavigate = { route ->
+                navController.navigate(route)
+            },
             onNavigateUp = onNavigateUpFromHomeScreen,
             showNavIcon = showNavIconOnDebugHomeScreen
         )

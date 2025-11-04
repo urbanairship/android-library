@@ -7,8 +7,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
@@ -18,6 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,11 +26,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.Airship
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.debug.DebugManager
+import com.urbanairship.debug.R
 import com.urbanairship.debug.ui.components.DebugScreen
 import com.urbanairship.debug.ui.components.TopBarNavigation
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import com.urbanairship.featureflag.FeatureFlag
-import com.urbanairship.featureflag.FeatureFlagManager
 import com.urbanairship.featureflag.featureFlagManager
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalMap
@@ -88,7 +87,7 @@ internal fun FeatureFlagContent(
                                 text = "Entries ${item.flags.size}",
                                 fontWeight = FontWeight.Light)
 
-                            Icon(Icons.Default.ChevronRight, contentDescription = "Show details")
+                            Icon(painterResource(R.drawable.ic_chevron), contentDescription = "Show details")
                         }
                     }
                 )

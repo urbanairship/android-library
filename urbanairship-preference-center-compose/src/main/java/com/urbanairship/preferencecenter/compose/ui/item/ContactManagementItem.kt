@@ -12,11 +12,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -26,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -147,11 +143,12 @@ private fun listView(
                             // },
                         }
                 ) {
+                    val iconRes = when(item.platform) {
+                        is Platform.Email -> R.drawable.ua_ic_preference_center_email
+                        is Platform.Sms -> R.drawable.ua_ic_preference_center_phone
+                    }
                     Icon(
-                        imageVector = when(item.platform) {
-                            is Platform.Email -> Icons.Outlined.Email
-                            is Platform.Sms -> Icons.Outlined.Phone
-                        },
+                        painter = painterResource(iconRes),
                         tint = PrefCenterTheme.colors.contactManagementItemIconTint,
                         contentDescription = null,
                         modifier = Modifier.size(PrefCenterTheme.dimens.contactManagementItemIconSize)
@@ -201,7 +198,7 @@ private fun listView(
                     onClick = { handler.invoke(ContactManagementItem.Action.Remove(channel)) }
                 ) {
                     Icon(
-                        imageVector = Icons.Outlined.Delete,
+                        painter = painterResource(R.drawable.ua_ic_preference_center_delete),
                         contentDescription = item.deleteButtonContentDescription(context, channel.maskedAddress),
                         tint = PrefCenterTheme.colors.contactManagementItemDeleteIconTint
                     )
@@ -222,7 +219,7 @@ private fun emptyView(text: String?) {
             Icon(
                 modifier = Modifier
                     .size(PrefCenterTheme.dimens.contactManagementItemIconSize),
-                imageVector = Icons.Outlined.Info,
+                painter = painterResource(R.drawable.ua_ic_preference_center_info_circle),
                 tint = PrefCenterTheme.colors.contactManagementItemIconTint,
                 contentDescription = null
             )

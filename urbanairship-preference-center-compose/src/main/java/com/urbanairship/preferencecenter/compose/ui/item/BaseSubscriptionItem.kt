@@ -8,9 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.selection.toggleable
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -18,6 +15,7 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
@@ -31,7 +29,6 @@ import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import com.urbanairship.preferencecenter.compose.ui.theme.PrefCenterTheme
-import com.urbanairship.preferencecenter.compose.ui.theme.PreferenceCenterTheme
 import com.urbanairship.preferencecenter.core.R
 
 @Composable
@@ -109,7 +106,8 @@ internal fun BaseSubscriptionItem(
                     if (PrefCenterTheme.options.showSwitchIcons) {
                         Crossfade(targetState = isChecked()) { state ->
                             Icon(
-                                imageVector =  if (state) Icons.Default.Check else Icons.Default.Clear,
+                                painter =  if (state) painterResource(R.drawable.ua_ic_preference_center_circle_check)
+                                else painterResource(R.drawable.ua_ic_preference_center_clear),
                                 contentDescription = null,
                                 tint = PrefCenterTheme.colors.surface,
                                 modifier = Modifier.padding(4.dp)

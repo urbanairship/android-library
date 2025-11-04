@@ -15,7 +15,6 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.mock
 
 @RunWith(AndroidJUnit4::class)
 public class DefaultDisplayCoordinatorTest {
@@ -62,10 +61,10 @@ public class DefaultDisplayCoordinatorTest {
 
         coordinator.isReady.test {
             assertTrue(awaitItem())
-            coordinator.messageWillDisplay(mock())
+            coordinator.messageWillDisplay(mockk())
             assertFalse(awaitItem())
 
-            coordinator.messageFinishedDisplaying(mock())
+            coordinator.messageFinishedDisplaying(mockk())
             assertTrue(awaitItem())
         }
 

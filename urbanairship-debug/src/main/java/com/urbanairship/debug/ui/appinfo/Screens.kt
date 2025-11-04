@@ -8,7 +8,7 @@ import com.urbanairship.debug.ui.Screen as BaseScreen
 internal enum class AppInfoScreen(
     override val titleRes: Int,
     override val descRes: Int? = null,
-    override val icon: ImageVector? = null,
+    override val icon: Int? = null,
     override val isRoot: Boolean = false,
 ) : BaseScreen {
     // Root screen
@@ -19,5 +19,5 @@ internal enum class AppInfoScreen(
 
     override val isTopLevel: Boolean = false
 
-    val route: String = DebugScreen.DeviceInfo.route + "/$name"
+    val route: String = DebugScreen.AppInfo.route + "/$name"
 }

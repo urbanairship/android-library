@@ -23,10 +23,8 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Assert.assertTrue
-import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.spy
 
 @RunWith(AndroidJUnit4::class)
 public class NativeBridgeTest {
@@ -512,18 +510,16 @@ public class NativeBridgeTest {
      */
     @Test
     public fun testMultiCommand() {
-        val spyNativeBridge = spy(nativeBridge)
-
         val url =
             "uairship://multi?uairship%3A%2F%2Frun-basic-actions%3Fadd_tags_action%3Dcoffee%26remove_tags_action%3Dtea&uairship%3A%2F%2Frun-actions%3Fadd_tags_action%3D%255B%2522foo%2522%252C%2522bar%2522%255D&uairship%3A%2F%2Fclose"
         assertTrue(
-            spyNativeBridge.onHandleCommand(
+            nativeBridge.onHandleCommand(
                 url, javaScriptExecutor, runRequestExtender, commandDelegate
             )
         )
 
         verify {
-            spyNativeBridge.onHandleCommand(
+            nativeBridge.onHandleCommand(
                 "uairship://run-basic-actions?add_tags_action=coffee&remove_tags_action=tea",
                 javaScriptExecutor,
                 runRequestExtender,
@@ -532,7 +528,7 @@ public class NativeBridgeTest {
         }
 
         verify {
-            spyNativeBridge.onHandleCommand(
+            nativeBridge.onHandleCommand(
                 "uairship://run-actions?add_tags_action=%5B%22foo%22%2C%22bar%22%5D",
                 javaScriptExecutor,
                 runRequestExtender,
@@ -541,7 +537,7 @@ public class NativeBridgeTest {
         }
 
         verify {
-            spyNativeBridge.onHandleCommand(
+            nativeBridge.onHandleCommand(
                 "uairship://close",
                 javaScriptExecutor,
                 runRequestExtender,

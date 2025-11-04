@@ -4,9 +4,6 @@ import android.content.res.Configuration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.material.icons.outlined.ArrowDropUp
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
@@ -17,9 +14,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.urbanairship.debug.R
 import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.jsonMapOf
@@ -45,12 +44,12 @@ internal fun JsonItem(
                         trailingContent = {
                             IconButton(onClick = { isExpanded = !isExpanded }) {
                                 val icon = if (isExpanded) {
-                                    Icons.Outlined.ArrowDropDown
+                                    painterResource(R.drawable.ic_arrow_drop_down)
                                 } else {
-                                    Icons.Outlined.ArrowDropUp
+                                    painterResource(R.drawable.ic_arrow_drop_up)
                                 }
                                 Icon(
-                                    imageVector = icon, contentDescription = null
+                                    painter = icon, contentDescription = null
                                 )
                             }
                         }

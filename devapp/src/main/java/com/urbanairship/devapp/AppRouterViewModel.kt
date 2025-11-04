@@ -6,10 +6,15 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
+import com.urbanairship.UALog
 import com.urbanairship.devapp.debug.DebugScreen
 import com.urbanairship.devapp.home.HomeScreen
 import com.urbanairship.devapp.home.QuickAccess
@@ -20,10 +25,13 @@ import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.MessageCenterScreen
 import com.urbanairship.messagecenter.compose.ui.rememberMessageCenterState
 import java.io.Serializable
+import java.time.LocalDateTime
+import java.util.Date
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 interface Destination: NavKey {
     fun serialize(): String
@@ -170,8 +178,13 @@ class AppRouterViewModel(
                 const val NAME = "message"
             }
         }
-        data object PreferenceCenter: TopLevelDestination("preference")
-        data object Settings: TopLevelDestination("settings")
+        data object PreferenceCenter: TopLevelDestination("preference") {
+            private fun readResolve(): Any = PreferenceCenter
+        }
+
+        data object Settings: TopLevelDestination("settings") {
+            private fun readResolve(): Any = Settings
+        }
 
         override fun serialize(): String  = this.value
 
@@ -192,7 +205,6 @@ class AppRouterViewModel(
         }
 
         companion object {
-
             val entries = listOf(Home, Message(), PreferenceCenter, Settings)
 
             fun restore(saved: String): TopLevelDestination? {

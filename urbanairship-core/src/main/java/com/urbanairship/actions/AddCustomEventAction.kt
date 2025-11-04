@@ -114,9 +114,10 @@ public class AddCustomEventAction(
             ?: map.optionalField(CustomEvent.EVENT_NAME)
     }
 
-    private inline fun <reified T> getEventValue(map: JsonMap): T? {
-        return map.optionalField(KEY_VALUE)
-            ?: map.optionalField(CustomEvent.EVENT_VALUE)
+    private fun getEventValue(map: JsonMap): Double? {
+        return map.optionalField<String>(KEY_VALUE)?.toDoubleOrNull()
+            ?: map.optionalField<Double>(KEY_VALUE)
+            ?: map.optionalField<Double>(CustomEvent.EVENT_VALUE)
     }
 
     /**

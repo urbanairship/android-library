@@ -83,6 +83,7 @@ dependencies {
     implementation(libs.compose.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation libs.compose.materialicons.extended
+    implementation libs.androidx.navigation.compose
 
     // Jetpack Glance
     implementation(libs.glance.appwidget)
@@ -141,8 +142,6 @@ dependencies {
     // Robolectric / Mockito
     testImplementation(libs.robolectric.core)
     androidTestImplementation(libs.robolectric.annotations)
-    androidTestImplementation(libs.mockito.core)
-    androidTestImplementation(libs.mockito.android)
 
     androidTestImplementation(libs.androidx.navigation.testing)
     debugImplementation(libs.androidx.fragment.testing)

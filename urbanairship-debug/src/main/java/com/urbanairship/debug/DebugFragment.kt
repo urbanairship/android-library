@@ -5,16 +5,15 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.RestrictTo
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed
 import androidx.fragment.app.Fragment
 import androidx.navigation.NavController
 import androidx.navigation.Navigation.findNavController
 import androidx.navigation.compose.rememberNavController
-import com.urbanairship.debug.ui.components.LocalIgnoreBottomPadding
 import com.urbanairship.debug.ui.home.DebugNavHost
-import com.urbanairship.debug.ui.theme.AirshipDebugTheme
+import com.urbanairship.debug.ui.theme.AirshipTypography
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -42,16 +41,17 @@ public class DebugFragment : Fragment() {
                 // Provide the ignoreBottomPadding value to the composition.
                 // This lets us control whether we apply or ignore bottom padding in the shared
                 // DebugScreen composable.
-                CompositionLocalProvider(LocalIgnoreBottomPadding provides ignoreBottomPadding) {
-                    AirshipDebugTheme {
-                        // Nav controller for the debug nav graph (using compose navigation).
-                        val debugNavController = rememberNavController()
-                        DebugNavHost(
-                            navController = debugNavController,
-                            showNavIconOnDebugHomeScreen = showNavIconOnDebugHomeScreen,
-                            onNavigateUpFromHomeScreen = { sampleNavController.navigateUp() }
-                        )
-                    }
+                // Nav controller for the debug nav graph (using compose navigation).
+                val debugNavController = rememberNavController()
+
+                MaterialTheme(
+                    typography = AirshipTypography
+                ) {
+                    DebugNavHost(
+                        navController = debugNavController,
+                        showNavIconOnDebugHomeScreen = showNavIconOnDebugHomeScreen,
+                        onNavigateUpFromHomeScreen = { sampleNavController.navigateUp() }
+                    )
                 }
             }
         }

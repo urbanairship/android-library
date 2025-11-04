@@ -10,7 +10,6 @@ import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.kotlin.mock
 
 @RunWith(AndroidJUnit4::class)
 public class ImmediateDisplayCoordinatorTest {
@@ -24,8 +23,8 @@ public class ImmediateDisplayCoordinatorTest {
             activityMonitor.foreground()
             assertTrue(awaitItem())
 
-            coordinator.messageWillDisplay(mock())
-            coordinator.messageFinishedDisplaying(mock())
+            coordinator.messageWillDisplay(mockk())
+            coordinator.messageFinishedDisplaying(mockk())
 
             ensureAllEventsConsumed()
 
