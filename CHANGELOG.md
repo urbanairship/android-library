@@ -4,9 +4,18 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.0.2 - November 4, 2025
+
+Patch release that fixes prompting for permissions on foreground.
+
+### Changes
+- Fixed prompting for permissions on foreground.
+- Removed usage of material icons compose library.
+- Updated Message Center titles to be markes as headings.
+
 ## Version 20.0.1 - October 23, 2025
 
-Minor release that fixes packaging and publishing for the modules added in 20.0.0. Apps upgrading to
+Patch release that fixes packaging and publishing for the modules added in 20.0.0. Apps upgrading to
 SDK 20.x should update directly to 20.0.1 to ensure proper packaging of these modules.
 
 ### Changes
