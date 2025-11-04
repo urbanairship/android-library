@@ -6,14 +6,11 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.createSavedStateHandle
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
-import androidx.navigation.NavController
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.devapp.debug.DebugScreen
 import com.urbanairship.devapp.home.HomeScreen
@@ -21,12 +18,8 @@ import com.urbanairship.devapp.home.QuickAccess
 import com.urbanairship.devapp.messagecenter.MessageCenterScreen
 import com.urbanairship.devapp.preferencecenter.PreferenceCenterScreen
 import com.urbanairship.devapp.thomas.ThomasLayoutNavigation
-import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
-import com.urbanairship.messagecenter.compose.ui.MessageCenterScreen
 import com.urbanairship.messagecenter.compose.ui.rememberMessageCenterState
-import java.io.Serializable
-import java.time.LocalDateTime
-import java.util.Date
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -61,6 +54,8 @@ class AppRouterViewModel(
     val activeBackStack: StateFlow<SnapshotStateList<Destination>>
         get() = _activeBackStack.asStateFlow()
 
+    private val stackUpdateScope = CoroutineScope(AirshipDispatchers.newSerialDispatcher())
+
     init {
         val selected = savedStateHandle
             .get<String>(ACTIVE_TOP_LEVEL_ITEM)
@@ -93,7 +88,7 @@ class AppRouterViewModel(
             return
         }
 
-        _activeBackStack.update { it.dropLast(1).toMutableStateList() }
+        updateActiveBackStack { it.dropLast(1).toMutableStateList() }
         saveState()
     }
 
@@ -102,13 +97,13 @@ class AppRouterViewModel(
             val clearStack = destination == selectedTopLevel.value
             changeTopLevel(destination)
             if (clearStack && _activeBackStack.value.size > 1) {
-                _activeBackStack.update {
+                updateActiveBackStack {
                     it.removeRange(1, it.size)
                     it
                 }
             }
         } else {
-            _activeBackStack.update { (it + destination).toMutableStateList() }
+            updateActiveBackStack { (it + destination).toMutableStateList() }
             backStacks.update {
                 it.toMutableMap()
                     .apply { put(selectedTopLevel.value, _activeBackStack.value) }
@@ -127,13 +122,17 @@ class AppRouterViewModel(
         val topLevel = (stack.first() as? TopLevelDestination) ?: return
 
         changeTopLevel(topLevel)
-        _activeBackStack.update { stack.toMutableStateList() }
+        updateActiveBackStack { stack.toMutableStateList() }
         backStacks.update {
             it.toMutableMap().apply { put(selectedTopLevel.value, _activeBackStack.value) }.toMap()
         }
     }
 
-
+    private fun updateActiveBackStack(block: (SnapshotStateList<Destination>) -> SnapshotStateList<Destination>) {
+        stackUpdateScope.launch {
+            _activeBackStack.update(block)
+        }
+    }
     fun navigationEntry(destination: Destination): NavEntry<Destination> {
         return destination.navigationEntry(
             onNavigate = { navigate(it) },
@@ -142,8 +141,8 @@ class AppRouterViewModel(
     }
 
     private fun changeTopLevel(destination: TopLevelDestination) {
+        updateActiveBackStack { getBackStackFor(destination) }
         _selectedItem.update { destination }
-        _activeBackStack.update { getBackStackFor(destination) }
     }
 
     private fun getBackStackFor(topLevel: TopLevelDestination): SnapshotStateList<Destination> {
@@ -166,7 +165,8 @@ class AppRouterViewModel(
         }
     }
 
-    sealed class TopLevelDestination(private val value: String): Destination, Serializable {
+    @kotlinx.serialization.Serializable
+    sealed class TopLevelDestination(private val value: String): Destination {
         data object Home: TopLevelDestination("home")
         data class Message(val messageId: String? = null): TopLevelDestination(NAME) {
             override fun serialize(): String {
@@ -178,13 +178,9 @@ class AppRouterViewModel(
                 const val NAME = "message"
             }
         }
-        data object PreferenceCenter: TopLevelDestination("preference") {
-            private fun readResolve(): Any = PreferenceCenter
-        }
+        data object PreferenceCenter: TopLevelDestination("preference")
 
-        data object Settings: TopLevelDestination("settings") {
-            private fun readResolve(): Any = Settings
-        }
+        data object Settings: TopLevelDestination("settings")
 
         override fun serialize(): String  = this.value
 
