@@ -78,7 +78,9 @@ public class PermissionsManager internal constructor(
         permissionsScope.launch {
             activityMonitor.resumedActivities().collect { activity ->
                 if (activity.javaClass != PermissionsActivity::class.java) {
-                    configuredPermissions.forEach { requestPermissionPendingResult(it) }
+                    configuredPermissions.forEach {
+                        checkPermissionStatus(it)
+                    }
                 }
             }
         }
@@ -425,7 +427,7 @@ private fun PermissionDelegate.requestPermissionFlow(context: Context, scope: Co
 private fun PermissionDelegate.checkPermissionFlow(context: Context, scope: CoroutineScope): Flow<PermissionStatus> {
     val stateFlow = MutableStateFlow<PermissionStatus?>(null)
     scope.launch {
-        var isResumed = AtomicBoolean(false)
+        val isResumed = AtomicBoolean(false)
         stateFlow.value = suspendCancellableCoroutine { continuation ->
             checkPermissionStatus(context) { permissionStatus ->
                 if (isActive && isResumed.compareAndSet(false, true)) {
