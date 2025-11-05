@@ -1,7 +1,6 @@
 name: Publish Docs
 
 on:
-  
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
@@ -16,7 +15,6 @@ on:
         description: 'The tag to publish'
         required: true
         type: string
-
     secrets:
       GCP_SA_KEY:
         description: 'The GCP service account key'
@@ -24,77 +22,9 @@ on:
 
 jobs:
   prepare-docs:
-    if: github.repository == 'urbanairship/android-library'
-    runs-on: ubuntu-latest
-    steps:
-      # Download pre-packaged docs artifacts if they were published by the release workflow.
-      - name: Download pre-packaged docs artifacts
-        id: download_docs
-        uses: actions/download-artifact@v4
-        continue-on-error: true
-        with:
-          name: packaged-docs-${{ inputs.version }}
-          path: build/docs
-
-      # Fallback to building if artifacts were not previously uploaded for the given version.
-      # NOTE: All the steps below this point will be skipped if the download step succeeds.
-      - name: Checkout repo to build docs
-        if: ${{ steps.download_docs.outcome == 'failure' }}
-        env:
-          VERSION: ${{ inputs.version }}
-        uses: actions/checkout@v4
-        with:
-          ref: refs/tags/$VERSION
-
-      - name: Setup Java Version
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Copy CI gradle.properties
-        if: ${{ steps.download_docs.outcome == 'failure' }}
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.gradle
-          cp .github/ci-gradle.properties ~/.gradle/gradle.properties
-
-      - name: Verify Version (Gradle equality)
-        if: ${{ steps.download_docs.outcome == 'failure' }}
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          set -euo pipefail
-          ACTUAL_VERSION=$(./gradlew -q getVersion)
-
-          if [[ "$ACTUAL_VERSION" != "$VERSION" ]]; then
-            echo "Gradle version mismatch: expected '$VERSION', got '$ACTUAL_VERSION'" >&2
-            exit 1
-          fi
-
-          echo "Verified version matches Gradle: $VERSION"
-
-      - name: Build docs packages
-        if: ${{ steps.download_docs.outcome == 'failure' }}
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          set -euo pipefail
-          ./gradlew packageDocs --stacktrace
-
-      - name: Upload packaged docs artifacts
-        if: ${{ steps.download_docs.outcome == 'failure' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: packaged-docs-${{ inputs.version }}
-          retention-days: 1
-          path: |
-            build/docs/${{ inputs.version }}-kdoc.tar.gz
+    uses: ./.github/workflows/prepare-docs.yml
+    with:
+      version: ${{ inputs.version }}
 
   upload-docs:
     if: github.repository == 'urbanairship/android-library'
@@ -110,8 +40,7 @@ jobs:
         with:
           ref: refs/tags/$VERSION
 
-      - name: Download packaged docs artifacts
-        id: download_docs
+      - name: Download prepared docs
         uses: actions/download-artifact@v4
         with:
           name: packaged-docs-${{ inputs.version }}

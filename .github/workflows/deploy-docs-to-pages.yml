@@ -27,132 +27,39 @@ on:
         required: true
         type: string
 
-  pull_request:
-
 jobs:
   prepare-docs:
-    #if: github.repository == 'urbanairship/android-library'
+    uses: ./.github/workflows/prepare-docs.yml
+    with:
+      version: ${{ inputs.version }}
+
+  deploy-to-pages:
+    if: github.repository == 'urbanairship/android-library'
+    needs: prepare-docs
     runs-on: ubuntu-latest
     steps:
-      - name: Extract version
-        id: extract_version
-        run: |
-          set -euo pipefail
-          
-          # Determine version based on trigger type
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            # For PRs, try to extract version from PR title (e.g., "pr-20.0.1" -> "20.0.1")
-            PR_TITLE="${{ github.event.pull_request.title }}"
-            echo "🔍 PR title: $PR_TITLE"
-            
-            # Try to extract version from PR title patterns like "pr-X.Y.Z" or "release-X.Y.Z"
-            if [[ "$PR_TITLE" =~ ^(pr|release)-([0-9]+\.[0-9]+\.[0-9]+.*) ]]; then
-              VERSION="${BASH_REMATCH[2]}"
-              echo "✅ Extracted version from PR title: $VERSION"
-            else
-              echo "❌ Error: No version found in PR title"
-              echo "Expected PR title format: 'pr-X.Y.Z'"
-              exit 1
-            fi
-          else
-            VERSION="${{ inputs.version }}"
-            echo "✅ Using version from workflow input: $VERSION"
-          fi
-
-            echo "VERSION=$VERSION" >> $GITHUB_ENV
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-      - name: Download packaged docs artifacts
-        id: download_docs
+      - name: Download prepared docs
         uses: actions/download-artifact@v4
-        continue-on-error: true
         with:
-          name: packaged-docs-${{ steps.extract_version.outputs.version }}
+          name: packaged-docs-${{ inputs.version }}
           path: build/docs
 
-      # Fallback to building if artifacts were not previously uploaded for the given version.
-      # NOTE: All the steps below this point will be skipped if the download step succeeds.
-      - name: Checkout repo to build docs
-        if: ${{ steps.download_docs.outcome == 'failure' }}
-        uses: actions/checkout@v4
-        with:
-          ref: refs/tags/${{ steps.extract_version.outputs.version }}
-
-      - name: Setup Java Version
-        if: ${{ steps.download_docs.outcome == 'failure' }}
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '21'
-
-      - name: Setup Gradle
-        if: ${{ steps.download_docs.outcome == 'failure' }}
-        uses: gradle/actions/setup-gradle@v3
-
-      - name: Copy CI gradle.properties
-        if: ${{ steps.download_docs.outcome == 'failure' }}
-        run: |
-          set -euo pipefail
-          mkdir -p ~/.gradle
-          cp .github/ci-gradle.properties ~/.gradle/gradle.properties
-
-      - name: Verify Version (Gradle equality)
-        if: ${{ steps.download_docs.outcome == 'failure' }}
-        env:
-          VERSION: ${{ steps.extract_version.outputs.version }}
-        run: |
-          set -euo pipefail
-          ACTUAL_VERSION=$(./gradlew -q getVersion)
-          
-          # Check if VERSION looks like a real version (contains dots) or is synthetic
-          if [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+ ]]; then
-            # Real version - verify it matches
-            if [[ "$ACTUAL_VERSION" != "$VERSION" ]]; then
-              echo "❌ Version mismatch!"
-              echo "Expected: $VERSION"
-              echo "Actual:   $ACTUAL_VERSION"
-              exit 1
-            fi
-            echo "✅ Version verified: $VERSION"
-          else
-            # Synthetic version - just show info
-            echo "📝 Build Information:"
-            echo "  Build version:     $VERSION"
-            echo "  Project version:   $ACTUAL_VERSION"
-            echo "ℹ️  Version verification skipped for synthetic versions"
-          fi
-
-      - name: Build docs packages
-        if: ${{ steps.download_docs.outcome == 'failure' }}
-        env:
-          VERSION: ${{ steps.extract_version.outputs.version }}
-        run: |
-          set -euo pipefail
-          ./gradlew packageDocs --stacktrace
-
       - name: Extract documentation for GitHub Pages
+        env:
+          VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-
+          
           DOC_PATH="build/docs/${VERSION}-kdoc.tar.gz"
-
-          # Check which method was used to obtain docs
-          if [[ "${{ steps.download_docs.outcome }}" == "success" ]]; then
-            echo "📦 Using pre-packaged docs artifacts from release workflow"
-          else
-            echo "🔨 Using locally built docs (pre-packaged artifacts not available)"
-          fi
-
+          
+          echo "📦 Processing documentation for GitHub Pages deployment"
+          
           # Verify the documentation file exists
           if [ ! -f "$DOC_PATH" ]; then
             echo "❌ Error: Documentation artifact not found!"
             echo "Expected: $DOC_PATH"
             echo "Available files in build/docs:"
             find build/docs -type f 2>/dev/null || echo "No build/docs directory found"
-            if [ -d build ]; then
-              echo "Available files in build directory:"
-              find build -name "*.tar.gz" -type f 2>/dev/null || echo "No tar.gz files found in build directory"
-            fi
             exit 1
           fi
           
@@ -183,6 +90,6 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./pages-docs
-          destination_dir: ${{ steps.extract_version.outputs.version }}
+          destination_dir: ${{ inputs.version }}
           keep_files: false
           enable_jekyll: false
