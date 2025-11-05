@@ -57,7 +57,7 @@ jobs:
 
       - name: Upload docs
         env:
-            VERSION: ${{ inputs.version }}
+          VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
           gsutil cp "build/docs/${VERSION}-kdoc.tar.gz" \

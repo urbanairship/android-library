@@ -10,7 +10,6 @@ on:
         
 jobs:
   prepare-docs:
-    if: github.repository == 'urbanairship/android-library'
     runs-on: ubuntu-latest
     steps:
       # Download pre-packaged docs artifacts if they were published by the release workflow.
