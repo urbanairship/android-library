@@ -19,6 +19,7 @@ import androidx.room.PrimaryKey;
         @ForeignKey(onDelete = ForeignKey.CASCADE, entity = ScheduleEntity.class,
                 parentColumns = "scheduleId", childColumns = "parentScheduleId") },
         indices = { @Index("parentScheduleId") })
+//TODO: migrate to kotlin on the next version update
 public class TriggerEntity {
 
     @PrimaryKey(autoGenerate = true)

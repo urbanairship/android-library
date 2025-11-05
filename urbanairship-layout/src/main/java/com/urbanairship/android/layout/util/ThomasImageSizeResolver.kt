@@ -38,7 +38,7 @@ internal class ThomasImageSizeResolver(
         return when (dimension?.type) {
             Size.DimensionType.AUTO ->  autoSize()
             Size.DimensionType.PERCENT -> null
-            Size.DimensionType.ABSOLUTE -> dpToPx(context, dimension.int).toInt()
+            Size.DimensionType.ABSOLUTE -> dpToPx(context, dimension.getInt()).toInt()
             null -> null
         }
     }

@@ -32,7 +32,6 @@ import com.urbanairship.android.layout.widget.Clippable
 import com.urbanairship.android.layout.widget.ClippableViewDelegate
 import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.WeightlessLinearLayout
-import com.urbanairship.android.layout.widget.WeightlessLinearLayout.LayoutParams.WRAP_CONTENT
 
 internal class LinearLayoutView(
     context: Context,
@@ -47,7 +46,7 @@ internal class LinearLayoutView(
 
     init {
         clipChildren = false
-        orientation = if (model.viewInfo.direction == Direction.VERTICAL) VERTICAL else HORIZONTAL
+        orientation = if (model.viewInfo.direction == Direction.VERTICAL) OrientationMode.VERTICAL else OrientationMode.HORIZONTAL
         gravity = if (model.viewInfo.direction == Direction.VERTICAL) CENTER_HORIZONTAL else CENTER_VERTICAL
         addItems(model.items)
 
@@ -158,15 +157,15 @@ internal class LinearLayoutView(
         val h = size.height
 
         val (width, maxWidthPercent) = when (w.type) {
-            AUTO -> WRAP_CONTENT to 0f
-            ABSOLUTE -> dpToPx(context, w.int).toInt() to 0f
-            PERCENT -> 0 to w.float
+            AUTO -> MarginLayoutParams.WRAP_CONTENT to 0f
+            ABSOLUTE -> dpToPx(context, w.getInt()).toInt() to 0f
+            PERCENT -> 0 to w.getFloat()
         }
 
         val (height, maxHeightPercent) = when (h.type) {
-            AUTO -> WRAP_CONTENT to 0f
-            ABSOLUTE -> dpToPx(context, h.int).toInt() to 0f
-            PERCENT -> 0 to h.float
+            AUTO -> MarginLayoutParams.WRAP_CONTENT to 0f
+            ABSOLUTE -> dpToPx(context, h.getInt()).toInt() to 0f
+            PERCENT -> 0 to h.getFloat()
         }
 
         val lp = LayoutParams(width, height, maxWidthPercent, maxHeightPercent).apply {
@@ -178,7 +177,7 @@ internal class LinearLayoutView(
             }
 
             itemInfo.position?.let {
-                gravity = it.gravity
+                gravity = it.getGravity()
             }
         }
         return lp

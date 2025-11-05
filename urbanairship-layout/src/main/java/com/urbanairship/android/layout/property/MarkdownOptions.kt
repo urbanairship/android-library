@@ -27,7 +27,7 @@ internal class MarkdownAppearance(json: JsonMap) {
         val styles: List<TextStyle>? = json.optionalList("styles")
             ?.mapNotNull {
                 try {
-                    TextStyle.from(it.optString())
+                    TextStyle.from(it)
                 } catch (e: JsonException) {
                     UALog.w("Failed to parse anchor styles: ${e.message}")
                     null

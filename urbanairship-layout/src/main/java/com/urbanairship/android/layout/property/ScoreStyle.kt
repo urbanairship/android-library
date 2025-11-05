@@ -126,18 +126,10 @@ internal sealed class ScoreStyle(val type: ScoreType) {
 
             @Throws(JsonException::class)
             fun fromJson(json: JsonMap): Binding {
-                val shapesJson = json.opt("shapes").optList()
-                val textAppearanceJson = json.opt("text_appearance").optMap()
-
-                val shapes: MutableList<Shape> = ArrayList()
-                for (i in 0..<shapesJson.size()) {
-                    val shapeJson = shapesJson[i].optMap()
-                    val shape = Shape.fromJson(shapeJson)
-                    shapes.add(shape)
-                }
-                val textAppearance = TextAppearance.fromJson(textAppearanceJson)
-
-                return Binding(shapes, textAppearance)
+                return Binding(
+                    shapes = json.opt("shapes").optList().map(Shape::fromJson),
+                    textAppearance = TextAppearance.fromJson(json.require("text_appearance"))
+                )
             }
         }
     }

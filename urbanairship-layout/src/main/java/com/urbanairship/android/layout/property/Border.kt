@@ -146,12 +146,13 @@ public class Border public constructor(
 
         @JvmStatic
         @Throws(JsonException::class)
-        public fun fromJson(json: JsonMap): Border {
+        public fun fromJson(json: JsonValue): Border {
+            val content = json.requireMap()
             return Border(
-                radius = json.opt("radius").integer,
-                strokeWidth = json.opt("stroke_width").integer,
-                strokeColor = json["stroke_color"]?.requireMap()?.let { Color.fromJson(it) },
-                cornerRadius = json["corner_radius"]?.let(CornerRadius::fromJson)
+                radius = content.opt("radius").integer,
+                strokeWidth = content.opt("stroke_width").integer,
+                strokeColor = content["stroke_color"]?.let { Color.fromJson(it) },
+                cornerRadius = content["corner_radius"]?.let(CornerRadius::fromJson)
             )
         }
     }

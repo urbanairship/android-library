@@ -270,7 +270,7 @@ internal class BannerLayout(
             }
     }
 
-    private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) {
+    private fun reportDismissFromOutside(state: LayoutData = LayoutData.EMPTY) {
         reporter.report(
             event = ReportingEvent.Dismiss(
                 data = ReportingEvent.DismissData.UserDismissed,

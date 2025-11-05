@@ -119,7 +119,7 @@ public class AutomationStoreMigratorTest {
                 this.scheduleType = "in_app_message"
                 this.data = makeInAppMessageData()
                 this.count = 3
-                this.executionState = ScheduleState.EXECUTING
+                this.executionState = ScheduleState.EXECUTING.value
                 this.executionStateChangeDate = 600
                 this.appState = 3 // background
                 this.screens = listOf("foo", "bar")
@@ -258,7 +258,7 @@ public class AutomationStoreMigratorTest {
                 this.scheduleType = "deferred"
                 this.data = makeDeferredData()
                 this.count = 3
-                this.executionState = ScheduleState.EXECUTING
+                this.executionState = ScheduleState.EXECUTING.value
                 this.executionStateChangeDate = 600
                 this.appState = 3 // background
                 this.screens = listOf("foo", "bar")
@@ -397,7 +397,7 @@ public class AutomationStoreMigratorTest {
                 this.scheduleType = "actions"
                 this.data = jsonMapOf("action" to "value").toJsonValue()
                 this.count = 3
-                this.executionState = ScheduleState.EXECUTING
+                this.executionState = ScheduleState.EXECUTING.value
                 this.executionStateChangeDate = 600
                 this.appState = 3 // background
                 this.screens = listOf("foo", "bar")

@@ -3299,7 +3299,9 @@
                                                 "width": "100%",
                                                 "height": "auto"
                                               },
-                                              "margin": "top:0",
+                                              "margin": {
+                                                "top": 0
+                                              },
                                               "view": {
                                                 "type": "score",
                                                 "identifier": "page-3-nps",

@@ -27,10 +27,10 @@ internal interface FrequencyLimitDao {
     suspend fun getConstraint(constraintId: String): ConstraintEntity?
 
     @Query("SELECT * FROM constraints")
-    suspend fun getAllConstraints(): List<ConstraintEntity>?
+    suspend fun getAllConstraints(): List<ConstraintEntity>
 
     @Query("SELECT * FROM occurrences WHERE parentConstraintId = :constraintId ORDER BY timeStamp ASC")
-    suspend fun getOccurrences(constraintId: String): List<OccurrenceEntity>?
+    suspend fun getOccurrences(constraintId: String): List<OccurrenceEntity>
 
     @Delete
     @Transaction

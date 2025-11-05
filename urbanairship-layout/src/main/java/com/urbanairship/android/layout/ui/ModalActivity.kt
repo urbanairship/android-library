@@ -79,7 +79,7 @@ public class ModalActivity : AppCompatActivity() {
         displayTimer = DisplayTimer(this, restoredTime)
 
         try {
-            val args = loader.displayArgs
+            val args = loader.getDisplayArgs()
             externalListener = args.listener
             reporter = ExternalReporter(externalListener)
 
@@ -89,7 +89,7 @@ public class ModalActivity : AppCompatActivity() {
                 return@onCreate
             }
 
-            disableBackButton = presentation.isDisableBackButton
+            disableBackButton = presentation.disableBackButton
 
             onBackPressedDispatcher.addCallback(this) {
                 if (!disableBackButton) {
@@ -126,7 +126,7 @@ public class ModalActivity : AppCompatActivity() {
                 id = viewModel.rootViewId
                 layoutParams = ConstraintLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
 
-                if (presentation.isDismissOnTouchOutside) {
+                if (presentation.dismissOnTouchOutside) {
                     setOnClickOutsideListener {
                         reportDismissFromOutside()
                         finishAfterTransition()
@@ -205,7 +205,7 @@ public class ModalActivity : AppCompatActivity() {
             }
     }
 
-    private fun reportDismissFromOutside(state: LayoutData = LayoutData.empty()) {
+    private fun reportDismissFromOutside(state: LayoutData = LayoutData.EMPTY) {
         if (dismissReported) {
             UALog.e { "Dismissed already called! not reporting dismiss again." }
             return

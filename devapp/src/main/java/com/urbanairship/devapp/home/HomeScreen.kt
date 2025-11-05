@@ -41,6 +41,9 @@ import com.urbanairship.devapp.AppRouterViewModel
 import com.urbanairship.devapp.Destination
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.devapp.R
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.liveupdate.LiveUpdate
+import com.urbanairship.liveupdate.LiveUpdateManager
 import AirshipTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -119,8 +122,18 @@ internal fun HomeScreen(
 
                     QuickSettingItem(
                         title = stringResource(R.string.start_live_activity),
-                        subtitle = "Not implemented",
-                        onClick = {}
+                        subtitle = "Start a sport live update",
+                        onClick = {
+                            LiveUpdateManager.shared().start(
+                                name = "sample-sports",
+                                type = "sports",
+                                content = jsonMapOf(
+                                    "team_one_score" to 0,
+                                    "team_two_score" to 0,
+                                    "status_update" to "Game started!"
+                                )
+                            )
+                        }
                     )
                     HorizontalDivider()
 

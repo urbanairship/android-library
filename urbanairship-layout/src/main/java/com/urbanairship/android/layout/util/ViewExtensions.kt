@@ -151,7 +151,7 @@ internal fun CheckableView<*>.checkedChanges(): Flow<Boolean> =
         checkedChangeListener = listener
         awaitClose { checkedChangeListener = null }
     }
-        .onStart { emit(checkableView.isChecked) }
+        .onStart { emit(checkableView.isChecked()) }
         .conflate()
 
 internal fun ScoreView.scoreChanges(): Flow<Int> =

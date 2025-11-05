@@ -415,7 +415,7 @@ internal class PagerModel(
                     scheduledJob = modelScope.launch {
                         while (isActive) {
                             pagerState.update { state ->
-                                state.copy(progress = progress)
+                                state.copy(progress = getProgress())
                             }
                             delay(100)
                         }

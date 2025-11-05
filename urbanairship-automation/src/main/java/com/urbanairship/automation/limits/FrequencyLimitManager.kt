@@ -153,7 +153,7 @@ internal class FrequencyLimitManager(
                     IllegalStateException("Missing frequency constraint: $id")
                 )
 
-                val occurrenceEntities = dao.getOccurrences(id) ?: listOf()
+                val occurrenceEntities = dao.getOccurrences(id)
                 lock.withLock {
                     constraintMap[id] = ConstraintInfo(constraint, occurrenceEntities.toMutableList())
                 }
@@ -178,7 +178,7 @@ internal class FrequencyLimitManager(
         return queue.run {
             writePending()
             try {
-                val existing = dao.getAllConstraints() ?: listOf()
+                val existing = dao.getAllConstraints()
                 val incomingIds = constraints.map { it.identifier }
 
                 // upsert new
@@ -212,7 +212,7 @@ internal class FrequencyLimitManager(
                 toUpsert.forEach { entity ->
                     dao.insert(entity)
                     entity.constraintId?.let {
-                        val occurrences = dao.getOccurrences(it).orEmpty().toMutableList()
+                        val occurrences = dao.getOccurrences(it).toMutableList()
                         lock.withLock {
                             constraintMap[it] = ConstraintInfo(entity, occurrences)
                         }
