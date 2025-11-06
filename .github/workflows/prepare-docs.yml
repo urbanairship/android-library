@@ -11,6 +11,7 @@ on:
 jobs:
   prepare-docs:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       # Download pre-packaged docs artifacts if they were published by the release workflow.
       - name: Download pre-packaged docs artifacts
@@ -39,6 +40,8 @@ jobs:
       - name: Setup Gradle
         if: ${{ steps.download_docs.outcome == 'failure' }}
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-home-cache-cleanup: true
 
       - name: Copy CI gradle.properties
         if: ${{ steps.download_docs.outcome == 'failure' }}
