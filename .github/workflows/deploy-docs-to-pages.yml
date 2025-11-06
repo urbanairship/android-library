@@ -28,21 +28,16 @@ on:
         type: string
 
 jobs:
+  prepare-docs:
+    uses: ./.github/workflows/prepare-docs.yml
+    with:
+      version: ${{ inputs.version }}
+
   deploy-to-pages:
-    if: github.repository == 'urbanairship/android-library'
+    needs: prepare-docs
     runs-on: ubuntu-latest
     steps:
-      - name: Extract version
-        id: extract_version
-        env:
-          VERSION: ${{ inputs.version }}
-        run: |
-          set -euo pipefail
-          MAJOR_VERSION=$(echo "$VERSION" | cut -d. -f1)
-          echo "VERSION_DIR=v$MAJOR_VERSION" >> $GITHUB_ENV
-
-      - name: Download packaged docs artifacts
-        id: download_docs
+      - name: Download prepared docs
         uses: actions/download-artifact@v4
         with:
           name: packaged-docs-${{ inputs.version }}
@@ -52,33 +47,40 @@ jobs:
         env:
           VERSION: ${{ inputs.version }}
         run: |
-          # Verify the artifact was downloaded
           set -euo pipefail
-
+          
           DOC_PATH="build/docs/${VERSION}-kdoc.tar.gz"
-
+          
+          echo "📦 Processing documentation for GitHub Pages deployment"
+          
+          # Verify the documentation file exists
           if [ ! -f "$DOC_PATH" ]; then
-            echo "Error: Documentation artifact not found!"
+            echo "❌ Error: Documentation artifact not found!"
             echo "Expected: $DOC_PATH"
-            echo "Available files:"
+            echo "Available files in build/docs:"
             find build/docs -type f 2>/dev/null || echo "No build/docs directory found"
             exit 1
           fi
+          
+          echo "✅ Found documentation artifact: $DOC_PATH"
+          echo "📊 File size: $(du -h "$DOC_PATH" | cut -f1)"
           
           # Create a directory for extracted docs
           mkdir -p ./pages-docs
           
           # Extract the tar.gz file
+          echo "📤 Extracting documentation..."
           tar -xzf "$DOC_PATH" -C ./pages-docs
           
           # Verify extraction was successful
           if [ -z "$(ls -A ./pages-docs)" ]; then
-            echo "Error: Documentation extraction failed - directory is empty"
+            echo "❌ Error: Documentation extraction failed - directory is empty"
             exit 1
           fi
           
           # List contents to verify extraction
-          echo "Successfully extracted documentation:"
+          echo "✅ Successfully extracted documentation:"
+          echo "📂 Contents of ./pages-docs:"
           ls -la ./pages-docs
 
       - name: Deploy to GitHub Pages
@@ -88,5 +90,5 @@ jobs:
           publish_branch: gh-pages
           publish_dir: ./pages-docs
           destination_dir: ${{ inputs.version }}
-          keep_files: true
+          keep_files: false
           enable_jekyll: false

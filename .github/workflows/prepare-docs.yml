@@ -1,0 +1,80 @@
+name: Prepare Documentation
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'The version to prepare documentation for'
+        required: true
+        type: string
+        
+jobs:
+  prepare-docs:
+    runs-on: ubuntu-latest
+    steps:
+      # Download pre-packaged docs artifacts if they were published by the release workflow.
+      - name: Download pre-packaged docs artifacts
+        id: download_docs
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: packaged-docs-${{ inputs.version }}
+          path: build/docs
+
+      # Fallback to building if artifacts were not previously uploaded for the given version.
+      # NOTE: All the steps below this point will be skipped if the download step succeeds.
+      - name: Checkout repo to build docs
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        uses: actions/checkout@v4
+        with:
+          ref: refs/tags/${{ inputs.version }}      
+
+      - name: Setup Java Version
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Gradle
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        uses: gradle/actions/setup-gradle@v3
+
+      - name: Copy CI gradle.properties
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.gradle
+          cp .github/ci-gradle.properties ~/.gradle/gradle.properties
+
+      - name: Verify Version (Gradle equality)
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          ACTUAL_VERSION=$(./gradlew -q getVersion)
+          if [[ "$ACTUAL_VERSION" != "$VERSION" ]]; then
+            echo "Gradle version mismatch: expected '$VERSION', got '$ACTUAL_VERSION'" >&2
+            exit 1
+          fi
+          echo "Verified version matches Gradle: $VERSION"
+
+      - name: Build docs packages
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          echo "🚀 Building documentation for version: $VERSION"
+          ./gradlew packageDocs --stacktrace
+          echo "✅ Documentation build completed successfully"
+
+      - name: Upload packaged docs artifacts
+        if: ${{ steps.download_docs.outcome == 'failure' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: packaged-docs-${{ inputs.version }}
+          retention-days: 1
+          path: |
+            build/docs/${{ inputs.version }}-kdoc.tar.gz
