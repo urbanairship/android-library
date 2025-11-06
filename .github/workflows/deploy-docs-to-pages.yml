@@ -1,11 +1,5 @@
 name: Deploy Docs to GitHub Pages
 
-# Set permissions for GitHub Pages deployment
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
@@ -36,6 +30,10 @@ jobs:
   deploy-to-pages:
     needs: prepare-docs
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     steps:
       - name: Download prepared docs
         uses: actions/download-artifact@v4
@@ -89,6 +87,5 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
           publish_dir: ./pages-docs
-          destination_dir: ${{ inputs.version }}
           keep_files: false
           enable_jekyll: false
