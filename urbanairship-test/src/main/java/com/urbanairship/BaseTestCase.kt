@@ -14,7 +14,7 @@ import org.robolectric.shadows.ShadowLooper
 
 @Config(
     sdk = [28],
-    shadows = [ShadowNotificationManagerExtension::class, ShadowAirshipExecutorsPaused::class]
+    shadows = [ShadowNotificationManagerExtension::class]
 )
 @RunWith(AndroidJUnit4::class)
 public abstract class BaseTestCase public constructor() {
