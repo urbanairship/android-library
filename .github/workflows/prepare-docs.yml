@@ -38,7 +38,7 @@ jobs:
 
       - name: Setup Gradle
         if: ${{ steps.download_docs.outcome == 'failure' }}
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v4
 
       - name: Copy CI gradle.properties
         if: ${{ steps.download_docs.outcome == 'failure' }}
