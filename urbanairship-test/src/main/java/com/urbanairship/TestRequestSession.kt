@@ -7,7 +7,6 @@ import com.urbanairship.http.RequestException
 import com.urbanairship.http.RequestSession
 import com.urbanairship.http.Response
 import com.urbanairship.http.ResponseParser
-import com.urbanairship.util.Checks
 
 /**
  * Request class used for testing.
@@ -48,7 +47,7 @@ public class TestRequestSession : RequestSession {
         }
 
         return try {
-            Checks.checkNotNull(request.url, "missing url")
+            requireNotNull(request.url) { "missing url" }
             val response = responses.removeAt(0)
 
             Response(

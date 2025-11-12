@@ -12,7 +12,6 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.util.Checks
 import java.util.Locale
 
 /**
@@ -25,10 +24,8 @@ public class RegionEvent private constructor(
      */
     private val source: String? = null,
     /**
-     * @hide
-     */
-    /**
      * The ID of the region.
+     * * @hide
      */
     internal val regionId: String,
 
@@ -210,21 +207,18 @@ public class RegionEvent private constructor(
         @Throws(IllegalArgumentException::class)
         public fun build(): RegionEvent {
             val source = this.source ?: throw IllegalArgumentException("Region event source must not be null")
-            Checks.checkArgument(
-                regionId.isNotEmpty(),
+            require(regionId.isNotEmpty()) {
                 "Region identifier must be greater than 0 characters."
-            )
-            Checks.checkArgument(
-                regionId.length <= MAX_CHARACTER_LENGTH,
+            }
+            require(regionId.length <= MAX_CHARACTER_LENGTH) {
                 "Region identifier exceeds max identifier length: $MAX_CHARACTER_LENGTH"
-            )
-            Checks.checkArgument(
-                source.isNotEmpty(), "Source must be greater than 0 characters."
-            )
-            Checks.checkArgument(
-                source.length <= MAX_CHARACTER_LENGTH,
+            }
+            require(source.isNotEmpty()) {
+                "Source must be greater than 0 characters."
+            }
+            require(source.length <= MAX_CHARACTER_LENGTH) {
                 "Source exceeds max source length: $MAX_CHARACTER_LENGTH"
-            )
+            }
 
             // Check boundary event
             return RegionEvent(
