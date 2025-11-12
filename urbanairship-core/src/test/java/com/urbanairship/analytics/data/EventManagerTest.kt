@@ -11,6 +11,7 @@ import com.urbanairship.analytics.EventType
 import com.urbanairship.analytics.data.EventEntity.EventIdAndData
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.http.RequestException
+import com.urbanairship.http.RequestResult
 import com.urbanairship.http.Response
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
@@ -137,7 +138,10 @@ public class EventManagerTest public constructor() : BaseTestCase() {
 
         // Return the response
         every { mockClient.sendEvents("some channel", eventPayloads, headers) } answers {
-            Response(HttpURLConnection.HTTP_OK, eventResponse)
+            RequestResult(
+                response = Response(HttpURLConnection.HTTP_OK, eventResponse),
+                shouldRetry = false
+            )
         }
 
         every { mockDispatcher.dispatch(any()) } answers {
@@ -201,7 +205,10 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100)
 
         every { mockClient.sendEvents("some channel", eventPayloads, headers) } answers {
-            Response(HttpURLConnection.HTTP_BAD_REQUEST, mockk())
+            RequestResult(
+                response = Response(HttpURLConnection.HTTP_BAD_REQUEST, mockk()),
+                shouldRetry = false
+            )
         }
 
         assertFalse(eventManager.uploadEvents("some channel", headers))

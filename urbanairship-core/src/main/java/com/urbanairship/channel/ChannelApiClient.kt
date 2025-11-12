@@ -10,9 +10,8 @@ import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.RequestSession
 import com.urbanairship.http.log
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.requireField
 import com.urbanairship.util.UAHttpStatusUtil
@@ -25,7 +24,7 @@ import com.urbanairship.util.UAHttpStatusUtil
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ChannelApiClient @VisibleForTesting constructor(
     private val runtimeConfig: AirshipRuntimeConfig,
-    private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
+    private val session: RequestSession = runtimeConfig.requestSession
 ) {
     internal suspend fun createChannel(channelPayload: ChannelRegistrationPayload): RequestResult<Channel> {
         UALog.d { "Creating channel with payload: $channelPayload" }
@@ -43,15 +42,15 @@ public class ChannelApiClient @VisibleForTesting constructor(
         )
 
         return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
-            return@execute if (UAHttpStatusUtil.inSuccessRange(status)) {
-                val identifier = JsonValue.parseString(responseBody).requireMap().requireField<String>(CHANNEL_ID_KEY)
-                Channel(
-                    identifier = identifier,
-                    location = builder.appendPath(identifier).build().toString()
-                )
-            } else {
-                null
+            if (!UAHttpStatusUtil.inSuccessRange(status)) {
+                return@execute null
             }
+
+            val identifier = JsonValue.parseString(responseBody).requireMap().requireField<String>(CHANNEL_ID_KEY)
+            return@execute Channel(
+                identifier = identifier,
+                location = builder.appendPath(identifier).build().toString()
+            )
         }.also { result ->
             result.log { "Creating channel finished with result: $result" }
         }

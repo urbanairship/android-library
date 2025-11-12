@@ -12,7 +12,6 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
@@ -37,7 +36,7 @@ public class DeferredApiClientTest {
     @Before
     public fun setup() {
         every { runtimeConfig.platform } returns Platform.ANDROID
-        apiClient = DeferredApiClient(runtimeConfig, requestSession.toSuspendingRequestSession())
+        apiClient = DeferredApiClient(runtimeConfig, requestSession)
     }
 
     @Test

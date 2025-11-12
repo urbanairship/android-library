@@ -7,7 +7,6 @@ import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import com.urbanairship.util.DateUtils
@@ -37,7 +36,7 @@ public class ContactChannelsApiClientTest {
     private val contactId = UUID.randomUUID().toString()
 
     private var client = ContactChannelsApiClient(
-        runtimeConfig, requestSession.toSuspendingRequestSession()
+        runtimeConfig, requestSession
     )
 
     @Test

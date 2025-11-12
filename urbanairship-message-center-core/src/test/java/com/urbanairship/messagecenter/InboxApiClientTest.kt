@@ -2,14 +2,12 @@
 package com.urbanairship.messagecenter
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.Platform
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
-import com.urbanairship.Airship
-import com.urbanairship.Platform
 import com.urbanairship.http.RequestAuth.ChannelTokenAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestException
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -52,7 +50,7 @@ public class InboxApiClientTest {
         )
     )
 
-    private val inboxApiClient = InboxApiClient(runtimeConfig, requestSession.toSuspendingRequestSession())
+    private val inboxApiClient = InboxApiClient(runtimeConfig, requestSession)
 
     @Before
     public fun setup() {

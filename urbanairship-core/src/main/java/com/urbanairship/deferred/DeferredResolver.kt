@@ -8,7 +8,6 @@ import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
@@ -30,7 +29,7 @@ public class DeferredResolver internal constructor(
 
     internal constructor(config: AirshipRuntimeConfig, audienceOverridesProvider: AudienceOverridesProvider) : this(
         audienceOverridesProvider = audienceOverridesProvider,
-        apiClient = DeferredApiClient(config, config.requestSession.toSuspendingRequestSession())
+        apiClient = DeferredApiClient(config, config.requestSession)
     )
 
     public suspend fun <T> resolve(request: DeferredRequest, parser: (JsonValue) -> T): DeferredResult<T> {

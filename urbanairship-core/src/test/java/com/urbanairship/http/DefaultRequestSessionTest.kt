@@ -2,10 +2,10 @@ package com.urbanairship.http
 
 import android.net.Uri
 import android.util.Base64
-import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.TestClock
 import com.urbanairship.Airship
 import com.urbanairship.Platform
+import com.urbanairship.TestAirshipRuntimeConfig
+import com.urbanairship.TestClock
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.toSignedToken
 import io.mockk.coEvery
@@ -33,7 +33,7 @@ public class DefaultRequestSessionTest {
     private val testClock = TestClock()
 
     @Suppress("ObjectLiteralToLambda") // Breaks test when converted
-    private val testParser = object : ResponseParser<String> {
+    private val testParser = object : ResponseParser<String?> {
         override fun parseResponse(
             status: Int,
             headers: Map<String, String>,
@@ -55,7 +55,7 @@ public class DefaultRequestSessionTest {
     )
 
     @Test
-    public fun testRequest() {
+    public fun testRequest(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             method = "POST",
@@ -64,14 +64,14 @@ public class DefaultRequestSessionTest {
         )
 
         val expectedHeaders = request.headers + expectedDefaultHeaders
-        val result = Response(200, "neat", "neat", emptyMap())
+        val result: Response<String?> = Response(200, "neat", "neat", emptyMap())
 
-        every<Response<String>> {
+        every<Response<String?>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns result
 
         assertEquals(
-            requestSession.execute(request, testParser), result
+            requestSession.execute(request, testParser), RequestResult(result, false)
         )
 
         verify {
@@ -88,7 +88,7 @@ public class DefaultRequestSessionTest {
     }
 
     @Test
-    public fun testBasicAuth() {
+    public fun testBasicAuth(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.BasicAuth("foo", "bar"),
@@ -119,7 +119,7 @@ public class DefaultRequestSessionTest {
     }
 
     @Test
-    public fun testBasicAppAuth() {
+    public fun testBasicAppAuth(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.BasicAppAuth,
@@ -146,7 +146,7 @@ public class DefaultRequestSessionTest {
     }
 
     @Test
-    public fun testBearerTokenAuth() {
+    public fun testBearerTokenAuth(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.BearerToken("some token"),
@@ -171,7 +171,7 @@ public class DefaultRequestSessionTest {
     }
 
     @Test
-    public fun testGeneratedAppTokenAuth() {
+    public fun testGeneratedAppTokenAuth(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.GeneratedAppToken,
@@ -208,7 +208,7 @@ public class DefaultRequestSessionTest {
     }
 
     @Test
-    public fun testGeneratedChannelTokenAuth() {
+    public fun testGeneratedChannelTokenAuth(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.GeneratedChannelToken("some channel"),
@@ -279,8 +279,8 @@ public class DefaultRequestSessionTest {
         confirmVerified(mockClient)
     }
 
-    @Test(expected = RequestException::class)
-    public fun testNoChannelAuthTokenProvider() {
+    @Test()
+    public fun testNoChannelAuthTokenProvider(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.ChannelTokenAuth("some channel ID"),
@@ -292,11 +292,12 @@ public class DefaultRequestSessionTest {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
-        requestSession.execute(request, testParser)
+        val result = requestSession.execute(request, testParser)
+        assert(result.exception is RequestException)
     }
 
-    @Test(expected = RequestException::class)
-    public fun testChannelAuthProviderThrows() {
+    @Test()
+    public fun testChannelAuthProviderThrows(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.ChannelTokenAuth("some channel ID"),
@@ -313,11 +314,12 @@ public class DefaultRequestSessionTest {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
-        requestSession.execute(request, testParser)
+        val result = requestSession.execute(request, testParser)
+        assert(result.exception is RequestException)
     }
 
     @Test
-    public fun testChannelAuthExpiredRetriesAndExpires() {
+    public fun testChannelAuthExpiredRetriesAndExpires(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.ChannelTokenAuth("some channel ID"),
@@ -339,7 +341,8 @@ public class DefaultRequestSessionTest {
         )
 
         assertEquals(
-            Response(200, "neat", "neat", emptyMap()), requestSession.execute(request, testParser)
+            RequestResult(Response(200, "neat", "neat", emptyMap()), false),
+            requestSession.execute(request, testParser)
         )
 
         val firstRequestHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
@@ -371,7 +374,7 @@ public class DefaultRequestSessionTest {
     }
 
     @Test
-    public fun testContactAuthProvider() {
+    public fun testContactAuthProvider(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.ContactTokenAuth("some contact ID"),
@@ -402,8 +405,8 @@ public class DefaultRequestSessionTest {
         confirmVerified(mockClient)
     }
 
-    @Test(expected = RequestException::class)
-    public fun testNoContactAuthTokenProvider() {
+    @Test()
+    public fun testNoContactAuthTokenProvider(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.ContactTokenAuth("some contact ID"),
@@ -415,11 +418,12 @@ public class DefaultRequestSessionTest {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
-        requestSession.execute(request, testParser)
+        val result = requestSession.execute(request, testParser)
+        assert(result.exception is RequestException)
     }
 
-    @Test(expected = RequestException::class)
-    public fun testContactAuthProviderThrows() {
+    @Test()
+    public fun testContactAuthProviderThrows(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.ContactTokenAuth("some contact ID"),
@@ -434,11 +438,12 @@ public class DefaultRequestSessionTest {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
-        requestSession.execute(request, testParser)
+        val result = requestSession.execute(request, testParser)
+        assert(result.exception is RequestException)
     }
 
     @Test
-    public fun testContactAuthExpiredRetriesAndExpires() {
+    public fun testContactAuthExpiredRetriesAndExpires(): TestResult = runTest {
         val request = Request(
             url = Uri.parse("some uri"),
             auth = RequestAuth.ContactTokenAuth("some contact ID"),
@@ -459,7 +464,8 @@ public class DefaultRequestSessionTest {
         )
 
         assertEquals(
-            Response(200, "neat", "neat", emptyMap()), requestSession.execute(request, testParser)
+            RequestResult(Response(200, "neat", "neat", emptyMap()), false),
+            requestSession.execute(request, testParser)
         )
 
         val firstRequestHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()

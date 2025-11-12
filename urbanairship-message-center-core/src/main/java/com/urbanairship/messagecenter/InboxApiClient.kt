@@ -13,8 +13,7 @@ import com.urbanairship.http.RequestAuth.ChannelTokenAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestException
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.SuspendingRequestSession
-import com.urbanairship.http.toSuspendingRequestSession
+import com.urbanairship.http.RequestSession
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -25,7 +24,7 @@ import com.urbanairship.util.UAHttpStatusUtil
 /**  high level abstraction for performing Inbox API requests. */
 internal class InboxApiClient(
     private val runtimeConfig: AirshipRuntimeConfig,
-    private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
+    private val session: RequestSession = runtimeConfig.requestSession
 ) {
 
     suspend fun fetchMessages(

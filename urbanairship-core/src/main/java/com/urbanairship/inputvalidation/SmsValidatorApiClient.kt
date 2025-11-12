@@ -11,8 +11,7 @@ import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.SuspendingRequestSession
-import com.urbanairship.http.toSuspendingRequestSession
+import com.urbanairship.http.RequestSession
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -31,7 +30,7 @@ internal interface SmsValidatorApiInterface {
 
 internal class SmsValidatorApiClient(
     private val config: AirshipRuntimeConfig,
-    private var session: SuspendingRequestSession = config.requestSession.toSuspendingRequestSession()
+    private var session: RequestSession = config.requestSession
 ): SmsValidatorApiInterface {
 
     @Throws(InvalidParameterException::class)
@@ -73,11 +72,11 @@ internal class SmsValidatorApiClient(
         )
 
         return session.execute(request) { status, _, responseBody ->
-            if (UAHttpStatusUtil.inSuccessRange(status)) {
-                JsonValue.parseString(responseBody).let(Result::fromJson)
-            } else {
-                null
+            if (!UAHttpStatusUtil.inSuccessRange(status)) {
+                return@execute null
             }
+
+            JsonValue.parseString(responseBody).let(Result::fromJson)
         }
     }
 

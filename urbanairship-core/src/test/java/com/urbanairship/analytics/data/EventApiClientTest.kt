@@ -43,7 +43,7 @@ public class EventApiClientTest {
 
         val response = client.sendEvents("some channel", events, emptyMap())
 
-        Assert.assertEquals(200, response.status.toLong())
+        Assert.assertEquals(200, response.status)
         Assert.assertEquals("", response.body)
         Assert.assertEquals("POST", requestSession.lastRequest.method)
         Assert.assertEquals("http://example.com/warp9/", requestSession.lastRequest.url.toString())
@@ -54,10 +54,10 @@ public class EventApiClientTest {
     /**
      * Test sending a request with a null URL will return an exception
      */
-    @Test(expected = RequestException::class)
     public fun testNullUrl() {
         runtimeConfig = TestAirshipRuntimeConfig(RemoteConfig())
-        client.sendEvents("some channel", events, emptyMap())
+        val result = client.sendEvents("some channel", events, emptyMap())
+        assert(result.exception is RequestException)
     }
 
     /**
@@ -70,7 +70,7 @@ public class EventApiClientTest {
 
         val response = client.sendEvents("some channel", events, emptyMap())
 
-        Assert.assertEquals(200, response.status.toLong())
+        Assert.assertEquals(200, response.status)
         Assert.assertEquals("", response.body)
         Assert.assertEquals("POST", requestSession.lastRequest.method)
         Assert.assertEquals("http://example.com/warp9/", requestSession.lastRequest.url.toString())
@@ -89,7 +89,7 @@ public class EventApiClientTest {
 
         val requestHeaders = requestSession.lastRequest.headers
 
-        Assert.assertEquals(200, response.status.toLong())
+        Assert.assertEquals(200, response.status)
         Assert.assertEquals("", response.body)
         Assert.assertEquals("POST", requestSession.lastRequest.method)
         Assert.assertEquals("http://example.com/warp9/", requestSession.lastRequest.url.toString())
@@ -106,7 +106,7 @@ public class EventApiClientTest {
         events.clear()
         events.add(invalidEvent)
         val response = client.sendEvents("some channel", events, emptyMap())
-        Assert.assertEquals(200, response.status.toLong())
+        Assert.assertEquals(200, response.status)
         Assert.assertEquals("", response.body)
         Assert.assertEquals("POST", requestSession.lastRequest.method)
         Assert.assertEquals("http://example.com/warp9/", requestSession.lastRequest.url.toString())

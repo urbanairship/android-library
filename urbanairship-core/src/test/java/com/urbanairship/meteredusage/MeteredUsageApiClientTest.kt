@@ -5,7 +5,6 @@ import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
 import com.urbanairship.Airship
 import com.urbanairship.http.RequestAuth
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
@@ -34,7 +33,7 @@ public class MeteredUsageApiClientTest {
 
     @Before
     public fun setUp() {
-        client = MeteredUsageApiClient(testConfig, requestSession.toSuspendingRequestSession())
+        client = MeteredUsageApiClient(testConfig, requestSession)
     }
 
     @Test

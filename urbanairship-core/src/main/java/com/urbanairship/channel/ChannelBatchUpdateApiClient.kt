@@ -3,23 +3,21 @@
 package com.urbanairship.channel
 
 import android.net.Uri
-import com.urbanairship.UALog
-import com.urbanairship.Airship
 import com.urbanairship.Platform
+import com.urbanairship.UALog
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.SuspendingRequestSession
-import com.urbanairship.http.toSuspendingRequestSession
+import com.urbanairship.http.RequestSession
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 
 /** API client for the channel bulk update endpoint. */
 internal class ChannelBatchUpdateApiClient(
     private val config: AirshipRuntimeConfig,
-    private val session: SuspendingRequestSession = config.requestSession.toSuspendingRequestSession()
+    private val session: RequestSession = config.requestSession
 ) {
     /** Bulk update channel subscription lists, tags, and attributes. */
     suspend fun update(

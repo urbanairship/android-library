@@ -10,7 +10,6 @@ import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
@@ -56,7 +55,7 @@ public class ContactApiClientTest {
     private val requestSession = TestRequestSession()
 
     private var client: ContactApiClient = ContactApiClient(
-        runtimeConfig, requestSession.toSuspendingRequestSession(), clock
+        runtimeConfig, requestSession, clock
     )
 
     @Before

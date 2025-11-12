@@ -6,7 +6,6 @@ import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import kotlinx.coroutines.Dispatchers
@@ -32,7 +31,7 @@ public class ChannelApiClientTest {
     private val requestSession = TestRequestSession()
     private val testDispatcher = StandardTestDispatcher()
 
-    private val client = ChannelApiClient(config, requestSession.toSuspendingRequestSession())
+    private val client = ChannelApiClient(config, requestSession)
 
     @Before
     public fun setup() {

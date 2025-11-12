@@ -3,7 +3,6 @@ package com.urbanairship.channel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
@@ -37,7 +36,7 @@ public class SubscriptionListApiClientTest {
 
     private val client = SubscriptionListApiClient(
         config,
-        requestSession.toSuspendingRequestSession()
+        requestSession
     )
 
     @Before

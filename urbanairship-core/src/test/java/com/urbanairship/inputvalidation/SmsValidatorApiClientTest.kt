@@ -3,12 +3,11 @@
 package com.urbanairship.inputvalidation
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.Airship
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
-import com.urbanairship.Airship
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
@@ -34,7 +33,7 @@ public class SmsValidatorApiClientTest {
 
     @Before
     public fun setUp() {
-        client = SmsValidatorApiClient(testConfig, requestSession.toSuspendingRequestSession())
+        client = SmsValidatorApiClient(testConfig, requestSession)
     }
 
     @Test

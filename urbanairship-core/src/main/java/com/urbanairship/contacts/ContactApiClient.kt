@@ -12,9 +12,8 @@ import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestException
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.RequestSession
 import com.urbanairship.http.log
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -33,7 +32,7 @@ import java.util.TimeZone
 @OpenForTesting
 internal class ContactApiClient (
     private val runtimeConfig: AirshipRuntimeConfig,
-    private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession(),
+    private val session: RequestSession = runtimeConfig.requestSession,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
 ) {
 
@@ -203,11 +202,11 @@ internal class ContactApiClient (
         UALog.d { "Associating channel $channelId type $channelType request: $request" }
 
         return session.execute(request) { status: Int, _: Map<String, String>, _: String? ->
-            if (status == 200) {
-                channelId
-            } else {
-                null
+            if (status != 200) {
+                return@execute null
             }
+
+            return@execute channelId
         }.also { result ->
             result.log { "Association channel $channelId type $channelType result: $result" }
         }
@@ -311,11 +310,10 @@ internal class ContactApiClient (
         UALog.d { "Identifying contact for channel $channelId request: $request" }
 
         return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
-            if (UAHttpStatusUtil.inSuccessRange(status)) {
-                IdentityResult(JsonValue.parseString(responseBody).requireMap(), clock)
-            } else {
-                null
+            if (!UAHttpStatusUtil.inSuccessRange(status)) {
+                return@execute null
             }
+            return@execute IdentityResult(JsonValue.parseString(responseBody).requireMap(), clock)
         }.also { result ->
             result.log { "Identifying contact for channel $channelId result: $result" }
         }
@@ -429,11 +427,13 @@ internal class ContactApiClient (
         UALog.d { "Disassociating contact channel with payload $payload request: $request" }
 
         return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
-            if (UAHttpStatusUtil.inSuccessRange(status)) {
-                JsonValue.parseString(responseBody).requireMap().requireField<String>(CHANNEL_ID_KEY)
-            } else {
-                null
+            if (!UAHttpStatusUtil.inSuccessRange(status)) {
+                return@execute null
             }
+
+            return@execute JsonValue.parseString(responseBody)
+                .requireMap()
+                .requireField<String>(CHANNEL_ID_KEY)
         }.also { result ->
             result.log { "Disassociating contact channel with payload $payload result: $result" }
         }

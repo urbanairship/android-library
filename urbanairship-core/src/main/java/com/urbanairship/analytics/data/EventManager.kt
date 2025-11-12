@@ -222,7 +222,7 @@ public class EventManager @VisibleForTesting internal constructor(
 
         try {
             val response = apiClient.sendEvents(channelId, eventPayloads, headers)
-            if (!response.isSuccessful) {
+            if (!response.isSuccessful || response.value == null) {
                 UALog.d("Analytic upload failed.")
                 return false
             }
@@ -233,9 +233,9 @@ public class EventManager @VisibleForTesting internal constructor(
             }
 
             // Update preferences
-            preferenceDataStore.put(MAX_TOTAL_DB_SIZE_KEY, response.result.maxTotalSize)
-            preferenceDataStore.put(MAX_BATCH_SIZE_KEY, response.result.maxBatchSize)
-            preferenceDataStore.put(MIN_BATCH_INTERVAL_KEY, response.result.minBatchInterval)
+            preferenceDataStore.put(MAX_TOTAL_DB_SIZE_KEY, response.value.maxTotalSize)
+            preferenceDataStore.put(MAX_BATCH_SIZE_KEY, response.value.maxBatchSize)
+            preferenceDataStore.put(MIN_BATCH_INTERVAL_KEY, response.value.minBatchInterval)
 
             // If there are still events left, schedule the next send
             if (eventCount - events.size > 0) {
