@@ -30,7 +30,6 @@ import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.Clock
-import com.urbanairship.util.UAStringUtil
 import java.util.TimeZone
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -574,19 +573,19 @@ public constructor(
             headers["X-UA-Channel-ID"] = airshipChannel.id ?: ""
             headers["X-UA-Push-Address"] = airshipChannel.id ?: ""
             if (sdkExtensions.isNotEmpty()) {
-                headers["X-UA-Frameworks"] = UAStringUtil.join(sdkExtensions, ",")
+                headers["X-UA-Frameworks"] = sdkExtensions.joinToString(",")
             }
 
             // Device info
             headers["X-UA-Device-Model"] = Build.MODEL
             headers["X-UA-Timezone"] = TimeZone.getDefault().id
             val locale = localeManager.locale
-            if (!UAStringUtil.isEmpty(locale.language)) {
+            if (locale.language.isNotEmpty()) {
                 headers["X-UA-Locale-Language"] = locale.language
-                if (!UAStringUtil.isEmpty(locale.country)) {
+                if (locale.country.isNotEmpty()) {
                     headers["X-UA-Locale-Country"] = locale.country
                 }
-                if (!UAStringUtil.isEmpty(locale.variant)) {
+                if (locale.variant.isNotEmpty()) {
                     headers["X-UA-Locale-Variant"] = locale.variant
                 }
             }

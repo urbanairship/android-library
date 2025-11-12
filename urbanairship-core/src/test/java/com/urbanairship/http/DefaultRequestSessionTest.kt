@@ -7,7 +7,7 @@ import com.urbanairship.TestClock
 import com.urbanairship.Airship
 import com.urbanairship.Platform
 import com.urbanairship.util.DateUtils
-import com.urbanairship.util.UAStringUtil
+import com.urbanairship.util.toSignedToken
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.confirmVerified
@@ -179,9 +179,8 @@ public class DefaultRequestSessionTest {
             headers = mapOf("foo" to "bar")
         )
 
-        val token = UAStringUtil.generateSignedToken(
-            appConfig.appSecret,
-            listOf(
+        val token = appConfig.appSecret.toSignedToken(
+            values = listOf(
                 appConfig.appKey, nonce, DateUtils.createIso8601TimeStamp(testClock.currentTimeMillis)
             )
         )
@@ -217,9 +216,8 @@ public class DefaultRequestSessionTest {
             headers = mapOf("foo" to "bar")
         )
 
-        val token = UAStringUtil.generateSignedToken(
-            appConfig.appSecret,
-            listOf(
+        val token = appConfig.appSecret.toSignedToken(
+            values = listOf(
                 appConfig.appKey, "some channel", nonce, DateUtils.createIso8601TimeStamp(testClock.currentTimeMillis)
             )
         )

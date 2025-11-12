@@ -3,7 +3,6 @@ package com.urbanairship.debug.ui.push
 import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonValue
 import com.urbanairship.push.PushMessage
-import com.urbanairship.util.UAStringUtil
 
 /***
  * PushItem model object.
@@ -17,7 +16,7 @@ internal class PushItem(val pushEntity: PushEntity) {
 
     val alert: String?
         get() {
-            if (UAStringUtil.isEmpty(message.alert)) {
+            if (message.alert.isNullOrEmpty()) {
                 return null
             }
             return message.alert

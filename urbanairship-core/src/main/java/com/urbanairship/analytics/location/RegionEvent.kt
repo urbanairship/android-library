@@ -13,7 +13,6 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.Checks
-import com.urbanairship.util.UAStringUtil
 import java.util.Locale
 
 /**
@@ -212,7 +211,7 @@ public class RegionEvent private constructor(
         public fun build(): RegionEvent {
             val source = this.source ?: throw IllegalArgumentException("Region event source must not be null")
             Checks.checkArgument(
-                !UAStringUtil.isEmpty(regionId),
+                regionId.isNotEmpty(),
                 "Region identifier must be greater than 0 characters."
             )
             Checks.checkArgument(
@@ -220,7 +219,7 @@ public class RegionEvent private constructor(
                 "Region identifier exceeds max identifier length: $MAX_CHARACTER_LENGTH"
             )
             Checks.checkArgument(
-                !UAStringUtil.isEmpty(source), "Source must be greater than 0 characters."
+                source.isNotEmpty(), "Source must be greater than 0 characters."
             )
             Checks.checkArgument(
                 source.length <= MAX_CHARACTER_LENGTH,

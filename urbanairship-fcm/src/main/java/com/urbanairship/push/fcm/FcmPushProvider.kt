@@ -12,7 +12,6 @@ import com.urbanairship.google.PlayServicesUtils
 import com.urbanairship.push.PushProvider
 import com.urbanairship.push.PushProvider.PushProviderUnavailableException
 import com.urbanairship.push.PushProvider.RegistrationException
-import com.urbanairship.util.UAStringUtil
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
@@ -75,7 +74,7 @@ public class FcmPushProvider public constructor() : PushProvider, AirshipVersion
         @Throws(IllegalStateException::class)
         private fun getFirebaseMessaging(): FirebaseMessaging {
             val configOptions = airshipConfigOptions
-            if (UAStringUtil.isEmpty(configOptions.fcmFirebaseAppName)) {
+            if (configOptions.fcmFirebaseAppName.isNullOrEmpty()) {
                 // This will throw an IllegalStateException if firebase is not configured
                 return FirebaseMessaging.getInstance()
             } else {

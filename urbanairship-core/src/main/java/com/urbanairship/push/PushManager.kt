@@ -46,7 +46,6 @@ import com.urbanairship.push.notifications.AirshipNotificationProvider
 import com.urbanairship.push.notifications.NotificationActionButtonGroup
 import com.urbanairship.push.notifications.NotificationChannelRegistry
 import com.urbanairship.push.notifications.NotificationProvider
-import com.urbanairship.util.UAStringUtil
 import java.util.concurrent.ExecutorService
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
@@ -474,7 +473,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
     /** Whether the app is capable of receiving push (`true` if a push token is present). */
     public val isPushAvailable: Boolean
-        get() = privacyManager.isEnabled(PrivacyManager.Feature.PUSH) && !UAStringUtil.isEmpty(pushToken)
+        get() = privacyManager.isEnabled(PrivacyManager.Feature.PUSH) && !pushToken.isNullOrEmpty()
 
     /** Whether the app is currently opted in for push. */
     public val isOptIn: Boolean
@@ -727,7 +726,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      * @return `false` if the ID exists in the history, otherwise `true`.
      */
     public fun isUniqueCanonicalId(canonicalId: String?): Boolean {
-        if (UAStringUtil.isEmpty(canonicalId)) {
+        if (canonicalId.isNullOrEmpty()) {
             return true
         }
 
@@ -866,7 +865,7 @@ public open class PushManager @VisibleForTesting internal constructor(
                 userNotificationsEnabled,
                 notificationManager.areNotificationsEnabled(),
                 privacyManager.isEnabled(PrivacyManager.Feature.PUSH),
-                !UAStringUtil.isEmpty(pushToken)
+                !pushToken.isNullOrEmpty()
             )
         }
 

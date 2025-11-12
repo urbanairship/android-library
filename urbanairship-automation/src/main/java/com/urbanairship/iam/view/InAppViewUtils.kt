@@ -34,7 +34,6 @@ import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.iam.info.InAppMessageMediaInfo
 import com.urbanairship.iam.info.InAppMessageTextInfo
-import com.urbanairship.util.UAStringUtil
 import java.lang.ref.WeakReference
 import kotlin.math.max
 
@@ -190,18 +189,10 @@ internal object InAppViewUtils {
      * @return The typeface with a specified font, or null if the font was not found.
      */
     private fun getTypeFace(context: Context, fontFamilies: List<String>?): Typeface? {
-        if (fontFamilies == null) { return null }
-
-        for (fontFamily in fontFamilies) {
-            if (UAStringUtil.isEmpty(fontFamily)) {
-                continue
-            }
-            val typeface = Fonts.shared(context).getFontFamily(fontFamily)
-            if (typeface != null) {
-                return typeface
-            }
-        }
-        return null
+        val provider = Fonts.shared(context)
+        return fontFamilies
+            ?.filter { it.isNotEmpty() }
+            ?.firstNotNullOfOrNull { provider.getFontFamily(it) }
     }
 
     /**

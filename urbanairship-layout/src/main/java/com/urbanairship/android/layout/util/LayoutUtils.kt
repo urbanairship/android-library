@@ -47,7 +47,6 @@ import com.urbanairship.android.layout.property.isEnabled
 import com.urbanairship.android.layout.property.resolvedLinkColor
 import com.urbanairship.android.layout.property.underlineLinks
 import com.urbanairship.android.layout.widget.Clippable
-import com.urbanairship.util.UAStringUtil.isEmpty
 import java.util.Arrays
 import kotlin.math.roundToInt
 import com.google.android.material.color.MaterialColors
@@ -369,13 +368,11 @@ internal object LayoutUtils {
         editText.gravity = editText.gravity or  // Vertically center single line text inputs, or top align multiline text inputs
                 (if (isMultiline) Gravity.TOP else Gravity.CENTER_VERTICAL)
 
-        if (isEmpty(textInput.viewInfo.hintText)) {
-            return
-        }
-
-        editText.hint = textInput.viewInfo.hintText
-        textInput.viewInfo.textAppearance.hintColor?.let {
-            editText.setHintTextColor(it.resolve(editText.context))
+        if (!textInput.viewInfo.hintText.isNullOrEmpty()) {
+            editText.hint = textInput.viewInfo.hintText
+            textInput.viewInfo.textAppearance.hintColor?.let {
+                editText.setHintTextColor(it.resolve(editText.context))
+            }
         }
     }
 
@@ -429,7 +426,7 @@ internal object LayoutUtils {
         val fonts = Fonts.shared(context)
 
         return fontFamilies
-            .mapNotNull {  if (isEmpty(it)) null else it }
+            .filter { !it.isEmpty() }
             .firstNotNullOfOrNull { fonts.getFontFamily(it) }
     }
 

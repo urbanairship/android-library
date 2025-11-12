@@ -17,8 +17,8 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
-import com.urbanairship.util.UAStringUtil
 import com.urbanairship.util.VersionUtils
+import com.urbanairship.util.toSha256
 import java.util.Objects
 import java.util.UUID
 
@@ -271,7 +271,7 @@ public sealed class AutomationTrigger(
                 components.add(it.toJsonValue().toString(true))
             }
 
-            return UAStringUtil.sha256(components.joinToString(":"))
+            return components.joinToString(":").toSha256()
                 ?: throw RuntimeException("failed to generate sha256 hash")
         }
     }

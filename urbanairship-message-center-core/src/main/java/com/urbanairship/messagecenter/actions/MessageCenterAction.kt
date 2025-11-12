@@ -13,7 +13,6 @@ import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.actions.MessageCenterAction.Companion.DEFAULT_NAMES
 import com.urbanairship.messagecenter.messageCenter
 import com.urbanairship.push.PushMessage
-import com.urbanairship.util.UAStringUtil
 
 /**
  * Starts an activity to display either the [Inbox] or a [Message] using
@@ -70,7 +69,7 @@ public open class MessageCenterAction
             }
         }
 
-        if (UAStringUtil.isEmpty(messageId)) {
+        if (messageId.isNullOrEmpty()) {
             messageCenter.showMessageCenter()
         } else {
             messageCenter.showMessageCenter(messageId)

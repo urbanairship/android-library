@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import com.urbanairship.UALog
-import com.urbanairship.util.UAStringUtil
 import java.io.Closeable
 import java.io.File
 import java.io.FileInputStream
@@ -37,7 +36,7 @@ internal class HmsTokenCache @VisibleForTesting constructor() {
 
     operator fun set(context: Context, token: String?) {
         synchronized(lock) {
-            if (UAStringUtil.equals(token, get(context))) {
+            if (token == get(context)) {
                 return
             }
             this.token = token

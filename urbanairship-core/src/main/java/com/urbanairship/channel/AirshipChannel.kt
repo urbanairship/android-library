@@ -35,7 +35,6 @@ import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.Clock
-import com.urbanairship.util.UAStringUtil
 import java.util.TimeZone
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.locks.ReentrantLock
@@ -587,10 +586,10 @@ public class AirshipChannel internal constructor(
         if (privacyManager.isAnyFeatureEnabled) {
             builder.setTimezone(TimeZone.getDefault().id)
             val locale = localeManager.locale
-            if (!UAStringUtil.isEmpty(locale.country)) {
+            if (locale.country.isNotEmpty()) {
                 builder.setCountry(locale.country)
             }
-            if (!UAStringUtil.isEmpty(locale.language)) {
+            if (locale.language.isNotEmpty()) {
                 builder.setLanguage(locale.language)
             }
             builder.setSdkVersion(Airship.version)

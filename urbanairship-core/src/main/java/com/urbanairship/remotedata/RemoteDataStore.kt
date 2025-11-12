@@ -10,7 +10,7 @@ import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.DataManager
-import com.urbanairship.util.UAStringUtil
+import com.urbanairship.util.repeat
 
 /**
  * [DataManager] class for remote data.
@@ -119,7 +119,7 @@ internal class RemoteDataStore (
                 cursor = this.query(TABLE_NAME, null, null, null, null)
             } else {
                 val where =
-                    COLUMN_NAME_TYPE + " IN ( " + UAStringUtil.repeat("?", types.size, ", ") + " )"
+                    COLUMN_NAME_TYPE + " IN ( " + "?".repeat(times = types.size, separator = ", ") + " )"
 
                 cursor = this.query(
                     TABLE_NAME, null, where, types.toTypedArray<String>(), null

@@ -9,7 +9,6 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.urbanairship.UALog
 import com.urbanairship.analytics.data.EventEntity.EventIdAndData
-import com.urbanairship.util.UAStringUtil
 
 /**
  * Event data access object.
@@ -64,7 +63,7 @@ internal abstract class EventDao {
         while (databaseSize() > maxDatabaseSize) {
             val sessionId = oldestSessionId() ?: return
 
-            if (UAStringUtil.isEmpty(sessionId)) {
+            if (sessionId.isEmpty()) {
                 return
             }
 

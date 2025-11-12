@@ -8,7 +8,7 @@ import com.urbanairship.Airship
 import com.urbanairship.Platform
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
-import com.urbanairship.util.UAStringUtil
+import com.urbanairship.util.toSignedToken
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
 
@@ -173,12 +173,9 @@ public class DefaultRequestSession : RequestSession {
                 val nonce = nonceTokenFactory()
                 val timestamp = DateUtils.createIso8601TimeStamp(requestTime)
 
-                val token = UAStringUtil.generateSignedToken(
-                        configOptions.appSecret,
-                        listOf(
-                            configOptions.appKey, nonce, timestamp
-                        )
-                    )
+                val token = configOptions.appSecret.toSignedToken(
+                    values = listOf(configOptions.appKey, nonce, timestamp)
+                )
 
                 ResolvedAuth(
                     headers = mapOf(
@@ -195,11 +192,8 @@ public class DefaultRequestSession : RequestSession {
                 val nonce = nonceTokenFactory()
                 val timestamp = DateUtils.createIso8601TimeStamp(requestTime)
 
-                val token = UAStringUtil.generateSignedToken(
-                    configOptions.appSecret,
-                    listOf(
-                        configOptions.appKey, auth.channelId, nonce, timestamp
-                    )
+                val token = configOptions.appSecret.toSignedToken(
+                    values = listOf(configOptions.appKey, auth.channelId, nonce, timestamp)
                 )
 
                 ResolvedAuth(
