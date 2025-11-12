@@ -1,8 +1,6 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.analytics.data
 
-import com.urbanairship.util.UAMathUtil
-
 /**
  * Model object containing response information from a request.
  *
@@ -17,9 +15,7 @@ internal class EventResponse(private val headers: Map<String, String>) {
         get() {
             return headers["X-UA-Max-Total"]
                 ?.let {
-                    UAMathUtil.constrain(
-                        it.toInt() * 1024, MIN_TOTAL_DB_SIZE_BYTES, MAX_TOTAL_DB_SIZE_BYTES
-                    )
+                    (it.toInt() * 1024).coerceIn(MIN_TOTAL_DB_SIZE_BYTES, MAX_TOTAL_DB_SIZE_BYTES)
                 }
                 ?: MIN_TOTAL_DB_SIZE_BYTES
         }
@@ -31,9 +27,7 @@ internal class EventResponse(private val headers: Map<String, String>) {
         get() {
             return headers["X-UA-Max-Batch"]
                 ?.let {
-                    UAMathUtil.constrain(
-                        it.toInt() * 1024, MIN_BATCH_SIZE_BYTES, MAX_BATCH_SIZE_BYTES
-                    )
+                    (it.toInt() * 1024).coerceIn(MIN_BATCH_SIZE_BYTES, MAX_BATCH_SIZE_BYTES)
                 }
                 ?: MIN_BATCH_SIZE_BYTES
         }
@@ -43,12 +37,8 @@ internal class EventResponse(private val headers: Map<String, String>) {
      */
     val minBatchInterval: Int
         get() {
-            return headers["X-UA-Min-Batch-Interval"]
-                ?.let {
-                    UAMathUtil.constrain(
-                        it.toInt(), MIN_BATCH_INTERVAL_MS, MAX_BATCH_INTERVAL_MS
-                    )
-                }
+            return headers["X-UA-Min-Batch-Interval"]?.toInt()
+                ?.coerceIn(MIN_BATCH_INTERVAL_MS, MAX_BATCH_INTERVAL_MS)
                 ?: MIN_BATCH_INTERVAL_MS
         }
 
