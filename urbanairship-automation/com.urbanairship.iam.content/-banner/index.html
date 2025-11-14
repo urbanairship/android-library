@@ -1,0 +1,478 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>Banner</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../../images/logo-icon.svg"></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    Airship Android SDK
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":urbanairship-automation/main">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":urbanairship-automation/main" data-filter=":urbanairship-automation/main">
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Airship Android SDK
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="urbanairship-automation::com.urbanairship.iam.content/Banner///PointingToDeclaration//-1141966037">
+  <div class="breadcrumbs"><a href="../../index.html">urbanairship-automation</a><span class="delimiter">/</span><a href="../index.html">com.urbanairship.iam.content</a><span class="delimiter">/</span><span class="current">Banner</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Banner</span></span></h1>
+    <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+      <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">Banner</a> : <a href="../../../urbanairship-core/com.urbanairship.json/-json-serializable/index.html">JsonSerializable</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/urbanairship-automation/src/main/java/com/urbanairship/iam/content/Banner.kt#L22">source</a>)</span></span></div><p class="paragraph">Display content for banner in-app message.</p></div>    </div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="1237857355%2FClasslikes%2F-1141966037" anchor-label="Companion" id="1237857355%2FClasslikes%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1237857355%2FClasslikes%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1622039186%2FClasslikes%2F-1141966037" anchor-label="Placement" id="1622039186%2FClasslikes%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-placement/index.html"><span><span>Placement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1622039186%2FClasslikes%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-placement/index.html">Placement</a> : <a href="../../../urbanairship-core/com.urbanairship.json/-json-serializable/index.html">JsonSerializable</a>, <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-placement/index.html">Banner.Placement</a><span class="token operator">&gt; </span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1319837329%2FClasslikes%2F-1141966037" anchor-label="Template" id="1319837329%2FClasslikes%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-template/index.html"><span><span>Template</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1319837329%2FClasslikes%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-template/index.html">Template</a> : <a href="../../../urbanairship-core/com.urbanairship.json/-json-serializable/index.html">JsonSerializable</a>, <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-template/index.html">Banner.Template</a><span class="token operator">&gt; </span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="-1269275033%2FProperties%2F-1141966037" anchor-label="actions" id="-1269275033%2FProperties%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="actions.html"><span><span>actions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1269275033%2FProperties%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="actions.html">actions</a><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship.json/-json-map/index.html">JsonMap</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The action names and values to be run when the banner is clicked.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1879735153%2FProperties%2F-1141966037" anchor-label="backgroundColor" id="-1879735153%2FProperties%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="background-color.html"><span>background</span><wbr><span><span>Color</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1879735153%2FProperties%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="background-color.html">backgroundColor</a><span class="token operator">: </span><a href="../../../urbanairship-automation/com.urbanairship.iam.info/-in-app-message-color/index.html">InAppMessageColor</a></div><div class="brief "><p class="paragraph">The optional banner background color.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-371739468%2FProperties%2F-1141966037" anchor-label="body" id="-371739468%2FProperties%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="body.html"><span><span>body</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-371739468%2FProperties%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="body.html">body</a><span class="token operator">: </span><a href="../../com.urbanairship.iam.info/-in-app-message-text-info/index.html">InAppMessageTextInfo</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The optional body <a href="../../com.urbanairship.iam.info/-in-app-message-text-info/index.html">InAppMessageTextInfo</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="172180728%2FProperties%2F-1141966037" anchor-label="borderRadius" id="172180728%2FProperties%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="border-radius.html"><span>border</span><wbr><span><span>Radius</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="172180728%2FProperties%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="border-radius.html">borderRadius</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-float/index.html">Float</a></div><div class="brief "><p class="paragraph">The optional border radius in dps.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1394631424%2FProperties%2F-1141966037" anchor-label="buttonLayoutType" id="-1394631424%2FProperties%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="button-layout-type.html"><span>button</span><wbr><span>Layout</span><wbr><span><span>Type</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1394631424%2FProperties%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="button-layout-type.html">buttonLayoutType</a><span class="token operator">: </span><a href="../../com.urbanairship.iam.info/-in-app-message-button-layout-type/index.html">InAppMessageButtonLayoutType</a></div><div class="brief "><p class="paragraph">The optional button layout.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2069204067%2FProperties%2F-1141966037" anchor-label="buttons" id="2069204067%2FProperties%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="buttons.html"><span><span>buttons</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2069204067%2FProperties%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="buttons.html">buttons</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../com.urbanairship.iam.info/-in-app-message-button-info/index.html">InAppMessageButtonInfo</a><span class="token operator">&gt;</span><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The list of optional buttons.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="765014991%2FProperties%2F-1141966037" anchor-label="dismissButtonColor" id="765014991%2FProperties%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="dismiss-button-color.html"><span>dismiss</span><wbr><span>Button</span><wbr><span><span>Color</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="765014991%2FProperties%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="dismiss-button-color.html">dismissButtonColor</a><span class="token operator">: </span><a href="../../../urbanairship-automation/com.urbanairship.iam.info/-in-app-message-color/index.html">InAppMessageColor</a></div><div class="brief "><p class="paragraph">The optional banner dismiss button color.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-416676804%2FProperties%2F-1141966037" anchor-label="durationMs" id="-416676804%2FProperties%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="duration-ms.html"><span>duration</span><wbr><span><span>Ms</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-416676804%2FProperties%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="duration-ms.html">durationMs</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></div><div class="brief "><p class="paragraph">The banner display duration. Default to 15 seconds</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="17133826%2FProperties%2F-1141966037" anchor-label="heading" id="17133826%2FProperties%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="heading.html"><span><span>heading</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="17133826%2FProperties%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="heading.html">heading</a><span class="token operator">: </span><a href="../../com.urbanairship.iam.info/-in-app-message-text-info/index.html">InAppMessageTextInfo</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The optional heading <a href="../../com.urbanairship.iam.info/-in-app-message-text-info/index.html">InAppMessageTextInfo</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1651349280%2FProperties%2F-1141966037" anchor-label="media" id="1651349280%2FProperties%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="media.html"><span><span>media</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1651349280%2FProperties%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="media.html">media</a><span class="token operator">: </span><a href="../../com.urbanairship.iam.info/-in-app-message-media-info/index.html">InAppMessageMediaInfo</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The optional media <a href="../../com.urbanairship.iam.info/-in-app-message-media-info/index.html">InAppMessageMediaInfo</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1687360577%2FProperties%2F-1141966037" anchor-label="placement" id="-1687360577%2FProperties%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="placement.html"><span><span>placement</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1687360577%2FProperties%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="placement.html">placement</a><span class="token operator">: </span><a href="-placement/index.html">Banner.Placement</a></div><div class="brief "><p class="paragraph">The optional banner placement. <a href="-placement/index.html">Placement</a></p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1991225436%2FProperties%2F-1141966037" anchor-label="template" id="1991225436%2FProperties%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="template.html"><span><span>template</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1991225436%2FProperties%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="template.html">template</a><span class="token operator">: </span><a href="-template/index.html">Banner.Template</a></div><div class="brief "><p class="paragraph">The optional banner <a href="-template/index.html">Template</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="369845578%2FFunctions%2F-1141966037" anchor-label="copy" id="369845578%2FFunctions%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="copy.html"><span><span>copy</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="369845578%2FFunctions%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-overloads/index.html"><span class="token annotation builtin">JvmOverloads</span></a></div></div><span class="token keyword">fun </span><a href="copy.html"><span class="token function">copy</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">heading<span class="token operator">: </span><a href="../../com.urbanairship.iam.info/-in-app-message-text-info/index.html">InAppMessageTextInfo</a><span class="token operator">?</span><span class="token operator"> = </span>this.heading<span class="token punctuation">, </span></span><span class="parameter ">body<span class="token operator">: </span><a href="../../com.urbanairship.iam.info/-in-app-message-text-info/index.html">InAppMessageTextInfo</a><span class="token operator">?</span><span class="token operator"> = </span>this.body<span class="token punctuation">, </span></span><span class="parameter ">media<span class="token operator">: </span><a href="../../com.urbanairship.iam.info/-in-app-message-media-info/index.html">InAppMessageMediaInfo</a><span class="token operator">?</span><span class="token operator"> = </span>this.media<span class="token punctuation">, </span></span><span class="parameter ">buttons<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../../com.urbanairship.iam.info/-in-app-message-button-info/index.html">InAppMessageButtonInfo</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>this.buttons<span class="token punctuation">, </span></span><span class="parameter ">buttonLayoutType<span class="token operator">: </span><a href="../../com.urbanairship.iam.info/-in-app-message-button-layout-type/index.html">InAppMessageButtonLayoutType</a><span class="token operator"> = </span>this.buttonLayoutType<span class="token punctuation">, </span></span><span class="parameter ">template<span class="token operator">: </span><a href="-template/index.html">Banner.Template</a><span class="token operator"> = </span>this.template<span class="token punctuation">, </span></span><span class="parameter ">backgroundColor<span class="token operator">: </span><a href="../../../urbanairship-automation/com.urbanairship.iam.info/-in-app-message-color/index.html">InAppMessageColor</a><span class="token operator"> = </span>this.backgroundColor<span class="token punctuation">, </span></span><span class="parameter ">dismissButtonColor<span class="token operator">: </span><a href="../../../urbanairship-automation/com.urbanairship.iam.info/-in-app-message-color/index.html">InAppMessageColor</a><span class="token operator"> = </span>this.dismissButtonColor<span class="token punctuation">, </span></span><span class="parameter ">borderRadius<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-float/index.html">Float</a><span class="token operator"> = </span>this.borderRadius<span class="token punctuation">, </span></span><span class="parameter ">durationMs<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator"> = </span>this.durationMs<span class="token punctuation">, </span></span><span class="parameter ">placement<span class="token operator">: </span><a href="-placement/index.html">Banner.Placement</a><span class="token operator"> = </span>this.placement<span class="token punctuation">, </span></span><span class="parameter ">actions<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship.json/-json-map/index.html">JsonMap</a><span class="token operator">?</span><span class="token operator"> = </span>this.actions</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">Banner</a></div><div class="brief "><p class="paragraph">Returns a copy of the Banner display content with the provided changes.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="519189675%2FFunctions%2F-1141966037" anchor-label="equals" id="519189675%2FFunctions%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="equals.html"><span><span>equals</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="519189675%2FFunctions%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">operator override </span><span class="token keyword">fun </span><a href="equals.html"><span class="token function">equals</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">other<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-529336357%2FFunctions%2F-1141966037" anchor-label="hashCode" id="-529336357%2FFunctions%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="hash-code.html"><span>hash</span><wbr><span><span>Code</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-529336357%2FFunctions%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="hash-code.html"><span class="token function">hashCode</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1706816554%2FFunctions%2F-1141966037" anchor-label="toJsonValue" id="-1706816554%2FFunctions%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="to-json-value.html"><span>to</span><wbr><span>Json</span><wbr><span><span>Value</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1706816554%2FFunctions%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="to-json-value.html"><span class="token function">toJsonValue</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship.json/-json-value/index.html">JsonValue</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-707502422%2FFunctions%2F-1141966037" anchor-label="toString" id="-707502422%2FFunctions%2F-1141966037" data-filterable-set=":urbanairship-automation/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="to-string.html"><span>to</span><wbr><span><span>String</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-707502422%2FFunctions%2F-1141966037"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-automation/main" data-filterable-set=":urbanairship-automation/main" data-active="" data-toggle=":urbanairship-automation/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-automation/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="to-string.html"><span class="token function">toString</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>©2025 Airship</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

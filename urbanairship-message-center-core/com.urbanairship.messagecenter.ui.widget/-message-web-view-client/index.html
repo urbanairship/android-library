@@ -1,0 +1,682 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>MessageWebViewClient</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../../images/logo-icon.svg"></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    Airship Android SDK
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":urbanairship-message-center-core/main">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":urbanairship-message-center-core/main" data-filter=":urbanairship-message-center-core/main">
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Airship Android SDK
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="urbanairship-message-center-core::com.urbanairship.messagecenter.ui.widget/MessageWebViewClient///PointingToDeclaration//-48673743">
+  <div class="breadcrumbs"><a href="../../index.html">urbanairship-message-center-core</a><span class="delimiter">/</span><a href="../index.html">com.urbanairship.messagecenter.ui.widget</a><span class="delimiter">/</span><span class="current">MessageWebViewClient</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Message</span><wbr><span>Web</span><wbr><span>View</span><wbr><span><span>Client</span></span></h1>
+    <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+      <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="index.html">MessageWebViewClient</a> : <a href="../../../urbanairship-core/com.urbanairship.webkit/-airship-web-view-client/index.html">AirshipWebViewClient</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/urbanairship-message-center-core/src/main/java/com/urbanairship/messagecenter/ui/widget/MessageWebView.kt#L62">source</a>)</span></span></div><p class="paragraph">A <code class="lang-kotlin">WebViewClient</code> that enables the Airship Native Bridge for Message Center.</p></div>    </div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="-99293442%2FConstructors%2F-48673743" anchor-label="MessageWebViewClient" id="-99293442%2FConstructors%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-message-web-view-client.html"><span>Message</span><wbr><span>Web</span><wbr><span>View</span><wbr><span><span>Client</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-99293442%2FConstructors%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="528063817%2FFunctions%2F-48673743" anchor-label="extendActionRequest" id="528063817%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="extend-action-request.html"><span>extend</span><wbr><span>Action</span><wbr><span><span>Request</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="528063817%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">protected </span><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="extend-action-request.html"><span class="token function">extendActionRequest</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">request<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship.actions/-action-run-request/index.html">ActionRunRequest</a><span class="token punctuation">, </span></span><span class="parameter ">webView<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship.actions/-action-run-request/index.html">ActionRunRequest</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="808695395%2FFunctions%2F-48673743" anchor-label="extendJavascriptEnvironment" id="808695395%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="extend-javascript-environment.html"><span>extend</span><wbr><span>Javascript</span><wbr><span><span>Environment</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="808695395%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/CallSuper.html"><span class="token annotation builtin">CallSuper</span></a></div></div><span class="token keyword">protected </span><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="extend-javascript-environment.html"><span class="token function">extendJavascriptEnvironment</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">builder<span class="token operator">: </span><span data-unresolved-link="com.urbanairship.javascript/JavaScriptEnvironment.Builder///PointingToDeclaration/">JavaScriptEnvironment.Builder</span><span class="token punctuation">, </span></span><span class="parameter ">webView<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="com.urbanairship.javascript/JavaScriptEnvironment.Builder///PointingToDeclaration/">JavaScriptEnvironment.Builder</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Inherited functions</h2>
+        <div class="table"><a data-name="-1234578932%2FFunctions%2F-48673743" anchor-label="addAuthRequestCredentials" id="-1234578932%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1234578932%2FFunctions%2F-48673743"><span>add</span><wbr><span>Auth</span><wbr><span>Request</span><wbr><span><span>Credentials</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1234578932%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#-1234578932%2FFunctions%2F-48673743"><span class="token function">addAuthRequestCredentials</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expectedAuthHost<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">username<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">password<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1671110276%2FFunctions%2F-48673743" anchor-label="addListener" id="1671110276%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1671110276%2FFunctions%2F-48673743"><span>add</span><wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1671110276%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/RestrictTo.html"><span class="token annotation builtin">RestrictTo</span></a><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="token punctuation">[</span><span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/RestrictTo.Scope.html#LIBRARY_GROUP">RestrictTo.Scope.LIBRARY_GROUP</a></span><wbr><span class="token punctuation">]</span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">fun </span><a href="index.html#1671110276%2FFunctions%2F-48673743"><span class="token function">addListener</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">listener<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship.webkit/-airship-web-view-client/-listener/index.html">AirshipWebViewClient.Listener</a></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-803139611%2FFunctions%2F-48673743" anchor-label="doUpdateVisitedHistory" id="-803139611%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-803139611%2FFunctions%2F-48673743"><span>do</span><wbr><span>Update</span><wbr><span>Visited</span><wbr><span><span>History</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-803139611%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-803139611%2FFunctions%2F-48673743"><span class="token function">doUpdateVisitedHistory</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">url<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">isReload<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="383628335%2FFunctions%2F-48673743" anchor-label="isAllowed" id="383628335%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#383628335%2FFunctions%2F-48673743"><span>is</span><wbr><span><span>Allowed</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="383628335%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">protected </span><span class="token keyword">fun </span><a href="index.html#383628335%2FFunctions%2F-48673743"><span class="token function">isAllowed</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">url<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="98515496%2FFunctions%2F-48673743" anchor-label="onAirshipCommand" id="98515496%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#98515496%2FFunctions%2F-48673743"><span>on</span><wbr><span>Airship</span><wbr><span><span>Command</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="98515496%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/RestrictTo.html"><span class="token annotation builtin">RestrictTo</span></a><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="token punctuation">[</span><span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/RestrictTo.Scope.html#LIBRARY_GROUP">RestrictTo.Scope.LIBRARY_GROUP</a></span><wbr><span class="token punctuation">]</span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#98515496%2FFunctions%2F-48673743"><span class="token function">onAirshipCommand</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">webView<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token punctuation">, </span></span><span class="parameter ">command<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">uri<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/net/Uri.html">Uri</a></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1528300873%2FFunctions%2F-48673743" anchor-label="onClose" id="1528300873%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1528300873%2FFunctions%2F-48673743"><span>on</span><wbr><span><span>Close</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1528300873%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1528300873%2FFunctions%2F-48673743"><span class="token function">onClose</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">webView<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-613795914%2FFunctions%2F-48673743" anchor-label="onFormResubmission" id="-613795914%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-613795914%2FFunctions%2F-48673743"><span>on</span><wbr><span>Form</span><wbr><span><span>Resubmission</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-613795914%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-613795914%2FFunctions%2F-48673743"><span class="token function">onFormResubmission</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">dontResend<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/os/Message.html">Message</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">resend<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/os/Message.html">Message</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1026782415%2FFunctions%2F-48673743" anchor-label="onLoadResource" id="-1026782415%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1026782415%2FFunctions%2F-48673743"><span>on</span><wbr><span>Load</span><wbr><span><span>Resource</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1026782415%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/CallSuper.html"><span class="token annotation builtin">CallSuper</span></a></div></div><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#-1026782415%2FFunctions%2F-48673743"><span class="token function">onLoadResource</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">webView<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token punctuation">, </span></span><span class="parameter ">url<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1143994814%2FFunctions%2F-48673743" anchor-label="onPageCommitVisible" id="-1143994814%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1143994814%2FFunctions%2F-48673743"><span>on</span><wbr><span>Page</span><wbr><span>Commit</span><wbr><span><span>Visible</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1143994814%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1143994814%2FFunctions%2F-48673743"><span class="token function">onPageCommitVisible</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">url<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1265648763%2FFunctions%2F-48673743" anchor-label="onPageFinished" id="1265648763%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1265648763%2FFunctions%2F-48673743"><span>on</span><wbr><span>Page</span><wbr><span><span>Finished</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1265648763%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/CallSuper.html"><span class="token annotation builtin">CallSuper</span></a></div></div><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#1265648763%2FFunctions%2F-48673743"><span class="token function">onPageFinished</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">url<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1374934564%2FFunctions%2F-48673743" anchor-label="onPageStarted" id="1374934564%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1374934564%2FFunctions%2F-48673743"><span>on</span><wbr><span>Page</span><wbr><span><span>Started</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1374934564%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/CallSuper.html"><span class="token annotation builtin">CallSuper</span></a></div></div><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#1374934564%2FFunctions%2F-48673743"><span class="token function">onPageStarted</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token punctuation">, </span></span><span class="parameter ">url<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">favicon<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/graphics/Bitmap.html">Bitmap</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1854066498%2FFunctions%2F-48673743" anchor-label="onReceivedClientCertRequest" id="1854066498%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1854066498%2FFunctions%2F-48673743"><span>on</span><wbr><span>Received</span><wbr><span>Client</span><wbr><span>Cert</span><wbr><span><span>Request</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1854066498%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1854066498%2FFunctions%2F-48673743"><span class="token function">onReceivedClientCertRequest</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">request<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/ClientCertRequest.html">ClientCertRequest</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-245370181%2FFunctions%2F-48673743" anchor-label="onReceivedError" id="-245370181%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1106625445%2FFunctions%2F-48673743"><span>on</span><wbr><span>Received</span><wbr><span><span>Error</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-245370181%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1106625445%2FFunctions%2F-48673743"><span class="token function"><strike>onReceivedError</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">errorCode<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">description<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">failingUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#-68057886%2FFunctions%2F-48673743"><span class="token function">onReceivedError</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">request<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebResourceRequest.html">WebResourceRequest</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">error<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebResourceError.html">WebResourceError</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1817258063%2FFunctions%2F-48673743" anchor-label="onReceivedHttpAuthRequest" id="1817258063%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1817258063%2FFunctions%2F-48673743"><span>on</span><wbr><span>Received</span><wbr><span>Http</span><wbr><span>Auth</span><wbr><span><span>Request</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1817258063%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/CallSuper.html"><span class="token annotation builtin">CallSuper</span></a></div></div><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#1817258063%2FFunctions%2F-48673743"><span class="token function">onReceivedHttpAuthRequest</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token punctuation">, </span></span><span class="parameter ">handler<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/HttpAuthHandler.html">HttpAuthHandler</a><span class="token punctuation">, </span></span><span class="parameter ">host<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">realm<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1163853994%2FFunctions%2F-48673743" anchor-label="onReceivedHttpError" id="-1163853994%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1163853994%2FFunctions%2F-48673743"><span>on</span><wbr><span>Received</span><wbr><span>Http</span><wbr><span><span>Error</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1163853994%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1163853994%2FFunctions%2F-48673743"><span class="token function">onReceivedHttpError</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">request<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebResourceRequest.html">WebResourceRequest</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">errorResponse<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebResourceResponse.html">WebResourceResponse</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-940909780%2FFunctions%2F-48673743" anchor-label="onReceivedLoginRequest" id="-940909780%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-940909780%2FFunctions%2F-48673743"><span>on</span><wbr><span>Received</span><wbr><span>Login</span><wbr><span><span>Request</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-940909780%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-940909780%2FFunctions%2F-48673743"><span class="token function">onReceivedLoginRequest</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">realm<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">account<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">args<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2121006195%2FFunctions%2F-48673743" anchor-label="onReceivedSslError" id="2121006195%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#2121006195%2FFunctions%2F-48673743"><span>on</span><wbr><span>Received</span><wbr><span>Ssl</span><wbr><span><span>Error</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2121006195%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#2121006195%2FFunctions%2F-48673743"><span class="token function">onReceivedSslError</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">handler<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/SslErrorHandler.html">SslErrorHandler</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">error<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/net/http/SslError.html">SslError</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1426268434%2FFunctions%2F-48673743" anchor-label="onRenderProcessGone" id="1426268434%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1426268434%2FFunctions%2F-48673743"><span>on</span><wbr><span>Render</span><wbr><span>Process</span><wbr><span><span>Gone</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1426268434%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1426268434%2FFunctions%2F-48673743"><span class="token function">onRenderProcessGone</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">detail<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/RenderProcessGoneDetail.html">RenderProcessGoneDetail</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1743945835%2FFunctions%2F-48673743" anchor-label="onSafeBrowsingHit" id="1743945835%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1743945835%2FFunctions%2F-48673743"><span>on</span><wbr><span>Safe</span><wbr><span>Browsing</span><wbr><span><span>Hit</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1743945835%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1743945835%2FFunctions%2F-48673743"><span class="token function">onSafeBrowsingHit</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">request<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebResourceRequest.html">WebResourceRequest</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">threatType<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter ">callback<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/SafeBrowsingResponse.html">SafeBrowsingResponse</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1451810319%2FFunctions%2F-48673743" anchor-label="onScaleChanged" id="1451810319%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1451810319%2FFunctions%2F-48673743"><span>on</span><wbr><span>Scale</span><wbr><span><span>Changed</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1451810319%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1451810319%2FFunctions%2F-48673743"><span class="token function">onScaleChanged</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">oldScale<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-float/index.html">Float</a><span class="token punctuation">, </span></span><span class="parameter ">newScale<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-float/index.html">Float</a></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1416939659%2FFunctions%2F-48673743" anchor-label="onTooManyRedirects" id="-1416939659%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1416939659%2FFunctions%2F-48673743"><span>on</span><wbr><span>Too</span><wbr><span>Many</span><wbr><span><span>Redirects</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1416939659%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1416939659%2FFunctions%2F-48673743"><span class="token function"><strike>onTooManyRedirects</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">cancelMsg<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/os/Message.html">Message</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">continueMsg<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/os/Message.html">Message</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-127956311%2FFunctions%2F-48673743" anchor-label="onUnhandledKeyEvent" id="-127956311%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-127956311%2FFunctions%2F-48673743"><span>on</span><wbr><span>Unhandled</span><wbr><span>Key</span><wbr><span><span>Event</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-127956311%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-127956311%2FFunctions%2F-48673743"><span class="token function">onUnhandledKeyEvent</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">event<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/view/KeyEvent.html">KeyEvent</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2132180337%2FFunctions%2F-48673743" anchor-label="removeAuthRequestCredentials" id="2132180337%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#2132180337%2FFunctions%2F-48673743"><span>remove</span><wbr><span>Auth</span><wbr><span>Request</span><wbr><span><span>Credentials</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2132180337%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#2132180337%2FFunctions%2F-48673743"><span class="token function">removeAuthRequestCredentials</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">expectedAuthHost<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1188419817%2FFunctions%2F-48673743" anchor-label="removeListener" id="1188419817%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1188419817%2FFunctions%2F-48673743"><span>remove</span><wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1188419817%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/RestrictTo.html"><span class="token annotation builtin">RestrictTo</span></a><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="token punctuation">[</span><span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/RestrictTo.Scope.html#LIBRARY_GROUP">RestrictTo.Scope.LIBRARY_GROUP</a></span><wbr><span class="token punctuation">]</span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">fun </span><a href="index.html#1188419817%2FFunctions%2F-48673743"><span class="token function">removeListener</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">listener<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship.webkit/-airship-web-view-client/-listener/index.html">AirshipWebViewClient.Listener</a></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-133624213%2FFunctions%2F-48673743" anchor-label="setActionCompletionCallback" id="-133624213%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-133624213%2FFunctions%2F-48673743"><span>set</span><wbr><span>Action</span><wbr><span>Completion</span><wbr><span><span>Callback</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-133624213%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="index.html#-133624213%2FFunctions%2F-48673743"><span class="token function">setActionCompletionCallback</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">actionCompletionCallback<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship.actions/-action-completion-callback/index.html">ActionCompletionCallback</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="405354628%2FFunctions%2F-48673743" anchor-label="setFaviconEnabled" id="405354628%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#405354628%2FFunctions%2F-48673743"><span>set</span><wbr><span>Favicon</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="405354628%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/RestrictTo.html"><span class="token annotation builtin">RestrictTo</span></a><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="token punctuation">[</span><span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/RestrictTo.Scope.html#LIBRARY_GROUP">RestrictTo.Scope.LIBRARY_GROUP</a></span><wbr><span class="token punctuation">]</span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">fun </span><a href="index.html#405354628%2FFunctions%2F-48673743"><span class="token function">setFaviconEnabled</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">enabled<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-926455102%2FFunctions%2F-48673743" anchor-label="shouldInterceptRequest" id="-926455102%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1900065239%2FFunctions%2F-48673743"><span>should</span><wbr><span>Intercept</span><wbr><span><span>Request</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-926455102%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/CallSuper.html"><span class="token annotation builtin">CallSuper</span></a></div></div><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#-1900065239%2FFunctions%2F-48673743"><span class="token function">shouldInterceptRequest</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">webView<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token punctuation">, </span></span><span class="parameter ">request<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebResourceRequest.html">WebResourceRequest</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebResourceResponse.html">WebResourceResponse</a><span class="token operator">?</span></div><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/CallSuper.html"><span class="token annotation builtin">CallSuper</span></a></div></div><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#605408613%2FFunctions%2F-48673743"><span class="token function"><strike>shouldInterceptRequest</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">webView<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token punctuation">, </span></span><span class="parameter ">url<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebResourceResponse.html">WebResourceResponse</a><span class="token operator">?</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1841628860%2FFunctions%2F-48673743" anchor-label="shouldOverrideKeyEvent" id="1841628860%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#1841628860%2FFunctions%2F-48673743"><span>should</span><wbr><span>Override</span><wbr><span>Key</span><wbr><span><span>Event</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1841628860%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#1841628860%2FFunctions%2F-48673743"><span class="token function">shouldOverrideKeyEvent</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">event<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/view/KeyEvent.html">KeyEvent</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1928202369%2FFunctions%2F-48673743" anchor-label="shouldOverrideUrlLoading" id="1928202369%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="index.html#-1077272299%2FFunctions%2F-48673743"><span>should</span><wbr><span>Override</span><wbr><span>Url</span><wbr><span><span>Loading</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1928202369%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="index.html#-1077272299%2FFunctions%2F-48673743"><span class="token function">shouldOverrideUrlLoading</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">view<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">request<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebResourceRequest.html">WebResourceRequest</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/CallSuper.html"><span class="token annotation builtin">CallSuper</span></a></div></div><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="index.html#2142477930%2FFunctions%2F-48673743"><span class="token function"><strike>shouldOverrideUrlLoading</strike></span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">webView<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/webkit/WebView.html">WebView</a><span class="token punctuation">, </span></span><span class="parameter ">url<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>©2025 Airship</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

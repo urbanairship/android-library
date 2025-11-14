@@ -1,0 +1,270 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>ActionRunRequest</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../../images/logo-icon.svg"></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    Airship Android SDK
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":urbanairship-core/main">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":urbanairship-core/main" data-filter=":urbanairship-core/main">
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Airship Android SDK
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="urbanairship-core::com.urbanairship.actions/ActionRunRequest///PointingToDeclaration//1762731939">
+  <div class="breadcrumbs"><a href="../../index.html">urbanairship-core</a><span class="delimiter">/</span><a href="../index.html">com.urbanairship.actions</a><span class="delimiter">/</span><span class="current">ActionRunRequest</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Action</span><wbr><span>Run</span><wbr><span><span>Request</span></span></h1>
+    <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+      <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="index.html">ActionRunRequest</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/urbanairship-core/src/main/java/com/urbanairship/actions/ActionRunRequest.kt#L46">source</a>)</span></span></div><p class="paragraph">ActionRunRequests provides a fluent API for running Actions.</p><p class="paragraph">If an action entails a UI interaction, <a href="../-action/should-run-on-main-thread.html">Action.shouldRunOnMainThread</a> will be overridden to return true so that the action runs on the UI thread when triggered asynchronously. If called by the UI thread, the action will run immediately, otherwise it will be posted to the main thread's looper. All other actions will run on their own thread. If the async run is triggered on the UI thread or a thread with a prepared looper, the optional <a href="../-action-completion-callback/index.html">com.urbanairship.actions.ActionCompletionCallback</a> will be executed on the calling thread by sending a message to the calling thread's handler. If the calling thread does not have a prepared looper, the callback will be executed on the main thread.</p><p class="paragraph">Synchronous runs will block, and should never be called on the UI thread. It should only be used when executing actions in a separate thread, or as a convenient way of running actions from another action.</p></div>    </div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="-1308452716%2FClasslikes%2F1762731939" anchor-label="ActionRunResult" id="-1308452716%2FClasslikes%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-action-run-result/index.html"><span>Action</span><wbr><span>Run</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1308452716%2FClasslikes%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-action-run-result/index.html">ActionRunResult</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>result<span class="token operator">: </span><a href="../-action-result/index.html">ActionResult</a></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-772803718%2FClasslikes%2F1762731939" anchor-label="Companion" id="-772803718%2FClasslikes%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-772803718%2FClasslikes%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-1266313754%2FFunctions%2F1762731939" anchor-label="run" id="-1266313754%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="run.html"><span><span>run</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1266313754%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="run.html"><span class="token function">run</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Executes the action asynchronously.</p></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="run.html"><span class="token function">run</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">callback<span class="token operator">: </span><a href="../-action-completion-callback/index.html">ActionCompletionCallback</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="run.html"><span class="token function">run</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">looper<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/os/Looper.html">Looper</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">callback<span class="token operator">: </span><a href="../-action-completion-callback/index.html">ActionCompletionCallback</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Executes the action asynchronously with a callback.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1991932226%2FFunctions%2F1762731939" anchor-label="runSuspending" id="1991932226%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="run-suspending.html"><span>run</span><wbr><span><span>Suspending</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1991932226%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="run-suspending.html"><span class="token function">runSuspending</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="-action-run-result/index.html">ActionRunRequest.ActionRunResult</a></div><div class="brief "><p class="paragraph">Executes the action.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="296871597%2FFunctions%2F1762731939" anchor-label="runSync" id="296871597%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="run-sync.html"><span>run</span><wbr><span><span>Sync</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="296871597%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/WorkerThread.html"><span class="token annotation builtin">WorkerThread</span></a></div></div><span class="token keyword">open </span><span class="token keyword">fun </span><a href="run-sync.html"><span class="token function">runSync</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-action-result/index.html">ActionResult</a></div><div class="brief "><p class="paragraph">Executes the action synchronously.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-611933456%2FFunctions%2F1762731939" anchor-label="setMetadata" id="-611933456%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set-metadata.html"><span>set</span><wbr><span><span>Metadata</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-611933456%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="set-metadata.html"><span class="token function">setMetadata</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">metadata<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/os/Bundle.html">Bundle</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">ActionRunRequest</a></div><div class="brief "><p class="paragraph">Sets the action argument's metadata.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1083993485%2FFunctions%2F1762731939" anchor-label="setSituation" id="-1083993485%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set-situation.html"><span>set</span><wbr><span><span>Situation</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1083993485%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="set-situation.html"><span class="token function">setSituation</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">situation<span class="token operator">: </span><a href="../-action/-situation/index.html">Action.Situation</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">ActionRunRequest</a></div><div class="brief "><p class="paragraph">Sets the situation.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1572905094%2FFunctions%2F1762731939" anchor-label="setValue" id="1572905094%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="set-value.html"><span>set</span><wbr><span><span>Value</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1572905094%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="set-value.html"><span class="token function">setValue</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">actionValue<span class="token operator">: </span><a href="../-action-value/index.html">ActionValue</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">ActionRunRequest</a></div><div class="brief "><p class="paragraph">Sets the action argument's value.</p></div><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="set-value.html"><span class="token function">setValue</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">object<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="index.html">ActionRunRequest</a></div><div class="brief "><p class="paragraph">Sets the action arguments value. The object will automatically be wrapped as a ActionValue and throw an illegal argument exception if its an invalid value.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>©2025 Airship</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

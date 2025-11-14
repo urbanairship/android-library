@@ -1,0 +1,801 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>AirshipConfigOptions</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../../images/logo-icon.svg"></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    Airship Android SDK
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":urbanairship-core/main">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":urbanairship-core/main" data-filter=":urbanairship-core/main">
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Airship Android SDK
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="urbanairship-core::com.urbanairship/AirshipConfigOptions///PointingToDeclaration//1762731939">
+  <div class="breadcrumbs"><a href="../../index.html">urbanairship-core</a><span class="delimiter">/</span><a href="../index.html">com.urbanairship</a><span class="delimiter">/</span><span class="current">AirshipConfigOptions</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Airship</span><wbr><span>Config</span><wbr><span><span>Options</span></span></h1>
+    <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+      <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">AirshipConfigOptions</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/urbanairship-core/src/main/java/com/urbanairship/AirshipConfigOptions.kt#L29">source</a>)</span></span></div><p class="paragraph">This class holds the set of options necessary to properly initialize <a href="../-airship/index.html">com.urbanairship.Airship</a>.</p></div>    </div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="-97852544%2FClasslikes%2F1762731939" anchor-label="Builder" id="-97852544%2FClasslikes%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-builder/index.html"><span><span>Builder</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-97852544%2FClasslikes%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-builder/index.html">Builder</a></div><div class="brief "><p class="paragraph">Airship config builder.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1252656815%2FClasslikes%2F1762731939" anchor-label="Companion" id="1252656815%2FClasslikes%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1252656815%2FClasslikes%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-382928338%2FClasslikes%2F1762731939" anchor-label="ConfigException" id="-382928338%2FClasslikes%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-config-exception/index.html"><span>Config</span><wbr><span><span>Exception</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-382928338%2FClasslikes%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-config-exception/index.html">ConfigException</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">throwable<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-throwable/index.html">Throwable</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span> : <a href="https://developer.android.com/reference/kotlin/java/lang/Exception.html">Exception</a></div><div class="brief "><p class="paragraph">Config exceptions when trying to load properties from a resource.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-245178297%2FClasslikes%2F1762731939" anchor-label="LogLevel" id="-245178297%2FClasslikes%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-log-level/index.html"><span>Log</span><wbr><span><span>Level</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-245178297%2FClasslikes%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-log-level/index.html">LogLevel</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-log-level/index.html">AirshipConfigOptions.LogLevel</a><span class="token operator">&gt; </span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1162328437%2FClasslikes%2F1762731939" anchor-label="PrivacyLevel" id="-1162328437%2FClasslikes%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-privacy-level/index.html"><span>Privacy</span><wbr><span><span>Level</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1162328437%2FClasslikes%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-privacy-level/index.html">PrivacyLevel</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-privacy-level/index.html">AirshipConfigOptions.PrivacyLevel</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Log privacy levels.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-703268736%2FClasslikes%2F1762731939" anchor-label="Site" id="-703268736%2FClasslikes%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-site/index.html"><span><span>Site</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-703268736%2FClasslikes%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-site/index.html">Site</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-site/index.html">AirshipConfigOptions.Site</a><span class="token operator">&gt; </span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="-1460011914%2FProperties%2F1762731939" anchor-label="allowedTransports" id="-1460011914%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="allowed-transports.html"><span>allowed</span><wbr><span><span>Transports</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1460011914%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="allowed-transports.html">allowedTransports</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">The transport types allowed for Push.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-945429705%2FProperties%2F1762731939" anchor-label="analyticsEnabled" id="-945429705%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="analytics-enabled.html"><span>analytics</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-945429705%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="analytics-enabled.html">analyticsEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Flag indicating whether the application will use analytics.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1178573004%2FProperties%2F1762731939" anchor-label="appKey" id="-1178573004%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="app-key.html"><span>app</span><wbr><span><span>Key</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1178573004%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="app-key.html">appKey</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Airship app key.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1153254999%2FProperties%2F1762731939" anchor-label="appSecret" id="1153254999%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="app-secret.html"><span>app</span><wbr><span><span>Secret</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1153254999%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="app-secret.html">appSecret</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div><div class="brief "><p class="paragraph">Airship app secret.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="914936348%2FProperties%2F1762731939" anchor-label="appStoreUri" id="914936348%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="app-store-uri.html"><span>app</span><wbr><span>Store</span><wbr><span><span>Uri</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="914936348%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="app-store-uri.html">appStoreUri</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/net/Uri.html">Uri</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Optional app store link when using the rate app action. If not set, the action will generate it using hte app's current package name.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="379177722%2FProperties%2F1762731939" anchor-label="autoLaunchApplication" id="379177722%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="auto-launch-application.html"><span>auto</span><wbr><span>Launch</span><wbr><span><span>Application</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="379177722%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="auto-launch-application.html">autoLaunchApplication</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Flag indicating whether or not to launch the launcher activity when a push notification or push notification button is opened and the application intent receiver did not launch an activity.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1314259060%2FProperties%2F1762731939" anchor-label="autoPauseInAppAutomationOnLaunch" id="1314259060%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="auto-pause-in-app-automation-on-launch.html"><span>auto</span><wbr><span>Pause</span><wbr><span>In</span><wbr><span>App</span><wbr><span>Automation</span><wbr><span>On</span><wbr><span><span>Launch</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1314259060%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="auto-pause-in-app-automation-on-launch.html">autoPauseInAppAutomationOnLaunch</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Flag indicating whether or not the SDK will automatically pause In-App Automation during app launch. Defaults to false.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-784648611%2FProperties%2F1762731939" anchor-label="backgroundReportingIntervalMS" id="-784648611%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="background-reporting-interval-m-s.html"><span>background</span><wbr><span>Reporting</span><wbr><span>Interval</span><wbr><span><span>MS</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-784648611%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="background-reporting-interval-m-s.html">backgroundReportingIntervalMS</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a></div><div class="brief "><p class="paragraph">Minimum delta in milliseconds between analytics uploads when adding location events while in the background.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="376962474%2FProperties%2F1762731939" anchor-label="channelCaptureEnabled" id="376962474%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="channel-capture-enabled.html"><span>channel</span><wbr><span>Capture</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="376962474%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="channel-capture-enabled.html">channelCaptureEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Flag indicating whether channel capture feature is enabled or not.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-327610124%2FProperties%2F1762731939" anchor-label="channelCreateOption" id="-327610124%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="channel-create-option.html"><span>channel</span><wbr><span>Create</span><wbr><span><span>Option</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-327610124%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="channel-create-option.html">channelCreateOption</a><span class="token operator">: </span><a href="../../com.urbanairship.channel/-airship-channel-create-option/index.html">AirshipChannelCreateOption</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Defines the procedure for creating a new channel. Implement the interface carefully to avoid potential issues such as having multiple devices with the same channel id or unpredicted Airship setup time.. When the method is set to <a href="../../com.urbanairship.channel/-channel-generation-method/-restore/index.html">com.urbanairship.channel.ChannelGenerationMethod.Restore</a>, the user must provide a unique channel ID.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-808030648%2FProperties%2F1762731939" anchor-label="channelCreationDelayEnabled" id="-808030648%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="channel-creation-delay-enabled.html"><span>channel</span><wbr><span>Creation</span><wbr><span>Delay</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-808030648%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="channel-creation-delay-enabled.html">channelCreationDelayEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Flag indicating whether channel creation delay is enabled or not.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1107010655%2FProperties%2F1762731939" anchor-label="dataCollectionOptInEnabled" id="-1107010655%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="data-collection-opt-in-enabled.html"><span>data</span><wbr><span>Collection</span><wbr><span>Opt</span><wbr><span>In</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1107010655%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="data-collection-opt-in-enabled.html"><strike>dataCollectionOptInEnabled</strike></a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Flag indicating if the data collection opt-in is enabled.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1127115702%2FProperties%2F1762731939" anchor-label="enabledFeatures" id="-1127115702%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="enabled-features.html"><span>enabled</span><wbr><span><span>Features</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1127115702%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="enabled-features.html">enabledFeatures</a><span class="token operator">: </span><a href="../-privacy-manager/-feature/index.html">PrivacyManager.Feature</a></div><div class="brief "><p class="paragraph">Default enabled Airship features for the app. For more details, see <a href="../-privacy-manager/index.html">PrivacyManager</a>. Defaults to <a href="../-privacy-manager/-feature/-companion/-a-l-l.html">PrivacyManager.Feature.ALL</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="108858706%2FProperties%2F1762731939" anchor-label="extendedBroadcastsEnabled" id="108858706%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="extended-broadcasts-enabled.html"><span>extended</span><wbr><span>Broadcasts</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="108858706%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="extended-broadcasts-enabled.html">extendedBroadcastsEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Flag indicating whether or not to perform extended broadcasts.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1483209021%2FProperties%2F1762731939" anchor-label="fcmFirebaseAppName" id="1483209021%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="fcm-firebase-app-name.html"><span>fcm</span><wbr><span>Firebase</span><wbr><span>App</span><wbr><span><span>Name</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1483209021%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="fcm-firebase-app-name.html">fcmFirebaseAppName</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The Firebase app name to use for FCM instead of the default app.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1898851351%2FProperties%2F1762731939" anchor-label="initialConfigUrl" id="-1898851351%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="initial-config-url.html"><span>initial</span><wbr><span>Config</span><wbr><span><span>Url</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1898851351%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="initial-config-url.html">initialConfigUrl</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The initial config URL.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-25145292%2FProperties%2F1762731939" anchor-label="inProduction" id="-25145292%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="in-production.html"><span>in</span><wbr><span><span>Production</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-25145292%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="in-production.html">inProduction</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Flag indicating whether the application is in production.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="510798439%2FProperties%2F1762731939" anchor-label="isAllowListScopeOpenSet" id="510798439%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is-allow-list-scope-open-set.html"><span>is</span><wbr><span>Allow</span><wbr><span>List</span><wbr><span>Scope</span><wbr><span>Open</span><wbr><span><span>Set</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="510798439%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="is-allow-list-scope-open-set.html">isAllowListScopeOpenSet</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1523097875%2FProperties%2F1762731939" anchor-label="isAllowListSet" id="-1523097875%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is-allow-list-set.html"><span>is</span><wbr><span>Allow</span><wbr><span>List</span><wbr><span><span>Set</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1523097875%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="is-allow-list-set.html">isAllowListSet</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-369386341%2FProperties%2F1762731939" anchor-label="isPromptForPermissionOnUserNotificationsEnabled" id="-369386341%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="is-prompt-for-permission-on-user-notifications-enabled.html"><span>is</span><wbr><span>Prompt</span><wbr><span>For</span><wbr><span>Permission</span><wbr><span>On</span><wbr><span>User</span><wbr><span>Notifications</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-369386341%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="is-prompt-for-permission-on-user-notifications-enabled.html">isPromptForPermissionOnUserNotificationsEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Flag indicating whether or not the SDK will automatically prompt for notification permission when enabling notifications with com.urbanairship.push.PushManager.setUserNotificationsEnabled.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="426209810%2FProperties%2F1762731939" anchor-label="logLevel" id="426209810%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="log-level.html"><span>log</span><wbr><span><span>Level</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="426209810%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="log-level.html">logLevel</a><span class="token operator">: </span><a href="-log-level/index.html">AirshipConfigOptions.LogLevel</a></div><div class="brief "><p class="paragraph">Logger level when the application is in debug mode. Defaults to <code class="lang-kotlin">DEBUG</code></p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1603411224%2FProperties%2F1762731939" anchor-label="logPrivacyLevel" id="-1603411224%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="log-privacy-level.html"><span>log</span><wbr><span>Privacy</span><wbr><span><span>Level</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1603411224%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="log-privacy-level.html">logPrivacyLevel</a><span class="token operator">: </span><a href="-privacy-level/index.html">AirshipConfigOptions.PrivacyLevel</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-444716262%2FProperties%2F1762731939" anchor-label="notificationAccentColor" id="-444716262%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="notification-accent-color.html"><span>notification</span><wbr><span>Accent</span><wbr><span><span>Color</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-444716262%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/ColorInt.html"><span class="token annotation builtin">ColorInt</span></a></div></div><span class="token keyword">val </span><a href="notification-accent-color.html">notificationAccentColor</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Notification accent color.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-104687344%2FProperties%2F1762731939" anchor-label="notificationChannel" id="-104687344%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="notification-channel.html"><span>notification</span><wbr><span><span>Channel</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-104687344%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="notification-channel.html">notificationChannel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">The default notification channel.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1146088494%2FProperties%2F1762731939" anchor-label="notificationIcon" id="1146088494%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="notification-icon.html"><span>notification</span><wbr><span><span>Icon</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1146088494%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/DrawableRes.html"><span class="token annotation builtin">DrawableRes</span></a></div></div><span class="token keyword">val </span><a href="notification-icon.html">notificationIcon</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Notification icon.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2085144415%2FProperties%2F1762731939" anchor-label="notificationLargeIcon" id="2085144415%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="notification-large-icon.html"><span>notification</span><wbr><span>Large</span><wbr><span><span>Icon</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2085144415%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/DrawableRes.html"><span class="token annotation builtin">DrawableRes</span></a></div></div><span class="token keyword">val </span><a href="notification-large-icon.html">notificationLargeIcon</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">Large notification icon.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1873316018%2FProperties%2F1762731939" anchor-label="requireInitialRemoteConfigEnabled" id="-1873316018%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="require-initial-remote-config-enabled.html"><span>require</span><wbr><span>Initial</span><wbr><span>Remote</span><wbr><span>Config</span><wbr><span><span>Enabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1873316018%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="require-initial-remote-config-enabled.html">requireInitialRemoteConfigEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Flag indicating whether the SDK will wait for an initial remote config instead of falling back on default API URLs.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1127826749%2FProperties%2F1762731939" anchor-label="resetEnabledFeatures" id="-1127826749%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="reset-enabled-features.html"><span>reset</span><wbr><span>Enabled</span><wbr><span><span>Features</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1127826749%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="reset-enabled-features.html">resetEnabledFeatures</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Allows resetting enabled features to match the runtime config defaults on each takeOff Defaults to <code class="lang-kotlin">false</code>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="467635802%2FProperties%2F1762731939" anchor-label="urlAllowList" id="467635802%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="url-allow-list.html"><span>url</span><wbr><span>Allow</span><wbr><span><span>List</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="467635802%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="url-allow-list.html">urlAllowList</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Additional URLs that will be added to the allow list for both UrlAllowList.SCOPE_OPEN_URL and UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE scopes.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-753811710%2FProperties%2F1762731939" anchor-label="urlAllowListScopeJavaScriptInterface" id="-753811710%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="url-allow-list-scope-java-script-interface.html"><span>url</span><wbr><span>Allow</span><wbr><span>List</span><wbr><span>Scope</span><wbr><span>Java</span><wbr><span>Script</span><wbr><span><span>Interface</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-753811710%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="url-allow-list-scope-java-script-interface.html">urlAllowListScopeJavaScriptInterface</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Additional URLs that will be added to the allow list for scope UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="400898569%2FProperties%2F1762731939" anchor-label="urlAllowListScopeOpenUrl" id="400898569%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="url-allow-list-scope-open-url.html"><span>url</span><wbr><span>Allow</span><wbr><span>List</span><wbr><span>Scope</span><wbr><span>Open</span><wbr><span><span>Url</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="400898569%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-field/index.html"><span class="token annotation builtin">JvmField</span></a></div></div><span class="token keyword">val </span><a href="url-allow-list-scope-open-url.html">urlAllowListScopeOpenUrl</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Additional URLs that will be added to the allow list for scope UrlAllowList.SCOPE_OPEN_URL. See <a href="../-url-allow-list/add-entry.html">UrlAllowList.addEntry</a> for valid URL patterns.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="674049709%2FProperties%2F1762731939" anchor-label="validationOverride" id="674049709%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="validation-override.html"><span>validation</span><wbr><span><span>Override</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="674049709%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="validation-override.html">validationOverride</a><span class="token operator">: </span><a href="../../com.urbanairship.inputvalidation/-airship-validation-override/index.html">AirshipValidationOverride</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Overrides the input validation used by Preference Center and Scenes.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="1906695260%2FFunctions%2F1762731939" anchor-label="validate" id="1906695260%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="validate.html"><span><span>validate</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1906695260%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="validate.html"><span class="token function">validate</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Validates the config.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>©2025 Airship</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

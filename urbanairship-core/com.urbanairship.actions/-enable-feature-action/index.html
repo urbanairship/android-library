@@ -1,0 +1,329 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>EnableFeatureAction</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../../images/logo-icon.svg"></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    Airship Android SDK
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":urbanairship-core/main">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":urbanairship-core/main" data-filter=":urbanairship-core/main">
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Airship Android SDK
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="urbanairship-core::com.urbanairship.actions/EnableFeatureAction///PointingToDeclaration//1762731939">
+  <div class="breadcrumbs"><a href="../../index.html">urbanairship-core</a><span class="delimiter">/</span><a href="../index.html">com.urbanairship.actions</a><span class="delimiter">/</span><span class="current">EnableFeatureAction</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Enable</span><wbr><span>Feature</span><wbr><span><span>Action</span></span></h1>
+    <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+      <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">EnableFeatureAction</a>&nbsp;<span><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-overloads/index.html"><span class="token annotation builtin">JvmOverloads</span></a>&nbsp;</span><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">permissionsManagerProvider<span class="token operator">: </span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../../com.urbanairship.permission/-permissions-manager/index.html">PermissionsManager</a><span class="token operator"> = </span>{ Airship.permissionsManager }</span></span><span class="token punctuation">)</span> : <a href="../-prompt-permission-action/index.html">PromptPermissionAction</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/urbanairship-core/src/main/java/com/urbanairship/actions/EnableFeatureAction.kt#L28">source</a>)</span></span></div><p class="paragraph">An action that enables features. Running the action with value <a href="-companion/-f-e-a-t-u-r-e_-l-o-c-a-t-i-o-n.html">FEATURE_LOCATION</a> or <a href="-companion/-f-e-a-t-u-r-e_-b-a-c-k-g-r-o-u-n-d_-l-o-c-a-t-i-o-n.html">FEATURE_BACKGROUND_LOCATION</a> will prompt the user for permissions before enabling.</p><p class="paragraph">Accepted situations: <a href="../-action/-situation/-p-u-s-h_-o-p-e-n-e-d/index.html">Action.Situation.PUSH_OPENED</a>, <a href="../-action/-situation/-w-e-b_-v-i-e-w_-i-n-v-o-c-a-t-i-o-n/index.html">Action.Situation.WEB_VIEW_INVOCATION</a>, <a href="../-action/-situation/-m-a-n-u-a-l_-i-n-v-o-c-a-t-i-o-n/index.html">Action.Situation.MANUAL_INVOCATION</a>, <a href="../-action/-situation/-a-u-t-o-m-a-t-i-o-n/index.html">Action.Situation.AUTOMATION</a>, and <a href="../-action/-situation/-f-o-r-e-g-r-o-u-n-d_-n-o-t-i-f-i-c-a-t-i-o-n_-a-c-t-i-o-n_-b-u-t-t-o-n/index.html">Action.Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON</a>.</p><p class="paragraph">Accepted argument value - either <a href="-companion/-f-e-a-t-u-r-e_-u-s-e-r_-n-o-t-i-f-i-c-a-t-i-o-n-s.html">FEATURE_USER_NOTIFICATIONS</a>, <a href="-companion/-f-e-a-t-u-r-e_-b-a-c-k-g-r-o-u-n-d_-l-o-c-a-t-i-o-n.html">FEATURE_BACKGROUND_LOCATION</a>, or <a href="-companion/-f-e-a-t-u-r-e_-l-o-c-a-t-i-o-n.html">FEATURE_LOCATION</a>.</p><p class="paragraph">Result value: <code class="lang-kotlin">true</code> if the feature was enabled, otherwise <code class="lang-kotlin">false</code>.</p><p class="paragraph">Default Registration Names: <a href="-companion/-d-e-f-a-u-l-t_-n-a-m-e-s.html">DEFAULT_NAMES</a></p></div>    </div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="-123110489%2FConstructors%2F1762731939" anchor-label="EnableFeatureAction" id="-123110489%2FConstructors%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-enable-feature-action.html"><span>Enable</span><wbr><span>Feature</span><wbr><span><span>Action</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-123110489%2FConstructors%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-overloads/index.html"><span class="token annotation builtin">JvmOverloads</span></a></div></div><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">permissionsManagerProvider<span class="token operator">: </span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="../../com.urbanairship.permission/-permissions-manager/index.html">PermissionsManager</a><span class="token operator"> = </span>{ Airship.permissionsManager }</span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="-1719946103%2FClasslikes%2F1762731939" anchor-label="Companion" id="-1719946103%2FClasslikes%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1719946103%2FClasslikes%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="672359645%2FFunctions%2F1762731939" anchor-label="onStart" id="672359645%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="on-start.html"><span>on</span><wbr><span><span>Start</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="672359645%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="on-start.html"><span class="token function">onStart</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Called before an action is performed.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1349901037%2FFunctions%2F1762731939" anchor-label="parseArg" id="-1349901037%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="parse-arg.html"><span>parse</span><wbr><span><span>Arg</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1349901037%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="parse-arg.html"><span class="token function">parseArg</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-prompt-permission-action/-args/index.html">PromptPermissionAction.Args</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Inherited functions</h2>
+        <div class="table"><a data-name="977431177%2FFunctions%2F1762731939" anchor-label="acceptsArguments" id="977431177%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-prompt-permission-action/accepts-arguments.html"><span>accepts</span><wbr><span><span>Arguments</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="977431177%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-prompt-permission-action/accepts-arguments.html"><span class="token function">acceptsArguments</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Called before an action is performed to determine if the the action can accept the arguments.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-417715743%2FFunctions%2F1762731939" anchor-label="onFinish" id="-417715743%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-action/on-finish.html"><span>on</span><wbr><span><span>Finish</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-417715743%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-action/on-finish.html"><span class="token function">onFinish</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a><span class="token punctuation">, </span></span><span class="parameter ">result<span class="token operator">: </span><a href="../-action-result/index.html">ActionResult</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Called after the action performs.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="643413825%2FFunctions%2F1762731939" anchor-label="perform" id="643413825%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-prompt-permission-action/perform.html"><span><span>perform</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="643413825%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-prompt-permission-action/perform.html"><span class="token function">perform</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-action-result/index.html">ActionResult</a></div><div class="brief "><p class="paragraph">Performs the action.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="236818089%2FFunctions%2F1762731939" anchor-label="prompt" id="236818089%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-prompt-permission-action/prompt.html"><span><span>prompt</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="236818089%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">protected </span><span class="token keyword">fun </span><a href="../-prompt-permission-action/prompt.html"><span class="token function">prompt</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">args<span class="token operator">: </span><a href="../-prompt-permission-action/-args/index.html">PromptPermissionAction.Args</a><span class="token punctuation">, </span></span><span class="parameter ">resultReceiver<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/os/ResultReceiver.html">ResultReceiver</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1977550634%2FFunctions%2F1762731939" anchor-label="run" id="1977550634%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-action/run.html"><span><span>run</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1977550634%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-action/run.html"><span class="token function">run</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-action-result/index.html">ActionResult</a></div><div class="brief "><p class="paragraph">Performs the action, with pre/post execution calls, if it accepts the provided arguments.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="530889383%2FFunctions%2F1762731939" anchor-label="sendResult" id="530889383%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-prompt-permission-action/send-result.html"><span>send</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="530889383%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-prompt-permission-action/send-result.html"><span class="token function">sendResult</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">permission<span class="token operator">: </span><a href="../../com.urbanairship.permission/-permission/index.html">Permission</a><span class="token punctuation">, </span></span><span class="parameter ">before<span class="token operator">: </span><a href="../../com.urbanairship.permission/-permission-status/index.html">PermissionStatus</a><span class="token punctuation">, </span></span><span class="parameter ">after<span class="token operator">: </span><a href="../../com.urbanairship.permission/-permission-status/index.html">PermissionStatus</a><span class="token punctuation">, </span></span><span class="parameter ">resultReceiver<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/os/ResultReceiver.html">ResultReceiver</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1739201386%2FFunctions%2F1762731939" anchor-label="shouldRunOnMainThread" id="1739201386%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../-prompt-permission-action/should-run-on-main-thread.html"><span>should</span><wbr><span>Run</span><wbr><span>On</span><wbr><span>Main</span><wbr><span><span>Thread</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1739201386%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="../-prompt-permission-action/should-run-on-main-thread.html"><span class="token function">shouldRunOnMainThread</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Determines which thread runs the action.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>©2025 Airship</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

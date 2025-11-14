@@ -1,0 +1,470 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>ContactManagement</title>
+<link href="../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../../styles/style.css" rel="Stylesheet">
+<link href="../../../../styles/main.css" rel="Stylesheet">
+<link href="../../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../../../images/logo-icon.svg"></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../../index.html" tabindex="1">
+                    Airship Android SDK
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":urbanairship-preference-center-core/main">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":urbanairship-preference-center-core/main" data-filter=":urbanairship-preference-center-core/main">
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Airship Android SDK
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="urbanairship-preference-center-core::com.urbanairship.preferencecenter.data/Item.ContactManagement///PointingToDeclaration//352119901">
+  <div class="breadcrumbs"><a href="../../../index.html">urbanairship-preference-center-core</a><span class="delimiter">/</span><a href="../../index.html">com.urbanairship.preferencecenter.data</a><span class="delimiter">/</span><a href="../index.html">Item</a><span class="delimiter">/</span><span class="current">ContactManagement</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Contact</span><wbr><span><span>Management</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">ContactManagement</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>id<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>platform<span class="token operator">: </span><a href="-platform/index.html">Item.ContactManagement.Platform</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>display<span class="token operator">: </span><a href="../../-common-display/index.html">CommonDisplay</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>addPrompt<span class="token operator">: </span><a href="-add-prompt/index.html">Item.ContactManagement.AddPrompt</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>removePrompt<span class="token operator">: </span><a href="-remove-prompt/index.html">Item.ContactManagement.RemovePrompt</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>emptyLabel<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>conditions<span class="token operator">: </span><a href="../../-conditions/index.html">Conditions</a></span></span><span class="token punctuation">)</span> : <a href="../index.html">Item</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/urbanairship-preference-center-core/src/main/java/com/urbanairship/preferencecenter/data/Item.kt#L145">source</a>)</span></span></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="916231625%2FConstructors%2F352119901" anchor-label="ContactManagement" id="916231625%2FConstructors%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-contact-management.html"><span>Contact</span><wbr><span><span>Management</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="916231625%2FConstructors%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">id<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">platform<span class="token operator">: </span><a href="-platform/index.html">Item.ContactManagement.Platform</a><span class="token punctuation">, </span></span><span class="parameter ">display<span class="token operator">: </span><a href="../../-common-display/index.html">CommonDisplay</a><span class="token punctuation">, </span></span><span class="parameter ">addPrompt<span class="token operator">: </span><a href="-add-prompt/index.html">Item.ContactManagement.AddPrompt</a><span class="token punctuation">, </span></span><span class="parameter ">removePrompt<span class="token operator">: </span><a href="-remove-prompt/index.html">Item.ContactManagement.RemovePrompt</a><span class="token punctuation">, </span></span><span class="parameter ">emptyLabel<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">conditions<span class="token operator">: </span><a href="../../-conditions/index.html">Conditions</a></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="514605068%2FClasslikes%2F352119901" anchor-label="ActionableMessage" id="514605068%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-actionable-message/index.html"><span>Actionable</span><wbr><span><span>Message</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="514605068%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-actionable-message/index.html">ActionableMessage</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>title<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>description<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>button<span class="token operator">: </span><a href="-labeled-button/index.html">Item.ContactManagement.LabeledButton</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contentDescription<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="698583609%2FClasslikes%2F352119901" anchor-label="AddChannelPrompt" id="698583609%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-add-channel-prompt/index.html"><span>Add</span><wbr><span>Channel</span><wbr><span><span>Prompt</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="698583609%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-add-channel-prompt/index.html">AddChannelPrompt</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>type<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>display<span class="token operator">: </span><a href="-prompt-display/index.html">Item.ContactManagement.PromptDisplay</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>submitButton<span class="token operator">: </span><a href="-labeled-button/index.html">Item.ContactManagement.LabeledButton</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>closeButton<span class="token operator">: </span><a href="-icon-button/index.html">Item.ContactManagement.IconButton</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>cancelButton<span class="token operator">: </span><a href="-labeled-button/index.html">Item.ContactManagement.LabeledButton</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>onSubmit<span class="token operator">: </span><a href="-actionable-message/index.html">Item.ContactManagement.ActionableMessage</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1299876286%2FClasslikes%2F352119901" anchor-label="AddPrompt" id="1299876286%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-add-prompt/index.html"><span>Add</span><wbr><span><span>Prompt</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1299876286%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-add-prompt/index.html">AddPrompt</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>prompt<span class="token operator">: </span><a href="-add-channel-prompt/index.html">Item.ContactManagement.AddChannelPrompt</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>button<span class="token operator">: </span><a href="-labeled-button/index.html">Item.ContactManagement.LabeledButton</a></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2030534257%2FClasslikes%2F352119901" anchor-label="ErrorMessages" id="-2030534257%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-error-messages/index.html"><span>Error</span><wbr><span><span>Messages</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2030534257%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-error-messages/index.html">ErrorMessages</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>invalidMessage<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>defaultMessage<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1986422668%2FClasslikes%2F352119901" anchor-label="IconButton" id="-1986422668%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-icon-button/index.html"><span>Icon</span><wbr><span><span>Button</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1986422668%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-icon-button/index.html">IconButton</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>contentDescription<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-281550210%2FClasslikes%2F352119901" anchor-label="LabeledButton" id="-281550210%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-labeled-button/index.html"><span>Labeled</span><wbr><span><span>Button</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-281550210%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-labeled-button/index.html">LabeledButton</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>text<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contentDescription<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1963624844%2FClasslikes%2F352119901" anchor-label="Platform" id="1963624844%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-platform/index.html"><span><span>Platform</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1963624844%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-platform/index.html">Platform</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>channelType<span class="token operator">: </span><a href="../../../../urbanairship-core/com.urbanairship.contacts/-channel-type/index.html">ChannelType</a></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="586897797%2FClasslikes%2F352119901" anchor-label="PromptDisplay" id="586897797%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-prompt-display/index.html"><span>Prompt</span><wbr><span><span>Display</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="586897797%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-prompt-display/index.html">PromptDisplay</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>title<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>description<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>footer<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1727328510%2FClasslikes%2F352119901" anchor-label="RegistrationOptions" id="1727328510%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-registration-options/index.html"><span>Registration</span><wbr><span><span>Options</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1727328510%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-registration-options/index.html">RegistrationOptions</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>type<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-631284672%2FClasslikes%2F352119901" anchor-label="RemoveChannelPrompt" id="-631284672%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-remove-channel-prompt/index.html"><span>Remove</span><wbr><span>Channel</span><wbr><span><span>Prompt</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-631284672%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-remove-channel-prompt/index.html">RemoveChannelPrompt</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>type<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>display<span class="token operator">: </span><a href="-prompt-display/index.html">Item.ContactManagement.PromptDisplay</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>submitButton<span class="token operator">: </span><a href="-labeled-button/index.html">Item.ContactManagement.LabeledButton</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>closeButton<span class="token operator">: </span><a href="-icon-button/index.html">Item.ContactManagement.IconButton</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>cancelButton<span class="token operator">: </span><a href="-labeled-button/index.html">Item.ContactManagement.LabeledButton</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>onSubmit<span class="token operator">: </span><a href="-actionable-message/index.html">Item.ContactManagement.ActionableMessage</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2004738455%2FClasslikes%2F352119901" anchor-label="RemovePrompt" id="2004738455%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-remove-prompt/index.html"><span>Remove</span><wbr><span><span>Prompt</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2004738455%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-remove-prompt/index.html">RemovePrompt</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>prompt<span class="token operator">: </span><a href="-remove-channel-prompt/index.html">Item.ContactManagement.RemoveChannelPrompt</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>button<span class="token operator">: </span><a href="-icon-button/index.html">Item.ContactManagement.IconButton</a></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="620564992%2FClasslikes%2F352119901" anchor-label="ResendOptions" id="620564992%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-resend-options/index.html"><span>Resend</span><wbr><span><span>Options</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="620564992%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-resend-options/index.html">ResendOptions</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>interval<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>message<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>button<span class="token operator">: </span><a href="-labeled-button/index.html">Item.ContactManagement.LabeledButton</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>onSuccess<span class="token operator">: </span><a href="-actionable-message/index.html">Item.ContactManagement.ActionableMessage</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="75506503%2FClasslikes%2F352119901" anchor-label="SmsSenderInfo" id="75506503%2FClasslikes%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-sms-sender-info/index.html"><span>Sms</span><wbr><span>Sender</span><wbr><span><span>Info</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="75506503%2FClasslikes%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="-sms-sender-info/index.html">SmsSenderInfo</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>senderId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>placeholderText<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>dialingCode<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>displayName<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="-2009523477%2FProperties%2F352119901" anchor-label="addPrompt" id="-2009523477%2FProperties%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="add-prompt.html"><span>add</span><wbr><span><span>Prompt</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2009523477%2FProperties%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="add-prompt.html">addPrompt</a><span class="token operator">: </span><a href="-add-prompt/index.html">Item.ContactManagement.AddPrompt</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="834665842%2FProperties%2F352119901" anchor-label="conditions" id="834665842%2FProperties%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="conditions.html"><span><span>conditions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="834665842%2FProperties%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="conditions.html">conditions</a><span class="token operator">: </span><a href="../../-conditions/index.html">Conditions</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="86292206%2FProperties%2F352119901" anchor-label="display" id="86292206%2FProperties%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="display.html"><span><span>display</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="86292206%2FProperties%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="display.html">display</a><span class="token operator">: </span><a href="../../-common-display/index.html">CommonDisplay</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1584415389%2FProperties%2F352119901" anchor-label="emptyLabel" id="-1584415389%2FProperties%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="empty-label.html"><span>empty</span><wbr><span><span>Label</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1584415389%2FProperties%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="empty-label.html">emptyLabel</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1421265263%2FProperties%2F352119901" anchor-label="id" id="1421265263%2FProperties%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="id.html"><span><span>id</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1421265263%2FProperties%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="id.html">id</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1659954345%2FProperties%2F352119901" anchor-label="platform" id="-1659954345%2FProperties%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="platform.html"><span><span>platform</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1659954345%2FProperties%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="platform.html">platform</a><span class="token operator">: </span><a href="-platform/index.html">Item.ContactManagement.Platform</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2109225954%2FProperties%2F352119901" anchor-label="removePrompt" id="2109225954%2FProperties%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="remove-prompt.html"><span>remove</span><wbr><span><span>Prompt</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2109225954%2FProperties%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="remove-prompt.html">removePrompt</a><span class="token operator">: </span><a href="-remove-prompt/index.html">Item.ContactManagement.RemovePrompt</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Inherited functions</h2>
+        <div class="table"><a data-name="-736521810%2FFunctions%2F352119901" anchor-label="jsonMapBuilder" id="-736521810%2FFunctions%2F352119901" data-filterable-set=":urbanairship-preference-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-core/main" data-filterable-set=":urbanairship-preference-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../json-map-builder.html"><span>json</span><wbr><span>Map</span><wbr><span><span>Builder</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-736521810%2FFunctions%2F352119901"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-core/main"><div class="symbol monospace"><span class="token keyword">protected </span><span class="token keyword">fun </span><a href="../json-map-builder.html"><span class="token function">jsonMapBuilder</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../../urbanairship-core/com.urbanairship.json/-json-map/-builder/index.html">JsonMap.Builder</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>©2025 Airship</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

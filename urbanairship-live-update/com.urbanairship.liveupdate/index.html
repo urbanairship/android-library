@@ -1,0 +1,311 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>com.urbanairship.liveupdate</title>
+<link href="../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../images/logo-icon.svg"></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../index.html" tabindex="1">
+                    Airship Android SDK
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":urbanairship-live-update/main">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":urbanairship-live-update/main" data-filter=":urbanairship-live-update/main">
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Airship Android SDK
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="package" id="content" pageids="urbanairship-live-update::com.urbanairship.liveupdate////PointingToDeclaration//743368344">
+  <div class="breadcrumbs"><a href="../index.html">urbanairship-live-update</a><span class="delimiter">/</span><span class="current">com.urbanairship.liveupdate</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Package-level</span></span> <span><span>declarations</span></span></h1>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="TYPE">Types</button><button class="section-tab" data-togglable="PROPERTY,EXTENSION_PROPERTY">Properties</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="-782226593%2FClasslikes%2F743368344" anchor-label="CallbackLiveUpdateCustomHandler" id="-782226593%2FClasslikes%2F743368344" data-filterable-set=":urbanairship-live-update/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-live-update/main" data-filterable-set=":urbanairship-live-update/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-callback-live-update-custom-handler/index.html"><span>Callback</span><wbr><span>Live</span><wbr><span>Update</span><wbr><span>Custom</span><wbr><span><span>Handler</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-782226593%2FClasslikes%2F743368344"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-live-update/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="-callback-live-update-custom-handler/index.html">CallbackLiveUpdateCustomHandler</a> : <a href="-custom-live-update-handler/index.html">CustomLiveUpdateHandler</a></div><div class="brief "><p class="paragraph">Live Update handler that allows for custom handling of Live Updates and uses a callback to return update results.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1402886247%2FClasslikes%2F743368344" anchor-label="CallbackLiveUpdateNotificationHandler" id="-1402886247%2FClasslikes%2F743368344" data-filterable-set=":urbanairship-live-update/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-live-update/main" data-filterable-set=":urbanairship-live-update/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-callback-live-update-notification-handler/index.html"><span>Callback</span><wbr><span>Live</span><wbr><span>Update</span><wbr><span>Notification</span><wbr><span><span>Handler</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1402886247%2FClasslikes%2F743368344"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-live-update/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="-callback-live-update-notification-handler/index.html">CallbackLiveUpdateNotificationHandler</a> : <a href="-notification-live-update-handler/index.html">NotificationLiveUpdateHandler</a></div><div class="brief "><p class="paragraph">Live Update handler that displays the latest content in a notification and uses a callback to return update results.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1231744122%2FClasslikes%2F743368344" anchor-label="CustomLiveUpdateHandler" id="1231744122%2FClasslikes%2F743368344" data-filterable-set=":urbanairship-live-update/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-live-update/main" data-filterable-set=":urbanairship-live-update/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-custom-live-update-handler/index.html"><span>Custom</span><wbr><span>Live</span><wbr><span>Update</span><wbr><span><span>Handler</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1231744122%2FClasslikes%2F743368344"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-live-update/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-custom-live-update-handler/index.html">CustomLiveUpdateHandler</a> : <a href="-live-update-handler/index.html">LiveUpdateHandler</a></div><div class="brief "><p class="paragraph">Handler for Live Update events that allows for custom handling.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="3080911%2FClasslikes%2F743368344" anchor-label="LiveUpdate" id="3080911%2FClasslikes%2F743368344" data-filterable-set=":urbanairship-live-update/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-live-update/main" data-filterable-set=":urbanairship-live-update/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-live-update/index.html"><span>Live</span><wbr><span><span>Update</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="3080911%2FClasslikes%2F743368344"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-live-update/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-live-update/index.html">LiveUpdate</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>name<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>type<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>content<span class="token operator">: </span><a href="../../urbanairship-core/com.urbanairship.json/-json-map/index.html">JsonMap</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>lastContentUpdateTime<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>lastStateChangeTime<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>dismissalTime<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Information about a Live Update.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-260884711%2FClasslikes%2F743368344" anchor-label="LiveUpdateEvent" id="-260884711%2FClasslikes%2F743368344" data-filterable-set=":urbanairship-live-update/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-live-update/main" data-filterable-set=":urbanairship-live-update/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-live-update-event/index.html"><span>Live</span><wbr><span>Update</span><wbr><span><span>Event</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-260884711%2FClasslikes%2F743368344"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-live-update/main"><div class="symbol monospace"><span class="token keyword">enum </span><a href="-live-update-event/index.html">LiveUpdateEvent</a> : <a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-enum/index.html">Enum</a><span class="token operator">&lt;</span><a href="-live-update-event/index.html">LiveUpdateEvent</a><span class="token operator">&gt; </span></div><div class="brief "><p class="paragraph">Live Update event types.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1520144407%2FClasslikes%2F743368344" anchor-label="LiveUpdateHandler" id="-1520144407%2FClasslikes%2F743368344" data-filterable-set=":urbanairship-live-update/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-live-update/main" data-filterable-set=":urbanairship-live-update/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-live-update-handler/index.html"><span>Live</span><wbr><span>Update</span><wbr><span><span>Handler</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1520144407%2FClasslikes%2F743368344"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-live-update/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-live-update-handler/index.html">LiveUpdateHandler</a></div><div class="brief "><p class="paragraph">Base interface for Live Update handlers.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="508615910%2FClasslikes%2F743368344" anchor-label="LiveUpdateManager" id="508615910%2FClasslikes%2F743368344" data-filterable-set=":urbanairship-live-update/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-live-update/main" data-filterable-set=":urbanairship-live-update/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-live-update-manager/index.html"><span>Live</span><wbr><span>Update</span><wbr><span><span>Manager</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="508615910%2FClasslikes%2F743368344"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-live-update/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-live-update-manager/index.html">LiveUpdateManager</a> : <a href="../../urbanairship-core/com.urbanairship/-airship-component/index.html">AirshipComponent</a></div><div class="brief "><p class="paragraph">Airship Live Updates.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="752823986%2FClasslikes%2F743368344" anchor-label="LiveUpdateResult" id="752823986%2FClasslikes%2F743368344" data-filterable-set=":urbanairship-live-update/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-live-update/main" data-filterable-set=":urbanairship-live-update/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-live-update-result/index.html"><span>Live</span><wbr><span>Update</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="752823986%2FClasslikes%2F743368344"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-live-update/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">class </span><a href="-live-update-result/index.html">LiveUpdateResult</a><span class="token operator">&lt;</span><span class="token keyword">out </span><a href="-live-update-result/index.html">T</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Result type for <a href="-live-update-handler/index.html">LiveUpdateHandler</a>s.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1798648756%2FClasslikes%2F743368344" anchor-label="NotificationLiveUpdateHandler" id="1798648756%2FClasslikes%2F743368344" data-filterable-set=":urbanairship-live-update/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-live-update/main" data-filterable-set=":urbanairship-live-update/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-notification-live-update-handler/index.html"><span>Notification</span><wbr><span>Live</span><wbr><span>Update</span><wbr><span><span>Handler</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1798648756%2FClasslikes%2F743368344"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-live-update/main"><div class="symbol monospace"><span class="token keyword">sealed </span><span class="token keyword">interface </span><a href="-notification-live-update-handler/index.html">NotificationLiveUpdateHandler</a> : <a href="-live-update-handler/index.html">LiveUpdateHandler</a></div><div class="brief "><p class="paragraph">Handler for Live Update events that update a Notification.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1318508444%2FClasslikes%2F743368344" anchor-label="SuspendLiveUpdateCustomHandler" id="1318508444%2FClasslikes%2F743368344" data-filterable-set=":urbanairship-live-update/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-live-update/main" data-filterable-set=":urbanairship-live-update/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-suspend-live-update-custom-handler/index.html"><span>Suspend</span><wbr><span>Live</span><wbr><span>Update</span><wbr><span>Custom</span><wbr><span><span>Handler</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1318508444%2FClasslikes%2F743368344"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-live-update/main"><div class="symbol monospace"><span class="token keyword">interface </span><a href="-suspend-live-update-custom-handler/index.html">SuspendLiveUpdateCustomHandler</a> : <a href="-custom-live-update-handler/index.html">CustomLiveUpdateHandler</a></div><div class="brief "><p class="paragraph">Live Update handler that allows for custom handling of Live Updates and uses a suspend function to handle updates.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="868446742%2FClasslikes%2F743368344" anchor-label="SuspendLiveUpdateNotificationHandler" id="868446742%2FClasslikes%2F743368344" data-filterable-set=":urbanairship-live-update/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-live-update/main" data-filterable-set=":urbanairship-live-update/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-suspend-live-update-notification-handler/index.html"><span>Suspend</span><wbr><span>Live</span><wbr><span>Update</span><wbr><span>Notification</span><wbr><span><span>Handler</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="868446742%2FClasslikes%2F743368344"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-live-update/main"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="-suspend-live-update-notification-handler/index.html">SuspendLiveUpdateNotificationHandler</a> : <a href="-notification-live-update-handler/index.html">NotificationLiveUpdateHandler</a></div><div class="brief "><p class="paragraph">Live Update handler that displays the latest content in a notification and uses a suspend function to handle updates.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="EXTENSION_PROPERTY">
+        <h2 class="tableheader">Inherited properties</h2>
+        <div class="table"><a data-name="515472576%2FProperties%2F743368344" anchor-label="liveUpdateManager" id="515472576%2FProperties%2F743368344" data-filterable-set=":urbanairship-live-update/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-live-update/main" data-filterable-set=":urbanairship-live-update/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="live-update-manager.html"><span>live</span><wbr><span>Update</span><wbr><span><span>Manager</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="515472576%2FProperties%2F743368344"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-live-update/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="../../urbanairship-core/com.urbanairship/-airship/index.html">Airship</a><span class="token punctuation">.</span><a href="live-update-manager.html">liveUpdateManager</a><span class="token operator">: </span><a href="-live-update-manager/index.html">LiveUpdateManager</a></div><div class="brief "><p class="paragraph">Provides access to the <a href="-live-update-manager/index.html">LiveUpdateManager</a> module features via the main <a href="../../urbanairship-core/com.urbanairship/-airship/index.html">Airship</a> singleton.</p></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>©2025 Airship</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

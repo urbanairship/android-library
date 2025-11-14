@@ -1,0 +1,648 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>Inbox</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../../images/logo-icon.svg"></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    Airship Android SDK
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":urbanairship-message-center-core/main">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":urbanairship-message-center-core/main" data-filter=":urbanairship-message-center-core/main">
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Airship Android SDK
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="urbanairship-message-center-core::com.urbanairship.messagecenter/Inbox///PointingToDeclaration//-48673743">
+  <div class="breadcrumbs"><a href="../../index.html">urbanairship-message-center-core</a><span class="delimiter">/</span><a href="../index.html">com.urbanairship.messagecenter</a><span class="delimiter">/</span><span class="current">Inbox</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Inbox</span></span></h1>
+    <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+      <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">Inbox</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/urbanairship-message-center-core/src/main/java/com/urbanairship/messagecenter/Inbox.kt#L51">source</a>)</span></span></div><p class="paragraph">The inbox provides access to the device's local inbox data. Modifications (e.g., deletions or mark read) will be sent to the Airship server the next time the inbox is synchronized.</p></div>    </div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="-2085854834%2FClasslikes%2F-48673743" anchor-label="FetchMessagesCallback" id="-2085854834%2FClasslikes%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-fetch-messages-callback/index.html"><span>Fetch</span><wbr><span>Messages</span><wbr><span><span>Callback</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2085854834%2FClasslikes%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-fetch-messages-callback/index.html">FetchMessagesCallback</a></div><div class="brief "><p class="paragraph">A callback used to be notified when refreshing messages.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="140821567%2FProperties%2F-48673743" anchor-label="inboxUpdated" id="140821567%2FProperties%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="inbox-updated.html"><span>inbox</span><wbr><span><span>Updated</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="140821567%2FProperties%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="inbox-updated.html">inboxUpdated</a><span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines.flow/Flow///PointingToDeclaration/">Flow</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a><span class="token operator">&gt;</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2000806793%2FProperties%2F-48673743" anchor-label="user" id="2000806793%2FProperties%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="user.html"><span><span>user</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2000806793%2FProperties%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="user.html">user</a><span class="token operator">: </span><a href="../-user/index.html">User</a></div><div class="brief "><p class="paragraph">The <a href="../-user/index.html">User</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="tableheader">Functions</h2>
+        <div class="table"><a data-name="-347665738%2FFunctions%2F-48673743" anchor-label="addListener" id="-347665738%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="add-listener.html"><span>add</span><wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-347665738%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="add-listener.html"><span class="token function">addListener</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">listener<span class="token operator">: </span><a href="../-inbox-listener/index.html">InboxListener</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Subscribe a listener for inbox update event callbacks.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1206402756%2FFunctions%2F-48673743" anchor-label="deleteAllMessages" id="1206402756%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="delete-all-messages.html"><span>delete</span><wbr><span>All</span><wbr><span><span>Messages</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1206402756%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="delete-all-messages.html"><span class="token function">deleteAllMessages</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Mark all <a href="../-message/index.html">Message</a>s deleted.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="52212972%2FFunctions%2F-48673743" anchor-label="deleteMessages" id="52212972%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="delete-messages.html"><span>delete</span><wbr><span><span>Messages</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="52212972%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="delete-messages.html"><span class="token function">deleteMessages</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>messageIds<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="delete-messages.html"><span class="token function">deleteMessages</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageIds<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-set/index.html">Set</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Mark <a href="../-message/index.html">Message</a>s deleted.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="94265079%2FFunctions%2F-48673743" anchor-label="fetchMessages" id="94265079%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="fetch-messages.html"><span>fetch</span><wbr><span><span>Messages</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="94265079%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="fetch-messages.html"><span class="token function">fetchMessages</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Suspending function to fetch the latest inbox changes from Airship.</p></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="fetch-messages.html"><span class="token function">fetchMessages</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">callback<span class="token operator">: </span><a href="-fetch-messages-callback/index.html">Inbox.FetchMessagesCallback</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-cancelable/index.html">Cancelable</a></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="fetch-messages.html"><span class="token function">fetchMessages</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">looper<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/android/os/Looper.html">Looper</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">callback<span class="token operator">: </span><a href="-fetch-messages-callback/index.html">Inbox.FetchMessagesCallback</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-cancelable/index.html">Cancelable</a></div><div class="brief "><p class="paragraph">Fetches the latest inbox changes from Airship.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1799413819%2FFunctions%2F-48673743" anchor-label="getCount" id="1799413819%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-count.html"><span>get</span><wbr><span><span>Count</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1799413819%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-count.html"><span class="token function">getCount</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">The total message count.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1505612277%2FFunctions%2F-48673743" anchor-label="getCountPendingResult" id="-1505612277%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-count-pending-result.html"><span>get</span><wbr><span>Count</span><wbr><span>Pending</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1505612277%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-count-pending-result.html"><span class="token function">getCountPendingResult</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">A <a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a> of the total message count.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1647827422%2FFunctions%2F-48673743" anchor-label="getMessage" id="-1647827422%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-message.html"><span>get</span><wbr><span><span>Message</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1647827422%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-message.html"><span class="token function">getMessage</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-message/index.html">Message</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Get the <a href="../-message/index.html">Message</a> with the corresponding message ID.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-779647010%2FFunctions%2F-48673743" anchor-label="getMessageByUrl" id="-779647010%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-message-by-url.html"><span>get</span><wbr><span>Message</span><wbr><span>By</span><wbr><span><span>Url</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-779647010%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-message-by-url.html"><span class="token function">getMessageByUrl</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-message/index.html">Message</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Get the <a href="../-message/index.html">Message</a> with the corresponding message body URL.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1353373478%2FFunctions%2F-48673743" anchor-label="getMessageByUrlPendingResult" id="1353373478%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-message-by-url-pending-result.html"><span>get</span><wbr><span>Message</span><wbr><span>By</span><wbr><span>Url</span><wbr><span>Pending</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1353373478%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-message-by-url-pending-result.html"><span class="token function">getMessageByUrlPendingResult</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Get the <a href="../-message/index.html">Message</a> with the corresponding message body URL as a <a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1122989343%2FFunctions%2F-48673743" anchor-label="getMessageIds" id="1122989343%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-message-ids.html"><span>get</span><wbr><span>Message</span><wbr><span><span>Ids</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1122989343%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-message-ids.html"><span class="token function">getMessageIds</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-set/index.html">Set</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">All the message IDs in the <a href="index.html">Inbox</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1687442521%2FFunctions%2F-48673743" anchor-label="getMessageIdsPendingResult" id="-1687442521%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-message-ids-pending-result.html"><span>get</span><wbr><span>Message</span><wbr><span>Ids</span><wbr><span>Pending</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1687442521%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-message-ids-pending-result.html"><span class="token function">getMessageIdsPendingResult</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-set/index.html">Set</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">A <a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a> of all the message IDs in the <a href="index.html">Inbox</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1304725346%2FFunctions%2F-48673743" anchor-label="getMessagePendingResult" id="1304725346%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-message-pending-result.html"><span>get</span><wbr><span>Message</span><wbr><span>Pending</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1304725346%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-message-pending-result.html"><span class="token function">getMessagePendingResult</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageId<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Get the <a href="../-message/index.html">Message</a> with the corresponding message ID as a <a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1974899805%2FFunctions%2F-48673743" anchor-label="getMessages" id="-1974899805%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-messages.html"><span>get</span><wbr><span><span>Messages</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1974899805%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-messages.html"><span class="token function">getMessages</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">predicate<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-predicate/index.html">Predicate</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Gets a list of RichPushMessages, filtered by the provided predicate, and sorted by descending sent-at date.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1110887281%2FFunctions%2F-48673743" anchor-label="getMessagesFlow" id="1110887281%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-messages-flow.html"><span>get</span><wbr><span>Messages</span><wbr><span><span>Flow</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1110887281%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-messages-flow.html"><span class="token function">getMessagesFlow</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">predicate<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-predicate/index.html">Predicate</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines.flow/Flow///PointingToDeclaration/">Flow</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Subscribes to the list of messages as a flow. The flow will emit the current list of messages, filtered by the provided predicate, and sorted by descending sent-at date, and will emit new lists whenever the inbox is updated.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1637184955%2FFunctions%2F-48673743" anchor-label="getMessagesPendingResult" id="-1637184955%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-messages-pending-result.html"><span>get</span><wbr><span>Messages</span><wbr><span>Pending</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1637184955%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-overloads/index.html"><span class="token annotation builtin">JvmOverloads</span></a></div></div><span class="token keyword">fun </span><a href="get-messages-pending-result.html"><span class="token function">getMessagesPendingResult</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">predicate<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-predicate/index.html">Predicate</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Gets a list of RichPushMessages as a <a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a>, filtered by the provided predicate, and sorted by descending sent-at date.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1748188401%2FFunctions%2F-48673743" anchor-label="getReadCount" id="1748188401%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-read-count.html"><span>get</span><wbr><span>Read</span><wbr><span><span>Count</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1748188401%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-read-count.html"><span class="token function">getReadCount</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">The number of read messages currently in the <a href="index.html">Inbox</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="179480853%2FFunctions%2F-48673743" anchor-label="getReadCountPendingResult" id="179480853%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-read-count-pending-result.html"><span>get</span><wbr><span>Read</span><wbr><span>Count</span><wbr><span>Pending</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="179480853%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-read-count-pending-result.html"><span class="token function">getReadCountPendingResult</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">A <a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a> of the read message count.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="792213465%2FFunctions%2F-48673743" anchor-label="getReadMessages" id="792213465%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-read-messages.html"><span>get</span><wbr><span>Read</span><wbr><span><span>Messages</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="792213465%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-read-messages.html"><span class="token function">getReadMessages</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">predicate<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-predicate/index.html">Predicate</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Gets a list of read RichPushMessages, filtered by the provided predicate. Sorted by descending sent-at date.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1303365071%2FFunctions%2F-48673743" anchor-label="getReadMessagesPendingResult" id="1303365071%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-read-messages-pending-result.html"><span>get</span><wbr><span>Read</span><wbr><span>Messages</span><wbr><span>Pending</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1303365071%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-overloads/index.html"><span class="token annotation builtin">JvmOverloads</span></a></div></div><span class="token keyword">fun </span><a href="get-read-messages-pending-result.html"><span class="token function">getReadMessagesPendingResult</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">predicate<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-predicate/index.html">Predicate</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Gets a list of read RichPushMessages as a <a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a>, filtered by the provided predicate, and sorted by descending sent-at date.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1180634634%2FFunctions%2F-48673743" anchor-label="getUnreadCount" id="1180634634%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-unread-count.html"><span>get</span><wbr><span>Unread</span><wbr><span><span>Count</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1180634634%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-unread-count.html"><span class="token function">getUnreadCount</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a></div><div class="brief "><p class="paragraph">The number of unread messages currently in the <a href="index.html">Inbox</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-357881700%2FFunctions%2F-48673743" anchor-label="getUnreadCountPendingResult" id="-357881700%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-unread-count-pending-result.html"><span>get</span><wbr><span>Unread</span><wbr><span>Count</span><wbr><span>Pending</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-357881700%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-unread-count-pending-result.html"><span class="token function">getUnreadCountPendingResult</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-int/index.html">Int</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">A <a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a> of the unread message count.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2051028430%2FFunctions%2F-48673743" anchor-label="getUnreadMessages" id="-2051028430%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-unread-messages.html"><span>get</span><wbr><span>Unread</span><wbr><span><span>Messages</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2051028430%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="get-unread-messages.html"><span class="token function">getUnreadMessages</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">predicate<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-predicate/index.html">Predicate</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Gets a list of unread RichPushMessages, filtered by the provided predicate, and sorted by descending sent-at date.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-953333120%2FFunctions%2F-48673743" anchor-label="getUnreadMessagesFlow" id="-953333120%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-unread-messages-flow.html"><span>get</span><wbr><span>Unread</span><wbr><span>Messages</span><wbr><span><span>Flow</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-953333120%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="get-unread-messages-flow.html"><span class="token function">getUnreadMessagesFlow</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">predicate<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-predicate/index.html">Predicate</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="kotlinx.coroutines.flow/Flow///PointingToDeclaration/">Flow</span><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Subscribes to the list of unread messages as a flow. The flow will emit the current list of unread messages, filtered by the provided predicate, and sorted by descending sent-at date, and will emit new lists whenever the inbox is updated.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="228625430%2FFunctions%2F-48673743" anchor-label="getUnreadMessagesPendingResult" id="228625430%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="get-unread-messages-pending-result.html"><span>get</span><wbr><span>Unread</span><wbr><span>Messages</span><wbr><span>Pending</span><wbr><span><span>Result</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="228625430%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.jvm/-jvm-overloads/index.html"><span class="token annotation builtin">JvmOverloads</span></a></div></div><span class="token keyword">fun </span><a href="get-unread-messages-pending-result.html"><span class="token function">getUnreadMessagesPendingResult</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">predicate<span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-predicate/index.html">Predicate</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="../-message/index.html">Message</a><span class="token operator">&gt;</span><span class="token operator">?</span><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">Gets a list of unread RichPushMessages as a <a href="../../../urbanairship-core/com.urbanairship/-pending-result/index.html">PendingResult</a>, filtered by the provided predicate, and sorted by descending sent-at date.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1779876180%2FFunctions%2F-48673743" anchor-label="markMessagesRead" id="-1779876180%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="mark-messages-read.html"><span>mark</span><wbr><span>Messages</span><wbr><span><span>Read</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1779876180%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="mark-messages-read.html"><span class="token function">markMessagesRead</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>messageIds<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="mark-messages-read.html"><span class="token function">markMessagesRead</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageIds<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-set/index.html">Set</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Mark <a href="../-message/index.html">Message</a>s read in bulk.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1753560140%2FFunctions%2F-48673743" anchor-label="markMessagesUnread" id="1753560140%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="mark-messages-unread.html"><span>mark</span><wbr><span>Messages</span><wbr><span><span>Unread</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1753560140%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="mark-messages-unread.html"><span class="token function">markMessagesUnread</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">vararg </span>messageIds<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="symbol monospace"><span class="token keyword">fun </span><a href="mark-messages-unread.html"><span class="token function">markMessagesUnread</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">messageIds<span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-set/index.html">Set</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Mark <a href="../-message/index.html">Message</a>s unread in bulk.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-134802367%2FFunctions%2F-48673743" anchor-label="removeListener" id="-134802367%2FFunctions%2F-48673743" data-filterable-set=":urbanairship-message-center-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="remove-listener.html"><span>remove</span><wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-134802367%2FFunctions%2F-48673743"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-message-center-core/main" data-filterable-set=":urbanairship-message-center-core/main" data-active="" data-toggle=":urbanairship-message-center-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-message-center-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="remove-listener.html"><span class="token function">removeListener</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">listener<span class="token operator">: </span><a href="../-inbox-listener/index.html">InboxListener</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Unsubscribe a listener for inbox update event callbacks.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>©2025 Airship</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

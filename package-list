@@ -1,0 +1,122 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:com.urbanairship.automation.storage/AutomationDao_Impl.Companion///PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-dao_-impl/-companion/index.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDao_Impl.Companion/getRequiredConverters/#/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-dao_-impl/-companion/get-required-converters.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDao_Impl///PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-dao_-impl/index.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDao_Impl/AutomationDao_Impl/#androidx.room.RoomDatabase/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-dao_-impl/-automation-dao_-impl.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDao_Impl/delete/#<ERROR CLASS> ERROR CLASS: Symbol not found for ScheduleEntity/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-dao_-impl/delete.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDao_Impl/getSchedules/#/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-dao_-impl/get-schedules.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDao_Impl/insert/#<ERROR CLASS> ERROR CLASS: Symbol not found for ScheduleEntity#kotlin.collections.MutableList[<ERROR CLASS> ERROR CLASS: Symbol not found for TriggerEntity??]/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-dao_-impl/insert.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDao_Impl/insert/#kotlin.collections.MutableCollection[<ERROR CLASS> ERROR CLASS: Symbol not found for FullSchedule??]/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-dao_-impl/insert.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDatabase_Impl///PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-database_-impl/index.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDatabase_Impl/AutomationDatabase_Impl/#/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-database_-impl/-automation-database_-impl.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDatabase_Impl/clearAllTables/#/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-database_-impl/clear-all-tables.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDatabase_Impl/createAutoMigrations/#kotlin.collections.Map[kotlin.reflect.KClass[androidx.room.migration.AutoMigrationSpec],androidx.room.migration.AutoMigrationSpec]/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-database_-impl/create-auto-migrations.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDatabase_Impl/createInvalidationTracker/#/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-database_-impl/create-invalidation-tracker.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDatabase_Impl/createOpenDelegate/#/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-database_-impl/create-open-delegate.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDatabase_Impl/getRequiredAutoMigrationSpecClasses/#/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-database_-impl/get-required-auto-migration-spec-classes.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDatabase_Impl/getRequiredTypeConverterClasses/#/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-database_-impl/get-required-type-converter-classes.html
+$dokka.location:com.urbanairship.automation.storage/AutomationDatabase_Impl/getScheduleDao/#/PointingToDeclaration/urbanairship-automation/com.urbanairship.automation.storage/[release]-automation-database_-impl/get-schedule-dao.html
+$dokka.location:com.urbanairship.messagecenter/MessageDao_Impl.Companion///PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-dao_-impl/-companion/index.html
+$dokka.location:com.urbanairship.messagecenter/MessageDao_Impl.Companion/getRequiredConverters/#/PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-dao_-impl/-companion/get-required-converters.html
+$dokka.location:com.urbanairship.messagecenter/MessageDao_Impl///PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-dao_-impl/index.html
+$dokka.location:com.urbanairship.messagecenter/MessageDao_Impl/MessageDao_Impl/#androidx.room.RoomDatabase/PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-dao_-impl/-message-dao_-impl.html
+$dokka.location:com.urbanairship.messagecenter/MessageDatabase_Impl///PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-database_-impl/index.html
+$dokka.location:com.urbanairship.messagecenter/MessageDatabase_Impl/MessageDatabase_Impl/#/PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-database_-impl/-message-database_-impl.html
+$dokka.location:com.urbanairship.messagecenter/MessageDatabase_Impl/clearAllTables/#/PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-database_-impl/clear-all-tables.html
+$dokka.location:com.urbanairship.messagecenter/MessageDatabase_Impl/createAutoMigrations/#kotlin.collections.Map[kotlin.reflect.KClass[androidx.room.migration.AutoMigrationSpec],androidx.room.migration.AutoMigrationSpec]/PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-database_-impl/create-auto-migrations.html
+$dokka.location:com.urbanairship.messagecenter/MessageDatabase_Impl/createInvalidationTracker/#/PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-database_-impl/create-invalidation-tracker.html
+$dokka.location:com.urbanairship.messagecenter/MessageDatabase_Impl/createOpenDelegate/#/PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-database_-impl/create-open-delegate.html
+$dokka.location:com.urbanairship.messagecenter/MessageDatabase_Impl/getDao/#/PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-database_-impl/get-dao.html
+$dokka.location:com.urbanairship.messagecenter/MessageDatabase_Impl/getRequiredAutoMigrationSpecClasses/#/PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-database_-impl/get-required-auto-migration-spec-classes.html
+$dokka.location:com.urbanairship.messagecenter/MessageDatabase_Impl/getRequiredTypeConverterClasses/#/PointingToDeclaration/urbanairship-message-center-core/com.urbanairship.messagecenter/[release]-message-database_-impl/get-required-type-converter-classes.html
+$dokka.location:com.urbanairship/PreferenceDataDao_Impl.Companion///PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-dao_-impl/-companion/index.html
+$dokka.location:com.urbanairship/PreferenceDataDao_Impl.Companion/getRequiredConverters/#/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-dao_-impl/-companion/get-required-converters.html
+$dokka.location:com.urbanairship/PreferenceDataDao_Impl///PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-dao_-impl/index.html
+$dokka.location:com.urbanairship/PreferenceDataDao_Impl/PreferenceDataDao_Impl/#androidx.room.RoomDatabase/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-dao_-impl/-preference-data-dao_-impl.html
+$dokka.location:com.urbanairship/PreferenceDataDao_Impl/delete/#kotlin.String/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-dao_-impl/delete.html
+$dokka.location:com.urbanairship/PreferenceDataDao_Impl/deleteAll/#/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-dao_-impl/delete-all.html
+$dokka.location:com.urbanairship/PreferenceDataDao_Impl/getPreferences/#/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-dao_-impl/get-preferences.html
+$dokka.location:com.urbanairship/PreferenceDataDao_Impl/queryKeys/#/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-dao_-impl/query-keys.html
+$dokka.location:com.urbanairship/PreferenceDataDao_Impl/queryValue/#kotlin.String/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-dao_-impl/query-value.html
+$dokka.location:com.urbanairship/PreferenceDataDao_Impl/upsert/#<ERROR CLASS> ERROR CLASS: Symbol not found for PreferenceData/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-dao_-impl/upsert.html
+$dokka.location:com.urbanairship/PreferenceDataDatabase_Impl///PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-database_-impl/index.html
+$dokka.location:com.urbanairship/PreferenceDataDatabase_Impl/PreferenceDataDatabase_Impl/#/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-database_-impl/-preference-data-database_-impl.html
+$dokka.location:com.urbanairship/PreferenceDataDatabase_Impl/clearAllTables/#/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-database_-impl/clear-all-tables.html
+$dokka.location:com.urbanairship/PreferenceDataDatabase_Impl/createAutoMigrations/#kotlin.collections.Map[kotlin.reflect.KClass[androidx.room.migration.AutoMigrationSpec],androidx.room.migration.AutoMigrationSpec]/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-database_-impl/create-auto-migrations.html
+$dokka.location:com.urbanairship/PreferenceDataDatabase_Impl/createInvalidationTracker/#/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-database_-impl/create-invalidation-tracker.html
+$dokka.location:com.urbanairship/PreferenceDataDatabase_Impl/createOpenDelegate/#/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-database_-impl/create-open-delegate.html
+$dokka.location:com.urbanairship/PreferenceDataDatabase_Impl/dao/#/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-database_-impl/dao.html
+$dokka.location:com.urbanairship/PreferenceDataDatabase_Impl/getRequiredAutoMigrationSpecClasses/#/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-database_-impl/get-required-auto-migration-spec-classes.html
+$dokka.location:com.urbanairship/PreferenceDataDatabase_Impl/getRequiredTypeConverterClasses/#/PointingToDeclaration/urbanairship-core/com.urbanairship/[release]-preference-data-database_-impl/get-required-type-converter-classes.html
+module:urbanairship-adm
+com.urbanairship.push.adm
+module:urbanairship-automation
+com.urbanairship.automation
+com.urbanairship.automation.storage
+com.urbanairship.embedded
+com.urbanairship.iam
+com.urbanairship.iam.actions
+com.urbanairship.iam.adapter
+com.urbanairship.iam.assets
+com.urbanairship.iam.content
+com.urbanairship.iam.info
+com.urbanairship.iam.legacy
+module:urbanairship-automation-compose
+com.urbanairship.automation.compose
+module:urbanairship-core
+com.urbanairship
+com.urbanairship.actions
+com.urbanairship.actions.tags
+com.urbanairship.activity
+com.urbanairship.analytics
+com.urbanairship.analytics.location
+com.urbanairship.analytics.templates
+com.urbanairship.annotation
+com.urbanairship.app
+com.urbanairship.channel
+com.urbanairship.contacts
+com.urbanairship.embedded
+com.urbanairship.google
+com.urbanairship.http
+com.urbanairship.images
+com.urbanairship.inputvalidation
+com.urbanairship.job
+com.urbanairship.json
+com.urbanairship.json.matchers
+com.urbanairship.locale
+com.urbanairship.permission
+com.urbanairship.push
+com.urbanairship.push.notifications
+com.urbanairship.util
+com.urbanairship.wallet
+com.urbanairship.webkit
+module:urbanairship-fcm
+com.urbanairship.push.fcm
+module:urbanairship-feature-flag
+com.urbanairship.featureflag
+module:urbanairship-hms
+com.urbanairship.push.hms
+module:urbanairship-live-update
+com.urbanairship.liveupdate
+com.urbanairship.liveupdate.notification
+module:urbanairship-message-center
+com.urbanairship.messagecenter.ui
+com.urbanairship.messagecenter.ui.view
+com.urbanairship.messagecenter.ui.widget
+module:urbanairship-message-center-core
+com.urbanairship.messagecenter
+com.urbanairship.messagecenter.actions
+com.urbanairship.messagecenter.animator
+com.urbanairship.messagecenter.ui.view
+com.urbanairship.messagecenter.ui.widget
+com.urbanairship.messagecenter.util
+module:urbanairship-preference-center
+com.urbanairship.preferencecenter.ui
+module:urbanairship-preference-center-compose
+com.urbanairship.preferencecenter.compose.ui
+com.urbanairship.preferencecenter.compose.ui.theme
+module:urbanairship-preference-center-core
+com.urbanairship.preferencecenter
+com.urbanairship.preferencecenter.data
+com.urbanairship.preferencecenter.util

@@ -1,0 +1,901 @@
+<!doctype html>
+<html class="no-js" lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>PreferenceCenterColors</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js", "js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+      if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      } else {
+        const savedDarkMode = JSON.parse(storage)
+        if (savedDarkMode === true) {
+          document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+      }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../ui-kit/ui-kit.min.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/safe-local-storage_blocking.js"></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../ui-kit/ui-kit.min.js" defer></script>
+<link href="../../../images/logo-icon.svg"></head>
+<body>
+<div class="root">
+    <header class="navigation theme-dark" id="navigation-wrapper" role="banner">
+<a class="library-name--link" href="../../../index.html" tabindex="1">
+                    Airship Android SDK
+            </a>        <button class="navigation-controls--btn navigation-controls--btn_toc ui-kit_mobile-only" id="toc-toggle" type="button">Toggle table of contents
+        </button>
+        <div class="navigation-controls--break ui-kit_mobile-only"></div>
+        <div class="library-version" id="library-version">
+        </div>
+        <div class="navigation-controls">
+        <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":urbanairship-preference-center-compose/main">androidJvm</button>
+            <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
+                <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
+                <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
+                    <div class="dropdown--header"><span>Target filter</span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close target filter">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                        <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
+                            <label class="checkbox">
+                                <input type="checkbox" class="checkbox--input" id=":urbanairship-preference-center-compose/main" data-filter=":urbanairship-preference-center-compose/main">
+                                <span class="checkbox--icon"></span>
+                                androidJvm
+                            </label>
+                        </li>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </ul>
+            <button class="navigation-controls--btn navigation-controls--btn_theme" id="theme-toggle-button" type="button">Switch theme
+            </button>
+            <div class="navigation-controls--btn navigation-controls--btn_search" id="searchBar" role="button">Search in
+                API
+            </div>
+        </div>
+    </header>
+    <div id="container">
+        <nav id="leftColumn" class="sidebar" data-item-type="SECTION" data-item-config="{&quot;defaultSize&quot;: 280, &quot;minSize&quot;: 200, &quot;maxSize&quot;: 400}">
+            <a class="toc--skip-link" href="#main">Skip to content</a>
+            <div class="dropdown theme-dark_mobile" data-role="dropdown" id="toc-dropdown">
+                <ul role="listbox" id="toc-listbox" class="dropdown--list dropdown--list_toc-list" data-role="dropdown-listbox" aria-label="Table of contents">
+                    <div class="dropdown--header">
+                            <span>
+                                    Airship Android SDK
+                            </span>
+                        <button class="button" data-role="dropdown-toggle" aria-label="Close table of contents">
+                            <i class="ui-kit-icon ui-kit-icon_cross"></i>
+                        </button>
+                    </div>
+                    <div class="sidebar--inner" id="sideMenu"></div>
+                </ul>
+                <div class="dropdown--overlay"></div>
+            </div>
+        </nav>
+        <div id="resizer" class="resizer" data-item-type="BAR"></div>
+        <div id="main" data-item-type="SECTION" role="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="urbanairship-preference-center-compose::com.urbanairship.preferencecenter.compose.ui.theme/PreferenceCenterColors///PointingToDeclaration//-1796350506">
+  <div class="breadcrumbs"><a href="../../index.html">urbanairship-preference-center-compose</a><span class="delimiter">/</span><a href="../index.html">com.urbanairship.preferencecenter.compose.ui.theme</a><span class="delimiter">/</span><span class="current">PreferenceCenterColors</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Preference</span><wbr><span>Center</span><wbr><span><span>Colors</span></span></h1>
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><a href="https://developer.android.com/reference/kotlin/androidx/compose/runtime/Immutable.html"><span class="token annotation builtin">Immutable</span></a></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">PreferenceCenterColors</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>background<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>surface<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>accent<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>divider<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>link<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>error<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>titleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>itemTitleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>itemDescriptionText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>sectionItemTitleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>sectionLabelBackground<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>sectionLabelText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>subscriptionTypeChipSurface<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>subscriptionTypeChipChecked<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>subscriptionTypeChipUnchecked<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>subscriptionTypeChipStroke<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>subscriptionTypeChipCheckMark<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>subscriptionTypeChipLabelText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>subscriptionSwitchCheckedThumbColor<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>subscriptionSwitchCheckedTrackColor<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>subscriptionSwitchUncheckedThumbColor<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>subscriptionSwitchUncheckedTrackColor<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementItemTitleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementItemDescriptionText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementItemIconTint<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementItemDeleteIconTint<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementItemActionText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementItemAddressText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementItemStatusText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementAddButtonText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementDialogBackground<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementDialogTitleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementDialogDescriptionText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementDialogInputLabelFocused<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementDialogInputLabelUnfocused<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementDialogInputBorderFocused<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementDialogInputBorderUnfocused<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementDialogButtonLabelPositive<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementDialogButtonLabelNeutral<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>contactManagementDialogButtonLabelDisabled<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>alertButtonBackground<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>alertButtonText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>alertTitleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>alertDescriptionText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>alertIconTint<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>topBarBackground<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>topBarTitleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>topBarIconTint<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>loadingIndicator<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></span></span><span class="token punctuation">)</span><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/urbanairship-preference-center-compose/src/main/java/com/urbanairship/preferencecenter/compose/ui/theme/PreferenceCenterColors.kt#L8">source</a>)</span></span></div></div></div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="tableheader">Constructors</h2>
+        <div class="table"><a data-name="588183240%2FConstructors%2F-1796350506" anchor-label="PreferenceCenterColors" id="588183240%2FConstructors%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-preference-center-colors.html"><span>Preference</span><wbr><span>Center</span><wbr><span><span>Colors</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="588183240%2FConstructors%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">background<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">surface<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">accent<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">divider<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">link<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">error<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">titleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">itemTitleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">itemDescriptionText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">sectionItemTitleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">sectionLabelBackground<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">sectionLabelText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">subscriptionTypeChipSurface<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">subscriptionTypeChipChecked<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">subscriptionTypeChipUnchecked<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">subscriptionTypeChipStroke<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">subscriptionTypeChipCheckMark<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">subscriptionTypeChipLabelText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">subscriptionSwitchCheckedThumbColor<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">subscriptionSwitchCheckedTrackColor<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">subscriptionSwitchUncheckedThumbColor<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">subscriptionSwitchUncheckedTrackColor<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementItemTitleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementItemDescriptionText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementItemIconTint<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementItemDeleteIconTint<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementItemActionText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementItemAddressText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementItemStatusText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementAddButtonText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementDialogBackground<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementDialogTitleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementDialogDescriptionText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementDialogInputLabelFocused<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementDialogInputLabelUnfocused<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementDialogInputBorderFocused<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementDialogInputBorderUnfocused<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementDialogButtonLabelPositive<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementDialogButtonLabelNeutral<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">contactManagementDialogButtonLabelDisabled<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">alertButtonBackground<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">alertButtonText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">alertTitleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">alertDescriptionText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">alertIconTint<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">topBarBackground<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">topBarTitleText<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">topBarIconTint<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a><span class="token punctuation">, </span></span><span class="parameter ">loadingIndicator<span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></span></span><span class="token punctuation">)</span></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="tableheader">Types</h2>
+        <div class="table"><a data-name="685984000%2FClasslikes%2F-1796350506" anchor-label="Companion" id="685984000%2FClasslikes%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="685984000%2FClasslikes%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="tableheader">Properties</h2>
+        <div class="table"><a data-name="-1269558345%2FProperties%2F-1796350506" anchor-label="accent" id="-1269558345%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="accent.html"><span><span>accent</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1269558345%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="accent.html">accent</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-488740419%2FProperties%2F-1796350506" anchor-label="alertButtonBackground" id="-488740419%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="alert-button-background.html"><span>alert</span><wbr><span>Button</span><wbr><span><span>Background</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-488740419%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="alert-button-background.html">alertButtonBackground</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1147523358%2FProperties%2F-1796350506" anchor-label="alertButtonText" id="1147523358%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="alert-button-text.html"><span>alert</span><wbr><span>Button</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1147523358%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="alert-button-text.html">alertButtonText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1542606996%2FProperties%2F-1796350506" anchor-label="alertDescriptionText" id="1542606996%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="alert-description-text.html"><span>alert</span><wbr><span>Description</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1542606996%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="alert-description-text.html">alertDescriptionText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1893078231%2FProperties%2F-1796350506" anchor-label="alertIconTint" id="-1893078231%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="alert-icon-tint.html"><span>alert</span><wbr><span>Icon</span><wbr><span><span>Tint</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1893078231%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="alert-icon-tint.html">alertIconTint</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-576184392%2FProperties%2F-1796350506" anchor-label="alertTitleText" id="-576184392%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="alert-title-text.html"><span>alert</span><wbr><span>Title</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-576184392%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="alert-title-text.html">alertTitleText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="489785811%2FProperties%2F-1796350506" anchor-label="background" id="489785811%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="background.html"><span><span>background</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="489785811%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="background.html">background</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1939951780%2FProperties%2F-1796350506" anchor-label="contactManagementAddButtonText" id="1939951780%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-add-button-text.html"><span>contact</span><wbr><span>Management</span><wbr><span>Add</span><wbr><span>Button</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1939951780%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-add-button-text.html">contactManagementAddButtonText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="492454560%2FProperties%2F-1796350506" anchor-label="contactManagementDialogBackground" id="492454560%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-dialog-background.html"><span>contact</span><wbr><span>Management</span><wbr><span>Dialog</span><wbr><span><span>Background</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="492454560%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-dialog-background.html">contactManagementDialogBackground</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-360374066%2FProperties%2F-1796350506" anchor-label="contactManagementDialogButtonLabelDisabled" id="-360374066%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-dialog-button-label-disabled.html"><span>contact</span><wbr><span>Management</span><wbr><span>Dialog</span><wbr><span>Button</span><wbr><span>Label</span><wbr><span><span>Disabled</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-360374066%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-dialog-button-label-disabled.html">contactManagementDialogButtonLabelDisabled</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="756832809%2FProperties%2F-1796350506" anchor-label="contactManagementDialogButtonLabelNeutral" id="756832809%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-dialog-button-label-neutral.html"><span>contact</span><wbr><span>Management</span><wbr><span>Dialog</span><wbr><span>Button</span><wbr><span>Label</span><wbr><span><span>Neutral</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="756832809%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-dialog-button-label-neutral.html">contactManagementDialogButtonLabelNeutral</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-326158351%2FProperties%2F-1796350506" anchor-label="contactManagementDialogButtonLabelPositive" id="-326158351%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-dialog-button-label-positive.html"><span>contact</span><wbr><span>Management</span><wbr><span>Dialog</span><wbr><span>Button</span><wbr><span>Label</span><wbr><span><span>Positive</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-326158351%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-dialog-button-label-positive.html">contactManagementDialogButtonLabelPositive</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-543621405%2FProperties%2F-1796350506" anchor-label="contactManagementDialogDescriptionText" id="-543621405%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-dialog-description-text.html"><span>contact</span><wbr><span>Management</span><wbr><span>Dialog</span><wbr><span>Description</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-543621405%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-dialog-description-text.html">contactManagementDialogDescriptionText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="847381549%2FProperties%2F-1796350506" anchor-label="contactManagementDialogInputBorderFocused" id="847381549%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-dialog-input-border-focused.html"><span>contact</span><wbr><span>Management</span><wbr><span>Dialog</span><wbr><span>Input</span><wbr><span>Border</span><wbr><span><span>Focused</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="847381549%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-dialog-input-border-focused.html">contactManagementDialogInputBorderFocused</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-538998522%2FProperties%2F-1796350506" anchor-label="contactManagementDialogInputBorderUnfocused" id="-538998522%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-dialog-input-border-unfocused.html"><span>contact</span><wbr><span>Management</span><wbr><span>Dialog</span><wbr><span>Input</span><wbr><span>Border</span><wbr><span><span>Unfocused</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-538998522%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-dialog-input-border-unfocused.html">contactManagementDialogInputBorderUnfocused</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1938469857%2FProperties%2F-1796350506" anchor-label="contactManagementDialogInputLabelFocused" id="-1938469857%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-dialog-input-label-focused.html"><span>contact</span><wbr><span>Management</span><wbr><span>Dialog</span><wbr><span>Input</span><wbr><span>Label</span><wbr><span><span>Focused</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1938469857%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-dialog-input-label-focused.html">contactManagementDialogInputLabelFocused</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1977574280%2FProperties%2F-1796350506" anchor-label="contactManagementDialogInputLabelUnfocused" id="-1977574280%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-dialog-input-label-unfocused.html"><span>contact</span><wbr><span>Management</span><wbr><span>Dialog</span><wbr><span>Input</span><wbr><span>Label</span><wbr><span><span>Unfocused</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1977574280%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-dialog-input-label-unfocused.html">contactManagementDialogInputLabelUnfocused</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1773701817%2FProperties%2F-1796350506" anchor-label="contactManagementDialogTitleText" id="-1773701817%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-dialog-title-text.html"><span>contact</span><wbr><span>Management</span><wbr><span>Dialog</span><wbr><span>Title</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1773701817%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-dialog-title-text.html">contactManagementDialogTitleText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1596631680%2FProperties%2F-1796350506" anchor-label="contactManagementItemActionText" id="-1596631680%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-item-action-text.html"><span>contact</span><wbr><span>Management</span><wbr><span>Item</span><wbr><span>Action</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1596631680%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-item-action-text.html">contactManagementItemActionText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1300278134%2FProperties%2F-1796350506" anchor-label="contactManagementItemAddressText" id="1300278134%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-item-address-text.html"><span>contact</span><wbr><span>Management</span><wbr><span>Item</span><wbr><span>Address</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1300278134%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-item-address-text.html">contactManagementItemAddressText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1053003612%2FProperties%2F-1796350506" anchor-label="contactManagementItemDeleteIconTint" id="-1053003612%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-item-delete-icon-tint.html"><span>contact</span><wbr><span>Management</span><wbr><span>Item</span><wbr><span>Delete</span><wbr><span>Icon</span><wbr><span><span>Tint</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1053003612%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-item-delete-icon-tint.html">contactManagementItemDeleteIconTint</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1523211410%2FProperties%2F-1796350506" anchor-label="contactManagementItemDescriptionText" id="-1523211410%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-item-description-text.html"><span>contact</span><wbr><span>Management</span><wbr><span>Item</span><wbr><span>Description</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1523211410%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-item-description-text.html">contactManagementItemDescriptionText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-642074225%2FProperties%2F-1796350506" anchor-label="contactManagementItemIconTint" id="-642074225%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-item-icon-tint.html"><span>contact</span><wbr><span>Management</span><wbr><span>Item</span><wbr><span>Icon</span><wbr><span><span>Tint</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-642074225%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-item-icon-tint.html">contactManagementItemIconTint</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-283988668%2FProperties%2F-1796350506" anchor-label="contactManagementItemStatusText" id="-283988668%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-item-status-text.html"><span>contact</span><wbr><span>Management</span><wbr><span>Item</span><wbr><span>Status</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-283988668%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-item-status-text.html">contactManagementItemStatusText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-449765870%2FProperties%2F-1796350506" anchor-label="contactManagementItemTitleText" id="-449765870%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="contact-management-item-title-text.html"><span>contact</span><wbr><span>Management</span><wbr><span>Item</span><wbr><span>Title</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-449765870%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="contact-management-item-title-text.html">contactManagementItemTitleText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="903590336%2FProperties%2F-1796350506" anchor-label="divider" id="903590336%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="divider.html"><span><span>divider</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="903590336%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="divider.html">divider</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="196992177%2FProperties%2F-1796350506" anchor-label="error" id="196992177%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="error.html"><span><span>error</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="196992177%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="error.html">error</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-315035197%2FProperties%2F-1796350506" anchor-label="itemDescriptionText" id="-315035197%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="item-description-text.html"><span>item</span><wbr><span>Description</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-315035197%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="item-description-text.html">itemDescriptionText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1945169881%2FProperties%2F-1796350506" anchor-label="itemTitleText" id="-1945169881%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="item-title-text.html"><span>item</span><wbr><span>Title</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1945169881%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="item-title-text.html">itemTitleText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="775331719%2FProperties%2F-1796350506" anchor-label="link" id="775331719%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="link.html"><span><span>link</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="775331719%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="link.html">link</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-916944018%2FProperties%2F-1796350506" anchor-label="loadingIndicator" id="-916944018%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="loading-indicator.html"><span>loading</span><wbr><span><span>Indicator</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-916944018%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="loading-indicator.html">loadingIndicator</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1535854580%2FProperties%2F-1796350506" anchor-label="sectionItemTitleText" id="1535854580%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="section-item-title-text.html"><span>section</span><wbr><span>Item</span><wbr><span>Title</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1535854580%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="section-item-title-text.html">sectionItemTitleText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-115097020%2FProperties%2F-1796350506" anchor-label="sectionLabelBackground" id="-115097020%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="section-label-background.html"><span>section</span><wbr><span>Label</span><wbr><span><span>Background</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-115097020%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="section-label-background.html">sectionLabelBackground</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-308421915%2FProperties%2F-1796350506" anchor-label="sectionLabelText" id="-308421915%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="section-label-text.html"><span>section</span><wbr><span>Label</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-308421915%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="section-label-text.html">sectionLabelText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1279529322%2FProperties%2F-1796350506" anchor-label="subscriptionSwitchCheckedThumbColor" id="-1279529322%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="subscription-switch-checked-thumb-color.html"><span>subscription</span><wbr><span>Switch</span><wbr><span>Checked</span><wbr><span>Thumb</span><wbr><span><span>Color</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1279529322%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="subscription-switch-checked-thumb-color.html">subscriptionSwitchCheckedThumbColor</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1402244277%2FProperties%2F-1796350506" anchor-label="subscriptionSwitchCheckedTrackColor" id="-1402244277%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="subscription-switch-checked-track-color.html"><span>subscription</span><wbr><span>Switch</span><wbr><span>Checked</span><wbr><span>Track</span><wbr><span><span>Color</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1402244277%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="subscription-switch-checked-track-color.html">subscriptionSwitchCheckedTrackColor</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="838024879%2FProperties%2F-1796350506" anchor-label="subscriptionSwitchUncheckedThumbColor" id="838024879%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="subscription-switch-unchecked-thumb-color.html"><span>subscription</span><wbr><span>Switch</span><wbr><span>Unchecked</span><wbr><span>Thumb</span><wbr><span><span>Color</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="838024879%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="subscription-switch-unchecked-thumb-color.html">subscriptionSwitchUncheckedThumbColor</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="715309924%2FProperties%2F-1796350506" anchor-label="subscriptionSwitchUncheckedTrackColor" id="715309924%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="subscription-switch-unchecked-track-color.html"><span>subscription</span><wbr><span>Switch</span><wbr><span>Unchecked</span><wbr><span>Track</span><wbr><span><span>Color</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="715309924%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="subscription-switch-unchecked-track-color.html">subscriptionSwitchUncheckedTrackColor</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-21385739%2FProperties%2F-1796350506" anchor-label="subscriptionTypeChipChecked" id="-21385739%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="subscription-type-chip-checked.html"><span>subscription</span><wbr><span>Type</span><wbr><span>Chip</span><wbr><span><span>Checked</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-21385739%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="subscription-type-chip-checked.html">subscriptionTypeChipChecked</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-396447321%2FProperties%2F-1796350506" anchor-label="subscriptionTypeChipCheckMark" id="-396447321%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="subscription-type-chip-check-mark.html"><span>subscription</span><wbr><span>Type</span><wbr><span>Chip</span><wbr><span>Check</span><wbr><span><span>Mark</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-396447321%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="subscription-type-chip-check-mark.html">subscriptionTypeChipCheckMark</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2088869083%2FProperties%2F-1796350506" anchor-label="subscriptionTypeChipLabelText" id="2088869083%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="subscription-type-chip-label-text.html"><span>subscription</span><wbr><span>Type</span><wbr><span>Chip</span><wbr><span>Label</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2088869083%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="subscription-type-chip-label-text.html">subscriptionTypeChipLabelText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1634672474%2FProperties%2F-1796350506" anchor-label="subscriptionTypeChipStroke" id="-1634672474%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="subscription-type-chip-stroke.html"><span>subscription</span><wbr><span>Type</span><wbr><span>Chip</span><wbr><span><span>Stroke</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1634672474%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="subscription-type-chip-stroke.html">subscriptionTypeChipStroke</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1028727727%2FProperties%2F-1796350506" anchor-label="subscriptionTypeChipSurface" id="1028727727%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="subscription-type-chip-surface.html"><span>subscription</span><wbr><span>Type</span><wbr><span>Chip</span><wbr><span><span>Surface</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1028727727%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="subscription-type-chip-surface.html">subscriptionTypeChipSurface</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2059474126%2FProperties%2F-1796350506" anchor-label="subscriptionTypeChipUnchecked" id="2059474126%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="subscription-type-chip-unchecked.html"><span>subscription</span><wbr><span>Type</span><wbr><span>Chip</span><wbr><span><span>Unchecked</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2059474126%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="subscription-type-chip-unchecked.html">subscriptionTypeChipUnchecked</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1339557548%2FProperties%2F-1796350506" anchor-label="surface" id="1339557548%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="surface.html"><span><span>surface</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1339557548%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="surface.html">surface</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="27327412%2FProperties%2F-1796350506" anchor-label="titleText" id="27327412%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="title-text.html"><span>title</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="27327412%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="title-text.html">titleText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="724146037%2FProperties%2F-1796350506" anchor-label="topBarBackground" id="724146037%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="top-bar-background.html"><span>top</span><wbr><span>Bar</span><wbr><span><span>Background</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="724146037%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="top-bar-background.html">topBarBackground</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-2056606257%2FProperties%2F-1796350506" anchor-label="topBarIconTint" id="-2056606257%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="top-bar-icon-tint.html"><span>top</span><wbr><span>Bar</span><wbr><span>Icon</span><wbr><span><span>Tint</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2056606257%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="top-bar-icon-tint.html">topBarIconTint</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1350585902%2FProperties%2F-1796350506" anchor-label="topBarTitleText" id="-1350585902%2FProperties%2F-1796350506" data-filterable-set=":urbanairship-preference-center-compose/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-preference-center-compose/main" data-filterable-set=":urbanairship-preference-center-compose/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="top-bar-title-text.html"><span>top</span><wbr><span>Bar</span><wbr><span>Title</span><wbr><span><span>Text</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1350585902%2FProperties%2F-1796350506"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-preference-center-compose/main"><div class="symbol monospace"><span class="token keyword">val </span><a href="top-bar-title-text.html">topBarTitleText</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/androidx/compose/ui/graphics/Color.html">Color</a></div></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    <div class="footer">
+        <div class="footer--container">
+            <a href="#content" id="go-to-top-link" class="footer--button footer--button_go-to-top"></a>
+            <div class="footer--content">
+                <div>
+                    <span>Generated by </span>
+                    <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
+                        Dokka
+                    </a>
+                    <div>©2025 Airship</div>
+                </div>
+            </div>
+        </div>
+    </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
