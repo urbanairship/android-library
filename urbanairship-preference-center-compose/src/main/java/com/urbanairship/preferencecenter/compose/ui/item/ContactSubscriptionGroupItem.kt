@@ -134,7 +134,7 @@ private fun componentsSelectedMark(isChecked: Boolean) {
        if (isChecked) {
            Icon(
                modifier = Modifier.padding(PrefCenterTheme.dimens.subscriptionTypeChipCheckMarkPadding),
-               painter = painterResource(R.drawable.ua_ic_preference_center_circle_check),
+               painter = painterResource(R.drawable.ua_ic_preference_center_checked),
                tint = PrefCenterTheme.colors.subscriptionTypeChipCheckMark,
                contentDescription = null
            )

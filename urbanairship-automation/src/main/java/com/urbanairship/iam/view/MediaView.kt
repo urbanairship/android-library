@@ -141,10 +141,12 @@ internal class MediaView @JvmOverloads constructor(
         val load = Runnable {
             val local = webViewWeakReference.get() ?: return@Runnable
             if (InAppMessageMediaInfo.MediaType.VIDEO == mediaInfo.type) {
-                local.loadData(
+                local.loadDataWithBaseURL(
+                    "http://" + this.context.packageName,
                     String.format(Locale.ROOT, VIDEO_HTML_FORMAT, mediaInfo.url),
                     "text/html",
-                    "UTF-8"
+                    "UTF-8",
+                    null
                 )
             } else {
                 local.loadUrl(mediaInfo.url)

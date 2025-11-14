@@ -7,6 +7,7 @@ import androidx.core.util.Consumer
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
+import com.urbanairship.mockk.clearInvocations
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
@@ -220,6 +221,21 @@ public class PermissionsManagerTest {
 
         verify {
             mockStatusListener.onPermissionStatusChanged(Permission.LOCATION, PermissionStatus.NOT_DETERMINED)
+        }
+    }
+
+    @Test
+    fun testCheckPermissionStatusOnActivityResume(): TestResult = runTest {
+        permissionsManager.setPermissionDelegate(Permission.LOCATION, mockDelegate)
+        advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
+        clearInvocations(mockDelegate)
+
+        activityMonitor.resumeActivity(Activity())
+        advanceUntilIdle()
+        testDispatcher.scheduler.advanceUntilIdle()
+        verify {
+            mockDelegate.checkPermissionStatus(any(), any())
         }
     }
 

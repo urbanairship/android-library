@@ -59,7 +59,9 @@ public fun rememberPreferenceCenterState(identifier: String): PreferenceCenterSt
         factory = DefaultPreferenceCenterViewModel.Factory,
         extras = MutableCreationExtras().apply {
             set(DefaultPreferenceCenterViewModel.IDENTIFIER_KEY, identifier)
-        }
+        },
+        // Using a key so that we can have a unique ViewModel per preference center identifier
+        key = identifier
     )
 
     return rememberPreferenceCenterState(viewModel)
@@ -76,19 +78,19 @@ internal fun rememberPreferenceCenterState(
     val state = remember { PreferenceCenterState(context, identifier, viewModel::handle) }
 
     LaunchedEffect(identifier) {
-        withContext(Dispatchers.Default) {
+        withContext(viewModel.scope.coroutineContext) {
             viewModel.states.collect { state.viewState = it }
         }
     }
 
     LaunchedEffect(identifier) {
-        withContext(Dispatchers.Default) {
+        withContext(viewModel.scope.coroutineContext) {
             viewModel.displayDialog.collect { state.dialogs = it }
         }
     }
 
     LaunchedEffect(identifier) {
-        withContext(Dispatchers.Default) {
+        withContext(viewModel.scope.coroutineContext) {
             viewModel.errors.collect { state.errorsFlow.emit(it) }
         }
     }

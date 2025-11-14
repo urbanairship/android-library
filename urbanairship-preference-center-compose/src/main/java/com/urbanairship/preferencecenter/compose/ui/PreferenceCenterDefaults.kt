@@ -29,7 +29,7 @@ public object PreferenceCenterDefaults {
     @Composable
     public fun topBar(
         title: String,
-        navIcon: Painter =
+        navIcon: Painter? =
             painterResource(com.urbanairship.preferencecenter.core.R.drawable.ua_ic_preference_center_arrow_back),
         navIconDescription: String? = stringResource(R.string.ua_back),
         onNavigateUp: () -> Unit
