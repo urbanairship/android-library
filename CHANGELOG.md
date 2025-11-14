@@ -4,6 +4,12 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.13.6 - November 14, 2025
+Patch release that fixes YouTube video playback in In-App Automation and Scenes. Applications that use YouTube videos in Scenes and non-html In-App Automations (IAA) must update to resolve playback errors.
+
+### Changes
+- Fixed YouTube video embedding to comply with YouTube API Client identification requirements.
+
 ## Version 19.13.5 - October 13, 2025
 Patch release that handles BigDecimal in our JSON parsing. This prevents parse exceptions if the default Android org.json package is replaced by the org.json maven package. 
 

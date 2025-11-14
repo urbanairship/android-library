@@ -374,7 +374,8 @@ internal class MediaView(
                         val video = model.viewInfo.video ?: Video.defaultVideo()
                         val videoId = YOUTUBE_ID_RE.find(model.viewInfo.url)?.groupValues?.get(1)
                         videoId?.let {
-                            weakWebView.loadData(
+                            weakWebView.loadDataWithBaseURL(
+                                "https://" + this.context.packageName,
                                 String.format(YOUTUBE_HTML_FORMAT,
                                     it,
                                     if (video.showControls) "1" else "0",
@@ -391,7 +392,8 @@ internal class MediaView(
                                     if (video.autoplay) YOUTUBE_AUTO_PLAYING_JS_CODE else ""
                                 ),
                                 "text/html",
-                                "UTF-8"
+                                "UTF-8",
+                                null
                             )
                         } ?: model.viewInfo.url.let {
                             weakWebView.loadUrl(it)
