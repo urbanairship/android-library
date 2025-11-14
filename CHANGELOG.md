@@ -4,6 +4,17 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.0.3 - November 14, 2025
+
+Patch release that fixes YouTube video playback in In-App Automation and Scenes and minor fixes for the Preference Center Compose module.
+Applications that use YouTube videos in Scenes and non-html In-App Automations (IAA) must update to resolve playback errors.
+
+### Changes
+- Fixed YouTube video embedding to comply with YouTube API Client identification requirements.
+- Allow multiple Preference Centers to be displayed with Preference Center Compose.
+- Fixed checked/unchecked icon assets for Preference Center Compose.
+- Updated Preference Center Compose default toolbar to allow `navIcon` to be `null`.
+
 ## Version 20.0.2 - November 4, 2025
 
 Patch release that fixes prompting for permissions on foreground.
