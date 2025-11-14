@@ -43,6 +43,7 @@ import com.urbanairship.preferencecenter.data.evaluate
 import com.urbanairship.preferencecenter.util.airshipScanConcat
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -77,6 +78,8 @@ import kotlinx.parcelize.TypeParceler
 internal interface PreferenceCenterViewModel {
     val identifier: String
     val states: StateFlow<ViewState>
+
+    val scope: CoroutineScope
     val displayDialog: StateFlow<ContactManagerDialog?>
     val errors: Flow<String?>
     fun handle(action: Action)
@@ -87,6 +90,7 @@ internal interface PreferenceCenterViewModel {
         ): PreferenceCenterViewModel = object : PreferenceCenterViewModel {
             override val identifier: String = "preview"
             override val states: StateFlow<ViewState> = MutableStateFlow(state)
+            override val scope: CoroutineScope = CoroutineScope(Dispatchers.Default)
             override fun handle(action: Action) {}
             override val displayDialog: StateFlow<ContactManagerDialog?> = MutableStateFlow(null)
             override val errors: Flow<String?> = emptyFlow()
@@ -136,6 +140,9 @@ internal class DefaultPreferenceCenterViewModel(
 
     private val errorsFlow: MutableStateFlow<String?> = MutableStateFlow(null)
     override val errors: Flow<String?> = errorsFlow.asStateFlow()
+
+    override val scope: CoroutineScope
+        get() = viewModelScope
 
     init {
         viewModelScope.launch(dispatcher) {

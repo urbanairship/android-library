@@ -106,8 +106,8 @@ internal fun BaseSubscriptionItem(
                     if (PrefCenterTheme.options.showSwitchIcons) {
                         Crossfade(targetState = isChecked()) { state ->
                             Icon(
-                                painter =  if (state) painterResource(R.drawable.ua_ic_preference_center_circle_check)
-                                else painterResource(R.drawable.ua_ic_preference_center_clear),
+                                painter =  if (state) painterResource(R.drawable.ua_ic_preference_center_checked)
+                                else painterResource(R.drawable.ua_ic_preference_center_unchecked),
                                 contentDescription = null,
                                 tint = PrefCenterTheme.colors.surface,
                                 modifier = Modifier.padding(4.dp)

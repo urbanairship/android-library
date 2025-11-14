@@ -72,3 +72,20 @@ private fun preview() {
         ).Content(isChecked = { true }, onCheckedChanged = {})
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun previewUnchecked() {
+    PreferenceCenterTheme {
+        ChannelSubscriptionItem(
+            item = Item.ChannelSubscription(
+                id = "preview id",
+                subscriptionId = "preview subscription id",
+                display = CommonDisplay(
+                    name = "preview name", description = "preview description"
+                ),
+                conditions = emptyList()
+            )
+        ).Content(isChecked = { false }, onCheckedChanged = {})
+    }
+}
