@@ -11,7 +11,7 @@ Patch release that fixes prompting for permissions on foreground.
 ### Changes
 - Fixed prompting for permissions on foreground.
 - Removed usage of material icons compose library.
-- Updated Message Center titles to be markes as headings.
+- Updated Message Center titles to be marked as headings.
 
 ## Version 20.0.1 - October 23, 2025
 
@@ -46,3 +46,4 @@ Major SDK release with several breaking changes. See the [Migration Guide](https
   - `preference-center`: Android XML layouts (depends on `preference-center-core`)
   - `preference-center-compose`: New Jetpack Compose UI (depends on `preference-center-core`)
 - New AirshipDebug package that exposes insights and debugging capabilities into the Airship SDK for development builds, providing enhanced visibility into SDK behavior and performance.
+- Removed automatic collection of `connection_type` and `carrier` device properties
