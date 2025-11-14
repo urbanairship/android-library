@@ -33,8 +33,7 @@ dependencies {
     api(libs.androidx.fragment.fragment)
     api(libs.androidx.annotation)
 
-    implementation(libs.androidx.work.runtime)
-    implementation(libs.androidx.concurrentfutures)
+    implementation(libs.androidx.work.runtimektx)
     implementation(libs.androidx.startup.runtime)
     implementation(libs.androidx.webkit)
 

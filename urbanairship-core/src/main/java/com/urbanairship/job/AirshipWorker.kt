@@ -2,12 +2,13 @@
 package com.urbanairship.job
 
 import android.content.Context
-import androidx.concurrent.futures.CallbackToFutureAdapter
-import androidx.work.ListenableWorker
+import androidx.work.CoroutineWorker
+import androidx.work.ListenableWorker.Result as WorkerResult
+import kotlin.Result as KotlinResult
 import androidx.work.WorkerParameters
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
-import com.google.common.util.concurrent.ListenableFuture
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * WorkManager worker for Airship Jobs.
@@ -17,26 +18,25 @@ import com.google.common.util.concurrent.ListenableFuture
 internal class AirshipWorker (
     context: Context,
     workerParams: WorkerParameters
-) : ListenableWorker(context, workerParams) {
+) : CoroutineWorker(context, workerParams) {
 
-    override fun startWork(): ListenableFuture<Result> {
-        return CallbackToFutureAdapter.getFuture { completer: CallbackToFutureAdapter.Completer<Result> ->
-            val jobInfo = parseJobInfo() ?: return@getFuture completer.set(Result.failure())
-            val workId = id
-            val runAttempt = runAttemptCount
+    override suspend fun doWork(): WorkerResult {
+        val jobInfo = parseJobInfo() ?: return WorkerResult.failure()
+        val workId = id
+        val runAttempt = runAttemptCount
 
-            UALog.v("Running job: $jobInfo, work Id: $workId run attempt: $runAttempt")
-
+        UALog.v("Running job: $jobInfo, work Id: $workId run attempt: $runAttempt")
+        return suspendCoroutine { continuation ->
             JobDispatcher.shared(applicationContext)
                 .onStartJob(jobInfo, runAttempt.toLong()) { jobResult: JobResult ->
                     when (jobResult) {
-                        JobResult.RETRY -> completer.set(Result.retry())
-                        JobResult.FAILURE -> completer.set(Result.failure())
-                        JobResult.SUCCESS -> completer.set(Result.success())
+                        JobResult.RETRY -> KotlinResult.success(WorkerResult.retry())
+                        JobResult.FAILURE -> KotlinResult.success(WorkerResult.failure())
+                        JobResult.SUCCESS -> KotlinResult.success(WorkerResult.success())
+                    }.let { result ->
+                        continuation.resumeWith(result)
                     }
                 }
-
-            jobInfo
         }
     }
 
