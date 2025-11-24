@@ -1,0 +1,220 @@
+version: 1
+presentation:
+  type: modal
+  placement_selectors: []
+  android:
+    disable_back_button: false
+  dismiss_on_touch_outside: false
+  default_placement:
+    ignore_safe_area: false
+    size:
+      width: 100%
+      height: 100%
+    position:
+      horizontal: center
+      vertical: top
+    shade_color:
+      default:
+        type: hex
+        hex: '#000000'
+        alpha: 0.2
+    web: {}
+view:
+  type: state_controller
+  view:
+    type: pager_controller
+    identifier: 99056779-74fe-4a46-8894-c36d72686d54
+    view:
+      type: linear_layout
+      direction: horizontal
+      items:
+        - size:
+            width: 100%
+            height: 100%
+          view:
+            type: container
+            items:
+              - identifier: a86d82d0-e433-4093-97a5-e5d4b123f496_pager_container_item
+                position:
+                  horizontal: center
+                  vertical: center
+                size:
+                  width: 100%
+                  height: 100%
+                view:
+                  type: pager
+                  disable_swipe: true
+                  background_color:
+                    default:
+                      alpha: 1
+                      hex: '#188de0'
+                      type: hex
+                  items:
+                    - identifier: 1ad630b3-966e-4b19-b36e-33b5eea1c283
+                      type: pager_item
+                      view:
+                        type: container
+                        items:
+                          - identifier: c069e150-efb6-4c66-a142-582ffa50e196_main_view_container_item
+                            size:
+                              width: 100%
+                              height: 100%
+                            position:
+                              horizontal: center
+                              vertical: center
+                            ignore_safe_area: false
+                            view:
+                              type: container
+                              background_color:
+                                default:
+                                  alpha: 1
+                                  hex: '#486635'
+                                  type: hex
+                              items:
+                                - identifier: 5b973d48-06a1-440e-af8c-2d51713119b7_container_item
+                                  margin:
+                                    bottom: 0
+                                    top: 0
+                                    end: 0
+                                    start: 0
+                                  position:
+                                    horizontal: center
+                                    vertical: center
+                                  size:
+                                    width: 100%
+                                    height: 100%
+                                  view:
+                                    type: linear_layout
+                                    direction: horizontal
+                                    items:
+                                      - identifier: scroll_container
+                                        size:
+                                          width: 100%
+                                          height: 100%
+                                        view:
+                                          type: scroll_layout
+                                          direction: horizontal
+                                          background_color:
+                                            default:
+                                              alpha: 1
+                                              hex: '#b7ed1b'
+                                              type: hex
+                                          view:
+                                            type: linear_layout
+                                            direction: horizontal
+                                            items:
+                                              - view:
+                                                  type: container
+                                                  background_color:
+                                                    default:
+                                                      alpha: 1
+                                                      hex: '#09542d'
+                                                      type: hex
+                                                  items:
+                                                    - identifier: 78d7485c-0235-411d-952a-d1f6dca531c3
+                                                      margin:
+                                                        top: 8
+                                                        bottom: 8
+                                                        start: 16
+                                                        end: 16
+                                                      position:
+                                                        horizontal: end
+                                                        vertical: bottom
+                                                      size:
+                                                        width: auto
+                                                        height: auto
+                                                      view:
+                                                        type: label_button
+                                                        identifier: next--btn1
+                                                        reporting_metadata:
+                                                          trigger_link_id: 78d7485c-0235-411d-952a-d1f6dca531c3
+                                                        label:
+                                                          type: label
+                                                          text: btn1
+                                                          content_description: btn1
+                                                          text_appearance:
+                                                            font_size: 16
+                                                            color:
+                                                              default:
+                                                                type: hex
+                                                                hex: '#FFFFFF'
+                                                                alpha: 1
+                                                              selectors: []
+                                                            alignment: center
+                                                            styles: []
+                                                            font_families:
+                                                              - sans-serif
+                                                        actions: {}
+                                                        enabled:
+                                                          - pager_next
+                                                        button_click:
+                                                          - pager_next
+                                                        localized_content_description:
+                                                          fallback: Next
+                                                          ref: ua_next
+                                                        background_color:
+                                                          default:
+                                                            type: hex
+                                                            hex: '#63AFF1'
+                                                            alpha: 1
+                                                          selectors: []
+                                                        border:
+                                                          radius: 3
+                                                          stroke_width: 0
+                                                          stroke_color:
+                                                            default:
+                                                              type: hex
+                                                              hex: '#63AFF1'
+                                                              alpha: 1
+                                                            selectors: []
+                                                identifier: ef38ca6c-9fa5-4753-9448-df048cad6ad7_wrapper
+                                                size:
+                                                  width: auto
+                                                  height: 100%
+                                                margin:
+                                                  top: 48
+                                                  bottom: 8
+                                                  start: 16
+                                                  end: 16
+                                              - identifier: 8705493d-d830-432c-a93f-34d0a52fa77e_linear_layout_item
+                                                size:
+                                                  width: auto
+                                                  height: 100%
+                                                view:
+                                                  type: linear_layout
+                                                  direction: horizontal
+                                                  items: []
+                        background_color:
+                          default:
+                            type: hex
+                            hex: '#FFFFFF'
+                            alpha: 1
+                          selectors: []
+                      state_actions:
+                        - type: set
+                          key: 1ad630b3-966e-4b19-b36e-33b5eea1c283_next
+                ignore_safe_area: false
+              - position:
+                  horizontal: end
+                  vertical: top
+                size:
+                  width: 48
+                  height: 48
+                view:
+                  type: image_button
+                  image:
+                    scale: 0.4
+                    type: icon
+                    icon: close
+                    color:
+                      default:
+                        type: hex
+                        hex: '#000000'
+                        alpha: 1
+                      selectors: []
+                  identifier: dismiss_button
+                  button_click:
+                    - dismiss
+                  localized_content_description:
+                    ref: ua_dismiss
+                    fallback: Dismiss
