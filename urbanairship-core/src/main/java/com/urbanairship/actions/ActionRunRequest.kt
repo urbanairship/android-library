@@ -15,7 +15,10 @@ import com.urbanairship.actions.Action.Situation
 import com.urbanairship.contacts.Scope
 import java.util.concurrent.Executor
 import java.util.concurrent.Semaphore
+import java.util.concurrent.locks.Lock
+import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.Volatile
+import kotlin.concurrent.withLock
 import com.google.android.gms.common.internal.Objects
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -50,6 +53,7 @@ public open class ActionRunRequest {
     private var action: Action? = null
     private var actionValue: ActionValue? = null
     private var metadata: Bundle? = null
+    private var metadataLock: ReentrantLock = ReentrantLock()
     private var scope: CoroutineScope
     private var situation = Situation.MANUAL_INVOCATION
 
@@ -116,7 +120,15 @@ public open class ActionRunRequest {
      * @return The request object.
      */
     public open fun setMetadata(metadata: Bundle?): ActionRunRequest {
-        return apply { this.metadata = metadata }
+        return apply {
+            metadataLock.withLock {
+                if (metadata == null) {
+                    this.metadata = null
+                } else {
+                    this.metadata = Bundle(metadata)
+                }
+            }
+        }
     }
 
     /**
@@ -150,7 +162,6 @@ public open class ActionRunRequest {
      */
     @WorkerThread
     public open fun runSync(): ActionResult {
-
         return try {
             runBlocking { runSuspending().result }
         } catch (ex: InterruptedException) {
@@ -214,9 +225,12 @@ public open class ActionRunRequest {
      * @return The action arguments.
      */
     private fun createActionArguments(): ActionArguments {
-        val metadata = this.metadata ?: Bundle()
-        actionName?.let {
-            metadata.putString(ActionArguments.REGISTRY_ACTION_NAME_METADATA, it)
+        val metadata = metadataLock.withLock {
+            val metadata = this.metadata ?: Bundle()
+            actionName?.let {
+                metadata.putString(ActionArguments.REGISTRY_ACTION_NAME_METADATA, it)
+            }
+            metadata
         }
 
         return ActionArguments(
