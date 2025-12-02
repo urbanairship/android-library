@@ -27,30 +27,25 @@ import com.urbanairship.util.PendingIntentCompat
 import java.util.UUID
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
  * Runnable that processes an incoming push.
  */
 internal class IncomingPushRunnable private constructor(
+    private val context: Context,
     private val message: PushMessage,
     private val providerClass: String,
-    builder: Builder
-) : Runnable {
+    private val isLongRunning: Boolean,
+    private val isProcessed: Boolean,
+    private val pushManagerProvider: (Duration) -> PushManager?,
+    private val notificationManager: NotificationManagerCompat,
+    private val jobDispatcher: JobDispatcher,
+    private val activityMonitor: ActivityMonitor
+) {
 
-    private val context = builder.context
-    private val isLongRunning = builder.isLongRunning
-    private val isProcessed = builder.isProcessed
-
-    private val pushManagerProvider: (Duration) -> PushManager? = builder.pushManagerProvider
-
-    private val notificationManager = builder.notificationManager
-        ?: NotificationManagerCompat.from(context)
-    private val jobDispatcher = builder.jobDispatcher
-        ?: JobDispatcher.shared(context)
-    private val activityMonitor = builder.activityMonitor
-        ?: GlobalActivityMonitor.shared(context)
-
-    override fun run() {
+    suspend fun run() {
         Autopilot.automaticTakeOff(context)
 
         val push = pushManagerProvider(
@@ -381,15 +376,15 @@ internal class IncomingPushRunnable private constructor(
             private set
         var providerClass: String? = null
             private set
-        var isLongRunning: Boolean = false
+        var isLongRunning = false
             private set
-        var isProcessed: Boolean = false
+        var isProcessed = false
             private set
-        var notificationManager: NotificationManagerCompat? = null
+        var notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(context)
             private set
-        var jobDispatcher: JobDispatcher? = null
+        var jobDispatcher: JobDispatcher = JobDispatcher.shared(context)
             private set
-        var activityMonitor: ActivityMonitor? = null
+        var activityMonitor: ActivityMonitor = GlobalActivityMonitor.shared(context)
             private set
 
         /**
@@ -476,9 +471,15 @@ internal class IncomingPushRunnable private constructor(
             val message = message ?: throw IllegalArgumentException("Push message missing")
 
             return IncomingPushRunnable(
+                context = context,
                 message = message,
                 providerClass = provider,
-                builder = this
+                isLongRunning = isLongRunning,
+                isProcessed = isProcessed,
+                pushManagerProvider = pushManagerProvider,
+                notificationManager = notificationManager,
+                jobDispatcher = jobDispatcher,
+                activityMonitor = activityMonitor
             )
         }
     }

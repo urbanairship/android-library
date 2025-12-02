@@ -52,6 +52,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -376,13 +377,15 @@ public open class PushManager @VisibleForTesting internal constructor(
                 val providerClass = jobInfo.extras.opt(PushProviderBridge.EXTRA_PROVIDER_CLASS).string
                     ?: return JobResult.SUCCESS
 
-                IncomingPushRunnable.Builder(context)
-                    .setLongRunning(true)
-                    .setProcessed(true)
-                    .setMessage(message)
-                    .setProviderClass(providerClass)
-                    .build()
-                    .run()
+                runBlocking {
+                    IncomingPushRunnable.Builder(context)
+                        .setLongRunning(true)
+                        .setProcessed(true)
+                        .setMessage(message)
+                        .setProviderClass(providerClass)
+                        .build()
+                        .run()
+                }
             }
         }
 
