@@ -161,13 +161,16 @@ internal constructor(
         nativeBridge.setActionCompletionCallback(actionCompletionCallback)
     }
 
-    @Deprecated("Deprecated in Java")
+    // TODO: Switch to the non-deprecated version when min SDK is 24+
+    //  shouldOverrideUrlLoading(WebView view, WebResourceRequest request)
+    @Suppress("OVERRIDE_DEPRECATION")
     @CallSuper
     override fun shouldOverrideUrlLoading(webView: WebView, url: String?): Boolean {
         if (interceptUrl(webView, url)) {
             return true
         }
 
+        @Suppress("DEPRECATION")
         return super.shouldOverrideUrlLoading(webView, url)
     }
 
@@ -253,10 +256,8 @@ internal constructor(
 
         val javaScriptExecutor = WebViewJavaScriptExecutor(webView)
 
-        val extender = object : ActionRunRequestExtender {
-            override fun extend(request: ActionRunRequest): ActionRunRequest {
-                return this@AirshipWebViewClient.extendActionRequest(request, webView)
-            }
+        val extender = ActionRunRequestExtender { request ->
+            this@AirshipWebViewClient.extendActionRequest(request, webView)
         }
 
         val delegate = object : CommandDelegate {

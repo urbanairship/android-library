@@ -24,6 +24,7 @@ import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
+import com.urbanairship.util.LocaleCompat
 import java.util.Locale
 import java.util.TimeZone
 import java.util.concurrent.Executor
@@ -432,7 +433,8 @@ public class AnalyticsTest {
      */
     @Test
     public fun testRequestHeaders() {
-        localeManager.setLocaleOverride(Locale("en", "US", "POSIX"))
+        val locale = LocaleCompat.of("en", "US", "POSIX")
+        localeManager.setLocaleOverride(locale)
         analytics.registerSDKExtension(Extension.CORDOVA, "1.2.3")
 
         every { mockChannel.id } returns "channel"
@@ -494,7 +496,7 @@ public class AnalyticsTest {
      */
     @Test
     public fun testRequestHeaderEmptyLocaleCountryHeaders() {
-        localeManager.setLocaleOverride(Locale("en", "", "POSIX"))
+        localeManager.setLocaleOverride(LocaleCompat.of("en", "", "POSIX"))
         every { mockChannel.id } returns "channel"
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
@@ -513,7 +515,7 @@ public class AnalyticsTest {
      */
     @Test
     public fun testRequestHeaderEmptyLocaleVariantHeaders() {
-        localeManager.setLocaleOverride(Locale("en", "US", ""))
+        localeManager.setLocaleOverride(LocaleCompat.of("en", "US", ""))
 
         every { mockChannel.id } returns "channel"
 
@@ -533,7 +535,7 @@ public class AnalyticsTest {
      */
     @Test
     public fun testRequestHeaderEmptyLanguageLocaleHeaders() {
-        localeManager.setLocaleOverride(Locale("", "US", "POSIX"))
+        localeManager.setLocaleOverride(LocaleCompat.of("", "US", "POSIX"))
 
         every { mockChannel.id } returns "channel"
 
@@ -608,17 +610,9 @@ public class AnalyticsTest {
     @Test
     public fun testAnalyticHeaderDelegate() {
         every { mockChannel.id } returns "channel"
-        analytics.addHeaderDelegate(object : AnalyticsHeaderDelegate {
-            override fun onCreateAnalyticsHeaders(): Map<String, String> {
-                return mapOf("foo" to "bar")
-            }
-        })
+        analytics.addHeaderDelegate { mapOf("foo" to "bar") }
 
-        analytics.addHeaderDelegate(object : AnalyticsHeaderDelegate {
-            override fun onCreateAnalyticsHeaders(): Map<String, String> {
-                return mapOf("cool" to "story", "neat" to "rad")
-            }
-        })
+        analytics.addHeaderDelegate { mapOf("cool" to "story", "neat" to "rad") }
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         analytics.onPerformJob(jobInfo)

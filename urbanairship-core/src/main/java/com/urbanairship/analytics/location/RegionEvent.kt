@@ -8,6 +8,7 @@ import com.urbanairship.UALog
 import com.urbanairship.analytics.ConversionData
 import com.urbanairship.analytics.Event
 import com.urbanairship.analytics.EventType
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -65,38 +66,45 @@ public class RegionEvent private constructor(
     /**
      * @hide
      */
+    @Throws(JsonException::class)
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun getEventData(context: Context, conversionData: ConversionData): JsonMap {
         return createEventData()
     }
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue {
         return createEventData().toJsonValue()
     }
 
+    @Throws(JsonException::class)
     private fun createEventData(): JsonMap {
-        val data = JsonMap.newBuilder()
-            .put(REGION_ID, regionId)
-            .put(SOURCE, source)
+        val data = JsonMap.newBuilder().put(REGION_ID, regionId).put(SOURCE, source)
             .put(BOUNDARY_EVENT, boundaryEvent.reportValue)
 
         if (proximityRegion?.isValid == true) {
-            data.put(PROXIMITY_REGION, jsonMapOf(
-                PROXIMITY_REGION_ID to proximityRegion.proximityId,
-                PROXIMITY_REGION_MAJOR to proximityRegion.major,
-                PROXIMITY_REGION_MINOR to proximityRegion.minor,
-                PROXIMITY_REGION_RSSI to proximityRegion.rssi,
-                LATITUDE to proximityRegion.latitude?.toString(),
-                LONGITUDE to proximityRegion.longitude?.toString()
-            ))
+            data.put(
+                PROXIMITY_REGION, jsonMapOf(
+                    PROXIMITY_REGION_ID to proximityRegion.proximityId,
+                    PROXIMITY_REGION_MAJOR to proximityRegion.major,
+                    PROXIMITY_REGION_MINOR to proximityRegion.minor,
+                    PROXIMITY_REGION_RSSI to proximityRegion.rssi,
+                    LATITUDE to proximityRegion.latitude?.toString(),
+                    LONGITUDE to proximityRegion.longitude?.toString()
+                )
+            )
         }
 
         if (circularRegion?.isValid == true) {
-            data.put(CIRCULAR_REGION, jsonMapOf(
-                CIRCULAR_REGION_RADIUS to String.format(Locale.US, "%.1f", circularRegion.radius),
-                LATITUDE to String.format(Locale.US, "%.7f", circularRegion.latitude),
-                LONGITUDE to String.format(Locale.US, "%.7f", circularRegion.longitude)
-            ))
+            data.put(
+                CIRCULAR_REGION, jsonMapOf(
+                    CIRCULAR_REGION_RADIUS to String.format(
+                        Locale.US, "%.1f", circularRegion.radius
+                    ),
+                    LATITUDE to String.format(Locale.US, "%.7f", circularRegion.latitude),
+                    LONGITUDE to String.format(Locale.US, "%.7f", circularRegion.longitude)
+                )
+            )
         }
 
         return data.build()
@@ -129,17 +137,13 @@ public class RegionEvent private constructor(
 
     /**
      * Builder class for [RegionEvent] Objects.
+     *
+     * @param regionId The ID of the region.
+     * @param boundaryEvent The type of boundary crossing event.
      */
     public class Builder(
-        /**
-         * The ID of the region.
-         */
-        @Size(min = 1, max = MAX_CHARACTER_LENGTH.toLong())
+        @param:Size(min = 1, max = MAX_CHARACTER_LENGTH.toLong())
         public val regionId: String,
-
-        /**
-         * The type of boundary crossing event.
-         */
         public var boundaryEvent: Boundary
     ) {
 

@@ -25,13 +25,13 @@ import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import java.util.Date
-import junit.framework.Assert.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -98,7 +98,7 @@ public class ExperimentManagerTest {
         assertEquals(1684868854000L, parsed.lastUpdated)
         assertEquals("holdout", parsed.type.jsonValue)
         assertEquals("static", parsed.resolutionType.jsonValue)
-        assert(parsed.reportingMetadata.equals(extractReportingMetadata(experimentJson)))
+        assert(parsed.reportingMetadata == extractReportingMetadata(experimentJson))
     }
 
     @Test
@@ -267,7 +267,7 @@ public class ExperimentManagerTest {
             bucketMax = 2336,
             hashOverrides = JsonMap
                 .newBuilder()
-                .put(contactId, "overriden")
+                .put(contactId, "overridden")
                 .build()
         ).build()
 

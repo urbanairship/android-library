@@ -140,7 +140,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     )
 
     private val applicationListener: ApplicationListener = object : SimpleApplicationListener() {
-        override fun onForeground(time: Long) {
+        override fun onForeground(milliseconds: Long) {
             val now = clock.currentTimeMillis()
             if (now >= lastForegroundDispatchTime + getRefreshInterval()) {
                 updateChangeToken()
@@ -165,13 +165,11 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     private var isAnyFeatureEnabled = AtomicBoolean(privacyManager.isAnyFeatureEnabled)
 
-    private val privacyListener = object : PrivacyManager.Listener {
-        override fun onEnabledFeaturesChanged() {
-            val newValue = privacyManager.isAnyFeatureEnabled
+    private val privacyListener = PrivacyManager.Listener {
+        val newValue = privacyManager.isAnyFeatureEnabled
 
-            if (!isAnyFeatureEnabled.getAndSet(newValue) && newValue) {
-                dispatchRefreshJobAsync()
-            }
+        if (!isAnyFeatureEnabled.getAndSet(newValue) && newValue) {
+            dispatchRefreshJobAsync()
         }
     }
 

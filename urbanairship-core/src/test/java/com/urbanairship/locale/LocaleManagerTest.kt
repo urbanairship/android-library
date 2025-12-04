@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
+import com.urbanairship.util.LocaleCompat
 import java.util.Locale
 import app.cash.turbine.test
 import io.mockk.mockk
@@ -25,7 +26,7 @@ public class LocaleManagerTest {
 
     @Test
     public fun testGetLocale() {
-        val de = Locale("de")
+        val de = LocaleCompat.of("de")
         context.resources.configuration.setLocale(de)
 
         Assert.assertEquals(de, localeManager.locale)
@@ -34,7 +35,7 @@ public class LocaleManagerTest {
     @Test
     public fun testLocaleUpdatesFlow(): TestResult = runTest {
         localeManager.localeUpdates.test {
-            val en = Locale("en")
+            val en = LocaleCompat.of("en")
             context.resources.configuration.setLocale(en)
 
             localeManager.onDeviceLocaleChanged()

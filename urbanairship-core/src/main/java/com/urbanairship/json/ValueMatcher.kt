@@ -19,8 +19,8 @@ import com.urbanairship.util.IvyVersionMatcher
  */
 public abstract class ValueMatcher protected constructor() : JsonSerializable, Predicate<JsonSerializable> {
 
-    override fun apply(jsonSerializable: JsonSerializable): Boolean {
-        return apply(jsonSerializable, false)
+    override fun apply(value: JsonSerializable): Boolean {
+        return apply(value, false)
     }
 
     /**
@@ -59,7 +59,7 @@ public abstract class ValueMatcher protected constructor() : JsonSerializable, P
          * @throws IllegalArgumentException if min is greater than max.
          */
         @JvmStatic
-        @kotlin.jvm.Throws(IllegalArgumentException::class)
+        @Throws(IllegalArgumentException::class)
         public fun newNumberRangeMatcher(min: Double?, max: Double?): ValueMatcher {
             require(!(min != null && max != null && max < min))
 
@@ -104,7 +104,7 @@ public abstract class ValueMatcher protected constructor() : JsonSerializable, P
          * @throws IllegalArgumentException If the constraint is not a valid ivy version constraint.
          */
         @JvmStatic
-        @kotlin.jvm.Throws(IllegalArgumentException::class)
+        @Throws(IllegalArgumentException::class)
         public fun newVersionMatcher(constraint: String): ValueMatcher {
             return VersionMatcher(IvyVersionMatcher.newMatcher(constraint))
         }
@@ -151,7 +151,7 @@ public abstract class ValueMatcher protected constructor() : JsonSerializable, P
          * @return The matcher as a [ValueMatcher].
          */
         @JvmStatic
-        @Throws(JsonException::class)
+        @Throws(JsonException::class, IllegalArgumentException::class)
         public fun parse(jsonValue: JsonValue?): ValueMatcher {
             val map = jsonValue?.optMap() ?: JsonMap.EMPTY_MAP
 

@@ -22,7 +22,7 @@ internal abstract class EventsDatabase : RoomDatabase() {
         fun persistent(context: Context): EventsDatabase =
             try {
                 Room.databaseBuilder(context.applicationContext, EventsDatabase::class.java, DB_NAME)
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(true)
                     .build()
             } catch (ex: Exception) {
                 ex.printStackTrace()

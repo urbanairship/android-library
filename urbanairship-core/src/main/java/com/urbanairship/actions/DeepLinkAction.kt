@@ -6,10 +6,12 @@ import android.content.Intent
 import android.net.Uri
 import com.urbanairship.Airship
 import com.urbanairship.UALog
+import com.urbanairship.actions.ActionArguments.Companion.PUSH_MESSAGE_METADATA
 import com.urbanairship.actions.ActionResult.Companion.newResult
 import com.urbanairship.actions.DeepLinkAction.Companion.DEFAULT_NAMES
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
+import com.urbanairship.util.getParcelableCompat
 
 /**
  * Action for opening a deep link.
@@ -54,7 +56,7 @@ public class DeepLinkAction(
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             .setPackage(context.packageName)
 
-        arguments.metadata.getParcelable<PushMessage>(ActionArguments.PUSH_MESSAGE_METADATA)?.let {
+        arguments.metadata.getParcelableCompat<PushMessage>(PUSH_MESSAGE_METADATA)?.let {
             intent.putExtra(PushManager.EXTRA_PUSH_MESSAGE_BUNDLE, it.getPushBundle())
         }
 

@@ -26,16 +26,5 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     // Tests
-    testImplementation project(':urbanairship-test')
-    testImplementation(libs.androidx.test.ext.junit)
-
-    testImplementation(libs.androidx.test.core)
-    testImplementation(libs.androidx.test.runner)
-    testImplementation(libs.androidx.test.rules)
-
-    testImplementation(libs.robolectric.core)
-    testImplementation(libs.mockk)
-    testImplementation(libs.androidx.room.testing)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
+    testImplementation(testFixtures(project(":urbanairship-core")))
 }

@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
@@ -13,7 +14,6 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestPushProvider
-import com.urbanairship.analytics.Analytics
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.push.notifications.NotificationArguments
 import com.urbanairship.push.notifications.NotificationArguments.Companion.newBuilder
@@ -25,6 +25,7 @@ import com.urbanairship.push.notifications.NotificationResult.Companion.cancel
 import com.urbanairship.push.notifications.NotificationResult.Companion.notification
 import com.urbanairship.push.notifications.NotificationResult.Companion.retry
 import com.urbanairship.util.PendingIntentCompat
+import com.urbanairship.util.getParcelableCompat
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
@@ -73,7 +74,7 @@ public class IncomingPushRunnableTest {
 
     @Before
     public fun setup() {
-        pushRunnable = IncomingPushRunnable.Builder(context, { pushManager })
+        pushRunnable = IncomingPushRunnable.Builder(context) { pushManager }
             .setProviderClass(testPushProvider.javaClass.toString())
             .setMessage(PushMessage(pushBundle))
             .setNotificationManager(notificationManager)
@@ -82,7 +83,7 @@ public class IncomingPushRunnableTest {
             .setActivityMonitor(activityMonitor)
             .build()
 
-        displayRunnable = IncomingPushRunnable.Builder(context, { pushManager })
+        displayRunnable = IncomingPushRunnable.Builder(context) { pushManager }
             .setProviderClass(testPushProvider.javaClass.toString())
             .setMessage(PushMessage(pushBundle))
             .setNotificationManager(notificationManager)
@@ -144,7 +145,7 @@ public class IncomingPushRunnableTest {
         notificationProvider.notification = createNotification()
         notificationProvider.tag = "testNotificationTag"
 
-        pushRunnable = IncomingPushRunnable.Builder(context, { pushManager })
+        pushRunnable = IncomingPushRunnable.Builder(context) { pushManager }
             .setProviderClass("wrong  class")
             .setMessage(PushMessage(pushBundle))
             .setLongRunning(true)
@@ -165,7 +166,7 @@ public class IncomingPushRunnableTest {
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
 
-        pushRunnable = IncomingPushRunnable.Builder(context, { pushManager })
+        pushRunnable = IncomingPushRunnable.Builder(context) { pushManager }
             .setProviderClass("wrong  class")
             .setMessage(PushMessage(pushBundle))
             .setLongRunning(true)
@@ -208,7 +209,7 @@ public class IncomingPushRunnableTest {
         pushBundle.putString("com.urbanairship.foreground_display", "false")
         message = PushMessage(pushBundle)
 
-        pushRunnable = IncomingPushRunnable.Builder(context, { pushManager })
+        pushRunnable = IncomingPushRunnable.Builder(context) { pushManager }
             .setProviderClass(testPushProvider.javaClass.toString())
             .setMessage(message)
             .setNotificationManager(notificationManager)
@@ -240,7 +241,7 @@ public class IncomingPushRunnableTest {
         pushBundle.putString("com.urbanairship.foreground_display", "true")
         message = PushMessage(pushBundle)
 
-        pushRunnable = IncomingPushRunnable.Builder(context, { pushManager })
+        pushRunnable = IncomingPushRunnable.Builder(context) { pushManager }
             .setProviderClass(testPushProvider.javaClass.toString())
             .setMessage(message)
             .setNotificationManager(notificationManager)
@@ -267,7 +268,7 @@ public class IncomingPushRunnableTest {
         notificationProvider.tag = "testNotificationTag"
         message = PushMessage(pushBundle)
 
-        pushRunnable = IncomingPushRunnable.Builder(context, { pushManager })
+        pushRunnable = IncomingPushRunnable.Builder(context) { pushManager }
             .setProviderClass(testPushProvider.javaClass.toString())
             .setMessage(message)
             .setNotificationManager(notificationManager)
@@ -417,9 +418,15 @@ public class IncomingPushRunnableTest {
 
         val shadowPendingIntent =
             Shadows.shadowOf(notificationProvider.notification?.contentIntent)
-        Assert.assertTrue(
-            "The pending intent is an activity intent.", shadowPendingIntent.isActivityIntent
-        )
+
+        val isActivityIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            shadowPendingIntent.isActivity
+        } else {
+            @Suppress("DEPRECATION")
+            shadowPendingIntent.isActivityIntent
+        }
+
+        Assert.assertTrue("The pending intent is an activity intent.", isActivityIntent)
 
         val intent = shadowPendingIntent.savedIntent
         Assert.assertEquals(
@@ -432,7 +439,7 @@ public class IncomingPushRunnableTest {
         Assert.assertSame(
             "The notification content intent matches.",
             pendingIntent,
-            intent.extras?.get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT)
+            intent.extras?.getParcelableCompat(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT)
         )
         Assert.assertSame(
             "cool-tag", intent.extras?.getString(PushManager.EXTRA_NOTIFICATION_TAG)
@@ -452,7 +459,7 @@ public class IncomingPushRunnableTest {
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
 
         val pendingIntent = PendingIntentCompat
-            .getBroadcast(RuntimeEnvironment.application, 1, Intent(), 0)
+            .getBroadcast(RuntimeEnvironment.getApplication(), 1, Intent(), 0)
         notificationProvider.notification = createNotification()
         notificationProvider.notification?.deleteIntent = pendingIntent
 
@@ -475,7 +482,7 @@ public class IncomingPushRunnableTest {
         Assert.assertSame(
             "The notification delete intent matches.",
             pendingIntent,
-            intent.extras?.get(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT)
+            intent.extras?.getParcelableCompat(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT)
         )
     }
 
@@ -485,6 +492,7 @@ public class IncomingPushRunnableTest {
      */
     @Test
     @Config(sdk = [25])
+    @Suppress("DEPRECATION") // We're testing old Notification APIs
     public fun testDeliverPushPreOreo(): TestResult = runTest {
         every { pushManager.isPushEnabled } returns true
         every { pushManager.isOptIn } returns true
@@ -506,9 +514,9 @@ public class IncomingPushRunnableTest {
 
         pushRunnable.run()
 
-        val notification = notificationProvider.notification
+        val notification = requireNotNull(notificationProvider.notification)
 
-        Assert.assertEquals(notification!!.sound, channelCompat.sound)
+        Assert.assertEquals(notification.sound, channelCompat.sound)
         Assert.assertEquals(NotificationManager.IMPORTANCE_HIGH, channelCompat.importance)
         Assert.assertEquals(
             notification.defaults and Notification.DEFAULT_VIBRATE, Notification.DEFAULT_VIBRATE
@@ -536,7 +544,7 @@ public class IncomingPushRunnableTest {
 
         val message = PushMessage(pushBundle)
 
-        IncomingPushRunnable.Builder(context, { pushManager })
+        IncomingPushRunnable.Builder(context) { pushManager }
             .setProviderClass(testPushProvider.javaClass.toString())
             .setMessage(message)
             .setNotificationManager(notificationManager)
@@ -557,6 +565,7 @@ public class IncomingPushRunnableTest {
         every { pushManager.isOptIn } returns true
         every { pushManager.isUniqueCanonicalId("testPushID") } returns true
 
+        @Suppress("DEPRECATION") // We don't want to create a channel on pre-Oreo
         notificationProvider.notification = NotificationCompat.Builder(context)
                 .setContentTitle("Test NotificationBuilder Title")
                 .setContentText("Test NotificationBuilder Text")

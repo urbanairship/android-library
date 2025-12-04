@@ -5,6 +5,7 @@ import android.app.Application
 import android.content.Intent
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.util.getParcelableExtraCompat
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -66,7 +67,7 @@ public class ShareActionTest {
         assertFalse(startedIntent.hasExtra(Intent.EXTRA_INITIAL_INTENTS))
 
         // Verify the chooser intent is contained in the starter intent
-        val chooserIntent = startedIntent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
+        val chooserIntent = startedIntent.getParcelableExtraCompat<Intent>(Intent.EXTRA_INTENT)
         assertEquals(chooserIntent!!.getStringExtra(Intent.EXTRA_TEXT), "Share text")
         assertEquals(chooserIntent.action, Intent.ACTION_SEND)
         assertEquals(null, chooserIntent.getPackage())

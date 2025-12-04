@@ -103,8 +103,6 @@ public open class AirshipWebView : WebView {
 
         // Disallow all file and content access, which could pose a security risk if enabled.
         settings.allowFileAccess = false
-        settings.allowFileAccessFromFileURLs = false
-        settings.allowUniversalAccessFromFileURLs = false
         settings.allowContentAccess = false
 
         settings.javaScriptEnabled = true
@@ -113,7 +111,6 @@ public open class AirshipWebView : WebView {
         if (ManifestUtils.shouldEnableLocalStorage(context)) {
             UALog.v("Application contains metadata to enable local storage")
             settings.domStorageEnabled = true
-            settings.databaseEnabled = true
         }
 
         initializeView()
@@ -202,6 +199,10 @@ public open class AirshipWebView : WebView {
 
         // Try to start Safe Browsing
         if (!isStartSafeBrowsingAttempted && shouldStartSafeBrowsing(context)) {
+            // In WebView version 122.0.6174.0 and later, this initialization is done automatically.
+            // We should still call it here for older versions, as this will return immediately
+            // if Safe Browsing is already initialized.
+            @Suppress("DEPRECATION")
             WebViewCompat.startSafeBrowsing(context.applicationContext) { started ->
                 if (!started) {
                     UALog.d("Unable to start Safe Browsing. Feature is not supported or disabled in the manifest.")

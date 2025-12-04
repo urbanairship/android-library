@@ -32,7 +32,6 @@ import com.urbanairship.job.JobInfo.ConflictStrategy
 import com.urbanairship.job.JobResult
 import com.urbanairship.json.JsonValue
 import com.urbanairship.locale.LocaleManager
-import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.Clock
 import java.util.TimeZone
@@ -168,7 +167,7 @@ public class AirshipChannel internal constructor(
         }
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(time: Long) {
+            override fun onForeground(milliseconds: Long) {
                 updateRegistration()
             }
         })

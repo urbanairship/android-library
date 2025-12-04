@@ -7,7 +7,7 @@ package com.urbanairship.app
  */
 public open class SimpleApplicationListener public constructor() : ApplicationListener {
 
-    override fun onForeground(time: Long) { }
+    override fun onForeground(milliseconds: Long) { }
 
-    override fun onBackground(time: Long) { }
+    override fun onBackground(milliseconds: Long) { }
 }

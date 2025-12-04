@@ -26,6 +26,7 @@ public data class RemoteConfig(
     public val iaaConfig: IAAConfig? = null
 ) : JsonSerializable {
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         AIRSHIP_CONFIG_KEY to airshipConfig?.toJsonValue(),
         METERED_USAGE_CONFIG_KEY to meteredUsageConfig?.toJsonValue(),
@@ -47,6 +48,7 @@ public data class RemoteConfig(
         private const val REMOTE_DATA_REFRESH_INTERVAL_KEY = "remote_data_refresh_interval"
         private const val IAA_CONFIG = "in_app_config"
 
+        @Throws(JsonException::class)
         public fun fromJson(json: JsonMap): RemoteConfig {
             return RemoteConfig(
                 airshipConfig = json.optionalField<JsonValue>(AIRSHIP_CONFIG_KEY)?.let {
@@ -65,6 +67,7 @@ public data class RemoteConfig(
             )
         }
 
+        @Throws(JsonException::class)
         public fun fromJson(json: JsonValue): RemoteConfig = fromJson(json.optMap())
     }
 }
@@ -83,6 +86,7 @@ public data class RemoteAirshipConfig(
     public val meteredUsageUrl: String? = null
 ) : JsonSerializable {
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         REMOTE_DATA_URL_KEY to remoteDataUrl,
         DEVICE_API_URL_KEY to deviceApiUrl,
@@ -121,6 +125,7 @@ public data class ContactConfig(
     public val channelRegistrationMaxResolveAgeMs: Long? = null
 ) : JsonSerializable {
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         FOREGROUND_INTERVAL_MS_KEY to foregroundIntervalMs,
         CHANNEL_REGISTRATION_MAX_RESOLVE_AGE_MS_KEY to channelRegistrationMaxResolveAgeMs
@@ -133,6 +138,7 @@ public data class ContactConfig(
         private const val CHANNEL_REGISTRATION_MAX_RESOLVE_AGE_MS_KEY = "max_cra_resolve_age_ms"
 
         /** @hide */
+        @Throws(JsonException::class)
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun fromJson(json: JsonValue): ContactConfig = ContactConfig(
             foregroundIntervalMs = json.optMap().optionalField(FOREGROUND_INTERVAL_MS_KEY),
@@ -142,6 +148,7 @@ public data class ContactConfig(
 }
 
 /** @hide */
+@ConsistentCopyVisibility
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class MeteredUsageConfig internal constructor(
     public val isEnabled: Boolean,
@@ -149,6 +156,7 @@ public data class MeteredUsageConfig internal constructor(
     public val interval: Duration
 ) : JsonSerializable {
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         IS_ENABLED_KEY to isEnabled,
         INITIAL_DELAY_MS_KEY to initialDelay.inWholeMilliseconds,
@@ -165,12 +173,14 @@ public data class MeteredUsageConfig internal constructor(
         private val DEFAULT_INITIAL_DELAY = 15.milliseconds
         private val DEFAULT_INTERVAL = 30.milliseconds
 
+        @Throws(JsonException::class)
         public fun fromJson(json: JsonMap): MeteredUsageConfig = MeteredUsageConfig(
             isEnabled = json.optionalField(IS_ENABLED_KEY) ?: false,
             initialDelay = json.optionalField<Long>(INITIAL_DELAY_MS_KEY)?.milliseconds ?: DEFAULT_INITIAL_DELAY,
             interval = json.optionalField<Long>(INTERVAL_MS_KEY)?.milliseconds ?: DEFAULT_INTERVAL,
         )
 
+        @Throws(JsonException::class)
         public fun fromJson(json: JsonValue): MeteredUsageConfig = fromJson(json.optMap())
 
         public val DEFAULT: MeteredUsageConfig =
@@ -202,6 +212,7 @@ public data class IAAConfig (
         }
     }
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         RETRYING_QUEUE to retryingQueue,
         ADDITIONAL_AUDIENCE_CONFIG to additionalAudienceCheck
@@ -236,6 +247,7 @@ public data class RetryingQueueConfig (
         }
     }
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         MAX_CONCURRENT_OPERATIONS to maxConcurrentOperations,
         MAX_PENDING_RESULTS to maxPendingResults,
@@ -269,6 +281,7 @@ public data class AdditionalAudienceCheckConfig(
         }
     }
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         IS_ENABLED to isEnabled,
         CONTEXT to context,

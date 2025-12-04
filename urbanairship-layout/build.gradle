@@ -47,14 +47,5 @@ dependencies {
     implementation(libs.google.material)
 
     // Unit Tests
-    testImplementation project(':urbanairship-test')
-    testImplementation(libs.junit)
-    testImplementation(libs.androidx.test.core)
-    testImplementation(libs.androidx.test.runner)
-    testImplementation(libs.androidx.test.rules)
-    testImplementation(libs.mockk)
-    testImplementation(libs.robolectric.core)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
-    testImplementation libs.androidx.test.ext.junitktx
+    testImplementation(testFixtures(project(":urbanairship-core")))
 }

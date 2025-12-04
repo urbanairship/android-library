@@ -3,6 +3,7 @@
 package com.urbanairship.util
 
 import androidx.annotation.RestrictTo
+import kotlinx.coroutines.ExperimentalForInheritanceCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.stateIn
 /**
  * @hide
  */
+@OptIn(ExperimentalForInheritanceCoroutinesApi::class)
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class DerivedStateFlow<T>(
     private val onValue: () -> T,

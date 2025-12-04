@@ -104,7 +104,7 @@ public class AirshipConfigOptionsTest {
 
     @Test(expected = ConfigException::class)
     public fun testThrowsInvalidConfigFile() {
-        val development = AirshipConfigOptions.Builder()
+        AirshipConfigOptions.Builder()
             .tryApplyProperties(application, UUID.randomUUID().toString())
             .build()
     }
@@ -146,6 +146,7 @@ public class AirshipConfigOptionsTest {
         Assert.assertTrue(defaultConfig.analyticsEnabled)
         Assert.assertFalse(defaultConfig.inProduction)
         Assert.assertFalse(defaultConfig.channelCreationDelayEnabled)
+        @Suppress("DEPRECATION")
         Assert.assertFalse(defaultConfig.dataCollectionOptInEnabled)
         Assert.assertFalse(defaultConfig.extendedBroadcastsEnabled)
         Assert.assertTrue(defaultConfig.requireInitialRemoteConfigEnabled)
@@ -222,6 +223,7 @@ public class AirshipConfigOptionsTest {
 
     @Test
     public fun testEnabledFeaturesMigration() {
+        @Suppress("DEPRECATION")  // for setDataCollectionOptInEnabled
         var configOptions = AirshipConfigOptions.newBuilder()
             .setEnabledFeatures(PrivacyManager.Feature.PUSH)
             .setDataCollectionOptInEnabled(true)
@@ -229,7 +231,10 @@ public class AirshipConfigOptionsTest {
 
         Assert.assertEquals(PrivacyManager.Feature.PUSH, configOptions.enabledFeatures)
 
-        configOptions = AirshipConfigOptions.newBuilder().setDataCollectionOptInEnabled(true).build()
+        @Suppress("DEPRECATION")  // for setDataCollectionOptInEnabled
+        configOptions = AirshipConfigOptions.newBuilder()
+            .setDataCollectionOptInEnabled(true)
+            .build()
 
         Assert.assertEquals(PrivacyManager.Feature.NONE, configOptions.enabledFeatures)
 
@@ -239,9 +244,10 @@ public class AirshipConfigOptionsTest {
     }
 
     public fun getProperties(file: String): Properties {
+        val classLoader = requireNotNull(javaClass.classLoader) { "ClassLoader is null!" }
         var stream: InputStream? = null
         try {
-            stream = javaClass.classLoader.getResourceAsStream(file)
+            stream = classLoader.getResourceAsStream(file)
             val properties = Properties()
             properties.load(stream)
             return properties

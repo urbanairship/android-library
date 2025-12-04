@@ -9,6 +9,7 @@ import com.urbanairship.Airship
 import com.urbanairship.Platform
 import com.urbanairship.http.RequestException
 import com.urbanairship.push.PushProvider
+import com.urbanairship.util.LocaleCompat
 import io.mockk.every
 import io.mockk.mockk
 import java.util.Locale
@@ -28,10 +29,7 @@ public class RemoteDataUrlFactoryTest {
         every { getAvailableProviders() } returns availableProviders
     }
 
-    private val factory: RemoteDataUrlFactory = RemoteDataUrlFactory(
-        runtimeConfig,
-        { pushProviders }
-    )
+    private val factory = RemoteDataUrlFactory(runtimeConfig) { pushProviders }
 
     /**
      * Test the SDK version is sent as a query parameter.
@@ -39,7 +37,7 @@ public class RemoteDataUrlFactoryTest {
     @Test
     @Throws(RequestException::class)
     public fun testSdkVersion() {
-        val uri = factory.createAppUrl(Locale("en"), 555)!!
+        val uri = factory.createAppUrl(LocaleCompat.of("en"), 555)!!
         Assert.assertEquals(uri.getQueryParameter("sdk_version"), Airship.version)
     }
 
@@ -52,7 +50,7 @@ public class RemoteDataUrlFactoryTest {
         availableProviders.add(TestPushProvider(PushProvider.DeliveryType.FCM))
         availableProviders.add(TestPushProvider(PushProvider.DeliveryType.FCM))
         availableProviders.add(TestPushProvider(PushProvider.DeliveryType.ADM))
-        val uri = factory.createAppUrl(Locale("en"), 555)!!
+        val uri = factory.createAppUrl(LocaleCompat.of("en"), 555)!!
         Assert.assertEquals(uri.getQueryParameter("push_providers"), "fcm,adm")
     }
 
@@ -62,7 +60,7 @@ public class RemoteDataUrlFactoryTest {
     @Test
     @Throws(RequestException::class)
     public fun testEmptyPushProviders() {
-        val uri = factory.createAppUrl(Locale("en"), 555)!!
+        val uri = factory.createAppUrl(LocaleCompat.of("en"), 555)!!
         Assert.assertNull(uri.getQueryParameter("push_providers"))
     }
 
@@ -73,7 +71,7 @@ public class RemoteDataUrlFactoryTest {
     @Throws(RequestException::class)
     public fun testManufacturer() {
         ShadowBuild.setManufacturer("huawei")
-        val uri = factory.createAppUrl(Locale("en"), 555)!!
+        val uri = factory.createAppUrl(LocaleCompat.of("en"), 555)!!
         Assert.assertEquals(uri.getQueryParameter("manufacturer"), "huawei")
     }
 
@@ -84,7 +82,7 @@ public class RemoteDataUrlFactoryTest {
     @Throws(RequestException::class)
     public fun testManufacturerNotIncluded() {
         ShadowBuild.setManufacturer("google")
-        val uri = factory.createAppUrl(Locale("en"), 555)!!
+        val uri = factory.createAppUrl(LocaleCompat.of("en"), 555)!!
         Assert.assertNull(uri.getQueryParameter("manufacturer"))
     }
 
@@ -94,7 +92,7 @@ public class RemoteDataUrlFactoryTest {
     @Test
     @Throws(RequestException::class)
     public fun testLocale() {
-        val locale = Locale("en", "US")
+        val locale = LocaleCompat.of("en", "US")
         val uri = factory.createAppUrl(locale, 555)!!
         Assert.assertEquals(uri.getQueryParameter("language"), "en")
         Assert.assertEquals(uri.getQueryParameter("country"), "US")
@@ -106,7 +104,7 @@ public class RemoteDataUrlFactoryTest {
     @Test
     @Throws(RequestException::class)
     public fun testLocaleMissingCountry() {
-        val locale = Locale("de")
+        val locale = LocaleCompat.of("de")
         val uri = factory.createAppUrl(locale, 555)!!
         Assert.assertEquals(uri.getQueryParameter("language"), "de")
         Assert.assertNull(uri.getQueryParameter("country"))
@@ -118,7 +116,7 @@ public class RemoteDataUrlFactoryTest {
     @Test
     @Throws(RequestException::class)
     public fun testLocaleMissingLanguage() {
-        val locale = Locale("", "US")
+        val locale = LocaleCompat.of("", "US")
         val uri = factory.createAppUrl(locale, 555)!!
         Assert.assertEquals(uri.getQueryParameter("country"), "US")
     }
@@ -151,7 +149,7 @@ public class RemoteDataUrlFactoryTest {
             get() = throw RuntimeException("Not implemented")
 
 
-        override fun getRegistrationToken(context: Context): String? {
+        override fun getRegistrationToken(context: Context): String {
             throw RuntimeException("Not implemented")
         }
 

@@ -19,6 +19,9 @@ import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.InteractiveNotificationEvent
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
+import com.urbanairship.push.PushManager.Companion.EXTRA_NOTIFICATION_CONTENT_INTENT
+import com.urbanairship.push.PushManager.Companion.EXTRA_NOTIFICATION_DELETE_INTENT
+import com.urbanairship.util.getParcelableCompat
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -139,10 +142,10 @@ internal class NotificationIntentProcessor(
     private fun onNotificationDismissed() {
         UALog.i("Notification dismissed: $notificationInfo")
 
-        (intent.extras?.get(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT) as PendingIntent?)?.let {
+        intent.extras?.getParcelableCompat<PendingIntent>(EXTRA_NOTIFICATION_DELETE_INTENT)?.let {
             try {
                 it.send()
-            } catch (e: PendingIntent.CanceledException) {
+            } catch (_: PendingIntent.CanceledException) {
                 UALog.d("Failed to send notification's deleteIntent, already canceled.")
             }
         }
@@ -156,10 +159,10 @@ internal class NotificationIntentProcessor(
      * Helper method that attempts to launch the application's launch intent.
      */
     private fun launchApplication() {
-        (intent.extras?.get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT) as PendingIntent?)?.let {
+        intent.extras?.getParcelableCompat<PendingIntent>(EXTRA_NOTIFICATION_CONTENT_INTENT)?.let {
             try {
                 it.send()
-            } catch (e: PendingIntent.CanceledException) {
+            } catch (_: PendingIntent.CanceledException) {
                 UALog.d("Failed to send notification's contentIntent, already canceled.")
             }
         }

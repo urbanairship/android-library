@@ -298,6 +298,9 @@ public class FeatureFlagDeferredResolverTest {
 
     @Test
     public fun waitForResolving(): TestResult = runTest {
+        // Create a subject with a dispatcher that shares this test's scheduler
+        val localSubject = FlagDeferredResolver(cache, coreResolver, clock, UnconfinedTestDispatcher(testScheduler))
+
         val expected = DeferredFlag.Found(
             DeferredFlagInfo(
                 isEligible = true,
@@ -325,10 +328,10 @@ public class FeatureFlagDeferredResolverTest {
         }
 
         val first = async {
-            subject.resolve(request, info)
+            localSubject.resolve(request, info)
         }
         val second = async {
-            subject.resolve(request, info)
+            localSubject.resolve(request, info)
         }
 
         var valueFirst = withTimeoutOrNull(100) { first.await() }
@@ -352,7 +355,7 @@ public class FeatureFlagDeferredResolverTest {
             ).toJsonValue()
 
 
-        subject.resolve(request, info)
+        localSubject.resolve(request, info)
 
         valueFirst = withTimeoutOrNull(100) { first.await() }
         valueSecond = withTimeoutOrNull(100) { second.await() }

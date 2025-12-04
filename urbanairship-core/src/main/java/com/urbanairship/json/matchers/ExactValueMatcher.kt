@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.json.matchers
 
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
 import com.urbanairship.json.jsonMapOf
@@ -14,15 +15,16 @@ internal class ExactValueMatcher(
     private val expected: JsonValue
 ) : ValueMatcher() {
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue  = jsonMapOf(
         EQUALS_VALUE_KEY to expected
     ).toJsonValue()
 
-    override fun apply(value: JsonValue, ignoreCase: Boolean): Boolean {
+    override fun apply(jsonValue: JsonValue, ignoreCase: Boolean): Boolean {
         return if (ignoreCase) {
-            equalsIgnoreCase(value, expected)
+            equalsIgnoreCase(jsonValue, expected)
         } else {
-            value == expected
+            jsonValue == expected
         }
     }
 

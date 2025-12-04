@@ -19,6 +19,7 @@ import androidx.core.util.Consumer
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.util.Clock
+import com.urbanairship.util.getParcelableExtraCompat
 
 /**
  * Activity that requests permissions.
@@ -73,7 +74,7 @@ public class PermissionsActivity public constructor(
         for (intent in intents) {
             UALog.v("Permission request cancelled", intent)
 
-            val resultReceiver = intent.getParcelableExtra<ResultReceiver>(RESULT_RECEIVER_EXTRA)
+            val resultReceiver = intent.getParcelableExtraCompat<ResultReceiver>(RESULT_RECEIVER_EXTRA)
             resultReceiver?.send(RESULT_CANCELED, bundleOf())
         }
 
@@ -93,9 +94,7 @@ public class PermissionsActivity public constructor(
 
         val intent = intents.removeAt(0)
         val permission = intent.getStringExtra(PERMISSION_EXTRA)
-        val resultReceiver = intent.getParcelableExtra<ResultReceiver>(
-            RESULT_RECEIVER_EXTRA
-        )
+        val resultReceiver = intent.getParcelableExtraCompat<ResultReceiver>(RESULT_RECEIVER_EXTRA)
 
         if (permission == null || resultReceiver == null) {
             processNextIntent()

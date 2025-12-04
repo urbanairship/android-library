@@ -26,6 +26,7 @@ public class ScopedSubscriptionListMutation internal constructor(
     public val timestamp: String?
 ) : JsonSerializable {
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         KEY_ACTION to action,
         KEY_LIST_ID to listId,
@@ -33,10 +34,10 @@ public class ScopedSubscriptionListMutation internal constructor(
         KEY_TIMESTAMP to timestamp
     ).toJsonValue()
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o == null || javaClass != o.javaClass) return false
-        val that = o as ScopedSubscriptionListMutation
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val that = other as ScopedSubscriptionListMutation
         return ObjectsCompat.equals(action, that.action)
                 && ObjectsCompat.equals(listId, that.listId)
                 && ObjectsCompat.equals(scope, that.scope)

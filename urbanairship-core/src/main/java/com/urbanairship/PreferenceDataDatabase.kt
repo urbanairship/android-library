@@ -68,7 +68,7 @@ public abstract class PreferenceDataDatabase public constructor() : RoomDatabase
 
             return databaseBuilder(context, PreferenceDataDatabase::class.java, path)
                 .addMigrations(MIGRATION_1_2)
-                .fallbackToDestructiveMigrationOnDowngrade()
+                .fallbackToDestructiveMigrationOnDowngrade(true)
                 .build()
         }
 

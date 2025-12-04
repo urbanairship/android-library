@@ -26,6 +26,7 @@ public class AttributeMutation internal constructor(
     public val timestamp: String?
 ) : JsonSerializable {
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         ATTRIBUTE_ACTION_KEY to action,
         ATTRIBUTE_NAME_KEY to name,
@@ -33,11 +34,11 @@ public class AttributeMutation internal constructor(
         ATTRIBUTE_TIMESTAMP_KEY to timestamp
     ).toJsonValue()
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o == null || javaClass != o.javaClass) return false
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
 
-        val mutation = o as AttributeMutation
+        val mutation = other as AttributeMutation
 
         if (action != mutation.action) return false
         if (name != mutation.name) return false

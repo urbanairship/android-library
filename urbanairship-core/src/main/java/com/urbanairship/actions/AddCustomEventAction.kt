@@ -1,7 +1,6 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
-import android.os.Parcelable
 import androidx.annotation.RestrictTo
 import com.urbanairship.Airship
 import com.urbanairship.UALog
@@ -14,6 +13,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.push.PushMessage
+import com.urbanairship.util.getParcelableCompat
 
 /**
  * An action that adds a custom event.
@@ -63,7 +63,7 @@ public class AddCustomEventAction(
 
         val eventBuilder = newBuilder(eventName)
             .setTransactionId(customEventMap.optionalField(CustomEvent.TRANSACTION_ID))
-            .setAttribution(arguments.metadata.getParcelable<Parcelable>(ActionArguments.PUSH_MESSAGE_METADATA) as PushMessage?)
+            .setAttribution(arguments.metadata.getParcelableCompat(ActionArguments.PUSH_MESSAGE_METADATA) as PushMessage?)
             .setInteraction(interactionType, interactionId)
 
         eventBuilder.setEventValue(eventDoubleValue)

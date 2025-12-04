@@ -2,6 +2,7 @@
 
 package com.urbanairship.json.matchers
 
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
 import com.urbanairship.json.jsonMapOf
@@ -11,12 +12,13 @@ import com.urbanairship.json.jsonMapOf
  */
 public class StringContainsMatcher(internal val expected: JsonValue): ValueMatcher() {
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         STRING_CONTAINS to expected
     ).toJsonValue()
 
-    override fun apply(value: JsonValue, ignoreCase: Boolean): Boolean {
-        val stringValue = value.string ?: return false
+    override fun apply(jsonValue: JsonValue, ignoreCase: Boolean): Boolean {
+        val stringValue = jsonValue.string ?: return false
         val contains = expected.string ?: return false
         return stringValue.contains(contains, ignoreCase)
     }

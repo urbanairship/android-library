@@ -45,8 +45,8 @@ public class ChannelCapture @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public c
 
     init {
         this.listener = object : SimpleApplicationListener() {
-            override fun onForeground(time: Long) {
-                countForeground(time)
+            override fun onForeground(milliseconds: Long) {
+                countForeground(milliseconds)
             }
         }
     }

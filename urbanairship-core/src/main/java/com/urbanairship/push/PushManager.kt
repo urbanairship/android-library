@@ -145,7 +145,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
-     * can be accessed from [com.urbanairship.Airship.getPushManager].
+     * can be accessed from [com.urbanairship.Airship.push].
      *
      * @param context Application context
      * @param preferenceDataStore The preferences data store.
@@ -236,7 +236,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         privacyManager.addListener { checkPermission() }
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(time: Long) {
+            override fun onForeground(milliseconds: Long) {
                 checkPermission()
             }
         })

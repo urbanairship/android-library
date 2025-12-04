@@ -53,8 +53,8 @@ public abstract class BaseTestCase public constructor() {
                     return false
                 }
 
-                val expectedValue = expected[key]
-                val actualValue = actual[key]
+                val expectedValue = expected.getObject(key)
+                val actualValue = actual.getObject(key)
 
                 if (expectedValue == null) {
                     if (actualValue != null) {
@@ -80,4 +80,10 @@ public abstract class BaseTestCase public constructor() {
             return true
         }
     }
+}
+
+/** Helper to get an object from a Bundle, suppressing deprecation warnings. */
+private fun Bundle.getObject(key: String): Any? {
+    @Suppress("DEPRECATION")
+    return this.get(key)
 }

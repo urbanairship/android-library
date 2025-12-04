@@ -2,6 +2,7 @@
 package com.urbanairship.json.matchers
 
 import androidx.core.util.ObjectsCompat
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
 import com.urbanairship.json.jsonMapOf
@@ -16,15 +17,15 @@ internal class NumberRangeMatcher(
     private val max: Double?
 ) : ValueMatcher() {
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (o == null || javaClass != o.javaClass) {
+        if (other == null || javaClass != other.javaClass) {
             return false
         }
 
-        val that = o as NumberRangeMatcher
+        val that = other as NumberRangeMatcher
 
         if (min != that.min) { return false }
         if (max != that.max) { return false }
@@ -36,23 +37,23 @@ internal class NumberRangeMatcher(
         return ObjectsCompat.hash(min, max)
     }
 
-    override fun apply(value: JsonValue, ignoreCase: Boolean): Boolean {
+    override fun apply(jsonValue: JsonValue, ignoreCase: Boolean): Boolean {
         if (min == null && max == null) {
             return true
         }
 
-        if (!value.isNumber) {
+        if (!jsonValue.isNumber) {
             return false
         }
 
         min?.let {
-            if (value.getDouble(0.0) < it) {
+            if (jsonValue.getDouble(0.0) < it) {
                 return false
             }
         }
 
         max?.let {
-            if (value.getDouble(0.0) > it) {
+            if (jsonValue.getDouble(0.0) > it) {
                 return false
             }
         }
@@ -60,6 +61,7 @@ internal class NumberRangeMatcher(
         return true
     }
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         MIN_VALUE_KEY to min,
         MAX_VALUE_KEY to max

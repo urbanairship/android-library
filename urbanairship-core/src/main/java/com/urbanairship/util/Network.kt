@@ -3,6 +3,7 @@ package com.urbanairship.util
 
 import android.content.Context
 import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 
@@ -23,8 +24,15 @@ public class Network public constructor() {
         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
         if (cm == null) {
             UALog.e("Error fetching network info.")
+            return false
         }
-        return cm?.activeNetworkInfo?.isConnected == true
+
+        val activeNetwork = cm.activeNetwork ?: return false
+        val capabilities = cm.getNetworkCapabilities(activeNetwork) ?: return false
+
+        // Return true if the device has a validated internet connection
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
     }
 
     public companion object {

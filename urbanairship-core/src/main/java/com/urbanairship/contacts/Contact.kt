@@ -194,7 +194,7 @@ public class Contact internal constructor(
     init {
         migrateNamedUser()
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(time: Long) {
+            override fun onForeground(milliseconds: Long) {
                 if (clock.currentTimeMillis() >= lastResolvedDate + foregroundResolveInterval) {
                     if (privacyManager.isContactsEnabled) {
                         contactManager.addOperation(ContactOperation.Resolve)
@@ -219,11 +219,9 @@ public class Contact internal constructor(
         }
 
         airshipChannel.addChannelListener(
-            listener = object : AirshipChannelListener {
-                override fun onChannelCreated(channelId: String) {
-                    if (privacyManager.isContactsEnabled) {
-                        contactManager.addOperation(ContactOperation.Resolve)
-                    }
+            listener = {
+                if (privacyManager.isContactsEnabled) {
+                    contactManager.addOperation(ContactOperation.Resolve)
                 }
             }
         )
@@ -615,7 +613,7 @@ public class Contact internal constructor(
         /** Default CRA max age. */
         private val CRA_MAX_AGE = TimeUnit.MINUTES.toMillis(10)
 
-        private val CONTACT_UPDATE_PUSH_KEY = "com.urbanairship.contact.update"
+        private const val CONTACT_UPDATE_PUSH_KEY = "com.urbanairship.contact.update"
 
     }
 }

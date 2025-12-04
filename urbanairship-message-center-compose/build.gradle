@@ -56,7 +56,7 @@ dependencies {
     implementation(libs.compose.materialicons.extended)
 
 
-    //Compose
+    // Compose
     implementation platform(libs.compose.bom)
     implementation libs.compose.runtime
     implementation libs.compose.material3
@@ -67,11 +67,5 @@ dependencies {
     implementation libs.landscapist.glide
 
     // Unit Tests
-    testImplementation project(':urbanairship-test')
-    testImplementation(libs.junit)
-    testImplementation(libs.androidx.test.core)
-    testImplementation(libs.androidx.test.ext.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
-    testImplementation(libs.mockk)
+    testImplementation(testFixtures(project(":urbanairship-core")))
 }

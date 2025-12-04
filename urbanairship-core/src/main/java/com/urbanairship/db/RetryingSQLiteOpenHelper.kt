@@ -63,9 +63,10 @@ public class RetryingSQLiteOpenHelper public constructor(
     private fun getDatabaseWithRetries(writable: Boolean): SupportSQLiteDatabase {
         synchronized(lock) {
             val name = databaseName
+
             // Ensure the DB dir exists on disk.
-            if (name != null) {
-                val dbFile = File(databaseName)
+            name?.let {
+                val dbFile = File(it)
                 val parentFile = dbFile.parentFile
                 if (parentFile != null && !parentFile.exists()) {
                     parentFile.mkdirs()
@@ -73,10 +74,10 @@ public class RetryingSQLiteOpenHelper public constructor(
             }
 
             // Retry up to the last attempt.
-            for (i in 0..<MAX_ATTEMPTS - 1) {
+            repeat(MAX_ATTEMPTS - 1) {
                 try {
                     return getDatabase(writable)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     // Clean up, so we can try again.
                     tryClose()
                 }
@@ -120,7 +121,7 @@ public class RetryingSQLiteOpenHelper public constructor(
     private fun tryClose() {
         try {
             close()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Ignored
         }
     }
@@ -130,7 +131,7 @@ public class RetryingSQLiteOpenHelper public constructor(
 
         try {
             File(name).delete()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             // Ignored
         }
     }

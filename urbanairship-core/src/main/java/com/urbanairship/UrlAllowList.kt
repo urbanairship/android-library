@@ -150,11 +150,7 @@ public class UrlAllowList public constructor() {
      * @param scope The scope.
      */
     private fun addEntry(pattern: UriPattern, scope: Scope) {
-        entries.update {
-            it.toMutableList()
-                .also { it.add(Entry(pattern, scope)) }
-                .toList()
-        }
+        entries.update { it + Entry(pattern, scope) }
     }
 
     /**
@@ -246,11 +242,14 @@ public class UrlAllowList public constructor() {
          * @return `true` if the uri matches, otherwise `false`.
          */
         fun matches(uri: Uri): Boolean {
-            if (scheme != null && (uri.scheme == null || !scheme.matcher(uri.scheme).matches())) {
+            val uriScheme = uri.scheme
+            val uriHost = uri.host
+
+            if (scheme != null && (uriScheme == null || !scheme.matcher(uriScheme).matches())) {
                 return false
             }
 
-            if (host != null && (uri.host == null || !host.matcher(uri.host).matches())) {
+            if (host != null && (uriHost == null || !host.matcher(uriHost).matches())) {
                 return false
             }
 
