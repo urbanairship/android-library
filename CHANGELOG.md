@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.0.5 - December 5, 2025
+
+Patch release that fixes an issue with opening the Compose Message Center.
+
+### Changes
+- Fixed opening of Compose MessageCenterActivity
+- Merged PushManagerExtensions into PushManager
+
 ## Version 20.0.4 - November 25, 2025
 
 Patch release that fixes a potential race condition when setting metadata and creating action arguments concurrently. Apps experiencing crashes when processing push notifications should update to resolve this issue.
