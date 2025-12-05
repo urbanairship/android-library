@@ -52,6 +52,7 @@ import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -126,6 +127,12 @@ public open class PushManager @VisibleForTesting internal constructor(
     internal val statusObserver: PushNotificationStatusObserver
 
     /**
+     * Airship [PushNotificationStatus] state flow.
+     */
+    public val pushNotificationStatusFlow: StateFlow<PushNotificationStatus>
+        get() = statusObserver.pushNotificationStatusFlow
+
+    /**
      * @hide
      */
     init {
@@ -145,7 +152,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
     /**
      * Creates a PushManager. Normally only one push manager instance should exist, and
-     * can be accessed from [com.urbanairship.Airship.getPushManager].
+     * can be accessed from [com.urbanairship.Airship.push].
      *
      * @param context Application context
      * @param preferenceDataStore The preferences data store.
@@ -426,7 +433,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     /**
      * Enables user notifications on Airship and tries to prompt for the notification permission.
      *
-     * @note This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
+     * Note: This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
      *
      * @param consumer A consumer that will be passed the success of the permission prompt.
      */
@@ -439,7 +446,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     /**
      * Enables user notifications on Airship and tries to prompt for the notification permission.
      *
-     * @note This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
+     * Note: This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
      *
      * @param promptFallback Prompt fallback if the the notification permission is silently denied.
      */
@@ -452,7 +459,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     /**
      * Enables user notifications on Airship and tries to prompt for the notification permission.
      *
-     * @note This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
+     * Note: This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
      *
      * @param promptFallback Prompt fallback if the the notification permission is silently denied.
      * @param consumer A consumer that will be passed the success of the permission prompt.
@@ -462,14 +469,30 @@ public open class PushManager @VisibleForTesting internal constructor(
         consumer: Consumer<Boolean>?
     ) {
         scope.launch {
-            preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
-            val status = permissionsManager.requestPermission(
-                permission = Permission.DISPLAY_NOTIFICATIONS,
-                fallback = promptFallback
-            )
-            consumer?.accept(status.permissionStatus == PermissionStatus.GRANTED)
-            updateStatusObserver()
+            val status = enableUserNotificationsSuspending(promptFallback)
+            consumer?.accept(status)
         }
+    }
+
+    /**
+     * Enables user notifications on Airship and tries to prompt for the notification permission.
+     *
+     * Note: This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
+     *
+     * @param promptFallback Prompt fallback if the the notification permission is silently denied.
+     * @return `true` if the notifications are enabled, otherwise `false.
+     */
+    public suspend fun enableUserNotificationsSuspending(
+        promptFallback: PermissionPromptFallback,
+    ) : Boolean {
+        preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
+        val status = permissionsManager.requestPermission(
+            permission = Permission.DISPLAY_NOTIFICATIONS,
+            fallback = promptFallback
+        )
+        updateStatusObserver()
+
+        return status.permissionStatus == PermissionStatus.GRANTED
     }
 
     /** Whether the app is capable of receiving push (`true` if a push token is present). */

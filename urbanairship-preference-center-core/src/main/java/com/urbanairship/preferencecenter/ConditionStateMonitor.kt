@@ -4,7 +4,6 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.Airship
 import com.urbanairship.preferencecenter.data.Condition
 import com.urbanairship.push.PushManager
-import com.urbanairship.push.pushNotificationStatusFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
