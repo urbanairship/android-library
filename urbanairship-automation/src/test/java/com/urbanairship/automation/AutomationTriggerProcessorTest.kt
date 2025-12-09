@@ -10,6 +10,7 @@ import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.TriggerStoreInterface
 import com.urbanairship.automation.engine.TriggerableState
 import com.urbanairship.automation.engine.AutomationScheduleState
+import com.urbanairship.automation.engine.EventsHistory
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.engine.triggerprocessor.TriggerData
@@ -30,7 +31,9 @@ import org.junit.runner.RunWith
 public class AutomationTriggerProcessorTest: BaseTestCase() {
     private val store: TriggerStoreInterface = AutomationStore.createInMemoryDatabase(ApplicationProvider.getApplicationContext())
     private val clock = TestClock()
-    private val processor = AutomationTriggerProcessor(store, clock)
+
+    private val eventsHistory = EventsHistory(clock)
+    private val processor = AutomationTriggerProcessor(store, eventsHistory, clock)
 
     @Test
     public fun testRestoreSchedules(): TestResult = runTest {
@@ -212,6 +215,60 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
 
             processor.setPaused(true)
             processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
+
+            expectNoEvents()
+        }
+    }
+
+    @Test
+    public fun testReplayEvents(): TestResult = runTest {
+        val triggerOld = AutomationTrigger.Event(
+            EventAutomationTrigger(
+                id = "trigger-id",
+                type = EventAutomationTriggerType.APP_INIT,
+                goal = 2.0,
+                predicate = null
+            )
+        )
+
+        val schedule = defaultSchedule(triggerOld)
+        val event = AutomationEvent.Event(EventAutomationTriggerType.APP_INIT)
+
+        processor.getTriggerResults().test {
+            processor.updateSchedules(listOf(schedule))
+            processor.processEvent(event)
+            eventsHistory.add(event)
+
+            expectNoEvents()
+
+            val trigger = AutomationTrigger.Event(
+                EventAutomationTrigger(
+                    id = "new-trigger-id",
+                    type = EventAutomationTriggerType.APP_INIT,
+                    goal = 1.0,
+                    predicate = null
+                )
+            )
+
+            val newSchedule = AutomationScheduleData(
+                schedule = AutomationSchedule(
+                    identifier = "new-schedule-id",
+                    data = AutomationSchedule.ScheduleData.Actions(actions = JsonValue.NULL),
+                    triggers = listOf(trigger),
+                    group = null,
+                    created = 0U
+                ),
+                scheduleState = AutomationScheduleState.IDLE,
+                scheduleStateChangeDate = clock.currentTimeMillis(),
+                executionCount = 0,
+                triggerSessionId = UUID.randomUUID().toString()
+            )
+
+            processor.updateSchedules(listOf(schedule, newSchedule))
+            val result = awaitItem()
+
+            assertEquals("new-schedule-id", result.scheduleId)
+            assertEquals(TriggerExecutionType.EXECUTION, result.triggerExecutionType)
 
             expectNoEvents()
         }

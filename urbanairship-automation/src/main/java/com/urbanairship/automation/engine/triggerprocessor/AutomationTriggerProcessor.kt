@@ -8,6 +8,7 @@ import com.urbanairship.automation.AutomationTrigger
 import com.urbanairship.automation.engine.AutomationEvent
 import com.urbanairship.automation.engine.AutomationScheduleData
 import com.urbanairship.automation.engine.AutomationScheduleState
+import com.urbanairship.automation.engine.EventsHistory
 import com.urbanairship.automation.engine.TriggerStoreInterface
 import com.urbanairship.automation.engine.TriggerableState
 import com.urbanairship.automation.engine.TriggeringInfo
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.update
 
 internal class AutomationTriggerProcessor(
     private val store: TriggerStoreInterface,
+    private val history: EventsHistory,
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) {
     private val triggerResultsFlow = MutableSharedFlow<TriggerResult>()
@@ -35,17 +37,19 @@ internal class AutomationTriggerProcessor(
     fun getTriggerResults() : Flow<TriggerResult> = triggerResultsFlow
 
     suspend fun processEvent(event: AutomationEvent) {
+        ingestEvent(event, preparedTriggers.values.flatMap { it })
+    }
 
-        trackStateChange(event)
+    private suspend fun ingestEvent(event: AutomationEvent, triggers: List<PreparedTrigger>, isReplay: Boolean = false) {
+        if (!isReplay) {
+            trackStateChange(event)
+        }
 
         if (isPausedFlow.value) {
             return
         }
 
-        val results = this.preparedTriggers.values.flatMap { triggers ->
-            triggers.map { it.process(event) }
-        }.filterNotNull()
-
+        val results = triggers.mapNotNull { it.process(event) }
         for (item in results.sortedWith(compareBy { it.priority })) {
             val result = item.triggerResult ?: continue
             emit(result)
@@ -74,6 +78,8 @@ internal class AutomationTriggerProcessor(
     suspend fun updateSchedules(datas: List<AutomationScheduleData>) {
         val sorted = datas.sortedWith(compareBy { it.schedule.priority })
 
+        val allNewTriggers = mutableListOf<PreparedTrigger>()
+
         for (data in sorted) {
             val schedule = data.schedule
             schedule.group?.let { scheduleGroups[schedule.identifier] = it }
@@ -97,6 +103,7 @@ internal class AutomationTriggerProcessor(
                         TriggerExecutionType.EXECUTION
                     )
                     new.add(prepared)
+                    allNewTriggers.add(prepared)
                 }
             }
 
@@ -118,10 +125,12 @@ internal class AutomationTriggerProcessor(
                         TriggerExecutionType.DELAY_CANCELLATION
                     )
                     new.add(prepared)
+                    allNewTriggers.add(prepared)
                 }
             }
 
             preparedTriggers[schedule.identifier] = new
+
             val newIds = new.map { it.trigger.id }.toSet()
             val oldIds = old.map { it.trigger.id }.toSet()
 
@@ -135,6 +144,12 @@ internal class AutomationTriggerProcessor(
             }
 
             this.updateScheduleState(schedule.identifier, data.scheduleState)
+        }
+
+        if (allNewTriggers.isNotEmpty()) {
+            history.getEvents().forEach { event ->
+                ingestEvent(event, allNewTriggers, isReplay = true)
+            }
         }
     }
 

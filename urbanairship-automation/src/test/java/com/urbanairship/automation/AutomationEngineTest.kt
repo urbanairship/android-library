@@ -12,6 +12,7 @@ import com.urbanairship.automation.engine.AutomationPreparer
 import com.urbanairship.automation.engine.AutomationScheduleData
 import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.AutomationStore
+import com.urbanairship.automation.engine.EventsHistory
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
@@ -113,7 +114,8 @@ public class AutomationEngineTest {
         clock = clock,
         sleeper = sleeper,
         dispatcher = testDispatcher,
-        automationStoreMigrator = automationStoreMigrator
+        automationStoreMigrator = automationStoreMigrator,
+        eventsHistory = EventsHistory()
     )
 
     @Before
