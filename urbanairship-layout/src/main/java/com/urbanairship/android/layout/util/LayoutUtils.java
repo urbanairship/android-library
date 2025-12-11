@@ -33,7 +33,6 @@ import com.urbanairship.android.layout.R;
 import com.urbanairship.android.layout.info.BaseToggleLayoutInfo;
 import com.urbanairship.android.layout.model.Background;
 import com.urbanairship.android.layout.model.ButtonLayoutModel;
-import com.urbanairship.android.layout.model.LabelModel;
 import com.urbanairship.android.layout.model.TextInputModel;
 import com.urbanairship.android.layout.property.Border;
 import com.urbanairship.android.layout.property.Color;
@@ -43,7 +42,6 @@ import com.urbanairship.android.layout.property.MarkdownOptionsKt;
 import com.urbanairship.android.layout.property.SwitchStyle;
 import com.urbanairship.android.layout.property.TapEffect;
 import com.urbanairship.android.layout.property.TextAppearance;
-import com.urbanairship.android.layout.property.TextInputTextAppearance;
 import com.urbanairship.android.layout.property.TextStyle;
 import com.urbanairship.android.layout.widget.Clippable;
 import com.urbanairship.util.UAStringUtil;
@@ -53,6 +51,7 @@ import java.util.List;
 
 import androidx.annotation.ColorInt;
 import androidx.annotation.FloatRange;
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -60,6 +59,8 @@ import androidx.annotation.RestrictTo;
 import androidx.appcompat.widget.AppCompatEditText;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.graphics.ColorUtils;
+import androidx.core.graphics.TypefaceCompat;
+import androidx.core.math.MathUtils;
 
 /**
  * Helpers for layout rendering.
@@ -416,21 +417,34 @@ public final class LayoutUtils {
                 .add(textColor)
                 .build());
 
-        int typefaceFlags = Typeface.NORMAL;
+        int fontWeight = 0;
+        boolean italic = false;
         int paintFlags = Paint.ANTI_ALIAS_FLAG | Paint.SUBPIXEL_TEXT_FLAG;
 
         for (TextStyle style : textAppearance.getTextStyles()) {
             switch (style) {
                 case BOLD:
-                    typefaceFlags |= Typeface.BOLD;
+                    // Set the font weight to Bold (700).
+                    fontWeight = 700;
                     break;
                 case ITALIC:
-                    typefaceFlags |= Typeface.ITALIC;
+                    italic = true;
                     break;
                 case UNDERLINE:
                     paintFlags |= Paint.UNDERLINE_TEXT_FLAG;
                     break;
             }
+        }
+
+        // If font_weight is provided, fallback to it.
+        if (textAppearance.getFontWeight() != 0) {
+            fontWeight = roundFontWeight(textAppearance.getFontWeight());
+        }
+
+        // If neither font_weight nor bold are provided, fallback to normal weight.
+        if (fontWeight == 0) {
+            // Default to Regular Weight (400).
+            fontWeight = 400;
         }
 
         switch (textAppearance.getAlignment()) {
@@ -445,9 +459,10 @@ public final class LayoutUtils {
                 break;
         }
 
-        Typeface typeface = getTypeFace(textView.getContext(), textAppearance.getFontFamilies());
+        Typeface family = getTypeFace(context, textAppearance.getFontFamilies());
+        Typeface typeface = TypefaceCompat.create(context, family, fontWeight, italic);
 
-        textView.setTypeface(typeface, typefaceFlags);
+        textView.setTypeface(typeface);
         textView.setPaintFlags(paintFlags);
     }
 
@@ -595,5 +610,14 @@ public final class LayoutUtils {
                 dp,
                 context.getResources().getDisplayMetrics()
         );
+    }
+
+    @IntRange(from = 100, to = 900)
+    private static int roundFontWeight(int fontWeight) {
+        // Round to nearest hundred
+        int rounded = Math.round(fontWeight / 100f) * 100;
+
+        // Clamp to valid range [100, 900]
+        return MathUtils.clamp(rounded, 100, 900);
     }
 }
