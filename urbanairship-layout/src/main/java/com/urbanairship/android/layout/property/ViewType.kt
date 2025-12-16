@@ -37,6 +37,7 @@ public enum class ViewType(
     ICON_VIEW("icon_view"),
     SCORE_CONTROLLER("score_controller"),
     SCORE_TOGGLE_LAYOUT("score_toggle_layout"),
+    STACK_IMAGE_BUTTON("stack_image_button"),
     UNKNOWN("");
 
     public val isFormInput: Boolean

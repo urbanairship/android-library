@@ -62,6 +62,7 @@ import com.urbanairship.android.layout.property.ViewType.SCORE
 import com.urbanairship.android.layout.property.ViewType.SCORE_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.SCORE_TOGGLE_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.SCROLL_LAYOUT
+import com.urbanairship.android.layout.property.ViewType.STACK_IMAGE_BUTTON
 import com.urbanairship.android.layout.property.ViewType.STATE_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.STORY_INDICATOR
 import com.urbanairship.android.layout.property.ViewType.TEXT_INPUT
@@ -80,7 +81,9 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalList
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
+import com.urbanairship.json.requireList
 import com.urbanairship.json.requireMap
+import kotlin.collections.map
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -124,6 +127,7 @@ public sealed class ViewInfo : View {
                 ICON_VIEW -> IconViewInfo(json)
                 SCORE_CONTROLLER -> ScoreControllerInfo(json)
                 SCORE_TOGGLE_LAYOUT -> ScoreToggleLayoutInfo(json)
+                STACK_IMAGE_BUTTON -> StackImageButtonInfo(json)
                 UNKNOWN -> throw JsonException("Unknown view type! '${json.requireField<String>("type")}'")
             }
         }
@@ -683,6 +687,83 @@ internal class ImageButtonInfo(json: JsonMap) : ButtonInfo(json) {
 internal class CheckboxInfo(json: JsonMap) : CheckableInfo(json), RecentlyIdentifiable by recentlyIdentifiable(json) {
     val reportingValue: JsonValue = json.requireField("reporting_value")
 }
+
+internal class StackImageButtonInfo(json: JsonMap) : ButtonInfo(json) {
+    val items = json.requireField<JsonList>("items").map { StackItemInfo.fromJson(it) }
+    val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it.requireField("items")) }
+
+    internal class ViewOverrides(json: JsonValue) {
+        val cleanJson = json.requireList().toJsonValue().list?.get(0)
+        val overrides = cleanJson?.let { safeJson ->
+            val itemsList = safeJson.map?.requireField<JsonList>("value")
+            itemsList?.map { item ->
+                ViewPropertyOverride(
+                    safeJson.toJsonValue(),
+                    valueParser = { json ->
+                        json.list?.map { StackItemInfo.fromJson(it) }
+                    }
+                )
+            }
+        }
+    }
+
+    internal enum class StackItemType(
+        private val value: String
+    ) {
+        SHAPE("shape"), ICON("icon"), IMAGE_URL("image_url"), UNKNOWN("");
+
+        internal companion object {
+            internal fun fromJson(value: JsonValue): StackItemType {
+                val type = value.requireString()
+                return StackItemType.entries.firstOrNull { it.value == type } ?: UNKNOWN
+            }
+        }
+    }
+}
+
+
+internal sealed interface StackItemInfo {
+
+    data class ShapeItem(
+        val shape: Shape
+    ) : StackItemInfo
+
+    data class IconItem(
+        val icon: Image
+    ) : StackItemInfo
+
+    data class ImageItem(
+        val imageUrl: String,
+        val mediaFit: MediaFit,
+        val cropPosition: Position,
+    ) : StackItemInfo
+
+    companion object {
+        fun fromJson(json: JsonValue): StackItemInfo {
+            val content = json.requireMap()
+            val type = StackImageButtonInfo.StackItemType.fromJson(content.require("type"))
+            return when (type) {
+                StackImageButtonInfo.StackItemType.SHAPE -> {
+                    val shapeData = content.requireField<JsonValue>("shape")
+                    ShapeItem(shape = Shape.fromJson(shapeData))
+                }
+                StackImageButtonInfo.StackItemType.ICON -> {
+                    val iconData = content.requireField<JsonValue>("icon")
+                    IconItem(icon = Image.fromJson(iconData))
+                }
+                StackImageButtonInfo.StackItemType.IMAGE_URL -> {
+                    ImageItem(
+                        imageUrl = content.requireField<String>("url"),
+                        mediaFit = MediaFit.from(content.requireField("media_fit")),
+                        cropPosition = Position.fromJson(content.requireField("position"))
+                    )
+                }
+                else -> throw IllegalArgumentException("Unknown StackItem type: $type")
+            }
+        }
+    }
+}
+
 
 internal class ToggleInfo(
     json: JsonMap

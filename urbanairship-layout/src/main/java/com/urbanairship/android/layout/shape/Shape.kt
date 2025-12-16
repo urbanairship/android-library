@@ -129,7 +129,7 @@ public class Shape public constructor(
             return drawable
         }
 
-        private fun buildLayerDrawable(
+        internal fun buildLayerDrawable(
             context: Context, shapes: List<Shape>, icon: Image.Icon?, enabledState: Boolean
         ): LayerDrawable {
             val layerCount = shapes.size + (if (icon != null) 1 else 0)

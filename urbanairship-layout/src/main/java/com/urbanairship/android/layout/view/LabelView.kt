@@ -8,6 +8,7 @@ import android.view.accessibility.AccessibilityEvent
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.info.LabelInfo
 import com.urbanairship.android.layout.model.Background

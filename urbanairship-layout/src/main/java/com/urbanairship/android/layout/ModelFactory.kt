@@ -39,6 +39,7 @@ import com.urbanairship.android.layout.info.ScoreControllerInfo
 import com.urbanairship.android.layout.info.ScoreInfo
 import com.urbanairship.android.layout.info.ScoreToggleLayoutInfo
 import com.urbanairship.android.layout.info.ScrollLayoutInfo
+import com.urbanairship.android.layout.info.StackImageButtonInfo
 import com.urbanairship.android.layout.info.StateControllerInfo
 import com.urbanairship.android.layout.info.StoryIndicatorInfo
 import com.urbanairship.android.layout.info.TextInputInfo
@@ -74,6 +75,7 @@ import com.urbanairship.android.layout.model.RadioInputToggleLayoutModel
 import com.urbanairship.android.layout.model.ScoreController
 import com.urbanairship.android.layout.model.ScoreInputToggleLayoutModel
 import com.urbanairship.android.layout.model.ScoreModel
+import com.urbanairship.android.layout.model.StackImageButtonModel
 import com.urbanairship.android.layout.model.StateController
 import com.urbanairship.android.layout.model.StoryIndicatorModel
 import com.urbanairship.android.layout.model.TextInputModel
@@ -317,7 +319,7 @@ internal class ThomasModelFactory : ModelFactory {
                 radio = radio?.let { states[it] as? SharedState<State.Radio> },
                 score = score?.let { states[it] as? SharedState<State.Score> },
                 layout = layoutFlow,
-                thomasState = makeThomasState(formFlow, layoutFlow),
+                thomasState = makeThomasState(formFlow, layoutFlow, pagerFlow),
                 pagerTracker = pagerTracker
             )
         }
@@ -633,6 +635,13 @@ internal class ThomasModelFactory : ModelFactory {
         )
         is IconViewInfo -> IconModel(
             viewInfo = info,
+            environment = environment,
+            properties = properties
+        )
+        is StackImageButtonInfo -> StackImageButtonModel(
+            viewInfo = info,
+            formState = environment.layoutState.thomasForm,
+            pagerState = environment.layoutState.pager,
             environment = environment,
             properties = properties
         )

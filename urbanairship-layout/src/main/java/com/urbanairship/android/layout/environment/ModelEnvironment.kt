@@ -95,6 +95,8 @@ internal sealed class LayoutEvent {
 
     data object PagerPrevious : LayoutEvent()
 
+    data object PagerPauseToggle : LayoutEvent()
+
     data class Finish(val cancel: Boolean = false) : LayoutEvent()
 }
 

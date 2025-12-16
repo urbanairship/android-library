@@ -7,6 +7,7 @@ import androidx.annotation.VisibleForTesting
 import com.urbanairship.Provider
 import com.urbanairship.Airship
 import com.urbanairship.Platform
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State

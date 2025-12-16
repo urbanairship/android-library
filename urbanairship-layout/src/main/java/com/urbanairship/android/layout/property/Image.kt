@@ -113,7 +113,9 @@ public sealed class Image(
             CLOSE("close", R.drawable.ua_layout_ic_close),
             CHECKMARK("checkmark", R.drawable.ua_layout_ic_check),
             ARROW_FORWARD("forward_arrow", R.drawable.ua_layout_ic_arrow_forward),
+            CHEVRON_FORWARD("chevron_forward", R.drawable.ua_layout_ic_arrow_forward),
             ARROW_BACK("back_arrow", R.drawable.ua_layout_ic_arrow_back),
+            CHEVRON_BACKWARD("chevron_backward", R.drawable.ua_layout_ic_arrow_back),
             ERROR_CIRCLE("exclamationmark_circle_fill", R.drawable.ua_layout_ic_error_circle_filled),
             ASTERISK("asterisk", R.drawable.ua_layout_ic_asterisk),
             ASTERISK_CIRCLE("asterisk_circle_fill", R.drawable.ua_layout_ic_asterisk_circle_filled),
@@ -121,7 +123,9 @@ public sealed class Image(
             STAR_FILL("star_fill", R.drawable.ua_layout_ic_star_fill),
             HEART("heart", R.drawable.ua_layout_ic_heart),
             HEART_FILL("heart_fill", R.drawable.ua_layout_ic_heart_fill),
-            PROGRESS_SPINNER("progress_spinner", R.drawable.ua_layout_animated_progress_spinner);
+            PROGRESS_SPINNER("progress_spinner", R.drawable.ua_layout_animated_progress_spinner),
+            PAUSE("pause", R.drawable.ua_layout_ic_pause),
+            PLAY("play", R.drawable.ua_layout_ic_play);
 
             companion object {
 
