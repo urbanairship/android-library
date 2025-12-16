@@ -4,6 +4,13 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.0.6 - December 15, 2025
+
+Patch release to fix a regression in `NotificationIntentProcessor` that interfered with handling of `PendingIntent`s set on custom built notifications.
+
+### Changes
+- Fixed issue with custom notification handling of `PendingIntent`s in `NotificationIntentProcessor`
+
 ## Version 20.0.5 - December 5, 2025
 
 Patch release that fixes an issue with opening the Compose Message Center.
