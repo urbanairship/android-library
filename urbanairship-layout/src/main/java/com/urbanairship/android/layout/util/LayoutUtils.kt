@@ -25,12 +25,10 @@ import android.widget.ImageButton
 import android.widget.TextView
 import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
-import androidx.annotation.IntRange
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.graphics.ColorUtils
-import androidx.core.graphics.TypefaceCompat
 import com.urbanairship.Fonts
 import com.urbanairship.android.layout.info.BaseToggleLayoutInfo
 import com.urbanairship.android.layout.model.Background
@@ -394,27 +392,15 @@ internal object LayoutUtils {
                 .build()
         )
 
-        var fontWeight = 0
-        var italic = false
+        var typefaceFlags = Typeface.NORMAL
         var paintFlags = Paint.ANTI_ALIAS_FLAG or Paint.SUBPIXEL_TEXT_FLAG
 
         for (style in textAppearance.textStyles) {
             when (style) {
-                TextStyle.BOLD -> fontWeight = 700 // Set the font weight to Bold (700).
-                TextStyle.ITALIC -> italic = true
+                TextStyle.BOLD -> typefaceFlags = typefaceFlags or Typeface.BOLD
+                TextStyle.ITALIC -> typefaceFlags = typefaceFlags or Typeface.ITALIC
                 TextStyle.UNDERLINE -> paintFlags = paintFlags or Paint.UNDERLINE_TEXT_FLAG
             }
-        }
-
-        // If font_weight is provided, fallback to it.
-        if (textAppearance.fontWeight != 0) {
-            fontWeight = roundFontWeight(textAppearance.fontWeight)
-        }
-
-        // If neither font_weight nor bold are provided, fallback to normal weight.
-        if (fontWeight == 0) {
-            // Default to Regular Weight (400).
-            fontWeight = 400
         }
 
         when (textAppearance.alignment) {
@@ -423,10 +409,9 @@ internal object LayoutUtils {
             TextAlignment.END -> textView.gravity = Gravity.END or Gravity.CENTER_VERTICAL
         }
 
-        val family = getTypeFace(context, textAppearance.fontFamilies)
-        val typeface = TypefaceCompat.create(context, family, fontWeight, italic)
+        val typeface = LayoutUtils.getTypeFace(textView.context, textAppearance.fontFamilies)
 
-        textView.setTypeface(typeface)
+        textView.setTypeface(typeface, typefaceFlags)
         textView.paintFlags = paintFlags
     }
 
@@ -577,14 +562,5 @@ internal object LayoutUtils {
             dp.toFloat(),
             context.resources.displayMetrics
         ).toInt()
-    }
-
-    @IntRange(from = 100, to = 900)
-    private fun roundFontWeight(fontWeight: Int): Int {
-        // Round to nearest hundred
-        val rounded = (fontWeight / 100f).roundToInt() * 100
-
-        // Clamp to valid range [100, 900]
-        return rounded.coerceIn(100, 900)
     }
 }

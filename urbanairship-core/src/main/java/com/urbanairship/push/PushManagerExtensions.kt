@@ -2,6 +2,7 @@
 @file:JvmName("-PushManagerExtensions")
 package com.urbanairship.push
 
+import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionPromptFallback
 import com.urbanairship.permission.PermissionStatus
 import kotlinx.coroutines.flow.StateFlow
@@ -9,7 +10,6 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * Airship notification status state flow.
  */
-@Deprecated("Use pushNotificationStatusFlow property on PushManager instead", ReplaceWith("pushNotificationStatusFlow"))
 public val PushManager.pushNotificationStatusFlow: StateFlow<PushNotificationStatus>
 get() {
     return this.statusObserver.pushNotificationStatusFlow

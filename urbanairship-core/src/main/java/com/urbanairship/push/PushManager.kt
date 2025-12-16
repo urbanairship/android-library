@@ -51,7 +51,6 @@ import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -125,12 +124,6 @@ public open class PushManager @VisibleForTesting internal constructor(
     public var foregroundNotificationDisplayPredicate: Predicate<PushMessage>? = null
 
     internal val statusObserver: PushNotificationStatusObserver
-
-    /**
-     * Airship [PushNotificationStatus] state flow.
-     */
-    public val pushNotificationStatusFlow: StateFlow<PushNotificationStatus>
-        get() = statusObserver.pushNotificationStatusFlow
 
     /**
      * @hide
@@ -435,7 +428,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     /**
      * Enables user notifications on Airship and tries to prompt for the notification permission.
      *
-     * Note: This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
+     * @note This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
      *
      * @param consumer A consumer that will be passed the success of the permission prompt.
      */
@@ -448,7 +441,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     /**
      * Enables user notifications on Airship and tries to prompt for the notification permission.
      *
-     * Note: This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
+     * @note This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
      *
      * @param promptFallback Prompt fallback if the the notification permission is silently denied.
      */
@@ -461,7 +454,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     /**
      * Enables user notifications on Airship and tries to prompt for the notification permission.
      *
-     * Note: This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
+     * @note This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
      *
      * @param promptFallback Prompt fallback if the the notification permission is silently denied.
      * @param consumer A consumer that will be passed the success of the permission prompt.
@@ -471,30 +464,14 @@ public open class PushManager @VisibleForTesting internal constructor(
         consumer: Consumer<Boolean>?
     ) {
         scope.launch {
-            val status = enableUserNotificationsSuspending(promptFallback)
-            consumer?.accept(status)
+            preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
+            val status = permissionsManager.requestPermission(
+                permission = Permission.DISPLAY_NOTIFICATIONS,
+                fallback = promptFallback
+            )
+            consumer?.accept(status.permissionStatus == PermissionStatus.GRANTED)
+            updateStatusObserver()
         }
-    }
-
-    /**
-     * Enables user notifications on Airship and tries to prompt for the notification permission.
-     *
-     * Note: This does NOT enable the [com.urbanairship.PrivacyManager.Feature.PUSH] feature.
-     *
-     * @param promptFallback Prompt fallback if the the notification permission is silently denied.
-     * @return `true` if the notifications are enabled, otherwise `false.
-     */
-    public suspend fun enableUserNotificationsSuspending(
-        promptFallback: PermissionPromptFallback,
-    ) : Boolean {
-        preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
-        val status = permissionsManager.requestPermission(
-            permission = Permission.DISPLAY_NOTIFICATIONS,
-            fallback = promptFallback
-        )
-        updateStatusObserver()
-
-        return status.permissionStatus == PermissionStatus.GRANTED
     }
 
     /** Whether the app is capable of receiving push (`true` if a push token is present). */

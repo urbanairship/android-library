@@ -165,8 +165,6 @@ internal class NotificationIntentProcessor(
             } catch (_: PendingIntent.CanceledException) {
                 UALog.d("Failed to send notification's contentIntent, already canceled.")
             }
-
-            return
         }
 
         if (!autoLaunchApplication) {

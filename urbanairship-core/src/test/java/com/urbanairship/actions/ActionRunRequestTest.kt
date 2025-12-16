@@ -22,8 +22,6 @@ import org.junit.runner.RunWith
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.LooperMode
-import java.util.Collections
-import java.util.ConcurrentModificationException
 
 @Config(sdk = [28])
 @LooperMode(LooperMode.Mode.LEGACY)
@@ -357,96 +355,6 @@ public class ActionRunRequestTest {
             action.runArgs?.metadata?.getString(ActionArguments.REGISTRY_ACTION_NAME_METADATA)
         )
         assertEquals("Missing metadata", "meta", action.runArgs?.metadata?.getString("so"))
-    }
-
-    /**
-     * Test that reproduces ConcurrentModificationException when setting metadata
-     * and creating action arguments concurrently.
-     *
-     * This test reproduces the issue described in:
-     * https://github.com/urbanairship/android-library/issues/258
-     */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    @Test
-    public fun testConcurrentModificationExceptionWithMetadata() {
-        val action = TestAction()
-        actionRegistry.registerEntry(setOf("test_action")) { ActionRegistry.Entry(action) }
-
-        val initialMetadata = Bundle()
-        initialMetadata.putString("key1", "value1")
-        initialMetadata.putString("key2", "value2")
-
-        val request = createRequest("test_action", actionRegistry)
-            .setMetadata(initialMetadata)
-            .setDispatcher(UnconfinedTestDispatcher())
-
-        // Track exceptions caught during concurrent execution
-        val exceptions = Collections.synchronizedList(mutableListOf<Throwable>())
-        val maxIterations = 400
-        val threadCount = 20
-
-        // Create multiple threads that will concurrently:
-        // 1. Call setMetadata() repeatedly
-        // 2. Call runSync() which internally calls createActionArguments()
-        val threads = mutableListOf<Thread>()
-
-        // Half the threads will set metadata
-        for (i in 0 until threadCount / 2) {
-            threads.add(Thread {
-                try {
-                    for (j in 0 until maxIterations) {
-                        val newMetadata = Bundle()
-                        newMetadata.putString("key1", "value1_${i}_$j")
-                        newMetadata.putString("key2", "value2_${i}_$j")
-                        newMetadata.putString("key3", "value3_${i}_$j")
-                        request.setMetadata(newMetadata)
-                    }
-                } catch (e: Throwable) {
-                    exceptions.add(e)
-                }
-            })
-        }
-
-        // Other half will run the action (which calls createActionArguments)
-        for (i in 0 until threadCount / 2) {
-            threads.add(Thread {
-                try {
-                    for (j in 0 until maxIterations) {
-                        request.runSync()
-                        // Small delay to increase chance of race condition
-                        Thread.sleep(0, 1)
-                    }
-                } catch (e: Throwable) {
-                    exceptions.add(e)
-                }
-            })
-        }
-
-        // Start all threads
-        threads.forEach { it.start() }
-
-        // Wait for all threads to complete
-        threads.forEach { it.join() }
-
-        // Check if we caught any ConcurrentModificationException
-        val concurrentModExceptions = exceptions.filterIsInstance<ConcurrentModificationException>()
-
-        // The test should reproduce the bug, so we expect at least one ConcurrentModificationException
-        // If the fix is applied, this test should pass (no exceptions)
-        if (concurrentModExceptions.isNotEmpty()) {
-            // Bug reproduced - this is expected before the fix
-            println("Reproduced ConcurrentModificationException: ${concurrentModExceptions.size} occurrences")
-            concurrentModExceptions.first().printStackTrace()
-        } else if (exceptions.isNotEmpty()) {
-            // Other exceptions occurred
-            println("Other exceptions occurred: ${exceptions.joinToString { it.javaClass.simpleName + ": " + it.message }}")
-            exceptions.first().printStackTrace()
-        }
-
-        // Note: This test is designed to reproduce the bug. With the fix applied,
-        // no exceptions should occur. The assertion will pass if no exceptions occurred
-        // or if ConcurrentModificationException was caught (reproducing the bug).
-        assertTrue(exceptions.isEmpty())
     }
 
     private inner class TestActionCompletionCallback : ActionCompletionCallback {

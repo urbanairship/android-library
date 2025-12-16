@@ -2,7 +2,6 @@
 package com.urbanairship.android.layout.property
 
 import androidx.annotation.Dimension
-import androidx.annotation.IntRange
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
@@ -23,10 +22,6 @@ public open class TextAppearance {
     public val textStyles: List<TextStyle>
 
     @JvmField
-    @IntRange(from = 0, to = 900)
-    public val fontWeight: Int = 0
-
-    @JvmField
     public val fontFamilies: List<String>
 
     protected constructor(textAppearance: TextAppearance) {
@@ -34,7 +29,6 @@ public open class TextAppearance {
         this.fontSize = textAppearance.fontSize
         this.alignment = textAppearance.alignment
         this.textStyles = textAppearance.textStyles
-        this.fontWeight = textAppearance.fontWeight
         this.fontFamilies = textAppearance.fontFamilies
     }
 
@@ -43,14 +37,12 @@ public open class TextAppearance {
         fontSize: Int,
         alignment: TextAlignment,
         textStyles: List<TextStyle>,
-        fontWeight: Int,
         fontFamilies: List<String>
     ) {
         this.color = color
         this.fontSize = fontSize
         this.alignment = alignment
         this.textStyles = textStyles
-        this.fontWeight = fontWeight
         this.fontFamilies = fontFamilies
     }
 
@@ -59,7 +51,6 @@ public open class TextAppearance {
         private const val KEY_COLOR = "color"
         private const val KEY_ALIGNMENT = "alignment"
         private const val KEY_STYLES = "styles"
-        private const val KEY_FONT_WEIGHT = "font_weight"
         private const val KEY_FONT_FAMILIES = "font_families"
 
         @JvmStatic
@@ -72,7 +63,6 @@ public open class TextAppearance {
                 fontSize = content.optionalField(KEY_FONT_SIZE) ?: 14,
                 alignment = content[KEY_ALIGNMENT]?.let(TextAlignment::from) ?: TextAlignment.CENTER,
                 textStyles = content.optionalList(KEY_STYLES)?.map(TextStyle::from) ?: emptyList(),
-                fontWeight = content.optionalField(KEY_FONT_WEIGHT) ?: 0,
                 fontFamilies = content.optionalList(KEY_FONT_FAMILIES)?.mapNotNull { it.string } ?: emptyList()
             )
         }
