@@ -5,8 +5,12 @@
         <activity
             android:name="com.urbanairship.messagecenter.compose.ui.MessageCenterActivity"
             android:label="Message Center"
-            android:exported="false"
-        />
+            android:exported="false" >
+            <intent-filter android:priority="-1">
+                <action android:name="com.urbanairship.VIEW_RICH_PUSH_INBOX" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

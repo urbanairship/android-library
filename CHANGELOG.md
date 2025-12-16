@@ -4,10 +4,32 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.0.6 - December 15, 2025
+
+Patch release to fix a regression in `NotificationIntentProcessor` that interfered with handling of `PendingIntent`s set on custom built notifications.
+
+### Changes
+- Fixed issue with custom notification handling of `PendingIntent`s in `NotificationIntentProcessor`
+
+## Version 20.0.5 - December 5, 2025
+
+Patch release that fixes an issue with opening the Compose Message Center.
+
+### Changes
+- Fixed opening of Compose MessageCenterActivity
+- Merged PushManagerExtensions into PushManager
+
+## Version 20.0.4 - November 25, 2025
+
+Patch release that fixes a potential race condition when setting metadata and creating action arguments concurrently. Apps experiencing crashes when processing push notifications should update to resolve this issue.
+
+### Changes
+- Fixed potential `ConcurrentModificationException` in `ActionRunRequest` when metadata is modified concurrently with action execution, most likely occurring when processing incoming push notifications ([#258](https://github.com/urbanairship/android-library/issues/258)).
+
+
 ## Version 20.0.3 - November 14, 2025
 
-Patch release that fixes YouTube video playback in In-App Automation and Scenes and minor fixes for the Preference Center Compose module.
-Applications that use YouTube videos in Scenes and non-html In-App Automations (IAA) must update to resolve playback errors.
+Patch release that fixes YouTube video playback in In-App Automation and Scenes and minor fixes for the Preference Center Compose module. Applications that use YouTube videos in Scenes and non-html In-App Automations (IAA) must update to resolve playback errors.
 
 ### Changes
 - Fixed YouTube video embedding to comply with YouTube API Client identification requirements.
