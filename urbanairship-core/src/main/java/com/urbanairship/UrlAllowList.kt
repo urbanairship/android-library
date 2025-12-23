@@ -313,6 +313,7 @@ public class UrlAllowList public constructor() {
         public fun createDefaultUrlAllowList(airshipConfigOptions: AirshipConfigOptions): UrlAllowList {
             val urlAllowList = UrlAllowList()
             urlAllowList.addEntry("https://*.urbanairship.com")
+            urlAllowList.addEntry("https://*.airship.com")
             urlAllowList.addEntry("https://*.asnapieu.com")
             urlAllowList.addEntry("sms:", Scope.OPEN_URL)
             urlAllowList.addEntry("mailto:", Scope.OPEN_URL)

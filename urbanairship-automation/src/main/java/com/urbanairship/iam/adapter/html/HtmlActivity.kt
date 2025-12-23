@@ -151,6 +151,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
             json.optMap()["button_info"]
                 ?.let(InAppMessageButtonInfo::fromJson)
                 ?.let { displayListener?.onButtonDismissed(it) }
+                ?: displayListener?.onUserDismissed()
         } catch (ex: JsonException) {
             UALog.e(ex) { "Unable to parse message resolution JSON" }
         }

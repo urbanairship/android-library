@@ -104,7 +104,7 @@ public class NativeBridge @VisibleForTesting public constructor(
                 setNamedUserCommand(namedUser)
             }
 
-            CLOSE_COMMAND -> {
+            CLOSE_COMMAND, DISMISS_COMMAND -> {
                 UALog.i("Running close command for URL: $url")
                 commandDelegate.onClose()
             }
@@ -363,6 +363,7 @@ public class NativeBridge @VisibleForTesting public constructor(
          * Close command to handle close method in the Javascript Interface.
          */
         private const val CLOSE_COMMAND = "close"
+        private const val DISMISS_COMMAND = "dismiss"
 
         /**
          * Multi command to handle running multiple commands.
