@@ -46,9 +46,6 @@ import com.urbanairship.android.layout.property.TextAlignment
 import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.property.TextStyle
 import com.urbanairship.android.layout.property.isEnabled
-import com.urbanairship.android.layout.property.resolvedLinkColor
-import com.urbanairship.android.layout.property.underlineLinks
-import com.urbanairship.android.layout.util.LayoutUtils.roundFontWeight
 import com.urbanairship.android.layout.widget.Clippable
 import java.util.Arrays
 import kotlin.math.roundToInt
@@ -351,11 +348,8 @@ internal object LayoutUtils {
         val isMarkdownEnabled = markdownOptions.isEnabled
 
         if (isMarkdownEnabled) {
-            val underlineLinks = markdownOptions.underlineLinks
-            val linkColor = markdownOptions.resolvedLinkColor(context)
-
             val html = Html.fromHtml(text.markdownToHtml())
-            textView.setHtml(html, underlineLinks, linkColor)
+            textView.setHtml(context, html, markdownOptions)
         } else {
             textView.text = text
         }
@@ -429,6 +423,14 @@ internal object LayoutUtils {
 
         textView.setTypeface(typeface)
         textView.paintFlags = paintFlags
+
+        textView.setLineSpacing(0f, textAppearance.lineHeightMultiplier?.toFloat() ?: 1f)
+
+        // Letter spacing is in EM units
+        textView.letterSpacing = textAppearance.kerning?.toFloat()?.let { kerning ->
+            val size = textAppearance.fontSize.toFloat()
+            if (size > 0) kerning / size else 0f
+        } ?: 0f
     }
 
     /**

@@ -1,9 +1,10 @@
+---
 version: 1
 presentation:
   type: modal
   default_placement:
     size:
-      width: 100%
+      width: 90%
       height: auto
     shade_color:
       default:
@@ -14,7 +15,7 @@ view:
   type: container
   background_color:
     default:
-      hex: '#ffffff'
+      hex: "#FFFFFF"
       alpha: 1
   items:
     - position:
@@ -27,6 +28,9 @@ view:
         type: linear_layout
         direction: vertical
         items:
+          #
+          # Markdown Support
+          #
           - margin:
               top: 8
               bottom: 8
@@ -37,17 +41,29 @@ view:
               height: auto
             view:
               type: label
-              text: Markdown Support
+              text: "==\u00A0Some really long\u00A0\n\u00A0TITLE!\u00A0=="
               text_appearance:
                 alignment: start
                 styles:
                   - bold
-                  - underlined
-                font_size: 18
+                font_size: 24
+                line_height_multiplier: 2
+                kerning: 10
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
+              markdown:
+                appearance:
+                  highlight:
+                    corner_radius: 12
+                    color:
+                      default:
+                        hex: "#FFFF00"
+                        alpha: 1
+          #
+          # Styles
+          #
           - margin:
               top: 8
               bottom: 8
@@ -66,7 +82,7 @@ view:
                 font_size: 16
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
           - margin:
               top: 0
@@ -78,13 +94,67 @@ view:
               height: auto
             view:
               type: label
-              text: Normal, **Bold**, *Italic*, ***Bold + Italic***\nNormal, __Bold__, _Italic_, ___Bold + Italic___
+              text: Normal, **Bold**, *Italic*, ==Highlighted==, ==***Highlighted + Bold + Italic***==
               text_appearance:
                 alignment: start
                 font_size: 14
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
+                    alpha: 1
+          - margin:
+              top: 0
+              bottom: 8
+              start: 8
+              end: 8
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label
+              text: Normal, __Bold__, _Italic_, ___Bold + Italic___
+              text_appearance:
+                alignment: start
+                font_size: 14
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+          - margin:
+              top: 0
+              bottom: 8
+              start: 8
+              end: 8
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label
+              text: "__Label with line breaks:__==\nNormal\n__Bold__\n_Italic_\n___Bold + Italic___=="
+              text_appearance:
+                alignment: start
+                font_size: 14
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+          - margin:
+              top: 0
+              bottom: 8
+              start: 8
+              end: 8
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label
+              text: "==Markdown formatting will *preserve* **symbols**, **punctuation**, & **newlines** in the original text:\n\n!@#$%^&*()_+-=[]{}|;':,.<>=="
+              text_appearance:
+                alignment: start
+                font_size: 14
+                color:
+                  default:
+                    hex: "#000000"
                     alpha: 1
           - margin:
               top: 0
@@ -102,7 +172,7 @@ view:
                 font_size: 14
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
           - margin:
               top: 0
@@ -114,36 +184,16 @@ view:
               height: auto
             view:
               type: label
-              text: Disabled Normal, **Bold**, *Italic*, ***Bold + Italic*** [link](https://www.airship.com) https://www.airship.com
+              text: ==Disabled Normal, **Bold**, *Italic*, ***Bold + Italic*** [link](https://www.airship.com) https://www.airship.com==
               text_appearance:
                 alignment: start
                 font_size: 14
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
               markdown:
                 disabled: true
-          - margin:
-              top: 0
-              bottom: 8
-              start: 8
-              end: 8
-            size:
-              width: 100%
-              height: auto
-            view:
-              type: label
-              text: |-
-                symbols, punctuation, & newlines will be *preserved*:
-                !@#$%^&*()_+-=[]{}|;':,.<>
-              text_appearance:
-                alignment: start
-                font_size: 14
-                color:
-                  default:
-                    hex: '#000000'
-                    alpha: 1
           - margin:
               top: 8
               bottom: 8
@@ -157,14 +207,14 @@ view:
               identifier: style_button
               background_color:
                 default:
-                  hex: '#6699ff'
+                  hex: "#6699ff"
                   alpha: 1
               border:
                 radius: 5
                 stroke_width: 1
                 stroke_color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
               label:
                 type: label
@@ -174,8 +224,11 @@ view:
                   alignment: center
                   color:
                     default:
-                      hex: '#000000'
+                      hex: "#000000"
                       alpha: 1
+          #
+          # HTML Links
+          #
           - margin:
               top: 8
               bottom: 8
@@ -194,7 +247,7 @@ view:
                 font_size: 16
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
           - margin:
               top: 0
@@ -206,23 +259,24 @@ view:
               height: auto
             view:
               type: label
-              text: Click [here](https://www.airship.com) to visit Airship's website, or [here](http://www.google.com) to visit Google.
+              text: "Click [here](https://www.airship.com) to visit Airship's website, or [here](http://www.google.com) to visit Google."
               text_appearance:
                 alignment: start
                 font_size: 14
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
               markdown:
                 appearance:
                   anchor:
                     color:
                       default:
-                        hex: '#00ff00'
+                        hex: "#00ff00"
                         alpha: 1
                     styles:
                       - underlined
+
           - margin:
               top: 0
               bottom: 8
@@ -239,7 +293,7 @@ view:
                 font_size: 14
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
           - margin:
               top: 0
@@ -257,7 +311,7 @@ view:
                 font_size: 14
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
           - margin:
               top: 0
@@ -275,7 +329,7 @@ view:
                 font_size: 14
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
           - margin:
               top: 8
@@ -293,11 +347,11 @@ view:
                 radius: 5
                 stroke_color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
               background_color:
                 default:
-                  hex: '#ff99ff'
+                  hex: "#ff99ff"
                   alpha: 1
               label:
                 type: label
@@ -307,8 +361,11 @@ view:
                   alignment: center
                   color:
                     default:
-                      hex: '#000000'
+                      hex: "#000000"
                       alpha: 1
+          #
+          # Text Links
+          #
           - margin:
               top: 8
               bottom: 8
@@ -327,7 +384,7 @@ view:
                 font_size: 16
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
           - margin:
               top: 0
@@ -339,13 +396,13 @@ view:
               height: auto
             view:
               type: label
-              text: '*Some* bare links work, but this behavior will differ between platforms: https://www.airship.com, www.airship.com, www.airship.com/product, airship.com, airship.com/product'
+              text: "*Some* bare links work, but this behavior will differ between platforms: https://www.airship.com, www.airship.com, www.airship.com/product, airship.com, airship.com/product"
               text_appearance:
                 alignment: start
                 font_size: 14
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
           - margin:
               top: 0
@@ -357,16 +414,17 @@ view:
               height: auto
             view:
               type: label
-              text: 'Bare emails work, but not bare phone numbers: test@example.com, +1 503-867-5309'
+              text: "Bare emails work, but not bare phone numbers: test@example.com, +1 503-867-5309"
               text_appearance:
                 alignment: start
                 font_size: 14
                 color:
                   default:
-                    hex: '#000000'
+                    hex: "#000000"
                     alpha: 1
+
           - margin:
-              top: 0
+              top: 24
               bottom: 8
               start: 8
               end: 8
@@ -375,7 +433,7 @@ view:
               height: auto
             view:
               type: label
-              text: All other markdown syntax will be ***ignored!!!***
+              text: "All other markdown syntax will be ***ignored!!!***"
               text_appearance:
                 alignment: start
                 font_size: 14
@@ -384,5 +442,5 @@ view:
                   - bold
                 color:
                   default:
-                    hex: '#cc0000'
+                    hex: "#cc0000"
                     alpha: 1

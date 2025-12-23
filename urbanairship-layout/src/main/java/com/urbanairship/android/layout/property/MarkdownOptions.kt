@@ -1,8 +1,10 @@
 package com.urbanairship.android.layout.property
 
 import android.content.Context
+import android.util.TypedValue
 import androidx.annotation.ColorInt
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.util.LayoutUtils.dpToPx
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.optionalField
@@ -17,8 +19,8 @@ internal class MarkdownOptions(
 }
 
 internal class MarkdownAppearance(json: JsonMap) {
-
     val links: LinkAppearance? = json.optionalMap("anchor")?.let { LinkAppearance(it) }
+    val highlight: HighlightAppearance? = json.optionalMap("highlight")?.let { HighlightAppearance(it) }
 
     internal class LinkAppearance(json: JsonMap) {
 
@@ -36,6 +38,11 @@ internal class MarkdownAppearance(json: JsonMap) {
             // We only support underline for anchors, so we'll ignore any other styles for now.
             ?.filter { it == TextStyle.UNDERLINE }
 
+    }
+
+    internal class HighlightAppearance(json: JsonMap) {
+        val color: Color? = Color.fromJsonField(json, "color")
+        val cornerRadius: Float? = json.optionalField<Float>("corner_radius")
     }
 }
 
@@ -58,6 +65,20 @@ internal val MarkdownOptions?.isEnabled: Boolean
 @ColorInt
 internal fun MarkdownOptions?.resolvedLinkColor(context: Context): Int? =
     this?.appearance?.links?.color?.resolve(context)
+
+@ColorInt
+internal fun MarkdownOptions?.resolveHighlightCornerRadius(context: Context): Float =
+    this?.appearance?.highlight?.cornerRadius?.let {
+        TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP,
+            it,
+            context.resources.displayMetrics
+        )
+    } ?: 0F
+
+@ColorInt
+internal fun MarkdownOptions?.resolveHighlightColor(context: Context): Int =
+    (this?.appearance?.highlight?.color?.resolve(context) ?: 0x4DFFD60A)
 
 /**
  * Whether links should be underlined.

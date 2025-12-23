@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.util
 
 import androidx.core.text.htmlEncode
+import java.util.Locale
 
 internal fun String?.ifNotEmpty(block: (String) -> Unit) {
     if (!this.isNullOrEmpty()) {
@@ -17,6 +18,7 @@ internal fun String?.ifNotEmpty(block: (String) -> Unit) {
  * - Italic: `*italic*`
  * - Bold and italic: `***bold + italic***`
  * - Strikethrough: `~~strikethrough~~`
+ * - Highlight: `==highlight==`
  *
  * All other markdown syntax will be ignored.
  */
@@ -48,20 +50,27 @@ private const val italicTag = """<i>$1</i>"""
 private val strikethroughRegex = """(?<!~)~~(?!~)(.*?)(?<!~)~~(?!~)""".toRegex()
 private const val strikethroughTag = """<s>$1</s>"""
 
+/** Matches `==highlight==` not preceded or followed by `=` */
+private val highlightRegex = """(?<!=)==(?!=)(.*?)(?<!=)==(?!=)""".toRegex(RegexOption.DOT_MATCHES_ALL)
+
+/** Color is replaced later **/
+private const val highlightTag = """<span style="background-color: #4DFFFF00;">$1</span>"""
+
 /** Newline character `\n` */
 private const val newline = "\n"
 private const val newlineEscaped = "\\n"
 private const val newlineTag = "<br>"
 
+
 private fun basicMarkdownToHtml(markdown: String): String =
-   markdown
+    markdown
         // Encode any HTML characters in the original input so that we don't lose
         // symbols like < or & after converting to HTML and rendering the text.
         // This must be done first, before any other formatting is applied.
         .htmlEncode()
         // Replace newlines with <br>
-       .replace(newline, newlineTag)
-       .replace(newlineEscaped, newlineTag)
+        .replace(newline, newlineTag)
+        .replace(newlineEscaped, newlineTag)
         // Replace [link](url) with <a href="url">link</a>
         .replace(linkRegex, linkTag)
         // Replace ***bold + italic*** and ___bold + italic___ with <b><i>bold + italic</i></b>
@@ -75,3 +84,5 @@ private fun basicMarkdownToHtml(markdown: String): String =
         .replace(italicRegexBar, italicTag)
         // Replace ~~strikethrough~~ with <s>strikethrough</s>
         .replace(strikethroughRegex, strikethroughTag)
+        // Replace ==highlight== with <span style="background-color: #4DFFFF00;">highlight</span>
+        .replace(highlightRegex, highlightTag)

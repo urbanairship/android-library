@@ -1,5 +1,6 @@
 package com.urbanairship.android.layout.util
 
+import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
 import android.graphics.RectF
@@ -30,12 +31,19 @@ import androidx.core.text.toSpannable
 import androidx.core.view.descendants
 import com.urbanairship.Airship
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
+import com.urbanairship.android.layout.property.Border
+import com.urbanairship.android.layout.property.MarkdownOptions
+import com.urbanairship.android.layout.property.resolveHighlightColor
+import com.urbanairship.android.layout.property.resolveHighlightCornerRadius
+import com.urbanairship.android.layout.property.resolvedLinkColor
+import com.urbanairship.android.layout.property.underlineLinks
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.android.layout.view.ScoreView
 import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.CheckableViewAdapter
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import RoundedBackgroundSpan
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -232,16 +240,50 @@ private fun checkMainThread() {
 }
 
 /** Sets the given [html] on the TextView and supports both html links and plain text links. */
-internal fun TextView.setHtml(html: Spanned?, underline: Boolean = false, color: Int? = null) {
+internal fun TextView.setHtml(
+    context: Context,
+    html: Spanned?,
+    markdownOptions: MarkdownOptions?
+) {
     movementMethod = LinkMovementMethodCompat.getInstance()
 
     text = if (html.isNullOrEmpty()) {
         null
     } else {
+        val underlineLinks = markdownOptions.underlineLinks
+        val linkColor = markdownOptions.resolvedLinkColor(context)
+        val highlightColor = markdownOptions.resolveHighlightColor(context)
+        val highlightCornerRadius = markdownOptions.resolveHighlightCornerRadius(context)
+
         html.toSpannable().apply {
-            convertUrlSpans(underline, color)
-            linkifyText(underline, color)
+            convertUrlSpans(underlineLinks, linkColor)
+            convertHighlightSpans(highlightColor, highlightCornerRadius)
+            linkifyText(underlineLinks, linkColor)
         }
+    }
+}
+
+/** * Finds standard background spans (from <span style='background-color'>)
+ * and replaces them with custom RoundedBackgroundSpans.
+ */
+private fun Spannable.convertHighlightSpans(color: Int, cornerRadius: Float) {
+    val bgSpans = getSpans(0, length, android.text.style.BackgroundColorSpan::class.java)
+        ?: emptyArray()
+
+    bgSpans.forEach { span ->
+        val start = getSpanStart(span)
+        val end = getSpanEnd(span)
+        val flags = getSpanFlags(span)
+
+        // Create the bubble with your specific styling
+        val bubbleSpan = RoundedBackgroundSpan(
+            backgroundColor = color,
+            cornerRadius = cornerRadius
+        )
+
+        // Swap the spans
+        removeSpan(span)
+        setSpan(bubbleSpan, start, end, flags)
     }
 }
 

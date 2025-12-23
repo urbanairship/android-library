@@ -28,6 +28,12 @@ public open class TextAppearance {
     @JvmField
     public val fontFamilies: List<String>
 
+    @JvmField
+    public val lineHeightMultiplier: Double?
+
+    @JvmField
+    public val kerning: Double?
+
     protected constructor(textAppearance: TextAppearance) {
         this.color = textAppearance.color
         this.fontSize = textAppearance.fontSize
@@ -35,6 +41,8 @@ public open class TextAppearance {
         this.textStyles = textAppearance.textStyles
         this.fontWeight = textAppearance.fontWeight
         this.fontFamilies = textAppearance.fontFamilies
+        this.lineHeightMultiplier = textAppearance.lineHeightMultiplier
+        this.kerning = textAppearance.kerning
     }
 
     public constructor(
@@ -43,7 +51,9 @@ public open class TextAppearance {
         alignment: TextAlignment,
         textStyles: List<TextStyle>,
         fontWeight: Int,
-        fontFamilies: List<String>
+        fontFamilies: List<String>,
+        lineHeightMultiplier: Double? = null,
+        kerning: Double? = null
     ) {
         this.color = color
         this.fontSize = fontSize
@@ -51,6 +61,8 @@ public open class TextAppearance {
         this.textStyles = textStyles
         this.fontWeight = fontWeight
         this.fontFamilies = fontFamilies
+        this.lineHeightMultiplier = lineHeightMultiplier
+        this.kerning = kerning
     }
 
     public companion object {
@@ -60,6 +72,9 @@ public open class TextAppearance {
         private const val KEY_STYLES = "styles"
         private const val KEY_FONT_WEIGHT = "font_weight"
         private const val KEY_FONT_FAMILIES = "font_families"
+        private const val LINE_HEIGHT_MULTIPLIER = "line_height_multiplier"
+        private const val KERNING = "kerning"
+
 
         @JvmStatic
         @Throws(JsonException::class)
@@ -72,7 +87,9 @@ public open class TextAppearance {
                 alignment = content[KEY_ALIGNMENT]?.let(TextAlignment::from) ?: TextAlignment.CENTER,
                 textStyles = content.optionalList(KEY_STYLES)?.map(TextStyle::from) ?: emptyList(),
                 fontWeight = content.optionalField(KEY_FONT_WEIGHT) ?: 0,
-                fontFamilies = content.optionalList(KEY_FONT_FAMILIES)?.mapNotNull { it.string } ?: emptyList()
+                fontFamilies = content.optionalList(KEY_FONT_FAMILIES)?.mapNotNull { it.string } ?: emptyList(),
+                lineHeightMultiplier = content.optionalField(LINE_HEIGHT_MULTIPLIER),
+                kerning = content.optionalField(KERNING),
             )
         }
     }

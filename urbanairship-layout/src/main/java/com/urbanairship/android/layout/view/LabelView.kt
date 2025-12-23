@@ -4,11 +4,12 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
+import android.util.TypedValue.COMPLEX_UNIT_SP
 import android.view.accessibility.AccessibilityEvent
 import androidx.appcompat.widget.AppCompatTextView
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
-import com.urbanairship.UALog
+import androidx.core.widget.TextViewCompat
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.info.LabelInfo
 import com.urbanairship.android.layout.model.Background
@@ -106,7 +107,6 @@ internal class LabelView(
             model.viewInfo.markdownOptions,
             resolvedState.text
         )
-
         this.lastState = resolvedState
     }
 
