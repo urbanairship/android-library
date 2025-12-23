@@ -87,7 +87,7 @@ internal data class ThomasState(
         const val DATA = "data"
         const val STATUS = "status"
         const val TYPE = "type"
-        const val PAGER = "\$pager"
+        const val PAGER = "\$pagers"
         const val PAUSED = "paused"
     }
 }
