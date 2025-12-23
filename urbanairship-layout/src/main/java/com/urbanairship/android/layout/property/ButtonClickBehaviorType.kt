@@ -19,7 +19,7 @@ internal enum class ButtonClickBehaviorType(
     PAGER_NEXT_OR_FIRST("pager_next_or_first"),
     PAGER_PAUSE("pager_pause"),
     PAGER_RESUME("pager_resume"),
-    PAGER_PAUSE_TOGGLE("pager_pause_toggle"),
+    PAGER_PAUSE_TOGGLE("pager_toggle_pause"),
     DISMISS("dismiss"),
     CANCEL("cancel");
 
