@@ -9,8 +9,10 @@ import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
+import com.urbanairship.android.layout.info.LocalizedContentDescription
 import com.urbanairship.android.layout.info.StackImageButtonInfo
 import com.urbanairship.android.layout.info.StackItemInfo
+import com.urbanairship.android.layout.util.resolveContentDescription
 import com.urbanairship.android.layout.view.StackImageButtonView
 
 internal class StackImageButtonModel(
@@ -40,14 +42,42 @@ internal class StackImageButtonModel(
             ResolvedState(
                 items = state.resolveOptional(
                     overrides = viewInfo.viewOverrides?.overrides,
-                    default = viewInfo.items)
+                    default = viewInfo.items
+                ),
+                contentDescription = state.resolveOptional(
+                    overrides = viewInfo.viewOverrides?.contentDescription,
+                    default = viewInfo.contentDescription
+                ),
+                localizedContentDescription = state.resolveOptional(
+                    overrides = viewInfo.viewOverrides?.localizedContentDescription,
+                    default = viewInfo.localizedContentDescription
+                )
             )
         } else {
-            ResolvedState(items = viewInfo.items)
+            ResolvedState(
+                items = viewInfo.items,
+                contentDescription = viewInfo.contentDescription,
+                localizedContentDescription = viewInfo.localizedContentDescription
+            )
         }
     }
 
+    fun resolveContentDescription(context: Context, state: ThomasState?): String? {
+        val resolved = resolveState(context, state)
+
+        // First try resolved contentDescription
+        resolved.contentDescription?.let { return it }
+
+        // Then try resolved localizedContentDescription
+        return context.resolveContentDescription(
+            contentDescription = null,
+            localizedContentDescription = resolved.localizedContentDescription
+        )
+    }
+
     data class ResolvedState(
-        val items: List<StackItemInfo>?
+        val items: List<StackItemInfo>?,
+        val contentDescription: String? = null,
+        val localizedContentDescription: LocalizedContentDescription? = null
     )
 }

@@ -690,19 +690,30 @@ internal class CheckboxInfo(json: JsonMap) : CheckableInfo(json), RecentlyIdenti
 
 internal class StackImageButtonInfo(json: JsonMap) : ButtonInfo(json) {
     val items = json.requireField<JsonList>("items").map { StackItemInfo.fromJson(it) }
-    val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it.requireField("items")) }
+    val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
 
-    internal class ViewOverrides(json: JsonValue) {
-        val cleanJson = json.requireList().toJsonValue().list?.get(0)
-        val overrides = cleanJson?.let { safeJson ->
-            val itemsList = safeJson.map?.requireField<JsonList>("value")
+    internal class ViewOverrides(json: JsonMap) {
+        // Handle items override - maintain backward compatibility
+        val overrides = json.optionalList("items")?.firstOrNull()?.let { itemsJson ->
+            val itemsList = itemsJson.map?.requireField<JsonList>("value")
             itemsList?.map { item ->
                 ViewPropertyOverride(
-                    safeJson.toJsonValue(),
+                    itemsJson,
                     valueParser = { json ->
                         json.list?.map { StackItemInfo.fromJson(it) }
                     }
                 )
+            }
+        }
+
+        // Add content description overrides
+        val contentDescription = json.optionalList("content_description")?.map {
+            ViewPropertyOverride(it, valueParser = { value -> value.optString() })
+        }
+
+        val localizedContentDescription = json.optionalList("localized_content_description")?.map {
+            ViewPropertyOverride(it) { value ->
+                value.optMap()?.let { LocalizedContentDescription(it) }
             }
         }
     }

@@ -114,8 +114,8 @@ internal class StackImageButtonView(
             // Clear any padding so that we can use the entire view area
             setPadding(0, 0, 0, 0)
 
-            // Set the content description, resolving localization if necessary
-            model.contentDescription(context)?.ifNotEmpty {
+            // Set the content description using resolved content description
+            model.resolveContentDescription(context, null)?.ifNotEmpty {
                 contentDescription = it
             }
         }
@@ -134,6 +134,12 @@ internal class StackImageButtonView(
                     }
                     is StackItemInfo.ImageItem -> createOrUpdateImage(it)
                 }
+            }
+
+            // Update content description based on resolved state
+            val newContentDescription = model.resolveContentDescription(context, state)
+            if (newContentDescription != button.contentDescription) {
+                button.contentDescription = newContentDescription
             }
         }
 
