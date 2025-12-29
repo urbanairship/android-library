@@ -5,7 +5,6 @@ import android.content.Context
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.Airship
-import com.urbanairship.PendingResult
 import com.urbanairship.Platform
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
@@ -91,14 +90,14 @@ public class AirshipChannelTest {
     private val replaceJob = JobInfo.newBuilder()
         .setAction("ACTION_UPDATE_CHANNEL")
         .setNetworkAccessRequired(true)
-        .setAirshipComponent(AirshipChannel::class.java)
+        .setScope(AirshipChannel::class.java.name)
         .setConflictStrategy(JobInfo.ConflictStrategy.REPLACE)
         .build()
 
     private val keepJob = JobInfo.newBuilder()
         .setAction("ACTION_UPDATE_CHANNEL")
         .setNetworkAccessRequired(true)
-        .setAirshipComponent(AirshipChannel::class.java)
+        .setScope(AirshipChannel::class.java.name)
         .setConflictStrategy(JobInfo.ConflictStrategy.KEEP)
         .build()
 

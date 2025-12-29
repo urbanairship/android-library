@@ -5,12 +5,11 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.WorkerThread
 import androidx.annotation.XmlRes
 import androidx.core.util.Consumer
-import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.AirshipExecutors
+import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.Platform
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
@@ -72,7 +71,8 @@ public open class PushManager @VisibleForTesting internal constructor(
     private val notificationManager: AirshipNotificationManager,
     private val activityMonitor: ActivityMonitor,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
-) : AirshipComponent(context, preferenceDataStore) {
+) : JobAwareAirshipComponent(context, preferenceDataStore, jobDispatcher) {
+
 
     public var notificationChannelRegistry: NotificationChannelRegistry =
         NotificationChannelRegistry(context, config.configOptions)
@@ -320,7 +320,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     private fun dispatchUpdateJob() {
         val jobInfo: JobInfo = JobInfo.newBuilder()
             .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
-            .setAirshipComponent(PushManager::class.java)
+            .setScope(PushManager::class.java.name)
             .setConflictStrategy(JobInfo.ConflictStrategy.REPLACE)
             .build()
 
@@ -366,12 +366,11 @@ public open class PushManager @VisibleForTesting internal constructor(
             }
         }
 
-    /**
-     * @hide
-     */
-    @WorkerThread
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(jobInfo: JobInfo): JobResult {
+
+    override val jobActions: List<String>
+        get() = listOf(ACTION_UPDATE_PUSH_REGISTRATION, ACTION_DISPLAY_NOTIFICATION)
+
+    override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             return JobResult.SUCCESS
         }
@@ -384,15 +383,13 @@ public open class PushManager @VisibleForTesting internal constructor(
                 val providerClass = jobInfo.extras.opt(PushProviderBridge.EXTRA_PROVIDER_CLASS).string
                     ?: return JobResult.SUCCESS
 
-                runBlocking {
-                    IncomingPushRunnable.Builder(context)
-                        .setLongRunning(true)
-                        .setProcessed(true)
-                        .setMessage(message)
-                        .setProviderClass(providerClass)
-                        .build()
-                        .run()
-                }
+                IncomingPushRunnable.Builder(context)
+                    .setLongRunning(true)
+                    .setProcessed(true)
+                    .setMessage(message)
+                    .setProviderClass(providerClass)
+                    .build()
+                    .run()
             }
         }
 

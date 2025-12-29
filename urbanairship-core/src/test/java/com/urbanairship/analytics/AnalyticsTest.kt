@@ -375,7 +375,7 @@ public class AnalyticsTest {
      * Tests sending events
      */
     @Test
-    public fun testSendingEvents() {
+    public fun testSendingEvents(): TestResult = runTest {
         every { mockChannel.id } returns "some channel"
         every { mockEventManager.uploadEvents(any(), any()) } returns true
 
@@ -390,7 +390,7 @@ public class AnalyticsTest {
      * Test sending events when there's no channel ID present
      */
     @Test
-    public fun testSendingWithNoChannelID() {
+    public fun testSendingWithNoChannelID(): TestResult = runTest {
         every { mockChannel.id } returns null
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
@@ -403,7 +403,7 @@ public class AnalyticsTest {
      * Test sending events when analytics is disabled.
      */
     @Test
-    public fun testSendingWithAnalyticsDisabled() {
+    public fun testSendingWithAnalyticsDisabled(): TestResult = runTest {
         privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         every { mockChannel.id } returns "channel"
 
@@ -417,7 +417,7 @@ public class AnalyticsTest {
      * Test sending events when the upload fails
      */
     @Test
-    public fun testSendEventsFails() {
+    public fun testSendEventsFails(): TestResult = runTest {
         every { mockChannel.id } returns "channel"
         every { mockEventManager.uploadEvents(any(), any()) } returns false
 
@@ -432,7 +432,7 @@ public class AnalyticsTest {
      * This verifies all required and most optional headers.
      */
     @Test
-    public fun testRequestHeaders() {
+    public fun testRequestHeaders(): TestResult = runTest {
         val locale = LocaleCompat.of("en", "US", "POSIX")
         localeManager.setLocaleOverride(locale)
         analytics.registerSDKExtension(Extension.CORDOVA, "1.2.3")
@@ -476,7 +476,7 @@ public class AnalyticsTest {
      * Test that amazon is set as the device family when the platform is amazon.
      */
     @Test
-    public fun testAmazonDeviceFamily() {
+    public fun testAmazonDeviceFamily(): TestResult = runTest {
         every { mockChannel.id } returns "channel"
         runtimeConfig.setPlatform(Platform.AMAZON)
 
@@ -495,7 +495,7 @@ public class AnalyticsTest {
      * field is blank on the locale.
      */
     @Test
-    public fun testRequestHeaderEmptyLocaleCountryHeaders() {
+    public fun testRequestHeaderEmptyLocaleCountryHeaders(): TestResult = runTest {
         localeManager.setLocaleOverride(LocaleCompat.of("en", "", "POSIX"))
         every { mockChannel.id } returns "channel"
 
@@ -514,7 +514,7 @@ public class AnalyticsTest {
      * field is blank on the locale.
      */
     @Test
-    public fun testRequestHeaderEmptyLocaleVariantHeaders() {
+    public fun testRequestHeaderEmptyLocaleVariantHeaders(): TestResult = runTest {
         localeManager.setLocaleOverride(LocaleCompat.of("en", "US", ""))
 
         every { mockChannel.id } returns "channel"
@@ -534,7 +534,7 @@ public class AnalyticsTest {
      * is empty.
      */
     @Test
-    public fun testRequestHeaderEmptyLanguageLocaleHeaders() {
+    public fun testRequestHeaderEmptyLanguageLocaleHeaders(): TestResult = runTest {
         localeManager.setLocaleOverride(LocaleCompat.of("", "US", "POSIX"))
 
         every { mockChannel.id } returns "channel"
@@ -555,7 +555,7 @@ public class AnalyticsTest {
      * Test that SDK extensions are registered correctly
      */
     @Test
-    public fun testSDKExtensions() {
+    public fun testSDKExtensions(): TestResult = runTest {
         analytics.registerSDKExtension(Extension.CORDOVA, "1.0.0")
         analytics.registerSDKExtension(Extension.UNITY, "2.0.0")
         analytics.registerSDKExtension(Extension.FLUTTER, "3.0.0")
@@ -581,7 +581,7 @@ public class AnalyticsTest {
     }
 
     @Test
-    public fun testPermissionHeaders() {
+    public fun testPermissionHeaders(): TestResult = runTest {
         every { mockChannel.id } returns "channel"
 
         every { mockPermissionsManager.configuredPermissions } returns setOf(Permission.LOCATION, Permission.DISPLAY_NOTIFICATIONS)
@@ -608,7 +608,7 @@ public class AnalyticsTest {
      * Test that analytics header delegates are able to provide additional headers.
      */
     @Test
-    public fun testAnalyticHeaderDelegate() {
+    public fun testAnalyticHeaderDelegate(): TestResult = runTest {
         every { mockChannel.id } returns "channel"
         analytics.addHeaderDelegate { mapOf("foo" to "bar") }
 

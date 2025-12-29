@@ -6,8 +6,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.Airship
-import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.contacts.Contact
 import com.urbanairship.http.RequestResult
@@ -342,7 +340,7 @@ public class AirshipMeteredUsageTest {
         jobId: String = "MeteredUsage.upload"
     ): JobInfo {
         return JobInfo.newBuilder()
-            .setAirshipComponent(AirshipMeteredUsage::class.java)
+            .setScope(AirshipMeteredUsage::class.java.name)
             .setAction(jobId)
             .setConflictStrategy(JobInfo.ConflictStrategy.KEEP)
             .setNetworkAccessRequired(true)

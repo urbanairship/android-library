@@ -20,7 +20,7 @@ internal class WorkManagerScheduler : Scheduler {
         try {
             val workRequest = createWorkRequest(jobInfo, delay)
             val workPolicy = convertConflict(jobInfo.conflictStrategy)
-            val uniqueName = jobInfo.airshipComponentName + ":" + jobInfo.action
+            val uniqueName = jobInfo.scope + ":" + jobInfo.action
             WorkManager.getInstance(context).enqueueUniqueWork(uniqueName, workPolicy, workRequest)
         } catch (e: Exception) {
             throw SchedulerException("Failed to schedule job", e)

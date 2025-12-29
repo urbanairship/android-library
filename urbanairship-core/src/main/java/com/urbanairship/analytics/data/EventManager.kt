@@ -91,7 +91,7 @@ public class EventManager @VisibleForTesting internal constructor(
             val jobInfo = JobInfo.newBuilder()
                 .setAction(ACTION_SEND)
                 .setNetworkAccessRequired(true)
-                .setAirshipComponent(Analytics::class.java)
+                .setScope(Analytics::class.java.name)
                 .setMinDelay(milliseconds)
                 .setConflictStrategy(conflictStrategy)
                 .build()

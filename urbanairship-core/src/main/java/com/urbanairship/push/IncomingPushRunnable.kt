@@ -346,7 +346,7 @@ internal class IncomingPushRunnable private constructor(
         val jobInfo = JobInfo.newBuilder()
             .setAction(PushManager.ACTION_DISPLAY_NOTIFICATION)
             .setConflictStrategy(JobInfo.ConflictStrategy.APPEND)
-            .setAirshipComponent(PushManager::class.java)
+            .setScope(PushManager::class.java.name)
             .setExtras(
                 jsonMapOf(
                     PushProviderBridge.EXTRA_PUSH to message,

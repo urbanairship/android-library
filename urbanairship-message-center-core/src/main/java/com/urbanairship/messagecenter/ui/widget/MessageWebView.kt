@@ -14,7 +14,6 @@ import com.urbanairship.javascript.JavaScriptEnvironment
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.messageCenter
 import com.urbanairship.webkit.AirshipWebViewClient
 import com.urbanairship.webkit.NestedScrollAirshipWebView

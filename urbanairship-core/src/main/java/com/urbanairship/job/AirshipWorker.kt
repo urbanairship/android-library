@@ -3,12 +3,10 @@ package com.urbanairship.job
 
 import android.content.Context
 import androidx.work.CoroutineWorker
-import androidx.work.ListenableWorker.Result as WorkerResult
-import kotlin.Result as KotlinResult
 import androidx.work.WorkerParameters
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
-import kotlin.coroutines.suspendCoroutine
+import androidx.work.ListenableWorker.Result as WorkerResult
 
 /**
  * WorkManager worker for Airship Jobs.
@@ -26,17 +24,11 @@ internal class AirshipWorker (
         val runAttempt = runAttemptCount
 
         UALog.v("Running job: $jobInfo, work Id: $workId run attempt: $runAttempt")
-        return suspendCoroutine { continuation ->
-            JobDispatcher.shared(applicationContext)
-                .onStartJob(jobInfo, runAttempt.toLong()) { jobResult: JobResult ->
-                    when (jobResult) {
-                        JobResult.RETRY -> KotlinResult.success(WorkerResult.retry())
-                        JobResult.FAILURE -> KotlinResult.success(WorkerResult.failure())
-                        JobResult.SUCCESS -> KotlinResult.success(WorkerResult.success())
-                    }.let { result ->
-                        continuation.resumeWith(result)
-                    }
-                }
+        val jobResult = JobDispatcher.shared(applicationContext).runJob(jobInfo, runAttempt.toLong())
+        return when (jobResult) {
+            JobResult.RETRY -> WorkerResult.retry()
+            JobResult.FAILURE -> WorkerResult.failure()
+            JobResult.SUCCESS -> WorkerResult.success()
         }
     }
 

@@ -7,8 +7,6 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RestrictTo
-import androidx.annotation.WorkerThread
-import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
@@ -16,6 +14,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.UALog.logLevel
 import com.urbanairship.Airship
+import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.Platform
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.app.ActivityMonitor
@@ -48,7 +47,6 @@ import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Airship channel access.
@@ -68,7 +66,7 @@ public class AirshipChannel internal constructor(
     private val jobDispatcher: JobDispatcher = JobDispatcher.shared(context),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     updateDispatcher: CoroutineDispatcher = AirshipDispatchers.IO
-) : AirshipComponent(context, dataStore) {
+) : JobAwareAirshipComponent(context, dataStore, jobDispatcher) {
 
     private val airshipChannelListeners: MutableList<AirshipChannelListener> = CopyOnWriteArrayList()
     private val tagLock = ReentrantLock()
@@ -234,37 +232,32 @@ public class AirshipChannel internal constructor(
             return !isChannelCreationDelayEnabled && privacyManager.isAnyFeatureEnabled
         }
 
-    /**
-     * {@inheritDoc}
-     *
-     * @hide
-     */
-    @WorkerThread
-    override fun onPerformJob(jobInfo: JobInfo): JobResult {
+    override val jobActions: List<String>
+        get() = listOf(ACTION_UPDATE_CHANNEL)
+
+    override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         if (!isRegistrationAllowed) {
             UALog.d { "Channel registration is currently disabled." }
             return JobResult.SUCCESS
         }
 
-        return runBlocking {
-            // Perform CRA first
-            val registrationResult = channelRegistrar.updateRegistration()
-            if (registrationResult == RegistrationResult.FAILED) {
-                return@runBlocking JobResult.FAILURE
-            }
-
-            val channelId = channelRegistrar.channelId ?: return@runBlocking JobResult.SUCCESS
-
-            if (!channelManager.uploadPending(channelId)) {
-                return@runBlocking JobResult.FAILURE
-            }
-
-            if (registrationResult == RegistrationResult.NEEDS_UPDATE || channelManager.hasPending) {
-                dispatchUpdateJob(conflictStrategy = ConflictStrategy.REPLACE)
-            }
-
-            JobResult.SUCCESS
+        // Perform CRA first
+        val registrationResult = channelRegistrar.updateRegistration()
+        if (registrationResult == RegistrationResult.FAILED) {
+            return JobResult.FAILURE
         }
+
+        val channelId = channelRegistrar.channelId ?: return JobResult.SUCCESS
+
+        if (!channelManager.uploadPending(channelId)) {
+            return JobResult.FAILURE
+        }
+
+        if (registrationResult == RegistrationResult.NEEDS_UPDATE || channelManager.hasPending) {
+            dispatchUpdateJob(conflictStrategy = ConflictStrategy.REPLACE)
+        }
+
+        return JobResult.SUCCESS
     }
 
     /**
@@ -542,7 +535,7 @@ public class AirshipChannel internal constructor(
         val jobInfo = JobInfo.newBuilder()
             .setAction(ACTION_UPDATE_CHANNEL)
             .setNetworkAccessRequired(true)
-            .setAirshipComponent(AirshipChannel::class.java)
+            .setScope(AirshipChannel::class.java.name)
             .setConflictStrategy(conflictStrategy)
             .build()
 

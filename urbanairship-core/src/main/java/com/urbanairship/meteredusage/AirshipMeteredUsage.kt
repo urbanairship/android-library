@@ -5,11 +5,10 @@ package com.urbanairship.meteredusage
 import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
-import com.urbanairship.AirshipComponent
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.Airship
+import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -22,7 +21,6 @@ import com.urbanairship.remoteconfig.MeteredUsageConfig
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.runBlocking
 
 /**
  * Airship Metered Usage tracker.
@@ -41,7 +39,7 @@ public class AirshipMeteredUsage internal constructor(
     private val client: MeteredUsageApiClient = MeteredUsageApiClient(config),
     private val contact: Contact,
     private val jobDispatcher: JobDispatcher = JobDispatcher.shared(context),
-) : AirshipComponent(context, dataStore) {
+) : JobAwareAirshipComponent(context, dataStore, jobDispatcher) {
 
     internal companion object {
         private const val WORK_ID = "MeteredUsage.upload"
@@ -79,7 +77,7 @@ public class AirshipMeteredUsage internal constructor(
         }
 
         jobDispatcher.dispatch(JobInfo.newBuilder()
-            .setAirshipComponent(AirshipMeteredUsage::class.java)
+            .setScope(AirshipMeteredUsage::class.java.name)
             .setAction(WORK_ID)
             .setConflictStrategy(JobInfo.ConflictStrategy.KEEP)
             .setNetworkAccessRequired(true)
@@ -107,7 +105,10 @@ public class AirshipMeteredUsage internal constructor(
         scheduleUpload(delay = 0.seconds)
     }
 
-    override fun onPerformJob(jobInfo: JobInfo): JobResult {
+    override val jobActions: List<String>
+        get() = listOf(WORK_ID)
+
+    override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         if (!usageConfig.get().isEnabled) {
             UALog.v { "Config disabled, skipping upload." }
             return JobResult.SUCCESS
@@ -127,12 +128,10 @@ public class AirshipMeteredUsage internal constructor(
 
         UALog.v { "Uploading events" }
 
-        val result = runBlocking {
-            try {
-                client.uploadEvents(events, channelId)
-            } catch (ex: Exception) {
-                return@runBlocking RequestResult(ex)
-            }
+        val result = try {
+            client.uploadEvents(events, channelId)
+        } catch (ex: Exception) {
+            RequestResult(ex)
         }
 
         if (!result.isSuccessful) {
@@ -142,12 +141,10 @@ public class AirshipMeteredUsage internal constructor(
 
         UALog.v { "Uploading success" }
 
-        runBlocking {
-            try {
-                store.deleteAll(events.map { it.eventId }.toList())
-            } catch (e: Exception) {
-                UALog.e(e) { "Failed to delete events" }
-            }
+        try {
+            store.deleteAll(events.map { it.eventId }.toList())
+        } catch (e: Exception) {
+            UALog.e(e) { "Failed to delete events" }
         }
 
         return JobResult.SUCCESS

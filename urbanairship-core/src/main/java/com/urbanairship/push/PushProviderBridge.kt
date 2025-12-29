@@ -4,11 +4,10 @@ package com.urbanairship.push
 import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
+import com.urbanairship.Airship
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.Airship
 import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout

@@ -200,7 +200,7 @@ public class MessageCenterTest {
     }
 
     @Test
-    public fun testPerformJobWhenEnabled() {
+    public fun testPerformJobWhenEnabled(): TestResult = runTest {
         val jobInfo = mockk<JobInfo>()
         coEvery { inbox.performUpdate() } returns Result.success(true)
         every { privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns true
@@ -212,7 +212,7 @@ public class MessageCenterTest {
     }
 
     @Test
-    public fun testPerformJobWhenDisabled() {
+    public fun testPerformJobWhenDisabled(): TestResult = runTest {
         every { privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns false
 
         val result = messageCenter.onPerformJob(mockk<JobInfo>())

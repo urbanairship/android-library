@@ -14,6 +14,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.analytics.data.EventManager
 import com.urbanairship.analytics.location.RegionEvent
 import com.urbanairship.app.ActivityMonitor
@@ -22,6 +23,7 @@ import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
 import com.urbanairship.json.JsonException
@@ -29,6 +31,8 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionsManager
+import com.urbanairship.push.PushManager.Companion.ACTION_DISPLAY_NOTIFICATION
+import com.urbanairship.push.PushManager.Companion.ACTION_UPDATE_PUSH_REGISTRATION
 import com.urbanairship.util.Clock
 import java.util.TimeZone
 import java.util.UUID
@@ -62,8 +66,8 @@ public constructor(
     private val eventManager: EventManager,
     private val permissionsManager: PermissionsManager,
     private val eventFeed: AirshipEventFeed,
-    private val clock: Clock = Clock.DEFAULT_CLOCK
-    ) : AirshipComponent(context, dataStore) {
+    private val clock: Clock = Clock.DEFAULT_CLOCK,
+    ) : JobAwareAirshipComponent(context, dataStore) {
 
     /**
      * Delegate to add analytics headers.
@@ -190,7 +194,7 @@ public constructor(
         channel: AirshipChannel,
         localeManager: LocaleManager,
         permissionsManager: PermissionsManager,
-        eventFeed: AirshipEventFeed
+        eventFeed: AirshipEventFeed,
     ) : this(
         context,
         dataStore,
@@ -243,11 +247,10 @@ public constructor(
         activityMonitor.removeApplicationListener(listener)
     }
 
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(jobInfo: JobInfo): JobResult {
+    override val jobActions: List<String>
+        get() = listOf(EventManager.ACTION_SEND)
+
+    override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         return when(jobInfo.action) {
             EventManager.ACTION_SEND -> {
                 if (!isEnabled) {

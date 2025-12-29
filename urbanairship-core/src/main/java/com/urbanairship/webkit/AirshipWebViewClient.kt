@@ -41,7 +41,7 @@ internal constructor(
     private val javaScriptExtender: (JavaScriptEnvironment.Builder) -> JavaScriptEnvironment.Builder
 ) : WebViewClient() {
 
-    public  constructor(nativeBridge: NativeBridge) : this(
+    public constructor(nativeBridge: NativeBridge) : this(
         nativeBridge,
         allowListProvider = { Airship.urlAllowList },
         javaScriptExtender = { builder ->
