@@ -43,8 +43,7 @@ public class NotificationProxyActivity public constructor() : Activity() {
             .process()
             .addResultCallback {
                 UALog.v("Finished processing notification intent with result $it.")
+                finish()
             }
-
-        finish()
     }
 }
