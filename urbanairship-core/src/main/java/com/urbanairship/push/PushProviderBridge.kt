@@ -1,14 +1,18 @@
 /* Copyright Airship and Contributors */
+
 package com.urbanairship.push
 
 import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
 import com.urbanairship.Airship
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeoutException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 
@@ -22,6 +26,8 @@ public object PushProviderBridge {
 
     public const val EXTRA_PROVIDER_CLASS: String = "EXTRA_PROVIDER_CLASS"
     public const val EXTRA_PUSH: String = "EXTRA_PUSH"
+
+    private val scope = CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
 
     /**
      * Triggers a registration update.
@@ -83,11 +89,13 @@ public object PushProviderBridge {
          * @param callback The callback.
          */
         public fun execute(context: Context, callback: Runnable? = null) {
-            runBlocking {
-                execute(context)
+            scope.launch {
+                try {
+                    execute(context)
+                } finally {
+                    callback?.run()
+                }
             }
-
-            callback?.run()
         }
 
         /**
@@ -110,7 +118,7 @@ public object PushProviderBridge {
                     pushJob.run()
                 }
             } catch (e: TimeoutException) {
-                UALog.e("Application took too long to process push. App may get closed.")
+                UALog.e(e, "Application took too long to process push. App may get closed.")
             } catch (e: Exception) {
                 UALog.e(e, "Failed to wait for notification")
             }
@@ -123,14 +131,8 @@ public object PushProviderBridge {
          */
         @WorkerThread
         public fun executeSync(context: Context) {
-            val countDownLatch = CountDownLatch(1)
-            execute(context) { countDownLatch.countDown() }
-
-            try {
-                countDownLatch.await()
-            } catch (e: InterruptedException) {
-                UALog.e(e, "Failed to wait for push.")
-                Thread.currentThread().interrupt()
+            runBlocking {
+                execute(context)
             }
         }
     }
