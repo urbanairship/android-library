@@ -10,6 +10,8 @@ import com.urbanairship.http.RequestException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,7 +40,7 @@ public class EventApiClientTest {
      * Test sending a correct request that succeeds
      */
     @Test
-    public fun testSendEventsSucceed() {
+    public fun testSendEventsSucceed(): TestResult = runTest {
         requestSession.addResponse(200, "")
 
         val response = client.sendEvents("some channel", events, emptyMap())
@@ -54,7 +56,8 @@ public class EventApiClientTest {
     /**
      * Test sending a request with a null URL will return an exception
      */
-    public fun testNullUrl() {
+    @Test
+    public fun testNullUrl(): TestResult = runTest {
         runtimeConfig = TestAirshipRuntimeConfig(RemoteConfig())
         val result = client.sendEvents("some channel", events, emptyMap())
         assert(result.exception is RequestException)
@@ -64,7 +67,7 @@ public class EventApiClientTest {
      * Test sending null or empty events returns an empty response.
      */
     @Test
-    public fun testSendEmptyEvents() {
+    public fun testSendEmptyEvents(): TestResult = runTest {
         requestSession.addResponse(200, "")
         events.clear()
 
@@ -80,7 +83,7 @@ public class EventApiClientTest {
      * This verifies all required and most optional headers.
      */
     @Test
-    public fun testRequestHeaders() {
+    public fun testRequestHeaders(): TestResult = runTest {
         requestSession.addResponse(200, "")
 
         val headers = mapOf("foo" to "bar")
@@ -100,7 +103,7 @@ public class EventApiClientTest {
      * Verify we return a response even if the Json is malformated
      */
     @Test
-    public fun testWrongJson() {
+    public fun testWrongJson(): TestResult = runTest {
         requestSession.addResponse(200, "")
 
         events.clear()

@@ -4,7 +4,6 @@ import android.content.Context
 import android.database.sqlite.SQLiteException
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.WorkerThread
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import com.urbanairship.analytics.AirshipEventData
@@ -25,6 +24,8 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Handles event storage and uploading.
@@ -41,8 +42,7 @@ public class EventManager @VisibleForTesting internal constructor(
     private val apiClient: EventApiClient,
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) {
-
-    private val eventLock = Any()
+    private val eventLock = Mutex()
 
     private val isScheduled = MutableStateFlow(false)
 
@@ -63,10 +63,9 @@ public class EventManager @VisibleForTesting internal constructor(
      * Schedule a batch event upload at a given time in the future.
      *
      * @param delay The initial delay.
-     * @param timeUnit The time unit of the delay.
      */
     public fun scheduleEventUpload(delay: Duration) {
-        var milliseconds = delay
+        var nextDelay = delay
 
         UALog.v("Requesting to schedule event upload with delay $delay")
 
@@ -80,25 +79,25 @@ public class EventManager @VisibleForTesting internal constructor(
                     (clock.currentTimeMillis() - previousScheduledTime), 0
                 ).milliseconds
 
-                if (currentDelay < milliseconds) {
+                if (currentDelay < nextDelay) {
                     UALog.v("Event upload already scheduled for an earlier time.")
                     conflictStrategy = JobInfo.ConflictStrategy.KEEP
-                    milliseconds = currentDelay
+                    nextDelay = currentDelay
                 }
             }
 
-            UALog.v("Scheduling upload in $milliseconds ms.")
+            UALog.v("Scheduling upload in $nextDelay ms.")
             val jobInfo = JobInfo.newBuilder()
                 .setAction(ACTION_SEND)
                 .setNetworkAccessRequired(true)
                 .setScope(Analytics::class.java.name)
-                .setMinDelay(milliseconds)
+                .setMinDelay(nextDelay)
                 .setConflictStrategy(conflictStrategy)
                 .build()
 
             jobDispatcher.dispatch(jobInfo)
 
-            preferenceDataStore.put(SCHEDULED_SEND_TIME, clock.currentTimeMillis() + milliseconds.inWholeMilliseconds)
+            preferenceDataStore.put(SCHEDULED_SEND_TIME, clock.currentTimeMillis() + nextDelay.inWholeMilliseconds)
             true
         }
     }
@@ -107,12 +106,12 @@ public class EventManager @VisibleForTesting internal constructor(
      * Adds an event.
      *
      * @param eventData The event data.
+     * @param priority The event priority.
      */
-    @WorkerThread
-    public fun addEvent(eventData: AirshipEventData, priority: Event.Priority) {
+    public suspend fun addEvent(eventData: AirshipEventData, priority: Event.Priority) {
         val entity = EventEntity(eventData)
 
-        synchronized(eventLock) {
+        eventLock.withLock {
             eventDao.insert(entity)
             // Handle database max size exceeded
             val maxSize = preferenceDataStore.getInt(
@@ -149,9 +148,8 @@ public class EventManager @VisibleForTesting internal constructor(
     /**
      * Deletes all events.
      */
-    @WorkerThread
-    public fun deleteEvents() {
-        synchronized(eventLock) {
+    public suspend fun deleteEvents() {
+        eventLock.withLock {
             eventDao.deleteAll()
         }
     }
@@ -180,8 +178,7 @@ public class EventManager @VisibleForTesting internal constructor(
      * @param headers The analytic headers.
      * @return `true` if the events uploaded, otherwise `false`.
      */
-    @WorkerThread
-    public fun uploadEvents(channelId: String, headers: Map<String, String>): Boolean {
+    public suspend fun uploadEvents(channelId: String, headers: Map<String, String>): Boolean {
         isScheduled.update {
             preferenceDataStore.put(LAST_SEND_KEY, clock.currentTimeMillis())
             false
@@ -191,7 +188,7 @@ public class EventManager @VisibleForTesting internal constructor(
         val events: List<EventIdAndData>
 
         try {
-            synchronized(eventLock) {
+            eventLock.withLock {
                 eventCount = eventDao.count()
                 if (eventCount <= 0) {
                     UALog.d("No events to send.")
@@ -228,7 +225,7 @@ public class EventManager @VisibleForTesting internal constructor(
             }
 
             UALog.d("Analytic events uploaded.")
-            synchronized(eventLock) {
+            eventLock.withLock {
                 eventDao.deleteBatch(events)
             }
 

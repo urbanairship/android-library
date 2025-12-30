@@ -20,46 +20,46 @@ import com.urbanairship.analytics.data.EventEntity.EventIdAndData
 internal abstract class EventDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    internal abstract fun insert(event: EventEntity)
+    internal abstract suspend fun insert(event: EventEntity)
 
     @Transaction
     @Query("SELECT * FROM events ORDER BY id ASC")
-    internal abstract fun get(): List<EventEntity>
+    internal abstract suspend fun get(): List<EventEntity>
 
     @Transaction
     @Query("SELECT id, eventId, data FROM events ORDER BY id ASC LIMIT :limit")
-    internal abstract fun getBatch(limit: Int): List<EventIdAndData>
+    internal abstract suspend fun getBatch(limit: Int): List<EventIdAndData>
 
     @Transaction
-    internal open fun deleteBatch(events: List<EventIdAndData>) {
+    internal open suspend fun deleteBatch(events: List<EventIdAndData>) {
         for (event in events) {
             delete(event.eventId)
         }
     }
 
     @Query("DELETE FROM events WHERE eventId = :eventId")
-    internal abstract fun delete(eventId: String)
+    internal abstract suspend fun delete(eventId: String)
 
     @Delete
-    internal abstract fun delete(vararg events: EventEntity)
+    internal abstract suspend fun delete(vararg events: EventEntity)
 
     @Query("DELETE FROM events")
-    internal abstract fun deleteAll()
+    internal abstract suspend fun deleteAll()
 
     @Query("SELECT COUNT(*) FROM events")
-    internal abstract fun count(): Int
+    internal abstract suspend fun count(): Int
 
     @Query("SELECT SUM(eventSize) FROM events")
-    internal abstract fun databaseSize(): Int
+    internal abstract suspend fun databaseSize(): Int
 
     @Query("SELECT sessionId FROM events ORDER BY id ASC LIMIT 1")
-    internal abstract fun oldestSessionId(): String?
+    internal abstract suspend fun oldestSessionId(): String?
 
     @Query("DELETE FROM events WHERE sessionId = :sessionId")
-    internal abstract fun deleteSession(sessionId: String): Int
+    internal abstract suspend fun deleteSession(sessionId: String): Int
 
     @Transaction
-    internal open fun trimDatabase(maxDatabaseSize: Int) {
+    internal open suspend fun trimDatabase(maxDatabaseSize: Int) {
         while (databaseSize() > maxDatabaseSize) {
             val sessionId = oldestSessionId() ?: return
 

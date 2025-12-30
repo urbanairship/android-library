@@ -5,12 +5,14 @@ package com.urbanairship.job
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Airship
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.util.SerialQueue
 import java.lang.ref.WeakReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.withContext
 
 @VisibleForTesting
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -61,8 +63,11 @@ public interface JobRunner {
             return try {
                 // Use SerialQueue to ensure jobs run in FIFO sequential order for this handler
                 // All jobs for the same handler entry will execute one at a time in the order they arrive
-                entry.queue.run {
-                    entry.jobHandler.invoke(jobInfo)
+                // Switch to AirshipDispatchers.IO to ensure work runs on threads with proper TrafficStats tagging
+                withContext(AirshipDispatchers.IO) {
+                    entry.queue.run {
+                        entry.jobHandler.invoke(jobInfo)
+                    }
                 }
             } catch (e: Exception) {
                 // Log the exception but don't let it propagate to other entries

@@ -11,7 +11,6 @@ import com.urbanairship.http.RequestResult
 import com.urbanairship.http.RequestSession
 import com.urbanairship.json.JsonValue
 import java.util.Locale
-import kotlinx.coroutines.runBlocking
 
 /** A client that handles uploading analytic events */
 internal class EventApiClient(
@@ -27,7 +26,7 @@ internal class EventApiClient(
      * @param headers Headers
      * @return eventResponse
      */
-    fun sendEvents(
+    suspend fun sendEvents(
         channelId: String,
         events: List<JsonValue?>,
         @Size(min = 1) headers: Map<String, String>
@@ -49,14 +48,11 @@ internal class EventApiClient(
         )
 
         UALog.d("Sending analytics events. Request: $request Events: $events")
-        val response = runBlocking {
-            session.execute(request) { _, responseHeaders, _ ->
-                EventResponse(responseHeaders)
-            }
+        return session.execute(request) { _, responseHeaders, _ ->
+            EventResponse(responseHeaders)
+        }.also {
+            UALog.d("Analytics event response: $it")
         }
-
-        UALog.d("Analytics event response: $response")
-        return response
     }
 
     internal companion object {
