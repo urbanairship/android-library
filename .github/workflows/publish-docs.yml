@@ -34,11 +34,9 @@ jobs:
       # Docs should already be built and uploaded at this point, but we still need
       # this step in order for google-github-actions/auth to work in upload step.
       - name: Checkout repo
-        env:
-          VERSION: ${{ inputs.version }}
         uses: actions/checkout@v4
         with:
-          ref: refs/tags/$VERSION
+          ref: refs/tags/${{ inputs.version }}
 
       - name: Download prepared docs
         uses: actions/download-artifact@v4
