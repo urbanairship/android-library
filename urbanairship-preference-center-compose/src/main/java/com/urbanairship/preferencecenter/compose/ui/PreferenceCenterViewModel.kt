@@ -181,6 +181,8 @@ internal class DefaultPreferenceCenterViewModel(
             .onEach { actions.emit(it) }
             .flowOn(dispatcher)
             .launchIn(viewModelScope)
+
+        handle(Action.Refresh)
     }
 
     override fun handle(action: Action) {
