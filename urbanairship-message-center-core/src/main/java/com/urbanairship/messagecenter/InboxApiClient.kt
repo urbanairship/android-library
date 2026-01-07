@@ -52,6 +52,22 @@ internal class InboxApiClient(
         }
     }
 
+    suspend fun loadAirshipLayout(url: Uri, user: UserCredentials?): RequestResult<JsonValue> {
+        val request = Request(
+            url = url,
+            auth = user?.let { BasicAuth(it.username, it.password) },
+            method = "GET"
+        )
+
+        return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
+            return@execute if (UAHttpStatusUtil.inSuccessRange(status)) {
+                JsonValue.parseString(responseBody)
+            } else {
+                null
+            }
+        }
+    }
+
     suspend fun syncDeletedMessageState(
         user: UserCredentials,
         channelId: String,

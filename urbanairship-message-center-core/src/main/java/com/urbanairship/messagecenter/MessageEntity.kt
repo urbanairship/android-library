@@ -56,7 +56,7 @@ internal data class MessageEntity(
     }
 
     fun toMessage(): Message? = try {
-        Message.Companion.create(JsonValue.parseString(rawMessageObject), unread, deleted)
+        Message.create(JsonValue.parseString(rawMessageObject), unread, deleted)
     } catch (e: JsonException) {
         UALog.e(e) { "Failed to create Message from JSON" }
         null

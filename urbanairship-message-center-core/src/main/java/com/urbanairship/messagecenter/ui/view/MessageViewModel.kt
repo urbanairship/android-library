@@ -2,20 +2,17 @@ package com.urbanairship.messagecenter.ui.view
 
 import android.os.Parcelable
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.asLiveData
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.urbanairship.Airship
 import com.urbanairship.UALog
+import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.messagecenter.Inbox
-import com.urbanairship.messagecenter.InboxListener
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.messageCenter
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,10 +50,15 @@ public class MessageViewModel(
      * The currently loaded [Message], if we have one.
      *
      * This is a convenience property for accessing the message from the current state, and will
-     * be `null` unless the current state is [MessageViewState.Content].
+     * be `null` unless the current state is [MessageViewState.MessageContent].
      */
     public val currentMessage: Message?
-        get() = (_states.value as? MessageViewState.Content)?.message
+        get() {
+            return when(val state = _states.value) {
+                is MessageViewState.MessageContent -> state.message
+                else -> null
+            }
+        }
 
     init {
         viewModelScope.launch {
@@ -132,8 +134,23 @@ public class MessageViewModel(
             return MessageViewState.Error(MessageViewState.Error.Type.UNAVAILABLE)
         }
 
-        // Message is available, return it
-        return MessageViewState.Content(message)
+        return when(message.contentType) {
+            Message.ContentType.HTML,
+            Message.ContentType.PLAIN -> {
+                val content = MessageViewState.MessageContent.Content.Html
+                MessageViewState.MessageContent(message, content)
+            }
+
+            Message.ContentType.THOMAS -> {
+                val layout = inbox.loadMessageLayout(message)
+                if (layout != null) {
+                    val content = MessageViewState.MessageContent.Content.Native(layout)
+                    MessageViewState.MessageContent(message, content)
+                } else {
+                    MessageViewState.Error(MessageViewState.Error.Type.UNAVAILABLE)
+                }
+            }
+        }
     }
 
     public companion object {
@@ -156,9 +173,17 @@ public sealed class MessageViewState {
 
     /** Content state. */
     @Parcelize
-    public data class Content(
-        val message: Message
-    ) : MessageViewState(), Parcelable
+    public data class MessageContent(
+        val message: Message,
+        val content: Content
+    ) : MessageViewState(), Parcelable {
+        public sealed class Content : Parcelable {
+            @Parcelize
+            public data object Html: Content()
+            @Parcelize
+            public data class Native(val layout: AirshipLayout): Content()
+        }
+    }
 
     /** Error state. */
     public data class Error(val error: Type) : MessageViewState() {

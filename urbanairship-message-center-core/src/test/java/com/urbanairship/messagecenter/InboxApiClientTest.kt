@@ -1,10 +1,12 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.messagecenter
 
+import android.net.Uri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.Platform
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
+import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestAuth.ChannelTokenAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestException
@@ -254,5 +256,23 @@ public class InboxApiClientTest {
         runtimeConfig.setPlatform(Platform.UNKNOWN)
         val result = inboxApiClient.updateUser(userCredentials, "channelId")
         assertNotNull(result.exception)
+    }
+
+    @Test
+    public fun testLoadAirshipLayoutSucceeds(): TestResult = runTest {
+        val layoutJson = "sample-layout"
+
+        requestSession.addResponse(200, layoutJson)
+
+        val layoutUrl = "https://some.url/layout"
+        val response = inboxApiClient.loadAirshipLayout(Uri.parse(layoutUrl), userCredentials)
+
+        assertEquals(200, response.status)
+        assertNotNull(response.value)
+        assertEquals(JsonValue.parseString(layoutJson), response.value?.toJsonValue())
+
+        assertEquals("GET", requestSession.lastRequest.method)
+        assertEquals(layoutUrl, requestSession.lastRequest.url.toString())
+        assertEquals(RequestAuth.BasicAuth(userCredentials.username, userCredentials.password), requestSession.lastRequest.auth)
     }
 }

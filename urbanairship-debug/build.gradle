@@ -26,7 +26,6 @@ android {
 dependencies {
     api project(':urbanairship-core')
     implementation project(':urbanairship-automation')
-    implementation project(':urbanairship-message-center-compose')
     implementation project(':urbanairship-preference-center-compose')
     implementation project(':urbanairship-feature-flag')
 

@@ -7,12 +7,13 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.urbanairship.UALog
+import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.messagecenter.Inbox
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State
-import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State.Content.WebViewState
+import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State.MessageContent.WebViewState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,9 +34,9 @@ internal interface MessageCenterMessageViewModel {
         data object Loading : State()
 
         /** Content state. */
-        data class Content(
+        data class MessageContent(
             val message: Message,
-            val webViewState: WebViewState = WebViewState.INIT,
+            val content: Content,
         ) : State() {
             enum class WebViewState {
                 INIT,
@@ -44,8 +45,13 @@ internal interface MessageCenterMessageViewModel {
                 LOADED
             }
 
+            sealed class Content {
+                data class Html(val webViewState: WebViewState = WebViewState.INIT): Content()
+                data class Native(val layout: AirshipLayout): Content()
+            }
+
             override fun toString(): String {
-                return "Content(messageId=${message.id}, webViewState=$webViewState)"
+                return "Content(messageId=${message.id}, content=$content)"
             }
         }
 
@@ -114,10 +120,10 @@ internal class DefaultMessageCenterMessageViewModel(
      * The currently loaded [Message], if we have one.
      *
      * This is a convenience property for accessing the message from the current state, and will
-     * be `null` unless the current state is [State.Content].
+     * be `null` unless the current state is [State.MessageContent].
      */
     val currentMessage: Message?
-        get() = (_states.value as? State.Content)?.message
+        get() = (_states.value as? State.MessageContent)?.message
 
     private var refreshJob: Job? = null
 
@@ -197,10 +203,17 @@ internal class DefaultMessageCenterMessageViewModel(
 
     fun updateWebViewState(state: WebViewState) {
         val current = _states.value
-        if (current is State.Content) {
-            UALog.v { "Updating web view state: $state" }
-            _states.value = current.copy(webViewState = state)
+        if (current !is State.MessageContent) {
+            return
         }
+
+        val content = current.content
+        if (content !is State.MessageContent.Content.Html) {
+            return
+        }
+
+        UALog.v { "Updating web view state: $state" }
+        _states.value = current.copy(content = content.copy(state))
     }
 
     fun subscribeForMessageUpdates(): Job =
@@ -229,8 +242,23 @@ internal class DefaultMessageCenterMessageViewModel(
             return State.Error(State.Error.Type.UNAVAILABLE)
         }
 
-        // Message is available, return it
-        return State.Content(message, WebViewState.INIT)
+        return when(message.contentType) {
+            Message.ContentType.HTML,
+            Message.ContentType.PLAIN -> {
+                val content = State.MessageContent.Content.Html(WebViewState.INIT)
+                State.MessageContent(message, content)
+            }
+
+            Message.ContentType.THOMAS -> {
+                val layout = inbox.loadMessageLayout(message)
+                if (layout != null) {
+                    val content = State.MessageContent.Content.Native(layout)
+                    State.MessageContent(message, content)
+                } else {
+                    State.Error(State.Error.Type.UNAVAILABLE)
+                }
+            }
+        }
     }
 
     companion object {

@@ -2,17 +2,21 @@
 package com.urbanairship.messagecenter
 
 import android.content.Context
+import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.Airship
 import com.urbanairship.Platform
+import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.http.RequestException
 import com.urbanairship.http.RequestResult
+import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 import com.urbanairship.messagecenter.InboxJobHandler.Companion.LAST_MESSAGE_REFRESH_TIME
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
@@ -28,6 +32,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
@@ -609,6 +614,116 @@ public class InboxJobHandlerTest {
         }
     }
 
+    @Test
+    public fun `test loadAirshipLayout returns layout on success`(): TestResult = runTest {
+        val messageJson = JsonValue.parseString("""
+            {
+              "message_id": "test-message-id",
+              "message_body_url": "https://some.url",
+              "message_url": "https://some.url",
+              "unread": true,
+              "message_sent": "2024-10-21 18:41:03",
+              "title": "Message title",
+              "content_type": "${Message.ContentType.THOMAS.jsonValue}"
+            }
+        """.trimIndent())
+        val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false)!!
+
+        coEvery { user.userCredentials } returns userCredentials
+        coEvery {
+            mockInboxApiClient.loadAirshipLayout(Uri.parse(message.bodyUrl), userCredentials)
+        } returns RequestResult(
+            status = HTTP_OK,
+            value = JsonValue.parseString(defaultLayoutJson),
+            body = null,
+            headers = null
+        )
+
+        val result = jobHandler.loadAirshipLayout(message)
+        val expected = AirshipLayout(JsonValue.parseString(defaultLayoutJson))
+
+        assertEquals(expected, result)
+        coVerify { mockInboxApiClient.loadAirshipLayout(Uri.parse(message.bodyUrl!!), userCredentials) }
+    }
+
+    @Test
+    public fun `test loadAirshipLayout returns null for wrong content type`(): TestResult = runTest {
+        val messageJson = JsonValue.parseString("""
+            {
+              "message_id": "test-message-id",
+              "message_body_url": "https://some.url",
+              "message_url": "https://some.url",
+              "unread": true,
+              "message_sent": "2024-10-21 18:41:03",
+              "title": "Message title",
+              "content_type": "${Message.ContentType.HTML.jsonValue}"
+            }
+        """.trimIndent())
+        val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false)!!
+
+        val result = jobHandler.loadAirshipLayout(message)
+
+        assertNull(result)
+        coVerify(exactly = 0) { mockInboxApiClient.loadAirshipLayout(any(), any()) }
+    }
+
+    @Test
+    public fun `test loadAirshipLayout returns null on API failure`(): TestResult = runTest {
+        val messageJson = JsonValue.parseString("""
+            {
+              "message_id": "test-message-id",
+              "message_body_url": "https://some.url",
+              "message_url": "https://some.url",
+              "unread": true,
+              "message_sent": "2024-10-21 18:41:03",
+              "title": "Message title",
+              "content_type": "${Message.ContentType.THOMAS.jsonValue}"
+            }
+        """.trimIndent())
+        val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false)!!
+
+        coEvery { user.userCredentials } returns userCredentials
+        coEvery {
+            mockInboxApiClient.loadAirshipLayout(Uri.parse(message.bodyUrl!!), userCredentials)
+        } returns RequestResult(
+            status = HTTP_INTERNAL_ERROR,
+            value = null,
+            body = null,
+            headers = null
+        )
+
+        val result = jobHandler.loadAirshipLayout(message)
+
+        assertNull(result)
+        coVerify { mockInboxApiClient.loadAirshipLayout(Uri.parse(message.bodyUrl!!), userCredentials) }
+    }
+
+    @Test
+    public fun `test loadAirshipLayout returns null on exception`(): TestResult = runTest {
+        val messageJson = JsonValue.parseString("""
+            {
+              "message_id": "test-message-id",
+              "message_body_url": "https://some.url",
+              "message_url": "https://some.url",
+              "unread": true,
+              "message_sent": "2024-10-21 18:41:03",
+              "title": "Message title",
+              "content_type": "${Message.ContentType.THOMAS.jsonValue}"
+            }
+        """.trimIndent())
+        val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false)!!
+
+        coEvery { user.userCredentials } returns userCredentials
+        coEvery {
+            mockInboxApiClient.loadAirshipLayout(any(), any())
+        } throws RuntimeException("test exception")
+
+        val result = jobHandler.loadAirshipLayout(message)
+
+        assertNull(result)
+        coVerify { mockInboxApiClient.loadAirshipLayout(Uri.parse(message.bodyUrl!!), userCredentials) }
+    }
+
     @Throws(JsonException::class)
     @Suppress("SameParameterValue") // unread is always false
     private fun createFakeMessage(messageId: String, unread: Boolean, deleted: Boolean): Message {
@@ -635,4 +750,24 @@ public class InboxJobHandlerTest {
 
         return Message.create(messageJson, unread, deleted)!!
     }
+
+    private val defaultLayoutJson = """
+            {
+                  "version":1,
+                  "presentation":{
+                     "type":"embedded",
+                     "embedded_id":"home_banner",
+                     "default_placement":{
+                        "size":{
+                           "width":"50%",
+                           "height":"50%"
+                        }
+                     }
+                  },
+                  "view":{
+                     "type":"container",
+                     "items":[]
+                  }
+                }
+        """.trimIndent()
 }

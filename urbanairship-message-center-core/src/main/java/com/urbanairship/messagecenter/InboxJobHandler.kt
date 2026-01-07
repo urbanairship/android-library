@@ -2,10 +2,13 @@
 
 package com.urbanairship.messagecenter
 
+import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
@@ -81,49 +84,56 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
         return false
     }
 
+    suspend fun loadAirshipLayout(message: Message): AirshipLayout? {
+        if (message.contentType != Message.ContentType.THOMAS) {
+            return null
+        }
+
+        try {
+            val url = Uri.parse(message.bodyUrl)
+            val response = inboxApiClient.loadAirshipLayout(url, user.userCredentials)
+            return response.value?.let { AirshipLayout(it) }
+        } catch (ex: Exception) {
+            UALog.w { "Failed to load Airship layout: ${ex.message}" }
+            return null
+        }
+    }
+
     /**
      * Update the Rich Push Inbox.
      *
      * @param serverMessages The messages from the server.
      */
     private suspend fun updateInbox(serverMessages: JsonList) {
-        val messagesToInsert: MutableList<JsonValue> = ArrayList()
-        val serverMessageIds = HashSet<String>()
-        for (message in serverMessages) {
-            if (!message.isJsonMap) {
-                UALog.e { "InboxJobHandler - Invalid message payload: $message" }
-                continue
+        val parsedMessages = serverMessages.mapNotNull {
+            val content = it.map ?: run {
+                UALog.e { "InboxJobHandler - Invalid message payload: $it" }
+                return@mapNotNull null
             }
 
-            val messageId = message.optMap().opt(Message.KEY_ID).string
-            if (messageId == null) {
-                UALog.e { "InboxJobHandler - Invalid message payload, missing message ID: $message" }
-                continue
+            val messageId = content[Message.KEY_ID]?.string ?: run {
+                UALog.e { "InboxJobHandler - Invalid message payload, missing message ID: $it" }
+                return@mapNotNull null
             }
 
-            serverMessageIds.add(messageId)
-
-            val jsonMap = message.map
-            if (jsonMap == null) {
-                UALog.e { "InboxJobHandler - Invalid message payload: $message" }
-                continue
-            }
-
-            val messageEntity = MessageEntity.createMessageFromPayload(messageId, jsonMap)
-            if (messageEntity == null) {
+            val dbEntry = MessageEntity.createMessageFromPayload(messageId, content)
+            if (dbEntry == null) {
                 UALog.e { "InboxJobHandler - Message Entity is null" }
-                continue
+                return@mapNotNull null
             }
 
-            if (!messageDao.messageExists(messageEntity.messageId)) {
-                messagesToInsert.add(message)
-            }
+            return@mapNotNull messageId to it
+        }
+            .toMap()
+
+        val messagesToInsert = parsedMessages.filter { (messageId, _) ->
+            !messageDao.messageExists(messageId)
         }
 
         // Bulk insert any new messages
         if (messagesToInsert.isNotEmpty()) {
             try {
-                val messages = MessageEntity.createMessagesFromPayload(messagesToInsert)
+                val messages = MessageEntity.createMessagesFromPayload(messagesToInsert.values.toList())
                 messageDao.insertMessages(messages)
             } catch (e: JsonException) {
                 UALog.e(e) { "Failed to create messages from payload." }
@@ -131,7 +141,7 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
         }
 
         val deletedMessageIds = messageDao.getMessageIds().toMutableSet()
-        deletedMessageIds.removeAll(serverMessageIds)
+        deletedMessageIds.removeAll(parsedMessages.keys)
         messageDao.deleteMessages(deletedMessageIds)
     }
 

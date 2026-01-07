@@ -242,6 +242,7 @@ private fun PreviewMessageListItem() {
         reporting = null,
         rawMessageJson = JsonValue.NULL,
         isDeletedClient = false,
+        contentType = Message.ContentType.HTML
     )
 
     MessageCenterTheme {

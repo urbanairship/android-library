@@ -24,12 +24,12 @@ public class MessageCenterMessageState internal constructor(
 
     /** The message title, or `null` if no message is displayed */
     public val title: String? by derivedStateOf {
-        (viewState as? State.Content)?.message?.title
+        (viewState as? State.MessageContent)?.message?.title
     }
 
     /** The message ID, or `null` if no message is displayed */
     public var messageId: String?
-        get() = (viewState as? State.Content)?.message?.id
+        get() = (viewState as? State.MessageContent)?.message?.id
         set(_) {
             onAction(
                 messageId?.let { Action.LoadMessage(it) } ?: Action.ClearMessage

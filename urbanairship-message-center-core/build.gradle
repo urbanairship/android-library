@@ -22,6 +22,7 @@ android {
 
 dependencies {
     api project(':urbanairship-core')
+    api project(':urbanairship-automation')
 
     // Kotlin
     implementation(libs.kotlinx.coroutines.core)
