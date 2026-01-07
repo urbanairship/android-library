@@ -274,20 +274,8 @@ internal class MediaView(
                 }
 
                 doOnAttach {
-                    val params = this@MediaView.layoutParams
-                    val isWrapWidth = params.width == WRAP_CONTENT
-                    val isWrapHeight = params.height == WRAP_CONTENT
-
-                    if (isWrapWidth || isWrapHeight) {
-                        // If either dimension is wrap_content, the aspect ratio will be adjusted
-                        // based on the video's aspect ratio.
-                        model.viewInfo.video?.aspectRatio?.let {
-                            aspectRatio = it.toFloat()
-                        }
-                    } else {
-                        // If the width and height are known, we don't need to fix to the aspect
-                        // ratio of the video.
-                        aspectRatio = null
+                    model.viewInfo.video?.aspectRatio?.let {
+                        aspectRatio = it.toFloat()
                     }
                 }
             }
