@@ -4,6 +4,13 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.0.7 - December 30, 2025
+
+Patch release with improvements to notification processing timing that resolves a crash when app is opened from a notification on Android 15.
+
+### Changes
+- Fixed notification processing timing for Android 15 compatibility
+
 ## Version 20.0.6 - December 15, 2025
 
 Patch release to fix a regression in `NotificationIntentProcessor` that interfered with handling of `PendingIntent`s set on custom built notifications.

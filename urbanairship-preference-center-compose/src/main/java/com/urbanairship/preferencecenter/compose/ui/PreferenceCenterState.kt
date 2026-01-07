@@ -75,7 +75,9 @@ internal fun rememberPreferenceCenterState(
 
     val identifier = viewModel.identifier
 
-    val state = remember { PreferenceCenterState(context, identifier, viewModel::handle) }
+    val state = remember(identifier) {
+        PreferenceCenterState(context, identifier, viewModel::handle)
+    }
 
     LaunchedEffect(identifier) {
         withContext(viewModel.scope.coroutineContext) {

@@ -243,9 +243,9 @@ public class PreferenceCenterViewModelTest {
 
     @Test
     public fun emitsInitialLoadingState(): TestResult = runTest {
-        viewModel(mockPreferenceCenter = null, mockChannel = null).run {
+        viewModel().run {
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 cancelAndIgnoreRemainingEvents()
             }
         }
@@ -274,7 +274,7 @@ public class PreferenceCenterViewModelTest {
             )
         ).run {
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 handle(Action.Refresh)
 
                 val initialState = awaitItem()
@@ -299,7 +299,7 @@ public class PreferenceCenterViewModelTest {
         viewModel(config = config).run {
             states.test {
                 handle(Action.Refresh)
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 assertTrue(awaitItem() is ViewState.Content)
 
                 cancelAndIgnoreRemainingEvents()
@@ -320,7 +320,7 @@ public class PreferenceCenterViewModelTest {
         viewModel(namedUserIdFlow = namedUserIdFlow).run {
             states.test {
                 handle(Action.Refresh)
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 assertTrue(awaitItem() is ViewState.Content)
 
                 namedUserIdFlow.emit("some other user")
@@ -343,7 +343,7 @@ public class PreferenceCenterViewModelTest {
         viewModel(config = config).run {
             states.test {
                 handle(Action.Refresh)
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 assertTrue(awaitItem() is ViewState.Content)
 
                 cancelAndIgnoreRemainingEvents()
@@ -368,7 +368,7 @@ public class PreferenceCenterViewModelTest {
         viewModel(config = config).run {
             states.test {
                 handle(Action.Refresh)
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 assertTrue(awaitItem() is ViewState.Content)
 
                 cancelAndIgnoreRemainingEvents()
@@ -393,7 +393,7 @@ public class PreferenceCenterViewModelTest {
         viewModel(config = config).run {
             states.test {
                 handle(Action.Refresh)
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 assertTrue(awaitItem() is ViewState.Content)
 
                 cancelAndIgnoreRemainingEvents()
@@ -430,7 +430,7 @@ public class PreferenceCenterViewModelTest {
             val item = Item.ChannelSubscription("id", SUBSCRIPTION_ID_1, CommonDisplay.EMPTY, emptyList())
 
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
 
                 handle(Action.Refresh)
                 assertTrue(awaitItem() is ViewState.Content)
@@ -440,19 +440,18 @@ public class PreferenceCenterViewModelTest {
                 assertTrue(state is ViewState.Content)
 
                 state as ViewState.Content
-                assertEquals(state.channelSubscriptions, setOf(SUBSCRIPTION_ID_1))
+                assertEquals(setOf(SUBSCRIPTION_ID_1), state.channelSubscriptions)
                 cancelAndIgnoreRemainingEvents()
             }
 
             coVerifyOrder {
                 contact.namedUserIdFlow
                 channel.subscriptions
-
                 channel.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, true)
                 editor.apply()
             }
-            confirmVerified(channel, editor)
+            confirmVerified(editor)
         }
     }
 
@@ -475,30 +474,31 @@ public class PreferenceCenterViewModelTest {
             val item = Item.ChannelSubscription("id", SUBSCRIPTION_ID_2, CommonDisplay.EMPTY, emptyList())
 
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
 
                 handle(Action.Refresh)
                 val initialState = awaitItem()
                 assertTrue(initialState is ViewState.Content)
                 initialState as ViewState.Content
-                assertEquals(initialState.channelSubscriptions, setOf(SUBSCRIPTION_ID_1, SUBSCRIPTION_ID_2))
+                assertEquals(setOf(SUBSCRIPTION_ID_1, SUBSCRIPTION_ID_2), initialState.channelSubscriptions)
 
                 handle(Action.PreferenceItemChanged(item, isEnabled = false))
                 val state = awaitItem()
                 assertTrue(state is ViewState.Content)
 
                 state as ViewState.Content
-                assertEquals(state.channelSubscriptions, setOf(SUBSCRIPTION_ID_1))
+                assertEquals(setOf(SUBSCRIPTION_ID_1), state.channelSubscriptions)
                 cancel()
             }
 
             coVerifyOrder {
+                contact.namedUserIdFlow
                 channel.subscriptions
                 channel.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, false)
                 editor.apply()
             }
-            confirmVerified(channel, editor)
+            confirmVerified(editor)
         }
     }
 
@@ -529,7 +529,7 @@ public class PreferenceCenterViewModelTest {
             val item = CONTACT_SUBSCRIPTION_ITEM_1
 
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
 
                 handle(Action.Refresh)
                 assertTrue(awaitItem() is ViewState.Content)
@@ -539,14 +539,13 @@ public class PreferenceCenterViewModelTest {
                 assertTrue(state is ViewState.Content)
 
                 state as ViewState.Content
-                assertEquals(state.contactSubscriptions, expectedSubscriptions)
+                assertEquals(expectedSubscriptions, state.contactSubscriptions)
                 cancelAndIgnoreRemainingEvents()
             }
 
             coVerifyOrder {
                 contact.namedUserIdFlow
                 contact.subscriptions
-
                 contact.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, item.scopes, true)
                 editor.apply()
@@ -555,7 +554,7 @@ public class PreferenceCenterViewModelTest {
                 channel.subscriptions
                 channel.editSubscriptionLists()
             }
-            confirmVerified(channel, contact, editor)
+            confirmVerified(editor)
         }
     }
 
@@ -589,20 +588,20 @@ public class PreferenceCenterViewModelTest {
             val item = CONTACT_SUBSCRIPTION_ITEM_1
 
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
 
                 handle(Action.Refresh)
                 val initialState = awaitItem()
                 assertTrue(initialState is ViewState.Content)
                 initialState as ViewState.Content
-                assertEquals(initialState.contactSubscriptions, initialSubscriptions)
+                assertEquals(initialSubscriptions, initialState.contactSubscriptions)
 
                 handle(Action.ScopedPreferenceItemChanged(item, item.scopes, isEnabled = false))
                 val state = awaitItem()
                 assertTrue(state is ViewState.Content)
 
                 state as ViewState.Content
-                assertEquals(state.contactSubscriptions, expectedSubscriptions)
+                assertEquals(expectedSubscriptions, state.contactSubscriptions)
 
                 cancelAndIgnoreRemainingEvents()
             }
@@ -610,7 +609,6 @@ public class PreferenceCenterViewModelTest {
             coVerifyOrder {
                 contact.namedUserIdFlow
                 contact.subscriptions
-
                 contact.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, item.scopes, false)
                 editor.apply()
@@ -619,7 +617,7 @@ public class PreferenceCenterViewModelTest {
                 channel.subscriptions
                 channel.editSubscriptionLists()
             }
-            confirmVerified(channel, contact, editor)
+            confirmVerified(editor)
         }
     }
 
@@ -651,7 +649,7 @@ public class PreferenceCenterViewModelTest {
             }
         ).run {
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
 
                 handle(Action.Refresh)
                 assertTrue(awaitItem() is ViewState.Content)
@@ -661,14 +659,13 @@ public class PreferenceCenterViewModelTest {
                 assertTrue(state is ViewState.Content)
 
                 state as ViewState.Content
-                assertEquals(state.contactSubscriptions, expectedSubscriptions)
+                assertEquals(expectedSubscriptions, state.contactSubscriptions)
                 cancel()
             }
 
             coVerifyOrder {
                 contact.namedUserIdFlow
                 contact.subscriptions
-
                 contact.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, component.scopes, true)
                 editor.apply()
@@ -677,7 +674,7 @@ public class PreferenceCenterViewModelTest {
                 channel.subscriptions
                 channel.editSubscriptionLists()
             }
-            confirmVerified(channel, contact, editor)
+            confirmVerified(editor)
         }
     }
 
@@ -715,20 +712,20 @@ public class PreferenceCenterViewModelTest {
             val item = CONTACT_SUBSCRIPTION_GROUP_ITEM_4
 
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
 
                 handle(Action.Refresh)
                 val initialState = awaitItem()
                 assertTrue(initialState is ViewState.Content)
                 initialState as ViewState.Content
-                assertEquals(initialState.contactSubscriptions, initialSubscriptions)
+                assertEquals(initialSubscriptions, initialState.contactSubscriptions)
 
                 handle(Action.ScopedPreferenceItemChanged(item, unsubscribeScopes, isEnabled = false))
                 val state = awaitItem()
                 assertTrue(state is ViewState.Content)
 
                 state as ViewState.Content
-                assertEquals(state.contactSubscriptions, expectedSubscriptions)
+                assertEquals(expectedSubscriptions, state.contactSubscriptions)
 
                 cancel()
             }
@@ -736,7 +733,6 @@ public class PreferenceCenterViewModelTest {
             coVerifyOrder {
                 contact.namedUserIdFlow
                 contact.subscriptions
-
                 contact.editSubscriptionLists(any())
                 editor.mutate(item.subscriptionId, unsubscribeScopes, false)
                 editor.apply()
@@ -745,7 +741,7 @@ public class PreferenceCenterViewModelTest {
                 channel.subscriptions
                 channel.editSubscriptionLists()
             }
-            confirmVerified(channel, contact, editor)
+            confirmVerified(editor)
         }
     }
 
@@ -768,7 +764,7 @@ public class PreferenceCenterViewModelTest {
             conditionState = initialConditions
         ).run {
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
 
                 handle(Action.Refresh)
 
@@ -776,9 +772,9 @@ public class PreferenceCenterViewModelTest {
                 // Ensure we received an initial content state
                 assertTrue(initialContent is ViewState.Content)
                 initialContent as ViewState.Content
-                assertEquals(initialContent.conditionState, initialConditions)
+                assertEquals(initialConditions, initialContent.conditionState,)
                 // Config should contain the entire unfiltered config
-                assertEquals(initialContent.config, ALERT_CONDITIONS_CONFIG)
+                assertEquals(ALERT_CONDITIONS_CONFIG, initialContent.config)
 
                 // List items should only contain the alert item when notifications are opted out
                 assertTrue(initialContent.listItems.size == 1)
@@ -791,7 +787,7 @@ public class PreferenceCenterViewModelTest {
                 // Sanity check
                 assertTrue(updatedContent is ViewState.Content)
                 updatedContent as ViewState.Content
-                assertEquals(updatedContent.conditionState, updatedConditions)
+                assertEquals(updatedConditions, updatedContent.conditionState)
 
                 // List items should contain a section with two subscription pref items
                 assertEquals(updatedContent.listItems.size, 3)
@@ -814,7 +810,7 @@ public class PreferenceCenterViewModelTest {
             "app-store" to JsonValue.wrap("baz")
         )
 
-        viewModel().run {
+        viewModel(advanceOnInit = true).run {
             handle(Action.ButtonActions(actions))
             advanceUntilIdle()
         }
@@ -866,7 +862,7 @@ public class PreferenceCenterViewModelTest {
         val mockItem: Item.ContactManagement = mockk {}
         viewModel().run {
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 handle(Action.Refresh)
                 assertTrue(awaitItem() is ViewState.Content)
                 ensureAllEventsConsumed()
@@ -875,7 +871,7 @@ public class PreferenceCenterViewModelTest {
             displayDialog.test {
                 skipItems(1)
                 handle(Action.RequestAddChannel(mockItem))
-                assertEquals(awaitItem(), ContactManagerDialog.Add(mockItem))
+                assertEquals(ContactManagerDialog.Add(mockItem), awaitItem())
                 ensureAllEventsConsumed()
             }
         }
@@ -895,7 +891,7 @@ public class PreferenceCenterViewModelTest {
 
         viewModel().run {
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 handle(Action.Refresh)
                 assertTrue(awaitItem() is ViewState.Content)
                 ensureAllEventsConsumed()
@@ -905,7 +901,7 @@ public class PreferenceCenterViewModelTest {
                 skipItems(1)
 
                 handle(Action.ConfirmAddChannel(mockItem, dialogResult))
-                assertEquals(awaitItem(), ContactManagerDialog.ConfirmAdd(mockMessage))
+                assertEquals(ContactManagerDialog.ConfirmAdd(mockMessage), awaitItem())
                 ensureAllEventsConsumed()
             }
         }
@@ -927,7 +923,7 @@ public class PreferenceCenterViewModelTest {
 
         viewModel().run {
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 handle(Action.Refresh)
                 assertTrue(awaitItem() is ViewState.Content)
                 ensureAllEventsConsumed()
@@ -937,7 +933,7 @@ public class PreferenceCenterViewModelTest {
                 skipItems(1)
 
                 handle(Action.RequestRemoveChannel(mockItem, contactChannel))
-                assertEquals(awaitItem(), ContactManagerDialog.Remove(mockItem, contactChannel))
+                assertEquals(ContactManagerDialog.Remove(mockItem, contactChannel), awaitItem())
                 ensureAllEventsConsumed()
             }
         }
@@ -959,7 +955,7 @@ public class PreferenceCenterViewModelTest {
 
         viewModel().run {
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 handle(Action.Refresh)
                 val initialState = awaitItem() as ViewState.Content
                 assertTrue(initialState.contactChannels.isEmpty())
@@ -1011,7 +1007,7 @@ public class PreferenceCenterViewModelTest {
 
         viewModel().run {
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 handle(Action.Refresh)
                 val initialState = awaitItem() as ViewState.Content
                 assertTrue(initialState.contactChannels.isEmpty())
@@ -1078,7 +1074,7 @@ public class PreferenceCenterViewModelTest {
             every { preferenceCenter.inputValidator } returns validator
 
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 handle(Action.Refresh)
                 assertTrue(awaitItem() is ViewState.Content)
                 ensureAllEventsConsumed()
@@ -1088,7 +1084,7 @@ public class PreferenceCenterViewModelTest {
                 assertNull(awaitItem())
 
                 handle(Action.ValidateSmsChannel(item, address, senderId, prefix))
-                assertEquals(awaitItem(), ContactManagerDialog.ConfirmAdd(item.addPrompt.prompt.onSubmit!!))
+                assertEquals(ContactManagerDialog.ConfirmAdd(item.addPrompt.prompt.onSubmit!!), awaitItem())
                 ensureAllEventsConsumed()
             }
 
@@ -1137,7 +1133,7 @@ public class PreferenceCenterViewModelTest {
             every { preferenceCenter.inputValidator } returns validator
 
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 handle(Action.Refresh)
                 assertTrue(awaitItem() is ViewState.Content)
                 ensureAllEventsConsumed()
@@ -1149,7 +1145,7 @@ public class PreferenceCenterViewModelTest {
                 errors.test {
                     assertNull(awaitItem())
                     handle(Action.ValidateSmsChannel(item, address, senderId))
-                    assertEquals(awaitItem(), invalidMessage)
+                    assertEquals(invalidMessage, awaitItem())
                     ensureAllEventsConsumed()
                 }
 
@@ -1179,7 +1175,7 @@ public class PreferenceCenterViewModelTest {
             mockContact = { coJustRun { resendDoubleOptIn(any()) } }
         ).run {
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 handle(Action.Refresh)
                 assertTrue(awaitItem() is ViewState.Content)
                 ensureAllEventsConsumed()
@@ -1189,7 +1185,7 @@ public class PreferenceCenterViewModelTest {
                 assertNull(awaitItem())
 
                 handle(Action.ResendChannelVerification(item, contactChannel))
-                assertEquals(awaitItem(), ContactManagerDialog.ResendConfirmation(item.platform.resendOptions.onSuccess!!))
+                assertEquals(ContactManagerDialog.ResendConfirmation(item.platform.resendOptions.onSuccess!!), awaitItem())
                 ensureAllEventsConsumed()
             }
         }
@@ -1239,20 +1235,20 @@ public class PreferenceCenterViewModelTest {
             dispatcher = testDispatcher
         ).run {
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 contactChannelsFlow.emit(Result.success(initialChannels))
 
                 handle(Action.Refresh)
                 val initialState = awaitItem() as ViewState.Content
-                assertEquals(initialState.contactChannels, initialChannels.toSet())
+                assertEquals(initialChannels.toSet(), initialState.contactChannels)
 
                 contactChannelsFlow.emit(Result.success(updatedChannels1))
                 val updatedState1 = awaitItem() as ViewState.Content
-                assertEquals(updatedState1.contactChannels, updatedChannels1.toSet())
+                assertEquals(updatedChannels1.toSet(), updatedState1.contactChannels)
 
                 contactChannelsFlow.emit(Result.success(updatedChannels2))
                 val updatedState2 = awaitItem() as ViewState.Content
-                assertEquals(updatedState2.contactChannels, updatedChannels2.toSet())
+                assertEquals(updatedChannels2.toSet(), updatedState2.contactChannels)
 
                 assertTrue(cancelAndConsumeRemainingEvents().isEmpty())
             }
@@ -1288,18 +1284,18 @@ public class PreferenceCenterViewModelTest {
             dispatcher = testDispatcher
         ).run {
             states.test {
-                assertEquals(awaitItem(), ViewState.Loading)
+                assertEquals(ViewState.Loading, awaitItem())
                 handle(Action.Refresh)
 
                 val initialState = awaitItem() as ViewState.Content
-                assertEquals(initialState.contactChannels, setOf(contactChannel))
-                assertEquals(initialState.contactChannelState, mapOf(contactChannel to initialChannelState))
+                assertEquals(setOf(contactChannel), initialState.contactChannels)
+                assertEquals(mapOf(contactChannel to initialChannelState), initialState.contactChannelState)
 
                 handle(Action.UpdateContactChannel(contactChannel, updatedChannelState))
 
                 val updatedState = awaitItem() as ViewState.Content
-                assertEquals(updatedState.contactChannels, setOf(contactChannel))
-                assertEquals(updatedState.contactChannelState, mapOf(contactChannel to updatedChannelState))
+                assertEquals(setOf(contactChannel), updatedState.contactChannels)
+                assertEquals(mapOf(contactChannel to updatedChannelState), updatedState.contactChannelState)
 
                 ensureAllEventsConsumed()
             }
@@ -1327,6 +1323,7 @@ public class PreferenceCenterViewModelTest {
         mockConditionStateMonitor: (ConditionStateMonitor.() -> Unit)? = {},
         conditionState: Condition.State = Condition.State(isOptedIn = true),
         namedUserIdFlow: StateFlow<String?> = MutableStateFlow(null),
+        advanceOnInit: Boolean = false,
     ): DefaultPreferenceCenterViewModel {
         preferenceCenter = if (mockPreferenceCenter == null) {
             mockk(relaxUnitFun = true)
@@ -1380,7 +1377,9 @@ public class PreferenceCenterViewModelTest {
             dispatcher = dispatcher,
             conditionMonitor = conditionMonitor,
         ).also {
-            advanceUntilIdle()
+            if (advanceOnInit) {
+                advanceUntilIdle()
+            }
         }
     }
 }

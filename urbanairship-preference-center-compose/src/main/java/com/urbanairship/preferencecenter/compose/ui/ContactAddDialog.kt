@@ -67,8 +67,9 @@ internal fun ContactAddDialog(
 ) {
     var isValid by remember { mutableStateOf(false) }
     var inputValue by remember { mutableStateOf("") }
-    var senderInfo: SmsSenderInfo? =
-        (platform as? Platform.Sms)?.registrationOptions?.senders?.first()
+    var senderInfo: SmsSenderInfo? by remember {
+        mutableStateOf((platform as? Platform.Sms)?.registrationOptions?.senders?.first())
+    }
     val errorText = viewModel.errors.collectAsStateWithLifecycle(null).value
 
     BasicAlertDialog(
@@ -149,7 +150,10 @@ internal fun ContactAddDialog(
                     },
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Done,
-                        keyboardType = KeyboardType.Phone
+                        keyboardType = when (platform) {
+                            is Platform.Email -> KeyboardType.Email
+                            is Platform.Sms -> KeyboardType.Phone
+                        }
                     ),
                     keyboardActions = KeyboardActions(
                         onDone = {

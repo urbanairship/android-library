@@ -22,6 +22,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,6 +31,7 @@ import com.urbanairship.contacts.ContactChannel
 import com.urbanairship.contacts.EmailRegistrationOptions
 import com.urbanairship.contacts.SmsRegistrationOptions
 import com.urbanairship.preferencecenter.compose.ui.ViewState
+import com.urbanairship.preferencecenter.compose.ui.isOptedIn
 import com.urbanairship.preferencecenter.compose.ui.theme.PrefCenterTheme
 import com.urbanairship.preferencecenter.compose.ui.theme.PreferenceCenterTheme
 import com.urbanairship.preferencecenter.core.R
@@ -130,17 +133,31 @@ private fun listView(
                     Modifier
                 }
 
+                // Build accessibility description matching the View implementation
+                val accessibilityDescription = itemContentDescription(
+                    context = context,
+                    item = item,
+                    maskedAddress = channel.maskedAddress,
+                    isOptedIn = channel.isOptedIn
+                )
+
+                val resendClickLabel = if (!channel.isOptedIn) {
+                    item.platform.resendOptions.button.contentDescription
+                        ?: item.platform.resendOptions.button.text
+                } else null
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.weight(1f)
                         .then(clickModifier)
                         .semantics(mergeDescendants = true) {
-                            // TODO: handle a11y description for merged children?
-                            // .semantics {
-                            //     contentDescription =
-                            //         item.platform.resendOptions.button.contentDescription
-                            //             ?: item.platform.resendOptions.button.text
-                            // },
+                            contentDescription = accessibilityDescription
+                            resendClickLabel?.let { label ->
+                                onClick(label = label) {
+                                    handler.invoke(ContactManagementItem.Action.Resend(channel))
+                                    true
+                                }
+                            }
                         }
                 ) {
                     val iconRes = when(item.platform) {
@@ -232,6 +249,43 @@ private fun emptyView(text: String?) {
                 color = PrefCenterTheme.colors.contactManagementItemDescriptionText,
             )
         }
+    }
+}
+
+
+private fun itemContentDescription(
+    context: Context,
+    item: Item.ContactManagement,
+    maskedAddress: String,
+    isOptedIn: Boolean
+): String {
+    return buildString {
+        append(platformDescription(context, item.platform))
+        append(" ")
+        append(addressDescription(context, maskedAddress))
+        statusDescription(context, isOptedIn)?.let {
+            append(" ")
+            append(it)
+        }
+    }
+}
+
+private fun platformDescription(context: Context, platform: Platform): String = when (platform) {
+    is Platform.Email -> context.getString(R.string.ua_preference_center_contact_management_email_description)
+    is Platform.Sms -> context.getString(R.string.ua_preference_center_contact_management_sms_description)
+}
+
+private fun addressDescription(context: Context, maskedAddress: String): String =
+    maskedAddress.replace(
+        regex = """\*+""".toRegex(),
+        replacement = context.getString(R.string.ua_preference_center_contact_management_redacted_description)
+    )
+
+private fun statusDescription(context: Context, isOptedIn: Boolean): String? {
+    return if (!isOptedIn) {
+        context.getString(R.string.ua_preference_center_contact_management_pending)
+    } else {
+        null
     }
 }
 

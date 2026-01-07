@@ -323,6 +323,7 @@ public class PreferenceCenterViewModelTest {
                 assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
 
                 namedUserIdFlow.emit("some other user")
+                advanceUntilIdle()
 
                 assertThat(awaitItem()).isEqualTo(State.Loading)
                 assertThat(awaitItem()).isInstanceOf(State.Content::class.java)
