@@ -9,6 +9,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 import java.io.InputStream
 import java.util.Scanner
@@ -58,13 +59,26 @@ internal class ThomasLayout {
             throw IllegalArgumentException("Unsupported file type: $assetsPath")
         }
 
-        @Throws(IllegalArgumentException::class, IllegalStateException::class)
+        @Throws(IllegalArgumentException::class, IllegalStateException::class, JsonException::class)
         fun display(context: Context) {
             val map = readFile(context)
 
             when(type) {
                 Type.SCENE_BANNERS, Type.SCENE_EMBEDDED, Type.SCENE_MODALS -> {
-                    val payload = LayoutInfo(map)
+                    val payload = if (map.containsKey("presentation")) {
+                        // DevApp layout, without the full in-app message wrapper
+                        LayoutInfo(map)
+                    } else {
+                        // Full API payload, from Flight Deck, etc.
+                        val layoutInfo = map.optionalMap("in_app_message")
+                            ?.optionalMap("message")
+                            ?.optionalMap("display")
+                            ?.optionalMap("layout")
+                            ?: throw IllegalStateException("Malformed layout file: $assetsPath")
+
+                        LayoutInfo(layoutInfo)
+                    }
+
                     DefaultThomasLayoutDisplay.shared.display(context, payload)
                 }
                 Type.MESSAGE_BANNERS, Type.MESSAGE_FULLSCREEN, Type.MESSAGE_HTML, Type.MESSAGE_MODAL -> {
