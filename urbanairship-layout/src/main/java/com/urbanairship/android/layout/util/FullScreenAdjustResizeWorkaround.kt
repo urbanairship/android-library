@@ -25,26 +25,34 @@ internal class FullScreenAdjustResizeWorkaround private constructor(activity: Ac
         layoutParams = child.layoutParams as FrameLayout.LayoutParams
     }
 
+    /**
+     * Resizes the view to avoid being covered by the on-screen keyboard.
+     *
+     * Since Android doesn't provide a good "keyboard visible" API, we use a heuristic:
+     * if more than 25% of the window is obscured from the bottom, we assume the keyboard
+     * is visible and shrink the view accordingly. Smaller obstructions (like the nav bar)
+     * are ignored.
+     */
     private fun adjustResizeIfNeeded() {
-        val usableHeight = getUsableHeight()
+        val visibleFrame = Rect().apply { child.getWindowVisibleDisplayFrame(this) }
+        val usableHeight = visibleFrame.bottom - visibleFrame.top
+
         if (usableHeight != previousUsableHeight) {
-            val usableHeightMinusKeyboard = child.rootView.height
-            val heightDelta = usableHeightMinusKeyboard - usableHeight
-            if (heightDelta > (usableHeightMinusKeyboard / 4)) {
-                // keyboard probably just became visible
-                layoutParams.height = usableHeightMinusKeyboard - heightDelta
+            val fullWindowHeight = child.rootView.height
+            val keyboardHeight = fullWindowHeight - visibleFrame.bottom
+
+            if (keyboardHeight > (fullWindowHeight / 4)) {
+                // The on-screen keyboard probably just became visible,
+                // set height to fill from top of screen to top of keyboard
+                layoutParams.height = fullWindowHeight - keyboardHeight
             } else {
-                // keyboard probably just dismissed
-                layoutParams.height = usableHeightMinusKeyboard
+                // The on-screen keyboard probably just dismissed,
+                // set height to fill the entire screen
+                layoutParams.height = fullWindowHeight
             }
             child.requestLayout()
             previousUsableHeight = usableHeight
         }
-    }
-
-    private fun getUsableHeight(): Int {
-        val rect = Rect().apply { child.getWindowVisibleDisplayFrame(this) }
-        return rect.bottom - rect.top
     }
 
     internal companion object {
