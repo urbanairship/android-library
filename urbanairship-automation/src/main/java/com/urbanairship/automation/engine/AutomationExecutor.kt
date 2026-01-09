@@ -57,11 +57,7 @@ internal class AutomationExecutor(
     }
 
     override fun isReady(preparedSchedule: PreparedSchedule): ScheduleReadyResult {
-        if (preparedSchedule.frequencyChecker?.checkAndIncrement() == false) {
-            return ScheduleReadyResult.SKIP
-        }
-
-        return when(preparedSchedule.data) {
+        val result = when(preparedSchedule.data) {
             is PreparedScheduleData.Action -> {
                 actionExecutor.isReady(preparedSchedule.data.json, preparedSchedule.info)
             }
@@ -69,6 +65,16 @@ internal class AutomationExecutor(
                 messageExecutor.isReady(preparedSchedule.data.message, preparedSchedule.info)
             }
         }
+
+        if (result != ScheduleReadyResult.READY) {
+            return result
+        }
+
+        if (preparedSchedule.frequencyChecker?.checkAndIncrement() == false) {
+            return ScheduleReadyResult.SKIP
+        }
+
+        return ScheduleReadyResult.READY
     }
 
     @MainThread
