@@ -24,6 +24,8 @@ import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 internal abstract class ButtonModel<T, I: Button>(
@@ -51,6 +53,17 @@ internal abstract class ButtonModel<T, I: Button>(
 
     @CallSuper
     override fun onViewAttached(view: T) {
+        pagerState?.let { state ->
+            viewScope.launch {
+                state.changes
+                    .map { it.isScrolling }
+                    .distinctUntilChanged()
+                    .collect { isScrolling ->
+                        listener?.setEnabled(!isScrolling)
+                    }
+            }
+        }
+
         viewScope.launch {
             view.taps().collect {
                 listener?.setEnabled(enabled = false)

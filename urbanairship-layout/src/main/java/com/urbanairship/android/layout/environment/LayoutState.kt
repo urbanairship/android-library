@@ -177,7 +177,8 @@ internal sealed class State {
         val isStoryPaused: Boolean = false,
         val isTouchExplorationEnabled: Boolean = false,
         val branching: PagerControllerBranching? = null,
-        val isScrollDisabled: Boolean = false
+        val isScrollDisabled: Boolean = false,
+        var isScrolling: Boolean = false
     ) : State() {
 
         val hasNext
@@ -220,6 +221,10 @@ internal sealed class State {
             } else {
                 copy(progress = 0)
             }
+        }
+
+        fun copyWithScrolling(isScrolling: Boolean): Pager {
+            return copy(isScrolling = isScrolling)
         }
 
         fun copyWithMediaPaused(isMediaPaused: Boolean) =

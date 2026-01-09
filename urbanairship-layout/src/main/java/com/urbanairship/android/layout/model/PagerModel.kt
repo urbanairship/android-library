@@ -125,6 +125,10 @@ internal class PagerModel(
 
                 (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex) && it.progress == 0
             }.collect {
+                // Page transition has completed - reset isScrolling if it was true
+                if (it.isScrolling) {
+                    pagerState.update { state -> state.copyWithScrolling(false) }
+                }
                 // Clear any automated actions scheduled for the previous page.
                 clearAutomatedActions(it.lastPageIndex)
                 if (it.lastPageIndex > it.pageIndex) {
@@ -134,16 +138,16 @@ internal class PagerModel(
                 // Handle any actions defined for the current page.
                 val currentPage = it.currentPageId?.let { id -> _allPages.firstOrNull { it.identifier == id } } ?: return@collect
 
-                // Page state actions could be run multiple time when branching update path.
-                // So we remember last page identifier and do not run state actions for it.
+                // This could be run multiple times when branching path updates,
+                // so we remember last page id and only run once per page.
                 if (lastDisplayedPageId.value != currentPage.identifier) {
                     lastDisplayedPageId.update { currentPage.identifier }
+
                     runStateActions(currentPage.stateActions)
+                    handlePageActions(currentPage.displayActions, currentPage.automatedActions)
+                    it.currentPageId?.let { pageId -> branchControl?.addToHistory(pageId) }
                 }
 
-                handlePageActions(currentPage.displayActions, currentPage.automatedActions)
-
-                it.currentPageId?.let { branchControl?.addToHistory(it) }
                 // Check if the current page has any automated pause/resume actions
                 val hasPauseOrResumeAction = currentPage.automatedActions?.hasPagerPauseOrResumeAction == true
 
@@ -226,9 +230,10 @@ internal class PagerModel(
 
             if (copy.pageIndex != it.pageIndex) {
                 branchControl?.onPageRequest(request)
+                copy.copyWithScrolling(isScrolling = true)
+            } else {
+                copy
             }
-
-            copy
         }
 
         return true
@@ -258,13 +263,24 @@ internal class PagerModel(
         // the page swipe if it was triggered by the user.
         viewScope.launch {
             view.pagerScrolls().collect { (position, isInternalScroll) ->
-                val request = makePageRequest(position) ?: return@collect
-                if (!resolve(request)) {
-                    return@collect
-                }
+                val request = makePageRequest(position)
+                if (request != null) {
+                    if (!resolve(request)) {
+                        return@collect
+                    }
 
-                if (!isInternalScroll) {
-                    reportPageSwipe(pagerState.changes.value)
+                    if (!isInternalScroll) {
+                        reportPageSwipe(pagerState.changes.value)
+                    }
+                } else {
+                    // If no page request, the scrolling is done
+                    pagerState.update { state ->
+                        if (state.isScrolling) {
+                            state.copy(isScrolling = false)
+                        } else {
+                            state
+                        }
+                    }
                 }
             }
         }

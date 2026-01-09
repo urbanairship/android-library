@@ -151,12 +151,21 @@ public class PagerModelTest {
             scrollsFlow.emit(PagerScrollEvent(position = 1, isInternalScroll = false))
             advanceUntilIdle()
 
+            val scrollingState = awaitItem()
+            advanceUntilIdle()
+            assertEquals(1, scrollingState.pageIndex)
+            assertEquals(0, scrollingState.lastPageIndex)
+            assertTrue(scrollingState.hasNext)
+            assertTrue(scrollingState.hasPrevious)
+            assertTrue(scrollingState.isScrolling)
+
             val updatedState = awaitItem()
             advanceUntilIdle()
             assertEquals(1, updatedState.pageIndex)
             assertEquals(0, updatedState.lastPageIndex)
             assertTrue(updatedState.hasNext)
             assertTrue(updatedState.hasPrevious)
+            assertFalse(updatedState.isScrolling)
 
             // Verify that we reported an event and ran actions when scrolling to the 2nd page
             verify { mockReporter.report(any()) }
@@ -184,11 +193,19 @@ public class PagerModelTest {
             scrollsFlow.emit(PagerScrollEvent(position = 1, isInternalScroll = true))
             advanceUntilIdle()
 
+            val scrollingState = awaitItem()
+            assertEquals(1, scrollingState.pageIndex)
+            assertEquals(0, scrollingState.lastPageIndex)
+            assertTrue(scrollingState.hasNext)
+            assertTrue(scrollingState.hasPrevious)
+            assertTrue(scrollingState.isScrolling)
+
             val updatedState = awaitItem()
             assertEquals(1, updatedState.pageIndex)
             assertEquals(0, updatedState.lastPageIndex)
             assertTrue(updatedState.hasNext)
             assertTrue(updatedState.hasPrevious)
+            assertFalse(updatedState.isScrolling)
 
             // Verify that we didn't report an event, but did run
             // actions again when scrolling to the 2nd page.
