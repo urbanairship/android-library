@@ -45,7 +45,6 @@ public class NotificationIntentProcessorTest {
     @Before
     public fun before() {
 
-
         every { context.getSystemService(Context.NOTIFICATION_SERVICE) } returns notificationManager
 
         val pushBundle = bundleOf(
@@ -101,8 +100,13 @@ public class NotificationIntentProcessorTest {
     public fun testNotificationResponseSuspending(): TestResult = runTest {
         every { notificationListener.onNotificationOpened(any()) } returns false
 
-        val result = NotificationIntentProcessor(analytics, pushManager, true, context, responseIntent, dispatcher)
-            .processSuspending()
+        val result = NotificationIntentProcessor(
+            context = context,
+            intent = responseIntent,
+            analytics = analytics,
+            pushManager = pushManager,
+            autoLaunchApplication = true
+        ).processInternal()
 
         Assert.assertTrue(result)
 
@@ -247,9 +251,14 @@ public class NotificationIntentProcessorTest {
     }
 
     private fun processIntent(intent: Intent): Boolean? {
-        return NotificationIntentProcessor(analytics, pushManager, true, context, intent, dispatcher)
-            .process()
-            .also { dispatcher.scheduler.advanceUntilIdle() }
-            .get()
+        return NotificationIntentProcessor(
+            context = context,
+            intent = intent,
+            analytics = analytics,
+            pushManager = pushManager,
+            autoLaunchApplication = true
+        ).process().also {
+            dispatcher.scheduler.advanceUntilIdle()
+        }.get()
     }
 }
