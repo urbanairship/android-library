@@ -33,10 +33,17 @@ public class NotificationProxyActivity public constructor() : Activity() {
 
         UALog.v("Received intent: %s", intent.action)
 
-        NotificationIntentProcessor(this, intent).process().addResultCallback {
-            UALog.v("Finished processing notification intent with result $it.")
+        NotificationIntentProcessor(this, intent).process { result ->
+            result.fold(onSuccess = {
+                UALog.v { "Finished processing notification intent with result $it." }
+            }, onFailure = {
+                UALog.e(it) {
+                    "NotificationProxyActivity - Exception when processing notification intent."
+                }
+            })
         }
 
+        // This needs to be called before onCreate finishes or Android will crash
         finish()
     }
 }

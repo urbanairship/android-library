@@ -5,13 +5,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import androidx.annotation.RestrictTo
-import com.urbanairship.AirshipExecutors
+import com.urbanairship.Airship
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
-import com.urbanairship.Airship
-import java.util.concurrent.ExecutionException
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.TimeoutException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A broadcast receiver that handles notification intents.
@@ -34,27 +32,27 @@ public class NotificationProxyReceiver public constructor() : BroadcastReceiver(
 
         UALog.v("Received intent: %s", intent.action)
 
+        /**
+         * We wait for the callback to finish before finishing the broadcast. We have 10 seconds total
+         * to process the intent before its considered a background ANR, so we are giving ourselves 9 seconds
+         * before finishing early (1 second for takeOff).
+         */
         val pendingResult = goAsync()
-        val future = NotificationIntentProcessor(context, intent).process()
+        NotificationIntentProcessor(context, intent).process(ACTION_TIMEOUT) { result ->
+            result.fold(onSuccess = {
+                UALog.v { "Finished processing notification intent with result $it." }
+            }, onFailure = {
+                UALog.e(it) {
+                    "NotificationProxyReceiver - Exception when processing notification intent."
+                }
+            })
 
-        AirshipExecutors.threadPoolExecutor().execute {
-            try {
-                val result = future[ACTION_TIMEOUT_SECONDS, TimeUnit.SECONDS]
-                UALog.v("Finished processing notification intent with result $result.")
-            } catch (e: InterruptedException) {
-                UALog.e(e, "NotificationProxyReceiver - Exception when processing notification intent.")
-                Thread.currentThread().interrupt()
-            } catch (e: ExecutionException) {
-                UALog.e(e, "NotificationProxyReceiver - Exception when processing notification intent.")
-                Thread.currentThread().interrupt()
-            } catch (e: TimeoutException) {
-                UALog.e("NotificationProxyReceiver - Application took too long to process notification intent.")
-            }
+            // Finish the broadcast
             pendingResult.finish()
         }
     }
 
     public companion object {
-        private const val ACTION_TIMEOUT_SECONDS: Long = 9 // 9 seconds
+        private val ACTION_TIMEOUT: Duration = 9.seconds
     }
 }
