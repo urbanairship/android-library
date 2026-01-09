@@ -8,6 +8,7 @@ import android.os.Bundle
 import androidx.annotation.MainThread
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
+import com.urbanairship.Airship
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.UALog
@@ -25,27 +26,23 @@ import com.urbanairship.util.getParcelableCompat
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 
 /**
  * Processes notification intents.
  */
 internal class NotificationIntentProcessor(
-    private val analytics: Analytics,
-    private val pushManager: PushManager,
-    private val autoLaunchApplication: Boolean,
     private val context: Context,
     private val intent: Intent,
-    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
+    private val analytics: Analytics = Airship.analytics,
+    private val pushManager: PushManager = Airship.push,
+    private val autoLaunchApplication: Boolean = Airship.airshipConfigOptions.autoLaunchApplication,
 ) {
-
-    private val scope = CoroutineScope(dispatcher + SupervisorJob())
     private val actionButtonInfo = NotificationActionButtonInfo.fromIntent(intent)
     private val notificationInfo = NotificationInfo.fromIntent(intent)
 
     /**
-     * Processes the intent.
+     * Processes the intent synchronously, returning a pending result that completes immediately.
      *
      * @return A pending result. The result will be `true` if the intent was processed, otherwise
      * `false`.
@@ -54,20 +51,18 @@ internal class NotificationIntentProcessor(
     fun process(): PendingResult<Boolean> {
         val pendingResult = PendingResult<Boolean>()
 
-        scope.launch {
-            pendingResult.setResult(processSuspending())
-        }
+        pendingResult.setResult(processInternal())
 
         return pendingResult
     }
 
     /**
-     * Processes the intent asynchroniously.
+     * Processes the intent.
      *
      * @return `true` if the intent was processed, otherwise `false`.
      */
     @MainThread
-    suspend fun processSuspending(): Boolean {
+    fun processInternal(): Boolean {
         if (intent.action == null || notificationInfo == null) {
             UALog.e("NotificationIntentProcessor - invalid intent %s", intent)
             return false
@@ -96,7 +91,7 @@ internal class NotificationIntentProcessor(
     }
 
     /** Handles the opened notification without an action. */
-    private suspend fun onNotificationResponse() {
+    private fun onNotificationResponse() {
         UALog.i("Notification response: $notificationInfo, $actionButtonInfo")
         if (notificationInfo == null) { return }
 
@@ -186,7 +181,7 @@ internal class NotificationIntentProcessor(
     }
 
     /** Helper method to run the actions. */
-    private suspend fun runNotificationResponseActions() {
+    private fun runNotificationResponseActions() {
         var actions: Map<String, ActionValue>? = null
         var situation = Situation.MANUAL_INVOCATION
         val metadata = bundleOf(ActionArguments.PUSH_MESSAGE_METADATA to notificationInfo?.message)
@@ -224,22 +219,19 @@ internal class NotificationIntentProcessor(
      * @param situation The situation.
      * @param metadata The metadata.
      */
-    private suspend fun runActions(
+    private fun runActions(
         actions: Map<String, ActionValue>,
         situation: Situation,
         metadata: Bundle
     ) {
         try {
-            actions
-                .map { (key, value) ->
-                    ActionRunRequest.createRequest(key)
-                        .setMetadata(metadata)
-                        .setSituation(situation)
-                        .setValue(value) }
-                .map { request ->
-                    scope.launch { request.runSuspending() }
-                }
-                .joinAll()
+            actions.forEach { (key, value) ->
+                ActionRunRequest.createRequest(key)
+                    .setMetadata(metadata)
+                    .setSituation(situation)
+                    .setValue(value)
+                    .run()
+            }
         } catch (ex: Exception) {
             UALog.e(ex, "Failed to run actions")
         }
@@ -252,7 +244,6 @@ internal class NotificationIntentProcessor(
      * @return The parsed actions.
      */
     private fun parseActionValues(payload: String): Map<String, ActionValue> {
-
         return try {
             JsonValue.parseString(payload).map
                 ?.associate { it.key to ActionValue(it.value) }
