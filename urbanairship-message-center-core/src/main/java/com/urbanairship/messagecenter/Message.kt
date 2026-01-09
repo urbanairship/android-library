@@ -3,6 +3,7 @@ package com.urbanairship.messagecenter
 import android.os.Parcelable
 import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
@@ -33,12 +34,28 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
     public val expirationDate: Date?,
     public val isUnread: Boolean,
     public val extras: Map<String, String?>?,
+    public val contentType: ContentType,
     internal val messageUrl: String,
     internal val reporting: JsonValue?,
     internal val rawMessageJson: JsonValue,
     internal var isUnreadClient: Boolean = isUnread,
     internal var isDeletedClient: Boolean,
 ) : Parcelable {
+
+    public enum class ContentType(internal val jsonValue: String) {
+        HTML("text/html"),
+        PLAIN("text/plain"),
+        THOMAS("application/vnd.urbanairship.thomas+json; version=1;");
+
+        internal companion object {
+            @Throws(JsonException::class)
+            fun fromJson(value: JsonValue): ContentType {
+                val content = value.requireString()
+                return entries.firstOrNull { it.jsonValue == content }
+                    ?: throw JsonException("Unknown content type: $content")
+            }
+        }
+    }
 
     /** Indicates whether the message has been read. */
     @IgnoredOnParcel
@@ -134,7 +151,8 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
             rawMessageJson == other.rawMessageJson &&
             isUnreadClient == other.isUnreadClient &&
             isDeletedClient == other.isDeletedClient &&
-            isRead == other.isRead
+            isRead == other.isRead &&
+            contentType == other.contentType
     }
 
     override fun hashCode(): Int = Objects.hash(
@@ -150,7 +168,8 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
         rawMessageJson,
         isUnreadClient,
         isDeletedClient,
-        isRead
+        isRead,
+        contentType
     )
 
     public companion object {
@@ -164,6 +183,7 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
         internal const val KEY_MESSAGE_URL: String = "message_url"
         internal const val KEY_MESSAGE_READ_URL: String = "message_read_url"
         internal const val KEY_MESSAGE_REPORTING: String = "message_reporting"
+        internal const val KEY_CONTENT_TYPE: String = "content_type"
         internal const val KEY_ICONS: String = "icons"
         internal const val KEY_LIST_ICON: String = "list_icon"
         internal const val EXTRA_SUBTITLE: String = "com.urbanairship.listing.field1"
@@ -186,7 +206,8 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
                     reporting = json[KEY_MESSAGE_REPORTING],
                     rawMessageJson = json.toJsonValue(),
                     isUnreadClient = isUnreadClient,
-                    isDeletedClient = isDeleted
+                    isDeletedClient = isDeleted,
+                    contentType = json[KEY_CONTENT_TYPE]?.let(ContentType::fromJson) ?: ContentType.HTML
                 )
             } catch (e: Exception) {
                 UALog.e(e, "Failed to create message from payload: $payload")

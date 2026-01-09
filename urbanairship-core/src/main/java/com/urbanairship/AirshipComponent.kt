@@ -6,9 +6,9 @@ import android.net.Uri
 import androidx.annotation.CallSuper
 import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
+import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
-import java.util.concurrent.Executor
 
 /**
  * Base class for Airship components.
@@ -31,11 +31,6 @@ public abstract class AirshipComponent @RestrictTo(RestrictTo.Scope.LIBRARY_GROU
     protected val context: Context = context.applicationContext
 
     /**
-     * Default job executor.
-     */
-    protected val defaultExecutor: Executor = AirshipExecutors.newSerialExecutor()
-
-    /**
      * Initialize the manager.
      * Called in [Airship] during takeoff.
      *
@@ -43,7 +38,9 @@ public abstract class AirshipComponent @RestrictTo(RestrictTo.Scope.LIBRARY_GROU
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @CallSuper
-    public open fun init() { }
+    public open fun init() {
+
+    }
 
     /**
      * Tear down the manager.
@@ -53,31 +50,6 @@ public abstract class AirshipComponent @RestrictTo(RestrictTo.Scope.LIBRARY_GROU
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public open fun tearDown() { }
-
-    /**
-     * Gets the executor for the given job.
-     *
-     * @param jobInfo The jobInfo.
-     * @return An executor that will be used to call [onPerformJob].
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun getJobExecutor(jobInfo: JobInfo): Executor {
-        return defaultExecutor
-    }
-
-    /**
-     * Called when a scheduled [JobInfo] is ready to perform.
-     *
-     * @param jobInfo The JobInfo.
-     * @return The result of the jobInfo.
-     * @hide
-     */
-    @WorkerThread
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public open fun onPerformJob(jobInfo: JobInfo): JobResult {
-        return JobResult.SUCCESS
-    }
 
     /**
      * Called when airship instance is ready.
@@ -98,5 +70,38 @@ public abstract class AirshipComponent @RestrictTo(RestrictTo.Scope.LIBRARY_GROU
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public open fun onAirshipDeepLink(uri: Uri): Boolean {
         return false
+    }
+}
+
+
+/**
+ * Temporary class to handle jobs in the traditional way until we migrate to new APIs.
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public abstract class JobAwareAirshipComponent(
+    context: Context,
+    dataStore: PreferenceDataStore,
+    jobDispatcher: JobDispatcher = JobDispatcher.shared(context)
+) : AirshipComponent(context, dataStore) {
+
+    protected abstract val jobActions: List<String>
+
+    /**
+     * Called when a scheduled [JobInfo] is ready to perform.
+     *
+     * @param jobInfo The JobInfo.
+     * @return The result of the jobInfo.
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public open suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
+        return JobResult.SUCCESS
+    }
+
+    init {
+        jobDispatcher.addWeakJobHandler(this, jobActions) {
+            onPerformJob(it)
+        }
     }
 }

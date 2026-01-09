@@ -16,8 +16,9 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
-import com.urbanairship.util.UAStringUtil
 import com.urbanairship.util.VersionUtils
+import com.urbanairship.util.base64Decoded
+import com.urbanairship.util.getSha256Digest
 import java.util.Arrays
 
 /**
@@ -539,14 +540,14 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
             return false
         }
 
-        var digest = UAStringUtil.sha256Digest(infoProvider.getChannelId())
+        var digest = infoProvider.getChannelId().getSha256Digest()
         if (digest == null || digest.size < 16) {
             return false
         }
 
-        digest = Arrays.copyOf(digest, 16)
+        digest = digest.copyOf(16)
         for (testDevice in testDevices) {
-            val decoded = UAStringUtil.base64Decode(testDevice)
+            val decoded = testDevice.base64Decoded()
             if (digest.contentEquals(decoded)) {
                 return true
             }
@@ -572,14 +573,14 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         // Sanitize language tags in case any happen to be malformed
         val languageTags: Set<String> = sanitizedLanguageTags(languageTags)
         try {
-            val joinedTags = UAStringUtil.join(languageTags, ",")
+            val joinedTags = languageTags.joinToString(",")
             val audienceLocales = LocaleListCompat.forLanguageTags(joinedTags)
             for (i in 0 until audienceLocales.size()) {
-                val audienceLocale = audienceLocales[i]
-                if (locale.language != audienceLocale!!.language) {
+                val audienceLocale = audienceLocales[i] ?: continue
+                if (locale.language != audienceLocale.language) {
                     continue
                 }
-                if (!UAStringUtil.isEmpty(audienceLocale.country) && audienceLocale.country != locale.country) {
+                if (audienceLocale.country.isNotEmpty() && audienceLocale.country != locale.country) {
                     continue
                 }
                 return true

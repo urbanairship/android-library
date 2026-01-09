@@ -79,18 +79,18 @@ public class DisplayArgsLoaderTest : TestCase() {
 
         // Read
         val fromParcel: DisplayArgsLoader = DisplayArgsLoader.CREATOR.createFromParcel(parcel)
-        assertEquals(loader.displayArgs.payload, fromParcel.displayArgs.payload)
+        assertEquals(loader.getDisplayArgs().payload, fromParcel.getDisplayArgs().payload)
         assertEquals(
-            loader.displayArgs.listener,
-            fromParcel.displayArgs.listener
+            loader.getDisplayArgs().listener,
+            fromParcel.getDisplayArgs().listener
         )
         assertEquals(
-            loader.displayArgs.imageCache,
-            fromParcel.displayArgs.imageCache
+            loader.getDisplayArgs().imageCache,
+            fromParcel.getDisplayArgs().imageCache
         )
         assertEquals(
-            loader.displayArgs.webViewClientFactory,
-            fromParcel.displayArgs.webViewClientFactory
+            loader.getDisplayArgs().webViewClientFactory,
+            fromParcel.getDisplayArgs().webViewClientFactory
         )
     }
 
@@ -100,7 +100,7 @@ public class DisplayArgsLoaderTest : TestCase() {
         val displayArgs = DisplayArgs(layoutInfo, listener, activityMonitor,  mockk(), null, null)
         val loader: DisplayArgsLoader = DisplayArgsLoader.newLoader(displayArgs)
         loader.dispose()
-        loader.displayArgs
+        loader.getDisplayArgs()
     }
 
     @Test(expected = DisplayArgsLoader.LoadException::class)
@@ -113,6 +113,6 @@ public class DisplayArgsLoaderTest : TestCase() {
         parcel.setDataPosition(0)
         val fromParcel: DisplayArgsLoader = DisplayArgsLoader.CREATOR.createFromParcel(parcel)
         loader.dispose()
-        fromParcel.displayArgs
+        fromParcel.getDisplayArgs()
     }
 }

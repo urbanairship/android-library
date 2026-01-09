@@ -172,11 +172,13 @@ internal class PagerModel(
 
         // Handle pager next and previous events from ButtonModel.
         environment.layoutEvents
-            .filter { it is LayoutEvent.PagerNext || it is LayoutEvent.PagerPrevious }
+            .filter { it is LayoutEvent.PagerNext || it is LayoutEvent.PagerPrevious
+                    || it is LayoutEvent.PagerPauseToggle }
             .onEach { event ->
                 when (event) {
                     is LayoutEvent.PagerNext -> handlePagerNext(event.fallback)
                     is LayoutEvent.PagerPrevious -> handlePagerPrevious()
+                    is LayoutEvent.PagerPauseToggle -> handlePagerPauseToggle()
                     else -> {}
                 }
             }
@@ -431,7 +433,7 @@ internal class PagerModel(
                     scheduledJob = modelScope.launch {
                         while (isActive) {
                             pagerState.update { state ->
-                                state.copy(progress = progress)
+                                state.copy(progress = getProgress())
                             }
                             delay(100)
                         }
@@ -537,6 +539,15 @@ internal class PagerModel(
 
     private fun handlePagerPrevious() {
         resolve(PageRequest.BACK)
+    }
+
+    @OptIn(DelicateLayoutApi::class)
+    private fun handlePagerPauseToggle() {
+        if (pagerState.value.isStoryPaused) {
+            resumeStory()
+        } else {
+            pauseStory()
+        }
     }
 
     private fun handleDismiss() {

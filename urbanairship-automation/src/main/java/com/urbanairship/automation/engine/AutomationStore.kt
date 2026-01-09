@@ -184,7 +184,7 @@ internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterfa
     }
 
     override suspend fun getSchedules(): List<AutomationScheduleData> {
-        val allScheduleEntities = dao.getAllSchedules() ?: return listOf()
+        val allScheduleEntities = dao.getAllSchedules()
         val validScheduleData = mutableListOf<AutomationScheduleData>()
         val schedulesToDelete = mutableListOf<String>()
 
@@ -206,7 +206,7 @@ internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterfa
     }
 
     override suspend fun getSchedules(group: String): List<AutomationScheduleData> {
-        return dao.getSchedules(group)?.mapNotNull { it.toScheduleData() } ?: listOf()
+        return dao.getSchedules(group).mapNotNull { it.toScheduleData() }
     }
 
     @Transaction
@@ -294,10 +294,10 @@ internal interface AutomationDao {
     suspend fun upsertSchedulesInternal(schedules: List<ScheduleEntity>)
 
     @Query("SELECT * FROM schedules")
-    suspend fun getAllSchedules(): List<ScheduleEntity>?
+    suspend fun getAllSchedules(): List<ScheduleEntity>
 
     @Query("SELECT * FROM schedules WHERE (`group` = :group)")
-    suspend fun getSchedules(group: String): List<ScheduleEntity>?
+    suspend fun getSchedules(group: String): List<ScheduleEntity>
 
     @Transaction
     suspend fun getSchedules(ids: List<String>): List<ScheduleEntity> =
@@ -308,7 +308,7 @@ internal interface AutomationDao {
      * to avoid the max query params limit of 999.
      */
     @Query("SELECT * FROM schedules WHERE (scheduleId IN (:ids))")
-    suspend fun getSchedulesBatchInternal(ids: List<String>): List<ScheduleEntity>?
+    suspend fun getSchedulesBatchInternal(ids: List<String>): List<ScheduleEntity>
 
     @Transaction
     suspend fun updateSchedule(

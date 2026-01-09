@@ -5,12 +5,11 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.WorkerThread
 import androidx.annotation.XmlRes
 import androidx.core.util.Consumer
-import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.AirshipExecutors
+import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.Platform
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
@@ -46,7 +45,6 @@ import com.urbanairship.push.notifications.AirshipNotificationProvider
 import com.urbanairship.push.notifications.NotificationActionButtonGroup
 import com.urbanairship.push.notifications.NotificationChannelRegistry
 import com.urbanairship.push.notifications.NotificationProvider
-import com.urbanairship.util.UAStringUtil
 import java.util.concurrent.ExecutorService
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
@@ -54,6 +52,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -72,7 +71,8 @@ public open class PushManager @VisibleForTesting internal constructor(
     private val notificationManager: AirshipNotificationManager,
     private val activityMonitor: ActivityMonitor,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
-) : AirshipComponent(context, preferenceDataStore) {
+) : JobAwareAirshipComponent(context, preferenceDataStore, jobDispatcher) {
+
 
     public var notificationChannelRegistry: NotificationChannelRegistry =
         NotificationChannelRegistry(context, config.configOptions)
@@ -243,7 +243,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         privacyManager.addListener { checkPermission() }
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(time: Long) {
+            override fun onForeground(milliseconds: Long) {
                 checkPermission()
             }
         })
@@ -320,7 +320,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     private fun dispatchUpdateJob() {
         val jobInfo: JobInfo = JobInfo.newBuilder()
             .setAction(ACTION_UPDATE_PUSH_REGISTRATION)
-            .setAirshipComponent(PushManager::class.java)
+            .setScope(PushManager::class.java.name)
             .setConflictStrategy(JobInfo.ConflictStrategy.REPLACE)
             .build()
 
@@ -366,12 +366,11 @@ public open class PushManager @VisibleForTesting internal constructor(
             }
         }
 
-    /**
-     * @hide
-     */
-    @WorkerThread
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(jobInfo: JobInfo): JobResult {
+
+    override val jobActions: List<String>
+        get() = listOf(ACTION_UPDATE_PUSH_REGISTRATION, ACTION_DISPLAY_NOTIFICATION)
+
+    override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             return JobResult.SUCCESS
         }
@@ -497,7 +496,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
     /** Whether the app is capable of receiving push (`true` if a push token is present). */
     public val isPushAvailable: Boolean
-        get() = privacyManager.isEnabled(PrivacyManager.Feature.PUSH) && !UAStringUtil.isEmpty(pushToken)
+        get() = privacyManager.isEnabled(PrivacyManager.Feature.PUSH) && !pushToken.isNullOrEmpty()
 
     /** Whether the app is currently opted in for push. */
     public val isOptIn: Boolean
@@ -750,7 +749,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      * @return `false` if the ID exists in the history, otherwise `true`.
      */
     public fun isUniqueCanonicalId(canonicalId: String?): Boolean {
-        if (UAStringUtil.isEmpty(canonicalId)) {
+        if (canonicalId.isNullOrEmpty()) {
             return true
         }
 
@@ -889,7 +888,7 @@ public open class PushManager @VisibleForTesting internal constructor(
                 userNotificationsEnabled,
                 notificationManager.areNotificationsEnabled(),
                 privacyManager.isEnabled(PrivacyManager.Feature.PUSH),
-                !UAStringUtil.isEmpty(pushToken)
+                !pushToken.isNullOrEmpty()
             )
         }
 

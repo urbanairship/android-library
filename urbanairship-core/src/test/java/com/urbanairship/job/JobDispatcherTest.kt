@@ -1,19 +1,18 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.job
 
-import android.app.Application
 import android.content.Context
-import androidx.core.util.Consumer
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.push.PushManager
-import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.Called
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -26,13 +25,12 @@ public class JobDispatcherTest {
     private val mockScheduler: Scheduler = mockk(relaxed = true)
     private val context: Context = ApplicationProvider.getApplicationContext<Context>()
     private val dispatcher = JobDispatcher(context, mockScheduler, jobRunner, mockRateLimiter)
-    private val mockConsumer: Consumer<JobResult> = mockk(relaxed = true)
 
     @Test
     public fun testDispatch() {
         val jobInfo = JobInfo.newBuilder()
             .setAction("test_action")
-            .setAirshipComponent(PushManager::class.java)
+            .setScope(PushManager::class.java.name)
             .setMinDelay(10.milliseconds)
             .build()
 
@@ -42,35 +40,35 @@ public class JobDispatcherTest {
     }
 
     @Test
-    public fun testStartJob() {
+    public fun testStartJob(): TestResult = runTest {
         val jobInfo = JobInfo.newBuilder()
             .setAction("test_action")
-            .setAirshipComponent(PushManager::class.java)
+            .setScope(PushManager::class.java.name)
             .build()
 
         jobRunner.result = JobResult.FAILURE
 
-        dispatcher.onStartJob(jobInfo, 1, mockConsumer)
-        verify { mockConsumer.accept(JobResult.FAILURE) }
+        val result = dispatcher.runJob(jobInfo, 1)
+        assert(result == JobResult.FAILURE)
         verify { mockScheduler wasNot Called }
         Assert.assertEquals(jobInfo, jobRunner.lastJob)
     }
 
     @Test
-    public fun testMaxRetries() {
+    public fun testMaxRetries(): TestResult = runTest {
         val jobInfo = JobInfo.newBuilder()
             .setAction("test_action")
-            .setAirshipComponent(PushManager::class.java)
+            .setScope(PushManager::class.java.name)
             .build()
 
         jobRunner.result = JobResult.RETRY
 
-        dispatcher.onStartJob(jobInfo, 4, mockConsumer)
-        verify { mockConsumer.accept(JobResult.RETRY) }
+        var result = dispatcher.runJob(jobInfo, 4)
+        assert(result == JobResult.RETRY)
         verify { mockScheduler wasNot Called }
 
-        dispatcher.onStartJob(jobInfo, 5, mockConsumer)
-        verify { mockConsumer.accept(JobResult.FAILURE) }
+        result = dispatcher.runJob(jobInfo, 5)
+        assert(result == JobResult.FAILURE)
         verify { mockScheduler.schedule(context, jobInfo, JobDispatcher.RESCHEDULE_RETRY_DELAY) }
     }
 
@@ -84,7 +82,7 @@ public class JobDispatcherTest {
     public fun testDispatchRateLimit() {
         val jobInfo = JobInfo.newBuilder()
             .setAction("test_action")
-            .setAirshipComponent(PushManager::class.java)
+            .setScope(PushManager::class.java.name)
             .setMinDelay(10.milliseconds)
             .addRateLimit("rateOne")
             .addRateLimit("rateTwo")
@@ -104,26 +102,26 @@ public class JobDispatcherTest {
     }
 
     @Test
-    public fun testStartJobTracksRateLimits() {
+    public fun testStartJobTracksRateLimits(): TestResult = runTest {
         val jobInfo = JobInfo.newBuilder()
             .setAction("test_action")
-            .setAirshipComponent(PushManager::class.java)
+            .setScope(PushManager::class.java.name)
             .setMinDelay(10.milliseconds)
             .addRateLimit("rateOne")
             .addRateLimit("rateTwo")
             .build()
 
-        dispatcher.onStartJob(jobInfo, 4, mockConsumer)
+        dispatcher.runJob(jobInfo, 4)
 
         verify { mockRateLimiter.track("rateOne") }
         verify { mockRateLimiter.track("rateTwo") }
     }
 
     @Test
-    public fun testStartJobOverRateLimit() {
+    public fun testStartJobOverRateLimit(): TestResult = runTest {
         val jobInfo = JobInfo.newBuilder()
             .setAction("test_action")
-            .setAirshipComponent(PushManager::class.java)
+            .setScope(PushManager::class.java.name)
             .setMinDelay(10.milliseconds)
             .addRateLimit("rateOne")
             .addRateLimit("rateTwo")
@@ -136,8 +134,8 @@ public class JobDispatcherTest {
             RateLimiter.Status(RateLimiter.LimitStatus.UNDER, 0.milliseconds)
         }
 
-        dispatcher.onStartJob(jobInfo, 4, mockConsumer)
-        verify { mockConsumer.accept(JobResult.FAILURE) }
+        val result = dispatcher.runJob(jobInfo, 4)
+        assert(result == JobResult.FAILURE)
         verify(exactly = 0) { mockRateLimiter.track(any()) }
         Assert.assertNull(jobRunner.lastJob)
 
@@ -148,9 +146,16 @@ public class JobDispatcherTest {
 
         var result: JobResult = JobResult.SUCCESS
         var lastJob: JobInfo? = null
-        override fun run(jobInfo: JobInfo, resultConsumer: Consumer<JobResult>) {
+
+        override suspend fun run(jobInfo: JobInfo): JobResult {
             lastJob = jobInfo
-            resultConsumer.accept(result)
+            return result
         }
+
+        override fun addJobHandler(
+            scope: String, jobActions: List<String>, jobHandler: suspend (JobInfo) -> JobResult
+        ) {
+        }
+
     }
 }

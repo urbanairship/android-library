@@ -6,14 +6,14 @@ import android.content.Intent
 import android.net.Uri
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.WorkerThread
+import com.urbanairship.Airship
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipExecutors
+import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.Airship
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.job.JobDispatcher
@@ -27,7 +27,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Airship Message Center.
@@ -44,7 +43,7 @@ public constructor(
     public val inbox: Inbox,
     private val pushManager: PushManager,
     dispatcher: CoroutineDispatcher
-) : AirshipComponent(context, dataStore) {
+) : JobAwareAirshipComponent(context, dataStore) {
 
     private val job = SupervisorJob()
     private val scope = CoroutineScope(dispatcher + job)
@@ -145,22 +144,20 @@ public constructor(
         inbox.setEnabled(isEnabled)
     }
 
-    /**
-     * @hide
-     */
-    @WorkerThread
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(jobInfo: JobInfo): JobResult {
+    override val jobActions: List<String>
+        get() = listOf(
+            ACTION_UPDATE_INBOX
+        )
+
+    override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         return if (privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
-            runBlocking {
-                inbox.performUpdate().fold(onSuccess = { result ->
-                    if (result) {
-                        JobResult.SUCCESS
-                    } else {
-                        JobResult.RETRY
-                    }
-                }, onFailure = { JobResult.FAILURE })
-            }
+            inbox.performUpdate().fold(onSuccess = { result ->
+                if (result) {
+                    JobResult.SUCCESS
+                } else {
+                    JobResult.RETRY
+                }
+            }, onFailure = { JobResult.FAILURE })
         } else {
             JobResult.SUCCESS
         }
@@ -328,7 +325,7 @@ public constructor(
 internal fun JobDispatcher.scheduleInboxUpdateJob(reason: Inbox.UpdateType) {
     val jobInfo = JobInfo.newBuilder()
         .setAction(MessageCenter.ACTION_UPDATE_INBOX)
-        .setAirshipComponent(MessageCenter::class.java)
+        .setScope(MessageCenter::class.java.name)
         .let {
             when(reason) {
                 Inbox.UpdateType.BEST_ATTEMPT ->

@@ -1,16 +1,14 @@
 package com.urbanairship.automation.audiencecheck
 
 import android.net.Uri
-import com.urbanairship.Airship
 import com.urbanairship.Platform
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestResult
+import com.urbanairship.http.RequestSession
 import com.urbanairship.http.ResponseParser
-import com.urbanairship.http.SuspendingRequestSession
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -23,7 +21,7 @@ import kotlin.time.Duration.Companion.seconds
 
 internal class AdditionalAudienceCheckApiClient(
     private val config: AirshipRuntimeConfig,
-    private var session: SuspendingRequestSession = config.requestSession.toSuspendingRequestSession()
+    private var session: RequestSession = config.requestSession
 ) {
 
     @Throws(InvalidParameterException::class)

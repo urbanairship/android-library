@@ -15,6 +15,7 @@ import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionPromptFallback
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
+import com.urbanairship.util.getParcelableCompat
 import java.util.concurrent.ExecutionException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -66,7 +67,7 @@ public open class PromptPermissionAction public constructor(
     }
 
     override fun perform(arguments: ActionArguments): ActionResult {
-        val resultReceiver = arguments.metadata.getParcelable<ResultReceiver>(RECEIVER_METADATA)
+        val resultReceiver = arguments.metadata.getParcelableCompat<ResultReceiver>(RECEIVER_METADATA)
 
         try {
             val args = parseArg(arguments)
@@ -84,7 +85,7 @@ public open class PromptPermissionAction public constructor(
 
     @Throws(ExecutionException::class, InterruptedException::class)
     protected fun prompt(args: Args, resultReceiver: ResultReceiver?) {
-        val permissionsManager = requireNotNull(permissionsManagerProvider())
+        val permissionsManager = permissionsManagerProvider()
 
         scope.launch {
             val before = permissionsManager.checkPermissionStatus(args.permission)

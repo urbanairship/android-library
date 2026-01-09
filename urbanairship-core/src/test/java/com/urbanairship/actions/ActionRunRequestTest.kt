@@ -4,7 +4,6 @@ package com.urbanairship.actions
 import android.os.Bundle
 import android.os.Looper
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.ShadowAirshipExecutorsLegacy
 import com.urbanairship.actions.ActionResult.Companion.newResult
 import com.urbanairship.actions.ActionRunRequest.Companion.createRequest
 import com.urbanairship.actions.ActionValue.Companion.wrap
@@ -26,9 +25,7 @@ import org.robolectric.annotation.LooperMode
 import java.util.Collections
 import java.util.ConcurrentModificationException
 
-@Config(
-    sdk = [28], shadows = [ShadowAirshipExecutorsLegacy::class]
-)
+@Config(sdk = [28])
 @LooperMode(LooperMode.Mode.LEGACY)
 @RunWith(AndroidJUnit4::class)
 public class ActionRunRequestTest {

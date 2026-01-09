@@ -10,6 +10,19 @@ import android.widget.TextView
 import androidx.annotation.MainThread
 import androidx.core.view.isVisible
 import com.urbanairship.UALog
+import com.urbanairship.actions.Action
+import com.urbanairship.actions.DefaultActionRunner
+import com.urbanairship.actions.run
+import com.urbanairship.android.layout.ThomasListenerInterface
+import com.urbanairship.android.layout.display.DisplayArgs
+import com.urbanairship.android.layout.environment.ThomasActionRunner
+import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.info.LayoutInfo
+import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.android.layout.ui.ThomasLayoutViewFactory
+import com.urbanairship.app.GlobalActivityMonitor
+import com.urbanairship.json.JsonSerializable
+import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.LOAD_FAILED
@@ -55,6 +68,50 @@ public class MessageView @JvmOverloads constructor(
     }
 
     private var error: Int? = null
+
+    private fun createDisplayArgs(layout: LayoutInfo): DisplayArgs? {
+        if (message?.contentType != Message.ContentType.THOMAS) {
+            return null
+        }
+
+        //TODO: we probably want to move it into the fragment to preserve state on refresh
+        //or at least split into local properties to make it less ugly
+        return DisplayArgs(
+            payload = layout,
+            listener = object : ThomasListenerInterface {
+                override fun onDismiss(cancel: Boolean) {
+                    listener?.onCloseMessage()
+                }
+
+                override fun onVisibilityChanged(
+                    isVisible: Boolean, isForegrounded: Boolean
+                ) {
+                }
+
+                override fun onStateChanged(state: JsonSerializable) {
+                }
+
+                override fun onReportingEvent(event: ReportingEvent) {
+                    UALog.v { "got event $event" }
+                    when(event) {
+                        is ReportingEvent.Dismiss -> {
+                            listener?.onCloseMessage()
+                        }
+                        else -> {}
+                    }
+                }
+            },
+            inAppActivityMonitor = GlobalActivityMonitor.shared(context),
+            actionRunner = object : ThomasActionRunner {
+                override fun run(
+                    actions: Map<String, JsonValue>, state: LayoutData
+                ) {
+                    DefaultActionRunner.run(actions, Action.Situation.AUTOMATION)
+                }
+
+            }
+        )
+    }
 
     private fun onViewCreated() {
         with (views.webView) {
@@ -103,13 +160,44 @@ public class MessageView @JvmOverloads constructor(
     @MainThread
     public fun render(state: MessageViewState) {
         when (state) {
-            is MessageViewState.Content -> {
-                if (message != state.message) {
-                    message = state.message
-                    views.webView.loadMessage(state.message)
-                } else {
+            is MessageViewState.MessageContent -> {
+                if (message == state.message) {
                     UALog.v("Message already displayed: ${state.message.id}")
+                    return
                 }
+
+                message = state.message
+
+                when(val content = state.content) {
+                    is MessageViewState.MessageContent.Content.Html -> {
+                        views.webView.loadMessage(state.message)
+                    }
+                    is MessageViewState.MessageContent.Content.Native -> {
+                        val displayArgs = createDisplayArgs(content.layout.layoutInfo) ?: run {
+                            UALog.w { "Failed to create display args" }
+                            return
+                        }
+
+                        views.nativeContainer.removeAllViews()
+                        val thomasView = ThomasLayoutViewFactory.createView(
+                            context = context,
+                            displayArgs = displayArgs,
+                            viewId = state.message.id
+                        )
+                        if (thomasView == null) {
+                            UALog.w { "Failed to load native layout" }
+                            return
+                        }
+
+                        views.nativeContainer.addView(
+                            thomasView,
+                            LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+                        )
+                        views.showMessage(true)
+                        listener?.onMessageLoaded(state.message)
+                    }
+                }
+
             }
             is MessageViewState.Empty -> {
                 message = null
@@ -150,6 +238,7 @@ public class MessageView @JvmOverloads constructor(
         val root: View,
         val shouldShowEmptyView: () -> Boolean,
         val webView: MessageWebView = root.findViewById(R.id.message),
+        val nativeContainer: FrameLayout = root.findViewById<FrameLayout>(R.id.native_container),
         val progressBar: View = root.findViewById(R.id.progress),
         val errorPage: View = root.findViewById(R.id.error),
         val errorMessage: TextView = root.findViewById(R.id.error_text),
@@ -163,10 +252,17 @@ public class MessageView @JvmOverloads constructor(
             errorPage.isVisible = false
             webView.isVisible = false
             emptyPage.isVisible = false
+            nativeContainer.isVisible = false
         }
 
-        fun showMessage() {
-            webView.isVisible = true
+        fun showMessage(isNative: Boolean = false) {
+            if (isNative) {
+                nativeContainer.isVisible = true
+                webView.isVisible = false
+            } else {
+                webView.isVisible = true
+                nativeContainer.isVisible = false
+            }
 
             progressBar.isVisible = false
             errorPage.isVisible = false
@@ -179,6 +275,7 @@ public class MessageView @JvmOverloads constructor(
             errorPage.isVisible = false
             webView.isVisible = false
             progressBar.isVisible = false
+            nativeContainer.isVisible = false
         }
 
         fun showError(error: MessageViewState.Error.Type) {
@@ -199,6 +296,7 @@ public class MessageView @JvmOverloads constructor(
             webView.isVisible = false
             progressBar.isVisible = false
             emptyPage.isVisible = false
+            nativeContainer.isVisible = false
         }
     }
 }

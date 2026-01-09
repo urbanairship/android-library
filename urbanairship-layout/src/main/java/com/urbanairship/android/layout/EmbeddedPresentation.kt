@@ -9,6 +9,9 @@ import com.urbanairship.android.layout.property.PresentationType
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonValue
+import com.urbanairship.json.optionalList
+import com.urbanairship.json.requireField
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -43,22 +46,21 @@ public class EmbeddedPresentation(
     }
 
     internal companion object {
+        private const val KEY_EMBEDDED_ID = "embedded_id"
+        private const val KEY_DEFAULT_PLACEMENT = "default_placement"
+        private const val KEY_PLACEMENT_SELECTORS = "placement_selectors"
+
         @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): EmbeddedPresentation {
-            val embeddedId = json.opt("embedded_id").string ?: throw JsonException(
-                "Failed to parse EmbeddedPresentation! Field 'embedded_id' is required."
-            )
-            val defaultPlacementJson = json.opt("default_placement").map ?: throw JsonException(
-                "Failed to parse EmbeddedPresentation! Field 'default_placement' is required."
-            )
-            val placementSelectorsJson = json.opt("placement_selectors").list
+        fun fromJson(json: JsonValue): EmbeddedPresentation {
+            val content = json.requireMap()
 
-            val defaultPlacement = EmbeddedPlacement.fromJson(defaultPlacementJson)
-            val placementSelectors = placementSelectorsJson?.let {
-                EmbeddedPlacementSelector.fromJsonList(it)
-            }
-
-            return EmbeddedPresentation(defaultPlacement, placementSelectors, embeddedId)
+            return EmbeddedPresentation(
+                defaultPlacement = EmbeddedPlacement.fromJson(content.require(KEY_DEFAULT_PLACEMENT)),
+                placementSelectors = content
+                    .optionalList(KEY_PLACEMENT_SELECTORS)
+                    ?.let(EmbeddedPlacementSelector::fromJsonList),
+                embeddedId = content.requireField(KEY_EMBEDDED_ID)
+            )
         }
     }
 }

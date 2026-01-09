@@ -4,6 +4,20 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.1.0 - January 9, 2026
+
+Minor release that includes several fixes and improvements for Scenes, In-App Automations, and notification handling.
+
+### Changes
+- Fixed a measurement issue with videos inside of containers in Scenes in certain configurations
+- Fixed a potential crash in `NotificationProxyActivity`
+- In-app automations and Scenes that were not available during app launch can now be triggered by events that happened in the previous 30 seconds
+- Added support for additional text styles in Scenes
+- Added highlight markdown support in Scenes (`==highlighted text==`)
+- Fixed incrementing frequency limits before a message is ready to display
+- Improved support for WebViews in Scenes
+- Added support for Story pause/resume and back/next controls
+
 ## Version 20.0.7 - December 30, 2025
 
 Patch release with improvements to notification processing timing that resolves a crash when app is opened from a notification on Android 15.

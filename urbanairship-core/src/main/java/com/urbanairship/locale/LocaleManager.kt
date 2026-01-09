@@ -1,11 +1,14 @@
 package com.urbanairship.locale
 
 import android.content.Context
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.annotation.RestrictTo
 import androidx.core.os.ConfigurationCompat
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
+import com.urbanairship.util.LocaleCompat
 import java.util.Locale
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
@@ -105,7 +108,7 @@ public class LocaleManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)  construc
             val variant = preferenceDataStore.getString(LOCALE_OVERRIDE_VARIANT_KEY, null)
                 ?: return null
 
-            return Locale(language, country, variant)
+            return LocaleCompat.of(language, country, variant)
         }
 
     /**

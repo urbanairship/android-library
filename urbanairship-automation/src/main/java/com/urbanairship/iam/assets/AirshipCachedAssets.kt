@@ -14,7 +14,7 @@ import com.urbanairship.Airship
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.util.UAStringUtil
+import com.urbanairship.util.toSha256
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -187,7 +187,7 @@ internal class DefaultAirshipCachedAssets(
 
     @Throws(IOException::class)
     private fun getCachedAssetUrl(remote: Uri): Uri {
-        val hash = UAStringUtil.sha256(remote.path)
+        val hash = remote.path?.toSha256()
             ?: throw IOException("Failed to generate cached asset URL hash!")
         return File(directory, hash).toUri()
     }

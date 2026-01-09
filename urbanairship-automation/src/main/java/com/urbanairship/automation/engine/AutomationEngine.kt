@@ -61,6 +61,7 @@ internal class AutomationEngine(
     private val eventsFeed: AutomationEventFeed,
     private val triggerProcessor: AutomationTriggerProcessor,
     private val delayProcessor: AutomationDelayProcessorInterface,
+    private val eventsHistory: EventsHistory,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val sleeper: TaskSleeper = TaskSleeper.default,
     private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
@@ -89,7 +90,6 @@ internal class AutomationEngine(
     private var pendingExecution = MutableStateFlow(setOf<PreparedData>())
 
     private var preprocessingDelayJobs = mutableListOf<Job>()
-
 
     @VisibleForTesting
     internal fun isStarted(): Boolean = restoreState.value != ScheduleRestoreState.IDLE
@@ -132,6 +132,7 @@ internal class AutomationEngine(
                     if (isActive) {
                         triggerProcessor.processEvent(it)
                     }
+                    eventsHistory.add(it)
                 }
             }
 

@@ -1,6 +1,9 @@
 package com.urbanairship.messagecenter.compose.ui
 
 import android.content.res.Configuration
+import android.view.View
+import android.view.ViewGroup
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,18 +26,33 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
-import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
+import androidx.compose.ui.viewinterop.AndroidView
+import com.urbanairship.actions.DefaultActionRunner
+import com.urbanairship.actions.run
+import com.urbanairship.android.layout.ThomasListenerInterface
+import com.urbanairship.android.layout.display.DisplayArgs
+import com.urbanairship.android.layout.environment.ThomasActionRunner
+import com.urbanairship.android.layout.event.ReportingEvent
+import com.urbanairship.android.layout.reporting.LayoutData
+import com.urbanairship.android.layout.ui.ThomasLayoutViewFactory
+import com.urbanairship.app.GlobalActivityMonitor
+import com.urbanairship.json.JsonSerializable
+import com.urbanairship.json.JsonValue
+import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State
-import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State.Content.WebViewState
+import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State.MessageContent.WebViewState
+import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
+import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
 import com.urbanairship.messagecenter.compose.ui.widget.MessageCenterWebView
 import com.urbanairship.R as CoreR
+import com.urbanairship.actions.Action as AutomationAction
 
 /**
  * Message Center message screen, including a top bar.
@@ -57,7 +75,7 @@ public fun MessageCenterMessageScreen(
     @OptIn(ExperimentalMaterial3Api::class)
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
-    val title = (state.viewState as? State.Content)?.message?.title
+    val title = (state.viewState as? State.MessageContent)?.message?.title
 
     @OptIn(ExperimentalMaterial3Api::class)
     Scaffold(
@@ -109,18 +127,30 @@ public fun MessageCenterMessage(
             is State.Empty -> EmptyView()
             is State.Error -> ErrorView(viewState.error) { state.onAction(Action.Refresh) }
             is State.Loading -> LoadingView()
-            is State.Content -> ContentView(
-                viewState = viewState,
-                onClose = onClose,
-                onAction = state::onAction
-            )
+            is State.MessageContent -> {
+                when(val content = viewState.content) {
+                    is State.MessageContent.Content.Html -> ContentView(
+                        message = viewState.message,
+                        content = content,
+                        onClose = onClose,
+                        onAction = state::onAction
+                    )
+                    is State.MessageContent.Content.Native -> NativeContentView(
+                        message = viewState.message,
+                        content = content,
+                        onClose = onClose,
+                        onAction = state::onAction
+                    )
+                }
+            }
         }
     }
 }
 
 @Composable
 private fun ContentView(
-    viewState: State.Content,
+    message: Message,
+    content: State.MessageContent.Content.Html,
     onClose: () -> Unit,
     onAction: ((Action) -> Unit)
 ) {
@@ -128,7 +158,7 @@ private fun ContentView(
         modifier = Modifier.fillMaxSize()
     ) {
         MessageCenterWebView(
-            message = viewState.message,
+            message = message,
             onClose = onClose,
             onPageStarted = {
                 onAction(Action.UpdateWebViewState(WebViewState.LOADING))
@@ -144,11 +174,72 @@ private fun ContentView(
         )
 
         // Show the error if we have one, otherwise show loading if we're loading
-        if (viewState.webViewState == WebViewState.ERROR) {
+        if (content.webViewState == WebViewState.ERROR) {
             ErrorView(State.Error.Type.LOAD_FAILED) { onAction(Action.Refresh) }
-        } else if (viewState.webViewState == WebViewState.LOADING) {
+        } else if (content.webViewState == WebViewState.LOADING) {
             LoadingView()
         }
+    }
+}
+
+@Composable
+private fun NativeContentView(
+    message: Message,
+    content: State.MessageContent.Content.Native,
+    onClose: () -> Unit,
+    onAction: ((Action) -> Unit)
+) {
+
+    onAction(Action.MarkCurrentMessageRead)
+
+    //TODO: we probably want to move it to a view model to preserve state on refresh
+    //or at least split into local properties to make it less ugly
+    val args = DisplayArgs(
+        payload = content.layout.layoutInfo,
+        listener = object : ThomasListenerInterface {
+            override fun onDismiss(cancel: Boolean) {
+            }
+
+            override fun onVisibilityChanged(
+                isVisible: Boolean, isForegrounded: Boolean
+            ) {
+            }
+
+            override fun onStateChanged(state: JsonSerializable) {
+            }
+
+            override fun onReportingEvent(event: ReportingEvent) {
+                when(event) {
+                    is ReportingEvent.Dismiss -> {
+                        onClose()
+                    }
+                    else -> {}
+                }
+            }
+        },
+        inAppActivityMonitor = GlobalActivityMonitor.shared(LocalContext.current),
+        actionRunner = object : ThomasActionRunner {
+            override fun run(
+                actions: Map<String, JsonValue>, state: LayoutData
+            ) {
+                DefaultActionRunner.run(actions, AutomationAction.Situation.AUTOMATION)
+            }
+
+        }
+    )
+
+    Box(Modifier.fillMaxSize()) {
+        AndroidView(
+            factory = { context ->
+                ThomasLayoutViewFactory.createView(
+                    context = context,
+                    displayArgs = args,
+                    viewId = message.id
+                )?.apply {
+                    layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                } ?: View(context)
+            }
+        )
     }
 }
 

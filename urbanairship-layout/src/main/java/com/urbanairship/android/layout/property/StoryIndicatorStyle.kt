@@ -10,7 +10,7 @@ internal sealed class StoryIndicatorStyle(val type: StoryIndicatorStyleType) {
     class LinearProgress(
         json: JsonMap
     ) : StoryIndicatorStyle(LINEAR_PROGRESS) {
-        val direction: Direction = Direction.from(json.requireField("direction"))
+        val direction: Direction = Direction.from(json.require("direction"))
         val sizing: SizingType? = json.optionalField<String>("sizing")?.let {
             SizingType.from(it)
         }

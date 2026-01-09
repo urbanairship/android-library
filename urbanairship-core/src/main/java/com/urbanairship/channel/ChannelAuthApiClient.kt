@@ -7,15 +7,14 @@ import com.urbanairship.http.AuthToken
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.SuspendingRequestSession
-import com.urbanairship.http.toSuspendingRequestSession
+import com.urbanairship.http.RequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.UAHttpStatusUtil
 
 internal class ChannelAuthApiClient(
     private val runtimeConfig: AirshipRuntimeConfig,
-    private val requestSession: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession(),
+    private val requestSession: RequestSession = runtimeConfig.requestSession,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
 ) {
     suspend fun getToken(channelId: String): RequestResult<AuthToken> {
@@ -32,17 +31,19 @@ internal class ChannelAuthApiClient(
         )
 
         return requestSession.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
-            if (UAHttpStatusUtil.inSuccessRange(status)) {
-                JsonValue.parseString(responseBody).requireMap().let { map ->
+            if (!UAHttpStatusUtil.inSuccessRange(status)) {
+                return@execute null
+            }
+
+            JsonValue.parseString(responseBody)
+                .requireMap()
+                .let { map ->
                     AuthToken(
                         identifier = channelId,
                         token = map.require("token").requireString(),
                         expirationDateMillis = requestTime + map.require("expires_in").getLong(0)
                     )
                 }
-            } else {
-                null
-            }
         }
     }
 }

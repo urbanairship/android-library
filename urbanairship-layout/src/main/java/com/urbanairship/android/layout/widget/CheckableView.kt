@@ -115,7 +115,7 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
                 info.className = accessibilityNodeClassName
 
                 if (host.isEnabled) {
-                    info.isChecked = checkableView.isChecked
+                    info.isChecked = checkableView.isChecked()
                 }
             }
         })
@@ -133,7 +133,7 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
 
     protected fun setCheckedInternal(isChecked: Boolean) {
         checkableView.setOnCheckedChangeListener(null)
-        checkableView.isChecked = isChecked
+        checkableView.setChecked(isChecked)
         checkableView.setOnCheckedChangeListener(checkedChangeListener)
     }
 

@@ -11,6 +11,7 @@ import com.urbanairship.analytics.EventType
 import com.urbanairship.analytics.data.EventEntity.EventIdAndData
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.http.RequestException
+import com.urbanairship.http.RequestResult
 import com.urbanairship.http.Response
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
@@ -19,9 +20,13 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import java.net.HttpURLConnection
 import kotlin.time.Duration.Companion.seconds
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -60,7 +65,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      * Tests adding an event after the next send time schedules an upload with a 10 second delay.
      */
     @Test
-    public fun testAddEventAfterNextSendTime() {
+    public fun testAddEventAfterNextSendTime(): TestResult = runTest {
         val entity = EventEntity(testEvent)
 
         every { mockDispatcher.dispatch(any()) } answers {
@@ -70,9 +75,12 @@ public class EventManagerTest public constructor() : BaseTestCase() {
             assertEquals(10.seconds, info.minDelay)
         }
 
+        coEvery { mockEventDao.insert(any()) } returns Unit
+        coEvery { mockEventDao.trimDatabase(any()) } returns Unit
+
         eventManager.addEvent(testEvent, Event.Priority.NORMAL)
         // Verify we add an event.
-        verify(exactly = 1) { mockEventDao.insert(entity) }
+        coVerify(exactly = 1) { mockEventDao.insert(entity) }
 
         // Check it schedules an upload
         verify { mockDispatcher.dispatch(any()) }
@@ -82,7 +90,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      * Tests adding an event  before the next send time schedules an upload with the remaining delay.
      */
     @Test
-    public fun testAddEventBeforeNextSendTime() {
+    public fun testAddEventBeforeNextSendTime(): TestResult = runTest {
         // Set the last send time to the current time so the next send time is minBatchInterval
         dataStore.put(EventManager.LAST_SEND_KEY, clock.currentTimeMillis)
 
@@ -96,6 +104,9 @@ public class EventManagerTest public constructor() : BaseTestCase() {
             assertEquals(20.seconds, info.minDelay)
         }
 
+        coEvery { mockEventDao.insert(any()) } returns Unit
+        coEvery { mockEventDao.trimDatabase(any()) } returns Unit
+
         eventManager.addEvent(testEvent, Event.Priority.NORMAL)
 
         verify { mockDispatcher.dispatch(any()) }
@@ -105,7 +116,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      * Tests sending events
      */
     @Test
-    public fun testSendingEvents() {
+    public fun testSendingEvents(): TestResult = runTest {
         val data = JsonValue.parseString("{ \"body\": \"firstEventBody\" }")
         val payload = EventIdAndData(1, "firstEvent", data)
         val events = listOf(payload)
@@ -116,14 +127,14 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         // Set up data manager to return 2 count for events.
         // Note: we only have one event, but it should only ask for one to upload
         // having it return 2 will make it schedule to upload events in the future
-        every { mockEventDao.count() } returns 2
+        coEvery { mockEventDao.count() } returns 2
 
         // Return 200 bytes in size.  It should only be able to do 100 bytes so only
         // the first event.
-        every { mockEventDao.databaseSize() } returns 200
+        coEvery { mockEventDao.databaseSize() } returns 200
 
         // Return the event when it asks for 1
-        every { mockEventDao.getBatch(1) } returns events
+        coEvery { mockEventDao.getBatch(1) } returns events
 
         // Set the max batch size to 100
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100)
@@ -136,9 +147,10 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         }
 
         // Return the response
-        every { mockClient.sendEvents("some channel", eventPayloads, headers) } answers {
-            Response(HttpURLConnection.HTTP_OK, eventResponse)
-        }
+        coEvery { mockClient.sendEvents("some channel", eventPayloads, headers) } returns RequestResult(
+            response = Response(HttpURLConnection.HTTP_OK, eventResponse),
+            shouldRetry = false
+        )
 
         every { mockDispatcher.dispatch(any()) } answers {
             val info: JobInfo = firstArg()
@@ -149,10 +161,10 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         assertTrue(eventManager.uploadEvents("some channel", headers))
 
         // Check mockClients receives the events
-        verify { mockClient.sendEvents("some channel", eventPayloads, headers) }
+        coVerify { mockClient.sendEvents("some channel", eventPayloads, headers) }
 
         // Check data manager deletes events
-        verify { mockEventDao.deleteBatch(events) }
+        coVerify { mockEventDao.deleteBatch(events) }
 
         // Verify responses are being saved
         assertEquals(200, dataStore.getInt(EventManager.MAX_TOTAL_DB_SIZE_KEY, 0))
@@ -167,18 +179,19 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      * Test event batching only sends a max of 500 events.
      */
     @Test
-    public fun testSendEventMaxCount() {
+    public fun testSendEventMaxCount(): TestResult = runTest {
         // Make the match batch size greater than 500
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100000)
 
         // Fake the resolver to act like it has more than 500 events
-        every { mockEventDao.databaseSize() } returns 100000
-        every { mockEventDao.count() } returns 1000
+        coEvery { mockEventDao.databaseSize() } returns 100000
+        coEvery { mockEventDao.count() } returns 1000
+        coEvery { mockEventDao.getBatch(500) } returns emptyList()
 
         eventManager.uploadEvents("some channel", emptyMap())
 
         // Verify it only asked for 500
-        verify { mockEventDao.getBatch(500) }
+        coVerify { mockEventDao.getBatch(500) }
     }
 
     /**
@@ -186,7 +199,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      */
     @Test
     @Throws(RequestException::class, JsonException::class)
-    public fun testSendEventsFails() {
+    public fun testSendEventsFails(): TestResult = runTest {
         val data = JsonValue.parseString("{ \"body\": \"firstEventBody\" }")
         val payload = EventIdAndData(1, "firstEvent", data)
         val events = listOf(payload)
@@ -194,30 +207,31 @@ public class EventManagerTest public constructor() : BaseTestCase() {
 
         val headers = mapOf("foo" to "bar")
 
-        every { mockEventDao.count() } returns 1
-        every { mockEventDao.databaseSize() } returns 100
-        every { mockEventDao.getBatch(1) } returns events
+        coEvery { mockEventDao.count() } returns 1
+        coEvery { mockEventDao.databaseSize() } returns 100
+        coEvery { mockEventDao.getBatch(1) } returns events
 
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100)
 
-        every { mockClient.sendEvents("some channel", eventPayloads, headers) } answers {
-            Response(HttpURLConnection.HTTP_BAD_REQUEST, mockk())
-        }
+        coEvery { mockClient.sendEvents("some channel", eventPayloads, headers) } returns RequestResult(
+            response = Response(HttpURLConnection.HTTP_BAD_REQUEST, mockk()),
+            shouldRetry = false
+        )
 
         assertFalse(eventManager.uploadEvents("some channel", headers))
 
         // Check mockClient receives the events
-        verify { mockClient.sendEvents("some channel", eventPayloads, headers) }
+        coVerify { mockClient.sendEvents("some channel", eventPayloads, headers) }
 
         // If it fails, it should skip deleting events
-        verify(exactly = 0) { mockEventDao.deleteBatch(any()) }
+        coVerify(exactly = 0) { mockEventDao.deleteBatch(any()) }
     }
 
     /**
      * Test adding a region event schedules an upload immediately.
      */
     @Test
-    public fun testAddingHighPriorityEvents() {
+    public fun testAddingHighPriorityEvents(): TestResult = runTest {
         // Set last send time to year 3005 so next send time is way in the future
         dataStore.put(EventManager.LAST_SEND_KEY, 32661446400000L)
 
@@ -226,6 +240,9 @@ public class EventManagerTest public constructor() : BaseTestCase() {
             assertEquals(EventManager.ACTION_SEND, info.action)
             assertEquals(0.seconds, info.minDelay)
         }
+
+        coEvery { mockEventDao.insert(any()) } returns Unit
+        coEvery { mockEventDao.trimDatabase(any()) } returns Unit
 
         eventManager.addEvent(testEvent, Event.Priority.HIGH)
 
@@ -237,8 +254,10 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      * Test delete all.
      */
     @Test
-    public fun testDeleteAll() {
+    public fun testDeleteAll(): TestResult = runTest {
+        coEvery { mockEventDao.deleteAll() } returns Unit
+
         eventManager.deleteEvents()
-        verify(exactly = 1) { mockEventDao.deleteAll() }
+        coVerify(exactly = 1) { mockEventDao.deleteAll() }
     }
 }

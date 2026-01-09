@@ -2,19 +2,16 @@
 package com.urbanairship.app
 
 import android.app.Activity
-import android.app.Application
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.After
-import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.Robolectric
-import org.robolectric.android.controller.ActivityController
 import org.robolectric.shadows.ShadowLooper
 
 /**
@@ -33,11 +30,11 @@ public class GlobalActivityMonitorTest {
 
         activityMonitor.registerListener(application)
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(time: Long) {
+            override fun onForeground(milliseconds: Long) {
                 isForeground = true
             }
 
-            override fun onBackground(time: Long) {
+            override fun onBackground(milliseconds: Long) {
                 isForeground = false
             }
         })

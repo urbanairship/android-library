@@ -1,66 +1,112 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.job
 
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import androidx.core.util.Consumer
-import com.urbanairship.AirshipComponent
-import com.urbanairship.AirshipExecutors
-import com.urbanairship.UALog
 import com.urbanairship.Airship
-import java.util.concurrent.Executor
+import com.urbanairship.AirshipDispatchers
+import com.urbanairship.UALog
+import com.urbanairship.util.SerialQueue
+import java.lang.ref.WeakReference
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.withContext
 
 @VisibleForTesting
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface JobRunner {
 
-    public fun run(jobInfo: JobInfo, resultConsumer: Consumer<JobResult>)
+    public suspend fun run(jobInfo: JobInfo): JobResult
 
-    public class DefaultRunner(
-        private val executor: Executor = AirshipExecutors.newSerialExecutor()
-    ) : JobRunner {
+    public fun addJobHandler(
+        scope: String,
+        jobActions: List<String>,
+        jobHandler: suspend (JobInfo) -> JobResult
+    )
 
-        override fun run(jobInfo: JobInfo, resultConsumer: Consumer<JobResult>) {
-            executor.execute {
-                if (!Airship.waitForReadyBlocking(AIRSHIP_WAIT_TIME)) {
-                    UALog.e("Airship not ready. Rescheduling job: $jobInfo")
-                    resultConsumer.accept(JobResult.RETRY)
-                    return@execute
+    public fun <T> addWeakJobHandler(
+        component: T,
+        jobActions: List<String>,
+        handler: suspend T.(JobInfo) -> JobResult
+    ) {
+        val scope = component?.javaClass?.name ?: ""
+        val weakRef = WeakReference(component)
+        addJobHandler(scope, jobActions) { jobInfo ->
+            weakRef.get()?.let { handler(it, jobInfo) } ?: JobResult.FAILURE
+        }
+    }
+
+    public class DefaultRunner() : JobRunner {
+
+        private val entryLock = ReentrantLock()
+        private val entries: MutableMap<String, JobHandlerEntry> = mutableMapOf()
+
+
+        override suspend fun run(jobInfo: JobInfo): JobResult {
+            if (!Airship.waitForReady(AIRSHIP_WAIT_TIME)) {
+                UALog.e { "Airship not ready. Rescheduling job: $jobInfo" }
+                return JobResult.RETRY
+            }
+
+            val key = makeEntryKey(jobInfo.scope, jobInfo.action)
+            val entry = entryLock.withLock {
+                entries[key]
+            }
+
+            if (entry == null) {
+                UALog.e { "No entries found for action ${jobInfo.action}. Rescheduling job: $jobInfo" }
+                return JobResult.FAILURE
+            }
+
+            return try {
+                // Use SerialQueue to ensure jobs run in FIFO sequential order for this handler
+                // All jobs for the same handler entry will execute one at a time in the order they arrive
+                // Switch to AirshipDispatchers.IO to ensure work runs on threads with proper TrafficStats tagging
+                withContext(AirshipDispatchers.IO) {
+                    entry.queue.run {
+                        entry.jobHandler.invoke(jobInfo)
+                    }
                 }
+            } catch (e: Exception) {
+                // Log the exception but don't let it propagate to other entries
+                // The exception is caught here so it doesn't break the FIFO queue for other jobs
+                UALog.e(e) { "Job handler threw exception for job: $jobInfo" }
+                JobResult.FAILURE
+            }
+        }
 
+        override fun addJobHandler(
+            scope: String,
+            jobActions: List<String>,
+            jobHandler: suspend (JobInfo) -> JobResult
+        ) {
+            val entry = JobHandlerEntry(jobHandler = jobHandler)
+            entryLock.withLock {
+                jobActions.forEach { action ->
+                    val key = makeEntryKey(scope, action)
+                    if (entries[key] != null) {
+                        UALog.e { "Duplicate job action: $key" }
+                        return
+                    }
 
-                val component = findAirshipComponent( jobInfo.airshipComponentName) ?: run {
-                    UALog.e("Unavailable to find airship components for jobInfo: $jobInfo")
-                    resultConsumer.accept(JobResult.SUCCESS)
-                    return@execute
-                }
-
-                component.getJobExecutor(jobInfo).execute {
-                    val result = component.onPerformJob(jobInfo)
-                    UALog.v("Finished: $jobInfo with result: $result")
-                    resultConsumer.accept(result)
+                    entries[key] = entry
                 }
             }
         }
 
-        /**
-         * Finds the [AirshipComponent]s for a given job.
-         *
-         * @param componentClassName The component's class name.
-         * @return The airship component.
-         */
-        private fun findAirshipComponent(
-            componentClassName: String
-        ): AirshipComponent? {
-            if (componentClassName.isEmpty()) {
-                return null
-            }
-
-            return Airship.components.firstOrNull { it.javaClass.name == componentClassName }
+        private fun makeEntryKey(scope: String, action: String): String {
+            return "$scope.$action"
         }
 
         private companion object {
             private val AIRSHIP_WAIT_TIME = 5.seconds
         }
     }
+
+    private data class JobHandlerEntry(
+        val queue: SerialQueue = SerialQueue(),
+        val jobHandler: suspend (JobInfo) -> JobResult
+    )
 }

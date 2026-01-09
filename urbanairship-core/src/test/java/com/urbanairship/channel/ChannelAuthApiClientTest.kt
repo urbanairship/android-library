@@ -8,11 +8,11 @@ import com.urbanairship.TestClock
 import com.urbanairship.TestRequestSession
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertNull
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -33,7 +33,7 @@ public class ChannelAuthApiClientTest {
     private var clock = TestClock()
     private val testDispatcher = StandardTestDispatcher()
 
-    private var client = ChannelAuthApiClient(config, requestSession.toSuspendingRequestSession(), clock)
+    private var client = ChannelAuthApiClient(config, requestSession, clock)
 
     @Before
     public fun setup() {

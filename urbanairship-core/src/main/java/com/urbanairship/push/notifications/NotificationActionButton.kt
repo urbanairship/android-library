@@ -81,8 +81,8 @@ public class NotificationActionButton private constructor(
      *
      * @return A list of remote inputs.
      */
-    public fun getRemoteInputs(): List<LocalizableRemoteInput>? {
-        return remoteInputs?.toList()
+    public fun getRemoteInputs(): List<LocalizableRemoteInput> {
+        return remoteInputs.toList()
     }
 
     /**
@@ -117,7 +117,7 @@ public class NotificationActionButton private constructor(
             .putExtra(PushManager.EXTRA_NOTIFICATION_ACTION_BUTTON_DESCRIPTION, actionDescription)
 
         // If remote inputs are present, create a mutable PendingIntent so that the underlying intent can be modified.
-        val flags = if (remoteInputs == null) 0 else PendingIntentCompat.FLAG_MUTABLE
+        val flags = if (remoteInputs.isEmpty()) 0 else PendingIntentCompat.FLAG_MUTABLE
 
         if (isForegroundAction) {
             intent.setClass(context, NotificationProxyActivity::class.java)
@@ -131,7 +131,7 @@ public class NotificationActionButton private constructor(
             icon, HtmlCompat.fromHtml(label, HtmlCompat.FROM_HTML_MODE_LEGACY), actionPendingIntent
         ).addExtras(extras)
 
-        remoteInputs?.forEach { input ->
+        remoteInputs.forEach { input ->
             actionBuilder.addRemoteInput(input.createRemoteInput(context))
         }
 

@@ -2,15 +2,14 @@ package com.urbanairship.http
 
 import android.util.Base64
 import androidx.annotation.RestrictTo
-import com.urbanairship.AirshipConfigOptions
-import com.urbanairship.Provider
 import com.urbanairship.Airship
+import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.Platform
+import com.urbanairship.Provider
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
-import com.urbanairship.util.UAStringUtil
+import com.urbanairship.util.toSignedToken
 import java.util.UUID
-import kotlinx.coroutines.runBlocking
 
 /**
  * Parses a response.
@@ -27,16 +26,17 @@ public class DefaultRequestSession : RequestSession {
     private val clock: Clock
     private val nonceTokenFactory: () -> String
 
-    public constructor(configOptions: AirshipConfigOptions, platformProvider: Provider<Platform>) : this(
-        configOptions, platformProvider, DefaultHttpClient()
-    )
+    public constructor(
+        configOptions: AirshipConfigOptions,
+        platformProvider: Provider<Platform>
+    ) : this(configOptions, platformProvider, DefaultHttpClient())
 
     internal constructor(
         configOptions: AirshipConfigOptions,
         platformProvider:  Provider<Platform>,
         httpClient: HttpClient,
         clock: Clock = Clock.DEFAULT_CLOCK,
-        nonceTokenFactory: () -> String = { UUID.randomUUID().toString() }
+        nonceTokenFactory: () -> String = { UUID.randomUUID().toString() },
     ) {
         this.configOptions = configOptions
         this.platformProvider = platformProvider
@@ -57,7 +57,7 @@ public class DefaultRequestSession : RequestSession {
         }
 
     @Throws(RequestException::class)
-    public override fun execute(request: Request): Response<Unit> {
+    public override suspend fun execute(request: Request): RequestResult<Unit> {
         return execute(request) { _, _, _ -> }
     }
 
@@ -67,25 +67,28 @@ public class DefaultRequestSession : RequestSession {
      * @return The request response.
      */
     @Throws(RequestException::class)
-    public override fun <T> execute(
+    public override suspend fun <T> execute(
         request: Request,
-        parser: ResponseParser<T>
-    ): Response<T> {
-        val result = doExecute(request, parser)
-        return if (result.shouldRetry) {
-            doExecute(request, parser).response
-        } else {
-            result.response
+        parser: ResponseParser<T?>
+    ): RequestResult<T> {
+        return try {
+            val result = doExecute(request, parser)
+            if (result.shouldRetry) {
+                doExecute(request, parser)
+            } else {
+                result
+            }
+        } catch (e: Exception) {
+            RequestResult(e)
         }
     }
 
-    @Throws(RequestException::class)
-    private fun <T> doExecute(
+    private suspend fun <T> doExecute(
         request: Request,
-        parser: ResponseParser<T>
+        parser: ResponseParser<T?>
     ): RequestResult<T> {
         if (request.url == null) {
-            throw RequestException("Missing URL")
+            return RequestResult(RequestException("Missing URL"))
         }
 
         val headers = mutableMapOf<String, String>()
@@ -102,29 +105,38 @@ public class DefaultRequestSession : RequestSession {
             }
 
             val response = httpClient.execute(
-                request.url, request.method, headers, request.body, request.followRedirects, parser
+                url = request.url,
+                method = request.method,
+                headers = headers,
+                body = request.body,
+                followRedirects = request.followRedirects,
+                parser = parser
             )
 
             return if (response.status == 401 && auth != null && auth.authToken != null) {
                 expireAuth(request.auth, auth.authToken)
-                RequestResult(true, response)
+                RequestResult(
+                    response = response,
+                    shouldRetry = true
+                )
             } else {
-                RequestResult(false, response)
+                RequestResult(
+                    response = response,
+                    shouldRetry = false
+                )
             }
         } catch (e: Exception) {
-            throw RequestException("Request failed: $request", e)
+            return RequestResult(RequestException("Request failed: $request", e))
         }
     }
 
-    private fun resolveAuth(auth: RequestAuth): ResolvedAuth {
+    private suspend fun resolveAuth(auth: RequestAuth): ResolvedAuth {
         return when (auth) {
             is RequestAuth.BasicAppAuth -> {
                 val credentials = configOptions.appKey + ":" + configOptions.appSecret
                 val token = Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
                 ResolvedAuth(
-                    headers = mapOf(
-                        "Authorization" to "Basic $token"
-                    )
+                    headers = mapOf("Authorization" to "Basic $token")
                 )
             }
 
@@ -132,22 +144,19 @@ public class DefaultRequestSession : RequestSession {
                 val credentials = auth.user + ":" + auth.password
                 val token = Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)
                 ResolvedAuth(
-                    headers = mapOf(
-                        "Authorization" to "Basic $token"
-                    )
+                    headers = mapOf("Authorization" to "Basic $token")
                 )
             }
 
             is RequestAuth.BearerToken -> {
                 ResolvedAuth(
-                    headers = mapOf(
-                        "Authorization" to "Bearer ${auth.token}"
-                    )
+                    headers = mapOf("Authorization" to "Bearer ${auth.token}")
                 )
             }
 
             is RequestAuth.ChannelTokenAuth -> {
-                val token = getToken(auth.channelId, requireNotNull(channelAuthTokenProvider))
+                val provider = requireNotNull(channelAuthTokenProvider)
+                val token = provider.fetchToken(auth.channelId).getOrThrow()
                 ResolvedAuth(
                     headers = mapOf(
                         "Authorization" to "Bearer $token",
@@ -158,7 +167,8 @@ public class DefaultRequestSession : RequestSession {
             }
 
             is RequestAuth.ContactTokenAuth -> {
-                val token = getToken(auth.contactId, requireNotNull(contactAuthTokenProvider))
+                val provider = requireNotNull(contactAuthTokenProvider)
+                val token = provider.fetchToken(auth.contactId).getOrThrow()
                 ResolvedAuth(
                     headers = mapOf(
                         "Authorization" to "Bearer $token",
@@ -173,12 +183,9 @@ public class DefaultRequestSession : RequestSession {
                 val nonce = nonceTokenFactory()
                 val timestamp = DateUtils.createIso8601TimeStamp(requestTime)
 
-                val token = UAStringUtil.generateSignedToken(
-                        configOptions.appSecret,
-                        listOf(
-                            configOptions.appKey, nonce, timestamp
-                        )
-                    )
+                val token = configOptions.appSecret.toSignedToken(
+                    values = listOf(configOptions.appKey, nonce, timestamp)
+                )
 
                 ResolvedAuth(
                     headers = mapOf(
@@ -195,11 +202,8 @@ public class DefaultRequestSession : RequestSession {
                 val nonce = nonceTokenFactory()
                 val timestamp = DateUtils.createIso8601TimeStamp(requestTime)
 
-                val token = UAStringUtil.generateSignedToken(
-                    configOptions.appSecret,
-                    listOf(
-                        configOptions.appKey, auth.channelId, nonce, timestamp
-                    )
+                val token = configOptions.appSecret.toSignedToken(
+                    values = listOf(configOptions.appKey, auth.channelId, nonce, timestamp)
                 )
 
                 ResolvedAuth(
@@ -215,28 +219,13 @@ public class DefaultRequestSession : RequestSession {
         }
     }
 
-    private fun expireAuth(auth: RequestAuth, token: String) {
+    private suspend fun expireAuth(auth: RequestAuth, token: String) {
         when (auth) {
-            is RequestAuth.ChannelTokenAuth -> runBlocking {
-                channelAuthTokenProvider?.expireToken(token)
-            }
-            is RequestAuth.ContactTokenAuth -> runBlocking {
-                contactAuthTokenProvider?.expireToken(token)
-            }
+            is RequestAuth.ChannelTokenAuth -> channelAuthTokenProvider?.expireToken(token)
+            is RequestAuth.ContactTokenAuth -> contactAuthTokenProvider?.expireToken(token)
             else -> {}
         }
     }
-
-    private fun getToken(identifier: String, provider: AuthTokenProvider): String {
-        val result = runBlocking {
-            val result = provider.fetchToken(identifier)
-            result
-        }
-
-        return result.getOrThrow()
-    }
-
-    private data class RequestResult<T>(val shouldRetry: Boolean, val response: Response<T>)
 
     private data class ResolvedAuth(
         val headers: Map<String, String>,

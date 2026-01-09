@@ -144,8 +144,8 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
     public val customPushProvider: PushProvider?
 
     /**
-     * Additional URLs that will be added to the allow list for both [UrlAllowList.SCOPE_OPEN_URL] and
-     * [UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE] scopes.
+     * Additional URLs that will be added to the allow list for both [UrlAllowList.Scope.OPEN_URL] and
+     * [UrlAllowList.Scope.JAVASCRIPT_INTERFACE] scopes.
      *
      * See [UrlAllowList.addEntry] for valid URL patterns.
      */
@@ -153,7 +153,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
     public val urlAllowList: List<String>
 
     /**
-     * Additional URLs that will be added to the allow list for scope [UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE].
+     * Additional URLs that will be added to the allow list for scope [UrlAllowList.Scope.JAVASCRIPT_INTERFACE].
      *
      * See [UrlAllowList.addEntry] for valid URL patterns.
      */
@@ -161,7 +161,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
     public val urlAllowListScopeJavaScriptInterface: List<String>
 
     /**
-     * Additional URLs that will be added to the allow list for scope [UrlAllowList.SCOPE_OPEN_URL].
+     * Additional URLs that will be added to the allow list for scope [UrlAllowList.Scope.OPEN_URL].
      * See [UrlAllowList.addEntry] for valid URL patterns.
      */
     @JvmField
@@ -350,7 +350,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
 
     /**
      * Flag indicating whether or not the SDK will automatically prompt for notification permission
-     * when enabling notifications with [com.urbanairship.push.PushManager.setUserNotificationsEnabled].
+     * when enabling notifications with [com.urbanairship.push.PushManager.userNotificationsEnabled].
      */
     public val isPromptForPermissionOnUserNotificationsEnabled: Boolean
 
@@ -411,6 +411,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         this.notificationChannel = builder.notificationChannel
         this.customPushProvider = builder.customPushProvider
         this.appStoreUri = builder.appStoreUri
+        @Suppress("DEPRECATION")
         this.dataCollectionOptInEnabled = builder.dataCollectionOptInEnabled
         this.enabledFeatures = builder.enabledFeatures
         this.resetEnabledFeatures = builder.resetEnabledFeatures
@@ -510,22 +511,22 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
             private set
 
         /**
-         * The additional URLs that will be added to the allow list for both [UrlAllowList.SCOPE_OPEN_URL] and
-         * [UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE] scopes.
+         * The additional URLs that will be added to the allow list for both [UrlAllowList.Scope.OPEN_URL] and
+         * [UrlAllowList.Scope.JAVASCRIPT_INTERFACE] scopes.
          * See [UrlAllowList.addEntry] for valid URL patterns.
          */
         public var urlAllowList: List<String>? = null
             private set
 
         /**
-         * The additional URLs that will be added to the allow list for scope [UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE].
+         * The additional URLs that will be added to the allow list for scope [UrlAllowList.Scope.JAVASCRIPT_INTERFACE].
          * See [UrlAllowList.addEntry] for valid URL patterns.
          */
         public var urlAllowListScopeJavaScriptInterface: List<String>? = null
             private set
 
         /**
-         * The additional URLs that will be added to the allow list for scope [UrlAllowList.SCOPE_OPEN_URL].
+         * The additional URLs that will be added to the allow list for scope [UrlAllowList.Scope.OPEN_URL].
          * See [UrlAllowList.addEntry] for valid URL patterns.
          */
         public var urlAllowListScopeOpenUrl: List<String>? = null
@@ -590,21 +591,21 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
 
         /**
          * The default notification Icon.
-         * See [com.urbanairship.push.notifications.AirshipNotificationProvider.setSmallIcon].
+         * See [com.urbanairship.push.notifications.AirshipNotificationProvider.smallIcon].
          */
         public var notificationIcon: Int = 0
             private set
 
         /**
          * The large notification Icon.
-         * See [com.urbanairship.push.notifications.AirshipNotificationProvider.setLargeIcon].
+         * See [com.urbanairship.push.notifications.AirshipNotificationProvider.largeIcon].
          */
         public var notificationLargeIcon: Int = 0
             private set
 
         /**
          * The default notification accent color.
-         * See [com.urbanairship.push.notifications.AirshipNotificationProvider.setDefaultAccentColor].
+         * See [com.urbanairship.push.notifications.AirshipNotificationProvider.defaultAccentColor].
          */
         public var notificationAccentColor: Int = NotificationCompat.COLOR_DEFAULT
             private set
@@ -634,11 +635,9 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
             private set
 
         /**
-         * The flag indicating whether data collection needs to be opted in with
-         * [Airship.setDataCollectionEnabled].
+         * The flag indicating whether data collection needs to be opted in.
          *
-         * This flag will only take affect on first run. If previously not enabled, the device
-         * will still have data collection enabled until disabled with [Airship.setDataCollectionEnabled].
+         * This method is deprecated. Use [PrivacyManager] to manage privacy features.
          */
         @Deprecated(message = "Use {@link #enabledFeatures} instead.")
         public var dataCollectionOptInEnabled: Boolean = false
@@ -683,7 +682,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         public var initialConfigUrl: String? = null
 
         /**
-         * When enabled sets [com.urbanairship.push.PushManager.setUserNotificationsEnabled]
+         * When enabled sets [com.urbanairship.push.PushManager.userNotificationsEnabled]
          * if the SDK should prompt for permission on Android 13+ devices. Enabled by default.
          */
         public var isPromptForPermissionOnUserNotificationsEnabled: Boolean = true
@@ -697,8 +696,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         /**
          * Apply the options from the default properties file `airshipconfig.properties`.
          *
-         *
-         * See [applyProperties].
+         * @see applyProperties
          *
          * @param context The application context
          * @return The config option builder.
@@ -1027,9 +1025,10 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
                         )
 
                         FIELD_SITE -> this.setSite(parseSite(configParser.getString(name)))
-                        FIELD_DATA_COLLECTION_OPT_IN_ENABLED -> this.setDataCollectionOptInEnabled(
-                            configParser.getBoolean(name, false)
-                        )
+                        FIELD_DATA_COLLECTION_OPT_IN_ENABLED -> {
+                            @Suppress("DEPRECATION")
+                            this.setDataCollectionOptInEnabled(configParser.getBoolean(name, false))
+                        }
 
                         FIELD_EXTENDED_BROADCASTS_ENABLED -> this.setExtendedBroadcastsEnabled(
                             configParser.getBoolean(name, false)
@@ -1110,7 +1109,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
          * Sets the default notification Icon.
          *
          *
-         * See [com.urbanairship.push.notifications.AirshipNotificationProvider.setSmallIcon].
+         * See [com.urbanairship.push.notifications.AirshipNotificationProvider.smallIcon].
          *
          * @param notificationIcon The notification icon.
          * @return The config options builder.
@@ -1124,7 +1123,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
          * Sets the large notification Icon.
          *
          *
-         * See [com.urbanairship.push.notifications.AirshipNotificationProvider.setLargeIcon].
+         * See [com.urbanairship.push.notifications.AirshipNotificationProvider.largeIcon].
          *
          * @param notificationLargeIcon The large notification icon.
          * @return The config options builder.
@@ -1138,7 +1137,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
          * Sets the default notification accent color.
          *
          *
-         * See [com.urbanairship.push.notifications.AirshipNotificationProvider.setDefaultAccentColor].
+         * See [com.urbanairship.push.notifications.AirshipNotificationProvider.defaultAccentColor].
          *
          * @param notificationAccentColor The notification accent color.
          * @return The config options builder.
@@ -1280,8 +1279,9 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         }
 
         /**
-         * Sets the additional URLs that will be added to the allow list for both [UrlAllowList.SCOPE_OPEN_URL] and
-         * [UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE] scopes.
+         * Sets the additional URLs that will be added to the allow list for both [UrlAllowList.Scope.OPEN_URL] and
+         * [UrlAllowList.Scope.JAVASCRIPT_INTERFACE] scopes.
+         *
          * See [UrlAllowList.addEntry] for valid URL patterns.
          *
          * @param urlAllowList An array of URL patterns.
@@ -1294,7 +1294,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         }
 
         /**
-         * Sets the additional URLs that will be added to the allow list for scope [UrlAllowList.SCOPE_JAVASCRIPT_INTERFACE].
+         * Sets the additional URLs that will be added to the allow list for scope [UrlAllowList.Scope.JAVASCRIPT_INTERFACE].
          * See [UrlAllowList.addEntry] for valid URL patterns.
          *
          * @param urlAllowListScopeJavaScriptInterface An array of URL patterns.
@@ -1306,7 +1306,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         }
 
         /**
-         * Sets the additional URLs that will be added to the allow list for scope [UrlAllowList.SCOPE_OPEN_URL].
+         * Sets the additional URLs that will be added to the allow list for scope [UrlAllowList.Scope.OPEN_URL].
          * See [UrlAllowList.addEntry] for valid URL patterns.
          *
          * @param urlAllowListScopeOpenUrl An array of URL patterns.
@@ -1341,7 +1341,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
                 val field = clazz.getField("DEBUG")
                 inProduction = field.get(null) == false
             } catch (e: Exception) {
-                UALog.w("AirshipConfigOptions - Unable to determine the build mode. Defaulting to debug.")
+                UALog.w(e, "AirshipConfigOptions - Unable to determine the build mode. Defaulting to debug.")
                 inProduction = false
             }
             return this
@@ -1501,17 +1501,16 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         }
 
         /**
-         * Set the flag indicating whether data collection needs to be opted in with
-         * [Airship.setDataCollectionEnabled].
+         * Set the flag indicating whether data collection needs to be opted in.
          *
-         * This flag will only take affect on first run. If previously not enabled, the device
-         * will still have data collection enabled until disabled with [Airship.setDataCollectionEnabled].
+         * This method is deprecated. Use [PrivacyManager] to manage SDK features instead.
          *
          * @param dataCollectionOptInEnabled The flag indicating whether data collection needs to be opted in.
          * @return The config options builder.
          */
         @Deprecated("Use {@link #enabledFeatures} instead.")
         public fun setDataCollectionOptInEnabled(dataCollectionOptInEnabled: Boolean): Builder {
+            @Suppress("DEPRECATION")
             this.dataCollectionOptInEnabled = dataCollectionOptInEnabled
             return this
         }
@@ -1567,7 +1566,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         }
 
         /**
-         * Sets if when enabling [com.urbanairship.push.PushManager.setUserNotificationsEnabled]
+         * Sets if when enabling [com.urbanairship.push.PushManager.userNotificationsEnabled]
          * if the SDK should prompt for permission on Android 13+ devices. Enabled by default.
          *
          * @param enabled `true` to prompt for notifications when user notifications are enabled, otherwise `false`.
@@ -1640,6 +1639,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
                 UALog.w("Production App Secret matches Development App Secret")
             }
 
+            @Suppress("DEPRECATION")
             if (dataCollectionOptInEnabled) {
                 UALog.w("dataCollectionOptInEnabled is deprecated. Use enabledFeatures instead.")
                 if (enabledFeatures === Feature.ALL) {

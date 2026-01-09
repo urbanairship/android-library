@@ -155,7 +155,7 @@ public class NotificationsPermissionDelegateTest {
             callback = { _ -> }
         )
 
-        coVerify { channelRegistry.getNotificationChannel(defaultChannelId) }
+        coVerify(timeout = 1000) { channelRegistry.getNotificationChannel(defaultChannelId) }
     }
 
     @Test

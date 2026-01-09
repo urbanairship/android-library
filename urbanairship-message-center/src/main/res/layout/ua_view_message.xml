@@ -6,6 +6,12 @@
     android:layout_height="match_parent"
     tools:parentTag="android.widget.FrameLayout">
 
+    <FrameLayout
+        android:id="@+id/native_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+    />
+
     <com.urbanairship.messagecenter.ui.widget.MessageWebView
         android:id="@+id/message"
         android:layout_width="match_parent"

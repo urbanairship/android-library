@@ -14,7 +14,6 @@ import com.urbanairship.javascript.JavaScriptEnvironment
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.messageCenter
 import com.urbanairship.webkit.AirshipWebViewClient
 import com.urbanairship.webkit.NestedScrollAirshipWebView
@@ -33,6 +32,8 @@ public open class MessageWebView @JvmOverloads constructor(
     defResStyle: Int = 0
 ): NestedScrollAirshipWebView(context, attrs, defStyle, defResStyle) {
 
+    private var currentMessage: Message? = null
+
     /**
      * Loads the web view with the [Message].
      *
@@ -41,6 +42,9 @@ public open class MessageWebView @JvmOverloads constructor(
     public open fun loadMessage(message: Message) {
         UALog.v { "Loading message: ${message.id}" }
         val user = Airship.messageCenter.user
+
+        // Store the message to avoid runBlocking lookups later
+        currentMessage = message
 
         // Send authorization in the headers if the web view supports it
         val headers = HashMap<String, String>()
@@ -54,6 +58,13 @@ public open class MessageWebView @JvmOverloads constructor(
         UALog.v { "Load URL: ${message.bodyUrl}" }
         loadUrl(message.bodyUrl, headers)
     }
+
+    /**
+     * Gets the currently loaded message.
+     *
+     * @return The message, or null if no message is loaded.
+     */
+    internal fun getCurrentMessage(): Message? = currentMessage
 }
 
 /**
@@ -98,11 +109,27 @@ public open class MessageWebViewClient : AirshipWebViewClient() {
      * @param webView The web view.
      * @return The rich push message, or null if the web view does not have an associated message.
      * @note This method should only be called from the main thread.
+     * @note The message should be set via [MessageWebView.loadMessage] before this is called.
      */
     @MainThread
-    private fun getMessage(webView: WebView): Message? = runBlocking {
-        val url = webView.url
-        Airship.messageCenter.inbox.getMessageByUrl(url)
+    internal fun getMessage(webView: WebView): Message? {
+        val messageWebView = webView as? MessageWebView
+        val currentMessage = messageWebView?.getCurrentMessage()
+        val currentUrl = webView.url
+
+        // Use the stored message if it exists and the URL matches
+        if (currentMessage != null && currentUrl == currentMessage.bodyUrl) {
+            return currentMessage
+        }
+
+        // Fallback to URL lookup if message is null or URL doesn't match
+        if (currentUrl != null) {
+            return runBlocking {
+                Airship.messageCenter.inbox.getMessageByUrl(currentUrl)
+            }
+        }
+
+        return null
     }
 
     private companion object {

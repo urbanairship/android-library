@@ -3,11 +3,13 @@ package com.urbanairship.actions
 
 import android.os.Parcel
 import android.os.Parcelable
+import androidx.core.os.ParcelCompat
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.util.readParcelableCompat
 
 /**
  * An ActionValue is a representation of any value that can be described using JSON. It can contain one
@@ -103,9 +105,9 @@ public constructor(
      */
     public val isNull: Boolean = jsonValue.isNull
 
-    override fun equals(`object`: Any?): Boolean {
-        if (`object` is ActionValue) {
-            return jsonValue == `object`.jsonValue
+    override fun equals(other: Any?): Boolean {
+        if (other is ActionValue) {
+            return jsonValue == other.jsonValue
         }
 
         return false
@@ -200,18 +202,18 @@ public constructor(
         /**
          * Wraps a [com.urbanairship.json.JsonValue] compatible object as an ActionValue.
          *
-         * @param object The action's value.
+         * @param value The action's value.
          * @return The ActionValue object.
          * @throws com.urbanairship.actions.ActionValueException If the object is unable to be wrapped into an
          * action value.
          */
         @JvmStatic
         @Throws(ActionValueException::class)
-        public fun wrap(`object`: Any?): ActionValue {
+        public fun wrap(value: Any?): ActionValue {
             try {
-                return ActionValue(JsonValue.wrap(`object`))
+                return ActionValue(JsonValue.wrap(value))
             } catch (e: JsonException) {
-                throw ActionValueException("Invalid ActionValue object: $`object`", e)
+                throw ActionValueException("Invalid ActionValue object: $value", e)
             }
         }
 
@@ -223,8 +225,8 @@ public constructor(
         @JvmField
         public val CREATOR: Parcelable.Creator<ActionValue> =
             object : Parcelable.Creator<ActionValue> {
-                override fun createFromParcel(`in`: Parcel): ActionValue {
-                    return ActionValue(`in`.readParcelable<Parcelable>(JsonValue::class.java.classLoader) as JsonValue?)
+                override fun createFromParcel(parcel: Parcel): ActionValue {
+                    return ActionValue(parcel.readParcelableCompat())
                 }
 
                 override fun newArray(size: Int): Array<ActionValue> {

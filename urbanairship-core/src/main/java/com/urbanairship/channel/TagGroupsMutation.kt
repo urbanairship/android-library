@@ -44,26 +44,26 @@ public class TagGroupsMutation private constructor(
 
     public val isEmpty: Boolean
         get() {
-            if (!addTags.isNullOrEmpty()) {
+            if (addTags.isNotEmpty()) {
                 return false
             }
 
-            if (!removeTags.isNullOrEmpty()) {
+            if (removeTags.isNotEmpty()) {
                 return false
             }
 
-            if (!setTags.isNullOrEmpty()) {
+            if (setTags.isNotEmpty()) {
                 return false
             }
 
             return true
         }
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o == null || javaClass != o.javaClass) return false
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
 
-        val mutation = o as TagGroupsMutation
+        val mutation = other as TagGroupsMutation
 
         if (addTags != mutation.addTags) return false
         if (removeTags != mutation.removeTags) return false
@@ -81,7 +81,7 @@ public class TagGroupsMutation private constructor(
 
     public fun apply(tagGroups: MutableMap<String, MutableSet<String>>) {
         // Add tags
-        addTags?.let { tagsToAdd ->
+        addTags.let { tagsToAdd ->
             tagsToAdd.forEach { (group, tags) ->
                 tagGroups
                     .getOrPut(group) { mutableSetOf() }
@@ -90,12 +90,12 @@ public class TagGroupsMutation private constructor(
         }
 
         // Remove tags
-        removeTags?.forEach { (group, tags) ->
+        removeTags.forEach { (group, tags) ->
             tagGroups[group]?.removeAll(tags)
         }
 
         // Set tags
-        setTags?.forEach { (group, tags) ->
+        setTags.forEach { (group, tags) ->
             tagGroups[group] = tags.toMutableSet()
         }
     }

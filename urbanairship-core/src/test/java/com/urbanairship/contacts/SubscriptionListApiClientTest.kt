@@ -6,7 +6,6 @@ import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import java.util.TimeZone
@@ -39,7 +38,7 @@ public class SubscriptionListApiClientTest {
     private val requestSession = TestRequestSession()
 
     private var client = SubscriptionListApiClient(
-        runtimeConfig, requestSession.toSuspendingRequestSession()
+        runtimeConfig, requestSession
     )
 
     @Before

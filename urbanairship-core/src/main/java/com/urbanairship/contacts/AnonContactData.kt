@@ -7,6 +7,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 
+@ConsistentCopyVisibility
 internal data class AnonContactData internal constructor(
     val tagGroups: Map<String, Set<String>> = emptyMap(),
     val attributes: Map<String, JsonValue> = emptyMap(),
@@ -14,6 +15,7 @@ internal data class AnonContactData internal constructor(
     val associatedChannels: List<AnonChannel> = emptyList()
 ) : JsonSerializable {
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         TAG_GROUPS_KEY to tagGroups,
         ATTRIBUTES_KEY to attributes,
@@ -22,15 +24,15 @@ internal data class AnonContactData internal constructor(
     ).toJsonValue()
 
     internal val isEmpty: Boolean
-        get() = attributes.isEmpty() && tagGroups.isEmpty() && associatedChannels.isEmpty() && subscriptionLists.isEmpty()
-
-
+        get() = attributes.isEmpty() && tagGroups.isEmpty() &&
+                associatedChannels.isEmpty() && subscriptionLists.isEmpty()
 
     internal companion object {
         private const val TAG_GROUPS_KEY = "tag_groups"
         private const val ATTRIBUTES_KEY = "attributes"
         private const val ASSOCIATED_CHANNELS_KEY = "associated_channels"
         private const val SUBSCRIPTION_LISTS = "subscription_lists"
+
         @Throws(JsonException::class)
         fun fromJson(jsonValue: JsonValue) : AnonContactData {
             return AnonContactData(
@@ -54,6 +56,7 @@ internal data class AnonChannel(
     val channelType: ChannelType
 ) : JsonSerializable {
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         CHANNEL_TYPE_KEY to channelType.toString(),
         CHANNEL_ID_KEY to channelId

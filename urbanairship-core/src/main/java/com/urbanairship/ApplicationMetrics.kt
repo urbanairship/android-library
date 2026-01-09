@@ -23,12 +23,12 @@ public class ApplicationMetrics(
 ) {
 
     private val applicationListener: ApplicationListener = object : SimpleApplicationListener() {
-        override fun onForeground(time: Long) {
+        override fun onForeground(milliseconds: Long) {
             if (privacyManager.isAnyEnabled(
                     PrivacyManager.Feature.ANALYTICS, PrivacyManager.Feature.IN_APP_AUTOMATION
                 )
             ) {
-                dataStore.put(LAST_OPEN_KEY, time)
+                dataStore.put(LAST_OPEN_KEY, milliseconds)
             }
         }
     }
@@ -40,7 +40,7 @@ public class ApplicationMetrics(
     /**
      * Determines whether the app version has been updated.
      *
-     * Requires [PrivacyManager.FEATURE_IN_APP_AUTOMATION] or [PrivacyManager.FEATURE_ANALYTICS] to be enabled.
+     * Requires [PrivacyManager.Feature.IN_APP_AUTOMATION] or [PrivacyManager.Feature.ANALYTICS] to be enabled.
      *
      * @return `true` if the app version has been updated, otherwise `false`.
      */
@@ -63,8 +63,6 @@ public class ApplicationMetrics(
      * January 1, 1970 00:00:00.0 UTC.
      *
      * Requires [PrivacyManager.Feature.IN_APP_AUTOMATION] or [PrivacyManager.Feature.ANALYTICS] to be enabled.
-     *
-     *
      *
      * An application "open" is determined in [com.urbanairship.analytics.Analytics]
      * by tracking activity start and stops.  This ensures that background services or

@@ -92,13 +92,13 @@ public class JsonList public constructor(
         return mutableList.size
     }
 
-    override fun equals(`object`: Any?): Boolean {
-        if (`object` === this) {
+    override fun equals(other: Any?): Boolean {
+        if (other === this) {
             return true
         }
 
-        if ((`object` is JsonList)) {
-            return mutableList == `object`.mutableList
+        if (other is JsonList) {
+            return mutableList == other.mutableList
         }
 
         return false

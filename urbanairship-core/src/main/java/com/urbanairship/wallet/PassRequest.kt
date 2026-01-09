@@ -13,14 +13,14 @@ import com.urbanairship.config.UrlBuilder
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth.BasicAuth
 import com.urbanairship.http.RequestBody
-import com.urbanairship.http.RequestException
 import com.urbanairship.http.ResponseParser
+import com.urbanairship.http.log
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.UAHttpStatusUtil
-import java.lang.Exception
 import java.util.concurrent.Executor
+import kotlinx.coroutines.runBlocking
 
 /**
  * Defines a request to fetch a [Pass].
@@ -97,8 +97,9 @@ public class PassRequest internal constructor(
                 val httpRequest = Request(url, "POST", auth, RequestBody.Json(body), headers)
 
                 UALog.d("Requesting pass %s with payload: %s", url, body)
-                try {
-                    val response = runtimeConfigProvider().requestSession.execute(
+
+                val response = runBlocking {
+                    runtimeConfigProvider().requestSession.execute(
                         request = httpRequest,
                         parser = ResponseParser { status: Int, _, responseBody ->
                             if (!UAHttpStatusUtil.inSuccessRange(status)) {
@@ -107,13 +108,10 @@ public class PassRequest internal constructor(
 
                             Pass.parsePass(JsonValue.parseString(responseBody))
                         })
-
-                    UALog.d("Pass %s request finished with status %s", templateId, response.status)
-                    requestCallback?.setResult(response.status, response.result)
-                } catch (e: RequestException) {
-                    UALog.e(e, "PassRequest - Request failed")
-                    requestCallback?.setResult(-1, null)
                 }
+
+                response.log { "Pass $templateId request finished with status ${response.status}" }
+                requestCallback?.setResult(response.status ?: -1, response.value)
 
                 // Notify the result
                 requestCallback?.run()

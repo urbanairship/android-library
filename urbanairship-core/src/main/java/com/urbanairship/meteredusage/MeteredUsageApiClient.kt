@@ -7,15 +7,14 @@ import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.RequestSession
 import com.urbanairship.http.log
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.jsonMapOf
 import java.security.InvalidParameterException
 
 internal class MeteredUsageApiClient(
     private val config: AirshipRuntimeConfig,
-    private var session: SuspendingRequestSession = config.requestSession.toSuspendingRequestSession()
+    private var session: RequestSession = config.requestSession
 ) {
 
     @Throws(InvalidParameterException::class)

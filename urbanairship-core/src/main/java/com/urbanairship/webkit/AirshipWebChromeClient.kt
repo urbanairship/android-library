@@ -11,12 +11,16 @@ import android.os.Message
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebView.WebViewTransport
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.urbanairship.UALog
 import com.urbanairship.javascript.NativeBridge
 import com.urbanairship.util.UriUtils
@@ -45,9 +49,11 @@ public open class AirshipWebChromeClient public constructor(activity: Activity?)
         customView = view
         customView?.setBackgroundColor(Color.BLACK)
 
-        activity.window.setFlags(
-            WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN
-        )
+        val windowController = with(activity.window) {
+            WindowCompat.getInsetsController(this, decorView)
+        }
+
+        windowController.hide(WindowInsetsCompat.Type.statusBars())
 
         activity.window.addContentView(
             customView, FrameLayout.LayoutParams(
@@ -62,7 +68,11 @@ public open class AirshipWebChromeClient public constructor(activity: Activity?)
         val activity = weakActivity.get() ?: return
         val customView = this.customView ?: return
 
-        activity.window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        val windowController = with(activity.window) {
+            WindowCompat.getInsetsController(this, decorView)
+        }
+
+        windowController.show(WindowInsetsCompat.Type.statusBars())
 
         val parent = customView.parent as ViewGroup
         parent.removeView(customView)
@@ -83,7 +93,9 @@ public open class AirshipWebChromeClient public constructor(activity: Activity?)
         val tempWebView = WebView(view.context)
 
         tempWebView.webViewClient = object : WebViewClient() {
-            @Deprecated("Deprecated in Java")
+            // TODO: Switch to the non-deprecated version when min SDK is 24+
+            //  shouldOverrideUrlLoading(WebView view, WebResourceRequest request)
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
                 val uri = Uri.parse(url)
 

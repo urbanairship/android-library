@@ -2,6 +2,7 @@
 package com.urbanairship.json.matchers
 
 import androidx.core.util.ObjectsCompat
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
@@ -17,6 +18,7 @@ internal class ArrayContainsMatcher(
     private val index: Int?
 ) : ValueMatcher() {
 
+    @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
         ARRAY_CONTAINS_KEY to predicate,
         INDEX_KEY to index
@@ -40,15 +42,15 @@ internal class ArrayContainsMatcher(
         return list.any { predicate.apply(it) }
     }
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) {
             return true
         }
-        if (o == null || javaClass != o.javaClass) {
+        if (other == null || javaClass != other.javaClass) {
             return false
         }
 
-        val that = o as ArrayContainsMatcher
+        val that = other as ArrayContainsMatcher
 
         if (index != that.index) { return false }
         return predicate == that.predicate

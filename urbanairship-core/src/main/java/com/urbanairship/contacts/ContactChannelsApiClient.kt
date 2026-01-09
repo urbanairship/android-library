@@ -7,19 +7,17 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.RequestSession
 import com.urbanairship.http.log
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.isoDateAsMilliseconds
 import com.urbanairship.json.requireField
 import com.urbanairship.util.UAHttpStatusUtil
-import kotlin.jvm.Throws
 
 internal class ContactChannelsApiClient(
     private val runtimeConfig: AirshipRuntimeConfig,
-    private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
+    private val session: RequestSession = runtimeConfig.requestSession
 ) {
 
     internal suspend fun fetch(contactId: String): RequestResult<List<ContactChannel>> {
@@ -39,11 +37,11 @@ internal class ContactChannelsApiClient(
         UALog.d { "Fetching contact channels for $contactId request: $request" }
 
         return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
-            return@execute if (UAHttpStatusUtil.inSuccessRange(status)) {
-                parseChannels(responseBody)
-            } else {
-                null
+            if (!UAHttpStatusUtil.inSuccessRange(status)) {
+                return@execute null
             }
+
+            return@execute parseChannels(responseBody)
         }.also { result ->
             result.log { "Fetching contact channels for $contactId finished with result: $result" }
         }

@@ -11,14 +11,14 @@ import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.Clock
+import java.util.Locale
+import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
 import io.mockk.spyk
-import java.util.Locale
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -37,7 +38,6 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -298,6 +298,9 @@ public class FeatureFlagDeferredResolverTest {
 
     @Test
     public fun waitForResolving(): TestResult = runTest {
+        // Create a subject with a dispatcher that shares this test's scheduler
+        val localSubject = FlagDeferredResolver(cache, coreResolver, clock, UnconfinedTestDispatcher(testScheduler))
+
         val expected = DeferredFlag.Found(
             DeferredFlagInfo(
                 isEligible = true,
@@ -325,18 +328,21 @@ public class FeatureFlagDeferredResolverTest {
         }
 
         val first = async {
-            subject.resolve(request, info)
+            localSubject.resolve(request, info)
         }
         val second = async {
-            subject.resolve(request, info)
+            localSubject.resolve(request, info)
         }
 
+        // With UnconfinedTestDispatcher, coroutines run immediately but will block
+        // on response.filterNotNull().first() since response is null
         var valueFirst = withTimeoutOrNull(100) { first.await() }
         var valueSecond = withTimeoutOrNull(100) { second.await() }
 
         assertNull(valueFirst)
         assertNull(valueSecond)
 
+        // Set the response - this will unblock the coreResolver.resolve() calls
         response.value =
             jsonMapOf(
                 "is_eligible" to true,
@@ -351,14 +357,13 @@ public class FeatureFlagDeferredResolverTest {
                 )
             ).toJsonValue()
 
+        // With UnconfinedTestDispatcher, setting response.value should immediately
+        // unblock the coroutines. Await directly - they should complete now.
+        valueFirst = first.await()
+        valueSecond = second.await()
 
-        subject.resolve(request, info)
-
-        valueFirst = withTimeoutOrNull(100) { first.await() }
-        valueSecond = withTimeoutOrNull(100) { second.await() }
-
-        assertEquals(expected, valueFirst?.getOrNull())
-        assertEquals(expected, valueSecond?.getOrNull())
+        assertEquals(expected, valueFirst.getOrNull())
+        assertEquals(expected, valueSecond.getOrNull())
 
         assertEquals(1, resolveCount)
     }

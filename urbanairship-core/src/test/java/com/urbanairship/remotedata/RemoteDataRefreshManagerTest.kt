@@ -47,7 +47,7 @@ public class RemoteDataRefreshManagerTest {
         val expected = JobInfo.newBuilder()
             .setAction(RemoteData.ACTION_REFRESH)
             .setNetworkAccessRequired(true)
-            .setAirshipComponent(RemoteData::class.java)
+            .setScope(RemoteData::class.java.name)
             .setConflictStrategy(JobInfo.ConflictStrategy.REPLACE)
             .build()
 

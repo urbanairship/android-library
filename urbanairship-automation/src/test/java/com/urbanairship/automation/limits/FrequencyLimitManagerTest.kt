@@ -53,7 +53,7 @@ public class FrequencyLimitManagerTest {
 
         manager.setConstraints(listOf(constraint))
 
-        val constraints = store.getAllConstraints() ?: listOf()
+        val constraints = store.getAllConstraints()
         assertEquals(1, constraints.size)
 
         val checker = requireNotNull(manager.getFrequencyChecker(listOf("foo")).getOrThrow())
@@ -79,7 +79,7 @@ public class FrequencyLimitManagerTest {
         assertTrue(checker.isOverLimit())
 
         manager.writePendingInQueue()
-        val occurrences = store.getOccurrences("foo")?.map { it.timeStamp } ?: listOf()
+        val occurrences = store.getOccurrences("foo").map { it.timeStamp } ?: listOf()
         assertEquals(3, occurrences.size)
         assertTrue(setOf(0L, 1000, 11000).all { occurrences.contains(it) })
     }
@@ -98,7 +98,7 @@ public class FrequencyLimitManagerTest {
         val checker2 = requireNotNull(manager.getFrequencyChecker(listOf("foo")).getOrThrow())
 
         val constraints = store.getAllConstraints()
-        assertEquals(1, constraints?.size)
+        assertEquals(1, constraints.size)
 
         assertFalse(checker1.isOverLimit())
         assertFalse(checker2.isOverLimit())
@@ -123,7 +123,7 @@ public class FrequencyLimitManagerTest {
         assertFalse(checker2.checkAndIncrement())
 
         manager.writePendingInQueue()
-        val occurrences = store.getOccurrences("foo")?.map { it.timeStamp }?.toSet() ?: emptySet()
+        val occurrences = store.getOccurrences("foo").map { it.timeStamp }?.toSet() ?: emptySet()
         assertEquals(3, occurrences.size)
         assertTrue(setOf(0L, 1000, 11000).all { occurrences.contains(it) })
     }
@@ -184,7 +184,7 @@ public class FrequencyLimitManagerTest {
         assertTrue(checker.checkAndIncrement())
 
         manager.writePendingInQueue()
-        assertEquals(3, store.getOccurrences("bar")?.size)
+        assertEquals(3, store.getOccurrences("bar").size)
 
         // Foo should not exist
         assertNull(store.getConstraint("foo"))
@@ -198,7 +198,7 @@ public class FrequencyLimitManagerTest {
         checker.checkAndIncrement()
 
         manager.setConstraints(listOf(FrequencyConstraint("foo", 20.seconds, 2)))
-        assertEquals(0, store.getOccurrences("foo")?.size)
+        assertEquals(0, store.getOccurrences("foo").size)
     }
 
     @Test
@@ -210,6 +210,6 @@ public class FrequencyLimitManagerTest {
 
         manager.setConstraints(listOf(FrequencyConstraint("foo", 10.seconds, 3)))
 
-        assertEquals(1, store.getOccurrences("foo")?.size)
+        assertEquals(1, store.getOccurrences("foo").size)
     }
 }

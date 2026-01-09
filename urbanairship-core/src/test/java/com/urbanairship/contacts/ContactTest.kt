@@ -189,7 +189,6 @@ public class ContactTest {
             builder = when (it) {
                 is AirshipChannel.Extender.Suspending -> it.extend(builder)
                 is AirshipChannel.Extender.Blocking -> it.extend(builder)
-                else -> { builder }
             }
         }
 
@@ -217,7 +216,6 @@ public class ContactTest {
             builder = when (it) {
                 is AirshipChannel.Extender.Suspending -> it.extend(builder)
                 is AirshipChannel.Extender.Blocking -> it.extend(builder)
-                else -> { builder }
             }
         }
 
@@ -255,7 +253,6 @@ public class ContactTest {
             builder = when (it) {
                 is AirshipChannel.Extender.Suspending -> it.extend(builder)
                 is AirshipChannel.Extender.Blocking -> it.extend(builder)
-                else -> { builder }
             }
         }
 
@@ -280,7 +277,6 @@ public class ContactTest {
             builder = when (it) {
                 is AirshipChannel.Extender.Suspending -> it.extend(builder)
                 is AirshipChannel.Extender.Blocking -> it.extend(builder)
-                else -> { builder }
             }
         }
 
@@ -895,7 +891,7 @@ public class ContactTest {
 
         coEvery { mockSubscriptionListApiClient.getSubscriptionLists(any()) } returns networkResult
 
-        contact.subscriptions.test {
+        contact.subscriptionListsFlow.test {
             assertEquals(networkResult.value, awaitItem().getOrThrow())
             ensureAllEventsConsumed()
         }
@@ -916,7 +912,7 @@ public class ContactTest {
 
         coEvery { mockSubscriptionListApiClient.getSubscriptionLists("stable contact id") } returns networkResult
 
-        contact.subscriptions.test {
+        contact.subscriptionListsFlow.test {
             assertEquals(networkResult.value, awaitItem().getOrThrow())
             ensureAllEventsConsumed()
         }
@@ -926,7 +922,7 @@ public class ContactTest {
         testClock.currentTimeMillis += 5.minutes.inWholeMilliseconds
         advanceTimeBy(5.minutes)
 
-        contact.subscriptions.test {
+        contact.subscriptionListsFlow.test {
             assertEquals(networkResult.value, awaitItem().getOrThrow())
             ensureAllEventsConsumed()
         }
@@ -965,7 +961,7 @@ public class ContactTest {
         )
         coEvery { mockSubscriptionListApiClient.getSubscriptionLists("second") } returns secondResult
 
-        contact.subscriptions.test {
+        contact.subscriptionListsFlow.test {
             contactIdUpdates.emit(ContactIdUpdate("first", null, true, 0))
             assertEquals(firstResult.value, awaitItem().getOrThrow())
 
@@ -997,7 +993,7 @@ public class ContactTest {
 
         coEvery { mockSubscriptionListApiClient.getSubscriptionLists("second") } returns secondResult
 
-        contact.subscriptions.test {
+        contact.subscriptionListsFlow.test {
             contactIdUpdates.emit(ContactIdUpdate("some id", null, true, 0))
 
             assertEquals(firstResult.value, awaitItem().getOrThrow())

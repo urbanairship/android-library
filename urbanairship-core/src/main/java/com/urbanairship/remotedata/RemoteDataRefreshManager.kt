@@ -12,7 +12,6 @@ import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -74,7 +73,7 @@ internal class RemoteDataRefreshManager(
         val jobInfo = JobInfo.newBuilder()
             .setAction(RemoteData.ACTION_REFRESH)
             .setNetworkAccessRequired(true)
-            .setAirshipComponent(RemoteData::class.java)
+            .setScope(RemoteData::class.java.name)
             .setConflictStrategy(JobInfo.ConflictStrategy.REPLACE)
             .build()
 

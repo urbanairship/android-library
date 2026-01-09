@@ -20,9 +20,27 @@ public class RateLimiter(
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) {
 
-    private val hits = MutableStateFlow<Map<String, List<Long>>>(emptyMap())
-    private val rules = MutableStateFlow<Map<String, Rule>>(emptyMap())
-    private val lock = Any()
+    private data class RateLimitData(
+        val hits: Map<String, List<Long>> = emptyMap(),
+        val rules: Map<String, Rule> = emptyMap()
+    ) {
+        fun withRule(limitId: String, rule: Rule): RateLimitData {
+            return copy(rules = rules + (limitId to rule))
+        }
+
+        fun withHits(limitId: String, hits: List<Long>): RateLimitData {
+            return copy(hits = this.hits + (limitId to hits))
+        }
+
+        fun withRuleAndResetHits(limitId: String, rule: Rule): RateLimitData {
+            return copy(
+                rules = rules + (limitId to rule),
+                hits = hits + (limitId to emptyList())
+            )
+        }
+    }
+
+    private val data = MutableStateFlow(RateLimitData())
 
     /**
      * Tracks a rate limit.
@@ -30,17 +48,14 @@ public class RateLimiter(
      * @param limitId The limit Id.
      */
     public fun track(limitId: String) {
-        synchronized(lock) {
-            val recordedHits = hits.value[limitId] ?: return
-            val limiterRule = rules.value[limitId] ?: return
-            val currentTime = clock.currentTimeMillis()
+        val currentTime = clock.currentTimeMillis()
 
-            this.hits.update { current ->
-                current
-                    .toMutableMap()
-                    .apply { put(limitId, filter(recordedHits + currentTime, limiterRule, currentTime)) }
-                    .toMap()
-            }
+        data.update { current ->
+            val recordedHits = current.hits[limitId] ?: return@update current
+            val limiterRule = current.rules[limitId] ?: return@update current
+
+            val updatedHits = filter(recordedHits + currentTime, limiterRule, currentTime)
+            current.withHits(limitId, updatedHits)
         }
     }
 
@@ -51,28 +66,27 @@ public class RateLimiter(
      * @return The status if a limit exists, otherwise `null`.
      */
     public fun status(limitId: String): Status? {
-        synchronized(lock) {
-            val recordedHits = hits.value[limitId] ?: return null
-            val appliedRule = rules.value[limitId] ?: return null
-            val currentTime = clock.currentTimeMillis()
+        val currentTime = clock.currentTimeMillis()
+        var result: Status? = null
+
+        data.update { current ->
+            val recordedHits = current.hits[limitId] ?: return@update current
+            val appliedRule = current.rules[limitId] ?: return@update current
 
             val updatedHits = filter(recordedHits, appliedRule, currentTime)
-            val result = if (updatedHits.size >= appliedRule.rate) {
+
+            // Calculate result while we have the data
+            result = if (updatedHits.size >= appliedRule.rate) {
                 val nextExpired = appliedRule.duration - (currentTime - updatedHits[updatedHits.size - appliedRule.rate]).milliseconds
                 Status(LimitStatus.OVER, nextExpired)
             } else {
                 Status(LimitStatus.UNDER, 0.seconds)
             }
 
-            hits.update { current ->
-                current
-                    .toMutableMap()
-                    .apply { put(limitId, updatedHits) }
-                    .toMap()
-            }
-
-            return result
+            current.withHits(limitId, updatedHits)
         }
+
+        return result
     }
 
     /**
@@ -87,20 +101,8 @@ public class RateLimiter(
         @IntRange(from = 1) rate: Int,
         duration: Duration
     ) {
-        synchronized(lock) {
-            rules.update { current ->
-                current
-                    .toMutableMap()
-                    .apply { put(limitId, Rule(rate, duration)) }
-                    .toMap()
-            }
-
-            hits.update { current ->
-                current
-                    .toMutableMap()
-                    .apply { put(limitId, emptyList()) }
-                    .toMap()
-            }
+        data.update { current ->
+            current.withRuleAndResetHits(limitId, Rule(rate, duration))
         }
     }
 

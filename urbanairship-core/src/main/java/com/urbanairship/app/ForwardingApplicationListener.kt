@@ -30,11 +30,11 @@ public class ForwardingApplicationListener public constructor() : ApplicationLis
         }
     }
 
-    override fun onForeground(time: Long) {
-        listeners.toList().forEach { it.onForeground(time) }
+    override fun onForeground(milliseconds: Long) {
+        listeners.toList().forEach { it.onForeground(milliseconds) }
     }
 
-    override fun onBackground(time: Long) {
-        listeners.toList().forEach { it.onBackground(time) }
+    override fun onBackground(milliseconds: Long) {
+        listeners.toList().forEach { it.onBackground(milliseconds) }
     }
 }

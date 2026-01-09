@@ -9,6 +9,7 @@ import com.urbanairship.TestClock
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.Clock
+import com.urbanairship.util.LocaleCompat
 import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -51,7 +52,7 @@ public class RemoteDataProviderTest {
 
     @Test
     public fun testRefresh(): TestResult = runTest {
-        val locale = Locale("bs")
+        val locale = LocaleCompat.of("bs")
         val randomValue = 100
 
         val remoteDataInfo = RemoteDataInfo(
@@ -127,7 +128,7 @@ public class RemoteDataProviderTest {
         }
 
         // load data
-        var result = provider.refresh("some token", Locale("bs"), 100)
+        var result = provider.refresh("some token", LocaleCompat.of("bs"), 100)
         assertTrue(result is RemoteDataProvider.RefreshResult.NewData)
 
         var payloads = provider.payloads(listOf("some type", "some other type"))
@@ -138,10 +139,10 @@ public class RemoteDataProviderTest {
         payloads = provider.payloads(listOf("some type", "some other type"))
         assertTrue(payloads.isEmpty())
 
-        result = provider.refresh("some token", Locale("bs"), 100)
+        result = provider.refresh("some token", LocaleCompat.of("bs"), 100)
         assertTrue(result is RemoteDataProvider.RefreshResult.NewData)
 
-        result = provider.refresh("some token", Locale("bs"), 100)
+        result = provider.refresh("some token", LocaleCompat.of("bs"), 100)
         assertTrue(result is RemoteDataProvider.RefreshResult.Skipped)
     }
 
@@ -174,17 +175,17 @@ public class RemoteDataProviderTest {
         }
 
         // load data
-        var result = provider.refresh("some token", Locale("bs"), 100)
+        var result = provider.refresh("some token", LocaleCompat.of("bs"), 100)
         assertTrue(result is RemoteDataProvider.RefreshResult.NewData)
 
         provider.isRemoteDataInfoUpToDateCallback = { info, locale, randomValue ->
             assertEquals(remoteDataInfo, info)
-            assertEquals(Locale("bs"), locale)
+            assertEquals(LocaleCompat.of("bs"), locale)
             assertEquals(randomValue, 100)
             true
         }
 
-        result = provider.refresh("some token", Locale("bs"), 100)
+        result = provider.refresh("some token", LocaleCompat.of("bs"), 100)
         assertTrue(result is RemoteDataProvider.RefreshResult.Skipped)
     }
 
@@ -217,7 +218,7 @@ public class RemoteDataProviderTest {
         }
 
         // load data
-        var result = provider.refresh("some token", Locale("bs"), 100)
+        var result = provider.refresh("some token", LocaleCompat.of("bs"), 100)
         assertTrue(result is RemoteDataProvider.RefreshResult.NewData)
 
         provider.isRemoteDataInfoUpToDateCallback = { _, _, _ ->
@@ -233,7 +234,7 @@ public class RemoteDataProviderTest {
             )
         }
 
-        result = provider.refresh("some token", Locale("bs"), 100)
+        result = provider.refresh("some token", LocaleCompat.of("bs"), 100)
         assertTrue(result is RemoteDataProvider.RefreshResult.Skipped)
     }
 
@@ -248,7 +249,7 @@ public class RemoteDataProviderTest {
             )
         }
 
-        val result = provider.refresh("some token", Locale("bs"), 100)
+        val result = provider.refresh("some token", LocaleCompat.of("bs"), 100)
         assertTrue(result is RemoteDataProvider.RefreshResult.Failed)
     }
 
@@ -263,7 +264,7 @@ public class RemoteDataProviderTest {
             )
         }
 
-        val result = provider.refresh("some token", Locale("bs"), 100)
+        val result = provider.refresh("some token", LocaleCompat.of("bs"), 100)
         assertTrue(result is RemoteDataProvider.RefreshResult.Failed)
     }
 
@@ -278,7 +279,7 @@ public class RemoteDataProviderTest {
             )
         }
 
-        val result = provider.refresh("some token", Locale("bs"), 100)
+        val result = provider.refresh("some token", LocaleCompat.of("bs"), 100)
         assertTrue(result is RemoteDataProvider.RefreshResult.Failed)
     }
 

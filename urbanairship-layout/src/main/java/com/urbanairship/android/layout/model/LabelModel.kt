@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.model
 
+import android.R
 import android.content.Context
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasState
@@ -8,7 +9,7 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LabelInfo
 import com.urbanairship.android.layout.property.TextAppearance
 import com.urbanairship.android.layout.view.LabelView
-import com.urbanairship.util.UAStringUtil
+import com.urbanairship.util.stringResource
 
 internal class LabelModel(
     viewInfo: LabelInfo,
@@ -46,18 +47,11 @@ internal class LabelModel(
             default = viewInfo.ref
         )
 
-        if (refs != null) {
-            for (ref in refs) {
-                val string = UAStringUtil.namedStringResource(context, ref)
-                if (string != null) {
-                    return string
-                }
-            }
-        } else if (ref != null) {
-            val string = UAStringUtil.namedStringResource(context, ref)
-            if (string != null) {
-                return string
-            }
+        val result = refs
+            ?.firstNotNullOfOrNull { it.stringResource(context) }
+            ?: ref?.stringResource(context)
+        if (result != null) {
+            return result
         }
 
         return state.resolveRequired(

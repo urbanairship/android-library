@@ -85,11 +85,12 @@ public class AutomationExecutorTest {
     @Test
     public fun testFrequencyCheckerCheckFailed(): TestResult = runTest {
         val frequencyChecker: FrequencyChecker = mockk()
+        coEvery { actionExecutor.isReady(any(), any()) } returns ScheduleReadyResult.READY
         coEvery { frequencyChecker.checkAndIncrement() } returns false
 
         val schedule = makeSchedule(checker = frequencyChecker)
 
-        assertEquals(executor.isReady(schedule), ScheduleReadyResult.SKIP)
+        assertEquals(ScheduleReadyResult.SKIP, executor.isReady(schedule))
         coVerify { frequencyChecker.checkAndIncrement() }
     }
 
@@ -102,11 +103,25 @@ public class AutomationExecutorTest {
 
         val schedule = makeSchedule(checker = frequencyChecker)
 
-        assertEquals(executor.isReady(schedule), ScheduleReadyResult.READY)
+        assertEquals(ScheduleReadyResult.READY, executor.isReady(schedule))
         coVerify { frequencyChecker.checkAndIncrement() }
         coVerify { actionExecutor.isReady(
             data = eq(JsonValue.wrap("neat")),
             preparedScheduleInfo = eq(schedule.info))
+        }
+    }
+
+    @Test
+    public fun testFrequencyCheckerNotCalledIfNotReady(): TestResult = runTest {
+        val frequencyChecker: FrequencyChecker = mockk()
+        val schedule = makeSchedule(checker = frequencyChecker)
+
+        val results = listOf(ScheduleReadyResult.NOT_READY, ScheduleReadyResult.INVALIDATE, ScheduleReadyResult.SKIP)
+
+        results.forEach { result ->
+            coEvery { actionExecutor.isReady(any(), any()) } returns result
+            assertEquals(result, executor.isReady(schedule))
+            coVerify(exactly = 0) { frequencyChecker.checkAndIncrement() }
         }
     }
 

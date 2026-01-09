@@ -9,8 +9,6 @@ import androidx.annotation.MainThread
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.os.bundleOf
 import com.urbanairship.Airship
-import com.urbanairship.AirshipDispatchers
-import com.urbanairship.PendingResult
 import com.urbanairship.UALog
 import com.urbanairship.actions.Action.Situation
 import com.urbanairship.actions.ActionArguments
@@ -20,10 +18,15 @@ import com.urbanairship.analytics.Analytics
 import com.urbanairship.analytics.InteractiveNotificationEvent
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
-import kotlinx.coroutines.CoroutineDispatcher
+import com.urbanairship.push.PushManager.Companion.EXTRA_NOTIFICATION_CONTENT_INTENT
+import com.urbanairship.push.PushManager.Companion.EXTRA_NOTIFICATION_DELETE_INTENT
+import com.urbanairship.util.getParcelableCompat
+import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 /**
  * Processes notification intents.
@@ -38,57 +41,66 @@ internal class NotificationIntentProcessor(
     private val actionButtonInfo = NotificationActionButtonInfo.fromIntent(intent)
     private val notificationInfo = NotificationInfo.fromIntent(intent)
 
+    private val scope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
+
     /**
-     * Processes the intent synchronously, returning a pending result that completes immediately.
+     * Processes the notification intent.
      *
-     * @return A pending result. The result will be `true` if the intent was processed, otherwise
-     * `false`.
+     * This method handles both notification responses (opening the notification or clicking an action)
+     * and notification dismissals.
+     *
+     * Processing happens on the main thread using [Dispatchers.Main.immediate] to ensure
+     * that activity launches are not blocked by background restrictions.
+     *
+     * @param timeout Optional timeout for processing. If the timeout is reached,
+     * the callback will be invoked with a failure result.
+     * @param callback Callback to be invoked when processing is complete or fails.
      */
     @MainThread
-    fun process(): PendingResult<Boolean> {
-        val pendingResult = PendingResult<Boolean>()
-
-        pendingResult.setResult(processInternal())
-
-        return pendingResult
+    fun process(timeout: Duration? = null, callback: (Result<Unit>) -> Unit) {
+        // Immediate main to avoid run loop hop so we can start activities without any background restrictions
+        scope.launch {
+            try {
+                val result = if (timeout != null) {
+                    // withTimeout will throw if it reaches the timeout
+                    withTimeout(timeout) {
+                        processInternal()
+                    }
+                } else {
+                    processInternal()
+                }
+                callback(result)
+            } catch(e: Exception) {
+                callback(Result.failure(e))
+            }
+        }
     }
 
-    /**
-     * Processes the intent.
-     *
-     * @return `true` if the intent was processed, otherwise `false`.
-     */
-    @MainThread
-    fun processInternal(): Boolean {
+    private suspend fun processInternal(): Result<Unit> {
         if (intent.action == null || notificationInfo == null) {
-            UALog.e("NotificationIntentProcessor - invalid intent %s", intent)
-            return false
+            return Result.failure(IllegalArgumentException("Invalid intent $intent"))
         }
 
-        val result: Boolean
         UALog.v("Processing intent: %s", intent.action)
-        when (intent.action) {
+        return when (intent.action) {
             PushManager.ACTION_NOTIFICATION_RESPONSE -> {
                 onNotificationResponse()
-                result = true
+                Result.success(Unit)
             }
 
             PushManager.ACTION_NOTIFICATION_DISMISSED -> {
                 onNotificationDismissed()
-                result = true
+                Result.success(Unit)
             }
 
             else -> {
-                UALog.e("NotificationIntentProcessor - Invalid intent action: %s", intent.action)
-                result = false
+                return Result.failure(IllegalArgumentException("Invalid intent action ${intent.action}"))
             }
         }
-
-        return result
     }
 
     /** Handles the opened notification without an action. */
-    private fun onNotificationResponse() {
+    private suspend fun onNotificationResponse() {
         UALog.i("Notification response: $notificationInfo, $actionButtonInfo")
         if (notificationInfo == null) { return }
 
@@ -134,10 +146,10 @@ internal class NotificationIntentProcessor(
     private fun onNotificationDismissed() {
         UALog.i("Notification dismissed: $notificationInfo")
 
-        (intent.extras?.get(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT) as PendingIntent?)?.let {
+        intent.extras?.getParcelableCompat<PendingIntent>(EXTRA_NOTIFICATION_DELETE_INTENT)?.let {
             try {
                 it.send()
-            } catch (e: PendingIntent.CanceledException) {
+            } catch (_: PendingIntent.CanceledException) {
                 UALog.d("Failed to send notification's deleteIntent, already canceled.")
             }
         }
@@ -151,10 +163,10 @@ internal class NotificationIntentProcessor(
      * Helper method that attempts to launch the application's launch intent.
      */
     private fun launchApplication() {
-        (intent.extras?.get(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT) as PendingIntent?)?.let {
+        intent.extras?.getParcelableCompat<PendingIntent>(EXTRA_NOTIFICATION_CONTENT_INTENT)?.let {
             try {
                 it.send()
-            } catch (e: PendingIntent.CanceledException) {
+            } catch (_: PendingIntent.CanceledException) {
                 UALog.d("Failed to send notification's contentIntent, already canceled.")
             }
 
@@ -178,7 +190,7 @@ internal class NotificationIntentProcessor(
     }
 
     /** Helper method to run the actions. */
-    private fun runNotificationResponseActions() {
+    private suspend fun runNotificationResponseActions() {
         var actions: Map<String, ActionValue>? = null
         var situation = Situation.MANUAL_INVOCATION
         val metadata = bundleOf(ActionArguments.PUSH_MESSAGE_METADATA to notificationInfo?.message)
@@ -216,7 +228,7 @@ internal class NotificationIntentProcessor(
      * @param situation The situation.
      * @param metadata The metadata.
      */
-    private fun runActions(
+    private suspend fun runActions(
         actions: Map<String, ActionValue>,
         situation: Situation,
         metadata: Bundle
@@ -227,7 +239,7 @@ internal class NotificationIntentProcessor(
                     .setMetadata(metadata)
                     .setSituation(situation)
                     .setValue(value)
-                    .run()
+                    .runSuspending()
             }
         } catch (ex: Exception) {
             UALog.e(ex, "Failed to run actions")

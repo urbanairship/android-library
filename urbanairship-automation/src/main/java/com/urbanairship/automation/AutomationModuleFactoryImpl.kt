@@ -22,6 +22,7 @@ import com.urbanairship.automation.engine.AutomationEventFeed
 import com.urbanairship.automation.engine.AutomationExecutor
 import com.urbanairship.automation.engine.AutomationPreparer
 import com.urbanairship.automation.engine.AutomationStore
+import com.urbanairship.automation.engine.EventsHistory
 import com.urbanairship.automation.engine.SerialAccessAutomationStore
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.limits.FrequencyLimitManager
@@ -101,6 +102,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
             displayHistoryStore = MessageDisplayHistoryStore(automationStore),
             displayImpressionRuleProvider = DefaultInAppDisplayImpressionRuleProvider()
         )
+        val eventsHistory = EventsHistory()
 
         // Preparation
         val actionPreparer = ActionAutomationPreparer()
@@ -151,7 +153,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 activityMonitor = activityMonitor,
                 eventFeed = eventFeed
             ),
-            triggerProcessor = AutomationTriggerProcessor(automationStore),
+            triggerProcessor = AutomationTriggerProcessor(automationStore, eventsHistory),
             delayProcessor = AutomationDelayProcessor(
                 analytics = analytics,
                 activityMonitor = activityMonitor,
@@ -159,7 +161,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
             automationStoreMigrator = AutomationStoreMigrator(
                 legacyDatabase = AutomationDatabase.createDatabase(context, runtimeConfig),
                 automationStore
-            )
+            ),
+            eventsHistory = eventsHistory
         )
 
         val automation = InAppAutomation(

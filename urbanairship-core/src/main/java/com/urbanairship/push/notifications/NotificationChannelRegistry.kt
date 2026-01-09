@@ -28,7 +28,7 @@ import kotlinx.coroutines.runBlocking
  */
 public class NotificationChannelRegistry @VisibleForTesting internal constructor(
     private val context: Context,
-    @VisibleForTesting private val dataManager: NotificationChannelRegistryDataManager,
+    private val dataManager: NotificationChannelRegistryDataManager,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) {
 

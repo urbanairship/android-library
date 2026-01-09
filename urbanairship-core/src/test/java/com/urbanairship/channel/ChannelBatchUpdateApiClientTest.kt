@@ -2,13 +2,11 @@
 package com.urbanairship.channel
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.Platform
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
-import com.urbanairship.Airship
-import com.urbanairship.Platform
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
@@ -42,7 +40,7 @@ public class ChannelBatchUpdateApiClientTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val client =
-        ChannelBatchUpdateApiClient(config, requestSession.toSuspendingRequestSession())
+        ChannelBatchUpdateApiClient(config, requestSession)
 
     @Before
     public fun setup() {

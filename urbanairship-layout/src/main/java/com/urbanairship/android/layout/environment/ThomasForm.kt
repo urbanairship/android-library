@@ -116,7 +116,7 @@ internal class ThomasForm(
                 val submitted = it.copy(status = ThomasFormStatus.SUBMITTED)
                 val event = ReportingEvent.FormResult(
                     data = submitted.formResult(),
-                    context = LayoutData.empty(), //will be set later
+                    context = LayoutData.EMPTY, //will be set later
                     attributes = submitted.attributes(),
                     channels = submitted.channels()
                     )

@@ -8,14 +8,14 @@ import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
 import com.urbanairship.http.RequestResult
 import com.urbanairship.http.ResponseParser
-import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.RequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.UAHttpStatusUtil
 
 internal class DeferredApiClient(
     private val config: AirshipRuntimeConfig,
-    private val session: SuspendingRequestSession
+    private val session: RequestSession
 ) {
 
     suspend fun resolve(

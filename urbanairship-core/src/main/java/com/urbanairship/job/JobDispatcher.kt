@@ -2,20 +2,25 @@
 package com.urbanairship.job
 
 import android.content.Context
-import android.os.Handler
-import android.os.Looper
 import androidx.annotation.IntRange
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import androidx.core.util.Consumer
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.job.JobRunner.DefaultRunner
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * Dispatches jobs.
@@ -30,16 +35,13 @@ public class JobDispatcher public constructor(
     private val rateLimiter: RateLimiter = RateLimiter()
 ) {
 
+    private val scheduleScope = CoroutineScope(AirshipDispatchers.newSerialDispatcher() + SupervisorJob())
+
     private val context: Context = context.applicationContext
     private val pendingJobInfos = MutableStateFlow<List<Pending>>(emptyList())
 
-    private val retryPendingRunnable = Runnable {
-        try {
-            dispatchPending()
-        } catch (_: SchedulerException) {
-            schedulePending()
-        }
-    }
+    private val retryJobLock = ReentrantLock()
+    private var retryJob: Job? = null
 
     /**
      * Sets a rate limit.
@@ -69,22 +71,39 @@ public class JobDispatcher public constructor(
         try {
             dispatchPending()
             scheduler.schedule(context, jobInfo, delay)
-        } catch (e: SchedulerException) {
+        } catch (e: Exception) {
             UALog.e(e, "Scheduler failed to schedule jobInfo")
             pendingJobInfos.update { it + Pending(jobInfo, delay) }
         }
-        schedulePending()
+
+        if (pendingJobInfos.value.isNotEmpty()) {
+            schedulePending()
+        }
     }
 
     private fun schedulePending() {
-        val handler = Handler(Looper.getMainLooper())
-        handler.removeCallbacks(retryPendingRunnable)
-        handler.postDelayed(retryPendingRunnable, RETRY_DELAY.inWholeMilliseconds)
+        retryJobLock.withLock {
+            retryJob?.cancel()
+            retryJob = scheduleScope.launch {
+                delay(RETRY_DELAY)
+                try {
+                    dispatchPending()
+                } catch (e: Exception) {
+                    UALog.e(e, "Failed to dispatch pending jobs, will retry")
+                    schedulePending()
+                }
+            }
+        }
     }
 
-    @Throws(SchedulerException::class)
+    private fun dispatchAsync(jobInfo: JobInfo, delay: Duration) {
+        scheduleScope.launch {
+            dispatch(jobInfo, delay)
+        }
+    }
+
     private fun dispatchPending() {
-        var exception: SchedulerException? = null
+        var exception: Exception? = null
 
         pendingJobInfos.update { current ->
             val processed = mutableSetOf<Pending>()
@@ -92,7 +111,7 @@ public class JobDispatcher public constructor(
                 try {
                     scheduler.schedule(context, item.jobInfo, item.delay)
                     processed.add(item)
-                } catch (e: SchedulerException) {
+                } catch (e: Exception) {
                     exception = e
                     return@update current - processed
                 }
@@ -104,34 +123,54 @@ public class JobDispatcher public constructor(
         exception?.let { throw it }
     }
 
-    public fun onStartJob(jobInfo: JobInfo, runAttempt: Long, callback: Consumer<JobResult>) {
+    public fun addJobHandler(
+        scope: String,
+        actions: List<String>,
+        handler: suspend (JobInfo) -> JobResult
+    ) {
+        jobRunner.addJobHandler(scope, actions, handler)
+    }
+
+    public fun <T> addWeakJobHandler(
+        component: T,
+        actions: List<String>,
+        handler: suspend T.(JobInfo) -> JobResult
+    ) {
+        jobRunner.addWeakJobHandler(component, actions, handler)
+    }
+
+    public suspend fun runJob(jobInfo: JobInfo, runAttempt: Long): JobResult {
         UALog.v("Running job: $jobInfo, run attempt: $runAttempt")
 
         val rateLimitDelay = getRateLimitDelay(jobInfo)
         if (rateLimitDelay.isPositive()) {
-            callback.accept(JobResult.FAILURE)
-            dispatch(jobInfo, rateLimitDelay)
-            return
+            // Schedule asynchronously after returning to avoid potential WorkManager conflicts
+            // with the current work execution that's still in progress
+            dispatchAsync(jobInfo, rateLimitDelay)
+            return JobResult.FAILURE
         }
 
         for (rateLimitID in jobInfo.rateLimitIds) {
             rateLimiter.track(rateLimitID)
         }
 
-        jobRunner.run(jobInfo) { result: JobResult ->
-            UALog.v("Job finished. Job info: $jobInfo, result: $result")
-            val shouldRetry = result == JobResult.RETRY
-            val shouldReschedule = runAttempt >= RESCHEDULE_RETRY_COUNT
-            // Workaround for APPEND jobs, which we don't want to reschedule like other jobs.
-            val isAppend = jobInfo.conflictStrategy == JobInfo.ConflictStrategy.APPEND
-            if (shouldRetry && shouldReschedule && !isAppend) {
-                UALog.v("Job retry limit reached. Rescheduling for a later time. Job info: $jobInfo")
-                dispatch(jobInfo, RESCHEDULE_RETRY_DELAY)
-                callback.accept(JobResult.FAILURE)
-            } else {
-                callback.accept(result)
-            }
+
+        val result = jobRunner.run(jobInfo)
+        UALog.v("Job finished. Job info: $jobInfo, result: $result")
+        val shouldRetry = result == JobResult.RETRY
+        val shouldReschedule = runAttempt >= RESCHEDULE_RETRY_COUNT
+
+        // Workaround for APPEND jobs, which we don't want to reschedule like other jobs.
+        val isAppend = jobInfo.conflictStrategy == JobInfo.ConflictStrategy.APPEND
+        if (shouldRetry && shouldReschedule && !isAppend) {
+            UALog.v("Job retry limit reached. Rescheduling for a later time. Job info: $jobInfo")
+            // Schedule asynchronously after returning to avoid potential WorkManager conflicts
+            // with the current work execution that's still in progress
+            dispatchAsync(jobInfo, RESCHEDULE_RETRY_DELAY)
+            return JobResult.FAILURE
         }
+
+        return result
     }
 
     private fun getDelay(jobInfo: JobInfo): Duration {

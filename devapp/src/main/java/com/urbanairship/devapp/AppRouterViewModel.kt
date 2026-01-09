@@ -11,7 +11,6 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import androidx.navigation3.runtime.NavEntry
 import androidx.navigation3.runtime.NavKey
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.UALog
 import com.urbanairship.devapp.debug.DebugScreen
 import com.urbanairship.devapp.home.HomeScreen
 import com.urbanairship.devapp.home.QuickAccess
@@ -19,6 +18,7 @@ import com.urbanairship.devapp.messagecenter.MessageCenterScreen
 import com.urbanairship.devapp.preferencecenter.PreferenceCenterScreen
 import com.urbanairship.devapp.thomas.ThomasLayoutNavigation
 import com.urbanairship.messagecenter.compose.ui.rememberMessageCenterState
+import java.io.Serializable
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -165,8 +165,7 @@ class AppRouterViewModel(
         }
     }
 
-    @kotlinx.serialization.Serializable
-    sealed class TopLevelDestination(private val value: String): Destination {
+    sealed class TopLevelDestination(private val value: String): Destination, Serializable {
         data object Home: TopLevelDestination("home")
         data class Message(val messageId: String? = null): TopLevelDestination(NAME) {
             override fun serialize(): String {

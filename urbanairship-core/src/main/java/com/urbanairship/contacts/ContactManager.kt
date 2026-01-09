@@ -349,9 +349,12 @@ internal class ContactManager(
             return
         }
 
-        val builder = JobInfo.newBuilder().setAction(Contact.ACTION_UPDATE_CONTACT)
-            .setNetworkAccessRequired(true).setAirshipComponent(Contact::class.java)
-            .setConflictStrategy(conflictStrategy).addRateLimit(UPDATE_RATE_LIMIT)
+        val builder = JobInfo.newBuilder()
+            .setAction(Contact.ACTION_UPDATE_CONTACT)
+            .setNetworkAccessRequired(true)
+            .setScope(Contact::class.java.name)
+            .setConflictStrategy(conflictStrategy)
+            .addRateLimit(UPDATE_RATE_LIMIT)
 
         val next = operations.firstOrNull { !isSkippable(it.operation) }?.operation
         if (next is ContactOperation.Reset || next is ContactOperation.Resolve) {

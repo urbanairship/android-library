@@ -17,6 +17,7 @@ import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.GlobalActivityMonitor.Companion.shared
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
 import java.util.UUID
@@ -183,6 +184,11 @@ public class Inbox @VisibleForTesting internal constructor(
             }
             Result.success(it)
         }
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public suspend fun loadMessageLayout(message: Message): AirshipLayout? {
+        return inboxJobHandler.loadAirshipLayout(message)
     }
 
     private suspend fun updateInbox(): Boolean = withContext(refreshDispatcher) {

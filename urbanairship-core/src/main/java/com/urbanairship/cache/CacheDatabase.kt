@@ -21,7 +21,7 @@ internal abstract class CacheDatabase : RoomDatabase() {
 
                 Room.databaseBuilder(context.applicationContext, CacheDatabase::class.java, DB_NAME.format(appKey))
                     .openHelperFactory(retryingOpenHelperFactory)
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(true)
                     .build()
             } catch (ex: Exception) {
                 ex.printStackTrace()

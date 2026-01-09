@@ -1,7 +1,6 @@
 package com.urbanairship.job
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.BaseTestCase
 import com.urbanairship.job.JobInfo.Companion.newBuilder
 import com.urbanairship.job.WorkUtils.convertToData
 import com.urbanairship.job.WorkUtils.convertToJobInfo
@@ -20,7 +19,7 @@ public class WorkUtilsTest {
     public fun testConvert() {
         val original = newBuilder()
             .setAction("some action")
-            .setAirshipComponent(PushManager::class.java)
+            .setScope(PushManager::class.java.name)
             .setConflictStrategy(JobInfo.ConflictStrategy.APPEND)
             .setExtras(jsonMapOf("key" to "value"))
             .setMinDelay(10.milliseconds)

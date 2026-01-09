@@ -8,6 +8,7 @@ import android.os.Parcel
 import android.os.Parcelable
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonValue
+import com.urbanairship.util.readParcelableCompat
 
 /**
  * Pass representing either an offer or loyalty wallet object.
@@ -41,7 +42,7 @@ public class Pass : Parcelable {
 
     @Throws(IllegalArgumentException::class)
     internal constructor(parcel: Parcel) {
-        publicUri = parcel.readParcelable(Uri::class.java.classLoader)
+        publicUri = parcel.readParcelableCompat()
             ?: throw IllegalArgumentException("publicUri cannot be null")
         id = parcel.readString()
     }
@@ -78,8 +79,8 @@ public class Pass : Parcelable {
          * @hide
          */
         public val CREATOR: Parcelable.Creator<Pass> = object : Parcelable.Creator<Pass> {
-            override fun createFromParcel(`in`: Parcel): Pass {
-                return Pass(`in`)
+            override fun createFromParcel(parcel: Parcel): Pass {
+                return Pass(parcel)
             }
 
             override fun newArray(size: Int): Array<Pass?> {

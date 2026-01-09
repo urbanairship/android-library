@@ -28,7 +28,7 @@ internal class AutomationStoreMigrator(
     internal suspend fun migrateData() {
         val legacyDao = legacyDatabase.scheduleDao
 
-        val oldSchedules = legacyDao.schedules
+        val oldSchedules = legacyDao.getSchedules()
         if (oldSchedules.isEmpty()) return
 
         val converted = convert(oldSchedules)
@@ -121,7 +121,7 @@ internal class AutomationStoreMigrator(
     private fun getDelay(fullSchedule: FullSchedule): AutomationDelay {
         return AutomationDelay(
             seconds = fullSchedule.schedule.seconds,
-            screens = fullSchedule.schedule.screens.ifEmpty { null },
+            screens = fullSchedule.schedule.screens?.ifEmpty { null },
             regionId = fullSchedule.schedule.regionId,
             appState = fullSchedule.schedule.appState.let {
                 when(it) {
@@ -183,25 +183,31 @@ internal class AutomationStoreMigrator(
     }
 
     private fun getPreparedScheduleInfo(schedule: ScheduleEntity, audienceCheck: Boolean = true): PreparedScheduleInfo? {
-        if (schedule.executionState == ScheduleState.PREPARING_SCHEDULE ||
-            schedule.executionState == ScheduleState.EXECUTING) {
-            return PreparedScheduleInfo(
-                scheduleId = schedule.scheduleId,
-                productId = schedule.productId,
-                campaigns = schedule.campaigns,
-                contactId = null,
-                experimentResult = null,
-                reportingContext = schedule.reportingContext,
-                triggerSessionId = UUID.randomUUID().toString(),
-                additionalAudienceCheckResult = audienceCheck,
-                priority = schedule.priority
-            )
+        val state = ScheduleState.fromValue(schedule.executionState) ?: return null
+
+        return when(state) {
+            ScheduleState.PREPARING_SCHEDULE, ScheduleState.EXECUTING -> {
+                PreparedScheduleInfo(
+                    scheduleId = schedule.scheduleId,
+                    productId = schedule.productId,
+                    campaigns = schedule.campaigns,
+                    contactId = null,
+                    experimentResult = null,
+                    reportingContext = schedule.reportingContext,
+                    triggerSessionId = UUID.randomUUID().toString(),
+                    additionalAudienceCheckResult = audienceCheck,
+                    priority = schedule.priority
+                )
+            }
+            else -> null
         }
-        return null
     }
 
     private fun convertScheduleState(scheduleState: Int): AutomationScheduleState {
-        return when (scheduleState) {
+        val state = ScheduleState.fromValue(scheduleState)
+            ?: return AutomationScheduleState.FINISHED
+
+        return when (state) {
             ScheduleState.IDLE -> AutomationScheduleState.IDLE
             ScheduleState.PREPARING_SCHEDULE -> AutomationScheduleState.PREPARED
             ScheduleState.WAITING_SCHEDULE_CONDITIONS -> AutomationScheduleState.PREPARED
@@ -209,7 +215,6 @@ internal class AutomationStoreMigrator(
             ScheduleState.EXECUTING -> AutomationScheduleState.EXECUTING
             ScheduleState.PAUSED -> AutomationScheduleState.PAUSED
             ScheduleState.FINISHED -> AutomationScheduleState.FINISHED
-            else -> AutomationScheduleState.FINISHED
         }
     }
 

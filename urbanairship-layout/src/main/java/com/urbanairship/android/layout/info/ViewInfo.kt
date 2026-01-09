@@ -62,6 +62,7 @@ import com.urbanairship.android.layout.property.ViewType.SCORE
 import com.urbanairship.android.layout.property.ViewType.SCORE_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.SCORE_TOGGLE_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.SCROLL_LAYOUT
+import com.urbanairship.android.layout.property.ViewType.STACK_IMAGE_BUTTON
 import com.urbanairship.android.layout.property.ViewType.STATE_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.STORY_INDICATOR
 import com.urbanairship.android.layout.property.ViewType.TEXT_INPUT
@@ -69,7 +70,6 @@ import com.urbanairship.android.layout.property.ViewType.TOGGLE
 import com.urbanairship.android.layout.property.ViewType.UNKNOWN
 import com.urbanairship.android.layout.property.ViewType.WEB_VIEW
 import com.urbanairship.android.layout.reporting.AttributeName
-import com.urbanairship.android.layout.reporting.AttributeName.attributeNameFromJson
 import com.urbanairship.android.layout.shape.Shape
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
@@ -81,7 +81,9 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalList
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
+import com.urbanairship.json.requireList
 import com.urbanairship.json.requireMap
+import kotlin.collections.map
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -125,6 +127,7 @@ public sealed class ViewInfo : View {
                 ICON_VIEW -> IconViewInfo(json)
                 SCORE_CONTROLLER -> ScoreControllerInfo(json)
                 SCORE_TOGGLE_LAYOUT -> ScoreToggleLayoutInfo(json)
+                STACK_IMAGE_BUTTON -> StackImageButtonInfo(json)
                 UNKNOWN -> throw JsonException("Unknown view type! '${json.requireField<String>("type")}'")
             }
         }
@@ -182,23 +185,19 @@ internal data class ViewPropertyOverride<T>(
 
 internal class CommonViewOverrides(json: JsonMap) {
     val backgroundColor = json.optionalList("background_color")?.map {
-        ViewPropertyOverride(it) { json -> Color.fromJson(json.requireMap()) }
+        ViewPropertyOverride(it) { json -> Color.fromJson(json) }
     }
 
     val border = json.optionalList("border")?.map {
-        ViewPropertyOverride(it) { json -> Border.fromJson(json.requireMap()) }
+        ViewPropertyOverride(it) { json -> Border.fromJson(json) }
     }
 }
 
 internal class BaseViewInfo(json: JsonMap) : View {
     override val type = ViewType.from(json.requireField<String>("type"))
 
-    override val backgroundColor = json.optionalMap("background_color")?.let {
-        Color.fromJson(it)
-    }
-    override val border = json.optionalMap("border")?.let {
-        Border.fromJson(it)
-    }
+    override val backgroundColor = json["background_color"]?.let(Color::fromJson)
+    override val border = json["border"]?.let(Border::fromJson)
 
     override val visibility = json.optionalMap("visibility")?.let {
         VisibilityInfo(it)
@@ -345,12 +344,8 @@ internal enum class FormValidationMode(private val value: String) {
 }
 
 internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), FormController, Controller by controller(json) {
-    override val responseType: String? =
-        json.optionalField("response_type")
-    override val submitBehavior: FormBehaviorType? =
-        json.optionalField<String>("submit")?.let {
-            FormBehaviorType.from(it)
-        }
+    override val responseType: String? = json.optionalField("response_type")
+    override val submitBehavior: FormBehaviorType? = json["submit"]?.let(FormBehaviorType::from)
     override val formEnabled: List<EnableBehaviorType>? =
         json.optionalList("form_enabled")?.map { EnableBehaviorType.from(it.optString()) }
     override val validationMode: FormValidationMode =
@@ -433,12 +428,12 @@ internal class ButtonLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), 
 }
 
 internal class IconViewInfo(json: JsonMap) : ViewInfo(), View by view(json), Accessible by accessible(json) {
-    val image = Image.Icon.fromJson(json.requireField("icon"))
+    val image = Image.Icon.fromJson(json.require("icon"))
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
 
     internal class ViewOverrides(json: JsonMap) {
         val icon = json.optionalList("icon")?.map {
-            ViewPropertyOverride(it, valueParser = { json -> Image.Icon.fromJson(json.requireMap()) })
+            ViewPropertyOverride(it, valueParser = { json -> Image.Icon.fromJson(json) })
         }
     }
 }
@@ -456,14 +451,14 @@ internal interface Checkable : BaseCheckable, View, Accessible {
 internal open class CheckableInfo(
     json: JsonMap
 ) : ViewInfo(), Checkable, View by view(json), Accessible by accessible(json) {
-    override val style: ToggleStyle = ToggleStyle.fromJson(json.requireField("style"))
+    override val style: ToggleStyle = ToggleStyle.fromJson(json.require("style"))
 }
 
 // ------ Components ------
 
 internal class LinearLayoutInfo(json: JsonMap) : ViewGroupInfo<LinearLayoutItemInfo>(), View by view(json) {
     private val randomizeChildren: Boolean = json.optionalField("randomize_children") ?: false
-    val direction: Direction = Direction.from(json.requireField("direction"))
+    val direction: Direction = Direction.from(json.require("direction"))
     val items = json.requireField<JsonList>("items").map { LinearLayoutItemInfo(it.requireMap()) }
         .let { if (randomizeChildren) it.shuffled() else it }
 
@@ -492,10 +487,9 @@ internal class LinearLayoutItemInfo(
     val json: JsonMap
 ) : ItemInfo(viewInfoFromJson(json.requireField("view"))) {
     val size = Size.fromJson(json.requireField("size"))
-    val margin = json.optionalMap("margin")?.let { Margin.fromJson(it) }
+    val margin = json["margin"]?.let(Margin::fromJson)
 
-    val position: Position? = json.optionalMap("position")
-        ?.let { Position.fromJson(it) }
+    val position: Position? = json["position"]?.let(Position::fromJson)
 
     val accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole(it) }
 
@@ -528,12 +522,12 @@ internal class ContainerLayoutItemInfo(
 ) : ItemInfo(viewInfoFromJson(json.requireField("view"))), SafeAreaAware by safeAreaAware(json) {
     val position: Position = Position.fromJson(json.requireField("position"))
     val size = Size.fromJson(json.requireField("size"))
-    val margin: Margin? = json.optionalMap("margin")?.let { Margin.fromJson(it) }
+    val margin: Margin? = json["margin"]?.let(Margin::fromJson)
 }
 
 internal class ScrollLayoutInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), View by view(json) {
     val view = viewInfoFromJson(json.requireField("view"))
-    val direction: Direction = Direction.from(json.requireField("direction"))
+    val direction: Direction = Direction.from(json.require("direction"))
 
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }
@@ -544,10 +538,9 @@ internal class MediaInfo(
     json: JsonMap
 ) : ViewInfo(), View by view(json), Accessible by accessible(json) {
     val url: String = json.requireField("url")
-    val mediaType: MediaType = MediaType.from(json.requireField("media_type"))
+    val mediaType: MediaType = MediaType.from(json.require("media_type"))
     val mediaFit: MediaFit = MediaFit.from(json.requireField("media_fit"))
-    val position: Position = json.optionalMap("position")
-        ?.let { Position.fromJson(it) } ?: Position.CENTER
+    val position: Position = json["position"]?.let(Position::fromJson) ?: Position.CENTER
     val video: Video? = json.optionalMap("video")?.let { Video.fromJson(it) }
 }
 
@@ -564,8 +557,7 @@ internal class LabelInfo(
     val iconEnd: LabelIcon? = json.optionalMap("icon_end")?.let {
         LabelIcon.fromJson(it)
     }
-    val textAppearance: TextAppearance =
-        TextAppearance.fromJson(json.requireField("text_appearance"))
+    val textAppearance: TextAppearance = TextAppearance.fromJson(json.require("text_appearance"))
     val markdownOptions: MarkdownOptions? = json.optionalMap("markdown")?.let { MarkdownOptions(it) }
     var accessibilityRole: AccessibilityRole? = json.optionalMap("accessibility_role")?.let { AccessibilityRole.fromJson(it) }
     val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
@@ -617,7 +609,7 @@ internal class LabelInfo(
 
                 return when (type) {
                     Type.FLOATING -> {
-                        val icon = Image.Icon.fromJson(json.requireField("icon"))
+                        val icon = Image.Icon.fromJson(json.require("icon"))
                         Floating(icon, space)
                     }
                 }
@@ -671,7 +663,7 @@ internal class LabelInfo(
         }
 
         val textAppearance = json.optionalList("text_appearance")?.map {
-            ViewPropertyOverride(it) { value -> TextAppearance.fromJson(value.optMap()) }
+            ViewPropertyOverride(it, TextAppearance::fromJson)
         }
 
         val ref = json.optionalList("ref")?.map {
@@ -689,18 +681,106 @@ internal class LabelButtonInfo(json: JsonMap) : ButtonInfo(json) {
 }
 
 internal class ImageButtonInfo(json: JsonMap) : ButtonInfo(json) {
-    val image: Image = Image.fromJson(json.requireField("image"))
+    val image: Image = Image.fromJson(json.require("image"))
 }
 
 internal class CheckboxInfo(json: JsonMap) : CheckableInfo(json), RecentlyIdentifiable by recentlyIdentifiable(json) {
     val reportingValue: JsonValue = json.requireField("reporting_value")
 }
 
+internal class StackImageButtonInfo(json: JsonMap) : ButtonInfo(json) {
+    val items = json.requireField<JsonList>("items").map { StackItemInfo.fromJson(it) }
+    val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
+
+    internal class ViewOverrides(json: JsonMap) {
+        // Handle items override - maintain backward compatibility
+        val overrides = json.optionalList("items")?.firstOrNull()?.let { itemsJson ->
+            val itemsList = itemsJson.map?.requireField<JsonList>("value")
+            itemsList?.map { item ->
+                ViewPropertyOverride(
+                    itemsJson,
+                    valueParser = { json ->
+                        json.list?.map { StackItemInfo.fromJson(it) }
+                    }
+                )
+            }
+        }
+
+        // Add content description overrides
+        val contentDescription = json.optionalList("content_description")?.map {
+            ViewPropertyOverride(it, valueParser = { value -> value.optString() })
+        }
+
+        val localizedContentDescription = json.optionalList("localized_content_description")?.map {
+            ViewPropertyOverride(it) { value ->
+                value.optMap()?.let { LocalizedContentDescription(it) }
+            }
+        }
+    }
+
+    internal enum class StackItemType(
+        private val value: String
+    ) {
+        SHAPE("shape"), ICON("icon"), IMAGE_URL("image_url"), UNKNOWN("");
+
+        internal companion object {
+            internal fun fromJson(value: JsonValue): StackItemType {
+                val type = value.requireString()
+                return StackItemType.entries.firstOrNull { it.value == type } ?: UNKNOWN
+            }
+        }
+    }
+}
+
+
+internal sealed interface StackItemInfo {
+
+    data class ShapeItem(
+        val shape: Shape
+    ) : StackItemInfo
+
+    data class IconItem(
+        val icon: Image
+    ) : StackItemInfo
+
+    data class ImageItem(
+        val imageUrl: String,
+        val mediaFit: MediaFit,
+        val cropPosition: Position,
+    ) : StackItemInfo
+
+    companion object {
+        fun fromJson(json: JsonValue): StackItemInfo {
+            val content = json.requireMap()
+            val type = StackImageButtonInfo.StackItemType.fromJson(content.require("type"))
+            return when (type) {
+                StackImageButtonInfo.StackItemType.SHAPE -> {
+                    val shapeData = content.requireField<JsonValue>("shape")
+                    ShapeItem(shape = Shape.fromJson(shapeData))
+                }
+                StackImageButtonInfo.StackItemType.ICON -> {
+                    val iconData = content.requireField<JsonValue>("icon")
+                    IconItem(icon = Image.fromJson(iconData))
+                }
+                StackImageButtonInfo.StackItemType.IMAGE_URL -> {
+                    ImageItem(
+                        imageUrl = content.requireField<String>("url"),
+                        mediaFit = MediaFit.from(content.requireField("media_fit")),
+                        cropPosition = Position.fromJson(content.requireField("position"))
+                    )
+                }
+                else -> throw IllegalArgumentException("Unknown StackItem type: $type")
+            }
+        }
+    }
+}
+
+
 internal class ToggleInfo(
     json: JsonMap
 ) : CheckableInfo(json), Identifiable by identifiable(json),
     Validatable by validatable(json) {
-    val attributeName: AttributeName? = attributeNameFromJson(json)
+    val attributeName: AttributeName? = AttributeName.attributeNameFromJson(json)
     val attributeValue: AttributeValue? = json.optionalField("attribute_value")
 }
 
@@ -713,11 +793,11 @@ internal class TextInputInfo(
     json: JsonMap
 ) : ViewInfo(), View by view(json), Identifiable by identifiable(json), Accessible by accessible(json),
     Validatable by validatable(json) {
-    val inputType: FormInputType = FormInputType.from(json.requireField("input_type"))
+    val inputType: FormInputType = FormInputType.from(json.require("input_type"))
     val hintText: String? = json.optionalField("place_holder")
     val textAppearance: TextInputTextAppearance =
-        TextInputTextAppearance.fromJson(json.requireField("text_appearance"))
-    val attributeName: AttributeName? = attributeNameFromJson(json)
+        TextInputTextAppearance.fromJson(json.require("text_appearance"))
+    val attributeName: AttributeName? = AttributeName.attributeNameFromJson(json)
     val iconEnd: IconEnd? = json.optionalField<JsonMap>("icon_end")?.let {
         IconEnd.fromJson(it)
     }
@@ -763,7 +843,7 @@ internal class TextInputInfo(
 
                 return when (type) {
                     Type.FLOATING -> {
-                        val icon = Image.Icon.fromJson(json.requireField("icon"))
+                        val icon = Image.Icon.fromJson(json.require("icon"))
                         Floating(icon)
                     }
                 }
@@ -778,7 +858,7 @@ internal class ScoreInfo(
 ) : ViewInfo(), View by view(json), Identifiable by identifiable(json), Accessible by accessible(json),
     Validatable by validatable(json) {
     val style: ScoreStyle = ScoreStyle.fromJson(json.requireField("style"))
-    val attributeName: AttributeName? = attributeNameFromJson(json)
+    val attributeName: AttributeName? = AttributeName.attributeNameFromJson(json)
 }
 
 internal class WebViewInfo(json: JsonMap) : ViewInfo(), View by view(json) {
@@ -925,10 +1005,11 @@ internal class PagerIndicatorInfo(
     }
 
     internal class Binding(json: JsonMap) {
-        val shapes: List<Shape> =
-            json.requireField<JsonList>("shapes").map { Shape.fromJson(it.requireMap()) }
-        val icon: Image.Icon? =
-            json.optionalMap("icon")?.let { Image.Icon.fromJson(it) }
+        val shapes: List<Shape> = json
+            .requireField<JsonList>("shapes")
+            .map(Shape::fromJson)
+
+        val icon: Image.Icon? = json["icon"]?.let { Image.Icon.fromJson(it) }
     }
 }
 
@@ -990,7 +1071,7 @@ internal open class BaseToggleLayoutInfo(json: JsonMap) :  ViewGroupInfo<ViewIte
 }
 
 internal class BasicToggleLayoutInfo(json: JsonMap) : BaseToggleLayoutInfo(json), Validatable by validatable(json) {
-    val attributeName: AttributeName? = attributeNameFromJson(json)
+    val attributeName: AttributeName? = AttributeName.attributeNameFromJson(json)
 }
 
 internal class CheckboxToggleLayoutInfo(json: JsonMap) : BaseToggleLayoutInfo(json) {
@@ -1019,7 +1100,7 @@ internal class RadioInputControllerInfo(
     json: JsonMap
 ) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json), Validatable by validatable(json),
     Accessible by accessible(json) {
-    val attributeName: AttributeName? = attributeNameFromJson(json)
+    val attributeName: AttributeName? = AttributeName.attributeNameFromJson(json)
 
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }
@@ -1028,7 +1109,7 @@ internal class ScoreControllerInfo(
     json: JsonMap
 ) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json), Validatable by validatable(json),
     Accessible by accessible(json) {
-    val attributeName: AttributeName? = attributeNameFromJson(json)
+    val attributeName: AttributeName? = AttributeName.attributeNameFromJson(json)
 
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 }

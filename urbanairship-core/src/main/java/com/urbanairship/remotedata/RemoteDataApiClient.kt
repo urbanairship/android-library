@@ -6,8 +6,7 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.SuspendingRequestSession
-import com.urbanairship.http.toSuspendingRequestSession
+import com.urbanairship.http.RequestSession
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
@@ -20,7 +19,7 @@ import com.urbanairship.util.DateUtils
  */
 internal class RemoteDataApiClient(
     private val config: AirshipRuntimeConfig,
-    private val session: SuspendingRequestSession = config.requestSession.toSuspendingRequestSession()
+    private val session: RequestSession = config.requestSession
 ) {
     internal data class Result(
         val remoteDataInfo: RemoteDataInfo,
@@ -46,16 +45,14 @@ internal class RemoteDataApiClient(
         )
 
         return session.execute(request) { status: Int, responseHeaders: Map<String, String>, responseBody: String? ->
-            return@execute if (status == 200) {
-                val remoteDataInfo = remoteDataInfoFactory(responseHeaders["Last-Modified"])
-                val payloads = parseResponse(responseBody, remoteDataInfo)
-                Result(
-                    remoteDataInfo,
-                    payloads
-                )
-            } else {
-                null
+            if (status != 200) {
+                return@execute null
             }
+
+            val remoteDataInfo = remoteDataInfoFactory(responseHeaders["Last-Modified"])
+            val payloads = parseResponse(responseBody, remoteDataInfo)
+
+            return@execute Result(remoteDataInfo, payloads)
         }
     }
 

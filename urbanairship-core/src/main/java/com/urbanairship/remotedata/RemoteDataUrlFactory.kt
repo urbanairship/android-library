@@ -9,7 +9,6 @@ import com.urbanairship.Platform
 import com.urbanairship.PushProviders
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.config.UrlBuilder
-import com.urbanairship.util.UAStringUtil
 import java.util.Locale
 
 /**
@@ -33,15 +32,14 @@ internal class RemoteDataUrlFactory(
 
     private val pushProviders: String?
     get() {
-        val deliveryTypes: MutableSet<String> = HashSet()
-        val providers: PushProviders = pushProvidersProvider()
-        for (provider in providers.getAvailableProviders()) {
-            deliveryTypes.add(provider.deliveryType.value)
-        }
+        val deliveryTypes = pushProvidersProvider().getAvailableProviders()
+            .map { it.deliveryType.value }
+            .toSet()
+
         if (deliveryTypes.isEmpty()) {
             return null
         }
-        return UAStringUtil.join(deliveryTypes, ",")
+        return deliveryTypes.joinToString(",")
     }
 
     fun createContactUrl(contactID: String, locale: Locale, randomValue: Int): Uri? {
@@ -80,11 +78,11 @@ internal class RemoteDataUrlFactory(
             builder.appendQueryParameter(PUSH_PROVIDER_QUERY_PARAM, it)
         }
 
-        if (!UAStringUtil.isEmpty(locale.language)) {
+        if (locale.language.isNotEmpty()) {
             builder.appendQueryParameter(LANGUAGE_QUERY_PARAM, locale.language)
         }
 
-        if (!UAStringUtil.isEmpty(locale.country)) {
+        if (locale.country.isNotEmpty()) {
             builder.appendQueryParameter(COUNTRY_QUERY_PARAM, locale.country)
         }
 

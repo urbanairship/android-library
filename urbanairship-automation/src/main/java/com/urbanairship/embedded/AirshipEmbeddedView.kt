@@ -286,7 +286,7 @@ private fun Size.Dimension.toEmbeddedDimension(
 ): EmbeddedDimension = when (this.type) {
     AUTO -> EmbeddedDimension(LayoutParams.WRAP_CONTENT, false)
     PERCENT -> parentDimensionProvider?.invoke()?.let { parentDimension ->
-        EmbeddedDimension(round(this.float * parentDimension).toInt(), true)
+        EmbeddedDimension(round(getFloat() * parentDimension).toInt(), true)
     }
     else -> null
 } ?: EmbeddedDimension(LayoutParams.MATCH_PARENT,  false)

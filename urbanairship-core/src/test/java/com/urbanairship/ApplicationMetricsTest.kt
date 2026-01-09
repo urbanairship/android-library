@@ -28,7 +28,9 @@ public class ApplicationMetricsTest : BaseTestCase() {
      */
     @Test
     public fun testGetLastOpenNotSet() {
-        Assert.assertEquals("Last open time should default to -1", -1, metrics.lastOpenTimeMillis)
+        @Suppress("DEPRECATION")
+        val lastOpenTime = metrics.lastOpenTimeMillis
+        Assert.assertEquals("Last open time should default to -1", -1, lastOpenTime)
     }
 
     /**
@@ -41,7 +43,9 @@ public class ApplicationMetricsTest : BaseTestCase() {
         activityMonitor.foreground(1000)
 
         // Make sure the time is greater than 0
-        Assert.assertEquals("Last open time should've updated", 1000, metrics.lastOpenTimeMillis)
+        @Suppress("DEPRECATION")
+        val lastOpenTime = metrics.lastOpenTimeMillis
+        Assert.assertEquals("Last open time should've updated", 1000, lastOpenTime)
     }
 
     @Test

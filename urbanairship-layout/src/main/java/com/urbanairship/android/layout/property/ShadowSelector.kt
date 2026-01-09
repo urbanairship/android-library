@@ -14,7 +14,7 @@ public data class ShadowSelector(
         @Throws(JsonException::class)
         public fun fromJson(json: JsonValue): ShadowSelector {
             return ShadowSelector(
-                platform = json.requireMap().optionalField<String>("platform")?.let { Platform.from(it) },
+                platform = json.requireMap()["platform"]?.let(Platform::from),
                 shadow = Shadow.fromJson(json.requireMap().requireField("shadow"))
             )
         }

@@ -2,11 +2,15 @@
 
 package com.urbanairship.iam.content
 
+import android.os.Parcel
+import android.os.Parcelable
+import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 
 /**
  * Display content for Scenes and Surveys.
@@ -14,7 +18,14 @@ import com.urbanairship.json.JsonValue
 public class AirshipLayout private constructor(
     public val layoutInfo: LayoutInfo,
     private val jsonValue: JsonValue //TODO: make LayoutInfo serializable and remove that field
-) : JsonSerializable {
+) : JsonSerializable, Parcelable {
+
+    @Throws(JsonException::class)
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public constructor(layoutJson: JsonValue) : this(
+        layoutInfo = LayoutInfo(layoutJson.requireMap()),
+        jsonValue = jsonMapOf(LAYOUT_KEY to layoutJson).toJsonValue()
+    )
 
     public companion object {
         private const val LAYOUT_KEY = "layout"
@@ -53,5 +64,11 @@ public class AirshipLayout private constructor(
 
     override fun hashCode(): Int {
         return layoutInfo.hashCode()
+    }
+
+    override fun describeContents(): Int = 0
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeString(jsonValue.toString())
     }
 }

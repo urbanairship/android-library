@@ -26,7 +26,7 @@ import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.findTargetDescendant
 import com.urbanairship.android.layout.widget.PagerRecyclerView
-import com.urbanairship.util.UAStringUtil
+import com.urbanairship.util.stringResource
 
 internal class PagerView(
     context: Context,
@@ -53,12 +53,8 @@ internal class PagerView(
                 // Iterate through each action provided
                 actions?.forEach { action ->
                     // Get the localized description
-                    val description = action.localizedContentDescription?.ref?.let { ref ->
-                        UAStringUtil.namedStringResource(
-                            context,
-                            ref,
-                            action.localizedContentDescription?.fallback ?: "Unknown" // Should never be hit, should fail gracefully in parsing
-                        )
+                    val description = action.localizedContentDescription?.ref?.let {
+                        it.stringResource(context) ?: action.localizedContentDescription?.fallback ?: "Unknown" // Should never be hit, should fail gracefully in parsing
                     } ?: action.localizedContentDescription?.fallback ?: "Unknown" // Should never be hit, should fail gracefully in parsing
 
                     ViewCompat.addAccessibilityAction(

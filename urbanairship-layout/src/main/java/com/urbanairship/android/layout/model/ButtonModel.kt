@@ -6,6 +6,7 @@ import android.content.Context
 import android.view.View
 import androidx.annotation.CallSuper
 import com.urbanairship.Airship
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
@@ -20,6 +21,7 @@ import com.urbanairship.android.layout.property.hasCancelOrDismiss
 import com.urbanairship.android.layout.property.hasFormSubmit
 import com.urbanairship.android.layout.property.hasFormValidate
 import com.urbanairship.android.layout.property.hasPagerNext
+import com.urbanairship.android.layout.property.hasPagerPauseToggle
 import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.widget.TappableView
@@ -117,6 +119,9 @@ internal abstract class ButtonModel<T, I: Button>(
             if (viewInfo.clickBehaviors.hasPagerPrevious) {
                 handlePagerPrevious()
             }
+            if (viewInfo.clickBehaviors.hasPagerPauseToggle) {
+                handlePagerPauseToggle()
+            }
         }
     }
 
@@ -173,6 +178,10 @@ internal abstract class ButtonModel<T, I: Button>(
     ).join()
 
     private suspend fun handlePagerPrevious() = broadcast(LayoutEvent.PagerPrevious).join()
+
+    private suspend fun handlePagerPauseToggle()  {
+        broadcast(LayoutEvent.PagerPauseToggle).join()
+    }
 
     private suspend fun handleDismiss(context: Context, isCancel: Boolean) {
         report(

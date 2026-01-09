@@ -526,6 +526,7 @@ public class PushMessageTest {
      * Test get notification sound.
      */
     @Test
+    @Suppress("DEPRECATION") // EXTRA_SOUND and getSound
     public fun testGetSound() {
         val context = spyk(ApplicationProvider.getApplicationContext<Context>())
         val resources: Resources = mockk {
@@ -547,6 +548,7 @@ public class PushMessageTest {
      * Test get notification sound is null when not found.
      */
     @Test
+    @Suppress("DEPRECATION") // EXTRA_SOUND and getSound
     public fun testGetSoundNull() {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val pushMessage = PushMessage(
@@ -563,7 +565,7 @@ public class PushMessageTest {
      */
     @Test
     public fun testGetIcon() {
-        val context = spyk(ApplicationProvider.getApplicationContext<Context>())
+        val context = spyk(ApplicationProvider.getApplicationContext())
         val resources: Resources = mockk {
             every { getIdentifier("icon", any(), any()) } returns 5
         }

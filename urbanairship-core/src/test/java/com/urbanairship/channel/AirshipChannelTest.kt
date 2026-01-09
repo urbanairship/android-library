@@ -5,7 +5,6 @@ import android.content.Context
 import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.Airship
-import com.urbanairship.PendingResult
 import com.urbanairship.Platform
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
@@ -21,6 +20,7 @@ import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import com.urbanairship.util.LocaleCompat
 import java.util.Locale
 import java.util.TimeZone
 import io.mockk.coEvery
@@ -90,14 +90,14 @@ public class AirshipChannelTest {
     private val replaceJob = JobInfo.newBuilder()
         .setAction("ACTION_UPDATE_CHANNEL")
         .setNetworkAccessRequired(true)
-        .setAirshipComponent(AirshipChannel::class.java)
+        .setScope(AirshipChannel::class.java.name)
         .setConflictStrategy(JobInfo.ConflictStrategy.REPLACE)
         .build()
 
     private val keepJob = JobInfo.newBuilder()
         .setAction("ACTION_UPDATE_CHANNEL")
         .setNetworkAccessRequired(true)
-        .setAirshipComponent(AirshipChannel::class.java)
+        .setScope(AirshipChannel::class.java.name)
         .setConflictStrategy(JobInfo.ConflictStrategy.KEEP)
         .build()
 
@@ -398,7 +398,7 @@ public class AirshipChannelTest {
     public fun testCraPayloadAndroid(): TestResult = runTest {
         every {
             mockLocaleManager.locale
-        } returns Locale("shyriiwook", "KASHYYYK")
+        } returns LocaleCompat.of("shyriiwook", "KASHYYYK")
 
         configuredPermissions = mapOf(
             Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.DENIED,
@@ -434,7 +434,7 @@ public class AirshipChannelTest {
 
         every {
             mockLocaleManager.locale
-        } returns Locale("en", "US")
+        } returns LocaleCompat.of("en", "US")
 
         channel.tags = setOf("cool_tag")
 
@@ -461,7 +461,7 @@ public class AirshipChannelTest {
 
         every {
             mockLocaleManager.locale
-        } returns Locale("en", "US")
+        } returns LocaleCompat.of("en", "US")
 
         channel.tags = setOf("cool_tag")
 
@@ -485,7 +485,7 @@ public class AirshipChannelTest {
 
         every {
             mockLocaleManager.locale
-        } returns Locale("en", "US")
+        } returns LocaleCompat.of("en", "US")
 
         val expectedPayload = ChannelRegistrationPayload.Builder()
             .setDeviceType(ChannelRegistrationPayload.DeviceType.ANDROID)
@@ -501,7 +501,7 @@ public class AirshipChannelTest {
     public fun testCraPayloadTagsDisabled(): TestResult = runTest {
         every {
             mockLocaleManager.locale
-        } returns Locale("shyriiwook", "KASHYYYK")
+        } returns LocaleCompat.of("shyriiwook", "KASHYYYK")
 
         configuredPermissions = mapOf(
             Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.DENIED,
@@ -534,7 +534,7 @@ public class AirshipChannelTest {
 
         every {
             mockLocaleManager.locale
-        } returns Locale("en", "US")
+        } returns LocaleCompat.of("en", "US")
 
         channel.tags = setOf("cool_tag")
 
@@ -559,7 +559,7 @@ public class AirshipChannelTest {
     public fun testCraPayloadMinify(): TestResult = runTest {
         every {
             mockLocaleManager.locale
-        } returns Locale("shyriiwook", "KASHYYYK")
+        } returns LocaleCompat.of("shyriiwook", "KASHYYYK")
 
         configuredPermissions = mapOf(
             Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.DENIED,

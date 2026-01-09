@@ -8,18 +8,16 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.RequestSession
 import com.urbanairship.http.log
-import com.urbanairship.http.toSuspendingRequestSession
-import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.optionalField
+import com.urbanairship.json.optionalList
 import com.urbanairship.util.UAHttpStatusUtil
 
 @OpenForTesting
 internal class SubscriptionListApiClient(
     private val runtimeConfig: AirshipRuntimeConfig,
-    private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
+    private val session: RequestSession = runtimeConfig.requestSession
 ) {
     suspend fun getSubscriptionLists(channelId: String): RequestResult<Set<String>> {
         val url = runtimeConfig.deviceUrl
@@ -40,14 +38,16 @@ internal class SubscriptionListApiClient(
         UALog.d { "Fetching contact subscription lists for $channelId request: $request" }
 
         return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
-            return@execute if (UAHttpStatusUtil.inSuccessRange(status)) {
-                JsonValue.parseString(responseBody).requireMap()
-                    .optionalField<JsonList>("list_ids")
-                    ?.map { value -> value.requireString() }
-                    ?.toSet() ?: emptySet()
-            } else {
-                null
+            if (!UAHttpStatusUtil.inSuccessRange(status)) {
+                return@execute null
             }
+
+            return@execute JsonValue.parseString(responseBody)
+                .requireMap()
+                .optionalList("list_ids")
+                ?.map { value -> value.requireString() }
+                ?.toSet()
+                ?: emptySet()
         }.also { result ->
             result.log { "Fetching contact subscription lists for $channelId finished with result: $result" }
         }

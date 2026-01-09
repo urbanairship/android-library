@@ -22,6 +22,7 @@ android {
 
 dependencies {
     api project(':urbanairship-core')
+    api project(':urbanairship-automation')
 
     // Kotlin
     implementation(libs.kotlinx.coroutines.core)
@@ -45,14 +46,7 @@ dependencies {
     implementation(libs.google.material)
 
     // Tests
-    testImplementation project(':urbanairship-test')
-    testImplementation(libs.junit)
-    testImplementation(libs.androidx.test.core)
-    testImplementation(libs.robolectric.core)
-    testImplementation(libs.androidx.test.ext.junit)
-    testImplementation(libs.mockk)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.turbine)
+    testImplementation(testFixtures(project(":urbanairship-core")))
 
     // Instrumentation Test
     androidTestImplementation(libs.androidx.test.core)

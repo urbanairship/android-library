@@ -4,10 +4,10 @@ package com.urbanairship.remotedata
 import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.WorkerThread
 import androidx.core.content.pm.PackageInfoCompat
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
+import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
@@ -51,7 +51,6 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 
 /**
@@ -74,7 +73,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     private val activityMonitor: ActivityMonitor = GlobalActivityMonitor.shared(context),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     coroutineDispatcher: CoroutineDispatcher = AirshipDispatchers.IO
-) : AirshipComponent(context, preferenceDataStore) {
+) : JobAwareAirshipComponent(context, preferenceDataStore) {
 
     private val scope = CoroutineScope(coroutineDispatcher + SupervisorJob())
 
@@ -140,7 +139,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     )
 
     private val applicationListener: ApplicationListener = object : SimpleApplicationListener() {
-        override fun onForeground(time: Long) {
+        override fun onForeground(milliseconds: Long) {
             val now = clock.currentTimeMillis()
             if (now >= lastForegroundDispatchTime + getRefreshInterval()) {
                 updateChangeToken()
@@ -165,13 +164,11 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     private var isAnyFeatureEnabled = AtomicBoolean(privacyManager.isAnyFeatureEnabled)
 
-    private val privacyListener = object : PrivacyManager.Listener {
-        override fun onEnabledFeaturesChanged() {
-            val newValue = privacyManager.isAnyFeatureEnabled
+    private val privacyListener = PrivacyManager.Listener {
+        val newValue = privacyManager.isAnyFeatureEnabled
 
-            if (!isAnyFeatureEnabled.getAndSet(newValue) && newValue) {
-                dispatchRefreshJobAsync()
-            }
+        if (!isAnyFeatureEnabled.getAndSet(newValue) && newValue) {
+            dispatchRefreshJobAsync()
         }
     }
 
@@ -235,20 +232,19 @@ public class RemoteData @VisibleForTesting internal constructor(
         config.removeRemoteConfigListener(configListener)
     }
 
-    /** @hide */
-    @WorkerThread
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(jobInfo: JobInfo): JobResult {
-        if (ACTION_REFRESH == jobInfo.action) {
-            return runBlocking {
-                refreshManager.performRefresh(
-                    changeToken,
-                    localeManager.locale,
-                    randomValue
-                )
-            }
+    override val jobActions: List<String>
+        get() = listOf(ACTION_REFRESH)
+
+    override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
+        return if (ACTION_REFRESH == jobInfo.action) {
+            refreshManager.performRefresh(
+                changeToken,
+                localeManager.locale,
+                randomValue
+            )
+        } else {
+            JobResult.SUCCESS
         }
-        return JobResult.SUCCESS
     }
 
     public val randomValue: Int

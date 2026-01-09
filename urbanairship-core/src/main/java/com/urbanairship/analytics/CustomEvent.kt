@@ -16,7 +16,6 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.toJsonMap
 import com.urbanairship.push.PushMessage
-import com.urbanairship.util.UAStringUtil
 import java.math.BigDecimal
 
 /**
@@ -74,7 +73,7 @@ public class CustomEvent private constructor(
 
         data.putOpt(EVENT_VALUE, eventValue?.movePointRight(6)?.toLong())
 
-        if (!UAStringUtil.isEmpty(sendId)) {
+        if (!sendId.isNullOrEmpty()) {
             data.put(CONVERSION_SEND_ID, sendId)
         } else {
             data.put(CONVERSION_SEND_ID, conversionSendId)
@@ -106,7 +105,7 @@ public class CustomEvent private constructor(
 
     override fun isValid(): Boolean {
 
-        if (UAStringUtil.isEmpty(eventName) || !eventName.isLengthValid()) {
+        if (eventName.isEmpty() || !eventName.isLengthValid()) {
             UALog.e(
                 "Event name must not be null, empty, or larger than $MAX_CHARACTER_LENGTH characters."
             )
@@ -268,7 +267,7 @@ public class CustomEvent private constructor(
          */
         @Throws(NumberFormatException::class)
         public fun setEventValue(value: String?): Builder {
-            if (UAStringUtil.isEmpty(value)) {
+            if (value.isNullOrEmpty()) {
                 return this.also { it.value = null }
             }
 

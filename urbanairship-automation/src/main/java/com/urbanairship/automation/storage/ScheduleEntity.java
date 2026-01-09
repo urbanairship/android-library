@@ -19,6 +19,7 @@ import androidx.room.PrimaryKey;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Entity(tableName = "schedules", indices = { @Index(value = { "scheduleId" }, unique = true) })
+//TODO: migrate to kotlin on next version update
 public class ScheduleEntity {
 
     @PrimaryKey(autoGenerate = true)

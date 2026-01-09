@@ -8,6 +8,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.mockk.clearInvocations
+import com.urbanairship.permission.Permission.DISPLAY_NOTIFICATIONS
+import com.urbanairship.permission.Permission.LOCATION
+import com.urbanairship.permission.PermissionStatus.NOT_DETERMINED
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
@@ -18,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -81,17 +85,13 @@ public class PermissionsManagerTest {
 
     @Test
     public fun testCheckPermissionNoDelegate(): TestResult = runTest {
-        assertEquals(
-            PermissionStatus.NOT_DETERMINED,
-            permissionsManager.suspendingCheckPermissionStatus(Permission.LOCATION)
-        )
+        assertEquals(NOT_DETERMINED, permissionsManager.checkPermissionStatus(LOCATION))
     }
 
     @Test
     public fun testRequestPermissionNoDelegate(): TestResult = runTest {
         assertEquals(
-            PermissionRequestResult.notDetermined(),
-            permissionsManager.suspendingRequestPermission(Permission.LOCATION)
+            PermissionRequestResult.notDetermined(), permissionsManager.requestPermission(LOCATION)
         )
     }
 
@@ -100,38 +100,35 @@ public class PermissionsManagerTest {
         val expected: MutableSet<Permission> = HashSet()
         assertEquals(expected, permissionsManager.configuredPermissions)
 
-        expected.add(Permission.LOCATION)
-        permissionsManager.setPermissionDelegate(Permission.LOCATION, mockDelegate)
+        expected.add(LOCATION)
+        permissionsManager.setPermissionDelegate(LOCATION, mockDelegate)
         assertEquals(expected, permissionsManager.configuredPermissions)
 
-        expected.add(Permission.DISPLAY_NOTIFICATIONS)
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
+        expected.add(DISPLAY_NOTIFICATIONS)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, mockDelegate)
         assertEquals(expected, permissionsManager.configuredPermissions)
     }
 
     @Test
     public fun testRequestPermission(): TestResult = runTest {
-        permissionsManager.setPermissionDelegate(Permission.LOCATION, mockDelegate)
+        permissionsManager.setPermissionDelegate(LOCATION, mockDelegate)
         mockDelegateStatus = PermissionRequestResult.granted()
 
-        assertEquals(
-            mockDelegateStatus,
-            permissionsManager.suspendingRequestPermission(Permission.LOCATION)
-        )
+        assertEquals(mockDelegateStatus, permissionsManager.requestPermission(LOCATION))
     }
 
     @Test
     public fun testOnEnableAirship(): TestResult = runTest {
         val enabler = mockk<Consumer<Permission>>(relaxed = true)
 
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, mockDelegate)
         mockDelegateStatus = PermissionRequestResult.granted()
 
         permissionsManager.addAirshipEnabler(enabler)
-        permissionsManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, true)
+        permissionsManager.requestPermission(DISPLAY_NOTIFICATIONS, true)
 
         verify {
-            enabler.accept(Permission.DISPLAY_NOTIFICATIONS)
+            enabler.accept(DISPLAY_NOTIFICATIONS)
         }
     }
 
@@ -139,13 +136,13 @@ public class PermissionsManagerTest {
     public fun testOnEnableAirshipDenied(): TestResult = runTest {
         val enabler = mockk<Consumer<Permission>>(relaxed = true)
 
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, mockDelegate)
         mockDelegateStatus = PermissionRequestResult.denied(true)
         permissionsManager.addAirshipEnabler(enabler)
-        permissionsManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, true)
+        permissionsManager.requestPermission(DISPLAY_NOTIFICATIONS, true)
 
         verify(exactly = 0) {
-            enabler.accept(Permission.DISPLAY_NOTIFICATIONS)
+            enabler.accept(DISPLAY_NOTIFICATIONS)
         }
     }
 
@@ -153,65 +150,65 @@ public class PermissionsManagerTest {
     public fun testOnEnableAirshipNotDetermined(): TestResult = runTest {
         val enabler = mockk<Consumer<Permission>>(relaxed = true)
 
-        permissionsManager.setPermissionDelegate(Permission.LOCATION, mockDelegate)
+        permissionsManager.setPermissionDelegate(LOCATION, mockDelegate)
         mockDelegateStatus = PermissionRequestResult.notDetermined()
         permissionsManager.addAirshipEnabler(enabler)
-        permissionsManager.suspendingRequestPermission(Permission.LOCATION, true)
+        permissionsManager.requestPermission(LOCATION, true)
 
         verify(exactly = 0) {
-            enabler.accept(Permission.DISPLAY_NOTIFICATIONS)
+            enabler.accept(DISPLAY_NOTIFICATIONS)
         }
     }
 
     @Test
     public fun testStatusChangeCheckOnRequest(): TestResult = runTest {
-        permissionsManager.setPermissionDelegate(Permission.LOCATION, mockDelegate)
-        permissionsManager.suspendingRequestPermission(Permission.LOCATION)
+        permissionsManager.setPermissionDelegate(LOCATION, mockDelegate)
+        permissionsManager.requestPermission(LOCATION)
 
         permissionsManager.addOnPermissionStatusChangedListener(mockStatusListener)
 
         mockDelegateStatus = PermissionRequestResult.granted()
-        permissionsManager.suspendingRequestPermission(Permission.LOCATION)
+        permissionsManager.requestPermission(LOCATION)
 
         verify {
-            mockStatusListener.onPermissionStatusChanged(Permission.LOCATION, PermissionStatus.GRANTED)
+            mockStatusListener.onPermissionStatusChanged(LOCATION, PermissionStatus.GRANTED)
         }
 
         mockDelegateStatus = PermissionRequestResult.denied(true)
-        permissionsManager.suspendingCheckPermissionStatus(Permission.LOCATION)
+        permissionsManager.checkPermissionStatus(LOCATION)
 
         verify {
-            mockStatusListener.onPermissionStatusChanged(Permission.LOCATION, PermissionStatus.DENIED)
+            mockStatusListener.onPermissionStatusChanged(LOCATION, PermissionStatus.DENIED)
         }
     }
 
     @Test
     public fun testStatusChangeCheckOnCheck(): TestResult = runTest {
-        permissionsManager.setPermissionDelegate(Permission.LOCATION, mockDelegate)
-        permissionsManager.suspendingRequestPermission(Permission.LOCATION)
+        permissionsManager.setPermissionDelegate(LOCATION, mockDelegate)
+        permissionsManager.requestPermission(LOCATION)
 
         permissionsManager.addOnPermissionStatusChangedListener(mockStatusListener)
 
         mockDelegateStatus = PermissionRequestResult.denied(true)
-        permissionsManager.suspendingRequestPermission(Permission.LOCATION)
+        permissionsManager.requestPermission(LOCATION)
 
         verify {
-            mockStatusListener.onPermissionStatusChanged(Permission.LOCATION, PermissionStatus.DENIED)
+            mockStatusListener.onPermissionStatusChanged(LOCATION, PermissionStatus.DENIED)
         }
 
         mockDelegateStatus = PermissionRequestResult.granted()
-        permissionsManager.suspendingCheckPermissionStatus(Permission.LOCATION)
+        permissionsManager.checkPermissionStatus(LOCATION)
 
         verify {
-            mockStatusListener.onPermissionStatusChanged(Permission.LOCATION, PermissionStatus.GRANTED)
+            mockStatusListener.onPermissionStatusChanged(LOCATION, PermissionStatus.GRANTED)
         }
     }
 
     @Test
     public fun testStatusChangeCheckOnActivityResume(): TestResult = runTest {
         mockDelegateStatus = PermissionRequestResult.denied(true)
-        permissionsManager.setPermissionDelegate(Permission.LOCATION, mockDelegate)
-        permissionsManager.suspendingCheckPermissionStatus(Permission.LOCATION)
+        permissionsManager.setPermissionDelegate(LOCATION, mockDelegate)
+        permissionsManager.checkPermissionStatus(LOCATION)
 
         permissionsManager.addOnPermissionStatusChangedListener(mockStatusListener)
         mockDelegateStatus = PermissionRequestResult.notDetermined()
@@ -220,13 +217,13 @@ public class PermissionsManagerTest {
         advanceUntilIdle()
 
         verify {
-            mockStatusListener.onPermissionStatusChanged(Permission.LOCATION, PermissionStatus.NOT_DETERMINED)
+            mockStatusListener.onPermissionStatusChanged(LOCATION, NOT_DETERMINED)
         }
     }
 
     @Test
     fun testCheckPermissionStatusOnActivityResume(): TestResult = runTest {
-        permissionsManager.setPermissionDelegate(Permission.LOCATION, mockDelegate)
+        permissionsManager.setPermissionDelegate(LOCATION, mockDelegate)
         advanceUntilIdle()
         testDispatcher.scheduler.advanceUntilIdle()
         clearInvocations(mockDelegate)
@@ -251,31 +248,31 @@ public class PermissionsManagerTest {
             every { checkPermissionStatus(any(), any()) } answers {
                 launch {
                     secondArg<Consumer<PermissionStatus>>().accept(
-                        resultFlow.first { it != null }?.permissionStatus ?: PermissionStatus.NOT_DETERMINED
+                        resultFlow.first { it != null }?.permissionStatus ?: NOT_DETERMINED
                     )
                 }
 
             }
         }
 
-        permissionsManager.setPermissionDelegate(Permission.LOCATION, delegate)
+        permissionsManager.setPermissionDelegate(LOCATION, delegate)
 
         val requestJobs = (0..6).map {
             async {
-                return@async permissionsManager.suspendingRequestPermission(Permission.LOCATION)
+                return@async permissionsManager.requestPermission(LOCATION)
             }
         }
 
         val checkStatusJobs = (0..10).map {
             async {
-                return@async permissionsManager.suspendingCheckPermissionStatus(Permission.LOCATION)
+                return@async permissionsManager.checkPermissionStatus(LOCATION)
             }
         }
 
         resultFlow.value = PermissionRequestResult.granted()
 
-        assertEquals((0..6).map { PermissionRequestResult.granted() }, requestJobs.map { it.await() })
-        assertEquals((0..10).map { PermissionStatus.GRANTED }, checkStatusJobs.map { it.await() })
+        assertEquals((0..6).map { PermissionRequestResult.granted() }, requestJobs.awaitAll())
+        assertEquals((0..10).map { PermissionStatus.GRANTED }, checkStatusJobs.awaitAll())
 
         verify(exactly = 1) {
             delegate.requestPermission(any(), any())
@@ -295,10 +292,10 @@ public class PermissionsManagerTest {
         }
 
         mockDelegateStatus = PermissionRequestResult.denied(true)
-        permissionsManager.setPermissionDelegate(Permission.LOCATION, mockDelegate)
+        permissionsManager.setPermissionDelegate(LOCATION, mockDelegate)
 
         val job = async {
-            permissionsManager.suspendingRequestPermission(Permission.LOCATION, fallback = PermissionPromptFallback.SystemSettings)
+            permissionsManager.requestPermission(LOCATION, fallback = PermissionPromptFallback.SystemSettings)
         }
         advanceUntilIdle()
 
@@ -331,10 +328,10 @@ public class PermissionsManagerTest {
         }
 
         mockDelegateStatus = PermissionRequestResult.denied(true)
-        permissionsManager.setPermissionDelegate(Permission.LOCATION, mockDelegate)
+        permissionsManager.setPermissionDelegate(LOCATION, mockDelegate)
 
         val job = async(Dispatchers.Default) {
-            permissionsManager.suspendingRequestPermission(Permission.LOCATION, fallback = PermissionPromptFallback.SystemSettings)
+            permissionsManager.requestPermission(LOCATION, fallback = PermissionPromptFallback.SystemSettings)
         }
         advanceUntilIdle()
 
@@ -369,10 +366,12 @@ public class PermissionsManagerTest {
         }
 
         mockDelegateStatus = PermissionRequestResult.denied(true)
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, mockDelegate)
 
         val job = async {
-            permissionsManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, fallback = PermissionPromptFallback.SystemSettings)
+            permissionsManager.requestPermission(
+                DISPLAY_NOTIFICATIONS, fallback = PermissionPromptFallback.SystemSettings
+            )
         }
         advanceUntilIdle()
 
@@ -400,9 +399,11 @@ public class PermissionsManagerTest {
     @Test
     public fun testFallbackNone(): TestResult = runTest {
         mockDelegateStatus = PermissionRequestResult.denied(true)
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, mockDelegate)
 
-        val result = permissionsManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, fallback = PermissionPromptFallback.None)
+        val result = permissionsManager.requestPermission(
+            DISPLAY_NOTIFICATIONS, fallback = PermissionPromptFallback.None
+        )
 
         assertEquals(
             PermissionRequestResult.denied(true),
@@ -419,11 +420,11 @@ public class PermissionsManagerTest {
         val callbackCalled = MutableStateFlow(false)
 
         mockDelegateStatus = PermissionRequestResult.denied(true)
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, mockDelegate)
 
         val job = async(Dispatchers.Default) {
             permissionsManager.requestPermission(
-                Permission.DISPLAY_NOTIFICATIONS,
+                DISPLAY_NOTIFICATIONS,
                 fallback = PermissionPromptFallback.Callback {
                     mockDelegateStatus = PermissionRequestResult.granted()
                     callbackCalled.value = true
@@ -447,9 +448,11 @@ public class PermissionsManagerTest {
     @Test
     public fun testFallbackIgnoredNotDetermined(): TestResult = runTest {
         mockDelegateStatus = PermissionRequestResult.notDetermined()
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, mockDelegate)
 
-        val result = permissionsManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, fallback = PermissionPromptFallback.SystemSettings)
+        val result = permissionsManager.requestPermission(
+            DISPLAY_NOTIFICATIONS, fallback = PermissionPromptFallback.SystemSettings
+        )
 
         assertEquals(
             PermissionRequestResult.notDetermined(),
@@ -464,9 +467,11 @@ public class PermissionsManagerTest {
     @Test
     public fun testFallbackIgnoredGranted(): TestResult = runTest {
         mockDelegateStatus = PermissionRequestResult.granted()
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, mockDelegate)
 
-        val result = permissionsManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, fallback = PermissionPromptFallback.SystemSettings)
+        val result = permissionsManager.requestPermission(
+            DISPLAY_NOTIFICATIONS, fallback = PermissionPromptFallback.SystemSettings
+        )
 
         assertEquals(
             PermissionRequestResult.granted(),
@@ -481,9 +486,11 @@ public class PermissionsManagerTest {
     @Test
     public fun testFallbackIgnoredDeniedFromPrompt(): TestResult = runTest {
         mockDelegateStatus = PermissionRequestResult.denied(false)
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, mockDelegate)
 
-        val result = permissionsManager.suspendingRequestPermission(Permission.DISPLAY_NOTIFICATIONS, fallback = PermissionPromptFallback.SystemSettings)
+        val result = permissionsManager.requestPermission(
+            DISPLAY_NOTIFICATIONS, fallback = PermissionPromptFallback.SystemSettings
+        )
 
         assertEquals(
             PermissionRequestResult.denied(false),
@@ -498,49 +505,49 @@ public class PermissionsManagerTest {
     @Test
     public fun testPermissionUpdates(): TestResult = runTest {
         mockDelegateStatus = PermissionRequestResult.denied(false)
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
-        permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, mockDelegate)
+        permissionsManager.checkPermissionStatus(DISPLAY_NOTIFICATIONS)
 
-        permissionsManager.permissionsUpdate(Permission.DISPLAY_NOTIFICATIONS).test {
+        permissionsManager.permissionsUpdate(DISPLAY_NOTIFICATIONS).test {
             assertEquals(PermissionStatus.DENIED, awaitItem())
 
             mockDelegateStatus = PermissionRequestResult.granted()
-            permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+            permissionsManager.checkPermissionStatus(DISPLAY_NOTIFICATIONS)
             assertEquals(PermissionStatus.GRANTED, awaitItem())
 
             mockDelegateStatus = PermissionRequestResult.notDetermined()
-            permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
-            assertEquals(PermissionStatus.NOT_DETERMINED, awaitItem())
+            permissionsManager.checkPermissionStatus(DISPLAY_NOTIFICATIONS)
+            assertEquals(NOT_DETERMINED, awaitItem())
         }
     }
 
     @Test
     public fun testPermissionStatusUpdatesFlow(): TestResult = runTest {
         mockDelegateStatus = PermissionRequestResult.denied(false)
-        permissionsManager.setPermissionDelegate(Permission.DISPLAY_NOTIFICATIONS, mockDelegate)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, mockDelegate)
 
         permissionsManager.permissionStatusUpdates.test {
-            permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+            permissionsManager.checkPermissionStatus(DISPLAY_NOTIFICATIONS)
             assertEquals(
-                Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.DENIED,
+                DISPLAY_NOTIFICATIONS to PermissionStatus.DENIED,
                 awaitItem()
             )
 
             mockDelegateStatus = PermissionRequestResult.granted()
-            permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+            permissionsManager.checkPermissionStatus(DISPLAY_NOTIFICATIONS)
             assertEquals(
-                Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.GRANTED,
+                DISPLAY_NOTIFICATIONS to PermissionStatus.GRANTED,
                 awaitItem()
             )
 
             mockDelegateStatus = PermissionRequestResult.notDetermined()
-            permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+            permissionsManager.checkPermissionStatus(DISPLAY_NOTIFICATIONS)
             assertEquals(
-                Permission.DISPLAY_NOTIFICATIONS to PermissionStatus.NOT_DETERMINED,
+                DISPLAY_NOTIFICATIONS to NOT_DETERMINED,
                 awaitItem()
             )
 
-            permissionsManager.suspendingCheckPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
+            permissionsManager.checkPermissionStatus(DISPLAY_NOTIFICATIONS)
             ensureAllEventsConsumed()
         }
     }
@@ -552,18 +559,18 @@ public class PermissionsManagerTest {
     @Test
     public fun testBrokenPermissionDelegate(): TestResult = runTest {
         mockDelegateStatus = PermissionRequestResult.granted()
-        permissionsManager.setPermissionDelegate(Permission.LOCATION, brokenDelegate)
+        permissionsManager.setPermissionDelegate(LOCATION, brokenDelegate)
 
         // Check permission
         assertEquals(
             PermissionStatus.GRANTED,
-            permissionsManager.suspendingCheckPermissionStatus(Permission.LOCATION)
+            permissionsManager.checkPermissionStatus(LOCATION)
         )
 
         // Request permission
         assertEquals(
             PermissionRequestResult.granted(),
-            permissionsManager.suspendingRequestPermission(Permission.LOCATION)
+            permissionsManager.requestPermission(LOCATION)
         )
     }
 }

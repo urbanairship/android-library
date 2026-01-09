@@ -196,7 +196,7 @@ public class PushMessage : Parcelable, JsonSerializable {
                     ?.associate { it.key to ActionValue(it.value) }
                     ?.toMutableMap()
                     ?: mutableMapOf()
-            } catch (e: JsonException) {
+            } catch (_: JsonException) {
                 UALog.e("Unable to parse action payload: %s", actionsPayload)
                 return emptyMap()
             }
@@ -315,6 +315,8 @@ public class PushMessage : Parcelable, JsonSerializable {
     @Deprecated("This setting does not work on Android O+. Applications are encouraged to use {@link NotificationChannelRegistry} instead.")
     public fun getSound(context: Context): Uri? {
         sound?.let { return sound }
+
+        @Suppress("DEPRECATION")
         val notificationSoundName = data[EXTRA_SOUND] ?: return sound
 
         val id = context.resources.getIdentifier(notificationSoundName, "raw", context.packageName)
@@ -342,7 +344,7 @@ public class PushMessage : Parcelable, JsonSerializable {
 
         return try {
             Color.parseColor(colorString)
-        } catch (e: IllegalArgumentException) {
+        } catch (_: IllegalArgumentException) {
             UALog.w(
                 "Unrecognized icon color string: %s. Using default color: %s",
                 colorString,
@@ -706,8 +708,8 @@ public class PushMessage : Parcelable, JsonSerializable {
         @JvmField
         public val CREATOR: Parcelable.Creator<PushMessage> =
             object : Parcelable.Creator<PushMessage> {
-                override fun createFromParcel(`in`: Parcel): PushMessage {
-                    val bundle = `in`.readBundle(PushMessage::class.java.classLoader)
+                override fun createFromParcel(parcel: Parcel): PushMessage {
+                    val bundle = parcel.readBundle(PushMessage::class.java.classLoader)
                     return PushMessage(bundle ?: Bundle())
                 }
 

@@ -41,10 +41,10 @@ public object DateUtils {
         try {
             synchronized(lock) {
                 return try {
-                    ISO_DATE_FORMAT.parse(timeStamp).time
-                } catch (ignored: ParseException) {
-                    ALT_ISO_DATE_FORMAT.parse(timeStamp).time
-                }
+                    ISO_DATE_FORMAT.parse(timeStamp)?.time
+                } catch (_: ParseException) {
+                    ALT_ISO_DATE_FORMAT.parse(timeStamp)?.time
+                } ?: throw ParseException("Unable to parse $timeStamp", -1)
             }
         } catch (e: Exception) {
             throw ParseException(
@@ -64,7 +64,7 @@ public object DateUtils {
     public fun parseIso8601(timeStamp: String, defaultValue: Long): Long {
         return try {
             parseIso8601(timeStamp)
-        } catch (ignored: ParseException) {
+        } catch (_: ParseException) {
             defaultValue
         }
     }

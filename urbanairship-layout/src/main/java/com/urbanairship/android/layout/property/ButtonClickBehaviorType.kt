@@ -19,6 +19,7 @@ internal enum class ButtonClickBehaviorType(
     PAGER_NEXT_OR_FIRST("pager_next_or_first"),
     PAGER_PAUSE("pager_pause"),
     PAGER_RESUME("pager_resume"),
+    PAGER_PAUSE_TOGGLE("pager_toggle_pause"),
     DISMISS("dismiss"),
     CANCEL("cancel");
 
@@ -53,7 +54,8 @@ private val storyNavigationBehaviors = listOf(
     ButtonClickBehaviorType.PAGER_NEXT_OR_DISMISS,
     ButtonClickBehaviorType.PAGER_NEXT_OR_FIRST,
     ButtonClickBehaviorType.PAGER_PAUSE,
-    ButtonClickBehaviorType.PAGER_RESUME
+    ButtonClickBehaviorType.PAGER_RESUME,
+    ButtonClickBehaviorType.PAGER_PAUSE_TOGGLE
 )
 
 internal val List<ButtonClickBehaviorType>.hasStoryNavigationBehavior: Boolean
@@ -94,3 +96,6 @@ internal val List<ButtonClickBehaviorType>.hasPagerPrevious: Boolean
 
 internal fun List<ButtonClickBehaviorType>.firstPagerNextOrNull(): ButtonClickBehaviorType? =
     firstOrNull { pagerNextBehaviors.contains(it) }
+
+internal val List<ButtonClickBehaviorType>.hasPagerPauseToggle: Boolean
+    get() = contains(ButtonClickBehaviorType.PAGER_PAUSE_TOGGLE)

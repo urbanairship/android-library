@@ -7,9 +7,8 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth.ChannelTokenAuth
 import com.urbanairship.http.RequestBody.GzippedJson
-import com.urbanairship.http.RequestException
+import com.urbanairship.http.RequestResult
 import com.urbanairship.http.RequestSession
-import com.urbanairship.http.Response
 import com.urbanairship.json.JsonValue
 import java.util.Locale
 
@@ -27,12 +26,11 @@ internal class EventApiClient(
      * @param headers Headers
      * @return eventResponse
      */
-    @Throws(RequestException::class)
-    fun sendEvents(
+    suspend fun sendEvents(
         channelId: String,
         events: List<JsonValue?>,
         @Size(min = 1) headers: Map<String, String>
-    ): Response<EventResponse> {
+    ): RequestResult<EventResponse> {
         val sentAt = System.currentTimeMillis() / 1000.0
         val requestHeaders = headers
             .toMutableMap()
@@ -50,12 +48,11 @@ internal class EventApiClient(
         )
 
         UALog.d("Sending analytics events. Request: $request Events: $events")
-        val response = session.execute(request) { _, responseHeaders, _ ->
+        return session.execute(request) { _, responseHeaders, _ ->
             EventResponse(responseHeaders)
+        }.also {
+            UALog.d("Analytics event response: $it")
         }
-
-        UALog.d("Analytics event response: $response")
-        return response
     }
 
     internal companion object {

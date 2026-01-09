@@ -8,7 +8,6 @@ import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
-import com.urbanairship.util.UAStringUtil
 
 @Entity(
     tableName = "richpush",
@@ -57,7 +56,7 @@ internal data class MessageEntity(
     }
 
     fun toMessage(): Message? = try {
-        Message.Companion.create(JsonValue.parseString(rawMessageObject), unread, deleted)
+        Message.create(JsonValue.parseString(rawMessageObject), unread, deleted)
     } catch (e: JsonException) {
         UALog.e(e) { "Failed to create Message from JSON" }
         null
@@ -71,7 +70,7 @@ internal data class MessageEntity(
         @Throws(JsonException::class)
         fun createMessageFromPayload(messageId: String?, messagePayload: JsonMap): MessageEntity? {
 
-            if (UAStringUtil.isEmpty(messagePayload.opt(Message.KEY_ID).string)) {
+            if (messagePayload.opt(Message.KEY_ID).string.isNullOrEmpty()) {
                 UALog.e { "MessageEntity - Message is missing an ID: $messagePayload" }
                 return null
             }

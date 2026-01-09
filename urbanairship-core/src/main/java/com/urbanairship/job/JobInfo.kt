@@ -35,11 +35,11 @@ public class JobInfo private constructor(builder: Builder) {
     public val action: String
 
     /**
-     * The [AirshipComponent] name that will receive the job.
+     * The scope name that will receive the job.
      *
-     * @return The [AirshipComponent] class name.
+     * @return The scope name.
      */
-    public val airshipComponentName: String
+    public val scope: String
 
     /**
      * If network access is required for the job.
@@ -74,7 +74,7 @@ public class JobInfo private constructor(builder: Builder) {
      */
     init {
         this.action = builder.action
-        this.airshipComponentName = builder.airshipComponentName ?: ""
+        this.scope = builder.scope ?: ""
         this.extras = builder.extras ?: jsonMapOf()
         this.isNetworkAccessRequired = builder.isNetworkAccessRequired
         this.minDelay = builder.minDelay
@@ -84,23 +84,29 @@ public class JobInfo private constructor(builder: Builder) {
     }
 
     override fun toString(): String {
-        return "JobInfo{action='$action', airshipComponentName='$airshipComponentName', " +
-                "isNetworkAccessRequired=$isNetworkAccessRequired, minDelayMs=$minDelay, " +
-                "conflictStrategy=$conflictStrategy, initialBackOffMs=$initialBackOff, " +
-                "extras=$extras, rateLimitIds=$rateLimitIds}"
+        return "JobInfo{" +
+                "action='$action', " +
+                "airshipComponentName='$scope', " +
+                "isNetworkAccessRequired=$isNetworkAccessRequired, " +
+                "minDelay=$minDelay, " +
+                "conflictStrategy=$conflictStrategy, " +
+                "initialBackOff=$initialBackOff, " +
+                "extras=$extras, " +
+                "rateLimitIds=$rateLimitIds" +
+                "}"
     }
 
-    override fun equals(o: Any?): Boolean {
-        if (this === o) return true
-        if (o == null || javaClass != o.javaClass) return false
-        val jobInfo = o as JobInfo
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || javaClass != other.javaClass) return false
+        val jobInfo = other as JobInfo
         return isNetworkAccessRequired == jobInfo.isNetworkAccessRequired
                 && minDelay == jobInfo.minDelay
                 && conflictStrategy == jobInfo.conflictStrategy
                 && initialBackOff == jobInfo.initialBackOff
                 && ObjectsCompat.equals(extras, jobInfo.extras)
                 && ObjectsCompat.equals(action, jobInfo.action)
-                && ObjectsCompat.equals(airshipComponentName, jobInfo.airshipComponentName)
+                && ObjectsCompat.equals(scope, jobInfo.scope)
                 && ObjectsCompat.equals(rateLimitIds, jobInfo.rateLimitIds)
     }
 
@@ -108,7 +114,7 @@ public class JobInfo private constructor(builder: Builder) {
         return ObjectsCompat.hash(
             extras,
             action,
-            airshipComponentName,
+            scope,
             isNetworkAccessRequired,
             minDelay,
             conflictStrategy,
@@ -122,7 +128,7 @@ public class JobInfo private constructor(builder: Builder) {
      */
     public class Builder {
         internal var action: String = ""
-        public var airshipComponentName: String? = null
+        public var scope: String? = null
             private set
         public var isNetworkAccessRequired: Boolean = false
             private set
@@ -161,16 +167,6 @@ public class JobInfo private constructor(builder: Builder) {
         }
 
         /**
-         * Sets the [AirshipComponent] that will receive the job.
-         *
-         * @param component The airship component.
-         * @return The job builder.
-         */
-        public fun setAirshipComponent(component: Class<out AirshipComponent>): Builder {
-            return this.also { it.airshipComponentName = component.name }
-        }
-
-        /**
          * Sets the min delay.
          *
          * @param delay The initial delay.
@@ -186,8 +182,8 @@ public class JobInfo private constructor(builder: Builder) {
          * @param componentName The airship component name.
          * @return The job builder.
          */
-        public fun setAirshipComponent(componentName: String): Builder {
-            return this.also { it.airshipComponentName = componentName }
+        public fun setScope(componentName: String): Builder {
+            return this.also { it.scope = componentName }
         }
 
         /**

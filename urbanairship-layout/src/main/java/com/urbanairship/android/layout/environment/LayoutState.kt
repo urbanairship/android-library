@@ -64,7 +64,7 @@ internal class LayoutState(
     companion object {
         val EMPTY = LayoutState(null, null, null,
             layout = SharedState(State.Layout.DEFAULT),
-            thomasState = makeThomasState(null, null),
+            thomasState = makeThomasState(null, null, null),
             thomasForm = null,
             parentForm = null,
             pagerTracker = null,

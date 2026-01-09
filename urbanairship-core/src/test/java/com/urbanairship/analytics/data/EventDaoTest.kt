@@ -9,6 +9,8 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.runTest
 
 @RunWith(AndroidJUnit4::class)
 public class EventDaoTest {
@@ -22,7 +24,7 @@ public class EventDaoTest {
     }
 
     @Test
-    public fun testInsert() {
+    public fun testInsert(): TestResult = runTest {
         Assert.assertEquals(0, eventDao.count().toLong())
         eventDao.insert(ENTITY)
         Assert.assertEquals(1, eventDao.count().toLong())
@@ -36,7 +38,7 @@ public class EventDaoTest {
     }
 
     @Test
-    public fun testGetAndDeleteBatch() {
+    public fun testGetAndDeleteBatch(): TestResult = runTest {
         val event1 = AirshipEventData(
             "event-1",
             "session-1",
@@ -74,7 +76,7 @@ public class EventDaoTest {
     }
 
     @Test
-    public fun testDatabaseSize() {
+    public fun testDatabaseSize(): TestResult = runTest {
         Assert.assertEquals(0, eventDao.databaseSize().toLong())
 
         eventDao.insert(ENTITY)
@@ -82,7 +84,7 @@ public class EventDaoTest {
     }
 
     @Test
-    public fun testTrim() {
+    public fun testTrim(): TestResult = runTest {
         val event1 = AirshipEventData(
             "event-1",
             "session-1",
@@ -118,7 +120,7 @@ public class EventDaoTest {
     }
 
     @Test
-    public fun testTrimWithNullSessionId() {
+    public fun testTrimWithNullSessionId(): TestResult = runTest {
         val nullSessionEntity = ENTITY.copy(sessionId = null)
         eventDao.insert(nullSessionEntity)
         Assert.assertEquals(1, eventDao.count().toLong())
@@ -129,7 +131,7 @@ public class EventDaoTest {
     }
 
     @Test
-    public fun testDeleteAll() {
+    public fun testDeleteAll(): TestResult = runTest {
         val event1 = AirshipEventData(
             "event-1",
             "session-1",

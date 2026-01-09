@@ -150,7 +150,7 @@ private fun InAppEventContext.Companion.makeFormContext(context: LayoutData?): I
     val info = context?.formInfo ?: return null
     return InAppEventContext.Form(
         identifier = info.identifier,
-        submitted = info.formSubmitted ?: false,
+        submitted = info.isFormSubmitted ?: false,
         type = info.formType,
         responseType = info.formResponseType
     )

@@ -8,16 +8,15 @@ import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestResult
-import com.urbanairship.http.SuspendingRequestSession
+import com.urbanairship.http.RequestSession
 import com.urbanairship.http.log
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.UAHttpStatusUtil
 
 @OpenForTesting
 internal class SubscriptionListApiClient(
     private val runtimeConfig: AirshipRuntimeConfig,
-    private val session: SuspendingRequestSession = runtimeConfig.requestSession.toSuspendingRequestSession()
+    private val session: RequestSession = runtimeConfig.requestSession
 ) {
 
     /**
@@ -45,31 +44,26 @@ internal class SubscriptionListApiClient(
         UALog.d { "Fetching contact subscription lists for $contactId request: $request" }
 
         return session.execute(request) { status: Int, _: Map<String, String>, responseBody: String? ->
-
-            if (UAHttpStatusUtil.inSuccessRange(status)) {
-                val json = JsonValue.parseString(responseBody)
-                    .requireMap()
-                    .require(SUBSCRIPTION_LISTS_KEY)
-                    .requireList()
-
-                val subscriptionLists = mutableMapOf<String, MutableSet<Scope>>()
-                json.map { entryJson ->
-                    val scope = Scope.fromJson(entryJson.optMap().opt(SCOPE_KEY))
-                    for (listIdJson in entryJson.optMap().opt(LIST_IDS_KEY).optList()) {
-                        val listId = listIdJson.requireString()
-                        var scopes = subscriptionLists[listId]
-                        if (scopes == null) {
-                            scopes = HashSet()
-                            subscriptionLists[listId] = scopes
-                        }
-                        scopes.add(scope)
-                    }
-                }
-
-                return@execute subscriptionLists.mapValues { it.value.toSet() }.toMap()
-            } else {
+            if (!UAHttpStatusUtil.inSuccessRange(status)) {
                 return@execute null
             }
+
+            val json = JsonValue.parseString(responseBody)
+                .requireMap()
+                .require(SUBSCRIPTION_LISTS_KEY)
+                .requireList()
+
+            val subscriptionLists = mutableMapOf<String, MutableSet<Scope>>()
+            json.map { entryJson ->
+                val scope = Scope.fromJson(entryJson.optMap().opt(SCOPE_KEY))
+                for (listIdJson in entryJson.optMap().opt(LIST_IDS_KEY).optList()) {
+                    val listId = listIdJson.requireString()
+                    val scopes = subscriptionLists.getOrPut(listId) { mutableSetOf() }
+                    scopes.add(scope)
+                }
+            }
+
+            return@execute subscriptionLists.mapValues { it.value.toSet() }.toMap()
         }.also { result ->
             result.log { "Fetching contact subscription lists for $contactId finished with result: $result" }
         }

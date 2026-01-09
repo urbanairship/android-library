@@ -6,7 +6,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestRequestSession
 import com.urbanairship.http.RequestAuth
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,7 +21,7 @@ import org.junit.runner.RunWith
 public class RemoteDataApiClientTest {
     private val testConfig = TestAirshipRuntimeConfig()
     private val requestSession = TestRequestSession()
-    private var client: RemoteDataApiClient = RemoteDataApiClient(testConfig, requestSession.toSuspendingRequestSession())
+    private var client: RemoteDataApiClient = RemoteDataApiClient(testConfig, requestSession)
 
     private val validPayload = RemoteDataPayload(
         type = "test_data_type",

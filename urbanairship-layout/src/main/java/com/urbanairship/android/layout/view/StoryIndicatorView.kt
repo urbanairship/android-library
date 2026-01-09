@@ -15,7 +15,7 @@ import com.urbanairship.android.layout.property.StoryIndicatorSource
 import com.urbanairship.android.layout.property.StoryIndicatorStyle
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
-import com.urbanairship.util.UAStringUtil.namedStringResource
+import com.urbanairship.util.stringResource
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator.INDICATOR_DIRECTION_START_TO_END
 
@@ -163,14 +163,10 @@ internal class StoryIndicatorView(
 
         // Announce the page change at the parent view level
         if (announcePage) {
-            val resourceName = "ua_pager_progress"
             val defaultAnnouncement = "Page ${pageIndex + 1} of $count"
+            val template = "ua_pager_progress".stringResource(context) ?: defaultAnnouncement
 
-            val announcement = namedStringResource(
-                context,
-                resourceName,
-                defaultAnnouncement
-            ).format(pageIndex + 1, count)
+            val announcement = template.format(pageIndex + 1, count)
 
             contentDescription = announcement
             announceForAccessibility(announcement)

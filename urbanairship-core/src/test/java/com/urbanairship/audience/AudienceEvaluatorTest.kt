@@ -14,9 +14,9 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
+import com.urbanairship.util.LocaleCompat
 import java.util.Locale
 import java.util.UUID
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import io.mockk.coEvery
 import io.mockk.every
@@ -55,7 +55,7 @@ public class AudienceEvaluatorTest {
         sticky = AudienceSticky(
             id = "sticky ID",
             reportingMetadata = JsonValue.wrap("sticky reporting"),
-            lastAccessTtl = 100.milliseconds
+            lastAccessTtl = 1.minutes
         )
     )
 
@@ -72,7 +72,7 @@ public class AudienceEvaluatorTest {
         sticky = AudienceSticky(
             id = "sticky ID",
             reportingMetadata = JsonValue.wrap("inverse sticky reporting"),
-            lastAccessTtl = 100.milliseconds
+            lastAccessTtl = 1.minutes
         )
     )
 
@@ -106,7 +106,7 @@ public class AudienceEvaluatorTest {
     }
 
     @Test
-    public fun testNotifiicationOptIn(): TestResult = runTest {
+    public fun testNotificationOptIn(): TestResult = runTest {
         var isOptedIn = false
 
         every { deviceInfo.isNotificationsOptedIn } answers { isOptedIn }
@@ -119,7 +119,7 @@ public class AudienceEvaluatorTest {
     }
 
     @Test
-    public fun testNotifiicationOptOut(): TestResult = runTest {
+    public fun testNotificationOptOut(): TestResult = runTest {
         var isOptedIn = true
         every { deviceInfo.isNotificationsOptedIn } answers { isOptedIn }
 
@@ -166,10 +166,10 @@ public class AudienceEvaluatorTest {
 
         assert(audienceSelector, isMatch = false)
 
-        locale = Locale("en-GB")
+        locale = LocaleCompat.of("en-GB")
         assert(audienceSelector, isMatch = false)
 
-        locale = Locale("en")
+        locale = LocaleCompat.of("en")
         assert(audienceSelector, isMatch = false)
 
         locale = Locale.forLanguageTag("fr-FR")
@@ -386,7 +386,7 @@ public class AudienceEvaluatorTest {
     }
 
     @Test
-    public fun testStickyHash(): TestResult = runTest(timeout = 5.minutes) {
+    public fun testStickyHash(): TestResult = runTest(timeout = 1.minutes) {
         var contactId = "not a match"
 
         coEvery { deviceInfo.getChannelId() } returns UUID.randomUUID().toString()
@@ -513,7 +513,7 @@ public class AudienceEvaluatorTest {
             sticky = AudienceSticky(
                 id = UUID.randomUUID().toString(),
                 reportingMetadata = JsonValue.wrap(UUID.randomUUID().toString()),
-                lastAccessTtl = 100.milliseconds
+                lastAccessTtl = 1.minutes
             )
         )
 
@@ -537,7 +537,7 @@ public class AudienceEvaluatorTest {
             sticky = AudienceSticky(
                 id = UUID.randomUUID().toString(),
                 reportingMetadata = JsonValue.wrap(UUID.randomUUID().toString()),
-                lastAccessTtl = 100.milliseconds
+                lastAccessTtl = 1.minutes
             )
         )
 
@@ -561,7 +561,7 @@ public class AudienceEvaluatorTest {
             sticky = AudienceSticky(
                 id = UUID.randomUUID().toString(),
                 reportingMetadata = JsonValue.wrap(UUID.randomUUID().toString()),
-                lastAccessTtl = 100.milliseconds
+                lastAccessTtl = 1.minutes
             )
         )
 

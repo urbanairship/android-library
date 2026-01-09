@@ -5,9 +5,8 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.Size
 import androidx.annotation.VisibleForTesting
-import androidx.annotation.WorkerThread
-import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
+import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.PendingResult
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
@@ -25,6 +24,8 @@ import com.urbanairship.channel.AttributeMutation
 import com.urbanairship.channel.TagGroupsEditor
 import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.contacts.Contact.Companion.CRA_MAX_AGE
+import com.urbanairship.contacts.Contact.Companion.FOREGROUND_INTERVAL
 import com.urbanairship.http.AuthTokenProvider
 import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.job.JobDispatcher
@@ -45,7 +46,6 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Airship contact. A contact is distinct from a channel and represents a "user"
@@ -77,7 +77,7 @@ public class Contact internal constructor(
         audienceOverridesProvider.contactUpdates(contactManager.stableContactIdUpdates)
     ),
     subscriptionListDispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
-) : AirshipComponent(context, preferenceDataStore) {
+) : JobAwareAirshipComponent(context, preferenceDataStore) {
 
     internal constructor(
         context: Context,
@@ -194,7 +194,7 @@ public class Contact internal constructor(
     init {
         migrateNamedUser()
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(time: Long) {
+            override fun onForeground(milliseconds: Long) {
                 if (clock.currentTimeMillis() >= lastResolvedDate + foregroundResolveInterval) {
                     if (privacyManager.isContactsEnabled) {
                         contactManager.addOperation(ContactOperation.Resolve)
@@ -219,11 +219,9 @@ public class Contact internal constructor(
         }
 
         airshipChannel.addChannelListener(
-            listener = object : AirshipChannelListener {
-                override fun onChannelCreated(channelId: String) {
-                    if (privacyManager.isContactsEnabled) {
-                        contactManager.addOperation(ContactOperation.Resolve)
-                    }
+            listener = {
+                if (privacyManager.isContactsEnabled) {
+                    contactManager.addOperation(ContactOperation.Resolve)
                 }
             }
         )
@@ -534,14 +532,13 @@ public class Contact internal constructor(
         editor.apply()
     }
 
-    /**
-     * @hide
-     */
-    @WorkerThread
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(jobInfo: JobInfo): JobResult {
+    override val jobActions: List<String>
+        get() = listOf(ACTION_UPDATE_CONTACT)
+
+
+    override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         return if (ACTION_UPDATE_CONTACT == jobInfo.action) {
-            val result = runBlocking { contactManager.performNextOperation() }
+            val result = contactManager.performNextOperation()
             return if (result) JobResult.SUCCESS else JobResult.FAILURE
         } else {
             JobResult.SUCCESS
@@ -615,7 +612,7 @@ public class Contact internal constructor(
         /** Default CRA max age. */
         private val CRA_MAX_AGE = TimeUnit.MINUTES.toMillis(10)
 
-        private val CONTACT_UPDATE_PUSH_KEY = "com.urbanairship.contact.update"
+        private const val CONTACT_UPDATE_PUSH_KEY = "com.urbanairship.contact.update"
 
     }
 }

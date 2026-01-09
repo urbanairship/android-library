@@ -18,6 +18,9 @@ android {
     sourceSets {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
     }
+    testFixtures {
+        enable = true
+    }
 
     room {
         schemaDirectory("$projectDir/schemas")
@@ -33,8 +36,7 @@ dependencies {
     api(libs.androidx.fragment.fragment)
     api(libs.androidx.annotation)
 
-    implementation(libs.androidx.work.runtime)
-    implementation(libs.androidx.concurrentfutures)
+    implementation(libs.androidx.work.runtimektx)
     implementation(libs.androidx.startup.runtime)
     implementation(libs.androidx.webkit)
 
@@ -47,16 +49,23 @@ dependencies {
 
     compileOnly(libs.playservices.base)
 
-    // Unit Tests
-    testImplementation project(':urbanairship-test')
-    testImplementation(libs.junit)
-    testImplementation(libs.androidx.test.core)
-    testImplementation(libs.robolectric.core)
-    testImplementation(libs.androidx.test.ext.junit)
-    testImplementation(libs.mockk)
-    testImplementation(libs.kotlinx.coroutines.test)
-    testImplementation(libs.google.truth)
-    testImplementation(libs.androidx.test.ext.truth)
+    // Unit Test Fixtures
+    // These are exposed to any module that depends on the test fixtures of this module
+    testFixturesApi(libs.androidx.room.testing)
+    testFixturesApi(libs.androidx.test.core)
+    testFixturesApi(libs.androidx.test.ext.junit)
+    testFixturesApi(libs.androidx.test.ext.junitktx)
+    testFixturesApi(libs.androidx.test.ext.truth)
+    testFixturesApi(libs.androidx.test.rules)
+    testFixturesApi(libs.androidx.test.runner)
+    testFixturesApi(libs.google.truth)
+    testFixturesApi(libs.junit)
+    testFixturesApi(libs.kotlinx.coroutines.android)
+    testFixturesApi(libs.kotlinx.coroutines.core)
+    testFixturesApi(libs.kotlinx.coroutines.test)
+    testFixturesApi(libs.mockk)
+    testFixturesApi(libs.robolectric.core)
+    testFixturesApi(libs.turbine)
 
     // Instrumentation Test
     androidTestImplementation(libs.androidx.test.core)
@@ -64,7 +73,6 @@ dependencies {
     androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.room.testing)
-    testImplementation(libs.turbine)
 }
 
 tasks.withType(Test).configureEach {

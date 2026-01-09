@@ -14,7 +14,8 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
-import com.urbanairship.util.UAStringUtil
+import com.urbanairship.util.getSha256Digest
+import com.urbanairship.util.toSha256
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -209,11 +210,11 @@ public class AudienceSelectorTest {
     @Test
     public fun testTestDevices(): TestResult = runTest {
 
-        val bytes = Arrays.copyOf(UAStringUtil.sha256Digest("test channel"), 16)
+        val bytes = "test channel".getSha256Digest()?.copyOf(16)
         val testDevice = Base64.encodeToString(bytes, Base64.DEFAULT)
 
         val withTestDevice = AudienceSelector.newBuilder().addTestDevice(testDevice).build()
-        val otherTestDevice = AudienceSelector.newBuilder().addTestDevice(UAStringUtil.sha256("some other channel")!!).build()
+        val otherTestDevice = AudienceSelector.newBuilder().addTestDevice("some other channel".toSha256()!!).build()
 
         coEvery { infoProvider.getChannelId() } returns "test channel"
         every { infoProvider.channelCreated } returns true

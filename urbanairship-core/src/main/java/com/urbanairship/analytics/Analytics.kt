@@ -8,19 +8,18 @@ import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
-import com.urbanairship.AirshipComponent
-import com.urbanairship.AirshipExecutors
+import com.urbanairship.Airship
+import com.urbanairship.AirshipDispatchers
+import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
-import com.urbanairship.Airship
 import com.urbanairship.analytics.data.EventManager
 import com.urbanairship.analytics.location.RegionEvent
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.channel.AirshipChannel
-import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
@@ -30,12 +29,12 @@ import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.Clock
-import com.urbanairship.util.UAStringUtil
 import java.util.TimeZone
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.Executor
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,6 +43,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /**
  * This class is the primary interface to the Airship Analytics API.
@@ -59,12 +59,11 @@ public constructor(
     private val airshipChannel: AirshipChannel,
     private val activityMonitor: ActivityMonitor,
     private val localeManager: LocaleManager,
-    private val executor: Executor,
     private val eventManager: EventManager,
     private val permissionsManager: PermissionsManager,
     private val eventFeed: AirshipEventFeed,
-    private val clock: Clock = Clock.DEFAULT_CLOCK
-    ) : AirshipComponent(context, dataStore) {
+    private val clock: Clock = Clock.DEFAULT_CLOCK,
+    ) : JobAwareAirshipComponent(context, dataStore) {
 
     /**
      * Delegate to add analytics headers.
@@ -99,6 +98,9 @@ public constructor(
     private val headerDelegates: MutableList<AnalyticsHeaderDelegate> = CopyOnWriteArrayList()
     private val associatedIdentifiersLock = Any()
 
+    private val job = SupervisorJob()
+    private val scope = CoroutineScope(AirshipDispatchers.IO + job)
+
     /**
      * Gets the current environment Id.
      *
@@ -115,13 +117,6 @@ public constructor(
      */
     @set:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public var conversionSendId: String? = null
-        /**
-         * Stores the send id for later retrieval when a push conversion has been detected.
-         * You should not call this method directly.
-         *
-         * @param sendId The associated send Id String.
-         * @hide
-         */
         set(sendId) {
             UALog.d { "Setting conversion send ID: $sendId" }
             field = sendId
@@ -135,13 +130,6 @@ public constructor(
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public var conversionMetadata: String? = null
-        /**
-         * Stores the send metadata for later retrieval when a push conversion has been detected.
-         * You should not call this method directly.
-         *
-         * @param metadata The associated metadata String.
-         * @hide
-         */
         set(metadata) {
             UALog.d { "Setting conversion metadata: $metadata" }
             field = metadata
@@ -191,7 +179,7 @@ public constructor(
         channel: AirshipChannel,
         localeManager: LocaleManager,
         permissionsManager: PermissionsManager,
-        eventFeed: AirshipEventFeed
+        eventFeed: AirshipEventFeed,
     ) : this(
         context,
         dataStore,
@@ -200,7 +188,6 @@ public constructor(
         channel,
         GlobalActivityMonitor.shared(context),
         localeManager,
-        AirshipExecutors.newSerialExecutor(),
         EventManager(context, dataStore, runtimeConfig),
         permissionsManager,
         eventFeed
@@ -222,11 +209,7 @@ public constructor(
             onForeground(clock.currentTimeMillis())
         }
 
-        airshipChannel.addChannelListener(
-            object : AirshipChannelListener {
-                override fun onChannelCreated(channelId: String) = uploadEvents()
-            }
-        )
+        airshipChannel.addChannelListener { uploadEvents() }
 
         privacyManager.addListener {
             if (!privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
@@ -242,13 +225,13 @@ public constructor(
 
     override fun tearDown() {
         activityMonitor.removeApplicationListener(listener)
+        job.cancel()
     }
 
-    /**
-     * @hide
-     */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    override fun onPerformJob(jobInfo: JobInfo): JobResult {
+    override val jobActions: List<String>
+        get() = listOf(EventManager.ACTION_SEND)
+
+    override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         return when(jobInfo.action) {
             EventManager.ACTION_SEND -> {
                 if (!isEnabled) {
@@ -360,7 +343,9 @@ public constructor(
         eventFeed.emit(feedEvent)
 
         UALog.v { "Adding event: ${event.type}" }
-        executor.execute { eventManager.addEvent(eventData, event.priority) }
+        scope.launch {
+            eventManager.addEvent(eventData, event.priority)
+        }
         _events.tryEmit(eventData)
         return true
     }
@@ -399,7 +384,7 @@ public constructor(
     }
 
     private fun clearPendingEvents() {
-        executor.execute {
+        scope.launch {
             UALog.i { "Deleting all analytic events." }
             eventManager.deleteEvents()
         }
@@ -574,19 +559,19 @@ public constructor(
             headers["X-UA-Channel-ID"] = airshipChannel.id ?: ""
             headers["X-UA-Push-Address"] = airshipChannel.id ?: ""
             if (sdkExtensions.isNotEmpty()) {
-                headers["X-UA-Frameworks"] = UAStringUtil.join(sdkExtensions, ",")
+                headers["X-UA-Frameworks"] = sdkExtensions.joinToString(",")
             }
 
             // Device info
             headers["X-UA-Device-Model"] = Build.MODEL
             headers["X-UA-Timezone"] = TimeZone.getDefault().id
             val locale = localeManager.locale
-            if (!UAStringUtil.isEmpty(locale.language)) {
+            if (locale.language.isNotEmpty()) {
                 headers["X-UA-Locale-Language"] = locale.language
-                if (!UAStringUtil.isEmpty(locale.country)) {
+                if (locale.country.isNotEmpty()) {
                     headers["X-UA-Locale-Country"] = locale.country
                 }
-                if (!UAStringUtil.isEmpty(locale.variant)) {
+                if (locale.variant.isNotEmpty()) {
                     headers["X-UA-Locale-Variant"] = locale.variant
                 }
             }

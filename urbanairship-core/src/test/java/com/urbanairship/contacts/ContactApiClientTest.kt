@@ -10,12 +10,12 @@ import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestBody
-import com.urbanairship.http.toSuspendingRequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import com.urbanairship.util.DateUtils
+import com.urbanairship.util.LocaleCompat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
@@ -56,7 +56,7 @@ public class ContactApiClientTest {
     private val requestSession = TestRequestSession()
 
     private var client: ContactApiClient = ContactApiClient(
-        runtimeConfig, requestSession.toSuspendingRequestSession(), clock
+        runtimeConfig, requestSession, clock
     )
 
     @Before
@@ -238,7 +238,7 @@ public class ContactApiClientTest {
         )
 
         val result =
-            client.registerOpen(fakeContactId, fakeEmail, options, Locale("en", "US"))
+            client.registerOpen(fakeContactId, fakeEmail, options, LocaleCompat.of("en", "US"))
         assertEquals(200, result.status)
 
         val expectedResultValue = "fake_channel_id"
@@ -314,7 +314,7 @@ public class ContactApiClientTest {
             ), false
         )
 
-        val result = client.registerEmail(fakeContactId, fakeEmail, options, Locale("en", "US"))
+        val result = client.registerEmail(fakeContactId, fakeEmail, options, LocaleCompat.of("en", "US"))
         assertEquals(200, result.status)
 
         val expectedResultValue = "fake_channel_id"
@@ -383,7 +383,7 @@ public class ContactApiClientTest {
 
         val options = SmsRegistrationOptions.options(fakeSenderId)
 
-        val result = client.registerSms(fakeContactId, fakeMsisdn, options, Locale("en", "US"))
+        val result = client.registerSms(fakeContactId, fakeMsisdn, options, LocaleCompat.of("en", "US"))
         assertEquals(200, result.status)
 
         val expectedResultValue = "fake_channel_id"
@@ -442,7 +442,7 @@ public class ContactApiClientTest {
         requestSession.addResponse(400)
 
         val options = SmsRegistrationOptions.options(fakeSenderId)
-        val result = client.registerSms(fakeContactId, fakeMsisdn, options, Locale("en", "US"))
+        val result = client.registerSms(fakeContactId, fakeMsisdn, options, LocaleCompat.of("en", "US"))
         assertEquals(400, result.status)
         assertNull(result.value)
     }
