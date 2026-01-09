@@ -1,0 +1,2481 @@
+{
+  "in_app_message": {
+    "edit_grace_period": 14,
+    "end": "2026-01-05T15:44:09",
+    "forms": [
+      {
+        "id": "78364238-8bd5-44e6-a0af-05e69944aeb4",
+        "questions": [
+          {
+            "id": "10c067ea-3f69-4055-a6b3-f68de0c3037e",
+            "label": "This is open text question ",
+            "type": "text"
+          }
+        ],
+        "response_type": "user_feedback",
+        "type": "form"
+      }
+    ],
+    "labels": [
+      {
+        "id": "9a1bf464-54b6-4029-ac98-35f8ba534c4c",
+        "label": "Screen 1"
+      }
+    ],
+    "message": {
+      "audience": {
+        "miss_behavior": "skip",
+        "tags": {
+          "and": [
+            {
+              "tag": "MaxAzoulay"
+            }
+          ]
+        }
+      },
+      "display": {
+        "layout": {
+          "presentation": {
+            "android": {
+              "disable_back_button": false
+            },
+            "default_placement": {
+              "device": {
+                "lock_orientation": "portrait"
+              },
+              "ignore_safe_area": true,
+              "position": {
+                "horizontal": "center",
+                "vertical": "top"
+              },
+              "shade_color": {
+                "default": {
+                  "alpha": 0.2,
+                  "hex": "#000000",
+                  "type": "hex"
+                }
+              },
+              "size": {
+                "height": "100%",
+                "width": "100%"
+              },
+              "web": {
+                "ignore_shade": true
+              }
+            },
+            "dismiss_on_touch_outside": false,
+            "placement_selectors": [
+              {
+                "orientation": "portrait",
+                "placement": {
+                  "border": {
+                    "radius": 0,
+                    "stroke_color": {
+                      "default": {
+                        "alpha": 1,
+                        "hex": "#000000",
+                        "type": "hex"
+                      },
+                      "selectors": [
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": false,
+                          "platform": "ios"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": true,
+                          "platform": "ios"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": false,
+                          "platform": "android"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": true,
+                          "platform": "android"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": false,
+                          "platform": "web"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": true,
+                          "platform": "web"
+                        }
+                      ]
+                    }
+                  },
+                  "device": {
+                    "lock_orientation": "portrait"
+                  },
+                  "ignore_safe_area": true,
+                  "position": {
+                    "horizontal": "center",
+                    "vertical": "center"
+                  },
+                  "shade_color": {
+                    "default": {
+                      "alpha": 0.2,
+                      "hex": "#989893",
+                      "type": "hex"
+                    },
+                    "selectors": [
+                      {
+                        "color": {
+                          "alpha": 0.2,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": false,
+                        "platform": "ios"
+                      },
+                      {
+                        "color": {
+                          "alpha": 1,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": true,
+                        "platform": "ios"
+                      },
+                      {
+                        "color": {
+                          "alpha": 0.2,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": false,
+                        "platform": "android"
+                      },
+                      {
+                        "color": {
+                          "alpha": 1,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": true,
+                        "platform": "android"
+                      },
+                      {
+                        "color": {
+                          "alpha": 0.2,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": false,
+                        "platform": "web"
+                      },
+                      {
+                        "color": {
+                          "alpha": 1,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": true,
+                        "platform": "web"
+                      }
+                    ]
+                  },
+                  "size": {
+                    "height": "100%",
+                    "width": "100%"
+                  },
+                  "web": {
+                    "ignore_shade": false
+                  }
+                },
+                "window_size": "small"
+              },
+              {
+                "orientation": "portrait",
+                "placement": {
+                  "border": {
+                    "radius": 0,
+                    "stroke_color": {
+                      "default": {
+                        "alpha": 1,
+                        "hex": "#000000",
+                        "type": "hex"
+                      },
+                      "selectors": [
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": false,
+                          "platform": "ios"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": true,
+                          "platform": "ios"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": false,
+                          "platform": "android"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": true,
+                          "platform": "android"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": false,
+                          "platform": "web"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": true,
+                          "platform": "web"
+                        }
+                      ]
+                    }
+                  },
+                  "device": {
+                    "lock_orientation": "portrait"
+                  },
+                  "ignore_safe_area": true,
+                  "position": {
+                    "horizontal": "center",
+                    "vertical": "center"
+                  },
+                  "shade_color": {
+                    "default": {
+                      "alpha": 0.2,
+                      "hex": "#989893",
+                      "type": "hex"
+                    },
+                    "selectors": [
+                      {
+                        "color": {
+                          "alpha": 0.2,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": false,
+                        "platform": "ios"
+                      },
+                      {
+                        "color": {
+                          "alpha": 1,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": true,
+                        "platform": "ios"
+                      },
+                      {
+                        "color": {
+                          "alpha": 0.2,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": false,
+                        "platform": "android"
+                      },
+                      {
+                        "color": {
+                          "alpha": 1,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": true,
+                        "platform": "android"
+                      },
+                      {
+                        "color": {
+                          "alpha": 0.2,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": false,
+                        "platform": "web"
+                      },
+                      {
+                        "color": {
+                          "alpha": 1,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": true,
+                        "platform": "web"
+                      }
+                    ]
+                  },
+                  "size": {
+                    "height": "100%",
+                    "width": "100%"
+                  },
+                  "web": {
+                    "ignore_shade": false
+                  }
+                },
+                "window_size": "medium"
+              },
+              {
+                "orientation": "portrait",
+                "placement": {
+                  "border": {
+                    "radius": 0,
+                    "stroke_color": {
+                      "default": {
+                        "alpha": 1,
+                        "hex": "#000000",
+                        "type": "hex"
+                      },
+                      "selectors": [
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": false,
+                          "platform": "ios"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": true,
+                          "platform": "ios"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": false,
+                          "platform": "android"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": true,
+                          "platform": "android"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": false,
+                          "platform": "web"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": true,
+                          "platform": "web"
+                        }
+                      ]
+                    }
+                  },
+                  "device": {
+                    "lock_orientation": "portrait"
+                  },
+                  "ignore_safe_area": true,
+                  "position": {
+                    "horizontal": "center",
+                    "vertical": "center"
+                  },
+                  "shade_color": {
+                    "default": {
+                      "alpha": 0.2,
+                      "hex": "#989893",
+                      "type": "hex"
+                    },
+                    "selectors": [
+                      {
+                        "color": {
+                          "alpha": 0.2,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": false,
+                        "platform": "ios"
+                      },
+                      {
+                        "color": {
+                          "alpha": 1,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": true,
+                        "platform": "ios"
+                      },
+                      {
+                        "color": {
+                          "alpha": 0.2,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": false,
+                        "platform": "android"
+                      },
+                      {
+                        "color": {
+                          "alpha": 1,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": true,
+                        "platform": "android"
+                      },
+                      {
+                        "color": {
+                          "alpha": 0.2,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": false,
+                        "platform": "web"
+                      },
+                      {
+                        "color": {
+                          "alpha": 1,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": true,
+                        "platform": "web"
+                      }
+                    ]
+                  },
+                  "size": {
+                    "height": "60%",
+                    "width": "60%"
+                  },
+                  "web": {
+                    "ignore_shade": false
+                  }
+                },
+                "window_size": "large"
+              },
+              {
+                "orientation": "landscape",
+                "placement": {
+                  "border": {
+                    "radius": 0,
+                    "stroke_color": {
+                      "default": {
+                        "alpha": 1,
+                        "hex": "#000000",
+                        "type": "hex"
+                      },
+                      "selectors": [
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": false,
+                          "platform": "ios"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": true,
+                          "platform": "ios"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": false,
+                          "platform": "android"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": true,
+                          "platform": "android"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": false,
+                          "platform": "web"
+                        },
+                        {
+                          "color": {
+                            "alpha": 1,
+                            "hex": "#000000",
+                            "type": "hex"
+                          },
+                          "dark_mode": true,
+                          "platform": "web"
+                        }
+                      ]
+                    }
+                  },
+                  "device": {
+                    "lock_orientation": "portrait"
+                  },
+                  "ignore_safe_area": true,
+                  "position": {
+                    "horizontal": "center",
+                    "vertical": "center"
+                  },
+                  "shade_color": {
+                    "default": {
+                      "alpha": 0.2,
+                      "hex": "#989893",
+                      "type": "hex"
+                    },
+                    "selectors": [
+                      {
+                        "color": {
+                          "alpha": 0.2,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": false,
+                        "platform": "ios"
+                      },
+                      {
+                        "color": {
+                          "alpha": 1,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": true,
+                        "platform": "ios"
+                      },
+                      {
+                        "color": {
+                          "alpha": 0.2,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": false,
+                        "platform": "android"
+                      },
+                      {
+                        "color": {
+                          "alpha": 1,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": true,
+                        "platform": "android"
+                      },
+                      {
+                        "color": {
+                          "alpha": 0.2,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": false,
+                        "platform": "web"
+                      },
+                      {
+                        "color": {
+                          "alpha": 1,
+                          "hex": "#989893",
+                          "type": "hex"
+                        },
+                        "dark_mode": true,
+                        "platform": "web"
+                      }
+                    ]
+                  },
+                  "size": {
+                    "height": "80%",
+                    "width": "50%"
+                  },
+                  "web": {
+                    "ignore_shade": false
+                  }
+                },
+                "window_size": "large"
+              }
+            ],
+            "type": "modal"
+          },
+          "version": 1,
+          "view": {
+            "type": "state_controller",
+            "view": {
+              "identifier": "720f6ceb-5072-40be-902d-6313282ae00e",
+              "type": "pager_controller",
+              "view": {
+                "form_enabled": [
+                  "form_submission"
+                ],
+                "identifier": "78364238-8bd5-44e6-a0af-05e69944aeb4",
+                "response_type": "user_feedback",
+                "submit": "submit_event",
+                "type": "form_controller",
+                "view": {
+                  "items": [
+                    {
+                      "identifier": "29bbb0e5-ebe3-41ed-a01d-8c37cc79339e_pager_container_item",
+                      "ignore_safe_area": true,
+                      "position": {
+                        "horizontal": "center",
+                        "vertical": "center"
+                      },
+                      "size": {
+                        "height": "100%",
+                        "width": "100%"
+                      },
+                      "view": {
+                        "disable_swipe": true,
+                        "items": [
+                          {
+                            "identifier": "9a1bf464-54b6-4029-ac98-35f8ba534c4c",
+                            "state_actions": [
+                              {
+                                "key": "9a1bf464-54b6-4029-ac98-35f8ba534c4c_next",
+                                "type": "set"
+                              }
+                            ],
+                            "type": "pager_item",
+                            "view": {
+                              "background_color": {
+                                "default": {
+                                  "alpha": 1,
+                                  "hex": "#BCBDC2",
+                                  "type": "hex"
+                                },
+                                "selectors": [
+                                  {
+                                    "color": {
+                                      "alpha": 1,
+                                      "hex": "#BCBDC2",
+                                      "type": "hex"
+                                    },
+                                    "dark_mode": false,
+                                    "platform": "ios"
+                                  },
+                                  {
+                                    "color": {
+                                      "alpha": 1,
+                                      "hex": "#FFFFFF",
+                                      "type": "hex"
+                                    },
+                                    "dark_mode": true,
+                                    "platform": "ios"
+                                  },
+                                  {
+                                    "color": {
+                                      "alpha": 1,
+                                      "hex": "#BCBDC2",
+                                      "type": "hex"
+                                    },
+                                    "dark_mode": false,
+                                    "platform": "android"
+                                  },
+                                  {
+                                    "color": {
+                                      "alpha": 1,
+                                      "hex": "#FFFFFF",
+                                      "type": "hex"
+                                    },
+                                    "dark_mode": true,
+                                    "platform": "android"
+                                  },
+                                  {
+                                    "color": {
+                                      "alpha": 1,
+                                      "hex": "#BCBDC2",
+                                      "type": "hex"
+                                    },
+                                    "dark_mode": false,
+                                    "platform": "web"
+                                  },
+                                  {
+                                    "color": {
+                                      "alpha": 1,
+                                      "hex": "#FFFFFF",
+                                      "type": "hex"
+                                    },
+                                    "dark_mode": true,
+                                    "platform": "web"
+                                  }
+                                ]
+                              },
+                              "items": [
+                                {
+                                  "identifier": "ee9f4bed-d339-47d0-80de-f41812458d3e_background_image_container",
+                                  "ignore_safe_area": true,
+                                  "margin": {
+                                    "end": 0,
+                                    "start": 0
+                                  },
+                                  "position": {
+                                    "horizontal": "center",
+                                    "vertical": "center"
+                                  },
+                                  "size": {
+                                    "height": "100%",
+                                    "width": "100%"
+                                  },
+                                  "view": {
+                                    "media_fit": "fit_crop",
+                                    "media_type": "image",
+                                    "position": {
+                                      "horizontal": "center",
+                                      "vertical": "center"
+                                    },
+                                    "type": "media",
+                                    "url": "https://c00001-dl.asnapieu.com/binary/public/YtDP8p2vSbW-KQkjUVsBAw/84552f96-eb89-4e83-b8ed-b4459904cdcd"
+                                  }
+                                },
+                                {
+                                  "identifier": "ffc52ce2-7e48-4643-922e-f9b3b2c58bc6_main_view_container_item",
+                                  "ignore_safe_area": true,
+                                  "position": {
+                                    "horizontal": "center",
+                                    "vertical": "center"
+                                  },
+                                  "size": {
+                                    "height": "100%",
+                                    "width": "100%"
+                                  },
+                                  "view": {
+                                    "items": [
+                                      {
+                                        "identifier": "901e96b9-0550-45e5-8f6f-d2737f3e405f_container_item",
+                                        "margin": {
+                                          "bottom": 0,
+                                          "end": 0,
+                                          "start": 0,
+                                          "top": 0
+                                        },
+                                        "position": {
+                                          "horizontal": "center",
+                                          "vertical": "center"
+                                        },
+                                        "size": {
+                                          "height": "100%",
+                                          "width": "100%"
+                                        },
+                                        "view": {
+                                          "direction": "vertical",
+                                          "items": [
+                                            {
+                                              "identifier": "scroll_container",
+                                              "size": {
+                                                "height": "100%",
+                                                "width": "100%"
+                                              },
+                                              "view": {
+                                                "direction": "vertical",
+                                                "type": "scroll_layout",
+                                                "view": {
+                                                  "direction": "vertical",
+                                                  "items": [
+                                                    {
+                                                      "identifier": "08bd4744-0679-4799-bd2b-84606a8d5e88",
+                                                      "margin": {
+                                                        "bottom": 0,
+                                                        "end": 0,
+                                                        "start": 0,
+                                                        "top": 48
+                                                      },
+                                                      "size": {
+                                                        "height": "auto",
+                                                        "width": "100%"
+                                                      },
+                                                      "view": {
+                                                        "items": [
+                                                          {
+                                                            "identifier": "08bd4744-0679-4799-bd2b-84606a8d5e88_linear_container",
+                                                            "margin": {
+                                                              "bottom": 0,
+                                                              "end": 0,
+                                                              "start": 0,
+                                                              "top": 0
+                                                            },
+                                                            "position": {
+                                                              "horizontal": "center",
+                                                              "vertical": "center"
+                                                            },
+                                                            "size": {
+                                                              "height": "auto",
+                                                              "width": "100%"
+                                                            },
+                                                            "view": {
+                                                              "background_color": {
+                                                                "default": {
+                                                                  "alpha": 0.4,
+                                                                  "hex": "#000000",
+                                                                  "type": "hex"
+                                                                },
+                                                                "selectors": [
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 0.4,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": false,
+                                                                    "platform": "ios"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 0.4,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": true,
+                                                                    "platform": "ios"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 0.4,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": false,
+                                                                    "platform": "android"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 0.4,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": true,
+                                                                    "platform": "android"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 0.4,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": false,
+                                                                    "platform": "web"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 0.4,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": true,
+                                                                    "platform": "web"
+                                                                  }
+                                                                ]
+                                                              },
+                                                              "border": {
+                                                                "radius": 0
+                                                              },
+                                                              "direction": "vertical",
+                                                              "items": [
+                                                                {
+                                                                  "identifier": "5048e78a-3c24-4845-b59c-59ce1081a038",
+                                                                  "margin": {
+                                                                    "bottom": 8,
+                                                                    "end": 16,
+                                                                    "start": 16,
+                                                                    "top": 8
+                                                                  },
+                                                                  "size": {
+                                                                    "height": "auto",
+                                                                    "width": "100%"
+                                                                  },
+                                                                  "view": {
+                                                                    "accessibility_hidden": false,
+                                                                    "content_description": "THIS FRIDAY",
+                                                                    "text": "THIS FRIDAY",
+                                                                    "text_appearance": {
+                                                                      "alignment": "center",
+                                                                      "color": {
+                                                                        "default": {
+                                                                          "alpha": 1,
+                                                                          "hex": "#FFFFFF",
+                                                                          "type": "hex"
+                                                                        },
+                                                                        "selectors": [
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#FFFFFF",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": false,
+                                                                            "platform": "ios"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#FFFFFF",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": true,
+                                                                            "platform": "ios"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#FFFFFF",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": false,
+                                                                            "platform": "android"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#FFFFFF",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": true,
+                                                                            "platform": "android"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#FFFFFF",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": false,
+                                                                            "platform": "web"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#FFFFFF",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": true,
+                                                                            "platform": "web"
+                                                                          }
+                                                                        ]
+                                                                      },
+                                                                      "font_families": [
+                                                                        "sans-serif"
+                                                                      ],
+                                                                      "font_size": 33,
+                                                                      "styles": [
+                                                                        "bold"
+                                                                      ]
+                                                                    },
+                                                                    "type": "label"
+                                                                  }
+                                                                },
+                                                                {
+                                                                  "identifier": "2d25dd49-3a7f-4b6b-bffd-54388ec6809d",
+                                                                  "margin": {
+                                                                    "bottom": 8,
+                                                                    "end": 16,
+                                                                    "start": 16,
+                                                                    "top": 8
+                                                                  },
+                                                                  "size": {
+                                                                    "height": "auto",
+                                                                    "width": "100%"
+                                                                  },
+                                                                  "view": {
+                                                                    "accessibility_hidden": false,
+                                                                    "content_description": "UP TO 70% OFF",
+                                                                    "text": "UP TO 70% OFF",
+                                                                    "text_appearance": {
+                                                                      "alignment": "center",
+                                                                      "color": {
+                                                                        "default": {
+                                                                          "alpha": 1,
+                                                                          "hex": "#FFFFFF",
+                                                                          "type": "hex"
+                                                                        },
+                                                                        "selectors": [
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#FFFFFF",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": false,
+                                                                            "platform": "ios"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#FFFFFF",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": true,
+                                                                            "platform": "ios"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#FFFFFF",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": false,
+                                                                            "platform": "android"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#FFFFFF",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": true,
+                                                                            "platform": "android"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#FFFFFF",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": false,
+                                                                            "platform": "web"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#FFFFFF",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": true,
+                                                                            "platform": "web"
+                                                                          }
+                                                                        ]
+                                                                      },
+                                                                      "font_families": [
+                                                                        "sans-serif"
+                                                                      ],
+                                                                      "font_size": 33,
+                                                                      "styles": [
+                                                                        "bold"
+                                                                      ]
+                                                                    },
+                                                                    "type": "label"
+                                                                  }
+                                                                }
+                                                              ],
+                                                              "type": "linear_layout"
+                                                            }
+                                                          }
+                                                        ],
+                                                        "type": "container"
+                                                      }
+                                                    },
+                                                    {
+                                                      "identifier": "10c067ea-3f69-4055-a6b3-f68de0c3037e",
+                                                      "margin": {
+                                                        "bottom": 8,
+                                                        "end": 16,
+                                                        "start": 16,
+                                                        "top": 8
+                                                      },
+                                                      "size": {
+                                                        "height": "auto",
+                                                        "width": "100%"
+                                                      },
+                                                      "view": {
+                                                        "direction": "vertical",
+                                                        "items": [
+                                                          {
+                                                            "margin": {
+                                                              "bottom": 8,
+                                                              "top": 0
+                                                            },
+                                                            "size": {
+                                                              "height": "auto",
+                                                              "width": "100%"
+                                                            },
+                                                            "view": {
+                                                              "accessibility_hidden": false,
+                                                              "accessibility_role": {
+                                                                "level": 1,
+                                                                "type": "heading"
+                                                              },
+                                                              "content_description": "This is open text question ",
+                                                              "identifier": "10c067ea-3f69-4055-a6b3-f68de0c3037e_title",
+                                                              "text": "This is open text question ",
+                                                              "text_appearance": {
+                                                                "alignment": "start",
+                                                                "color": {
+                                                                  "default": {
+                                                                    "alpha": 1,
+                                                                    "hex": "#000000",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "selectors": [
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "ios"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "ios"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "android"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "android"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "web"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "web"
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                "font_families": [
+                                                                  "sans-serif"
+                                                                ],
+                                                                "font_size": 22,
+                                                                "styles": [
+                                                                  "bold"
+                                                                ]
+                                                              },
+                                                              "type": "label"
+                                                            }
+                                                          },
+                                                          {
+                                                            "margin": {
+                                                              "bottom": 25,
+                                                              "top": 0
+                                                            },
+                                                            "size": {
+                                                              "height": 75,
+                                                              "width": "100%"
+                                                            },
+                                                            "view": {
+                                                              "background_color": {
+                                                                "default": {
+                                                                  "alpha": 1,
+                                                                  "hex": "#FFFFFF",
+                                                                  "type": "hex"
+                                                                },
+                                                                "selectors": [
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#FFFFFF",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": false,
+                                                                    "platform": "ios"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": true,
+                                                                    "platform": "ios"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#FFFFFF",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": false,
+                                                                    "platform": "android"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": true,
+                                                                    "platform": "android"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#FFFFFF",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": false,
+                                                                    "platform": "web"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": true,
+                                                                    "platform": "web"
+                                                                  }
+                                                                ]
+                                                              },
+                                                              "border": {
+                                                                "radius": 4,
+                                                                "stroke_color": {
+                                                                  "default": {
+                                                                    "alpha": 1,
+                                                                    "hex": "#000000",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "selectors": [
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "ios"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "ios"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "android"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "android"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "web"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "web"
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                "stroke_width": 1
+                                                              },
+                                                              "content_description": "This is open text question ",
+                                                              "identifier": "10c067ea-3f69-4055-a6b3-f68de0c3037e",
+                                                              "input_type": "text_multiline",
+                                                              "on_edit": {
+                                                                "state_actions": [
+                                                                  {
+                                                                    "key": "123",
+                                                                    "type": "set"
+                                                                  }
+                                                                ]
+                                                              },
+                                                              "on_error": {
+                                                                "state_actions": [
+                                                                  {
+                                                                    "key": "123",
+                                                                    "type": "set",
+                                                                    "value": true
+                                                                  }
+                                                                ]
+                                                              },
+                                                              "on_valid": {
+                                                                "state_actions": [
+                                                                  {
+                                                                    "key": "123",
+                                                                    "type": "set"
+                                                                  }
+                                                                ]
+                                                              },
+                                                              "place_holder": "",
+                                                              "required": false,
+                                                              "text_appearance": {
+                                                                "alignment": "start",
+                                                                "color": {
+                                                                  "default": {
+                                                                    "alpha": 1,
+                                                                    "hex": "#000000",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "selectors": [
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "ios"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "ios"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "android"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "android"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "web"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "web"
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                "font_families": [
+                                                                  "sans-serif"
+                                                                ],
+                                                                "font_size": 14,
+                                                                "place_holder_color": {
+                                                                  "default": {
+                                                                    "alpha": 1,
+                                                                    "hex": "#000000",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "selectors": [
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "ios"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "ios"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "android"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "android"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "web"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "web"
+                                                                    }
+                                                                  ]
+                                                                }
+                                                              },
+                                                              "type": "text_input",
+                                                              "view_overrides": {
+                                                                "border": [
+                                                                  {
+                                                                    "value": {
+                                                                      "radius": 4,
+                                                                      "stroke_color": {
+                                                                        "default": {
+                                                                          "alpha": 1,
+                                                                          "hex": "#ff0000",
+                                                                          "type": "hex"
+                                                                        }
+                                                                      },
+                                                                      "stroke_width": 1
+                                                                    },
+                                                                    "when_state_matches": {
+                                                                      "scope": [
+                                                                        "123"
+                                                                      ],
+                                                                      "value": {
+                                                                        "equals": true
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "icon_end": [
+                                                                  {
+                                                                    "value": {
+                                                                      "icon": {
+                                                                        "color": {
+                                                                          "default": {
+                                                                            "alpha": 1,
+                                                                            "hex": "#ff0000",
+                                                                            "type": "hex"
+                                                                          }
+                                                                        },
+                                                                        "icon": "exclamationmark_circle_fill",
+                                                                        "scale": 1,
+                                                                        "type": "icon"
+                                                                      },
+                                                                      "type": "floating"
+                                                                    },
+                                                                    "when_state_matches": {
+                                                                      "scope": [
+                                                                        "123"
+                                                                      ],
+                                                                      "value": {
+                                                                        "equals": true
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ]
+                                                              }
+                                                            }
+                                                          }
+                                                        ],
+                                                        "type": "linear_layout"
+                                                      }
+                                                    },
+                                                    {
+                                                      "identifier": "a7a4c8a4-e5ce-45d9-a097-5e83e33373ac_linear_layout_item",
+                                                      "size": {
+                                                        "height": "100%",
+                                                        "width": "100%"
+                                                      },
+                                                      "view": {
+                                                        "direction": "horizontal",
+                                                        "items": [],
+                                                        "type": "linear_layout"
+                                                      }
+                                                    }
+                                                  ],
+                                                  "type": "linear_layout"
+                                                }
+                                              }
+                                            },
+                                            {
+                                              "identifier": "3e04877e-c7a8-4d16-94d3-80728f2b3166",
+                                              "margin": {
+                                                "bottom": 8,
+                                                "end": 0,
+                                                "start": 0,
+                                                "top": 0
+                                              },
+                                              "size": {
+                                                "height": "auto",
+                                                "width": "100%"
+                                              },
+                                              "view": {
+                                                "items": [
+                                                  {
+                                                    "identifier": "3e04877e-c7a8-4d16-94d3-80728f2b3166_linear_container",
+                                                    "margin": {
+                                                      "bottom": 0,
+                                                      "end": 0,
+                                                      "start": 0,
+                                                      "top": 0
+                                                    },
+                                                    "position": {
+                                                      "horizontal": "center",
+                                                      "vertical": "center"
+                                                    },
+                                                    "size": {
+                                                      "height": "auto",
+                                                      "width": "100%"
+                                                    },
+                                                    "view": {
+                                                      "border": {
+                                                        "radius": 0
+                                                      },
+                                                      "direction": "vertical",
+                                                      "items": [
+                                                        {
+                                                          "identifier": "dfc6d268-8ba5-438a-a034-eb4b3195577d",
+                                                          "margin": {
+                                                            "bottom": 8,
+                                                            "end": 16,
+                                                            "start": 16,
+                                                            "top": 8
+                                                          },
+                                                          "size": {
+                                                            "height": "auto",
+                                                            "width": "100%"
+                                                          },
+                                                          "view": {
+                                                            "actions": {},
+                                                            "background_color": {
+                                                              "default": {
+                                                                "alpha": 1,
+                                                                "hex": "#FFFFFF",
+                                                                "type": "hex"
+                                                              },
+                                                              "selectors": [
+                                                                {
+                                                                  "color": {
+                                                                    "alpha": 1,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "dark_mode": false,
+                                                                  "platform": "ios"
+                                                                },
+                                                                {
+                                                                  "color": {
+                                                                    "alpha": 1,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "dark_mode": true,
+                                                                  "platform": "ios"
+                                                                },
+                                                                {
+                                                                  "color": {
+                                                                    "alpha": 1,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "dark_mode": false,
+                                                                  "platform": "android"
+                                                                },
+                                                                {
+                                                                  "color": {
+                                                                    "alpha": 1,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "dark_mode": true,
+                                                                  "platform": "android"
+                                                                },
+                                                                {
+                                                                  "color": {
+                                                                    "alpha": 1,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "dark_mode": false,
+                                                                  "platform": "web"
+                                                                },
+                                                                {
+                                                                  "color": {
+                                                                    "alpha": 1,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "dark_mode": true,
+                                                                  "platform": "web"
+                                                                }
+                                                              ]
+                                                            },
+                                                            "border": {
+                                                              "radius": 4,
+                                                              "stroke_color": {
+                                                                "default": {
+                                                                  "alpha": 1,
+                                                                  "hex": "#FFFFFF",
+                                                                  "type": "hex"
+                                                                },
+                                                                "selectors": [
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#FFFFFF",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": false,
+                                                                    "platform": "ios"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#FFFFFF",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": true,
+                                                                    "platform": "ios"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#FFFFFF",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": false,
+                                                                    "platform": "android"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#FFFFFF",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": true,
+                                                                    "platform": "android"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#FFFFFF",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": false,
+                                                                    "platform": "web"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#FFFFFF",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": true,
+                                                                    "platform": "web"
+                                                                  }
+                                                                ]
+                                                              },
+                                                              "stroke_width": 0
+                                                            },
+                                                            "button_click": [
+                                                              "form_submit",
+                                                              "dismiss"
+                                                            ],
+                                                            "content_description": "Shop now",
+                                                            "enabled": [
+                                                              "form_validation"
+                                                            ],
+                                                            "event_handlers": [
+                                                              {
+                                                                "state_actions": [
+                                                                  {
+                                                                    "key": "submitted",
+                                                                    "type": "set",
+                                                                    "value": true
+                                                                  }
+                                                                ],
+                                                                "type": "tap"
+                                                              }
+                                                            ],
+                                                            "identifier": "submit_feedback--Shop now",
+                                                            "label": {
+                                                              "content_description": "Shop now",
+                                                              "text": "Shop now",
+                                                              "text_appearance": {
+                                                                "alignment": "center",
+                                                                "color": {
+                                                                  "default": {
+                                                                    "alpha": 1,
+                                                                    "hex": "#000000",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "selectors": [
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "ios"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "ios"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "android"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "android"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "web"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#000000",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "web"
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                "font_families": [
+                                                                  "sans-serif"
+                                                                ],
+                                                                "font_size": 16,
+                                                                "styles": [
+                                                                  "bold"
+                                                                ]
+                                                              },
+                                                              "type": "label",
+                                                              "view_overrides": {
+                                                                "icon_start": [
+                                                                  {
+                                                                    "value": {
+                                                                      "icon": {
+                                                                        "color": {
+                                                                          "default": {
+                                                                            "alpha": 1,
+                                                                            "hex": "#000000",
+                                                                            "type": "hex"
+                                                                          },
+                                                                          "selectors": [
+                                                                            {
+                                                                              "color": {
+                                                                                "alpha": 1,
+                                                                                "hex": "#000000",
+                                                                                "type": "hex"
+                                                                              },
+                                                                              "dark_mode": false,
+                                                                              "platform": "ios"
+                                                                            },
+                                                                            {
+                                                                              "color": {
+                                                                                "alpha": 1,
+                                                                                "hex": "#000000",
+                                                                                "type": "hex"
+                                                                              },
+                                                                              "dark_mode": true,
+                                                                              "platform": "ios"
+                                                                            },
+                                                                            {
+                                                                              "color": {
+                                                                                "alpha": 1,
+                                                                                "hex": "#000000",
+                                                                                "type": "hex"
+                                                                              },
+                                                                              "dark_mode": false,
+                                                                              "platform": "android"
+                                                                            },
+                                                                            {
+                                                                              "color": {
+                                                                                "alpha": 1,
+                                                                                "hex": "#000000",
+                                                                                "type": "hex"
+                                                                              },
+                                                                              "dark_mode": true,
+                                                                              "platform": "android"
+                                                                            },
+                                                                            {
+                                                                              "color": {
+                                                                                "alpha": 1,
+                                                                                "hex": "#000000",
+                                                                                "type": "hex"
+                                                                              },
+                                                                              "dark_mode": false,
+                                                                              "platform": "web"
+                                                                            },
+                                                                            {
+                                                                              "color": {
+                                                                                "alpha": 1,
+                                                                                "hex": "#000000",
+                                                                                "type": "hex"
+                                                                              },
+                                                                              "dark_mode": true,
+                                                                              "platform": "web"
+                                                                            }
+                                                                          ]
+                                                                        },
+                                                                        "icon": "progress_spinner",
+                                                                        "scale": 1,
+                                                                        "type": "icon"
+                                                                      },
+                                                                      "space": 8,
+                                                                      "type": "floating"
+                                                                    },
+                                                                    "when_state_matches": {
+                                                                      "scope": [
+                                                                        "$forms",
+                                                                        "current",
+                                                                        "status",
+                                                                        "type"
+                                                                      ],
+                                                                      "value": {
+                                                                        "equals": "validating"
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "text": [
+                                                                  {
+                                                                    "value": "Shop now",
+                                                                    "when_state_matches": {
+                                                                      "scope": [
+                                                                        "$forms",
+                                                                        "current",
+                                                                        "status",
+                                                                        "type"
+                                                                      ],
+                                                                      "value": {
+                                                                        "equals": "validating"
+                                                                      }
+                                                                    }
+                                                                  }
+                                                                ],
+                                                                "text_appearance": [
+                                                                  {
+                                                                    "value": {
+                                                                      "alignment": "center",
+                                                                      "color": {
+                                                                        "default": {
+                                                                          "alpha": 1,
+                                                                          "hex": "#000000",
+                                                                          "type": "hex"
+                                                                        },
+                                                                        "selectors": [
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#000000",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": false,
+                                                                            "platform": "ios"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#000000",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": true,
+                                                                            "platform": "ios"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#000000",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": false,
+                                                                            "platform": "android"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#000000",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": true,
+                                                                            "platform": "android"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#000000",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": false,
+                                                                            "platform": "web"
+                                                                          },
+                                                                          {
+                                                                            "color": {
+                                                                              "alpha": 1,
+                                                                              "hex": "#000000",
+                                                                              "type": "hex"
+                                                                            },
+                                                                            "dark_mode": true,
+                                                                            "platform": "web"
+                                                                          }
+                                                                        ]
+                                                                      },
+                                                                      "font_families": [
+                                                                        "sans-serif"
+                                                                      ],
+                                                                      "font_size": 16,
+                                                                      "styles": [
+                                                                        "bold"
+                                                                      ]
+                                                                    }
+                                                                  }
+                                                                ]
+                                                              }
+                                                            },
+                                                            "reporting_metadata": {
+                                                              "button_action": "submit_feedback",
+                                                              "button_id": "dfc6d268-8ba5-438a-a034-eb4b3195577d",
+                                                              "trigger_link_id": "dfc6d268-8ba5-438a-a034-eb4b3195577d"
+                                                            },
+                                                            "type": "label_button"
+                                                          }
+                                                        },
+                                                        {
+                                                          "identifier": "160f0e88-68bc-4fb0-8bcb-aa72630b3dfe",
+                                                          "margin": {
+                                                            "bottom": 8,
+                                                            "end": 16,
+                                                            "start": 16,
+                                                            "top": 8
+                                                          },
+                                                          "size": {
+                                                            "height": "auto",
+                                                            "width": "100%"
+                                                          },
+                                                          "view": {
+                                                            "actions": {},
+                                                            "background_color": {
+                                                              "default": {
+                                                                "alpha": 0,
+                                                                "hex": "#FFFFFF",
+                                                                "type": "hex"
+                                                              },
+                                                              "selectors": [
+                                                                {
+                                                                  "color": {
+                                                                    "alpha": 0,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "dark_mode": false,
+                                                                  "platform": "ios"
+                                                                },
+                                                                {
+                                                                  "color": {
+                                                                    "alpha": 0,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "dark_mode": true,
+                                                                  "platform": "ios"
+                                                                },
+                                                                {
+                                                                  "color": {
+                                                                    "alpha": 0,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "dark_mode": false,
+                                                                  "platform": "android"
+                                                                },
+                                                                {
+                                                                  "color": {
+                                                                    "alpha": 0,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "dark_mode": true,
+                                                                  "platform": "android"
+                                                                },
+                                                                {
+                                                                  "color": {
+                                                                    "alpha": 0,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "dark_mode": false,
+                                                                  "platform": "web"
+                                                                },
+                                                                {
+                                                                  "color": {
+                                                                    "alpha": 0,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "dark_mode": true,
+                                                                  "platform": "web"
+                                                                }
+                                                              ]
+                                                            },
+                                                            "border": {
+                                                              "radius": 3,
+                                                              "stroke_color": {
+                                                                "default": {
+                                                                  "alpha": 1,
+                                                                  "hex": "#000000",
+                                                                  "type": "hex"
+                                                                },
+                                                                "selectors": [
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": false,
+                                                                    "platform": "ios"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": true,
+                                                                    "platform": "ios"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": false,
+                                                                    "platform": "android"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": true,
+                                                                    "platform": "android"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": false,
+                                                                    "platform": "web"
+                                                                  },
+                                                                  {
+                                                                    "color": {
+                                                                      "alpha": 1,
+                                                                      "hex": "#000000",
+                                                                      "type": "hex"
+                                                                    },
+                                                                    "dark_mode": true,
+                                                                    "platform": "web"
+                                                                  }
+                                                                ]
+                                                              },
+                                                              "stroke_width": 0
+                                                            },
+                                                            "button_click": [
+                                                              "dismiss"
+                                                            ],
+                                                            "content_description": "no thanks",
+                                                            "enabled": [],
+                                                            "identifier": "dismiss--no thanks",
+                                                            "label": {
+                                                              "content_description": "no thanks",
+                                                              "text": "no thanks",
+                                                              "text_appearance": {
+                                                                "alignment": "center",
+                                                                "color": {
+                                                                  "default": {
+                                                                    "alpha": 1,
+                                                                    "hex": "#FFFFFF",
+                                                                    "type": "hex"
+                                                                  },
+                                                                  "selectors": [
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "ios"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "ios"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "android"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "android"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": false,
+                                                                      "platform": "web"
+                                                                    },
+                                                                    {
+                                                                      "color": {
+                                                                        "alpha": 1,
+                                                                        "hex": "#FFFFFF",
+                                                                        "type": "hex"
+                                                                      },
+                                                                      "dark_mode": true,
+                                                                      "platform": "web"
+                                                                    }
+                                                                  ]
+                                                                },
+                                                                "font_families": [
+                                                                  "sans-serif"
+                                                                ],
+                                                                "font_size": 16,
+                                                                "styles": [
+                                                                  "underlined"
+                                                                ]
+                                                              },
+                                                              "type": "label"
+                                                            },
+                                                            "localized_content_description": {
+                                                              "fallback": "Dismiss",
+                                                              "ref": "ua_dismiss"
+                                                            },
+                                                            "reporting_metadata": {
+                                                              "button_action": "dismiss",
+                                                              "button_id": "160f0e88-68bc-4fb0-8bcb-aa72630b3dfe",
+                                                              "trigger_link_id": "160f0e88-68bc-4fb0-8bcb-aa72630b3dfe"
+                                                            },
+                                                            "type": "label_button"
+                                                          }
+                                                        }
+                                                      ],
+                                                      "type": "linear_layout"
+                                                    }
+                                                  }
+                                                ],
+                                                "type": "container"
+                                              }
+                                            }
+                                          ],
+                                          "type": "linear_layout"
+                                        }
+                                      }
+                                    ],
+                                    "type": "container"
+                                  }
+                                }
+                              ],
+                              "type": "container"
+                            }
+                          }
+                        ],
+                        "type": "pager"
+                      }
+                    },
+                    {
+                      "position": {
+                        "horizontal": "end",
+                        "vertical": "top"
+                      },
+                      "size": {
+                        "height": 48,
+                        "width": 48
+                      },
+                      "view": {
+                        "button_click": [
+                          "dismiss"
+                        ],
+                        "identifier": "dismiss_button",
+                        "image": {
+                          "color": {
+                            "default": {
+                              "alpha": 1,
+                              "hex": "#FFFFFF",
+                              "type": "hex"
+                            },
+                            "selectors": [
+                              {
+                                "color": {
+                                  "alpha": 1,
+                                  "hex": "#FFFFFF",
+                                  "type": "hex"
+                                },
+                                "dark_mode": false,
+                                "platform": "ios"
+                              },
+                              {
+                                "color": {
+                                  "alpha": 1,
+                                  "hex": "#FFFFFF",
+                                  "type": "hex"
+                                },
+                                "dark_mode": true,
+                                "platform": "ios"
+                              },
+                              {
+                                "color": {
+                                  "alpha": 1,
+                                  "hex": "#FFFFFF",
+                                  "type": "hex"
+                                },
+                                "dark_mode": false,
+                                "platform": "android"
+                              },
+                              {
+                                "color": {
+                                  "alpha": 1,
+                                  "hex": "#FFFFFF",
+                                  "type": "hex"
+                                },
+                                "dark_mode": true,
+                                "platform": "android"
+                              },
+                              {
+                                "color": {
+                                  "alpha": 1,
+                                  "hex": "#FFFFFF",
+                                  "type": "hex"
+                                },
+                                "dark_mode": false,
+                                "platform": "web"
+                              },
+                              {
+                                "color": {
+                                  "alpha": 1,
+                                  "hex": "#FFFFFF",
+                                  "type": "hex"
+                                },
+                                "dark_mode": true,
+                                "platform": "web"
+                              }
+                            ]
+                          },
+                          "icon": "close",
+                          "scale": 0.4,
+                          "type": "icon"
+                        },
+                        "localized_content_description": {
+                          "fallback": "Dismiss",
+                          "ref": "ua_dismiss"
+                        },
+                        "reporting_metadata": {
+                          "button_action": "dismiss",
+                          "button_id": "dismiss_button"
+                        },
+                        "type": "image_button"
+                      }
+                    }
+                  ],
+                  "type": "container"
+                }
+              }
+            }
+          }
+        }
+      },
+      "display_type": "layout",
+      "name": "testing keyboard issue"
+    },
+    "message_type": "commercial",
+    "reporting_context": {
+      "content_types": [
+        "scene",
+        "survey"
+      ],
+      "experiment_id": "",
+      "message_type": "commercial"
+    },
+    "requires_eligibility": false,
+    "scopes": [
+      "app"
+    ],
+    "triggers": [
+      {
+        "goal": 1,
+        "type": "active_session"
+      }
+    ]
+  }
+}
