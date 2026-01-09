@@ -97,7 +97,7 @@
     <h1 class="cover"><span>Push</span><wbr><span><span>Manager</span></span></h1>
     <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
       <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="index.html">PushManager</a> : <a href="../../com.urbanairship/-airship-component/index.html">AirshipComponent</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/urbanairship-core/src/main/java/com/urbanairship/push/PushManager.kt#L62">source</a>)</span></span></div><p class="paragraph">This class is the primary interface for customizing the display and behavior of incoming push notifications.</p></div>    </div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">class </span><a href="index.html">PushManager</a> : <a href="../../../urbanairship-core/com.urbanairship/-job-aware-airship-component/index.html">JobAwareAirshipComponent</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/urbanairship-core/src/main/java/com/urbanairship/push/PushManager.kt#L61">source</a>)</span></span></div><p class="paragraph">This class is the primary interface for customizing the display and behavior of incoming push notifications.</p></div>    </div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button><button class="section-tab" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION,EXTENSION_PROPERTY,EXTENSION_FUNCTION">Members &amp; Extensions</button></div>
@@ -189,6 +189,23 @@
                   <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
                     <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
 <div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@get:</span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/RestrictTo.html"><span class="token annotation builtin">RestrictTo</span></a><span class="token punctuation">(</span><span>value<span class="token operator"> = </span><span class="token punctuation">[</span><span><a href="https://developer.android.com/reference/kotlin/androidx/annotation/RestrictTo.Scope.html#LIBRARY_GROUP">RestrictTo.Scope.LIBRARY_GROUP</a></span><wbr><span class="token punctuation">]</span></span><wbr><span class="token punctuation">)</span></div></div><span class="token keyword">val </span><a href="is-push-enabled.html">isPushEnabled</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="753117657%2FProperties%2F1762731939" anchor-label="jobActions" id="753117657%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="job-actions.html"><span>job</span><wbr><span><span>Actions</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="753117657%2FProperties%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">protected </span><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">val </span><a href="job-actions.html">jobActions</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin.collections/-list/index.html">List</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div></div>                  </div>
                 </div>
               </div>
             </div>
@@ -348,27 +365,10 @@
           </div>
         </div>
       </div>
-      <div data-togglable="PROPERTY">
+      <div data-togglable="EXTENSION_PROPERTY">
         <h2 class="tableheader">Inherited properties</h2>
-        <div class="table"><a data-name="1263028883%2FProperties%2F1762731939" anchor-label="defaultExecutor" id="1263028883%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+        <div class="table"><a data-name="-269832233%2FProperties%2F1762731939" anchor-label="pushNotificationStatusFlow" id="-269832233%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
           <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
-            <div class="main-subrow keyValue ">
-              <div class=""><span class="inline-flex">
-                  <div><a href="../../com.urbanairship/-airship-component/default-executor.html"><span>default</span><wbr><span><span>Executor</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1263028883%2FProperties%2F1762731939"></span>
-                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                  </span></span></div>
-              <div>
-                <div class="title">
-                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">protected </span><span class="token keyword">val </span><a href="../../com.urbanairship/-airship-component/default-executor.html">defaultExecutor</a><span class="token operator">: </span><a href="https://developer.android.com/reference/kotlin/java/util/concurrent/Executor.html">Executor</a></div><div class="brief "><p class="paragraph">Default job executor.</p></div></div>                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-<a data-name="-269832233%2FProperties%2F1762731939" anchor-label="pushNotificationStatusFlow" id="-269832233%2FProperties%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
-          <div class="table-row table-row_content" data-togglable="EXTENSION_PROPERTY" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../push-notification-status-flow.html"><span>push</span><wbr><span>Notification</span><wbr><span>Status</span><wbr><span><span>Flow</span></span></a></div>
@@ -679,6 +679,27 @@
           </div>
         </div>
       </div>
+      <div data-togglable="EXTENSION_FUNCTION">
+        <h2 class="tableheader">Inherited functions</h2>
+        <div class="table"><a data-name="-1481228521%2FFunctions%2F1762731939" anchor-label="enableUserNotifications" id="-1481228521%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="../enable-user-notifications.html"><span>enable</span><wbr><span>User</span><wbr><span><span>Notifications</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1481228521%2FFunctions%2F1762731939"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">suspend </span><span class="token keyword">fun </span><a href="index.html">PushManager</a><span class="token punctuation">.</span><a href="../enable-user-notifications.html"><span class="token function">enableUserNotifications</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">promptFallback<span class="token operator">: </span><a href="../../com.urbanairship.permission/-permission-prompt-fallback/index.html">PermissionPromptFallback</a><span class="token operator"> = </span>PermissionPromptFallback.None</span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Enables user notifications on Airship and tries to prompt for the notification permission.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -691,7 +712,7 @@
                     <a class="footer--link footer--link_external" href="https://github.com/Kotlin/dokka">
                         Dokka
                     </a>
-                    <div>©2025 Airship</div>
+                    <div>©2026 Airship</div>
                 </div>
             </div>
         </div>
