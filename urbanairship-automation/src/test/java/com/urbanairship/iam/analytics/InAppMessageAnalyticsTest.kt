@@ -3,14 +3,20 @@ package com.urbanairship.iam.analytics
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.analytics.EventType
+import com.urbanairship.android.layout.analytics.LayoutEventContext
+import com.urbanairship.android.layout.analytics.LayoutEventData
+import com.urbanairship.android.layout.analytics.LayoutEventMessageId
+import com.urbanairship.android.layout.analytics.LayoutEventSource
+import com.urbanairship.android.layout.analytics.LayoutEventRecorderInterface
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.InAppMessage
-import com.urbanairship.iam.analytics.events.InAppDisplayEvent
-import com.urbanairship.iam.analytics.events.InAppEvent
+import com.urbanairship.android.layout.analytics.events.InAppDisplayEvent
+import com.urbanairship.android.layout.analytics.events.LayoutEvent
+import com.urbanairship.android.layout.analytics.makeContext
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.json.JsonSerializable
@@ -42,7 +48,7 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class InAppMessageAnalyticsTest {
-    private val eventRecorder: InAppEventRecorderInterface = mockk(relaxed = true)
+    private val eventRecorder: LayoutEventRecorderInterface = mockk(relaxed = true)
     private val historyStore: MessageDisplayHistoryStore = mockk()
     private val preparedInfo = PreparedScheduleInfo(
         scheduleId = UUID.randomUUID().toString(),
@@ -63,7 +69,7 @@ public class InAppMessageAnalyticsTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private val clock = TestClock()
-    private var event: InAppEventData? = null
+    private var event: LayoutEventData? = null
     private var displayHistory: MessageDisplayHistory? = null
 
     @Before
@@ -91,8 +97,8 @@ public class InAppMessageAnalyticsTest {
         val analytics = makeAnalytics()
         analytics.recordEvent(TestInAppEvent(), layoutContext = null)
 
-        assertEquals(event?.messageId, InAppEventMessageId.AirshipId(preparedInfo.scheduleId, preparedInfo.campaigns))
-        assertEquals(event?.source, InAppEventSource.AIRSHIP)
+        assertEquals(event?.messageId, LayoutEventMessageId.AirshipId(preparedInfo.scheduleId, preparedInfo.campaigns))
+        assertEquals(event?.source, LayoutEventSource.AIRSHIP)
     }
 
     @Test
@@ -100,8 +106,8 @@ public class InAppMessageAnalyticsTest {
         val analytics = makeAnalytics(source = InAppMessage.Source.APP_DEFINED)
         analytics.recordEvent(TestInAppEvent(), layoutContext = null)
 
-        assertEquals(event?.messageId, InAppEventMessageId.AppDefined(preparedInfo.scheduleId))
-        assertEquals(event?.source, InAppEventSource.APP_DEFINED)
+        assertEquals(event?.messageId, LayoutEventMessageId.AppDefined(preparedInfo.scheduleId))
+        assertEquals(event?.source, LayoutEventSource.APP_DEFINED)
     }
 
     @Test
@@ -109,8 +115,8 @@ public class InAppMessageAnalyticsTest {
         val analytics = makeAnalytics(source = InAppMessage.Source.LEGACY_PUSH)
         analytics.recordEvent(TestInAppEvent(), layoutContext = null)
 
-        assertEquals(event?.messageId, InAppEventMessageId.Legacy(preparedInfo.scheduleId))
-        assertEquals(event?.source, InAppEventSource.AIRSHIP)
+        assertEquals(event?.messageId, LayoutEventMessageId.Legacy(preparedInfo.scheduleId))
+        assertEquals(event?.source, LayoutEventSource.AIRSHIP)
     }
 
     @Test
@@ -121,11 +127,11 @@ public class InAppMessageAnalyticsTest {
             "button-id"
         )
 
-        val expectedContext = InAppEventContext.makeContext(
+        val expectedContext = LayoutEventContext.makeContext(
             reportingContext = preparedInfo.reportingContext,
             experimentResult = preparedInfo.experimentResult,
             layoutContext = layoutData,
-            displayContext = InAppEventContext.Display(
+            displayContext = LayoutEventContext.Display(
                 triggerSessionId = preparedInfo.triggerSessionId,
                 isFirstDisplay = true,
                 isFirstDisplayTriggerSessionId = true
@@ -257,13 +263,13 @@ public class InAppMessageAnalyticsTest {
             isReportingEnabled = true
         )
 
-        val firstDisplayContext = InAppEventContext.Display(
+        val firstDisplayContext = LayoutEventContext.Display(
             triggerSessionId = preparedInfo.triggerSessionId,
             isFirstDisplay = true,
             isFirstDisplayTriggerSessionId = true
         )
 
-        val secondDisplayContext = InAppEventContext.Display(
+        val secondDisplayContext = LayoutEventContext.Display(
             triggerSessionId = preparedInfo.triggerSessionId,
             isFirstDisplay = false,
             isFirstDisplayTriggerSessionId = false
@@ -296,13 +302,13 @@ public class InAppMessageAnalyticsTest {
             )
         )
 
-        val firstDisplayContext = InAppEventContext.Display(
+        val firstDisplayContext = LayoutEventContext.Display(
             triggerSessionId = preparedInfo.triggerSessionId,
             isFirstDisplay = false,
             isFirstDisplayTriggerSessionId = true
         )
 
-        val secondDisplayContext = InAppEventContext.Display(
+        val secondDisplayContext = LayoutEventContext.Display(
             triggerSessionId = preparedInfo.triggerSessionId,
             isFirstDisplay = false,
             isFirstDisplayTriggerSessionId = false
@@ -335,9 +341,9 @@ public class InAppMessageAnalyticsTest {
             )
         )
 
-        val displayContexts = mutableListOf<InAppEventContext.Display?>()
+        val displayContexts = mutableListOf< LayoutEventContext.Display?>()
         coEvery { eventRecorder.recordEvent(any()) } answers {
-            displayContexts.add((firstArg() as InAppEventData).context?.display)
+            displayContexts.add((firstArg() as LayoutEventData).context?.display)
         }
 
         analytics.recordEvent(TestInAppEvent(), null)
@@ -346,19 +352,19 @@ public class InAppMessageAnalyticsTest {
         analytics.recordEvent(InAppDisplayEvent(), null)
         analytics.recordEvent(TestInAppEvent(), null)
 
-        val firstDisplayContext = InAppEventContext.Display(
+        val firstDisplayContext = LayoutEventContext.Display(
             triggerSessionId = preparedInfo.triggerSessionId,
             isFirstDisplay = false,
             isFirstDisplayTriggerSessionId = false
         )
 
-        val secondDisplayContext = InAppEventContext.Display(
+        val secondDisplayContext = LayoutEventContext.Display(
             triggerSessionId = preparedInfo.triggerSessionId,
             isFirstDisplay = false,
             isFirstDisplayTriggerSessionId = false
         )
 
-        val expected = listOf<InAppEventContext.Display?>(
+        val expected = listOf<LayoutEventContext.Display?>(
             // event before a display
             firstDisplayContext,
             // first display
@@ -402,4 +408,4 @@ public class InAppMessageAnalyticsTest {
 private class TestInAppEvent(
     override val eventType: EventType = EventType.IN_APP_DISPLAY,
     override val data: JsonSerializable? = null
-) : InAppEvent
+) : LayoutEvent

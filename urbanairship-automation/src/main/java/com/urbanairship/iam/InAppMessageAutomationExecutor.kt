@@ -7,6 +7,7 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.run
+import com.urbanairship.android.layout.analytics.DisplayResult
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.engine.InterruptedBehavior
@@ -14,9 +15,8 @@ import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
-import com.urbanairship.iam.adapter.DisplayResult
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
-import com.urbanairship.iam.analytics.events.InAppResolutionEvent
+import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
 import com.urbanairship.iam.assets.AssetCacheManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -87,7 +87,7 @@ internal class InAppMessageAutomationExecutor(
         if (!preparedScheduleInfo.additionalAudienceCheckResult) {
             UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} missed additional audience check." }
             data.analytics.recordEvent(
-                event = InAppResolutionEvent.audienceExcluded(),
+                event = LayoutResolutionEvent.audienceExcluded(),
                 layoutContext = null
             )
             return@withContext ScheduleExecuteResult.FINISHED
@@ -102,7 +102,7 @@ internal class InAppMessageAutomationExecutor(
         if (preparedScheduleInfo.experimentResult?.isMatching == true) {
             UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} part of experiment." }
             data.analytics.recordEvent(
-                event = InAppResolutionEvent.control(preparedScheduleInfo.experimentResult),
+                event = LayoutResolutionEvent.control(preparedScheduleInfo.experimentResult),
                 layoutContext = null
             )
         } else {
@@ -145,7 +145,7 @@ internal class InAppMessageAutomationExecutor(
 
                 analyticsFactory
                     .makeAnalytics(schedule.data.message, preparedScheduleInfo)
-                    .recordEvent(InAppResolutionEvent.interrupted(), null)
+                    .recordEvent(LayoutResolutionEvent.interrupted(), null)
 
                 assetManager.clearCache(preparedScheduleInfo.scheduleId)
 

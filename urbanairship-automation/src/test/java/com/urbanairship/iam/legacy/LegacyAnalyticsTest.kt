@@ -1,8 +1,8 @@
 package com.urbanairship.iam.legacy
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.iam.analytics.InAppEventMessageId
-import com.urbanairship.iam.analytics.InAppEventRecorderInterface
+import com.urbanairship.android.layout.analytics.LayoutEventMessageId
+import com.urbanairship.android.layout.analytics.LayoutEventRecorderInterface
 import com.urbanairship.json.jsonMapOf
 import io.mockk.mockk
 import io.mockk.verify
@@ -11,7 +11,7 @@ import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 public class LegacyAnalyticsTest {
-    private val recorder: InAppEventRecorderInterface = mockk(relaxed = true)
+    private val recorder: LayoutEventRecorderInterface = mockk(relaxed = true)
     private val analytics = LegacyAnalytics(recorder)
 
     @Test
@@ -26,7 +26,7 @@ public class LegacyAnalyticsTest {
 
                 it.event.data == expectedData &&
                         it.event.eventType.reportingName == "in_app_resolution" &&
-                        it.messageId == InAppEventMessageId.Legacy("some-schedule-id")
+                        it.messageId == LayoutEventMessageId.Legacy("some-schedule-id")
             })
         }
     }
@@ -42,7 +42,7 @@ public class LegacyAnalyticsTest {
                     "replacement_id" to "some-other-schedule-id"
                 )
 
-                it.event.data == expectedData && it.event.eventType.reportingName == "in_app_resolution" && it.messageId == InAppEventMessageId.Legacy(
+                it.event.data == expectedData && it.event.eventType.reportingName == "in_app_resolution" && it.messageId == LayoutEventMessageId.Legacy(
                     "some-schedule-id"
                 )
             })

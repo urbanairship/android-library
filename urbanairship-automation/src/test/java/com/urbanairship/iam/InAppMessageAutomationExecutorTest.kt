@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.actions.Action
+import com.urbanairship.android.layout.analytics.DisplayResult
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.ScheduleExecuteResult
@@ -12,11 +13,10 @@ import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.actions.InAppActionRunner
 import com.urbanairship.iam.adapter.DisplayAdapter
-import com.urbanairship.iam.adapter.DisplayResult
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.iam.analytics.events.InAppEvent
-import com.urbanairship.iam.analytics.events.InAppResolutionEvent
+import com.urbanairship.android.layout.analytics.events.LayoutEvent
+import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
 import com.urbanairship.iam.assets.AssetCacheManager
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
@@ -141,8 +141,8 @@ public class InAppMessageAutomationExecutorTest {
         )
 
         every { analytics.recordEvent(any(), any()) } answers {
-            val event: InAppEvent = firstArg()
-            assertEquals(InAppResolutionEvent.interrupted().eventType, event.eventType)
+            val event: LayoutEvent = firstArg()
+            assertEquals(LayoutResolutionEvent.interrupted().eventType, event.eventType)
         }
 
         coEvery { assetManager.clearCache(any()) } answers {
@@ -208,7 +208,7 @@ public class InAppMessageAutomationExecutorTest {
         coEvery { assetManager.clearCache(any()) } just runs
 
         every { analytics.recordEvent(any(), any()) } answers {
-            assertEquals(InAppResolutionEvent.control(experimentResult).eventType, firstArg<InAppEvent>().eventType)
+            assertEquals(LayoutResolutionEvent.control(experimentResult).eventType, firstArg<LayoutEvent>().eventType)
         }
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
@@ -267,8 +267,8 @@ public class InAppMessageAutomationExecutorTest {
         }
 
         coEvery { analytics.recordEvent(any(), any()) } answers {
-            val event: InAppEvent = firstArg()
-            assertEquals(event.eventType, InAppResolutionEvent.audienceExcluded().eventType)
+            val event: LayoutEvent = firstArg()
+            assertEquals(event.eventType, LayoutResolutionEvent.audienceExcluded().eventType)
         }
 
         val result = execute(preparedInfo.copy(additionalAudienceCheckResult = false))

@@ -11,12 +11,12 @@ import com.urbanairship.Predicate
 import com.urbanairship.UALog.e
 import com.urbanairship.actions.ActionRunner
 import com.urbanairship.actions.run
+import com.urbanairship.android.layout.analytics.DisplayResult
 import com.urbanairship.app.ActivityListener
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.automation.R
 import com.urbanairship.iam.adapter.DelegatingDisplayAdapter
-import com.urbanairship.iam.adapter.DisplayResult
 import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.assets.AirshipCachedAssets

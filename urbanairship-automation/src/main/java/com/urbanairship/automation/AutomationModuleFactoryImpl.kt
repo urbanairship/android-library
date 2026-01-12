@@ -45,7 +45,7 @@ import com.urbanairship.iam.actions.LandingPageAction
 import com.urbanairship.iam.actions.ScheduleAction
 import com.urbanairship.iam.adapter.DisplayAdapterFactory
 import com.urbanairship.iam.analytics.DefaultInAppDisplayImpressionRuleProvider
-import com.urbanairship.iam.analytics.InAppEventRecorder
+import com.urbanairship.android.layout.analytics.LayoutEventRecorder
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.iam.analytics.MessageDisplayHistoryStore
 import com.urbanairship.iam.assets.AssetCacheManager
@@ -88,7 +88,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         audienceEvaluator: AudienceEvaluator
     ): Module {
         val assetManager = AssetCacheManager(context)
-        val eventRecorder = InAppEventRecorder(analytics, meteredUsage)
+        val eventRecorder = LayoutEventRecorder(analytics, meteredUsage)
         val scheduleConditionNotifier = ScheduleConditionsChangedNotifier()
         val remoteDataAccess = AutomationRemoteDataAccess(context, remoteData)
         val activityMonitor = GlobalActivityMonitor.shared(context)

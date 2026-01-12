@@ -3,9 +3,10 @@
 package com.urbanairship.iam.adapter
 
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.analytics.DisplayResult
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.iam.analytics.events.InAppDisplayEvent
-import com.urbanairship.iam.analytics.events.InAppResolutionEvent
+import com.urbanairship.android.layout.analytics.events.InAppDisplayEvent
+import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.util.timer.Timer
 import kotlin.time.Duration
@@ -34,7 +35,7 @@ internal class InAppMessageDisplayListener(
     fun onButtonDismissed(info: InAppMessageButtonInfo) {
         tryDismiss { displayTime ->
             analytics.recordEvent(
-                InAppResolutionEvent.buttonTap(
+                LayoutResolutionEvent.buttonTap(
                     identifier = info.identifier,
                     description = info.label.text,
                     displayTime = displayTime
@@ -50,7 +51,7 @@ internal class InAppMessageDisplayListener(
     fun onTimedOut() {
         tryDismiss { displayTime ->
             analytics.recordEvent(
-                InAppResolutionEvent.timedOut(
+                LayoutResolutionEvent.timedOut(
                     displayTime = displayTime
                 ), layoutContext = null
             )
@@ -61,7 +62,7 @@ internal class InAppMessageDisplayListener(
     fun onUserDismissed() {
         tryDismiss { displayTime ->
             analytics.recordEvent(
-                InAppResolutionEvent.userDismissed(
+                LayoutResolutionEvent.userDismissed(
                     displayTime = displayTime
                 ), layoutContext = null
             )
@@ -72,7 +73,7 @@ internal class InAppMessageDisplayListener(
     fun onMessageTapDismissed() {
         tryDismiss { displayTime ->
             analytics.recordEvent(
-                InAppResolutionEvent.messageTap(
+                LayoutResolutionEvent.messageTap(
                     displayTime = displayTime
                 ),
                 layoutContext = null

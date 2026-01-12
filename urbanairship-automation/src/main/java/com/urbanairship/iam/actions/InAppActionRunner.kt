@@ -14,7 +14,7 @@ import com.urbanairship.actions.PromptPermissionAction
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.iam.analytics.events.InAppPermissionResultEvent
+import com.urbanairship.android.layout.analytics.events.LayoutPermissionResultEvent
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
@@ -77,7 +77,7 @@ internal class InAppActionRunner(
                     after: PermissionStatus
                 ) {
                     analytics.recordEvent(
-                        event = InAppPermissionResultEvent(permission, before, after),
+                        event = LayoutPermissionResultEvent(permission, before, after),
                         layoutContext = state
                     )
                 }

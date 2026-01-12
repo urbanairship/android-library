@@ -2,11 +2,12 @@
 
 package com.urbanairship.iam.analytics
 
+import com.urbanairship.android.layout.analytics.LayoutEventRecorderInterface
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.iam.InAppMessage
 
 internal class InAppMessageAnalyticsFactory(
-    private val eventRecorder: InAppEventRecorderInterface,
+    private val eventRecorder: LayoutEventRecorderInterface,
     private val displayHistoryStore: MessageDisplayHistoryStore,
     private val displayImpressionRuleProvider: InAppDisplayImpressionRuleInterface
 ) {
