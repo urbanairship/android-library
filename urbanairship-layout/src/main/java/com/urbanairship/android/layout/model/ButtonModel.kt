@@ -91,7 +91,15 @@ internal abstract class ButtonModel<T, I: Button>(
                 }
 
                 evaluateClickBehaviors(view.context ?: Airship.application)
-                listener?.setEnabled(enabled = true)
+
+                if (viewInfo.enableBehaviors?.isNotEmpty() == true) {
+                    val currentPager = layoutState.pager?.changes?.value
+                    val currentForm = layoutState.thomasForm?.formUpdates?.value
+                    val shouldBeEnabled = mapEnableBehavior(form = currentForm, pager = currentPager)
+                    listener?.setEnabled(shouldBeEnabled)
+                } else {
+                    listener?.setEnabled(enabled = true)
+                }
             }
         }
     }
