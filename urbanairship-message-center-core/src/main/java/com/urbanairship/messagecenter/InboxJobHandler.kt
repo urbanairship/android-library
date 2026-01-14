@@ -6,12 +6,10 @@ import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
-import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
-import com.urbanairship.json.JsonValue
 import java.net.HttpURLConnection
 import kotlin.time.Duration.Companion.hours
 
@@ -85,7 +83,7 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
     }
 
     suspend fun loadAirshipLayout(message: Message): AirshipLayout? {
-        if (message.contentType != Message.ContentType.THOMAS) {
+        if (message.contentType != Message.ContentType.NATIVE) {
             return null
         }
 

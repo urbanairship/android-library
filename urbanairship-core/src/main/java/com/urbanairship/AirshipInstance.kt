@@ -308,7 +308,9 @@ internal class AirshipInstance(
             config = runtimeConfig,
             privacyManager = privacyManager,
             channel = channel,
-            pushManager = pushManager
+            pushManager = pushManager,
+            analytics = analytics,
+            meteredUsage = meteredUsageManager
         )
         processModule(messageCenterModule)
 

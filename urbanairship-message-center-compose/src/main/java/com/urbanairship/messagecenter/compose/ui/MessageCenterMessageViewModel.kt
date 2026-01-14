@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.messagecenter.Inbox
 import com.urbanairship.messagecenter.Message
@@ -27,6 +28,11 @@ internal interface MessageCenterMessageViewModel {
     val scope: CoroutineScope
 
     fun handle(action: Action)
+
+    fun makeAnalytics(
+        message: Message,
+        onDismiss: () -> Unit = {}
+    ): ThomasListenerInterface
 
     /** [MessageCenterMessage] display states. */
     sealed class State {
@@ -149,6 +155,10 @@ internal class DefaultMessageCenterMessageViewModel(
         }
     }
 
+    override fun makeAnalytics(message: Message, onDismiss: () -> Unit): ThomasListenerInterface {
+        return inbox.makeNativeMessageAnalytics(message, onDismiss)
+    }
+
     /** Loads the message with the given [messageId]. */
     fun loadMessage(messageId: String) {
         if (messageId == currentMessage?.id) {
@@ -249,7 +259,7 @@ internal class DefaultMessageCenterMessageViewModel(
                 State.MessageContent(message, content)
             }
 
-            Message.ContentType.THOMAS -> {
+            Message.ContentType.NATIVE -> {
                 val layout = inbox.loadMessageLayout(message)
                 if (layout != null) {
                     val content = State.MessageContent.Content.Native(layout)

@@ -10,6 +10,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.urbanairship.android.layout.ThomasListenerInterface
+import com.urbanairship.android.layout.ui.ThomasLayoutViewFactory
+import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State
 
@@ -19,6 +22,7 @@ import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.S
 @Stable
 public class MessageCenterMessageState internal constructor(
     private val onAction: (Action) -> Unit,
+    private val makeAnalytics: (Message, onDismiss: () -> Unit) -> ThomasListenerInterface
 ) {
     internal var viewState by mutableStateOf<State>(State.Empty)
 
@@ -38,6 +42,10 @@ public class MessageCenterMessageState internal constructor(
 
     internal fun onAction(action: Action) {
         onAction.invoke(action)
+    }
+
+    internal fun makeAnalytics(message: Message, onDismiss: () -> Unit): ThomasListenerInterface {
+        return makeAnalytics.invoke(message, onDismiss)
     }
 }
 
@@ -64,7 +72,12 @@ public fun rememberMessageCenterMessageState(
 internal fun rememberMessageCenterMessageState(
     viewModel: MessageCenterMessageViewModel,
 ): MessageCenterMessageState {
-    val state = remember { MessageCenterMessageState(viewModel::handle) }
+    val state = remember {
+        MessageCenterMessageState(
+            onAction = viewModel::handle,
+            makeAnalytics = viewModel::makeAnalytics
+        )
+    }
 
     LaunchedEffect(Unit) {
         with(viewModel.scope.coroutineContext) {

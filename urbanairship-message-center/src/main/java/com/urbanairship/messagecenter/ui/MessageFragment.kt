@@ -113,6 +113,11 @@ public open class MessageFragment @JvmOverloads constructor(
             }
         }
 
+        messageView.analyticsFactory = analyticsFactory@{ onDismiss ->
+            val message = viewModel.currentMessage ?: return@analyticsFactory null
+            viewModel.makeAnalytics(message, onDismiss)
+        }
+
         if (savedInstanceState == null) {
             messageId?.let { viewModel.loadMessage(it) } ?: UALog.i {
                 "MessageFragment started without a message ID. " + "Call loadMessage(messageId) to load a message."
@@ -150,7 +155,10 @@ public open class MessageFragment @JvmOverloads constructor(
     public fun loadMessage(messageId: String): Unit = viewModel.loadMessage(messageId)
 
     /** Clears the currently displayed message. */
-    public fun clearMessage(): Unit = viewModel.clearMessage()
+    public fun clearMessage(): Unit {
+        messageView?.onDismissed()
+        viewModel.clearMessage()
+    }
 
     /** Deletes the given [message]. */
     public fun deleteMessage(message: Message): Unit = viewModel.deleteMessages(message)

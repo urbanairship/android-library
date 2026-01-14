@@ -192,12 +192,12 @@ public open class MessageCenterFragment(): Fragment(R.layout.ua_fragment_message
     public fun closeMessage() {
         if (isTwoPane) {
             messageFragment?.setToolbarTitle(null)
-            messageFragment?.clearMessage()
             listFragment?.clearHighlighted()
         } else {
             updatePaneAccessibility(false)
             slidingPaneLayout.close()
         }
+        messageFragment?.clearMessage()
         listener?.onCloseMessage()
     }
 

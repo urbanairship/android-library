@@ -15,14 +15,11 @@ import com.urbanairship.actions.DefaultActionRunner
 import com.urbanairship.actions.run
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
-import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.ui.ThomasLayoutViewFactory
 import com.urbanairship.app.GlobalActivityMonitor
-import com.urbanairship.json.JsonSerializable
-import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.LOAD_FAILED
@@ -62,6 +59,10 @@ public class MessageView @JvmOverloads constructor(
 
     private var message: Message? = null
 
+    internal var analyticsFactory: ((onDismissed: () -> Unit) -> ThomasListenerInterface?)? = null
+    private var isDismissReported = false
+    private var currentDisplayArgs: DisplayArgs? = null
+
     init {
         inflate(context, R.layout.ua_view_message, this)
         onViewCreated()
@@ -70,45 +71,21 @@ public class MessageView @JvmOverloads constructor(
     private var error: Int? = null
 
     private fun createDisplayArgs(layout: LayoutInfo): DisplayArgs? {
-        if (message?.contentType != Message.ContentType.THOMAS) {
+        if (message?.contentType != Message.ContentType.NATIVE) {
             return null
         }
 
-        //TODO: we probably want to move it into the fragment to preserve state on refresh
-        //or at least split into local properties to make it less ugly
+        val analytics = analyticsFactory?.invoke {
+            isDismissReported = true
+            listener?.onCloseMessage()
+        } ?: return null
+
         return DisplayArgs(
             payload = layout,
-            listener = object : ThomasListenerInterface {
-                override fun onDismiss(cancel: Boolean) {
-                    listener?.onCloseMessage()
-                }
-
-                override fun onVisibilityChanged(
-                    isVisible: Boolean, isForegrounded: Boolean
-                ) {
-                }
-
-                override fun onStateChanged(state: JsonSerializable) {
-                }
-
-                override fun onReportingEvent(event: ReportingEvent) {
-                    UALog.v { "got event $event" }
-                    when(event) {
-                        is ReportingEvent.Dismiss -> {
-                            listener?.onCloseMessage()
-                        }
-                        else -> {}
-                    }
-                }
-            },
+            listener = analytics,
             inAppActivityMonitor = GlobalActivityMonitor.shared(context),
-            actionRunner = object : ThomasActionRunner {
-                override fun run(
-                    actions: Map<String, JsonValue>, state: LayoutData
-                ) {
-                    DefaultActionRunner.run(actions, Action.Situation.AUTOMATION)
-                }
-
+            actionRunner = { actions, _ ->
+                DefaultActionRunner.run(actions, Action.Situation.AUTOMATION)
             }
         )
     }
@@ -195,6 +172,7 @@ public class MessageView @JvmOverloads constructor(
                         )
                         views.showMessage(true)
                         listener?.onMessageLoaded(state.message)
+                        currentDisplayArgs = displayArgs
                     }
                 }
 
@@ -212,6 +190,28 @@ public class MessageView @JvmOverloads constructor(
                 views.showProgress()
             }
         }
+    }
+
+    internal fun onDismissed() {
+        val message = message ?: return
+        if (message.contentType != Message.ContentType.NATIVE) {
+            return
+        }
+        if (isDismissReported) {
+            ThomasLayoutViewFactory.clear()
+            isDismissReported = false
+            return
+        }
+
+        currentDisplayArgs?.listener?.onReportingEvent(
+            event = ReportingEvent.Dismiss(
+                data = ReportingEvent.DismissData.UserDismissed,
+                displayTime = ThomasLayoutViewFactory.calculateDisplayTime(message.id),
+                context = LayoutData.EMPTY
+            )
+        )
+
+        ThomasLayoutViewFactory.clear()
     }
 
     /** Pauses the WebView. */

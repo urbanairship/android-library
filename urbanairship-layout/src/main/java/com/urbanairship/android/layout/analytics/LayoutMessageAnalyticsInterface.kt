@@ -7,5 +7,5 @@ import com.urbanairship.android.layout.reporting.LayoutData
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface LayoutMessageAnalyticsInterface {
-    fun recordEvent(event: LayoutEvent, layoutContext: LayoutData?)
+    public fun recordEvent(event: LayoutEvent, layoutContext: LayoutData?)
 }

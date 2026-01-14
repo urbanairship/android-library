@@ -8,6 +8,6 @@ import com.urbanairship.json.JsonValue
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface ThomasActionRunner {
+public fun interface ThomasActionRunner {
     public fun run(actions: Map<String, JsonValue>, state: LayoutData)
 }
