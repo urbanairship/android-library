@@ -18,6 +18,7 @@ internal sealed class StoryIndicatorStyle(val type: StoryIndicatorStyleType) {
         val spacing: Int = json.optionalField<Int>("spacing") ?: 4
         val trackColor = Color.fromJson(json.requireField("track_color"))
         val progressColor = Color.fromJson(json.requireField("progress_color"))
+        val inactiveSegmentScaler: Double = json.optionalField<Double>("inactive_segment_scaler") ?: 0.5
 
         internal enum class SizingType(private val value: String) {
             EQUAL("equal"),
