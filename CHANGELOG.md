@@ -4,6 +4,12 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.13.7 - January 16, 2026
+Patch release that fixes a potential image-related crash in Scenes.
+
+### Changes
+- Fixes a potential crash in Scenes with specific images and display settings.
+
 ## Version 19.13.6 - November 14, 2025
 Patch release that fixes YouTube video playback in In-App Automation and Scenes. Applications that use YouTube videos in Scenes and non-html In-App Automations (IAA) must update to resolve playback errors.
 
