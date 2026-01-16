@@ -83,16 +83,6 @@ public open class MessageCenterMessageFragment(
 
         messageTitle?.let(::setToolbarTitle)
 
-        // Retrieve the Toolbar title TextView and set it as heading
-        toolbar?.let {
-            val titleTextView = it.children.firstOrNull { view ->
-                view is TextView && view.text == it.title
-            } as? TextView
-            titleTextView?.let { textView ->
-                ViewCompat.setAccessibilityHeading(textView, true)
-            }
-        }
-
         updateToolbarNavIcon()
     }
 
@@ -112,6 +102,10 @@ public open class MessageCenterMessageFragment(
     public fun setToolbarTitle(title: String?) {
         collapseToolbar?.title = title
         toolbar?.title = title
+
+        collapseToolbar?.let {
+            ViewCompat.setAccessibilityHeading(it, true)
+        }
     }
 
     /** Sets up the message toolbar. */
