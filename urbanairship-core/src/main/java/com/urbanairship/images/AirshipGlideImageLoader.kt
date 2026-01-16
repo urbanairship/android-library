@@ -11,6 +11,7 @@ import androidx.core.view.ancestors
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.DataSource
 import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.load.resource.bitmap.DownsampleStrategy
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
 import com.bumptech.glide.load.resource.gif.GifDrawable
 import com.bumptech.glide.request.RequestListener
@@ -75,6 +76,13 @@ internal object AirshipGlideImageLoader : ImageLoader {
                     placeholder(imageRequestOptions.placeHolder)
                 }
             }
+            // Scales, maintaining the original aspect ratio, so that one of the
+            // image's dimensions is exactly equal to the requested size and the
+            // other dimension is less than or equal to the requested size.
+            // This will not upscale images, but will downscale images that are too large.
+            // Upscaling will be handled by the ImageView's scaleType.
+            .downsample(DownsampleStrategy.CENTER_INSIDE)
+            .dontTransform()
             .transition(withCrossFade(100))
             .into(
                 AirshipImageViewTarget(
