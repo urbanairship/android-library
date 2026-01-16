@@ -73,7 +73,10 @@ internal class StackImageButtonView(
         val baseBackground = this.background
         model.listener = object : ButtonModel.Listener {
             override fun setEnabled(enabled: Boolean) {
-                button.isEnabled = enabled
+                if (button.isEnabled != enabled) {
+                    button.isEnabled = enabled
+                    this@StackImageButtonView.alpha = if (enabled) 1.0f else LayoutUtils.MATERIAL_ALPHA_DISABLED
+                }
             }
 
             override fun onStateUpdated(state: ThomasState) {

@@ -117,36 +117,48 @@ internal class PagerModel(
         }
 
         // Listen for page changes (or the initial page display)
-        // and run any actions for the current page.
+        // when we are scrolling and reset isScrolling once the transition completes.
         modelScope.launch {
             pagerState.changes.filter {
                 // If current and last are both 0, we're initializing the pager.
                 // Otherwise, we only want to act on changes to the pageIndex.
-
-                (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex) && it.progress == 0
+                (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex)
+                        && it.progress == 0
+                        && it.isScrolling
             }.collect {
                 // Page transition has completed - reset isScrolling if it was true
-                if (it.isScrolling) {
-                    pagerState.update { state -> state.copyWithScrolling(false) }
-                }
+                pagerState.update { it.copyWithScrolling(false) }
+            }
+        }
+
+        // Listen for page changes (or the initial page display)
+        // when we are not scrolling and run any actions for the current page.
+        modelScope.launch {
+            pagerState.changes.filter {
+                // If current and last are both 0, we're initializing the pager.
+                // Otherwise, we only want to act on changes to the pageIndex.
+                (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex)
+                        && it.progress == 0
+                        && it.isScrolling.not()
+            }.collect {
                 // Clear any automated actions scheduled for the previous page.
                 clearAutomatedActions(it.lastPageIndex)
                 if (it.lastPageIndex > it.pageIndex) {
-                    it.previousPageId?.let { branchControl?.removeFromHistory(it) }
+                    it.previousPageId?.let { pageId -> branchControl?.removeFromHistory(pageId) }
                 }
 
                 // Handle any actions defined for the current page.
-                val currentPage = it.currentPageId?.let { id -> _allPages.firstOrNull { it.identifier == id } } ?: return@collect
+                val currentPage = it.currentPageId?.let { id ->
+                    _allPages.firstOrNull { page -> page.identifier == id }
+                } ?: return@collect
 
-                // This could be run multiple times when branching path updates,
-                // so we remember last page id and only run once per page.
                 if (lastDisplayedPageId.value != currentPage.identifier) {
                     lastDisplayedPageId.update { currentPage.identifier }
-
                     runStateActions(currentPage.stateActions)
-                    handlePageActions(currentPage.displayActions, currentPage.automatedActions)
-                    it.currentPageId?.let { pageId -> branchControl?.addToHistory(pageId) }
                 }
+
+                handlePageActions(currentPage.displayActions, currentPage.automatedActions)
+                it.currentPageId?.let { pageId -> branchControl?.addToHistory(pageId) }
 
                 // Check if the current page has any automated pause/resume actions
                 val hasPauseOrResumeAction = currentPage.automatedActions?.hasPagerPauseOrResumeAction == true
