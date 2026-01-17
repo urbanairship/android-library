@@ -4,6 +4,15 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.1.1 - January 16, 2026
+
+Patch release that fixes a potential image-related crash in Scenes and acessibility issues.
+
+### Changes
+- Fixed a potential crash in Scenes with specific images and display settings
+- Fixed Message Center title not being marked as a heading
+- Fixed Scene icon buttons not having a proper disabled effect
+
 ## Version 20.1.0 - January 9, 2026
 
 Minor release that includes several fixes and improvements for Scenes, In-App Automations, and notification handling.

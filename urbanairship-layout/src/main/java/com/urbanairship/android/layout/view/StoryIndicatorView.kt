@@ -138,6 +138,9 @@ internal class StoryIndicatorView(
             return
         }
         val storyHeight = this.height
+        val inactiveScaler = when (val style = model.viewInfo.style) {
+            is StoryIndicatorStyle.LinearProgress -> style.inactiveSegmentScaler
+        }
         for (i in 0 until count) {
             (progressIndicators[i] as? LinearProgressIndicator)?.let { indicator ->
                 if (i == pageIndex) {
@@ -151,10 +154,10 @@ internal class StoryIndicatorView(
                         indicator.visibility = GONE
                     }
                     if (i > pageIndex) {
-                        indicator.trackThickness = (storyHeight * 0.5).toInt()
+                        indicator.trackThickness = (storyHeight * inactiveScaler).toInt()
                         indicator.setProgressCompat(0, false)
                     } else {
-                        indicator.trackThickness = (storyHeight * 0.5).toInt()
+                        indicator.trackThickness = (storyHeight * inactiveScaler).toInt()
                         indicator.setProgressCompat(100, false)
                     }
                 }

@@ -66,7 +66,7 @@ internal object LayoutUtils {
     const val DEFAULT_BORDER_RADIUS: Int = 0
 
     private const val MATERIAL_ALPHA_LOW = 0.32f
-    private const val MATERIAL_ALPHA_DISABLED = 0.38f
+    const val MATERIAL_ALPHA_DISABLED = 0.38f
 
     private const val NBSP = "\u00A0"
     private const val NARROW_NBSP = "\u202F"
