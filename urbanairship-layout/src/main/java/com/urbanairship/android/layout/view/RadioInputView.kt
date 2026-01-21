@@ -2,6 +2,9 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
+import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
+import android.widget.Button
 import android.widget.RadioButton
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.isVisible
@@ -57,6 +60,20 @@ internal class RadioInputView(
             override fun toggle() {
                 // Not calling super, because the controller/model handles updating the view.
                 checkedChangeListener?.onCheckedChange(this, !isChecked)
+            }
+
+            override fun getAccessibilityClassName(): CharSequence? {
+                return accessibilityNodeClassName
+            }
+
+            override fun onInitializeAccessibilityEvent(event: AccessibilityEvent) {
+                super.onInitializeAccessibilityEvent(event)
+                event.setClassName(accessibilityNodeClassName)
+            }
+
+            override fun onInitializeAccessibilityNodeInfo(info: AccessibilityNodeInfo) {
+                super.onInitializeAccessibilityNodeInfo(info)
+                info.setClassName(accessibilityNodeClassName)
             }
         }
     }
