@@ -20,6 +20,7 @@ import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import com.urbanairship.util.AutoRefreshingDataProvider
 import com.urbanairship.util.LocaleCompat
 import java.util.Locale
 import java.util.TimeZone
@@ -77,7 +78,7 @@ public class AirshipChannelTest {
     private val mockBatchUpdateManager = mockk<ChannelBatchUpdateManager>(relaxed = true)
     private val mockJobDispatcher = mockk<JobDispatcher>(relaxed = true)
     private val mockSubscriptions = mockk<ChannelSubscriptions>(relaxed = false)
-    private val subscriptionsProviderFlow = MutableSharedFlow<Result<Set<String>>>(replay = 1)
+    private val subscriptionsProviderFlow = MutableSharedFlow<AutoRefreshingDataProvider.IdentifiableResult<Set<String>>>(replay = 1)
     private val mockSubscriptionsProvider = mockk<SubscriptionsProvider>(relaxed = false) {
         coEvery {this@mockk.updates} returns subscriptionsProviderFlow
     }
@@ -386,7 +387,12 @@ public class AirshipChannelTest {
             mockSubscriptions.fetchSubscriptionLists("some channel")
         } returns result
 
-        subscriptionsProviderFlow.tryEmit(Result.success(setOf("one", "two", "three")))
+        subscriptionsProviderFlow.tryEmit(
+            AutoRefreshingDataProvider.IdentifiableResult(
+                identifier = "some channel",
+                data = Result.success(setOf("one", "two", "three"))
+            )
+        )
         channelIdFlow.tryEmit("some channel")
 
         assertEquals(result, channel.fetchSubscriptionLists())

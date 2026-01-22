@@ -14,6 +14,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -32,10 +33,11 @@ public class JobDispatcher public constructor(
     context: Context,
     private val scheduler: Scheduler = WorkManagerScheduler(),
     private val jobRunner: JobRunner = DefaultRunner(),
-    private val rateLimiter: RateLimiter = RateLimiter()
+    private val rateLimiter: RateLimiter = RateLimiter(),
+    private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) {
 
-    private val scheduleScope = CoroutineScope(AirshipDispatchers.newSerialDispatcher() + SupervisorJob())
+    private val scheduleScope = CoroutineScope(dispatcher + SupervisorJob())
 
     private val context: Context = context.applicationContext
     private val pendingJobInfos = MutableStateFlow<List<Pending>>(emptyList())

@@ -33,6 +33,7 @@ import java.util.TimeZone
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
@@ -63,6 +64,7 @@ public constructor(
     private val permissionsManager: PermissionsManager,
     private val eventFeed: AirshipEventFeed,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
+    dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
     ) : JobAwareAirshipComponent(context, dataStore) {
 
     /**
@@ -99,7 +101,7 @@ public constructor(
     private val associatedIdentifiersLock = Any()
 
     private val job = SupervisorJob()
-    private val scope = CoroutineScope(AirshipDispatchers.IO + job)
+    private val scope = CoroutineScope(dispatcher + job)
 
     /**
      * Gets the current environment Id.

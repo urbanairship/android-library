@@ -38,6 +38,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -75,7 +76,8 @@ public class AnalyticsTest {
         localeManager,
         mockEventManager,
         mockPermissionsManager,
-        mockEventFeed
+        mockEventFeed,
+        dispatcher = testDispatcher
     )
 
     @Before
@@ -121,13 +123,15 @@ public class AnalyticsTest {
      * is sent.
      */
     @Test
-    public fun testOnBackground(): TestResult = runTest {
+    public fun testOnBackground(): TestResult = runTest(testDispatcher) {
         // Start analytics in the foreground
         analytics.conversionSendId = "some-id"
         activityMonitor.background()
 
         // Verify that we clear the conversion send id
         assertThat(analytics.conversionSendId).isNull()
+
+        advanceUntilIdle()
 
         coVerify {
             mockEventManager.addEvent(
@@ -163,9 +167,11 @@ public class AnalyticsTest {
      * Test adding an event
      */
     @Test
-    public fun testAddEvent(): TestResult = runTest {
+    public fun testAddEvent(): TestResult = runTest(testDispatcher) {
         val event = CustomEvent.newBuilder("cool").build()
         analytics.addEvent(event)
+
+        advanceUntilIdle()
 
         coVerify {
             mockEventManager.addEvent(
@@ -185,7 +191,7 @@ public class AnalyticsTest {
      * Test adding an event when analytics is disabled through airship config.
      */
     @Test
-    public fun testAddEventDisabledAnalyticsConfig(): TestResult = runTest {
+    public fun testAddEventDisabledAnalyticsConfig(): TestResult = runTest(testDispatcher) {
         val options = AirshipConfigOptions.Builder()
             .setDevelopmentAppKey("appKey")
             .setDevelopmentAppSecret("appSecret")
@@ -201,7 +207,7 @@ public class AnalyticsTest {
      * Test adding an event when analytics is disabled
      */
     @Test
-    public fun testAddEventDisabledAnalytics(): TestResult = runTest {
+    public fun testAddEventDisabledAnalytics(): TestResult = runTest(testDispatcher) {
         privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         analytics.addEvent(AppForegroundEvent(100))
         coVerify(exactly = 0) { mockEventManager.addEvent(any(), any())  }
@@ -211,7 +217,7 @@ public class AnalyticsTest {
      * Test adding an invalid event
      */
     @Test
-    public fun testAddInvalidEvent(): TestResult = runTest {
+    public fun testAddInvalidEvent(): TestResult = runTest(testDispatcher) {
         val event: Event = mockk() {
             every { eventId } returns "event-id"
             every { type } returns EventType.APP_BACKGROUND
@@ -228,8 +234,9 @@ public class AnalyticsTest {
      * Test disabling analytics should start dispatch a job to delete all events.
      */
     @Test
-    public fun testDisableAnalytics(): TestResult = runTest {
+    public fun testDisableAnalytics(): TestResult = runTest(testDispatcher) {
         privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
+        advanceUntilIdle()
         coVerify { mockEventManager.deleteEvents() }
     }
 
@@ -237,9 +244,9 @@ public class AnalyticsTest {
      * Test editAssociatedIdentifiers dispatches a job to add a new associate_identifiers event.
      */
     @Test
-    public fun testEditAssociatedIdentifiers(): TestResult = runTest {
+    public fun testEditAssociatedIdentifiers(): TestResult = runTest(testDispatcher) {
         analytics.editAssociatedIdentifiers().addIdentifier("customKey", "customValue").apply()
-
+        advanceUntilIdle()
         coVerify {
             mockEventManager.addEvent(
                 match {
@@ -254,11 +261,11 @@ public class AnalyticsTest {
     }
 
     @Test
-    public fun testEditAssociatedIdentifiersClosure(): TestResult = runTest {
+    public fun testEditAssociatedIdentifiersClosure(): TestResult = runTest(testDispatcher) {
         analytics.editAssociatedIdentifiers {
             addIdentifier("customKey", "customValue")
         }
-
+        advanceUntilIdle()
         coVerify {
             mockEventManager.addEvent(
                 match {
@@ -276,11 +283,13 @@ public class AnalyticsTest {
      * Test editAssociatedIdentifiers doesn't dispatch a job when adding a duplicate associate_identifier.
      */
     @Test
-    public fun testEditDuplicateAssociatedIdentifiers(): TestResult = runTest {
+    public fun testEditDuplicateAssociatedIdentifiers(): TestResult = runTest(testDispatcher) {
         analytics.editAssociatedIdentifiers().addIdentifier("customKey", "customValue").apply()
 
         // Edit with a duplicate identifier
         analytics.editAssociatedIdentifiers().addIdentifier("customKey", "customValue").apply()
+
+        advanceUntilIdle()
 
         // Verify we don't add an event more than once
         coVerify(exactly = 1) {
@@ -297,11 +306,13 @@ public class AnalyticsTest {
      * Test that tracking event adds itself on background
      */
     @Test
-    public fun testTrackingEventBackground(): TestResult = runTest {
+    public fun testTrackingEventBackground(): TestResult = runTest(testDispatcher) {
         analytics.trackScreen("test_screen")
 
         // Make call to background
         activityMonitor.background()
+
+        advanceUntilIdle()
 
         coVerify{
             mockEventManager.addEvent(
@@ -317,11 +328,13 @@ public class AnalyticsTest {
      * Test that tracking event adds itself upon adding a new screen
      */
     @Test
-    public fun testTrackingEventAddNewScreen(): TestResult = runTest {
+    public fun testTrackingEventAddNewScreen(): TestResult = runTest(testDispatcher) {
         analytics.trackScreen("test_screen_1")
 
         // Add another screen
         analytics.trackScreen("test_screen_2")
+
+        advanceUntilIdle()
 
         // Verify we started an add event job
         coVerify{
@@ -339,11 +352,13 @@ public class AnalyticsTest {
      * Test that tracking event ignores duplicate tracking calls for same screen
      */
     @Test
-    public fun testTrackingEventAddSameScreen(): TestResult = runTest {
+    public fun testTrackingEventAddSameScreen(): TestResult = runTest(testDispatcher) {
         analytics.trackScreen("test_screen_1")
 
         // Add another screen
         analytics.trackScreen("test_screen_1")
+
+        advanceUntilIdle()
 
         coVerify(exactly = 0){
             mockEventManager.addEvent(
@@ -372,12 +387,14 @@ public class AnalyticsTest {
      * Tests sending events
      */
     @Test
-    public fun testSendingEvents(): TestResult = runTest {
+    public fun testSendingEvents(): TestResult = runTest(testDispatcher) {
         every { mockChannel.id } returns "some channel"
         coEvery { mockEventManager.uploadEvents(any(), any()) } returns true
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         assertThat(analytics.onPerformJob( jobInfo)).isEqualTo(JobResult.SUCCESS)
+
+        advanceUntilIdle()
 
         coVerify { mockEventManager.uploadEvents("some channel", any()) }
     }
@@ -387,11 +404,13 @@ public class AnalyticsTest {
      * Test sending events when there's no channel ID present
      */
     @Test
-    public fun testSendingWithNoChannelID(): TestResult = runTest {
+    public fun testSendingWithNoChannelID(): TestResult = runTest(testDispatcher) {
         every { mockChannel.id } returns null
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         assertThat(analytics.onPerformJob(jobInfo)).isEqualTo(JobResult.SUCCESS)
+
+        advanceUntilIdle()
 
         coVerify(exactly = 0) { mockEventManager.uploadEvents(any(), any()) }
     }
@@ -400,12 +419,14 @@ public class AnalyticsTest {
      * Test sending events when analytics is disabled.
      */
     @Test
-    public fun testSendingWithAnalyticsDisabled(): TestResult = runTest {
+    public fun testSendingWithAnalyticsDisabled(): TestResult = runTest(testDispatcher) {
         privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         every { mockChannel.id } returns "channel"
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         assertThat(analytics.onPerformJob(jobInfo)).isEqualTo(JobResult.SUCCESS)
+
+        advanceUntilIdle()
 
         coVerify(exactly = 0) { mockEventManager.uploadEvents(any(), any()) }
     }
@@ -414,12 +435,14 @@ public class AnalyticsTest {
      * Test sending events when the upload fails
      */
     @Test
-    public fun testSendEventsFails(): TestResult = runTest {
+    public fun testSendEventsFails(): TestResult = runTest(testDispatcher) {
         every { mockChannel.id } returns "channel"
         coEvery { mockEventManager.uploadEvents(any(), any()) } returns false
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         assertThat(analytics.onPerformJob(jobInfo)).isEqualTo(JobResult.RETRY)
+
+        advanceUntilIdle()
 
         coVerify(exactly = 1) { mockEventManager.uploadEvents(any(), any()) }
     }
@@ -429,7 +452,7 @@ public class AnalyticsTest {
      * This verifies all required and most optional headers.
      */
     @Test
-    public fun testRequestHeaders(): TestResult = runTest {
+    public fun testRequestHeaders(): TestResult = runTest(testDispatcher) {
         val locale = LocaleCompat.of("en", "US", "POSIX")
         localeManager.setLocaleOverride(locale)
         analytics.registerSDKExtension(Extension.CORDOVA, "1.2.3")
@@ -464,6 +487,8 @@ public class AnalyticsTest {
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         analytics.onPerformJob(jobInfo)
 
+        advanceUntilIdle()
+
         coVerify {
             mockEventManager.uploadEvents("channel", expectedHeaders)
         }
@@ -473,12 +498,14 @@ public class AnalyticsTest {
      * Test that amazon is set as the device family when the platform is amazon.
      */
     @Test
-    public fun testAmazonDeviceFamily(): TestResult = runTest {
+    public fun testAmazonDeviceFamily(): TestResult = runTest(testDispatcher) {
         every { mockChannel.id } returns "channel"
         runtimeConfig.setPlatform(Platform.AMAZON)
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         analytics.onPerformJob(jobInfo)
+
+        advanceUntilIdle()
 
         coVerify {
             mockEventManager.uploadEvents("channel", match {
@@ -492,12 +519,14 @@ public class AnalyticsTest {
      * field is blank on the locale.
      */
     @Test
-    public fun testRequestHeaderEmptyLocaleCountryHeaders(): TestResult = runTest {
+    public fun testRequestHeaderEmptyLocaleCountryHeaders(): TestResult = runTest(testDispatcher) {
         localeManager.setLocaleOverride(LocaleCompat.of("en", "", "POSIX"))
         every { mockChannel.id } returns "channel"
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         analytics.onPerformJob(jobInfo)
+
+        advanceUntilIdle()
 
         coVerify {
             mockEventManager.uploadEvents("channel", match {
@@ -511,13 +540,15 @@ public class AnalyticsTest {
      * field is blank on the locale.
      */
     @Test
-    public fun testRequestHeaderEmptyLocaleVariantHeaders(): TestResult = runTest {
+    public fun testRequestHeaderEmptyLocaleVariantHeaders(): TestResult = runTest(testDispatcher) {
         localeManager.setLocaleOverride(LocaleCompat.of("en", "US", ""))
 
         every { mockChannel.id } returns "channel"
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         analytics.onPerformJob(jobInfo)
+
+        advanceUntilIdle()
 
         coVerify {
             mockEventManager.uploadEvents("channel", match {
@@ -531,13 +562,15 @@ public class AnalyticsTest {
      * is empty.
      */
     @Test
-    public fun testRequestHeaderEmptyLanguageLocaleHeaders(): TestResult = runTest {
+    public fun testRequestHeaderEmptyLanguageLocaleHeaders(): TestResult = runTest(testDispatcher) {
         localeManager.setLocaleOverride(LocaleCompat.of("", "US", "POSIX"))
 
         every { mockChannel.id } returns "channel"
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         analytics.onPerformJob(jobInfo)
+
+        advanceUntilIdle()
 
         coVerify {
             mockEventManager.uploadEvents("channel", match {
@@ -552,7 +585,7 @@ public class AnalyticsTest {
      * Test that SDK extensions are registered correctly
      */
     @Test
-    public fun testSDKExtensions(): TestResult = runTest {
+    public fun testSDKExtensions(): TestResult = runTest(testDispatcher) {
         analytics.registerSDKExtension(Extension.CORDOVA, "1.0.0")
         analytics.registerSDKExtension(Extension.UNITY, "2.0.0")
         analytics.registerSDKExtension(Extension.FLUTTER, "3.0.0")
@@ -570,6 +603,8 @@ public class AnalyticsTest {
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         analytics.onPerformJob(jobInfo)
 
+        advanceUntilIdle()
+
         coVerify {
             mockEventManager.uploadEvents("channel", match {
                 it["X-UA-Frameworks"] == expected
@@ -578,7 +613,7 @@ public class AnalyticsTest {
     }
 
     @Test
-    public fun testPermissionHeaders(): TestResult = runTest {
+    public fun testPermissionHeaders(): TestResult = runTest(testDispatcher) {
         every { mockChannel.id } returns "channel"
 
         every { mockPermissionsManager.configuredPermissions } returns setOf(Permission.LOCATION, Permission.DISPLAY_NOTIFICATIONS)
@@ -593,6 +628,8 @@ public class AnalyticsTest {
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         analytics.onPerformJob(jobInfo)
 
+        advanceUntilIdle()
+
         coVerify {
             mockEventManager.uploadEvents("channel", match {
                 it["X-UA-Permission-location"] == "not_determined" &&
@@ -605,7 +642,7 @@ public class AnalyticsTest {
      * Test that analytics header delegates are able to provide additional headers.
      */
     @Test
-    public fun testAnalyticHeaderDelegate(): TestResult = runTest {
+    public fun testAnalyticHeaderDelegate(): TestResult = runTest(testDispatcher) {
         every { mockChannel.id } returns "channel"
         analytics.addHeaderDelegate { mapOf("foo" to "bar") }
 
@@ -613,6 +650,8 @@ public class AnalyticsTest {
 
         val jobInfo = JobInfo.newBuilder().setAction(EventManager.ACTION_SEND).build()
         analytics.onPerformJob(jobInfo)
+
+        advanceUntilIdle()
 
         coVerify {
             mockEventManager.uploadEvents("channel", match {
@@ -622,7 +661,7 @@ public class AnalyticsTest {
     }
 
     @Test
-    public fun testScreenState(): TestResult = runTest {
+    public fun testScreenState(): TestResult = runTest(testDispatcher) {
         analytics.screenState.test {
             assertThat(awaitItem()).isNull()
 
@@ -647,7 +686,7 @@ public class AnalyticsTest {
     }
 
     @Test
-    public fun testRegionState(): TestResult = runTest {
+    public fun testRegionState(): TestResult = runTest(testDispatcher) {
         analytics.regionState.test {
             assertThat(awaitItem()).isEmpty()
 
@@ -677,7 +716,7 @@ public class AnalyticsTest {
     }
 
     @Test
-    public fun testEventFeed(): TestResult = runTest {
+    public fun testEventFeed(): TestResult = runTest(testDispatcher) {
         analytics.trackScreen("foo")
         verify {
             mockEventFeed.emit(AirshipEventFeed.Event.Screen("foo"))

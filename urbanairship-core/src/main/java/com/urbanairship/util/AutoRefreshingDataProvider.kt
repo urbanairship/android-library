@@ -28,6 +28,12 @@ internal abstract class AutoRefreshingDataProvider<T, R>(
     private val taskSleeper: TaskSleeper = TaskSleeper.default,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
 ) {
+
+    data class IdentifiableResult<T>(
+        val identifier: String,
+        val data: Result<T>
+    )
+
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
     private val changeTokenFlow = MutableStateFlow(UUID.randomUUID())
     private val fetchCache = FetchCache<T>(clock, maxCacheAge)
@@ -37,41 +43,42 @@ internal abstract class AutoRefreshingDataProvider<T, R>(
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    val updates: SharedFlow<Result<T>> by lazy {
-        var lastIdentifier: String? = null
-
-
+    val updates: SharedFlow<IdentifiableResult<T>> by lazy {
         combine(identifierUpdates, changeTokenFlow) { identifier, changeToken ->
             Pair(identifier, changeToken)
         }.flatMapLatest { (identifier, changeToken) ->
+            var hasEmittedForThisId = false
+            var backoff: Duration = initialBackoff
+
             val fetchUpdates = flow {
-
-                var backoff: Duration = initialBackoff
-
                 while (true) {
                     val fetched = fetch(identifier, changeToken)
-                    backoff = if (fetched.isSuccess) {
+                    backoff = if (fetched.data.isSuccess) {
                         emit(fetched)
+                        hasEmittedForThisId = true
                         taskSleeper.sleep(fetchCache.remainingCacheTimeMillis)
                         initialBackoff
                     } else {
-                        if (lastIdentifier != identifier) {
+                        // Only emit failure if we haven't successfully
+                        // provided data for this specific ID yet
+                        if (!hasEmittedForThisId) {
                             emit(fetched)
                         }
                         taskSleeper.sleep(backoff)
                         backoff.times(2).coerceAtMost(maxBackoff)
                     }
-                    lastIdentifier = identifier
                 }
             }
 
 
             combine(fetchUpdates, overrideUpdates) { fetchUpdate, overrides ->
-                fetchUpdate.fold(onSuccess = {
-                    Result.success(onApplyOverrides(it, overrides))
-                }, onFailure = {
-                    Result.failure(it)
-                })
+                IdentifiableResult(
+                    identifier = fetchUpdate.identifier, data = fetchUpdate.data.fold(onSuccess = {
+                        Result.success(onApplyOverrides(it, overrides))
+                    }, onFailure = {
+                        Result.failure(it)
+                    })
+                )
             }
         }.shareIn(
             scope = scope,
@@ -80,17 +87,24 @@ internal abstract class AutoRefreshingDataProvider<T, R>(
         )
     }
 
-    private suspend fun fetch(identifier: String, changeToken: UUID): Result<T> {
+    private suspend fun fetch(identifier: String, changeToken: UUID): IdentifiableResult<T> {
         val cached = fetchCache.getCache(identifier, changeToken)
         if (cached != null) {
-            return cached
+            return IdentifiableResult(
+                identifier = identifier,
+                data = cached
+            )
         }
 
         val result = onFetch(identifier)
         if (result.isSuccess) {
             fetchCache.setCache(identifier, changeToken, result)
         }
-        return result
+
+        return IdentifiableResult(
+            identifier = identifier,
+            data = result
+        )
     }
 
     abstract suspend fun onFetch(identifier: String): Result<T>

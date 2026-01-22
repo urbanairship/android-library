@@ -11,7 +11,6 @@ import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 

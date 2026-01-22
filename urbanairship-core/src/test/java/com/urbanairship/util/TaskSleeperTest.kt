@@ -2,18 +2,11 @@ package com.urbanairship.util
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
-import com.urbanairship.TestTaskSleeper
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
-import junit.framework.TestCase.assertFalse
-import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.resetMain
@@ -33,8 +26,16 @@ public class TaskSleeperTest {
         currentTimeMillis = 0
     }
 
-    private val sleeper: TestTaskSleeper = TestTaskSleeper(clock) { sleep ->
-        clock.currentTimeMillis += sleep.inWholeMilliseconds
+    private val recordedIntervals = mutableListOf<Duration>()
+
+    // We create a subclass to override onSleep and capture the chunks
+    // without actually calling delay()
+    private val sleeper = object : TaskSleeper(clock) {
+        override suspend fun onSleep(duration: Duration) {
+            recordedIntervals.add(duration)
+            // Manually advance our test clock so the 'remainingMillis' calculation works
+            clock.currentTimeMillis += duration.inWholeMilliseconds
+        }
     }
 
     @Before
@@ -48,32 +49,32 @@ public class TaskSleeperTest {
     }
 
     @Test
-    public fun testIntervalSleep(): TestResult = runTest {
-        awaitSleep(85.seconds)
-        assertThat(sleeper.sleeps).containsExactly(30.seconds, 30.seconds, 25.seconds)
+    public fun testIntervalSleep(): TestResult = runTest(testDispatcher) {
+        // This tests that 85s is broken into [30s, 30s, 25s]
+        sleeper.sleep(85.seconds)
+
+        assertThat(recordedIntervals).containsExactly(30.seconds, 30.seconds, 25.seconds)
     }
 
     @Test
-    public fun testBelowIntervalSleep(): TestResult = runTest {
-        awaitSleep(30.seconds)
-        assertThat(sleeper.sleeps).containsExactly(30.seconds)
+    public fun testBelowIntervalSleep(): TestResult = runTest(testDispatcher) {
+        // This tests that 10s is just one [10s] chunk
+        sleeper.sleep(10.seconds)
+
+        assertThat(recordedIntervals).containsExactly(10.seconds)
     }
 
     @Test
-    public fun testNegativeSleep(): TestResult = runTest {
-        awaitSleep((-1).seconds)
-        assertThat(sleeper.sleeps).isEmpty()
+    public fun testNegativeSleep(): TestResult = runTest(testDispatcher) {
+        sleeper.sleep((-5).seconds)
+
+        assertThat(recordedIntervals).isEmpty()
     }
 
     @Test
-    public fun testZeroSleep(): TestResult = runTest {
-        awaitSleep(0.seconds)
-        assertThat(sleeper.sleeps).isEmpty()
-    }
+    public fun testZeroSleep(): TestResult = runTest(testDispatcher) {
+        sleeper.sleep(0.seconds)
 
-    private suspend fun awaitSleep(duration: Duration) {
-        coroutineScope {
-            async { sleeper.sleep(duration) }.await()
-        }
+        assertThat(recordedIntervals).isEmpty()
     }
 }

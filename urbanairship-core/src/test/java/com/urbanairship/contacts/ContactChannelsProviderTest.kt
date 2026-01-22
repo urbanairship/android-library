@@ -70,7 +70,7 @@ public class ContactChannelsProviderTest {
         provider.updates.test {
             ensureAllEventsConsumed()
             contactIdUpdate.value = "some-contact-id"
-            assertEquals(expected, this.awaitItem().getOrThrow())
+            assertEquals(expected, this.awaitItem().data.getOrThrow())
         }
     }
 //
