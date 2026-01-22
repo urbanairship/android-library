@@ -45,6 +45,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 
@@ -136,7 +137,7 @@ public class AirshipChannel internal constructor(
      */
     public var channelIdFlow: StateFlow<String?> = channelRegistrar.channelIdFlow
 
-    public val subscriptions: Flow<Result<Set<String>>> = subscriptionsProvider.updates
+    public val subscriptions: Flow<Result<Set<String>>> = subscriptionsProvider.updates.map { it.data }
 
 
     init {
@@ -459,7 +460,7 @@ public class AirshipChannel internal constructor(
      */
     @JvmSynthetic
     public suspend fun fetchSubscriptionLists(): Result<Set<String>> {
-        return subscriptionsProvider.updates.first()
+        return subscriptionsProvider.updates.first().data
     }
 
     /**

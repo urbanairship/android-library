@@ -3,4 +3,9 @@
     <declare-styleable name="UrbanAirship.PreferenceCenter">
         <attr name="urbanAirshipPreferenceCenterSubscriptionTypeChipStyle" format="reference"/>
     </declare-styleable>
+
+    <declare-styleable name="UrbanAirship.PreferenceCenterView">
+        <!-- The ID of the Preference Center to be displayed. -->
+        <attr name="preferenceCenterId" format="string"/>
+    </declare-styleable>
 </resources>

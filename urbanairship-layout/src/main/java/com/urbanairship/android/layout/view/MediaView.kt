@@ -265,7 +265,6 @@ internal class MediaView(
 
         wv.webChromeClient = viewEnvironment.webChromeClientFactory().create()
         wv.addJavascriptInterface(wv.getJavascriptInterface(), "VideoListenerInterface")
-
         val frameLayout = when (model.viewInfo.mediaType) {
             // Adjust the aspect ratio of the WebView if the media is video or youtube.
             MediaType.VIDEO -> FixedAspectRatioFrameLayout(context).apply {
@@ -274,8 +273,22 @@ internal class MediaView(
                 }
 
                 doOnAttach {
-                    model.viewInfo.video?.aspectRatio?.let {
-                        aspectRatio = it.toFloat()
+                    val params = this@MediaView.layoutParams
+                    val isWrapWidth = params.width == WRAP_CONTENT
+                    val isWrapHeight = params.height == WRAP_CONTENT
+
+                    if (isWrapWidth || isWrapHeight) {
+                        // If either dimension is wrap_content, the aspect ratio will be adjusted
+                        // based on the video's aspect ratio.
+                        model.viewInfo.video?.aspectRatio?.let {
+                            aspectRatio = it.toFloat()
+                        }
+                        shouldEnforceAspectRatio = true
+                    } else {
+                        // If the width and height are known, we don't need to fix to the aspect
+                        // ratio of the video.
+                        aspectRatio = model.viewInfo.video?.aspectRatio?.toFloat() ?: 1.77f
+                        shouldEnforceAspectRatio = false
                     }
                 }
             }
@@ -482,6 +495,7 @@ internal class MediaView(
 
         // Default to a 16:9 aspect ratio
         var aspectRatio: Float? = 1.77f
+        var shouldEnforceAspectRatio: Boolean = true
 
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
             val widthMode = MeasureSpec.getMode(widthMeasureSpec)
@@ -499,6 +513,13 @@ internal class MediaView(
             } else if (widthMode == MeasureSpec.EXACTLY) {
                 false
             } else {
+                super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+                return
+            }
+
+            // If we shouldn't enforce aspect ratio (both dimensions are MATCH_PARENT),
+            // just measure to the available size
+            if (!shouldEnforceAspectRatio && widthMode == MeasureSpec.EXACTLY && heightMode == MeasureSpec.EXACTLY && receivedWidth > 0 && receivedHeight > 0) {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec)
                 return
             }

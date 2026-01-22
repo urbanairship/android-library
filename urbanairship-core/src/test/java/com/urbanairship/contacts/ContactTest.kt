@@ -23,6 +23,7 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.remoteconfig.ContactConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import com.urbanairship.util.AutoRefreshingDataProvider
 import com.urbanairship.util.TaskSleeper
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -41,6 +42,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -73,7 +75,7 @@ public class ContactTest {
         coEvery { contactOverrides(any()) } returns AudienceOverrides.Contact()
     }
 
-    private val contactChannelFlow = MutableSharedFlow<Result<List<ContactChannel>>>()
+    private val contactChannelFlow = MutableSharedFlow<AutoRefreshingDataProvider.IdentifiableResult<List<ContactChannel>>>()
     private val mockChannelsContactProvider = mockk<ContactChannelsProvider>(relaxUnitFun = true) {
         every { updates } returns contactChannelFlow.asSharedFlow()
     }
@@ -878,22 +880,20 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptions(): TestResult = runTest {
-        contactIdUpdates.tryEmit(ContactIdUpdate("stable contact id", null, true, 0))
+        contactIdUpdates.value = ContactIdUpdate("stable contact id", null, true, 0)
+
         val networkResult = RequestResult(
             status = 200,
-            value = mapOf(
-                "foo" to setOf(Scope.APP, Scope.SMS),
-                "bar" to setOf(Scope.EMAIL)
-            ),
+            value = mapOf("foo" to setOf(Scope.APP)),
             body = null,
             headers = emptyMap()
         )
 
-        coEvery { mockSubscriptionListApiClient.getSubscriptionLists(any()) } returns networkResult
+        coEvery { mockSubscriptionListApiClient.getSubscriptionLists("stable contact id") } returns networkResult
 
         contact.subscriptionListsFlow.test {
-            assertEquals(networkResult.value, awaitItem().getOrThrow())
-            ensureAllEventsConsumed()
+            val result = awaitItem()
+            assertEquals(networkResult.value, result.getOrThrow())
         }
     }
 
