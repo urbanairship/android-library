@@ -120,7 +120,9 @@ public class InboxTest {
             taskSleeper = taskSleeper,
             clock = clock,
             dispatcher = testDispatcher,
-            updateScheduler = mockScheduler
+            updateScheduler = mockScheduler,
+            analytics = mockk(),
+            meteredUsage = mockk()
         )
 
         verify { mockChannel.addChannelRegistrationPayloadExtender(capture(argument)) }

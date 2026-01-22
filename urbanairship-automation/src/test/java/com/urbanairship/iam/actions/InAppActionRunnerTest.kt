@@ -11,9 +11,9 @@ import com.urbanairship.actions.PermissionResultReceiver
 import com.urbanairship.actions.PromptPermissionAction
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.iam.analytics.InAppCustomEventContext
-import com.urbanairship.iam.analytics.InAppEventMessageId
+import com.urbanairship.android.layout.analytics.LayoutEventMessageId
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.iam.analytics.events.InAppPermissionResultEvent
+import com.urbanairship.android.layout.analytics.events.LayoutPermissionResultEvent
 import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
@@ -57,7 +57,7 @@ public class InAppActionRunnerTest {
 
         verify {
             analytics.recordEvent(
-                InAppPermissionResultEvent(
+                LayoutPermissionResultEvent(
                     permission = Permission.LOCATION,
                     startingStatus = PermissionStatus.GRANTED,
                     endingStatus = PermissionStatus.DENIED
@@ -115,7 +115,7 @@ public class InAppActionRunnerTest {
 
         verify {
             analytics.recordEvent(
-                InAppPermissionResultEvent(
+                LayoutPermissionResultEvent(
                     permission = Permission.LOCATION,
                     startingStatus = PermissionStatus.GRANTED,
                     endingStatus = PermissionStatus.DENIED
@@ -136,7 +136,7 @@ public class InAppActionRunnerTest {
         }
 
         val context = InAppCustomEventContext(
-            id = InAppEventMessageId.AirshipId("foo", null),
+            id = LayoutEventMessageId.AirshipId("foo", null),
             context = null
         )
         val layoutData: LayoutData = mockk()

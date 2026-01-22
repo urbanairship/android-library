@@ -7,9 +7,9 @@ import com.urbanairship.automation.utils.NetworkMonitor
 import com.urbanairship.iam.actions.InAppActionRunner
 import com.urbanairship.iam.adapter.DisplayAdapterFactory
 import com.urbanairship.iam.analytics.InAppCustomEventContext
-import com.urbanairship.iam.analytics.InAppEventMessageId
+import com.urbanairship.android.layout.analytics.LayoutEventMessageId
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.iam.analytics.events.InAppEvent
+import com.urbanairship.android.layout.analytics.events.LayoutEvent
 import com.urbanairship.iam.assets.EmptyAirshipCachedAssets
 import com.urbanairship.json.JsonValue
 import kotlinx.coroutines.CoroutineScope
@@ -37,10 +37,10 @@ public class InAppMessagePreview(
                 activityMonitor = GlobalActivityMonitor.shared(context)
             )
             val analytics = object : InAppMessageAnalyticsInterface {
-                override fun recordEvent(event: InAppEvent, layoutContext: LayoutData?) { }
+                override fun recordEvent(event: LayoutEvent, layoutContext: LayoutData?) { }
                 override fun customEventContext(state: LayoutData?): InAppCustomEventContext {
                     return InAppCustomEventContext(
-                        id = InAppEventMessageId.AppDefined(message.name),
+                        id = LayoutEventMessageId.AppDefined(message.name),
                         context = null
                     )
                 }

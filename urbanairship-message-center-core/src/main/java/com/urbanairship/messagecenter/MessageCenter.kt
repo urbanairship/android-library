@@ -14,11 +14,13 @@ import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
+import com.urbanairship.analytics.Analytics
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
+import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
@@ -96,12 +98,21 @@ public constructor(
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         channel: AirshipChannel,
-        pushManager: PushManager
+        pushManager: PushManager,
+        analytics: Analytics,
+        meteredUsage: AirshipMeteredUsage
     ) : this(
         context = context,
         dataStore = dataStore,
         privacyManager = privacyManager,
-        inbox = Inbox(context, dataStore, channel, config) { reason ->
+        inbox = Inbox(
+            context = context,
+            dataStore = dataStore,
+            airshipChannel = channel,
+            config = config,
+            analytics = analytics,
+            meteredUsage = meteredUsage
+        ) { reason ->
             JobDispatcher.shared(context).scheduleInboxUpdateJob(reason)
         },
         pushManager = pushManager,

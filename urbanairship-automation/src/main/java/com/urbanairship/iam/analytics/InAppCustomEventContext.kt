@@ -2,13 +2,15 @@
 
 package com.urbanairship.iam.analytics
 
+import com.urbanairship.android.layout.analytics.LayoutEventMessageId
+import com.urbanairship.android.layout.analytics.LayoutEventContext
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 
 internal data class InAppCustomEventContext(
-    val id: InAppEventMessageId,
-    val context: InAppEventContext?
+    val id: LayoutEventMessageId,
+    val context: LayoutEventContext?
 ): JsonSerializable {
 
     companion object {

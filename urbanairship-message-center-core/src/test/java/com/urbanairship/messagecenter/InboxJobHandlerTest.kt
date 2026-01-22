@@ -7,16 +7,13 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestAirshipRuntimeConfig
-import com.urbanairship.Airship
 import com.urbanairship.Platform
-import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.http.RequestException
 import com.urbanairship.http.RequestResult
 import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.jsonMapOf
 import com.urbanairship.messagecenter.InboxJobHandler.Companion.LAST_MESSAGE_REFRESH_TIME
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
@@ -32,7 +29,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
@@ -624,7 +620,7 @@ public class InboxJobHandlerTest {
               "unread": true,
               "message_sent": "2024-10-21 18:41:03",
               "title": "Message title",
-              "content_type": "${Message.ContentType.THOMAS.jsonValue}"
+              "content_type": "${Message.ContentType.NATIVE.jsonValue}"
             }
         """.trimIndent())
         val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false)!!
@@ -677,7 +673,7 @@ public class InboxJobHandlerTest {
               "unread": true,
               "message_sent": "2024-10-21 18:41:03",
               "title": "Message title",
-              "content_type": "${Message.ContentType.THOMAS.jsonValue}"
+              "content_type": "${Message.ContentType.NATIVE.jsonValue}"
             }
         """.trimIndent())
         val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false)!!
@@ -708,7 +704,7 @@ public class InboxJobHandlerTest {
               "unread": true,
               "message_sent": "2024-10-21 18:41:03",
               "title": "Message title",
-              "content_type": "${Message.ContentType.THOMAS.jsonValue}"
+              "content_type": "${Message.ContentType.NATIVE.jsonValue}"
             }
         """.trimIndent())
         val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false)!!

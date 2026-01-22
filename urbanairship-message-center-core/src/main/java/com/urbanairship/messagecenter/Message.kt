@@ -45,7 +45,7 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
     public enum class ContentType(internal val jsonValue: String) {
         HTML("text/html"),
         PLAIN("text/plain"),
-        THOMAS("application/vnd.urbanairship.thomas+json; version=1;");
+        NATIVE("application/vnd.urbanairship.thomas+json; version=1;");
 
         internal companion object {
             @Throws(JsonException::class)

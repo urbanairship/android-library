@@ -3,11 +3,18 @@
 package com.urbanairship.iam.analytics
 
 import com.urbanairship.AirshipDispatchers
+import com.urbanairship.android.layout.analytics.LayoutEventContext
+import com.urbanairship.android.layout.analytics.LayoutEventData
+import com.urbanairship.android.layout.analytics.LayoutEventMessageId
+import com.urbanairship.android.layout.analytics.LayoutEventSource
+import com.urbanairship.android.layout.analytics.LayoutEventRecorderInterface
+import com.urbanairship.android.layout.analytics.LayoutMessageAnalyticsInterface
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.iam.InAppMessage
-import com.urbanairship.iam.analytics.events.InAppDisplayEvent
-import com.urbanairship.iam.analytics.events.InAppEvent
+import com.urbanairship.android.layout.analytics.events.InAppDisplayEvent
+import com.urbanairship.android.layout.analytics.events.LayoutEvent
+import com.urbanairship.android.layout.analytics.makeContext
 import com.urbanairship.json.JsonValue
 import com.urbanairship.meteredusage.MeteredUsageEventEntity
 import com.urbanairship.meteredusage.MeteredUsageType
@@ -22,29 +29,28 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-internal interface InAppMessageAnalyticsInterface {
-    fun recordEvent(event: InAppEvent, layoutContext: LayoutData?)
+internal interface InAppMessageAnalyticsInterface: LayoutMessageAnalyticsInterface {
     fun customEventContext(state: LayoutData?): InAppCustomEventContext
 }
 
 internal class InAppMessageAnalytics private constructor(
     private val preparedScheduleInfo: PreparedScheduleInfo,
-    private val messageId: InAppEventMessageId,
-    private val source: InAppEventSource,
+    private val messageId: LayoutEventMessageId,
+    private val source: LayoutEventSource,
     private val renderedLocale: JsonValue?,
-    private val eventRecorder: InAppEventRecorderInterface,
+    private val eventRecorder: LayoutEventRecorderInterface,
     private val isReportingEnabled: Boolean,
     private val historyStore: MessageDisplayHistoryStoreInterface,
     private val displayImpressionRule: InAppDisplayImpressionRule,
     private var _displayHistory: MutableStateFlow<MessageDisplayHistory>,
-    private var _displayContext: MutableStateFlow<InAppEventContext.Display>,
+    private var _displayContext: MutableStateFlow<LayoutEventContext.Display>,
     private val clock: Clock,
     dispatcher: CoroutineDispatcher
 ): InAppMessageAnalyticsInterface {
 
     constructor(preparedScheduleInfo: PreparedScheduleInfo,
                 message: InAppMessage,
-                eventRecorder: InAppEventRecorderInterface,
+                eventRecorder: LayoutEventRecorderInterface,
                 historyStore: MessageDisplayHistoryStoreInterface,
                 displayImpressionRule: InAppDisplayImpressionRule,
                 displayHistory: MessageDisplayHistory,
@@ -61,7 +67,7 @@ internal class InAppMessageAnalytics private constructor(
                 displayImpressionRule = displayImpressionRule,
                 _displayHistory = MutableStateFlow(displayHistory),
                 _displayContext = MutableStateFlow(
-                    InAppEventContext.Display(
+                    LayoutEventContext.Display(
                         triggerSessionId = preparedScheduleInfo.triggerSessionId,
                         isFirstDisplay = displayHistory.lastDisplay == null,
                         isFirstDisplayTriggerSessionId = preparedScheduleInfo.triggerSessionId != displayHistory.lastDisplay?.triggerSessionId
@@ -74,31 +80,31 @@ internal class InAppMessageAnalytics private constructor(
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     private val displayHistory: StateFlow<MessageDisplayHistory> = _displayHistory.asStateFlow()
-    private val displayContext: StateFlow<InAppEventContext.Display> = _displayContext.asStateFlow()
+    private val displayContext: StateFlow<LayoutEventContext.Display> = _displayContext.asStateFlow()
 
     private companion object {
-        fun makeMessageId(message: InAppMessage, scheduleID: String, campaigns: JsonValue?): InAppEventMessageId {
+        fun makeMessageId(message: InAppMessage, scheduleID: String, campaigns: JsonValue?): LayoutEventMessageId {
             return when(message.source ?:  InAppMessage.Source.REMOTE_DATA) {
-                 InAppMessage.Source.REMOTE_DATA -> InAppEventMessageId.AirshipId(
+                 InAppMessage.Source.REMOTE_DATA -> LayoutEventMessageId.AirshipId(
                     scheduleID,
                     campaigns
                 )
-                 InAppMessage.Source.APP_DEFINED -> InAppEventMessageId.AppDefined(
+                 InAppMessage.Source.APP_DEFINED -> LayoutEventMessageId.AppDefined(
                     scheduleID
                 )
-                 InAppMessage.Source.LEGACY_PUSH -> InAppEventMessageId.Legacy(scheduleID)
+                 InAppMessage.Source.LEGACY_PUSH -> LayoutEventMessageId.Legacy(scheduleID)
             }
         }
 
-        fun makeEventSource(message: InAppMessage): InAppEventSource {
+        fun makeEventSource(message: InAppMessage): LayoutEventSource {
              return when(message.source ?:  InAppMessage.Source.REMOTE_DATA) {
-                 InAppMessage.Source.APP_DEFINED -> InAppEventSource.APP_DEFINED
-                else -> InAppEventSource.AIRSHIP
+                 InAppMessage.Source.APP_DEFINED -> LayoutEventSource.APP_DEFINED
+                else -> LayoutEventSource.AIRSHIP
             }
         }
     }
 
-    override fun recordEvent(event: InAppEvent, layoutContext: LayoutData?) {
+    override fun recordEvent(event: LayoutEvent, layoutContext: LayoutData?) {
         val now = clock.currentTimeMillis()
 
         if (event is InAppDisplayEvent) {
@@ -148,9 +154,9 @@ internal class InAppMessageAnalytics private constructor(
             return
         }
 
-        val data = InAppEventData(
+        val data = LayoutEventData(
             event = event,
-            context = InAppEventContext.makeContext(
+            context = LayoutEventContext.makeContext(
                 reportingContext = preparedScheduleInfo.reportingContext,
                 experimentResult = preparedScheduleInfo.experimentResult,
                 layoutContext = layoutContext,
@@ -167,7 +173,7 @@ internal class InAppMessageAnalytics private constructor(
     override fun customEventContext(state: LayoutData?): InAppCustomEventContext {
         return InAppCustomEventContext(
             id = messageId,
-            context = InAppEventContext.makeContext(
+            context = LayoutEventContext.makeContext(
                 reportingContext = preparedScheduleInfo.reportingContext,
                 experimentResult = preparedScheduleInfo.experimentResult,
                 layoutContext = state,

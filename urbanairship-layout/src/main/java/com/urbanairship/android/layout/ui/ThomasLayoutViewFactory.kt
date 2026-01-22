@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment
+import com.urbanairship.android.layout.environment.ExternalReporter
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -32,6 +33,8 @@ import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.json.JsonValue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.update
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -42,6 +45,8 @@ public object ThomasLayoutViewFactory {
         override val viewModelStore: ViewModelStore
             get() = SimpleViewModelStore
     }
+
+    private val viewToTimer = MutableStateFlow<Map<String, DisplayTimer>>(mapOf())
 
     public fun createView(
         context: Context,
@@ -60,16 +65,17 @@ public object ThomasLayoutViewFactory {
         }
 
         val timer = DisplayTimer(activity, 0)
+        viewToTimer.update { it + (viewId to timer) }
 
         val reportDismiss = {
             displayArgs.listener.onDismiss(false)
+            clear()
         }
 
         activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
                 // Clean up the view model store when the activity is destroyed.
                 reportDismiss()
-                //TODO: clear SimpleViewModelStore ?
                 activity.lifecycle.removeObserver(this)
             }
         })
@@ -85,17 +91,7 @@ public object ThomasLayoutViewFactory {
         val viewModelProvider = ViewModelProvider(SimpleViewModelStoreOwner)
         val viewModel = viewModelProvider[viewId, LayoutViewModel::class.java]
 
-        val reporter = object : Reporter {
-            override fun report(event: ReportingEvent) {
-                displayArgs.listener.onReportingEvent(event)
-            }
-
-            override fun onVisibilityChanged(
-                isVisible: Boolean, isForegrounded: Boolean
-            ) {
-                displayArgs.listener.onVisibilityChanged(isVisible, isForegrounded)
-            }
-        }
+        val reporter = ExternalReporter(displayArgs.listener)
 
         try {
             val modelEnvironment = viewModel.getOrCreateEnvironment(
@@ -141,6 +137,15 @@ public object ThomasLayoutViewFactory {
             UALog.e("Failed to load model!", e)
             return null
         }
+    }
+
+    public fun clear() {
+        SimpleViewModelStore.clear()
+        viewToTimer.value = mapOf()
+    }
+
+    public fun calculateDisplayTime(viewId: String): Duration {
+        return viewToTimer.value[viewId]?.time?.milliseconds ?: Duration.ZERO
     }
 
     private val presentation = EmbeddedPresentation(

@@ -12,12 +12,17 @@ import com.urbanairship.PendingResult
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
+import com.urbanairship.analytics.Analytics
+import com.urbanairship.android.layout.ThomasListenerInterface
+import com.urbanairship.android.layout.analytics.LayoutEventRecorder
+import com.urbanairship.android.layout.analytics.LayoutListener
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.GlobalActivityMonitor.Companion.shared
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.iam.content.AirshipLayout
+import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
 import java.util.UUID
@@ -56,6 +61,8 @@ public class Inbox @VisibleForTesting internal constructor(
     private val activityMonitor: ActivityMonitor,
     private val airshipChannel: AirshipChannel,
     private val config: AirshipRuntimeConfig,
+    private val analytics: Analytics,
+    private val meteredUsage: AirshipMeteredUsage,
     private val taskSleeper: TaskSleeper = TaskSleeper.default,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     dispatcher: CoroutineDispatcher = Dispatchers.IO,
@@ -86,6 +93,8 @@ public class Inbox @VisibleForTesting internal constructor(
         dataStore: PreferenceDataStore,
         airshipChannel: AirshipChannel,
         config: AirshipRuntimeConfig,
+        analytics: Analytics,
+        meteredUsage: AirshipMeteredUsage,
         updateScheduler: (UpdateType) -> Unit
     ) : this(
         dataStore = dataStore,
@@ -94,7 +103,9 @@ public class Inbox @VisibleForTesting internal constructor(
         activityMonitor = shared(context),
         airshipChannel = airshipChannel,
         config = config,
-        updateScheduler = updateScheduler
+        updateScheduler = updateScheduler,
+        analytics = analytics,
+        meteredUsage = meteredUsage
     )
 
     @VisibleForTesting
@@ -121,8 +132,8 @@ public class Inbox @VisibleForTesting internal constructor(
     public val inboxUpdated: Flow<Unit> = updatesFlow.asSharedFlow()
 
     private val applicationListener = object : ApplicationListener {
-        override fun onForeground(time: Long) = scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
-        override fun onBackground(time: Long) = scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
+        override fun onForeground(milliseconds: Long) = scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
+        override fun onBackground(milliseconds: Long) = scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
     }
 
     private val configListener = AirshipRuntimeConfig.ConfigChangeListener {
@@ -189,6 +200,23 @@ public class Inbox @VisibleForTesting internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public suspend fun loadMessageLayout(message: Message): AirshipLayout? {
         return inboxJobHandler.loadAirshipLayout(message)
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun makeNativeMessageAnalytics(
+        message: Message,
+        onDismiss: () -> Unit
+    ): ThomasListenerInterface {
+        return LayoutListener(
+            analytics = MessageAnalytics(
+                message = message,
+                eventRecorder = LayoutEventRecorder(
+                    analytics = analytics,
+                    meteredUsage = meteredUsage
+                )
+            ),
+            onDismiss = { _ -> onDismiss() }
+        )
     }
 
     private suspend fun updateInbox(): Boolean = withContext(refreshDispatcher) {

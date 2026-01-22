@@ -3,10 +3,11 @@
 package com.urbanairship.iam.adapter
 
 import android.content.Context
+import com.urbanairship.android.layout.analytics.DisplayResult
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.iam.analytics.events.InAppDisplayEvent
-import com.urbanairship.iam.analytics.events.InAppResolutionEvent
+import com.urbanairship.android.layout.analytics.events.InAppDisplayEvent
+import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.util.timer.ActiveTimer
 import kotlin.coroutines.resume
@@ -51,7 +52,7 @@ internal class CustomDisplayAdapterWrapper (
         return when(result) {
             is CustomDisplayResolution.ButtonTap -> {
                 analytics.recordEvent(
-                    InAppResolutionEvent.buttonTap(
+                    LayoutResolutionEvent.buttonTap(
                         identifier = result.info.identifier,
                         description = result.info.label.text,
                         displayTime = timer.time
@@ -66,7 +67,7 @@ internal class CustomDisplayAdapterWrapper (
             }
             is CustomDisplayResolution.MessageTap -> {
                 analytics.recordEvent(
-                    event = InAppResolutionEvent.messageTap(
+                    event = LayoutResolutionEvent.messageTap(
                         displayTime = timer.time
                     ),
                     layoutContext = null)
@@ -74,7 +75,7 @@ internal class CustomDisplayAdapterWrapper (
             }
             is CustomDisplayResolution.TimedOut -> {
                 analytics.recordEvent(
-                    event = InAppResolutionEvent.timedOut(
+                    event = LayoutResolutionEvent.timedOut(
                         displayTime = timer.time
                     ),
                     layoutContext = null)
@@ -82,7 +83,7 @@ internal class CustomDisplayAdapterWrapper (
             }
             is CustomDisplayResolution.UserDismissed -> {
                 analytics.recordEvent(
-                    event = InAppResolutionEvent.userDismissed(
+                    event = LayoutResolutionEvent.userDismissed(
                         displayTime = timer.time
                     ),
                     layoutContext = null

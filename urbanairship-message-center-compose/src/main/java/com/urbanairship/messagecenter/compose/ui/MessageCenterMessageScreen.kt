@@ -23,6 +23,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -51,6 +54,7 @@ import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.S
 import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
 import com.urbanairship.messagecenter.compose.ui.widget.MessageCenterWebView
+import kotlin.time.Duration
 import com.urbanairship.R as CoreR
 import com.urbanairship.actions.Action as AutomationAction
 
@@ -139,7 +143,16 @@ public fun MessageCenterMessage(
                         message = viewState.message,
                         content = content,
                         onClose = onClose,
-                        onAction = state::onAction
+                        onAction = state::onAction,
+                        analyticsBuilder = { onDismissed ->
+                            state.makeAnalytics(
+                                message = viewState.message,
+                                onDismiss = {
+                                    onDismissed()
+                                    onClose()
+                                }
+                            )
+                        }
                     )
                 }
             }
@@ -152,7 +165,7 @@ private fun ContentView(
     message: Message,
     content: State.MessageContent.Content.Html,
     onClose: () -> Unit,
-    onAction: ((Action) -> Unit)
+    onAction: ((Action) -> Unit),
 ) {
     Box(
         modifier = Modifier.fillMaxSize()
@@ -187,46 +200,41 @@ private fun NativeContentView(
     message: Message,
     content: State.MessageContent.Content.Native,
     onClose: () -> Unit,
-    onAction: ((Action) -> Unit)
+    onAction: ((Action) -> Unit),
+    analyticsBuilder: (onDismissed: () -> Unit) -> ThomasListenerInterface
 ) {
 
     onAction(Action.MarkCurrentMessageRead)
 
-    //TODO: we probably want to move it to a view model to preserve state on refresh
-    //or at least split into local properties to make it less ugly
+    val isAlreadyDismissed = remember { mutableStateOf(false) }
+
     val args = DisplayArgs(
         payload = content.layout.layoutInfo,
-        listener = object : ThomasListenerInterface {
-            override fun onDismiss(cancel: Boolean) {
-            }
-
-            override fun onVisibilityChanged(
-                isVisible: Boolean, isForegrounded: Boolean
-            ) {
-            }
-
-            override fun onStateChanged(state: JsonSerializable) {
-            }
-
-            override fun onReportingEvent(event: ReportingEvent) {
-                when(event) {
-                    is ReportingEvent.Dismiss -> {
-                        onClose()
-                    }
-                    else -> {}
-                }
-            }
+        listener = analyticsBuilder {
+            isAlreadyDismissed.value = true
         },
         inAppActivityMonitor = GlobalActivityMonitor.shared(LocalContext.current),
-        actionRunner = object : ThomasActionRunner {
-            override fun run(
-                actions: Map<String, JsonValue>, state: LayoutData
-            ) {
-                DefaultActionRunner.run(actions, AutomationAction.Situation.AUTOMATION)
-            }
-
+        actionRunner = { actions, _ ->
+            DefaultActionRunner.run(actions, AutomationAction.Situation.AUTOMATION)
         }
     )
+
+    DisposableEffect(message.id) {
+        onDispose {
+            if (!isAlreadyDismissed.value) {
+                isAlreadyDismissed.value = true
+                args.listener.onReportingEvent(
+                    event = ReportingEvent.Dismiss(
+                        data = ReportingEvent.DismissData.UserDismissed,
+                        displayTime = ThomasLayoutViewFactory.calculateDisplayTime(message.id),
+                        context = LayoutData.EMPTY
+                    )
+                )
+            }
+
+            ThomasLayoutViewFactory.clear()
+        }
+    }
 
     Box(Modifier.fillMaxSize()) {
         AndroidView(

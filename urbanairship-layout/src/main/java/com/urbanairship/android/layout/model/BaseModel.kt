@@ -296,7 +296,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         listener?.setVisibility(isVisible)
     }
 
-    private fun mapEnableBehavior(form: State.Form?, pager: State.Pager?): Boolean {
+    protected fun mapEnableBehavior(form: State.Form?, pager: State.Pager?): Boolean {
         val behaviors = viewInfo.enableBehaviors ?: return true
         return behaviors.map {
             when(it) {

@@ -51,7 +51,9 @@ public object Modules {
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         channel: AirshipChannel,
-        pushManager: PushManager
+        pushManager: PushManager,
+        analytics: Analytics,
+        meteredUsage: AirshipMeteredUsage
     ): Module? {
         try {
             return createFactory(
@@ -62,7 +64,10 @@ public object Modules {
                 config = config,
                 privacyManager = privacyManager,
                 airshipChannel = channel,
-                pushManager = pushManager)
+                pushManager = pushManager,
+                analytics = analytics,
+                meteredUsage = meteredUsage
+            )
         } catch (e: Exception) {
             UALog.e(e, "Failed to build Message Center module")
         }

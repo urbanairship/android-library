@@ -6,8 +6,10 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipVersionInfo
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
+import com.urbanairship.analytics.Analytics
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
+import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.modules.Module
 import com.urbanairship.push.PushManager
 
@@ -25,6 +27,8 @@ public interface MessageCenterModuleFactory : AirshipVersionInfo {
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,
-        pushManager: PushManager
+        pushManager: PushManager,
+        analytics: Analytics,
+        meteredUsage: AirshipMeteredUsage
     ): Module
 }

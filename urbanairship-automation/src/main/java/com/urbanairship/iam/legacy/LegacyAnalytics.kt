@@ -3,22 +3,22 @@
 package com.urbanairship.iam.legacy
 
 import com.urbanairship.analytics.EventType
-import com.urbanairship.iam.analytics.InAppEventData
-import com.urbanairship.iam.analytics.InAppEventMessageId
-import com.urbanairship.iam.analytics.InAppEventRecorderInterface
-import com.urbanairship.iam.analytics.InAppEventSource
-import com.urbanairship.iam.analytics.events.InAppEvent
+import com.urbanairship.android.layout.analytics.LayoutEventData
+import com.urbanairship.android.layout.analytics.LayoutEventMessageId
+import com.urbanairship.android.layout.analytics.LayoutEventRecorderInterface
+import com.urbanairship.android.layout.analytics.LayoutEventSource
+import com.urbanairship.android.layout.analytics.events.LayoutEvent
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.jsonMapOf
 
-internal class LegacyAnalytics(private val eventRecorder: InAppEventRecorderInterface) {
+internal class LegacyAnalytics(private val eventRecorder: LayoutEventRecorderInterface) {
     fun recordReplacedEvent(scheduleID: String, replacementID: String) {
         eventRecorder.recordEvent(
-            InAppEventData(
+            LayoutEventData(
                 event = LegacyResolutionEvent.replaced(replacementID),
                 context = null,
-                messageId = InAppEventMessageId.Legacy(scheduleID),
-                source = InAppEventSource.AIRSHIP,
+                messageId = LayoutEventMessageId.Legacy(scheduleID),
+                source = LayoutEventSource.AIRSHIP,
                 renderedLocale = null
             )
         )
@@ -26,11 +26,11 @@ internal class LegacyAnalytics(private val eventRecorder: InAppEventRecorderInte
 
     fun recordDirectOpenEvent(scheduleID: String) {
         eventRecorder.recordEvent(
-            InAppEventData(
+            LayoutEventData(
                 event = LegacyResolutionEvent.directOpen(),
                 context = null,
-                messageId = InAppEventMessageId.Legacy(scheduleID),
-                source = InAppEventSource.AIRSHIP,
+                messageId = LayoutEventMessageId.Legacy(scheduleID),
+                source = LayoutEventSource.AIRSHIP,
                 renderedLocale = null
             )
         )
@@ -39,7 +39,7 @@ internal class LegacyAnalytics(private val eventRecorder: InAppEventRecorderInte
 
 private class LegacyResolutionEvent(
     reportData: JsonSerializable?
-) : InAppEvent {
+) : LayoutEvent {
 
     override val eventType: EventType = EventType.IN_APP_RESOLUTION
     override val data: JsonSerializable? = reportData

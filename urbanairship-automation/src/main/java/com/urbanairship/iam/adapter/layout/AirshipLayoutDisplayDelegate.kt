@@ -5,6 +5,8 @@ import android.app.Activity
 import android.content.Context
 import com.urbanairship.Predicate
 import com.urbanairship.android.layout.Thomas
+import com.urbanairship.android.layout.analytics.DisplayResult
+import com.urbanairship.android.layout.analytics.LayoutListener
 import com.urbanairship.android.layout.display.DisplayException
 import com.urbanairship.android.layout.util.CachedImage
 import com.urbanairship.app.ActivityMonitor
@@ -12,7 +14,6 @@ import com.urbanairship.embedded.EmbeddedViewManager
 import com.urbanairship.iam.InAppMessageWebViewClient
 import com.urbanairship.iam.actions.InAppActionRunner
 import com.urbanairship.iam.adapter.DelegatingDisplayAdapter
-import com.urbanairship.iam.adapter.DisplayResult
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.InAppMessageDisplayContent

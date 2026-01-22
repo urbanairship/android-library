@@ -6,10 +6,12 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.ActionsManifest
+import com.urbanairship.analytics.Analytics
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.messagecenter.actions.MessageCenterAction
 import com.urbanairship.messagecenter.core.BuildConfig
+import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.messagecenter.MessageCenterModuleFactory
 import com.urbanairship.push.PushManager
@@ -30,10 +32,21 @@ public class MessageCenterModuleFactoryImpl public constructor() : MessageCenter
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,
-        pushManager: PushManager
+        pushManager: PushManager,
+        analytics: Analytics,
+        meteredUsage: AirshipMeteredUsage
     ): Module {
         val messageCenter =
-            MessageCenter(context, dataStore, config, privacyManager, airshipChannel, pushManager)
+            MessageCenter(
+                context = context,
+                dataStore = dataStore,
+                config = config,
+                privacyManager = privacyManager,
+                channel = airshipChannel,
+                pushManager = pushManager,
+                analytics = analytics,
+                meteredUsage = meteredUsage
+            )
         return Module.Companion.singleComponent(messageCenter, MessageCenterActionsManifest())
     }
 }

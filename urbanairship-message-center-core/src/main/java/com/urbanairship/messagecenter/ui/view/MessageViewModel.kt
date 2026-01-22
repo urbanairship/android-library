@@ -1,6 +1,7 @@
 package com.urbanairship.messagecenter.ui.view
 
 import android.os.Parcelable
+import androidx.annotation.RestrictTo
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -10,6 +11,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.urbanairship.Airship
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.messagecenter.Inbox
 import com.urbanairship.messagecenter.Message
@@ -116,6 +118,12 @@ public class MessageViewModel(
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun makeAnalytics(message: Message, onDismiss: () -> Unit): ThomasListenerInterface {
+        return inbox.makeNativeMessageAnalytics(message, onDismiss)
+    }
+
     private suspend fun getOrFetchMessage(messageId: String): MessageViewState {
         // Try to load the message from local storage
         val message = inbox.getMessage(messageId) ?: run {
@@ -141,7 +149,7 @@ public class MessageViewModel(
                 MessageViewState.MessageContent(message, content)
             }
 
-            Message.ContentType.THOMAS -> {
+            Message.ContentType.NATIVE -> {
                 val layout = inbox.loadMessageLayout(message)
                 if (layout != null) {
                     val content = MessageViewState.MessageContent.Content.Native(layout)
