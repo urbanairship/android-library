@@ -6,17 +6,19 @@ import com.urbanairship.analytics.EventType
 import com.urbanairship.android.layout.analytics.LayoutEventContext
 import com.urbanairship.android.layout.analytics.LayoutEventData
 import com.urbanairship.android.layout.analytics.LayoutEventMessageId
-import com.urbanairship.android.layout.analytics.LayoutEventSource
 import com.urbanairship.android.layout.analytics.LayoutEventRecorderInterface
+import com.urbanairship.android.layout.analytics.LayoutEventSource
+import com.urbanairship.android.layout.analytics.MessageDisplayHistory
+import com.urbanairship.android.layout.analytics.MessageDisplayHistoryStoreInterface
+import com.urbanairship.android.layout.analytics.events.InAppDisplayEvent
+import com.urbanairship.android.layout.analytics.events.LayoutEvent
+import com.urbanairship.android.layout.analytics.makeContext
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.InAppMessage
-import com.urbanairship.android.layout.analytics.events.InAppDisplayEvent
-import com.urbanairship.android.layout.analytics.events.LayoutEvent
-import com.urbanairship.android.layout.analytics.makeContext
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.json.JsonSerializable
@@ -49,7 +51,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class InAppMessageAnalyticsTest {
     private val eventRecorder: LayoutEventRecorderInterface = mockk(relaxed = true)
-    private val historyStore: MessageDisplayHistoryStore = mockk()
+    private val historyStore: MessageDisplayHistoryStoreInterface = mockk()
     private val preparedInfo = PreparedScheduleInfo(
         scheduleId = UUID.randomUUID().toString(),
         productId = UUID.randomUUID().toString(),

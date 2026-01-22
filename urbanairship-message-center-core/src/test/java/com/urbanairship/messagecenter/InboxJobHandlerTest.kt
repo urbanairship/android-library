@@ -623,7 +623,7 @@ public class InboxJobHandlerTest {
               "content_type": "${Message.ContentType.NATIVE.jsonValue}"
             }
         """.trimIndent())
-        val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false)!!
+        val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false, associatedData = null)!!
 
         coEvery { user.userCredentials } returns userCredentials
         coEvery {
@@ -655,7 +655,7 @@ public class InboxJobHandlerTest {
               "content_type": "${Message.ContentType.HTML.jsonValue}"
             }
         """.trimIndent())
-        val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false)!!
+        val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false, associatedData = null)!!
 
         val result = jobHandler.loadAirshipLayout(message)
 
@@ -676,7 +676,7 @@ public class InboxJobHandlerTest {
               "content_type": "${Message.ContentType.NATIVE.jsonValue}"
             }
         """.trimIndent())
-        val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false)!!
+        val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false, associatedData = null)!!
 
         coEvery { user.userCredentials } returns userCredentials
         coEvery {
@@ -707,7 +707,7 @@ public class InboxJobHandlerTest {
               "content_type": "${Message.ContentType.NATIVE.jsonValue}"
             }
         """.trimIndent())
-        val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false)!!
+        val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false, associatedData = null)!!
 
         coEvery { user.userCredentials } returns userCredentials
         coEvery {
@@ -722,7 +722,7 @@ public class InboxJobHandlerTest {
 
     @Throws(JsonException::class)
     @Suppress("SameParameterValue") // unread is always false
-    private fun createFakeMessage(messageId: String, unread: Boolean, deleted: Boolean): Message {
+    private fun createFakeMessage(messageId: String, unread: Boolean, deleted: Boolean, associatedData: JsonValue? = null): Message {
         @Language("JSON")
         val messageJson = JsonValue.parseString("""
             {
@@ -744,7 +744,7 @@ public class InboxJobHandlerTest {
             }
         """.trimIndent())
 
-        return Message.create(messageJson, unread, deleted)!!
+        return Message.create(messageJson, unread, deleted, associatedData)!!
     }
 
     private val defaultLayoutJson = """

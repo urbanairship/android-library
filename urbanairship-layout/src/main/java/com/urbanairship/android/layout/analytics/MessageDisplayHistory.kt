@@ -1,25 +1,27 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.iam.analytics
+package com.urbanairship.android.layout.analytics
 
+import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
-import com.urbanairship.automation.engine.ScheduleStoreInterface
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 
-internal data class MessageDisplayHistory(
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class MessageDisplayHistory(
     val lastImpression: LastImpression? = null,
     val lastDisplay: LastDisplay? = null
 ) : JsonSerializable {
 
-    internal data class LastImpression(
+    public data class LastImpression(
         val date: Long,
         val triggerSessionId: String
     ) : JsonSerializable {
-        companion object {
+        internal companion object {
             private const val KEY_DATE = "date"
             private const val KEY_TRIGGER_SESSION_ID = "trigger_session_id"
 
@@ -39,10 +41,10 @@ internal data class MessageDisplayHistory(
         ).toJsonValue()
     }
 
-    internal data class LastDisplay(
+    public data class LastDisplay(
         val triggerSessionId: String
     ) : JsonSerializable {
-        companion object {
+        internal companion object {
             private const val KEY_TRIGGER_SESSION_ID = "trigger_session_id"
 
             @Throws(JsonException::class)
@@ -59,7 +61,7 @@ internal data class MessageDisplayHistory(
         ).toJsonValue()
     }
 
-    companion object {
+    internal companion object {
         private const val KEY_LAST_IMPRESSION = "last_impression"
         private const val KEY_LAST_DISPLAY = "last_display"
 
@@ -79,25 +81,26 @@ internal data class MessageDisplayHistory(
     ).toJsonValue()
 }
 
-internal interface MessageDisplayHistoryStoreInterface {
-    suspend fun set(history: MessageDisplayHistory, scheduleID: String)
-    suspend fun get(scheduleID: String): MessageDisplayHistory
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public interface MessageDisplayHistoryStoreInterface {
+    public suspend fun set(history: MessageDisplayHistory, itemId: String)
+    public suspend fun get(itemId: String): MessageDisplayHistory
 }
 
-internal class MessageDisplayHistoryStore(
-    val store: ScheduleStoreInterface,
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class DefaultMessageDisplayHistoryStore(
+    private val save: suspend (itemId: String, history: JsonValue) -> Unit,
+    private val load: suspend (itemId: String) -> JsonValue?
 ) : MessageDisplayHistoryStoreInterface {
 
-    override suspend fun set(history: MessageDisplayHistory, scheduleID: String){
-        store.updateSchedule(scheduleID) { data ->
-            data.associatedData = history.toJsonValue()
-            data
-        }
+    override suspend fun set(history: MessageDisplayHistory, itemId: String){
+        this.save(itemId, history.toJsonValue())
     }
 
-    override suspend fun get(scheduleID: String): MessageDisplayHistory {
-        val data = store.getSchedule(scheduleID)?.associatedData
-            ?: return MessageDisplayHistory()
+    override suspend fun get(itemId: String): MessageDisplayHistory {
+        val data = load(itemId) ?: return MessageDisplayHistory()
 
         return data.let {
             try {
@@ -109,5 +112,4 @@ internal class MessageDisplayHistoryStore(
             }
         }
     }
-
 }

@@ -11,6 +11,7 @@ import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.ActionsManifest
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
+import com.urbanairship.android.layout.analytics.DefaultMessageDisplayHistoryStore
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.automation.action.ActionAutomationExecutor
@@ -47,7 +48,6 @@ import com.urbanairship.iam.adapter.DisplayAdapterFactory
 import com.urbanairship.iam.analytics.DefaultInAppDisplayImpressionRuleProvider
 import com.urbanairship.android.layout.analytics.LayoutEventRecorder
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
-import com.urbanairship.iam.analytics.MessageDisplayHistoryStore
 import com.urbanairship.iam.assets.AssetCacheManager
 import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
 import com.urbanairship.iam.legacy.LegacyAnalytics
@@ -99,7 +99,14 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         )
         val analyticsFactory = InAppMessageAnalyticsFactory(
             eventRecorder = eventRecorder,
-            displayHistoryStore = MessageDisplayHistoryStore(automationStore),
+            displayHistoryStore = DefaultMessageDisplayHistoryStore(
+                save = { itemId, history ->
+                    automationStore.updateSchedule(itemId) { data ->
+                        data.also { it.associatedData = history }
+                    }
+                },
+                load = { automationStore.getSchedule(it)?.associatedData }
+            ),
             displayImpressionRuleProvider = DefaultInAppDisplayImpressionRuleProvider()
         )
         val eventsHistory = EventsHistory()

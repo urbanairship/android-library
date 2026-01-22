@@ -14,6 +14,7 @@ import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.android.layout.ThomasListenerInterface
+import com.urbanairship.android.layout.analytics.DefaultMessageDisplayHistoryStore
 import com.urbanairship.android.layout.analytics.LayoutEventRecorder
 import com.urbanairship.android.layout.analytics.LayoutListener
 import com.urbanairship.app.ActivityMonitor
@@ -213,7 +214,15 @@ public class Inbox @VisibleForTesting internal constructor(
                 eventRecorder = LayoutEventRecorder(
                     analytics = analytics,
                     meteredUsage = meteredUsage
-                )
+                ),
+                displayHistoryStore = DefaultMessageDisplayHistoryStore(
+                    save = { itemId, history ->
+                        val current = messageDao.getMessage(itemId) ?: return@DefaultMessageDisplayHistoryStore
+                        current.associatedData = history
+                        messageDao.insert(current)
+                    },
+                    load = { messageDao.getMessage(it)?.associatedData }
+                ),
             ),
             onDismiss = { _ -> onDismiss() }
         )

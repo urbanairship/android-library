@@ -9,6 +9,8 @@ import com.urbanairship.android.layout.analytics.LayoutEventMessageId
 import com.urbanairship.android.layout.analytics.LayoutEventSource
 import com.urbanairship.android.layout.analytics.LayoutEventRecorderInterface
 import com.urbanairship.android.layout.analytics.LayoutMessageAnalyticsInterface
+import com.urbanairship.android.layout.analytics.MessageDisplayHistory
+import com.urbanairship.android.layout.analytics.MessageDisplayHistoryStoreInterface
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.iam.InAppMessage
@@ -128,10 +130,8 @@ internal class InAppMessageAnalytics private constructor(
                 _displayHistory.update { value ->
                     MessageDisplayHistory(
                         lastImpression = MessageDisplayHistory.LastImpression(
-                            now,
-                            preparedScheduleInfo.triggerSessionId
-                        ),
-                        lastDisplay = value.lastDisplay
+                            now, preparedScheduleInfo.triggerSessionId
+                        ), lastDisplay = value.lastDisplay
                     )
                 }
             }
@@ -197,7 +197,7 @@ internal class InAppMessageAnalytics private constructor(
         }
     }
 
-    private fun recordImpression(date: Long): Boolean {
+    override fun recordImpression(date: Long): Boolean {
         if (!shouldRecordImpression()) {
             return false
         }

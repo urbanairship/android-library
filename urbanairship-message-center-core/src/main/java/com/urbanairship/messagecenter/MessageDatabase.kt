@@ -10,10 +10,14 @@ import androidx.room.Database
 import androidx.room.Room.databaseBuilder
 import androidx.room.Room.inMemoryDatabaseBuilder
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import com.urbanairship.AirshipConfigOptions
+import com.urbanairship.automation.storage.Converters
 import com.urbanairship.db.RetryingSQLiteOpenHelper
+import com.urbanairship.json.JsonTypeConverters
 import java.io.File
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asExecutor
@@ -23,10 +27,11 @@ import kotlinx.coroutines.asExecutor
  * @hide
  */
 @Database(
-    version = 7,
+    version = 8,
     entities = [MessageEntity::class],
     autoMigrations = [AutoMigration(from = 5, to = 6), AutoMigration(from = 6, to = 7)]
 )
+@TypeConverters(JsonTypeConverters::class)
 internal abstract class MessageDatabase () : RoomDatabase() {
 
     internal abstract val dao: MessageDao
@@ -55,6 +60,11 @@ internal abstract class MessageDatabase () : RoomDatabase() {
         val MIGRATION_2_5: Migration = MessageDatabaseMultiMigration(2, 5)
         val MIGRATION_3_5: Migration = MessageDatabaseMultiMigration(3, 5)
         val MIGRATION_4_5: Migration = MessageDatabaseMultiMigration(4, 5)
+        val MIGRATION_7_8: Migration = object : Migration(7, 8) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN associated_data TEXT")
+            }
+        }
 
         fun createDatabase(context: Context, config: AirshipConfigOptions): MessageDatabase {
             val name = config.appKey + "_" + DB_NAME
@@ -66,7 +76,7 @@ internal abstract class MessageDatabase () : RoomDatabase() {
 
             return databaseBuilder(context, MessageDatabase::class.java, path)
                 .openHelperFactory(retryingOpenHelperFactory)
-                .addMigrations(MIGRATION_1_5, MIGRATION_2_5, MIGRATION_3_5, MIGRATION_4_5)
+                .addMigrations(MIGRATION_1_5, MIGRATION_2_5, MIGRATION_3_5, MIGRATION_4_5, MIGRATION_7_8)
                 .fallbackToDestructiveMigration(true)
                 .build()
         }

@@ -40,6 +40,7 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
     internal val rawMessageJson: JsonValue,
     internal var isUnreadClient: Boolean = isUnread,
     internal var isDeletedClient: Boolean,
+    private var associatedData: JsonValue?
 ) : Parcelable {
 
     public enum class ContentType(internal val jsonValue: String) {
@@ -91,6 +92,14 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
     @IgnoredOnParcel
     public val subtitle: String? by lazy {
         extras?.get(EXTRA_SUBTITLE)
+    }
+
+    /**
+     * Product id used for impressions tracking. Defaults to [DEFAULT_PRODUCT_ID].
+     */
+    @IgnoredOnParcel
+    public val productId: String by lazy {
+        extras?.get(PRODUCT_ID) ?: DEFAULT_PRODUCT_ID
     }
 
     // TODO: Remove when deprecated methods below are removed
@@ -152,7 +161,8 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
             isUnreadClient == other.isUnreadClient &&
             isDeletedClient == other.isDeletedClient &&
             isRead == other.isRead &&
-            contentType == other.contentType
+            contentType == other.contentType &&
+            associatedData == other.associatedData
     }
 
     override fun hashCode(): Int = Objects.hash(
@@ -169,7 +179,8 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
         isUnreadClient,
         isDeletedClient,
         isRead,
-        contentType
+        contentType,
+        associatedData
     )
 
     public companion object {
@@ -188,7 +199,15 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
         internal const val KEY_LIST_ICON: String = "list_icon"
         internal const val EXTRA_SUBTITLE: String = "com.urbanairship.listing.field1"
 
-        internal fun create(payload: JsonValue, isUnreadClient: Boolean, isDeleted: Boolean): Message? =
+        internal const val PRODUCT_ID: String = "product ID"
+        internal const val DEFAULT_PRODUCT_ID = "default_thomas_mc"
+
+        internal fun create(
+            payload: JsonValue,
+            isUnreadClient: Boolean,
+            isDeleted: Boolean,
+            associatedData: JsonValue? = null
+        ): Message? =
             try {
                 val json = payload.requireMap()
 
@@ -207,7 +226,8 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
                     rawMessageJson = json.toJsonValue(),
                     isUnreadClient = isUnreadClient,
                     isDeletedClient = isDeleted,
-                    contentType = json[KEY_CONTENT_TYPE]?.let(ContentType::fromJson) ?: ContentType.HTML
+                    contentType = json[KEY_CONTENT_TYPE]?.let(ContentType::fromJson) ?: ContentType.HTML,
+                    associatedData = associatedData
                 )
             } catch (e: Exception) {
                 UALog.e(e, "Failed to create message from payload: $payload")

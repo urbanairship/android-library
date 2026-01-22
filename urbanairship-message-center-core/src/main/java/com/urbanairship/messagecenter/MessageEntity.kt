@@ -41,7 +41,9 @@ internal data class MessageEntity(
     @ColumnInfo(name = "raw_message_object")
     val rawMessageObject: String,
     @ColumnInfo(name = "expiration_timestamp")
-    val expirationTimestamp: String?
+    val expirationTimestamp: String?,
+    @ColumnInfo(name = "associated_data")
+    var associatedData: JsonValue?
 ) {
 
     val messageReporting: JsonValue? by lazy {
@@ -56,7 +58,12 @@ internal data class MessageEntity(
     }
 
     fun toMessage(): Message? = try {
-        Message.create(JsonValue.parseString(rawMessageObject), unread, deleted)
+        Message.create(
+            payload = JsonValue.parseString(jsonString = rawMessageObject),
+            isUnreadClient = unread,
+            isDeleted = deleted,
+            associatedData = associatedData
+        )
     } catch (e: JsonException) {
         UALog.e(e) { "Failed to create Message from JSON" }
         null
@@ -87,7 +94,8 @@ internal data class MessageEntity(
                 deleted = false,
                 timestamp = messagePayload.opt(Message.KEY_SENT_DATE).string,
                 rawMessageObject = messagePayload.toString(),
-                expirationTimestamp = messagePayload.opt(Message.KEY_EXPIRATION_DATE).string
+                expirationTimestamp = messagePayload.opt(Message.KEY_EXPIRATION_DATE).string,
+                associatedData = null
             )
         }
 

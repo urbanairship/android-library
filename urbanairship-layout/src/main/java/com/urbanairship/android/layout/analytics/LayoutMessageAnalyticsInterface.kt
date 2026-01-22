@@ -8,4 +8,5 @@ import com.urbanairship.android.layout.reporting.LayoutData
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface LayoutMessageAnalyticsInterface {
     public fun recordEvent(event: LayoutEvent, layoutContext: LayoutData?)
+    public fun recordImpression(date: Long): Boolean
 }

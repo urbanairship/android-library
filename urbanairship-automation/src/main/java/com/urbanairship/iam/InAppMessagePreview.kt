@@ -38,6 +38,7 @@ public class InAppMessagePreview(
             )
             val analytics = object : InAppMessageAnalyticsInterface {
                 override fun recordEvent(event: LayoutEvent, layoutContext: LayoutData?) { }
+                override fun recordImpression(date: Long): Boolean { return false }
                 override fun customEventContext(state: LayoutData?): InAppCustomEventContext {
                     return InAppCustomEventContext(
                         id = LayoutEventMessageId.AppDefined(message.name),
