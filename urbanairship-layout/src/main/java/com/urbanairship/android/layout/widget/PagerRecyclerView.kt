@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.widget
 
 import android.content.Context
+import android.graphics.Rect
 import android.util.DisplayMetrics
 import android.view.MotionEvent
 import android.view.View
@@ -43,9 +44,9 @@ internal class PagerRecyclerView(
         snapHelper.attachToRecyclerView(this)
 
         layoutManager = if (model.isSinglePage || model.viewInfo.isSwipeDisabled) {
-            SwipeDisabledLinearLayoutManager(context, LinearLayoutManager.HORIZONTAL)
+            SwipeDisabledLinearLayoutManager(context, LinearLayoutManager.HORIZONTAL) { isInternalScroll }
         } else {
-            ThomasLinearLayoutManager(context, LinearLayoutManager.HORIZONTAL)
+            ThomasLinearLayoutManager(context, LinearLayoutManager.HORIZONTAL) { isInternalScroll }
         }
 
         setLayoutManager(layoutManager)
@@ -122,7 +123,9 @@ internal class PagerRecyclerView(
     }
 
     private open class ThomasLinearLayoutManager(
-        context: Context?, orientation: Int
+        context: Context?,
+        orientation: Int,
+        private val isInternalScrollInProgress: () -> Boolean
     ) : LinearLayoutManager(context, orientation, false) {
 
         init {
@@ -130,6 +133,20 @@ internal class PagerRecyclerView(
             // TODO: revisit this now that we have a better way for models to determine if they
             //   are displayed in the current pager page.
             isItemPrefetchEnabled = false
+        }
+
+        override fun requestChildRectangleOnScreen(
+            parent: RecyclerView,
+            child: View,
+            rect: Rect,
+            immediate: Boolean,
+            focusedChildVisible: Boolean
+        ): Boolean {
+            // Prevent TalkBack from scrolling back to focused element during programmatic scrolls
+            if (isInternalScrollInProgress()) {
+                return false
+            }
+            return super.requestChildRectangleOnScreen(parent, child, rect, immediate, focusedChildVisible)
         }
 
         override fun generateDefaultLayoutParams(): LayoutParams {
@@ -149,8 +166,10 @@ internal class PagerRecyclerView(
      * Custom `LinearLayoutManager` that disables scrolling via touch, but can still be scrolled programmatically.
      */
     private class SwipeDisabledLinearLayoutManager(
-        context: Context?, orientation: Int
-    ) : ThomasLinearLayoutManager(context, orientation) {
+        context: Context?,
+        orientation: Int,
+        isInternalScrollInProgress: () -> Boolean
+    ) : ThomasLinearLayoutManager(context, orientation, isInternalScrollInProgress) {
 
         override fun canScrollHorizontally(): Boolean {
             return false
