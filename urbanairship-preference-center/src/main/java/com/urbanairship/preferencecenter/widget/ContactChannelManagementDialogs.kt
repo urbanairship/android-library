@@ -3,38 +3,39 @@ package com.urbanairship.preferencecenter.widget
 import android.content.Context
 import android.view.ContextThemeWrapper
 import androidx.appcompat.app.AlertDialog
-import androidx.lifecycle.lifecycleScope
 import com.urbanairship.R
 import com.urbanairship.UALog
 import com.urbanairship.contacts.ContactChannel
 import com.urbanairship.preferencecenter.data.Item
-import com.urbanairship.preferencecenter.ui.PreferenceCenterFragment
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Action
 import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView.DialogResult
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import com.urbanairship.preferencecenter.R as prefCenterR
 
-internal fun PreferenceCenterFragment.showContactManagementAddDialog(
+internal fun showContactManagementAddDialog(
+    context: Context,
+    scope: CoroutineScope,
     item: Item.ContactManagement,
     onHandleAction: (Action) -> Unit,
     errors: Flow<String>,
     dismisses: Flow<Unit>
 ) {
-    val context = requireContext().themed()
+    val themedContext = context.themed()
 
     val view = item.addPrompt.prompt
 
     val submitButtonLabel = view.submitButton.text
-    val cancelButtonLabel = view.cancelButton?.text ?: context.getString(R.string.ua_cancel)
+    val cancelButtonLabel = view.cancelButton?.text ?: themedContext.getString(R.string.ua_cancel)
 
-    val inputView = ContactChannelDialogInputView(context).apply {
+    val inputView = ContactChannelDialogInputView(themedContext).apply {
         setPlatform(item.platform, view.display)
     }
 
-    val dialog = MaterialAlertDialogBuilder(context)
+    val dialog = MaterialAlertDialogBuilder(themedContext)
         .setTitle(view.display.title)
         .apply { view.display.description?.let { setMessage(it) } }
         .setView(inputView)
@@ -53,18 +54,17 @@ internal fun PreferenceCenterFragment.showContactManagementAddDialog(
             UALog.e { "Add contact channel dialog result was null!" }
             inputView.setError(item.platform.errorMessages.defaultMessage)
         } else {
-            // Map the dialog result to an action and pass it back to the Fragment to update
-            // the ViewModel.
+            // Map the dialog result to an action to update the ViewModel.
             val action = when (result) {
                 is DialogResult.Email -> {
                     Action.ValidateEmailChannel(item, result.address)
                 }
 
                 is DialogResult.Sms ->
-                    // SMS needs to be validated by backend or
-                    // a custom validation handler. The model will handle making the request
-                    // and will either register the channel or show an error message via the
-                    // errors flow (which is why we don't want to dismiss the dialog here).
+                    // SMS needs to be validated by backend or a custom validation handler.
+                    // The model will handle making the request and will either register the
+                    // channel or show an error message via the errors flow (which is why we
+                    // don't want to dismiss the dialog here).
                     Action.ValidateSmsChannel(item, result.address, result.senderId, prefix = result.prefix)
             }
             onHandleAction(action)
@@ -77,12 +77,12 @@ internal fun PreferenceCenterFragment.showContactManagementAddDialog(
         // Listen for validation errors from PreferenceCenterViewModel
         errors
             .onEach { inputView.setError(it) }
-            .launchIn(lifecycleScope)
+            .launchIn(scope)
 
         // Listen for dialog dismiss requests from PreferenceCenterViewModel
         dismisses
             .onEach { dialog.dismiss() }
-            .launchIn(lifecycleScope)
+            .launchIn(scope)
 
         // Listen for validation changes from the input view
         inputView.onValidationChanged = { isValid ->
@@ -104,12 +104,13 @@ internal fun PreferenceCenterFragment.showContactManagementAddDialog(
     dialog.show()
 }
 
-internal fun PreferenceCenterFragment.showContactManagementAddConfirmDialog(
+internal fun showContactManagementAddConfirmDialog(
+    context: Context,
     message: Item.ContactManagement.ActionableMessage,
 ) {
-    val context = requireContext().themed()
+    val themedContext = context.themed()
 
-    MaterialAlertDialogBuilder(context)
+    MaterialAlertDialogBuilder(themedContext)
         .setTitle(message.title)
         .setMessage(message.description)
         .setPositiveButton(message.button.text) { dialog, _ ->
@@ -118,19 +119,20 @@ internal fun PreferenceCenterFragment.showContactManagementAddConfirmDialog(
         .show()
 }
 
-internal fun PreferenceCenterFragment.showContactManagementRemoveDialog(
+internal fun showContactManagementRemoveDialog(
+    context: Context,
     item: Item.ContactManagement,
     channel: ContactChannel,
     onHandleAction: (Action) -> Unit
 ) {
-    val context = requireContext().themed()
+    val themedContext = context.themed()
 
     val prompt = item.removePrompt.prompt
 
     val submitButtonLabel = prompt.submitButton.text
-    val cancelButtonLabel = prompt.cancelButton?.text ?: context.getString(R.string.ua_cancel)
+    val cancelButtonLabel = prompt.cancelButton?.text ?: themedContext.getString(R.string.ua_cancel)
 
-    MaterialAlertDialogBuilder(context)
+    MaterialAlertDialogBuilder(themedContext)
         .setTitle(prompt.display.title)
         .apply { prompt.display.description?.let { setMessage(it) } }
         .setNeutralButton(cancelButtonLabel) { _, _ -> }
@@ -140,12 +142,13 @@ internal fun PreferenceCenterFragment.showContactManagementRemoveDialog(
         .show()
 }
 
-internal fun PreferenceCenterFragment.showContactManagementResentDialog(
+internal fun showContactManagementResentDialog(
+    context: Context,
     message: Item.ContactManagement.ActionableMessage,
 ) {
-    val context = requireContext().themed()
+    val themedContext = context.themed()
 
-    MaterialAlertDialogBuilder(context)
+    MaterialAlertDialogBuilder(themedContext)
         .setTitle(message.title)
         .setMessage(message.description)
         .setPositiveButton(message.button.text) { _, _ -> }

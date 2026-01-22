@@ -204,16 +204,12 @@ public class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference
     }
 
     private fun render(state: State): Unit = when (state) {
-        is State.Loading -> {
-            views.showLoading()
-        }
+        is State.Loading -> views.showLoading()
         is State.Error -> views.showError()
         is State.Content -> {
-            onDisplayListener?.let {
-                if (!it.onDisplayPreferenceCenter(state.title, state.subtitle)) {
-                    showHeaderItem(state.title, state.subtitle)
-                }
-            } ?: showHeaderItem(state.title, state.subtitle)
+            if (onDisplayListener?.onDisplayPreferenceCenter(state.title, state.subtitle) != true) {
+                showHeaderItem(state.title, state.subtitle)
+            }
 
             adapter.submit(
                 items = state.listItems,
@@ -229,6 +225,8 @@ public class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference
     private suspend fun handle(effect: Effect) = when (effect) {
         is Effect.ShowContactManagementAddDialog ->
             showContactManagementAddDialog(
+                context = requireContext(),
+                scope = viewLifecycleOwner.lifecycleScope,
                 item = effect.item,
                 onHandleAction = viewModel::handle,
                 errors = contactManagementDialogErrors.consumeAsFlow(),
@@ -236,13 +234,13 @@ public class PreferenceCenterFragment : Fragment(R.layout.ua_fragment_preference
             )
         is Effect.ShowContactManagementAddConfirmDialog ->
             effect.item.addPrompt.prompt.onSubmit?.let { message ->
-                showContactManagementAddConfirmDialog(message)
+                showContactManagementAddConfirmDialog(requireContext(), message)
             }
         is Effect.ShowContactManagementRemoveDialog ->
-            showContactManagementRemoveDialog(effect.item, effect.channel, viewModel::handle)
+            showContactManagementRemoveDialog(requireContext(), effect.item, effect.channel, viewModel::handle)
         is Effect.ShowChannelVerificationResentDialog ->
             effect.item.platform.resendOptions.onSuccess?.let { message ->
-                showContactManagementResentDialog(message)
+                showContactManagementResentDialog(requireContext(), message)
             }
         Effect.DismissContactManagementAddDialog ->
             contactManagementDialogDismisses.emit(Unit)
