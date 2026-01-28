@@ -36,6 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -205,6 +206,24 @@ public class AnalyticsTest {
         privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
         analytics.addEvent(AppForegroundEvent(100))
         verify(exactly = 0) { mockEventManager.addEvent(any(), any())  }
+    }
+
+    @Test
+    public fun testCustomEventFeed(): TestResult = runTest(testDispatcher) {
+        val event = CustomEvent.newBuilder("cool").build()
+        analytics.recordCustomEvent(event)
+
+        advanceUntilIdle()
+
+        val expectedFeedEvent =  AirshipEventFeed.Event.Analytics(
+            event.type,
+            event.toJsonValue(),
+            event.eventValue?.toDouble()
+        )
+
+        verify(exactly = 1) {
+            mockEventFeed.emit(expectedFeedEvent)
+        }
     }
 
     /**

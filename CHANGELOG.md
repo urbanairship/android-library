@@ -4,6 +4,13 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.13.8 - January 28, 2026
+Patch release that fixes an issue with custom events being double counted for IAX triggers (reporting was not affected). 
+Apps that make use of custom event triggers in IAX should update to this version or later.
+
+### Changes
+- Fixed issue that caused custom events being double counted for IAX triggers (reporting was not affected)
+
 ## Version 19.13.7 - January 16, 2026
 Patch release that fixes a potential image-related crash in Scenes.
 
