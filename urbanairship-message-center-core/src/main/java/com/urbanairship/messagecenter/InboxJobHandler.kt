@@ -83,7 +83,7 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
     }
 
     suspend fun loadAirshipLayout(message: Message): AirshipLayout? {
-        if (message.contentType != Message.ContentType.NATIVE) {
+        if (message.contentType !is Message.ContentType.Native) {
             return null
         }
 

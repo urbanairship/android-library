@@ -43,17 +43,39 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
     private var associatedData: JsonValue?
 ) : Parcelable {
 
-    public enum class ContentType(internal val jsonValue: String) {
-        HTML("text/html"),
-        PLAIN("text/plain"),
-        NATIVE("application/vnd.urbanairship.thomas+json; version=1;");
+    @Parcelize
+    public sealed class ContentType(internal val jsonValue: String) : Parcelable {
+        public data object Html : ContentType("text/html")
+        public data object Plain : ContentType("text/plain")
+        public data class Native(val version: Int) : ContentType(NATIVE_CONTENT_TYPE)
 
         internal companion object {
+            const val NATIVE_CONTENT_TYPE = "application/vnd.urbanairship.thomas+json"
+            private const val VERSION = "version"
+
             @Throws(JsonException::class)
             fun fromJson(value: JsonValue): ContentType {
                 val content = value.requireString()
-                return entries.firstOrNull { it.jsonValue == content }
-                    ?: throw JsonException("Unknown content type: $content")
+                return when(content) {
+                    Html.jsonValue -> Html
+                    Plain.jsonValue -> Plain
+                    else -> {
+                        if (!content.startsWith(NATIVE_CONTENT_TYPE)) {
+                            throw JsonException("Unknown content type: $content")
+                        }
+
+                        val version = content
+                            .replace(" ", "")
+                            .split(";")
+                            .lastOrNull { it.startsWith(VERSION) }
+                            ?.split("=")
+                            ?.lastOrNull()
+                            ?.let(String::toIntOrNull)
+                            ?: throw JsonException("Unknown content type: $content")
+
+                        Native(version)
+                    }
+                }
             }
         }
     }
@@ -226,7 +248,7 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
                     rawMessageJson = json.toJsonValue(),
                     isUnreadClient = isUnreadClient,
                     isDeletedClient = isDeleted,
-                    contentType = json[KEY_CONTENT_TYPE]?.let(ContentType::fromJson) ?: ContentType.HTML,
+                    contentType = json[KEY_CONTENT_TYPE]?.let(ContentType::fromJson) ?: ContentType.Html,
                     associatedData = associatedData
                 )
             } catch (e: Exception) {

@@ -242,7 +242,7 @@ private fun PreviewMessageListItem() {
         reporting = null,
         rawMessageJson = JsonValue.NULL,
         isDeletedClient = false,
-        contentType = Message.ContentType.HTML,
+        contentType = Message.ContentType.Html,
         associatedData = null
     )
 

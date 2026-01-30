@@ -71,7 +71,7 @@ public class MessageView @JvmOverloads constructor(
     private var error: Int? = null
 
     private fun createDisplayArgs(layout: LayoutInfo): DisplayArgs? {
-        if (message?.contentType != Message.ContentType.NATIVE) {
+        if (message?.contentType !is Message.ContentType.Native) {
             return null
         }
 
@@ -194,7 +194,7 @@ public class MessageView @JvmOverloads constructor(
 
     internal fun onDismissed() {
         val message = message ?: return
-        if (message.contentType != Message.ContentType.NATIVE) {
+        if (message.contentType !is Message.ContentType.Native) {
             return
         }
         if (isDismissReported) {

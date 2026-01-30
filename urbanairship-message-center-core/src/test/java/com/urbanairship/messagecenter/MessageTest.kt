@@ -11,6 +11,7 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import org.intellij.lang.annotations.Language
+import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -83,6 +84,43 @@ public class MessageTest {
 
         // Verify that we set the sent date to now when the message was created
         assertEquals(now.toString(), message.sentDate.toString())
+    }
+
+    @Test
+    public fun testContentTypeParsing() {
+        // A map of valid content_type string values to their expected Message.ContentType
+        val validCases = mapOf(
+            "text/html" to Message.ContentType.Html,
+            "text/plain" to Message.ContentType.Plain,
+            "application/vnd.urbanairship.thomas+json;version=1" to Message.ContentType.Native(1),
+            "application/vnd.urbanairship.thomas+json; version=2" to Message.ContentType.Native(2),
+            "application/vnd.urbanairship.thomas+json; version=3; foo=bar" to Message.ContentType.Native(3),
+        )
+
+        validCases.forEach { (typeString, expectedType) ->
+            val type = Message.ContentType.fromJson(JsonValue.wrap(typeString))
+            assertEquals("Failed for type: $typeString", expectedType, type)
+        }
+
+        // A list of invalid JSON value types for the content_type field.
+        // The create method should handle these gracefully by defaulting to HTML, not throwing an exception.
+        val invalidJsonTypeCases = listOf(
+            100,
+            false,
+            null,
+            mapOf("foo" to "bar"),
+            listOf("foo", "bar"),
+            "application/vnd.urbanairship.thomas+json",
+            "application/vnd.urbanairship.thomas+json; version=foo",
+            "text/html1",
+            "application/vnd.urbanairship.thomas+json; garbage version=foo",
+        ).map(JsonValue::wrap)
+
+        invalidJsonTypeCases.forEach { invalidValue ->
+            assertThrows(JsonException::class.java, {
+                Message.ContentType.fromJson(invalidValue)
+            })
+        }
     }
 
 
