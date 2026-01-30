@@ -82,6 +82,7 @@ public fun MessageCenterScreen(
                         }
                     },
                     modifier = Modifier.fillMaxSize(),
+                    onNavigateUp = onNavigateUp
                 )
             }
         },
