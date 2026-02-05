@@ -190,17 +190,19 @@ public object MessageCenterDefaults {
         canDelete: Boolean = true,
         onMessageDeleted: () -> Unit = {},
     ) {
-        IconButton(
-            onClick = {
-                state.onAction(MessageCenterMessageViewModel.Action.DeleteCurrentMessage)
-                onMessageDeleted.invoke()
-            },
-            enabled = state.messageId != null && canDelete
-        ) {
-            Icon(
-                painter = painterResource(com.urbanairship.messagecenter.core.R.drawable.ua_ic_message_center_delete),
-                contentDescription = stringResource(CoreR.string.ua_delete)
-            )
+        if (canDelete) {
+            IconButton(
+                onClick = {
+                    state.onAction(MessageCenterMessageViewModel.Action.DeleteCurrentMessage)
+                    onMessageDeleted.invoke()
+                },
+                enabled = state.messageId != null
+            ) {
+                Icon(
+                    painter = painterResource(com.urbanairship.messagecenter.core.R.drawable.ua_ic_message_center_delete),
+                    contentDescription = stringResource(CoreR.string.ua_delete)
+                )
+            }
         }
     }
 }

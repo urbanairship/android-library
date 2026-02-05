@@ -200,6 +200,7 @@ internal class DefaultMessageCenterListViewModel(
     private fun markMessagesRead(messages: Set<String>) {
         UALog.d { "Marking ${messages.size} messages read" }
         inbox.markMessagesRead(messages)
+        setEditing(false)
     }
 
     /** Marks the selected messages as read. */
@@ -212,8 +213,9 @@ internal class DefaultMessageCenterListViewModel(
 
     /** Deletes the given list of [messages]. */
     private fun deleteMessages(messages: Set<String>) {
-        UALog.d { "Deleting  ${messages.size} messages" }
+        UALog.d { "Deleting ${messages.size} messages" }
         inbox.deleteMessages(messages)
+        setEditing(false)
     }
 
     /** Deletes the selected messages. */

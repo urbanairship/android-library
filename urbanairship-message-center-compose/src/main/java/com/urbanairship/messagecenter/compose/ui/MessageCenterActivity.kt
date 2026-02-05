@@ -20,8 +20,7 @@ import kotlinx.coroutines.flow.update
 /** Activity to display a message center */
 public class MessageCenterActivity: ComponentActivity() {
 
-    private val _messageIdToOpen = MutableStateFlow<String?>(null)
-    private val messageIdToOpen = _messageIdToOpen.asStateFlow()
+    private val messageIdToOpen = MutableStateFlow<String?>(null)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
@@ -36,10 +35,10 @@ public class MessageCenterActivity: ComponentActivity() {
             return
         }
 
-        _messageIdToOpen.update { MessageCenter.parseMessageId(intent) }
+        messageIdToOpen.update { MessageCenter.parseMessageId(intent) }
 
         // Load the theme (or the default theme if none has been set)
-        val theme = MessageCenter.shared().theme
+        val theme = Airship.messageCenter.theme
 
         setContent {
             val messageId = messageIdToOpen.collectAsStateWithLifecycle()
@@ -62,7 +61,7 @@ public class MessageCenterActivity: ComponentActivity() {
         super.onNewIntent(intent)
 
         MessageCenter.parseMessageId(intent)?.let { id ->
-            _messageIdToOpen.update { id }
+            messageIdToOpen.update { id }
         }
     }
 }

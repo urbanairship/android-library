@@ -16,20 +16,28 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.urbanairship.messagecenter.compose.R
 
+/**
+ * Configuration options for the Message Center UI.
+ *
+ * @property showMessageListThumbnail Whether to show message thumbnails in the Message Center list.
+ * @property messageListPlaceholderIcon Placeholder for messages, shown while loading or if no thumbnail is set.
+ * @property messageListUnreadIndicator Message list unread indicator override.
+ * @property messageCenterDividerEnabled Whether to show dividers between items in the Message Center list
+ * @property messageCenterEmptyListMessage Message Center list empty state message view override.
+ * @property messageLoadingView Overrides message loading view.
+ * @property messageCenterListTitle Overrides the title shown in the Message Center List screen top bar. If `null`, the default localized string will be used.
+ * @property canDeleteMessages Whether messages can be deleted from the Message Center. Setting this to `false` will hide any delete UI in the Message Center.
+ */
 @Immutable
 public data class MessageCenterOptions(
     val showMessageListThumbnail: Boolean,
-    /** Placeholder for messages, shown while loading or if no thumbnail is set */
     val messageListPlaceholderIcon: @Composable () -> Unit,
-    /** Message list unread indicator override */
     val messageListUnreadIndicator: @Composable (Boolean) -> Unit,
-    /** Whether to show dividers between items in the Message Center list */
     val messageCenterDividerEnabled: Boolean,
-    /** Message Center list empty state message view override */
     val messageCenterEmptyListMessage: (@Composable () -> Unit)? = null,
-    /** Overrides message loading view */
     val messageLoadingView: (@Composable () -> Unit)? = null,
-
+    val messageCenterListTitle: String? = null,
+    val canDeleteMessages: Boolean = true
 ) {
     public companion object {
         public fun defaults(): MessageCenterOptions = MessageCenterOptions(

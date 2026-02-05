@@ -97,7 +97,8 @@ public fun MessageCenterMessageScreen(
                     actions = {
                         MessageCenterDefaults.messageTopBarActions(
                             state = state,
-                            onMessageDeleted = onClose
+                            onMessageDeleted = onClose,
+                            canDelete = MsgCenterTheme.options.canDeleteMessages
                         )
                     }
                 )

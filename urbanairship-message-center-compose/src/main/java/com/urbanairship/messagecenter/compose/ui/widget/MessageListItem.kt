@@ -71,6 +71,7 @@ internal fun MessageListItem(
                     message = message,
                     isEditing = isEditing,
                     isSelected = isSelected,
+                    canDelete = options.canDeleteMessages,
                     onAction = onAction
                 )
                 contentDescription(context, message, isEditing, isHighlighted)
@@ -155,17 +156,22 @@ private fun accessibilityActions(
     message: Message,
     isEditing: Boolean,
     isSelected: Boolean,
+    canDelete: Boolean,
     onAction: (Action) -> Unit,
 ): List<CustomAccessibilityAction> {
-    val actions = mutableListOf(
-        CustomAccessibilityAction(
-            label = context.getString(CoreR.string.ua_delete),
-            action = {
-                onAction(Action.DeleteMessages(listOf(message)))
-                true
-            }
+    val actions = mutableListOf<CustomAccessibilityAction>()
+
+    if (canDelete) {
+        actions.add(
+            CustomAccessibilityAction(
+                label = context.getString(CoreR.string.ua_delete),
+                action = {
+                    onAction(Action.DeleteMessages(listOf(message)))
+                    true
+                }
+            )
         )
-    )
+    }
 
     if (!message.isRead) {
         actions.add(

@@ -3,57 +3,72 @@ package com.urbanairship.messagecenter.compose.ui.theme
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 
+/**
+ * Message Center color palette.
+ *
+ * @property background Message Center background color
+ * @property surface Message Center surface color
+ * @property accent Message Center accent color
+ * @property divider Message Center divider color
+ * @property messageListHighlight Message Center list item highlight color
+ * @property messageListItemTitle Message Center list item title color
+ * @property messageListItemSubtitle Message Center list item subtitle color
+ * @property messageListItemDate Message Center list item date color
+ * @property messageListItemCheckbox Message Center list item checkbox colors
+ * @property messageListBackground Message Center list background color
+ * @property listTopBar Message Center list top bar colors
+ * @property messageTopBar Message Center message top bar colors
+ * @property messageCenterError Message Center error color
+ * @property messageCenterAlertLabel Message Center alert label color
+ * @property messageCenterEditBar Message Center list edit bar colors
+ * @property messageCenterPullToRefreshBackground Message Center pull to refresh background color
+ * @property messageCenterPullToRefresh Message Center pull to refresh color
+ * @property messageCenterEditBarContent Message Center list edit bar content color
+ * @property messageErrorBackground Background color for error messages on the message screen
+ * @property messageError Message Error text color
+ * @property messageLoadingBackground Background color for a message loading screen
+ * @property messageEmptyBackground Background color for empty messages
+ * @property messageEmptyLabel Message center error label color
+ */
 @Immutable
 public data class MessageCenterColors(
-    /** Message Center background color */
     val background: Color,
-    /** Message Center surface color */
     val surface: Color,
-    /** Message Center accent color */
     val accent: Color,
-    /** Message Center divider color */
     val divider: Color,
-    /** Message Center list item highlight color */
     val messageListHighlight: Color,
-    /** Message Center list item title color */
     val messageListItemTitle: Color,
-    /** Message Center list item subtitle color */
     val messageListItemSubtitle: Color,
-    /** Message Center list item date color */
     val messageListItemDate: Color,
-    /** Message Center list item checkbox colors */
     val messageListItemCheckbox: CheckboxColors,
-    /** Message Center list background color */
     val messageListBackground: Color,
-    /** Message Center list top bar colors */
     val listTopBar: TopAppBarColors,
-    /** Message Center message top bar colors */
     val messageTopBar: TopAppBarColors,
-    /** Message Center error color */
     val messageCenterError: Color,
-    /** Message Center alert label color */
     val messageCenterAlertLabel: Color,
-    /** Message Center list edit bar colors */
     val messageCenterEditBar: Color,
-    /** Message Center pull to refresh background color */
     val messageCenterPullToRefreshBackground: Color,
-    /** Message Center pull to refresh color */
     val messageCenterPullToRefresh: Color,
-    /** Message Center list edit bar content color */
     val messageCenterEditBarContent: Color,
-    /** Background color for error messages on the message screen*/
     val messageErrorBackground: Color,
-    /** Message Error text color */
     val messageError: Color,
-    /** Background color for a message loading screen */
     val messageLoadingBackground: Color,
-    /** Background color for empty messages */
     val messageEmptyBackground: Color,
-    /** Message center error label color */
     val messageEmptyLabel: Color,
 ) {
     public companion object {
 
+        /**
+         * Light theme default colors.
+         *
+         * @param background Message Center background color
+         * @param surface Message Center surface color
+         * @param accent Message Center accent color
+         * @param textPrimary Primary text color
+         * @param textSecondary Secondary text color
+         * @param divider Message Center divider color
+         * @param error Message Center error color
+         */
         public fun lightDefaults(
             background: Color = Color(0xFFF3F3F3),
             surface: Color = Color.White,
@@ -113,6 +128,17 @@ public data class MessageCenterColors(
             messageEmptyLabel = textPrimary,
         )
 
+        /**
+         * Dark theme default colors.
+         *
+         * @param background Message Center background color
+         * @param surface Message Center surface color
+         * @param accent Message Center accent color
+         * @param textPrimary Primary text color
+         * @param textSecondary Secondary text color
+         * @param divider Message Center divider color
+         * @param error Message Center error color
+         */
         public fun darkDefaults(
             background: Color = Color.Black,
             surface: Color = Color(0xFF121212),
@@ -174,6 +200,22 @@ public data class MessageCenterColors(
     }
 }
 
+/**
+ * Checkbox color palette.
+ *
+ * @property checkedCheckmarkColor Color of the checkmark when checked
+ * @property uncheckedCheckmarkColor Color of the checkmark when unchecked
+ * @property checkedBoxColor Color of the box when checked
+ * @property uncheckedBoxColor Color of the box when unchecked
+ * @property disabledCheckedBoxColor Color of the box when checked and disabled
+ * @property disabledUncheckedBoxColor Color of the box when unchecked and disabled
+ * @property disabledIndeterminateBoxColor Color of the box when indeterminate and disabled
+ * @property checkedBorderColor Color of the border when checked
+ * @property uncheckedBorderColor Color of the border when unchecked
+ * @property disabledBorderColor Color of the border when disabled
+ * @property disabledUncheckedBorderColor Color of the border when unchecked and disabled
+ * @property disabledIndeterminateBorderColor Color of the border when indeterminate and disabled
+ */
 @Immutable
 public data class CheckboxColors(
     val checkedCheckmarkColor: Color,
@@ -190,6 +232,15 @@ public data class CheckboxColors(
     val disabledIndeterminateBorderColor: Color
 )
 
+/**
+ * Top app bar color palette.
+ *
+ * @property containerColor Color of the app bar container
+ * @property scrolledContainerColor Color of the app bar container when scrolled
+ * @property navigationIconContentColor Color of the navigation icon content
+ * @property titleContentColor Color of the title content
+ * @property actionIconContentColor Color of the action icon content
+ */
 @Immutable
 public data class TopAppBarColors(
     val containerColor: Color,

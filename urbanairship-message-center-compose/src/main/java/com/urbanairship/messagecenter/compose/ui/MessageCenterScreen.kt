@@ -6,8 +6,6 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -23,10 +21,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.urbanairship.R
 import com.urbanairship.messagecenter.Message
+import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action as MessageAction
@@ -118,11 +118,14 @@ private fun ListPane(
    onNavigateUp: () -> Unit = { },
    onMessageClick: (Message) -> Unit,
 ) {
+
     MessageCenterListScreen(
         state = state,
         topBar = {
+            val title = MsgCenterTheme.options.messageCenterListTitle ?: stringResource(R.string.ua_message_center_title)
+
             MessageCenterDefaults.listTopBar(
-                title = "Messages",
+                title = title,
                 isEditing = state.isEditing,
                 navIcon = if (showNavigateUp) painterResource(com.urbanairship.messagecenter.core.R.drawable.ua_ic_message_center_arrow_back) else null,
                 onNavigateUp = onNavigateUp,
@@ -152,7 +155,12 @@ private fun MessagePane(
                     title = title,
                     navIcon = if (showNavigateUp) painterResource(com.urbanairship.messagecenter.core.R.drawable.ua_ic_message_center_arrow_back) else null,
                     onNavigateUp = onNavigateUp,
-                    actions = { MessageCenterDefaults.messageTopBarActions(state) },
+                    actions = {
+                        MessageCenterDefaults.messageTopBarActions(
+                            state = state,
+                            canDelete = MsgCenterTheme.options.canDeleteMessages
+                        )
+                    },
                     scrollBehavior = scrollBehavior
                 )
             },
