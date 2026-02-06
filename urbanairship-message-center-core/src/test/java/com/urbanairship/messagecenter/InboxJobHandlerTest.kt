@@ -620,7 +620,7 @@ public class InboxJobHandlerTest {
               "unread": true,
               "message_sent": "2024-10-21 18:41:03",
               "title": "Message title",
-              "content_type": "${Message.ContentType.NATIVE.jsonValue}"
+              "content_type": "application/vnd.urbanairship.thomas+json; version=1"
             }
         """.trimIndent())
         val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false, associatedData = null)!!
@@ -652,7 +652,7 @@ public class InboxJobHandlerTest {
               "unread": true,
               "message_sent": "2024-10-21 18:41:03",
               "title": "Message title",
-              "content_type": "${Message.ContentType.HTML.jsonValue}"
+              "content_type": "${Message.ContentType.Html.jsonValue}"
             }
         """.trimIndent())
         val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false, associatedData = null)!!
@@ -673,7 +673,7 @@ public class InboxJobHandlerTest {
               "unread": true,
               "message_sent": "2024-10-21 18:41:03",
               "title": "Message title",
-              "content_type": "${Message.ContentType.NATIVE.jsonValue}"
+              "content_type": "application/vnd.urbanairship.thomas+json; version=1"
             }
         """.trimIndent())
         val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false, associatedData = null)!!
@@ -704,7 +704,7 @@ public class InboxJobHandlerTest {
               "unread": true,
               "message_sent": "2024-10-21 18:41:03",
               "title": "Message title",
-              "content_type": "${Message.ContentType.NATIVE.jsonValue}"
+              "content_type": "application/vnd.urbanairship.thomas+json; version=1"
             }
         """.trimIndent())
         val message = Message.create(messageJson, isUnreadClient = true, isDeleted = false, associatedData = null)!!

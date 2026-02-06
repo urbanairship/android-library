@@ -81,7 +81,7 @@ public class MessageAnalyticsTest {
             expirationDate = null,
             isUnread = true,
             extras = null,
-            contentType = Message.ContentType.HTML,
+            contentType = Message.ContentType.Html,
             messageUrl = "test://url.message",
             reporting = JsonValue.wrap("reporting"),
             rawMessageJson = JsonValue.NULL,

@@ -143,13 +143,13 @@ public class MessageViewModel(
         }
 
         return when(message.contentType) {
-            Message.ContentType.HTML,
-            Message.ContentType.PLAIN -> {
+            Message.ContentType.Html,
+            Message.ContentType.Plain -> {
                 val content = MessageViewState.MessageContent.Content.Html
                 MessageViewState.MessageContent(message, content)
             }
 
-            Message.ContentType.NATIVE -> {
+            is Message.ContentType.Native -> {
                 val layout = inbox.loadMessageLayout(message)
                 if (layout != null) {
                     val content = MessageViewState.MessageContent.Content.Native(layout)

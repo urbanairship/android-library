@@ -253,13 +253,13 @@ internal class DefaultMessageCenterMessageViewModel(
         }
 
         return when(message.contentType) {
-            Message.ContentType.HTML,
-            Message.ContentType.PLAIN -> {
+            Message.ContentType.Html,
+            Message.ContentType.Plain -> {
                 val content = State.MessageContent.Content.Html(WebViewState.INIT)
                 State.MessageContent(message, content)
             }
 
-            Message.ContentType.NATIVE -> {
+            is Message.ContentType.Native -> {
                 val layout = inbox.loadMessageLayout(message)
                 if (layout != null) {
                     val content = State.MessageContent.Content.Native(layout)
