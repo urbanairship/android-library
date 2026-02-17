@@ -155,27 +155,11 @@ public class DefaultRequestSession : RequestSession {
             }
 
             is RequestAuth.ChannelTokenAuth -> {
-                val provider = requireNotNull(channelAuthTokenProvider)
-                val token = provider.fetchToken(auth.channelId).getOrThrow()
-                ResolvedAuth(
-                    headers = mapOf(
-                        "Authorization" to "Bearer $token",
-                        "X-UA-Appkey" to configOptions.appKey,
-                    ),
-                    authToken = token
-                )
+                resolveTokenAuth(requireNotNull(channelAuthTokenProvider), auth.channelId)
             }
 
             is RequestAuth.ContactTokenAuth -> {
-                val provider = requireNotNull(contactAuthTokenProvider)
-                val token = provider.fetchToken(auth.contactId).getOrThrow()
-                ResolvedAuth(
-                    headers = mapOf(
-                        "Authorization" to "Bearer $token",
-                        "X-UA-Appkey" to configOptions.appKey,
-                    ),
-                    authToken = token
-                )
+                resolveTokenAuth(requireNotNull(contactAuthTokenProvider), auth.contactId)
             }
 
             is RequestAuth.GeneratedAppToken -> {
@@ -217,6 +201,18 @@ public class DefaultRequestSession : RequestSession {
                 )
             }
         }
+    }
+
+    private suspend fun resolveTokenAuth(provider: AuthTokenProvider, id: String): ResolvedAuth {
+        val token = provider.fetchToken(id).getOrThrow()
+        return ResolvedAuth(
+            headers = mapOf(
+                "Authorization" to "Bearer $token",
+                "X-UA-Appkey" to configOptions.appKey,
+                "X-UA-Auth-Type" to "SDK-JWT",
+            ),
+            authToken = token
+        )
     }
 
     private suspend fun expireAuth(auth: RequestAuth, token: String) {

@@ -261,7 +261,8 @@ public class DefaultRequestSessionTest {
 
         val authHeaders = mapOf(
             "X-UA-Appkey" to appConfig.appKey,
-            "Authorization" to "Bearer some auth token"
+            "Authorization" to "Bearer some auth token",
+            "X-UA-Auth-Type" to "SDK-JWT"
         )
 
         val expectedHeaders = (request.headers + expectedDefaultHeaders + authHeaders)
@@ -348,10 +349,12 @@ public class DefaultRequestSessionTest {
         val firstRequestHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
         firstRequestHeaders["Authorization"] = "Bearer first"
         firstRequestHeaders["X-UA-Appkey"] = appConfig.appKey
+        firstRequestHeaders["X-UA-Auth-Type"] = "SDK-JWT"
 
         val secondRequestHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
         secondRequestHeaders["Authorization"] = "Bearer second"
         secondRequestHeaders["X-UA-Appkey"] = appConfig.appKey
+        secondRequestHeaders["X-UA-Auth-Type"] = "SDK-JWT"
 
         verify {
             mockClient.execute(
@@ -387,7 +390,8 @@ public class DefaultRequestSessionTest {
 
         val authHeaders = mapOf(
             "X-UA-Appkey" to appConfig.appKey,
-            "Authorization" to "Bearer some auth token"
+            "Authorization" to "Bearer some auth token",
+            "X-UA-Auth-Type" to "SDK-JWT"
         )
 
         val expectedHeaders = (request.headers + expectedDefaultHeaders + authHeaders)
@@ -471,10 +475,12 @@ public class DefaultRequestSessionTest {
         val firstRequestHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
         firstRequestHeaders["Authorization"] = "Bearer first"
         firstRequestHeaders["X-UA-Appkey"] = appConfig.appKey
+        firstRequestHeaders["X-UA-Auth-Type"] = "SDK-JWT"
 
         val secondRequestHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
         secondRequestHeaders["Authorization"] = "Bearer second"
         secondRequestHeaders["X-UA-Appkey"] = appConfig.appKey
+        secondRequestHeaders["X-UA-Auth-Type"] = "SDK-JWT"
 
         verify {
             mockClient.execute(
