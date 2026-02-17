@@ -36,6 +36,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
 import com.urbanairship.actions.DefaultActionRunner
 import com.urbanairship.actions.run
 import com.urbanairship.android.layout.ThomasListenerInterface
@@ -216,7 +218,8 @@ private fun NativeContentView(
         inAppActivityMonitor = GlobalActivityMonitor.shared(LocalContext.current),
         actionRunner = { actions, _ ->
             DefaultActionRunner.run(actions, AutomationAction.Situation.AUTOMATION)
-        }
+        },
+//        stateStorage = content.store //disable state storage
     )
 
     DisposableEffect(message.id) {

@@ -20,6 +20,7 @@ import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.ui.ThomasLayoutViewFactory
 import com.urbanairship.app.GlobalActivityMonitor
+import com.urbanairship.messagecenter.InMemoryLayoutDataStorage
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.LOAD_FAILED
@@ -58,11 +59,13 @@ public class MessageView @JvmOverloads constructor(
     public var showEmptyView: Boolean = false
 
     private var message: Message? = null
+    private var displayedMessageId: String? = null
 
     internal var analyticsFactory: ((onDismissed: () -> Unit) -> ThomasListenerInterface?)? = null
     private var isDismissReported = false
     private var currentDisplayArgs: DisplayArgs? = null
 
+    private var stateStorage: InMemoryLayoutDataStorage? = null
     init {
         inflate(context, R.layout.ua_view_message, this)
         onViewCreated()
@@ -86,7 +89,8 @@ public class MessageView @JvmOverloads constructor(
             inAppActivityMonitor = GlobalActivityMonitor.shared(context),
             actionRunner = { actions, _ ->
                 DefaultActionRunner.run(actions, Action.Situation.AUTOMATION)
-            }
+            },
+//            stateStorage = stateStorage //disable state storage
         )
     }
 
@@ -150,6 +154,10 @@ public class MessageView @JvmOverloads constructor(
                         views.webView.loadMessage(state.message)
                     }
                     is MessageViewState.MessageContent.Content.Native -> {
+                        if (displayedMessageId != state.message.id ) {
+                            stateStorage = InMemoryLayoutDataStorage()
+                        }
+
                         val displayArgs = createDisplayArgs(content.layout.layoutInfo) ?: run {
                             UALog.w { "Failed to create display args" }
                             return
@@ -175,6 +183,8 @@ public class MessageView @JvmOverloads constructor(
                         currentDisplayArgs = displayArgs
                     }
                 }
+
+                displayedMessageId = state.message.id
 
             }
             is MessageViewState.Empty -> {
@@ -212,6 +222,7 @@ public class MessageView @JvmOverloads constructor(
         )
 
         ThomasLayoutViewFactory.clear()
+        views.nativeContainer.removeAllViews()
     }
 
     /** Pauses the WebView. */

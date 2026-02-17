@@ -53,7 +53,8 @@ public class CheckboxControllerTest {
             identifier = "form-id",
             formType = FormType.Form,
             formResponseType = "form",
-            validationMode = FormValidationMode.IMMEDIATE
+            validationMode = FormValidationMode.IMMEDIATE,
+            initialChildrenValues = emptyMap()
         )
     ))
 

@@ -10,6 +10,7 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
 import com.urbanairship.android.layout.util.DelicateLayoutApi
+import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
 import kotlin.coroutines.resume
@@ -131,6 +132,10 @@ internal class ThomasForm(
     @OptIn(DelicateLayoutApi::class)
     internal fun <T : ThomasFormField<*>> inputData(identifier: String): T? {
         return feed.value.inputData(identifier)
+    }
+
+    internal fun getInitialValue(identifier: String): JsonValue? {
+        return feed.changes.value.getInitialValue(identifier)
     }
 
     fun updateFormInput(

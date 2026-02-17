@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.ui
 import android.view.View
 import androidx.lifecycle.ViewModel
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.LayoutStateStorage
 import com.urbanairship.android.layout.ModelFactory
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.ThomasModelFactory
@@ -26,13 +27,15 @@ internal class LayoutViewModel : ViewModel() {
         reporter: Reporter,
         displayTimer: DisplayTimer,
         actionRunner: ThomasActionRunner,
-        layoutState: LayoutState = LayoutState.EMPTY
+        layoutState: LayoutState = LayoutState.EMPTY,
+        stateStorage: LayoutStateStorage? = null
     ): ModelEnvironment =
         environment ?: ModelEnvironment(
             layoutState = layoutState,
             reporter = reporter,
             actionsRunner = actionRunner,
             displayTimer = displayTimer,
+            stateStorage = stateStorage
         ).also {
             environment = it
         }

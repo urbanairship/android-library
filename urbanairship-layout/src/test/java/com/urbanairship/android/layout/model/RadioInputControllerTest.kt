@@ -49,7 +49,12 @@ public class RadioInputControllerTest {
     private val mockView: AnyModel = mockk(relaxed = true)
 
     private val formState = spyk(SharedState(
-        State.Form(identifier = "form-id", formType = FormType.Form, formResponseType = "form", validationMode = FormValidationMode.IMMEDIATE)
+        State.Form(
+            identifier = "form-id",
+            formType = FormType.Form,
+            formResponseType = "form",
+            validationMode = FormValidationMode.IMMEDIATE,
+            initialChildrenValues = emptyMap())
     ))
 
     private val radioState = spyk(SharedState(State.Radio(identifier = IDENTIFIER)))

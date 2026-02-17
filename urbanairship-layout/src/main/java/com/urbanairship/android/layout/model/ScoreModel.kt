@@ -52,7 +52,7 @@ internal class ScoreModel(
         formState.updateFormInput(
             value = ThomasFormField.Score(
                 identifier = viewInfo.identifier,
-                originalValue = null,
+                originalValue = formState.getInitialValue(viewInfo.identifier)?.integer,
                 fieldType = ThomasFormField.FieldType.just(
                     value = -1,
                     validator = { it > 0 || !viewInfo.isRequired },

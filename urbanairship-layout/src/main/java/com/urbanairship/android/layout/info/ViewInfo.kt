@@ -75,6 +75,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonPredicate
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
@@ -322,7 +323,7 @@ internal interface FormController : Controller {
     val validationMode: FormValidationMode
 }
 
-internal enum class FormValidationMode(private val value: String) {
+internal enum class FormValidationMode(private val value: String): JsonSerializable {
     ON_DEMAND("on_demand"),
     IMMEDIATE("immediate");
 
@@ -330,15 +331,15 @@ internal enum class FormValidationMode(private val value: String) {
         return name.lowercase()
     }
 
+    override fun toJsonValue(): JsonValue = JsonValue.wrap(value)
+
     internal companion object {
         @Throws(JsonException::class)
-        fun from(value: String): FormValidationMode {
-            for (type in FormValidationMode.entries) {
-                if (type.value == value.lowercase()) {
-                    return type
-                }
-            }
-            throw JsonException("Unknown form validation mode value: $value")
+        fun from(value: JsonValue): FormValidationMode {
+            val content = value.requireString()
+
+            return FormValidationMode.entries.firstOrNull { it.value == content }
+                ?: throw JsonException("Unknown form validation mode value: $content")
         }
     }
 }
@@ -1025,7 +1026,12 @@ internal class StoryIndicatorInfo(json: JsonMap) : ViewInfo(), View by view(json
 internal class StateControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(), View by view(json) {
     val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
     val initialState: JsonMap? = json.optionalField("initial_state")
+    val identifier: String? = json.optionalField("identifier")
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
+
+    companion object {
+        const val IDENTIFIER = "default"
+    }
 }
 
 internal class FormControllerInfo(json: JsonMap) : FormInfo(json) {

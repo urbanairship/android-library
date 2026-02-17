@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.environment
 
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 
@@ -32,4 +33,14 @@ internal enum class ThomasFormStatus(private val type: String): JsonSerializable
         get() = this == ERROR
 
     override fun toJsonValue(): JsonValue = JsonValue.wrap(type)
+
+    companion object {
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): ThomasFormStatus {
+            val content = value.requireString()
+            return ThomasFormStatus.entries.firstOrNull { it.type == content }
+                ?: throw JsonException("Unknown form status: $content")
+        }
+    }
 }

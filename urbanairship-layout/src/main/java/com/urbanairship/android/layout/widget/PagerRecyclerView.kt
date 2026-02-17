@@ -66,10 +66,9 @@ internal class PagerRecyclerView(
             insets
         }
 
-        if (this.isLayoutRtl) {
-            // This is fixing an eventual measuring issue (depending on the pager size) in the recycler view in RTL
-            scrollToPosition(0)
-        }
+        // This is fixing an eventual measuring issue (depending on the pager size) in the recycler view in RTL
+        // It also fixes scroll on restored views
+        scrollToPosition(0)
     }
 
     fun getDisplayedItemPosition(): Int {
@@ -82,6 +81,13 @@ internal class PagerRecyclerView(
     fun scrollTo(position: Int) {
         // Set the internal scroll flag to prevent page swipe events from being reported.
         // The flag will be cleared when the smooth scroll animation is completed.
+        // For regular scroll views(i.e. when swipe is enabled) we perform smoothScrollToPosition
+        // before this call which basically disables touch interactions with pager.
+        // so mark as internal scroll only if the target position is different from the displayed.
+        if (position == getDisplayedItemPosition()) {
+            return
+        }
+
         isInternalScroll = true
         smoothScrollToPosition(position)
     }

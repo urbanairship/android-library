@@ -1,5 +1,6 @@
 package com.urbanairship.android.layout
 
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.FormType
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
@@ -199,11 +200,13 @@ internal class ThomasModelFactory : ModelFactory {
         val controllers = processedControllers.mapValues { it.value.build() }
         // Mutable map of tags to built models
         val builtModels = mutableMapOf<Tag, Pair<AnyModel, ItemInfo>>()
+
         // Layout states, passed to model via their model environment when a node references
         // controllers by tag
         val layoutStates = controllers.mapValues { (_, ctrl) ->
-            createMutableSharedState(ctrl.info.info)
+            createMutableSharedState(ctrl.info.info, environment.stateStorage)
         }
+
         // Loop over processed nodes until we've built all models
         while (processedNodes.isNotEmpty()) {
             // For each pass, find any nodes that can be built (i.e. all their children are built)
@@ -243,23 +246,66 @@ internal class ThomasModelFactory : ModelFactory {
         return root.first
     }
 
-    private fun createMutableSharedState(info: ViewInfo): SharedState<State>? {
+    private fun createMutableSharedState(info: ViewInfo, stateStorage: LayoutStateStorage?): SharedState<State>? {
+        fun makeState(identifier: String, default: () -> State): SharedState<State> {
+            val storage = stateStorage ?: return SharedState(default())
+
+            return storage.getState(identifier) { SharedState(default()) }
+        }
+
         return when (info) {
-            is FormControllerInfo -> SharedState(
-                State.Form(info.identifier, FormType.Form, info.responseType, info.validationMode))
-            is NpsFormControllerInfo -> SharedState(
-                State.Form(info.identifier, FormType.Nps(info.npsIdentifier), info.responseType, info.validationMode)
-            )
-            is RadioInputControllerInfo -> SharedState(State.Radio(info.identifier))
-            is ScoreControllerInfo -> SharedState(State.Score(info.identifier))
-            is CheckboxControllerInfo -> SharedState(
-                State.Checkbox(info.identifier, info.minSelection, info.maxSelection)
-            )
-            is PagerControllerInfo -> SharedState(State.Pager(
+            is FormControllerInfo -> makeState(
                 identifier = info.identifier,
-                branching = info.branching)
+                default = {
+                    State.Form(
+                        identifier = info.identifier,
+                        formType = FormType.Form,
+                        formResponseType = info.responseType,
+                        validationMode = info.validationMode,
+                        initialChildrenValues = emptyMap()
+                    )
+                }
             )
-            is StateControllerInfo -> SharedState(State.Layout())
+            is NpsFormControllerInfo -> makeState(
+                identifier = info.identifier,
+                default = {
+                    State.Form(
+                        identifier = info.identifier,
+                        formType = FormType.Nps(info.npsIdentifier),
+                        formResponseType = info.responseType,
+                        validationMode = info.validationMode,
+                        initialChildrenValues = emptyMap()
+                    )
+                }
+            )
+            is RadioInputControllerInfo -> makeState(
+                identifier = info.identifier,
+                default = { State.Radio(info.identifier) }
+            )
+            is ScoreControllerInfo -> makeState(
+                identifier = info.identifier,
+                default = { State.Score(info.identifier) }
+            )
+            is CheckboxControllerInfo -> makeState(
+                identifier = info.identifier,
+                default = {
+                    State.Checkbox(info.identifier, info.minSelection, info.maxSelection)
+                }
+            )
+            is PagerControllerInfo -> makeState(
+                identifier = info.identifier,
+                default = {
+                    State.Pager(identifier = info.identifier, branching = info.branching)
+                }
+            )
+            is StateControllerInfo -> {
+                val identifier = info.identifier ?: StateControllerInfo.IDENTIFIER
+                makeState(
+                    identifier = identifier,
+                    default = { State.Layout(identifier =  identifier) }
+                )
+            }
+
             else -> null
         }
     }

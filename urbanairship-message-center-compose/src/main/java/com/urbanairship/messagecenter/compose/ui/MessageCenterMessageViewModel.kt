@@ -2,13 +2,16 @@ package com.urbanairship.messagecenter.compose.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.LayoutDataStorage
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.iam.content.AirshipLayout
+import com.urbanairship.messagecenter.InMemoryLayoutDataStorage
 import com.urbanairship.messagecenter.Inbox
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
@@ -53,7 +56,10 @@ internal interface MessageCenterMessageViewModel {
 
             sealed class Content {
                 data class Html(val webViewState: WebViewState = WebViewState.INIT): Content()
-                data class Native(val layout: AirshipLayout): Content()
+                data class Native(
+                    val layout: AirshipLayout,
+                    val store: LayoutDataStorage
+                ): Content()
             }
 
             override fun toString(): String {
@@ -119,6 +125,11 @@ internal class DefaultMessageCenterMessageViewModel(
      */
     override val states: StateFlow<State> = _states.asStateFlow()
 
+    /**
+     * View Model store for native content. Used for saving \ restoring state of a message
+     */
+    private var viewStateStore = InMemoryLayoutDataStorage()
+
     override val scope: CoroutineScope
         get() = viewModelScope
 
@@ -167,6 +178,7 @@ internal class DefaultMessageCenterMessageViewModel(
         }
 
         UALog.v { "Loading message: $messageId" }
+        viewStateStore.saveState(null)
 
         _states.value = State.Loading
 
@@ -262,7 +274,7 @@ internal class DefaultMessageCenterMessageViewModel(
             is Message.ContentType.Native -> {
                 val layout = inbox.loadMessageLayout(message)
                 if (layout != null) {
-                    val content = State.MessageContent.Content.Native(layout)
+                    val content = State.MessageContent.Content.Native(layout, viewStateStore)
                     State.MessageContent(message, content)
                 } else {
                     State.Error(State.Error.Type.UNAVAILABLE)

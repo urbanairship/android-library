@@ -85,11 +85,19 @@ public class FormControllerTest {
     private val mockView: AnyModel = mockk(relaxed = true)
 
     private val parentFormState = spyk(SharedState(State.Form(
-        identifier = PARENT_FORM_ID, formType = FormType.Form, formResponseType = "form", validationMode = FormValidationMode.IMMEDIATE)
+        identifier = PARENT_FORM_ID,
+        formType = FormType.Form,
+        formResponseType = "form",
+        validationMode = FormValidationMode.IMMEDIATE,
+        initialChildrenValues = emptyMap())
     ))
 
     private val childFormState = spyk(SharedState(State.Form(
-        identifier = CHILD_FORM_ID, formType = FormType.Form, formResponseType = "form", validationMode = FormValidationMode.IMMEDIATE)
+        identifier = CHILD_FORM_ID,
+        formType = FormType.Form,
+        formResponseType = "form",
+        validationMode = FormValidationMode.IMMEDIATE,
+        initialChildrenValues = emptyMap())
     ))
 
     private val pagerState = spyk(SharedState(State.Pager(

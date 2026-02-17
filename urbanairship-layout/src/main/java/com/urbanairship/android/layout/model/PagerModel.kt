@@ -37,6 +37,7 @@ import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import com.urbanairship.json.JsonValue
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -48,6 +49,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 internal class PagerModel(
     viewInfo: PagerInfo,
@@ -269,7 +271,9 @@ internal class PagerModel(
                 .filter { (pageIndex, lastPageIndex) -> pageIndex != lastPageIndex }
                 .distinctUntilChanged()
                 .collect { (pageIndex, _) ->
-                    listener?.scrollTo(pageIndex)
+                    withContext(Dispatchers.Main) {
+                        listener?.scrollTo(pageIndex)
+                    }
                 }
         }
 

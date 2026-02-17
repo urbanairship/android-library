@@ -5,6 +5,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutState.StateMutation
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormValidationMode
+import com.urbanairship.android.layout.info.StateControllerInfo
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.model.PageRequest
 import com.urbanairship.android.layout.property.AttributeValue
@@ -16,8 +17,16 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.reporting.ThomasFormFieldStatus
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalField
+import com.urbanairship.json.optionalMap
+import com.urbanairship.json.requireField
+import com.urbanairship.json.requireList
+import com.urbanairship.json.requireMap
 import java.util.UUID
 import kotlin.math.max
 import kotlin.time.Duration
@@ -131,7 +140,30 @@ internal class LayoutState(
         val id: String,
         val key: String,
         val value: JsonValue
-    )
+    ): JsonSerializable {
+
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            ID to id,
+            KEY to key,
+            VALUE to value
+        ).toJsonValue()
+
+        companion object {
+            private const val ID = "id"
+            private const val KEY = "key"
+            private const val VALUE = "value"
+
+            @Throws(JsonException::class)
+            fun fromJson(json: JsonValue): StateMutation {
+                val content = json.requireMap()
+                return StateMutation(
+                    id = content.requireField(ID),
+                    key = content.requireField(KEY),
+                    value = content.requireField(VALUE)
+                )
+            }
+        }
+    }
 
     private fun removeTempMutation(mutation: StateMutation) {
         layout.update { current ->
@@ -153,14 +185,43 @@ internal class LayoutState(
 
 internal sealed class FormType(
     val value: String
-) {
-    object Form : FormType("form")
-    data class Nps(val scoreId: String) : FormType("nps")
+): JsonSerializable {
+    object Form : FormType(TYPE_FORM)
+    data class Nps(val scoreId: String) : FormType(TYPE_NPS)
 
     override fun toString(): String = value
+
+    override fun toJsonValue(): JsonValue {
+        val builder = JsonMap.newBuilder().put(TYPE, value)
+
+        when(this) {
+            is Nps -> builder.put(SCORE_ID, scoreId)
+            else -> {}
+        }
+
+        return builder.build().toJsonValue()
+    }
+
+    companion object {
+        private const val TYPE = "type"
+        private const val TYPE_FORM = "form"
+        private const val TYPE_NPS = "nps"
+        private const val SCORE_ID = "score_id"
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): FormType {
+            val content = value.requireMap()
+
+            return when(val type = content.requireField<String>(TYPE)) {
+                TYPE_FORM -> Form
+                TYPE_NPS -> Nps(content.requireField(SCORE_ID))
+                else -> throw JsonException("Unknown form type: $type")
+            }
+        }
+    }
 }
 
-internal sealed class State {
+internal sealed class State(val type: Type): JsonSerializable {
     // TODO(stories): We may want to split that out into a separate
     //   state flow to avoid a ton of extra updates to pager state?
     //   Or, we could sprinkle some distinctUntilChanged() calls around and circle back.
@@ -179,7 +240,7 @@ internal sealed class State {
         val branching: PagerControllerBranching? = null,
         val isScrollDisabled: Boolean = false,
         var isScrolling: Boolean = false
-    ) : State() {
+    ) : State(Type.PAGER) {
 
         val hasNext
             get() = pageIndex < pageIds.size - 1 && !isScrollDisabled
@@ -263,6 +324,60 @@ internal sealed class State {
 
                 return pageIds[lastPageIndex]
             }
+
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            TYPE to type,
+            IDENTIFIER to identifier,
+            PAGE_INDEX to pageIndex,
+            LAST_PAGE_INDEX to lastPageIndex,
+            COMPLETED to completed,
+            PAGE_IDS to pageIds,
+            DURATIONS to durations,
+            PROGRESS to progress,
+            IS_MEDIA_PAUSED to isMediaPaused,
+            WAS_MEDIA_PAUSED to wasMediaPaused,
+            IS_STORY_PAUSED to isStoryPaused,
+            IS_TOUCH_EXPLORATION_ENABLED to isTouchExplorationEnabled,
+            BRANCHING to branching,
+            IS_SCROLL_DISABLED to isScrollDisabled
+        ).toJsonValue()
+
+        companion object {
+            private const val IDENTIFIER = "identifier"
+            private const val PAGE_INDEX = "page_index"
+            private const val LAST_PAGE_INDEX = "last_page_index"
+            private const val COMPLETED = "completed"
+            private const val PAGE_IDS = "page_ids"
+            private const val DURATIONS = "durations"
+            private const val PROGRESS = "progress"
+            private const val IS_MEDIA_PAUSED = "is_media_paused"
+            private const val WAS_MEDIA_PAUSED = "was_media_paused"
+            private const val IS_STORY_PAUSED = "is_story_paused"
+            private const val IS_TOUCH_EXPLORATION_ENABLED = "is_touch_exploration_enabled"
+            private const val BRANCHING = "branching"
+            private const val IS_SCROLL_DISABLED = "is_scroll_disabled"
+
+            @Throws(JsonException::class)
+            fun fromJson(json: JsonValue): Pager {
+                val content = json.requireMap()
+
+                return Pager(
+                    identifier = content.requireField(IDENTIFIER),
+                    pageIndex = content.requireField(PAGE_INDEX),
+                    lastPageIndex = content.requireField(LAST_PAGE_INDEX),
+                    completed = content.requireField(COMPLETED),
+                    pageIds = content.requireList(PAGE_IDS).map { it.requireString() },
+                    durations = content.requireList(DURATIONS).map { it.integer },
+                    progress = content.requireField(PROGRESS),
+                    isMediaPaused = content.requireField(IS_MEDIA_PAUSED),
+                    wasMediaPaused = content.requireField(WAS_MEDIA_PAUSED),
+                    isStoryPaused = content.requireField(IS_STORY_PAUSED),
+                    isTouchExplorationEnabled = content.requireField(IS_TOUCH_EXPLORATION_ENABLED),
+                    branching = content[BRANCHING]?.let(PagerControllerBranching::from),
+                    isScrollDisabled = content.requireField(IS_SCROLL_DISABLED)
+                )
+            }
+        }
     }
 
     internal data class Form(
@@ -281,7 +396,8 @@ internal sealed class State {
         val isEnabled: Boolean = true,
         val isDisplayReported: Boolean = false,
         private val children: Map<String, Child> = emptyMap(),
-    ) : State() {
+        private val initialChildrenValues: Map<String, JsonValue>
+    ) : State(Type.FORM) {
 
         val filteredFields: Map<String, ThomasFormField<*>>
             get() = children
@@ -303,7 +419,7 @@ internal sealed class State {
 
             return copy(
                 children = updatedChildren,
-                status = evaluateFormStatus(updatedChildren,  allowValid = true)
+                status = evaluateFormStatus(updatedChildren,  allowValid = true),
             )
         }
 
@@ -320,7 +436,7 @@ internal sealed class State {
 
             return copy(
                 children = updatedChildren,
-                status = evaluateFormStatus(updatedChildren, allowValid =  false)
+                status = evaluateFormStatus(updatedChildren, allowValid =  false),
             )
         }
 
@@ -379,7 +495,7 @@ internal sealed class State {
                         identifier = identifier,
                         responseType = formResponseType,
                         children = children,
-                        fieldType = ThomasFormField.FieldType.just(children))
+                        fieldType = ThomasFormField.FieldType.just(children),)
                 is FormType.Nps ->
                     ThomasFormField.Nps(
                         identifier = identifier,
@@ -423,6 +539,56 @@ internal sealed class State {
             val predicate: FormFieldFilterPredicate? = null,
             val lastProcessStatus: ThomasFormFieldStatus<*>
         )
+
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            TYPE to type,
+            IDENTIFIER to identifier,
+            FORM_TYPE to formType,
+            FORM_RESPONSE_TYPE to formResponseType,
+            VALIDATION_MODE to validationMode,
+            STATUS to status,
+            DISPLAYED_INPUTS to displayedInputs,
+            IS_VISIBLE to isVisible,
+            IS_ENABLED to isEnabled,
+            IS_DISPLAY_REPORTED to isDisplayReported,
+            CHILDREN to children.mapValues { it.value.field.jsonValue() }
+        ).toJsonValue()
+
+        fun getInitialValue(identifier: String): JsonValue? {
+            return initialChildrenValues[identifier]
+        }
+
+        companion object {
+            private const val IDENTIFIER = "identifier"
+            private const val FORM_TYPE = "form_type"
+            private const val FORM_RESPONSE_TYPE = "form_response_type"
+            private const val VALIDATION_MODE = "validation_mode"
+            private const val STATUS = "status"
+            private const val DISPLAYED_INPUTS = "displayed_inputs"
+            private const val IS_VISIBLE = "is_visible"
+            private const val IS_ENABLED = "is_enabled"
+            private const val IS_DISPLAY_REPORTED = "is_display_reported"
+            private const val CHILDREN = "children"
+
+            @Throws(JsonException::class)
+            fun fromJson(json: JsonValue): Form {
+                val content = json.requireMap()
+
+                return Form(
+                    identifier = content.requireField(IDENTIFIER),
+                    formType = FormType.fromJson(content.requireField(FORM_TYPE)),
+                    formResponseType = content.optionalField(FORM_RESPONSE_TYPE),
+                    validationMode = FormValidationMode.from(content.requireField(VALIDATION_MODE)),
+                    status = ThomasFormStatus.fromJson(content.requireField(STATUS)),
+                    displayedInputs = content.requireList(DISPLAYED_INPUTS)
+                        .map { it.requireString() }.toSet(),
+                    isVisible = content.requireField(IS_VISIBLE),
+                    isEnabled = content.requireField(IS_ENABLED),
+                    isDisplayReported = content.requireField(IS_DISPLAY_REPORTED),
+                    initialChildrenValues = content.requireMap(CHILDREN).map,
+                )
+            }
+        }
     }
 
     internal data class Checkbox(
@@ -431,12 +597,31 @@ internal sealed class State {
         val maxSelection: Int,
         val selectedItems: Set<Selected> = emptySet(),
         val isEnabled: Boolean = true,
-    ) : State() {
+    ) : State(Type.CHECKBOX) {
 
         internal data class Selected(
             val identifier: String?,
             val reportingValue: JsonValue
-        )
+        ) : JsonSerializable {
+            override fun toJsonValue(): JsonValue = jsonMapOf(
+                IDENTIFIER to identifier,
+                REPORTING_VALUE to reportingValue
+            ).toJsonValue()
+
+            companion object {
+                private const val IDENTIFIER = "identifier"
+                private const val REPORTING_VALUE = "reporting_value"
+
+                @Throws(JsonException::class)
+                fun fromJson(json: JsonValue): Selected {
+                    val content = json.requireMap()
+                    return Selected(
+                        identifier = content[IDENTIFIER]?.requireString(),
+                        reportingValue = content.requireField(REPORTING_VALUE)
+                    )
+                }
+            }
+        }
 
         fun isSelected(
             identifier: String? = null,
@@ -449,13 +634,42 @@ internal sealed class State {
                 selectedItems.any { it.identifier == identifier }
             }
         }
+
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            TYPE to type,
+            IDENTIFIER to identifier,
+            MIN_SELECTION to minSelection,
+            MAX_SELECTION to maxSelection,
+            SELECTED_ITEMS to selectedItems,
+            IS_ENABLED to isEnabled
+        ).toJsonValue()
+
+        companion object {
+            private const val IDENTIFIER = "identifier"
+            private const val MIN_SELECTION = "min_selection"
+            private const val MAX_SELECTION = "max_selection"
+            private const val SELECTED_ITEMS = "selected_items"
+            private const val IS_ENABLED = "is_enabled"
+
+            @Throws(JsonException::class)
+            fun fromJson(json: JsonValue): Checkbox {
+                val content = json.requireMap()
+                return Checkbox(
+                    identifier = content.requireField(IDENTIFIER),
+                    minSelection = content.requireField(MIN_SELECTION),
+                    maxSelection = content.requireField(MAX_SELECTION),
+                    selectedItems = content.requireList(SELECTED_ITEMS).map(Selected::fromJson).toSet(),
+                    isEnabled = content.requireField(IS_ENABLED)
+                )
+            }
+        }
     }
 
     internal data class Radio(
         val identifier: String,
         val selectedItem: Selected? = null,
         val isEnabled: Boolean = true,
-    ) : State() {
+    ) : State(Type.RADIO) {
 
         fun isSelected(
             identifier: String? = null,
@@ -472,14 +686,60 @@ internal sealed class State {
             val identifier: String?,
             val reportingValue: JsonValue?,
             val attributeValue: AttributeValue?
-        )
+        ) : JsonSerializable {
+
+            override fun toJsonValue(): JsonValue = jsonMapOf(
+                IDENTIFIER to identifier,
+                REPORTING_VALUE to reportingValue,
+                ATTRIBUTE_VALUE to attributeValue
+            ).toJsonValue()
+
+            companion object {
+                private const val IDENTIFIER = "identifier"
+                private const val REPORTING_VALUE = "reporting_value"
+                private const val ATTRIBUTE_VALUE = "attribute_value"
+
+                @Throws(JsonException::class)
+                fun fromJson(json: JsonValue): Selected {
+                    val content = json.requireMap()
+                    return Selected(
+                        identifier = content[IDENTIFIER]?.requireString(),
+                        reportingValue = content.optionalField(REPORTING_VALUE),
+                        attributeValue = content.optionalField(ATTRIBUTE_VALUE)
+                    )
+                }
+            }
+        }
+
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            TYPE to type,
+            IDENTIFIER to identifier,
+            SELECTED_ITEM to selectedItem,
+            IS_ENABLED to isEnabled
+        ).toJsonValue()
+
+        companion object {
+            private const val IDENTIFIER = "identifier"
+            private const val SELECTED_ITEM = "selected_item"
+            private const val IS_ENABLED = "is_enabled"
+
+            @Throws(JsonException::class)
+            fun fromJson(json: JsonValue): Radio {
+                val content = json.requireMap()
+                return Radio(
+                    identifier = content.requireField(IDENTIFIER),
+                    selectedItem = content[SELECTED_ITEM]?.let(Selected::fromJson),
+                    isEnabled = content.requireField(IS_ENABLED)
+                )
+            }
+        }
     }
 
     internal data class Score(
         val identifier: String,
         val selectedItem: Selected? = null,
         val isEnabled: Boolean = true,
-    ) : State() {
+    ) : State(Type.SCORE) {
 
         fun isSelected(
             identifier: String? = null,
@@ -496,19 +756,91 @@ internal sealed class State {
             val identifier: String?,
             val reportingValue: JsonValue?,
             val attributeValue: AttributeValue?
-        )
+        ): JsonSerializable {
+
+            override fun toJsonValue(): JsonValue = jsonMapOf(
+                IDENTIFIER to identifier,
+                REPORTING_VALUE to reportingValue,
+                ATTRIBUTE_VALUE to attributeValue
+            ).toJsonValue()
+
+            companion object {
+                private const val IDENTIFIER = "identifier"
+                private const val REPORTING_VALUE = "reporting_value"
+                private const val ATTRIBUTE_VALUE = "attribute_value"
+
+                @Throws(JsonException::class)
+                fun fromJson(value: JsonValue): Selected {
+                    val content = value.requireMap()
+                    return Selected(
+                        identifier = content[IDENTIFIER]?.requireString(),
+                        reportingValue = content.optionalField(REPORTING_VALUE),
+                        attributeValue = content[ATTRIBUTE_VALUE]
+                    )
+                }
+            }
+        }
+
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            TYPE to type,
+            IDENTIFIER to identifier,
+            SELECTED_ITEM to selectedItem,
+            IS_ENABLED to isEnabled
+        ).toJsonValue()
+
+        companion object {
+            private const val IDENTIFIER = "identifier"
+            private const val SELECTED_ITEM = "selected_item"
+            private const val IS_ENABLED = "is_enabled"
+
+            @Throws(JsonException::class)
+            fun fromJson(value: JsonValue): Score {
+                val content = value.requireMap()
+                return Score(
+                    identifier = content.requireField(IDENTIFIER),
+                    selectedItem = content[SELECTED_ITEM]?.let(Selected::fromJson),
+                    isEnabled = content.requireField(IS_ENABLED)
+                )
+            }
+        }
     }
 
     internal data class Layout(
+        val identifier: String,
         var mutations: Map<String, StateMutation> = emptyMap()
-    ) : State() {
+    ) : State(Type.LAYOUT) {
 
         var state: Map<String, JsonValue> = run {
             mutations.mapValues { it.value.value }
         }
 
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            TYPE to type,
+            MUTATIONS to mutations,
+            IDENTIFIER to identifier
+        ).toJsonValue()
+
         companion object {
-            val DEFAULT = Layout()
+            val DEFAULT = Layout(identifier = StateControllerInfo.IDENTIFIER)
+
+            private const val MUTATIONS = "mutations"
+            private const val IDENTIFIER = "identifier"
+
+            @Throws(JsonException::class)
+            fun fromJson(json: JsonValue): Layout {
+                val content = json.requireMap()
+
+                val mutations: Map<String, StateMutation> = content
+                    .optionalMap(MUTATIONS)
+                    ?.map
+                    ?.mapValues { StateMutation.fromJson(it.value) }
+                    ?: emptyMap()
+
+                return Layout(
+                    identifier = content.requireField(IDENTIFIER),
+                    mutations = mutations
+                )
+            }
         }
 
         fun copyWithState(state: JsonMap): Layout {
@@ -517,6 +849,44 @@ internal sealed class State {
             }
 
             return copy(mutations = mutations)
+        }
+    }
+
+    enum class Type(private val jsonValue: String): JsonSerializable {
+        PAGER("pager"),
+        FORM("form"),
+        CHECKBOX("checkbox"),
+        RADIO("radio"),
+        SCORE("score"),
+        LAYOUT("layout");
+
+        override fun toJsonValue(): JsonValue = JsonValue.wrap(jsonValue)
+
+        companion object {
+            @Throws(JsonException::class)
+            fun fromJson(value: JsonValue): Type {
+                val content = value.requireString()
+                return Type.entries.firstOrNull { it.jsonValue == content }
+                    ?: throw JsonException("Unknown state type: $content")
+            }
+        }
+    }
+
+    companion object {
+        private const val TYPE = "type"
+
+        @Throws(JsonException::class)
+        fun fromJson(json: JsonValue): State {
+            val type = json.requireMap().require(TYPE).let(Type::fromJson)
+
+            return when(type) {
+                Type.PAGER -> Pager.fromJson(json)
+                Type.FORM -> Form.fromJson(json)
+                Type.CHECKBOX -> Checkbox.fromJson(json)
+                Type.RADIO -> Radio.fromJson(json)
+                Type.SCORE -> Score.fromJson(json)
+                Type.LAYOUT -> Layout.fromJson(json)
+            }
         }
     }
 }

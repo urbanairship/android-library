@@ -2,6 +2,7 @@ package com.urbanairship.android.layout.environment
 
 import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.android.layout.LayoutStateStorage
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.model.PagerNextFallback
 import com.urbanairship.android.layout.property.AttributeValue
@@ -33,7 +34,8 @@ internal class ModelEnvironment(
     val channelRegistrar: ThomasChannelRegistrar = ThomasChannelRegistrar(),
     val eventHandler: LayoutEventHandler = LayoutEventHandler(modelScope),
     val pagerTracker: PagersViewTracker = PagersViewTracker(),
-    val viewIdResolver: ThomasViewIdResolver = ThomasViewIdResolver()
+    val viewIdResolver: ThomasViewIdResolver = ThomasViewIdResolver(),
+    val stateStorage: LayoutStateStorage? = null
 ) {
     val layoutEvents: Flow<LayoutEvent> = eventHandler.layoutEvents
 

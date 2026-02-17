@@ -2,6 +2,7 @@ package com.urbanairship.android.layout.ui
 
 import android.content.Context
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
 import android.widget.FrameLayout
 import androidx.annotation.MainThread
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -116,5 +117,12 @@ internal class ThomasEmbeddedView(
             parent.removeView(this)
             frame = null
         }
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+
+        val inputManager = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        inputManager.hideSoftInputFromWindow(windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
     }
 }

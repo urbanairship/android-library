@@ -65,7 +65,7 @@ internal class TextInputModel(
             value = ThomasFormField.TextInput(
                 textInput = viewInfo.inputType,
                 identifier = viewInfo.identifier,
-                originalValue = null,
+                originalValue = formState.getInitialValue(viewInfo.identifier)?.string,
                 fieldType = ThomasFormField.FieldType.just(
                     value = "",
                     validator = { !viewInfo.isRequired },

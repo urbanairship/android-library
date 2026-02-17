@@ -10,27 +10,18 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.urbanairship.UALog
-import com.urbanairship.actions.Action
-import com.urbanairship.actions.DefaultActionRunner
-import com.urbanairship.actions.run
 import com.urbanairship.android.layout.EmbeddedPresentation
+import com.urbanairship.android.layout.LayoutStateStorage
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment
 import com.urbanairship.android.layout.environment.ExternalReporter
-import com.urbanairship.android.layout.environment.Reporter
-import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.event.ReportingEvent
-import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.property.ConstrainedSize
 import com.urbanairship.android.layout.property.EmbeddedPlacement
 import com.urbanairship.android.layout.reporting.DisplayTimer
-import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.getActivity
-import com.urbanairship.app.GlobalActivityMonitor
-import com.urbanairship.json.JsonValue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -97,7 +88,8 @@ public object ThomasLayoutViewFactory {
             val modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
                 actionRunner = displayArgs.actionRunner,
-                displayTimer = timer
+                displayTimer = timer,
+                stateStorage = displayArgs.stateStorage?.let { LayoutStateStorage(it) }
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = displayArgs.payload.view,
