@@ -6,6 +6,45 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 
+/**
+ * Retail event template. Use with [com.urbanairship.analytics.CustomEvent.newBuilder]
+ * or [com.urbanairship.analytics.customEvent] to create a custom event with retail template properties.
+ *
+ * Example (Kotlin):
+ * ```
+ * customEvent(
+ *     RetailEventTemplate.Type.Purchased,
+ *     RetailEventTemplate.Properties(
+ *         id = "sku-123",
+ *         category = "shoes",
+ *         eventDescription = "Running Shoes",
+ *         brand = "Nike"
+ *     )
+ * ) {
+ *     setEventValue(99.99)
+ *     setTransactionId("txn-456")
+ * }.track()
+ * ```
+ *
+ * Example (Java):
+ * ```
+ * RetailEventTemplate.Properties properties = RetailEventTemplate.Properties.newBuilder()
+ *     .setId("sku-123")
+ *     .setCategory("shoes")
+ *     .setDescription("Running Shoes")
+ *     .setBrand("Nike")
+ *     .build();
+ *
+ * CustomEvent.newBuilder(RetailEventTemplate.Type.Purchased, properties)
+ *     .setEventValue(99.99)
+ *     .setTransactionId("txn-456")
+ *     .build()
+ *     .track();
+ * ```
+ *
+ * @see com.urbanairship.analytics.CustomEvent.newBuilder
+ * @see com.urbanairship.analytics.customEvent
+ */
 public sealed class RetailEventTemplate {
 
     public sealed class Type(internal val eventName: String) {

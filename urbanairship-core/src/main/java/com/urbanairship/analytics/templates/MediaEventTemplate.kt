@@ -6,6 +6,43 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 
+/**
+ * Media event template. Use with [com.urbanairship.analytics.CustomEvent.newBuilder]
+ * or [com.urbanairship.analytics.customEvent] to create a custom event with media template properties.
+ *
+ * Example (Kotlin):
+ * ```
+ * customEvent(
+ *     MediaEventTemplate.Type.Consumed,
+ *     MediaEventTemplate.Properties(
+ *         id = "episode-123",
+ *         category = "podcasts",
+ *         eventDescription = "Tech Talk #42",
+ *         author = "Jane Doe"
+ *     )
+ * ) {
+ *     setEventValue(1.0)
+ * }.track()
+ * ```
+ *
+ * Example (Java):
+ * ```
+ * MediaEventTemplate.Properties properties = MediaEventTemplate.Properties.newBuilder()
+ *     .setId("episode-123")
+ *     .setCategory("podcasts")
+ *     .setDescription("Tech Talk #42")
+ *     .setAuthor("Jane Doe")
+ *     .build();
+ *
+ * CustomEvent.newBuilder(MediaEventTemplate.Type.Consumed, properties)
+ *     .setEventValue(1.0)
+ *     .build()
+ *     .track();
+ * ```
+ *
+ * @see com.urbanairship.analytics.CustomEvent.newBuilder
+ * @see com.urbanairship.analytics.customEvent
+ */
 public sealed class MediaEventTemplate {
 
     public sealed class Type(internal val eventName: String) {

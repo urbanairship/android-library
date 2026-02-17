@@ -6,6 +6,41 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 
+/**
+ * Search event template. Use with [com.urbanairship.analytics.CustomEvent.newBuilder]
+ * or [com.urbanairship.analytics.customEvent] to create a custom event with search template properties.
+ *
+ * Example (Kotlin):
+ * ```
+ * customEvent(
+ *     SearchEventTemplate.Type.SEARCH,
+ *     SearchEventTemplate.Properties(
+ *         category = "hotels",
+ *         query = "beach resort",
+ *         totalResults = 53
+ *     )
+ * ) {
+ *     setEventValue(1.0)
+ * }.track()
+ * ```
+ *
+ * Example (Java):
+ * ```
+ * SearchEventTemplate.Properties properties = SearchEventTemplate.Properties.newBuilder()
+ *     .setCategory("hotels")
+ *     .setQuery("beach resort")
+ *     .setTotalResults(53)
+ *     .build();
+ *
+ * CustomEvent.newBuilder(SearchEventTemplate.Type.SEARCH, properties)
+ *     .setEventValue(1.0)
+ *     .build()
+ *     .track();
+ * ```
+ *
+ * @see com.urbanairship.analytics.CustomEvent.newBuilder
+ * @see com.urbanairship.analytics.customEvent
+ */
 public sealed class SearchEventTemplate {
 
     public enum class Type(internal val eventName: String) {

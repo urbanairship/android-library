@@ -6,6 +6,35 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 
+/**
+ * Account event template. Use with [com.urbanairship.analytics.CustomEvent.newBuilder]
+ * or [com.urbanairship.analytics.customEvent] to create a custom event with account template properties.
+ *
+ * Example (Kotlin):
+ * ```
+ * customEvent(
+ *     AccountEventTemplate.Type.REGISTERED,
+ *     AccountEventTemplate.Properties(category = "premium")
+ * ) {
+ *     setEventValue(9.99)
+ * }.track()
+ * ```
+ *
+ * Example (Java):
+ * ```
+ * AccountEventTemplate.Properties properties = AccountEventTemplate.Properties.newBuilder()
+ *     .setCategory("premium")
+ *     .build();
+ *
+ * CustomEvent.newBuilder(AccountEventTemplate.Type.REGISTERED, properties)
+ *     .setEventValue(9.99)
+ *     .build()
+ *     .track();
+ * ```
+ *
+ * @see com.urbanairship.analytics.CustomEvent.newBuilder
+ * @see com.urbanairship.analytics.customEvent
+ */
 public sealed class AccountEventTemplate {
 
     public enum class Type(internal val eventName: String) {
