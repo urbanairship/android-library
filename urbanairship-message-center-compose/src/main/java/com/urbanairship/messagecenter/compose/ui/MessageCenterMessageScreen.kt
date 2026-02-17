@@ -106,7 +106,7 @@ public fun MessageCenterMessageScreen(
         MessageCenterMessage(
             state = state,
             modifier = Modifier.padding(paddingValues.withoutBottomPadding()),
-            onClose = onClose
+            onClose = onNavigateUp
         )
     }
 }
