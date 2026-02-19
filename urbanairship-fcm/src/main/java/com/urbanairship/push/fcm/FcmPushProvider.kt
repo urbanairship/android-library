@@ -62,7 +62,12 @@ public class FcmPushProvider public constructor() : PushProvider, AirshipVersion
     }
 
     override fun isSupported(context: Context): Boolean {
-        return PlayServicesUtils.isGooglePlayStoreAvailable(context)
+        return try {
+            PlayServicesUtils.isGooglePlayStoreAvailable(context)
+        } catch (e: Exception) {
+            UALog.e(e, "Unable to check Google Play Store availability for FCM.")
+            false
+        }
     }
 
     override fun toString(): String {

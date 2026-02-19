@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.2.2 - February 19, 2026
+
+Patch release with an FCM availability check improvement to better handle unexpected Google Play service lookup failures.
+
+### Changes
+
+- Added exception handling and logging around the FCM Google Play Store availability check to prevent unexpected crashes when Google checks fail.
+
 ## Version 20.2.1 - February 6, 2026
 
 Patch release with several minor improvements for the Compose Message Center UI. Apps that make use of the Compose Message Center should update to take advantage of these improvements.
