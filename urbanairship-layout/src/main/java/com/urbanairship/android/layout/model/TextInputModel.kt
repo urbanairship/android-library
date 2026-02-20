@@ -6,8 +6,6 @@ import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
-import com.urbanairship.android.layout.info.Identifiable
-import com.urbanairship.android.layout.info.RecentlyIdentifiable
 import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
@@ -44,6 +42,9 @@ internal class TextInputModel(
     }
     private val _smsLocale = MutableStateFlow<SmsLocale?>(null)
 
+    val selectedLocale: SmsLocale?
+        get() = _smsLocale.value
+
     interface Listener : BaseModel.Listener {
 
         fun restoreValue(value: String)
@@ -61,11 +62,15 @@ internal class TextInputModel(
         }
 
     init {
+        val initialValue = formState.getInitialValue(viewInfo.identifier)?.let(ThomasFormField.TextInput::decodeState)
+        _smsLocale.value = initialValue?.smsLocale
+
         formState.updateFormInput(
             value = ThomasFormField.TextInput(
                 textInput = viewInfo.inputType,
+                smsLocale = _smsLocale.value,
                 identifier = viewInfo.identifier,
-                originalValue = formState.getInitialValue(viewInfo.identifier)?.string,
+                originalValue = initialValue?.value,
                 fieldType = ThomasFormField.FieldType.just(
                     value = "",
                     validator = { !viewInfo.isRequired },
@@ -308,6 +313,7 @@ internal class TextInputModel(
 
         return ThomasFormField.TextInput(
             textInput = viewInfo.inputType,
+            smsLocale = smsLocale,
             identifier = viewInfo.identifier,
             originalValue = input,
             fieldType = method

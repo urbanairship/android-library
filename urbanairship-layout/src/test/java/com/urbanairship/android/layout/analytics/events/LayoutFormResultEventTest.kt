@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.analytics.events
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.property.FormInputType
+import com.urbanairship.android.layout.property.SmsLocale
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.json.JsonValue
 import junit.framework.TestCase.assertEquals
@@ -22,6 +23,12 @@ public class LayoutFormResultEventTest {
             ),
             ThomasFormField.TextInput(
                 textInput = FormInputType.SMS,
+                smsLocale = SmsLocale(
+                    countryCode = "US",
+                    prefix = "+1",
+                    registration = null,
+                    validationHints = null
+                ),
                 identifier = "sms_input_id",
                 originalValue = "sms_input_value",
                 fieldType = ThomasFormField.FieldType.just( "sms_input_value")

@@ -148,6 +148,8 @@ internal class TextInputView(
 
             setAdapter(adapter)
 
+            adapter.getPosition(model.selectedLocale)?.let(::setSelection)
+
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(p0: AdapterView<*>?, p1: View?, p2: Int, p3: Long) {
                     val locale = adapter.getItem(p2)

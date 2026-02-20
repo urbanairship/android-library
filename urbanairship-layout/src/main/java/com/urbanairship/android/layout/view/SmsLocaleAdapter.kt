@@ -47,6 +47,13 @@ internal class SmsLocaleAdapter(
         }
         return result
     }
+
+    fun getPosition(locale: SmsLocale?): Int? {
+        if (locale == null) { return null }
+        val index = locales.indexOfFirst { it.countryCode == locale.countryCode }
+        if (index < 0) { return null }
+        return index
+    }
 }
 
 private fun SmsLocale.displayValue(): String {

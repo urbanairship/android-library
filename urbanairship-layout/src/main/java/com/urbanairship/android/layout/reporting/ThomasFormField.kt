@@ -4,11 +4,14 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.FormInputType
+import com.urbanairship.android.layout.property.SmsLocale
 import com.urbanairship.android.layout.reporting.ThomasFormField.Type
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
 import kotlin.time.Duration
@@ -78,7 +81,7 @@ public sealed class ThomasFormField<T>(
         return builder.build()
     }
 
-    public fun jsonValue(): JsonValue? =
+    public open fun jsonValue(): JsonValue? =
         JsonValue.wrapOpt(originalValue).let {
             if (it != JsonValue.NULL) it else null
         }
@@ -113,6 +116,7 @@ public sealed class ThomasFormField<T>(
 
     public data class TextInput(
         val textInput: FormInputType,
+        val smsLocale: SmsLocale? = null,
         override val identifier: String,
         override val originalValue: String?,
         override val fieldType: FieldType<String>
@@ -120,7 +124,49 @@ public sealed class ThomasFormField<T>(
         FormInputType.EMAIL -> Type.EMAIL
         FormInputType.SMS -> Type.SMS
         else -> Type.TEXT
-    })
+    }) {
+
+        override fun jsonValue(): JsonValue? {
+            return State(originalValue ?: "", smsLocale).toJsonValue()
+        }
+
+        internal companion object {
+
+            fun decodeState(json: JsonValue): State? {
+                return try {
+                    State.fromJson(json)
+                } catch (ex: Exception) {
+                    null
+                }
+            }
+        }
+
+        internal data class State(
+            val value: String,
+            val smsLocale: SmsLocale?
+        ): JsonSerializable {
+
+            override fun toJsonValue(): JsonValue = jsonMapOf(
+                VALUE to value,
+                SMS_LOCALE to smsLocale?.toJsonValue()
+            ).toJsonValue()
+
+            internal companion object {
+                private const val VALUE = "value"
+                private const val SMS_LOCALE = "sms_locale"
+
+                @Throws(JsonException::class)
+                fun fromJson(value: JsonValue): State {
+                    val content = value.requireMap()
+
+                    return State(
+                        value = content.requireField(VALUE),
+                        smsLocale = content[SMS_LOCALE]?.let(SmsLocale::fromJson)
+                    )
+                }
+            }
+        }
+    }
 
     public data class Score(
         override val identifier: String,
