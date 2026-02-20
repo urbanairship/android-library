@@ -8,6 +8,7 @@ import com.urbanairship.messagecenter.compose.ui.MessageCenterScreen
 import com.urbanairship.messagecenter.compose.ui.MessageCenterState
 import com.urbanairship.messagecenter.compose.ui.rememberMessageCenterState
 import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterColors
+import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterOptions
 import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,8 +33,14 @@ fun MessageCenterScreen(
         error = MaterialTheme.colorScheme.error
     )
 
+    val options = MessageCenterOptions.defaults().copy(
+        messageCenterListTitle = "Inbox",
+        canDeleteMessages = true
+    )
+
     MessageCenterTheme(
-        colors = if (isSystemInDarkTheme()) darkColors else lightColors
+        colors = if (isSystemInDarkTheme()) darkColors else lightColors,
+        options = options
     ) {
         MessageCenterScreen(state = state)
     }

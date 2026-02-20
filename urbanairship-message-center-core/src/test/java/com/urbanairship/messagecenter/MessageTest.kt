@@ -123,7 +123,6 @@ public class MessageTest {
         }
     }
 
-
     @Test
     @Throws(JsonException::class)
     public fun testProductIdParsing() {
@@ -157,7 +156,6 @@ public class MessageTest {
         )
         assertEquals("message-product-id", message.productId)
     }
-
 
     private companion object {
         @Language("JSON")

@@ -26,6 +26,7 @@ The Airship SDK 20.0 introduces major architectural changes including the renami
   - [Minor Push Notification Changes](#minor-push-notification-changes)
   - [Permissions Manager API Changes](#permissions-manager-api-changes)
   - [Action Framework Changes](#action-framework-changes)
+  - [Event Template Changes](#event-template-changes)
 - [Deprecated APIs](#deprecated-apis)
   - [UAirship Deprecated](#uairship-deprecated)
   - [Autopilot Signature Change](#autopilot-signature-change)
@@ -240,6 +241,197 @@ Airship.actionRegistry.registerEntry(setOf("my_action")) {
         predicate = MyPredicate()
     )
 }
+```
+
+### Event Template Changes
+
+The event template classes (`RetailEventTemplate`, `MediaEventTemplate`, `AccountEventTemplate`, `SearchEventTemplate`) have been redesigned. The old template classes that combined properties and event creation have been replaced with a new architecture that separates concerns into `Type` and `Properties` classes, with event creation handled by `CustomEvent`.
+
+#### Package Change
+
+All event templates have moved to a new package:
+
+| SDK 19.x | SDK 20.x |
+|---|---|
+| `com.urbanairship.analytics.RetailEventTemplate` | `com.urbanairship.analytics.templates.RetailEventTemplate` |
+| `com.urbanairship.analytics.MediaEventTemplate` | `com.urbanairship.analytics.templates.MediaEventTemplate` |
+| `com.urbanairship.analytics.AccountEventTemplate` | `com.urbanairship.analytics.templates.AccountEventTemplate` |
+| `com.urbanairship.analytics.SearchEventTemplate` | `com.urbanairship.analytics.templates.SearchEventTemplate` |
+
+#### API Changes
+
+In SDK 19.x, templates were created via factory methods, properties were set directly on the template, and events were created from the template. In SDK 20.x, this is split into:
+
+1. **`Type`** — a sealed class (or enum) that defines the event situation (e.g., `Purchased`, `AddedToCart`)
+2. **`Properties`** — a data class holding template-specific fields (e.g., category, brand, description)
+3. **`CustomEvent.newBuilder(type, properties)`** — creates the event, with event-level fields like `eventValue` and `transactionId` set on the builder
+
+##### Retail Event Template
+
+| SDK 19.x Factory Method | SDK 20.x Type |
+|---|---|
+| `RetailEventTemplate.newPurchasedTemplate()` | `RetailEventTemplate.Type.Purchased` |
+| `RetailEventTemplate.newAddedToCartTemplate()` | `RetailEventTemplate.Type.AddedToCart` |
+| `RetailEventTemplate.newBrowsedTemplate()` | `RetailEventTemplate.Type.Browsed` |
+| `RetailEventTemplate.newStarredProductTemplate()` | `RetailEventTemplate.Type.Starred` |
+| `RetailEventTemplate.newSharedTemplate(source, medium)` | `RetailEventTemplate.Type.Shared(source, medium)` |
+| `RetailEventTemplate.newWishlistTemplate(id, name)` | `RetailEventTemplate.Type.Wishlist(id, name)` |
+
+| SDK 19.x Template Method | SDK 20.x Location |
+|---|---|
+| `template.setCategory(...)` | `RetailEventTemplate.Properties(category = ...)` |
+| `template.setId(...)` | `RetailEventTemplate.Properties(id = ...)` |
+| `template.setDescription(...)` | `RetailEventTemplate.Properties(eventDescription = ...)` |
+| `template.setBrand(...)` | `RetailEventTemplate.Properties(brand = ...)` |
+| `template.setValue(...)` | `CustomEvent.Builder.setEventValue(...)` |
+| `template.setTransactionId(...)` | `CustomEvent.Builder.setTransactionId(...)` |
+| `template.createEvent()` | `CustomEvent.newBuilder(type, properties).build()` |
+
+###### Java
+```java
+// SDK 19.x
+RetailEventTemplate template = RetailEventTemplate.newPurchasedTemplate();
+template.setCategory("shoes")
+    .setId("sku-123")
+    .setDescription("Running Shoes")
+    .setBrand("Nike")
+    .setValue(99.99)
+    .setTransactionId("txn-456")
+    .createEvent()
+    .track();
+
+// SDK 20.x
+RetailEventTemplate.Properties properties = RetailEventTemplate.Properties.newBuilder()
+    .setId("sku-123")
+    .setCategory("shoes")
+    .setDescription("Running Shoes")
+    .setBrand("Nike")
+    .build();
+
+CustomEvent.newBuilder(RetailEventTemplate.Type.Purchased, properties)
+    .setEventValue(99.99)
+    .setTransactionId("txn-456")
+    .build()
+    .track();
+```
+
+###### Kotlin
+```kotlin
+// SDK 19.x
+RetailEventTemplate.newPurchasedTemplate()
+    .setCategory("shoes")
+    .setId("sku-123")
+    .setDescription("Running Shoes")
+    .setBrand("Nike")
+    .setValue(99.99)
+    .setTransactionId("txn-456")
+    .createEvent()
+    .track()
+
+// SDK 20.x
+customEvent(
+    RetailEventTemplate.Type.Purchased,
+    RetailEventTemplate.Properties(
+        id = "sku-123",
+        category = "shoes",
+        eventDescription = "Running Shoes",
+        brand = "Nike"
+    )
+) {
+    setEventValue(99.99)
+    setTransactionId("txn-456")
+}.track()
+```
+
+##### Media Event Template
+
+| SDK 19.x Factory Method | SDK 20.x Type |
+|---|---|
+| `MediaEventTemplate.newBrowsedTemplate()` | `MediaEventTemplate.Type.Browsed` |
+| `MediaEventTemplate.newConsumedTemplate()` | `MediaEventTemplate.Type.Consumed` |
+| `MediaEventTemplate.newStarredTemplate()` | `MediaEventTemplate.Type.Starred` |
+| `MediaEventTemplate.newSharedTemplate(source, medium)` | `MediaEventTemplate.Type.Shared(source, medium)` |
+
+###### Kotlin
+```kotlin
+// SDK 19.x
+MediaEventTemplate.newConsumedTemplate()
+    .setCategory("podcasts")
+    .setId("episode-123")
+    .setDescription("Tech Talk #42")
+    .setAuthor("Jane Doe")
+    .setValue(1.0)
+    .createEvent()
+    .track()
+
+// SDK 20.x
+customEvent(
+    MediaEventTemplate.Type.Consumed,
+    MediaEventTemplate.Properties(
+        id = "episode-123",
+        category = "podcasts",
+        eventDescription = "Tech Talk #42",
+        author = "Jane Doe"
+    )
+) {
+    setEventValue(1.0)
+}.track()
+```
+
+##### Account Event Template
+
+| SDK 19.x Factory Method | SDK 20.x Type |
+|---|---|
+| `AccountEventTemplate.newRegisteredTemplate()` | `AccountEventTemplate.Type.REGISTERED` |
+| `AccountEventTemplate.newLoggedInTemplate()` | `AccountEventTemplate.Type.LOGGED_IN` |
+| `AccountEventTemplate.newLoggedOutTemplate()` | `AccountEventTemplate.Type.LOGGED_OUT` |
+
+###### Kotlin
+```kotlin
+// SDK 19.x
+AccountEventTemplate.newRegisteredTemplate()
+    .setCategory("premium")
+    .setValue(9.99)
+    .createEvent()
+    .track()
+
+// SDK 20.x
+customEvent(
+    AccountEventTemplate.Type.REGISTERED,
+    AccountEventTemplate.Properties(category = "premium")
+) {
+    setEventValue(9.99)
+}.track()
+```
+
+##### Search Event Template
+
+| SDK 19.x Factory Method | SDK 20.x Type |
+|---|---|
+| `SearchEventTemplate.newSearchTemplate()` | `SearchEventTemplate.Type.SEARCH` |
+
+###### Kotlin
+```kotlin
+// SDK 19.x
+SearchEventTemplate.newSearchTemplate()
+    .setCategory("hotels")
+    .setQuery("beach resort")
+    .setTotalResults(53)
+    .setValue(1.0)
+    .createEvent()
+    .track()
+
+// SDK 20.x
+customEvent(
+    SearchEventTemplate.Type.SEARCH,
+    SearchEventTemplate.Properties(
+        category = "hotels",
+        query = "beach resort",
+        totalResults = 53
+    )
+) {
+    setEventValue(1.0)
+}.track()
 ```
 
 ## Deprecated APIs

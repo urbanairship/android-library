@@ -5,7 +5,7 @@ package com.urbanairship.messagecenter.compose.ui
 import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 
-/** Manages the global [MsgCenterTheme]. */
+/** Manages the global [MessageCenterTheme]. */
 internal object MessageCenterThemeManager {
     private var theme: MessageCenterTheme? = null
 
@@ -28,6 +28,7 @@ internal object MessageCenterThemeManager {
  * [MessageCenterTheme] composable to set the theme for the embedded hierarchy instead of setting
  * this property.
  */
+@Suppress("UnusedReceiverParameter")
 public var MessageCenter.theme: MessageCenterTheme
     get() = MessageCenterThemeManager.getTheme()
     set(value) = MessageCenterThemeManager.setTheme(value)

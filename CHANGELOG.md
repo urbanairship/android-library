@@ -4,6 +4,36 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.2.2 - February 19, 2026
+
+Patch release with an FCM availability check improvement to better handle unexpected Google Play service lookup failures.
+
+### Changes
+
+- Added exception handling and logging around the FCM Google Play Store availability check to prevent unexpected crashes when Google checks fail.
+
+## Version 20.2.1 - February 6, 2026
+
+Patch release with several minor improvements for the Compose Message Center UI. Apps that make use of the Compose Message Center should update to take advantage of these improvements.
+
+### Changes
+
+- Allows the Compose Message Center toolbar title to be overridden via `MessageCenterOptions`
+- Option to disable message deletion in the Compose Message Center via `MessageCenterOptions`
+- Fixed the up arrow and `onNavigateUp` callback for the Compose Message Center list screen
+
+## Version 20.2.0 - January 28, 2026
+
+Minor release that adds a new `PreferenceCenterView`, fixes fetching subscription lists after changing contact IDs, and improvements for Scenes.
+
+### Changes
+- Added `PreferenceCenterView` for easier integration of Preference Centers when the `Fragment` API is not desired
+- Fixed issue where subscription lists could remain cached after changing contact IDs
+- Improved measurement of videos inside of containers in Scenes
+- Improved checkbox and radio button accessibility in Scenes
+- Improved TalkBack navigation for Scenes with Pagers
+- Fixed issue that caused custom events being double counted for IAX triggers (reporting was not affected)
+
 ## Version 20.1.1 - January 16, 2026
 
 Patch release that fixes a potential image-related crash in Scenes and acessibility issues.

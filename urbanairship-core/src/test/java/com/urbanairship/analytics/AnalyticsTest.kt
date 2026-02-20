@@ -213,6 +213,24 @@ public class AnalyticsTest {
         coVerify(exactly = 0) { mockEventManager.addEvent(any(), any())  }
     }
 
+    @Test
+    public fun testCustomEventFeed(): TestResult = runTest(testDispatcher) {
+        val event = CustomEvent.newBuilder("cool").build()
+        analytics.recordCustomEvent(event)
+
+        advanceUntilIdle()
+
+        val expectedFeedEvent =  AirshipEventFeed.Event.Analytics(
+            event.type,
+            event.toJsonValue(),
+            event.eventValue?.toDouble()
+        )
+
+        verify(exactly = 1) {
+            mockEventFeed.emit(expectedFeedEvent)
+        }
+    }
+
     /**
      * Test adding an invalid event
      */

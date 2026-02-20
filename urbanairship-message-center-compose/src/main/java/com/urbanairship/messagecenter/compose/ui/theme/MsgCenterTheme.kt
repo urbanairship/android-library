@@ -6,7 +6,12 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.compositionLocalOf
 
-// non-@composable version of the theme, used for configuring the activity before compose is set up
+/**
+ * Message Center Theme
+ *
+ * This non-@composable version of the theme is used for configuring the default
+ * `MessageCenterActivity` and should not be used in Composables.
+ */
 public data class MessageCenterTheme(
     val lightColors: MessageCenterColors = MessageCenterColors.lightDefaults(),
     val darkColors: MessageCenterColors = MessageCenterColors.darkDefaults(),
@@ -15,7 +20,17 @@ public data class MessageCenterTheme(
     val options: MessageCenterOptions = MessageCenterOptions.defaults()
 )
 
-// @Composable function that applies the theme to its children, used for embedding the MC UI in a compose hierarchy
+/**
+ * Message Center Theme
+ *
+ * Applies the provided Message Center theming to the nested composable content.
+ *
+ * @param colors The Message Center colors
+ * @param options The Message Center options
+ * @param typography The Message Center typography
+ * @param dimens The Message Center dimensions
+ * @param content The composable content to apply the theme to
+ */
 @Composable
 public fun MessageCenterTheme(
     colors: MessageCenterColors = if(isSystemInDarkTheme()) MessageCenterColors.darkDefaults() else MessageCenterColors.lightDefaults(),

@@ -6,6 +6,17 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
+/**
+ * Message Center typography styles.
+ *
+ * @param itemTitle The text style for message list item titles
+ * @param itemDescription The text style for message list item descriptions
+ * @param itemDate The text style for message list item dates
+ * @param emptyViewMessage The text style for the empty view message
+ * @param messageCenterError The text style for message center error messages
+ * @param alertButtonLabel The text style for alert button labels
+ * @param messageError The text style for message error messages
+ */
 @Immutable
 public data class MessageCenterTypography(
     val itemTitle: TextStyle,
@@ -17,6 +28,12 @@ public data class MessageCenterTypography(
     val messageError: TextStyle
 ) {
     public companion object {
+
+        /**
+         * Default Message Center typography styles.
+         *
+         * @param fontFamily Optional font family to apply to all typography styles
+         */
         public fun defaults(fontFamily: FontFamily? = null): MessageCenterTypography {
 
             val primaryText = TextStyle(

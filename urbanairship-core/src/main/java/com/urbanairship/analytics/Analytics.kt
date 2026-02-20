@@ -261,17 +261,7 @@ public constructor(
      * @param event The region event.
      */
     public fun recordCustomEvent(event: CustomEvent) {
-        if (!addEvent(event)) {
-            return
-        }
-
-        eventFeed.emit(
-            AirshipEventFeed.Event.Analytics(
-                event.type,
-                event.toJsonValue(),
-                event.eventValue?.toDouble()
-            )
-        )
+        addEvent(event)
     }
 
     /**
