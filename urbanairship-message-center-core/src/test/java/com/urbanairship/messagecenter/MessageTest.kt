@@ -124,6 +124,41 @@ public class MessageTest {
     }
 
 
+    @Test
+    @Throws(JsonException::class)
+    public fun testProductIdParsing() {
+        val map = JsonValue.parseString(MCRAP_MESSAGE).requireMap().map.toMutableMap()
+        map["product_id"] = JsonValue.wrap("some-product-id")
+
+        val message = requireNotNull(
+            Message.create(JsonValue.wrap(map), true, false)
+        )
+
+        assertEquals("some-product-id", message.productId)
+    }
+
+    @Test
+    fun testProductIdFromConstructor() {
+        val json = JsonValue.parseString("""{"product_id": "message-product-id"}""")
+        val message = Message(
+            id = "message-id",
+            title = "title",
+            bodyUrl = "test://url",
+            sentDate = Date(),
+            expirationDate = null,
+            isUnread = true,
+            extras = null,
+            contentType = Message.ContentType.Html,
+            messageUrl = "test://url.message",
+            reporting = JsonValue.wrap("reporting"),
+            rawMessageJson = json,
+            isDeletedClient = false,
+            associatedData = null
+        )
+        assertEquals("message-product-id", message.productId)
+    }
+
+
     private companion object {
         @Language("JSON")
         private val MCRAP_MESSAGE = """

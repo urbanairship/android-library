@@ -19,7 +19,6 @@ import com.urbanairship.meteredusage.MeteredUsageType
 import com.urbanairship.util.Clock
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -43,18 +42,20 @@ internal class MessageAnalytics(
         message: Message,
         eventRecorder: LayoutEventRecorderInterface,
         displayHistoryStore: MessageDisplayHistoryStoreInterface,
-        dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
+        dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
+        clock: Clock = Clock.DEFAULT_CLOCK
     ): this(
         messageId = LayoutEventMessageId.AirshipId(
             identifier = message.id,
             campaigns = null
         ),
-        productId = message.productId,
+        productId = message.productId ?: DEFAULT_PRODUCT_ID,
         reportingContext = message.reporting,
         eventRecorder = eventRecorder,
         displayHistoryStore = displayHistoryStore,
         eventSource = LayoutEventSource.AIRSHIP,
         dispatcher = dispatcher,
+        clock = clock
     )
 
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
@@ -162,5 +163,6 @@ internal class MessageAnalytics(
 
     private companion object {
         val IMPRESSION_SESSION_LENGTH = 30.minutes
+        const val DEFAULT_PRODUCT_ID = "default_thomas_mc"
     }
 }

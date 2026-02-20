@@ -313,6 +313,84 @@ public class MessageAnalyticsTest {
         verify(exactly = 1) { eventRecorder.recordImpressionEvent(any()) }
     }
 
+    @Test
+    fun `test productId from message`() = testScope.runTest {
+        coEvery { historyStore.get("message-id") } returns MessageDisplayHistory()
+
+        val message = Message(
+            id = "message-id",
+            title = "title",
+            bodyUrl = "test://url",
+            sentDate = Date(),
+            expirationDate = null,
+            isUnread = true,
+            extras = null,
+            contentType = Message.ContentType.Html,
+            messageUrl = "test://url.message",
+            reporting = JsonValue.wrap("reporting"),
+            rawMessageJson = JsonValue.parseString("""{"product_id": "message-product-id"}"""),
+            isDeletedClient = false,
+            associatedData = null
+        )
+
+        val analytics = MessageAnalytics(
+            message = message,
+            eventRecorder = eventRecorder,
+            displayHistoryStore = historyStore,
+            dispatcher = testDispatcher,
+            clock = clock
+        )
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Trigger impression
+        clock.currentTimeMillis = 100L
+        analytics.recordEvent(InAppDisplayEvent(), null)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val impressionSlot = slot<MeteredUsageEventEntity>()
+        coVerify { eventRecorder.recordImpressionEvent(capture(impressionSlot)) }
+        assertEquals("message-product-id", impressionSlot.captured.product)
+    }
+
+    @Test
+    fun `test default productId`() = testScope.runTest {
+        coEvery { historyStore.get("message-id") } returns MessageDisplayHistory()
+
+        val message = Message(
+            id = "message-id",
+            title = "title",
+            bodyUrl = "test://url",
+            sentDate = Date(),
+            expirationDate = null,
+            isUnread = true,
+            extras = null,
+            contentType = Message.ContentType.Html,
+            messageUrl = "test://url.message",
+            reporting = JsonValue.wrap("reporting"),
+            rawMessageJson = JsonValue.parseString("""{}"""),
+            isDeletedClient = false,
+            associatedData = null
+        )
+
+        val analytics = MessageAnalytics(
+            message = message,
+            eventRecorder = eventRecorder,
+            displayHistoryStore = historyStore,
+            dispatcher = testDispatcher,
+            clock = clock
+        )
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // Trigger impression
+        clock.currentTimeMillis = 100L
+        analytics.recordEvent(InAppDisplayEvent(), null)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val impressionSlot = slot<MeteredUsageEventEntity>()
+        coVerify { eventRecorder.recordImpressionEvent(capture(impressionSlot)) }
+        assertEquals("default_thomas_mc", impressionSlot.captured.product)
+    }
+
     private fun createAnalytics(sessionId: String = this.sessionId): MessageAnalytics {
         return MessageAnalytics(
             messageId = messageId,

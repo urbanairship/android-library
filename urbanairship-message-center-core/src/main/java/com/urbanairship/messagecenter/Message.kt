@@ -117,11 +117,11 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
     }
 
     /**
-     * Product id used for impressions tracking. Defaults to [DEFAULT_PRODUCT_ID].
+     * Product ID used for impressions tracking.
      */
     @IgnoredOnParcel
-    public val productId: String by lazy {
-        extras?.get(PRODUCT_ID) ?: DEFAULT_PRODUCT_ID
+    internal val productId: String? by lazy {
+        rawMessageJson.optMap().optionalField(PRODUCT_ID)
     }
 
     // TODO: Remove when deprecated methods below are removed
@@ -221,8 +221,7 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
         internal const val KEY_LIST_ICON: String = "list_icon"
         internal const val EXTRA_SUBTITLE: String = "com.urbanairship.listing.field1"
 
-        internal const val PRODUCT_ID: String = "product ID"
-        internal const val DEFAULT_PRODUCT_ID = "default_thomas_mc"
+        internal const val PRODUCT_ID: String = "product_id"
 
         internal fun create(
             payload: JsonValue,
