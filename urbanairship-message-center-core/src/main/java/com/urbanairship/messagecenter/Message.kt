@@ -4,7 +4,9 @@ import android.os.Parcelable
 import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
@@ -40,7 +42,7 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
     internal val rawMessageJson: JsonValue,
     internal var isUnreadClient: Boolean = isUnread,
     internal var isDeletedClient: Boolean,
-    private var associatedData: JsonValue?
+    private var associatedData: AssociatedData? = null
 ) : Parcelable {
 
     @Parcelize
@@ -248,7 +250,7 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
                     isUnreadClient = isUnreadClient,
                     isDeletedClient = isDeleted,
                     contentType = json[KEY_CONTENT_TYPE]?.let(ContentType::fromJson) ?: ContentType.Html,
-                    associatedData = associatedData
+                    associatedData = AssociatedData.parseOrCreate(associatedData)
                 )
             } catch (e: Exception) {
                 UALog.e(e, "Failed to create message from payload: $payload")
@@ -264,5 +266,73 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
                 rhs.sentDate.compareTo(lhs.sentDate)
             }
         }
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @Parcelize
+    public data class AssociatedData(
+        val displayHistory: JsonValue?,
+        val viewState: ViewState?
+    ): Parcelable, JsonSerializable {
+
+        @Parcelize
+        public data class ViewState(
+            val restorationId: String,
+            val state: JsonValue
+        ): Parcelable, JsonSerializable {
+
+            internal companion object {
+
+                private const val KEY_RESTORATION_ID = "restoration_id"
+                private const val KEY_STATE = "state"
+
+                @Throws(JsonException::class)
+                fun fromJson(value: JsonValue): ViewState {
+                    val json = value.requireMap()
+
+                    return ViewState(
+                        restorationId = json.requireField(KEY_RESTORATION_ID),
+                        state = json.requireField(KEY_STATE)
+                    )
+                }
+            }
+
+            override fun toJsonValue(): JsonValue = jsonMapOf(
+                KEY_RESTORATION_ID to restorationId,
+                KEY_STATE to state
+            ).toJsonValue()
+        }
+
+        internal companion object {
+            private const val KEY_DISPLAY_HISTORY = "display_history"
+            private const val KEY_VIEW_STATE = "view_state"
+
+            @Throws(JsonException::class)
+            fun fromJson(value: JsonValue): AssociatedData {
+                val json = value.requireMap()
+                return AssociatedData(
+                    displayHistory = json[KEY_DISPLAY_HISTORY],
+                    viewState = json[KEY_VIEW_STATE]?.let { ViewState.fromJson(it) }
+                )
+            }
+
+            fun parseOrCreate(value: JsonValue?): AssociatedData {
+                if (value == null) {
+                    return AssociatedData(null, null)
+                }
+
+                return try {
+                    fromJson(value)
+                } catch (ex: JsonException) {
+                    UALog.e(ex, "Failed to parse AssociatedData")
+                    AssociatedData(null, null)
+                }
+            }
+        }
+
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            KEY_DISPLAY_HISTORY to displayHistory,
+            KEY_VIEW_STATE to viewState
+        ).toJsonValue()
     }
 }

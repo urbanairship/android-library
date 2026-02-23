@@ -5,9 +5,13 @@ import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.analytics.MessageDisplayHistory
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireField
 
 @Entity(
     tableName = "richpush",
@@ -43,7 +47,7 @@ internal data class MessageEntity(
     @ColumnInfo(name = "expiration_timestamp")
     val expirationTimestamp: String?,
     @ColumnInfo(name = "associated_data")
-    var associatedData: JsonValue?
+    var associatedData: JsonValue? // [Message.AssociatedData] class is expected to be serialized to JSON
 ) {
 
     val messageReporting: JsonValue? by lazy {

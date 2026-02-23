@@ -219,10 +219,16 @@ public class Inbox @VisibleForTesting internal constructor(
                 displayHistoryStore = DefaultMessageDisplayHistoryStore(
                     save = { itemId, history ->
                         val current = messageDao.getMessage(itemId) ?: return@DefaultMessageDisplayHistoryStore
-                        current.associatedData = history
+                        val associatedData = Message.AssociatedData.parseOrCreate(current.associatedData)
+                        current.associatedData = associatedData.copy(displayHistory = history).toJsonValue()
                         messageDao.insert(current)
                     },
-                    load = { messageDao.getMessage(it)?.associatedData }
+                    load = {
+                        val current = messageDao.getMessage(it)
+                        return@DefaultMessageDisplayHistoryStore Message.AssociatedData
+                            .parseOrCreate(current?.associatedData)
+                            .displayHistory
+                    }
                 ),
             ),
             onDismiss = { _ -> onDismiss() }
