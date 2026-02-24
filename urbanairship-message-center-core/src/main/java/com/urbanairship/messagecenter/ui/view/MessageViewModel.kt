@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.urbanairship.Airship
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.LayoutDataStorage
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.messagecenter.Inbox
@@ -47,6 +48,15 @@ public class MessageViewModel(
      * A `LiveData` of MessageView [States][MessageViewState] (data consumed by the view in order to display the message).
      */
     public val statesLiveData: LiveData<MessageViewState> = _states.asLiveData()
+
+    /**
+     * View state provider for native messages.
+     */
+    private var _viewStateStorage: LayoutDataStorage? = null
+    public val viewStateStorage: LayoutDataStorage?
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        get() = _viewStateStorage
+
 
     /**
      * The currently loaded [Message], if we have one.
@@ -152,6 +162,10 @@ public class MessageViewModel(
             is Message.ContentType.Native -> {
                 val layout = inbox.loadMessageLayout(message)
                 if (layout != null) {
+                    _viewStateStorage = inbox
+                        .makeViewStateStorage(message.id, layout)
+                        .apply { prepare("static") } //TODO: replace with restorationId from layout
+
                     val content = MessageViewState.MessageContent.Content.Native(layout)
                     MessageViewState.MessageContent(message, content)
                 } else {

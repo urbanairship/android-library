@@ -13,6 +13,7 @@ import com.urbanairship.UALog
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.DefaultActionRunner
 import com.urbanairship.actions.run
+import com.urbanairship.android.layout.LayoutDataStorage
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.event.ReportingEvent
@@ -20,7 +21,6 @@ import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.ui.ThomasLayoutViewFactory
 import com.urbanairship.app.GlobalActivityMonitor
-import com.urbanairship.messagecenter.InMemoryLayoutDataStorage
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
 import com.urbanairship.messagecenter.ui.view.MessageViewState.Error.Type.LOAD_FAILED
@@ -62,10 +62,10 @@ public class MessageView @JvmOverloads constructor(
     private var displayedMessageId: String? = null
 
     internal var analyticsFactory: ((onDismissed: () -> Unit) -> ThomasListenerInterface?)? = null
+    internal var storageFactory: (() -> LayoutDataStorage?)? = null
     private var isDismissReported = false
     private var currentDisplayArgs: DisplayArgs? = null
 
-    private var stateStorage: InMemoryLayoutDataStorage? = null
     init {
         inflate(context, R.layout.ua_view_message, this)
         onViewCreated()
@@ -90,7 +90,7 @@ public class MessageView @JvmOverloads constructor(
             actionRunner = { actions, _ ->
                 DefaultActionRunner.run(actions, Action.Situation.AUTOMATION)
             },
-//            stateStorage = stateStorage //disable state storage
+//            stateStorage = storageFactory?.invoke() //disable state storage
         )
     }
 
@@ -154,10 +154,6 @@ public class MessageView @JvmOverloads constructor(
                         views.webView.loadMessage(state.message)
                     }
                     is MessageViewState.MessageContent.Content.Native -> {
-                        if (displayedMessageId != state.message.id ) {
-                            stateStorage = InMemoryLayoutDataStorage()
-                        }
-
                         val displayArgs = createDisplayArgs(content.layout.layoutInfo) ?: run {
                             UALog.w { "Failed to create display args" }
                             return

@@ -13,6 +13,7 @@ import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import com.urbanairship.analytics.Analytics
+import com.urbanairship.android.layout.LayoutDataStorage
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.analytics.DefaultMessageDisplayHistoryStore
 import com.urbanairship.android.layout.analytics.LayoutEventRecorder
@@ -202,6 +203,24 @@ public class Inbox @VisibleForTesting internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public suspend fun loadMessageLayout(message: Message): AirshipLayout? {
         return scope.async { inboxJobHandler.loadAirshipLayout(message) }.await()
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun makeViewStateStorage(messageId: String, layout: AirshipLayout): LayoutDataStorage {
+        return PersistentLayoutDataStorage(
+            onFetch = {
+                val current = messageDao.getMessage(messageId)
+                return@PersistentLayoutDataStorage Message.AssociatedData
+                    .parseOrCreate(current?.associatedData)
+                    .viewState
+            },
+            onSave = { state ->
+                val current = messageDao.getMessage(messageId) ?: return@PersistentLayoutDataStorage
+                val associatedData = Message.AssociatedData.parseOrCreate(current.associatedData)
+                current.associatedData = associatedData.copy(viewState = state).toJsonValue()
+                messageDao.insert(current)
+            }
+        )
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

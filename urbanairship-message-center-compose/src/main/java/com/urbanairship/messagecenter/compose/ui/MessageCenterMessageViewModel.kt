@@ -11,7 +11,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.LayoutDataStorage
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.iam.content.AirshipLayout
-import com.urbanairship.messagecenter.InMemoryLayoutDataStorage
+import com.urbanairship.messagecenter.PersistentLayoutDataStorage
 import com.urbanairship.messagecenter.Inbox
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
@@ -125,11 +125,6 @@ internal class DefaultMessageCenterMessageViewModel(
      */
     override val states: StateFlow<State> = _states.asStateFlow()
 
-    /**
-     * View Model store for native content. Used for saving \ restoring state of a message
-     */
-    private var viewStateStore = InMemoryLayoutDataStorage()
-
     override val scope: CoroutineScope
         get() = viewModelScope
 
@@ -176,9 +171,6 @@ internal class DefaultMessageCenterMessageViewModel(
             UALog.v { "Message already loaded: $messageId" }
             return
         }
-
-        UALog.v { "Loading message: $messageId" }
-        viewStateStore.saveState(null)
 
         _states.value = State.Loading
 
@@ -274,7 +266,10 @@ internal class DefaultMessageCenterMessageViewModel(
             is Message.ContentType.Native -> {
                 val layout = inbox.loadMessageLayout(message)
                 if (layout != null) {
-                    val content = State.MessageContent.Content.Native(layout, viewStateStore)
+                    val viewStore = inbox.makeViewStateStorage(message.id, layout)
+                    viewStore.prepare("static") //TODO: replace with the restorationId from layout
+
+                    val content = State.MessageContent.Content.Native(layout, viewStore)
                     State.MessageContent(message, content)
                 } else {
                     State.Error(State.Error.Type.UNAVAILABLE)

@@ -18,7 +18,9 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface LayoutDataStorage {
+    public suspend fun prepare(restorationId: String)
     public fun getSavedState(): JsonValue?
     public fun saveState(state: JsonValue?)
 }

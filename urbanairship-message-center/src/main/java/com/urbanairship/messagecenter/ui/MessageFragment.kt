@@ -118,6 +118,8 @@ public open class MessageFragment @JvmOverloads constructor(
             viewModel.makeAnalytics(message, onDismiss)
         }
 
+        messageView.storageFactory = { viewModel.viewStateStorage }
+
         if (savedInstanceState == null) {
             messageId?.let { viewModel.loadMessage(it) } ?: UALog.i {
                 "MessageFragment started without a message ID. " + "Call loadMessage(messageId) to load a message."
