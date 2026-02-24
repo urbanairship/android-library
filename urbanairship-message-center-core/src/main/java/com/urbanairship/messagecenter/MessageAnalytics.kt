@@ -163,6 +163,6 @@ internal class MessageAnalytics(
 
     private companion object {
         val IMPRESSION_SESSION_LENGTH = 30.minutes
-        const val DEFAULT_PRODUCT_ID = "default_thomas_mc"
+        const val DEFAULT_PRODUCT_ID = "default_native_mc"
     }
 }

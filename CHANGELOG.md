@@ -4,6 +4,16 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.3.0 - February 24, 2026
+
+Minor release that adds support for Native Message Center. Native content type requires displaying the message content in an Airship Message View. Apps that do not use Airship's message views (e.g. using a WebView directly) should filter out messages where `message.contentType` is not `Message.ContentType.Html`.
+
+### Changes
+
+- Removed library group restrictions on  `PushProviderBridge`.
+- Added support for Native Message Center.
+
+
 ## Version 20.2.2 - February 19, 2026
 
 Patch release with an FCM availability check improvement to better handle unexpected Google Play service lookup failures.

@@ -388,7 +388,7 @@ public class MessageAnalyticsTest {
 
         val impressionSlot = slot<MeteredUsageEventEntity>()
         coVerify { eventRecorder.recordImpressionEvent(capture(impressionSlot)) }
-        assertEquals("default_thomas_mc", impressionSlot.captured.product)
+        assertEquals("default_native_mc", impressionSlot.captured.product)
     }
 
     private fun createAnalytics(sessionId: String = this.sessionId): MessageAnalytics {
