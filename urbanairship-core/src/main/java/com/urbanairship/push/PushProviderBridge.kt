@@ -17,11 +17,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 
 /**
- * [PushProvider] callback methods.
- *
- * @hide
+ * [PushProvider] callback methods. Low level push provider bridge. Most apps should not call this directly.
+ * Instead, use the specific provider integrations (e.g. `AirshipFirebaseIntegration`, `AirshipHmsIntegration`, or `AdmHandlerBase`) when trying to extend a service and call through to us.
  */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public object PushProviderBridge {
 
     public const val EXTRA_PROVIDER_CLASS: String = "EXTRA_PROVIDER_CLASS"
