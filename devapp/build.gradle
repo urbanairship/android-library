@@ -2,13 +2,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id 'com.android.application'
-    id 'kotlin-android'
     alias(libs.plugins.kotlinx.serialization)
     alias(libs.plugins.compose.compiler)
 }
 
 android {
-    namespace 'com.urbanairship.devapp'
+    namespace = 'com.urbanairship.devapp'
 
     compileSdk rootProject.compileSdkVersion
 
@@ -42,7 +41,7 @@ android {
 
 
     lint {
-        abortOnError false
+        abortOnError = false
         disable 'MissingTranslation', 'AppCompatResource'
     }
 }
@@ -79,7 +78,7 @@ dependencies {
     implementation(libs.playservices.location)
 
     // Compose
-    androidTestImplementation(platform(libs.compose.bom))
+    implementation(platform(libs.compose.bom))
     implementation(libs.compose.material3)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation libs.compose.materialicons.extended

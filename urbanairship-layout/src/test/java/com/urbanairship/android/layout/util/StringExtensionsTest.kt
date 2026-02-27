@@ -149,4 +149,52 @@ public class StringExtensionsTest {
         val expected = ""
         assertEquals(expected, input.markdownToHtml())
     }
+
+    @Test
+    public fun markdownToHtmlSnakeCase() {
+        val input = "Airship_test_ko"
+        val expected = "Airship_test_ko"
+        assertEquals(expected, input.markdownToHtml())
+
+        val input2 = "hello_world_test"
+        val expected2 = "hello_world_test"
+        assertEquals(expected2, input2.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlUnderscoreBoundaries() {
+        val input = "_italic_"
+        val expected = "<i>italic</i>"
+        assertEquals(expected, input.markdownToHtml())
+
+        val input2 = " _italic_ "
+        val expected2 = " <i>italic</i> "
+        assertEquals(expected2, input2.markdownToHtml())
+
+        val input3 = "(_italic_)"
+        val expectedWeb = "(<i>italic</i>)"
+        assertEquals(expectedWeb, input3.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlAsteriskIntraword() {
+        val input = "un*frigging*believable"
+        val expected = "un<i>frigging</i>believable"
+        assertEquals(expected, input.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlStrikethroughIntraword() {
+        val input = "del~~ete~~d"
+        val expected = "del<s>ete</s>d"
+        assertEquals(expected, input.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlHighlightIntraword() {
+        val input = "high==light==ed"
+        val expected = """high<span style="background-color: #4DFFFF00;">light</span>ed"""
+        assertEquals(expected, input.markdownToHtml())
+    }
+
 }

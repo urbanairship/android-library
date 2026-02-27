@@ -19,7 +19,7 @@ android {
         unitTests.includeAndroidResources = true
     }
 
-    namespace 'com.urbanairship.preferencecenter.core'
+    namespace = 'com.urbanairship.preferencecenter.core'
 }
 
 allOpen {
@@ -34,7 +34,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     // AndroidX
-    implementation(libs.androidx.core)
+    implementation(libs.androidx.corektx)
     implementation(libs.androidx.activityktx)
     implementation(libs.androidx.fragment.fragmentktx)
     implementation(libs.androidx.constraintlayout)

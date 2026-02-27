@@ -7,7 +7,6 @@ import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
 
 plugins {
     id("com.android.library")
-    id("kotlin-android")
     id("org.jetbrains.dokka")
     id("maven-publish")
 }
@@ -47,6 +46,7 @@ android {
 
         buildFeatures {
             buildConfig = true
+            resValues = true
         }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -83,17 +83,18 @@ dependencies {
 
 dokka {
     dokkaSourceSets {
-        main {
-            sourceRoots.from("src/main/java")
-
-            sourceLink {
-                localDirectory.set(file("src/main/java"))
-                remoteUrl("https://github.com/urbanairship/android-library/blob/${project.name}/src/main/java")
-                remoteLineSuffix.set("#L")
-            }
-        }
-
         configureEach {
+
+            if (name == "release") {
+                sourceRoots.from("src/main/java")
+
+                sourceLink {
+                    localDirectory.set(file("src/main/java"))
+                    remoteUrl("https://github.com/urbanairship/android-library/blob/${project.name}/src/main/java")
+                    remoteLineSuffix.set("#L")
+                }
+            }
+
             suppressGeneratedFiles.set(true)
             skipEmptyPackages.set(true)
 

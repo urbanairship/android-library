@@ -1,4 +1,4 @@
-import com.android.build.gradle.LibraryExtension
+import com.android.build.api.dsl.LibraryExtension
 import io.github.gradlenexus.publishplugin.NexusPublishExtension
 import io.github.gradlenexus.publishplugin.NexusPublishPlugin
 import org.gradle.api.Plugin
@@ -65,7 +65,7 @@ class AirshipPublishPlugin : Plugin<Project> {
 
         val sourcesJar = tasks.register<Jar>("sourcesJar") {
             archiveClassifier.set("sources")
-            from(android.sourceSets["main"].java.srcDirs)
+            from(android.sourceSets["main"].java)
         }
 
         apply<MavenPublishPlugin>()

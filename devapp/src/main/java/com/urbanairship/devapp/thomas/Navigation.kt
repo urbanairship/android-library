@@ -40,7 +40,7 @@ data object ThomasLayoutNavigation {
         override fun navigationEntry(
             onNavigate: (Destination) -> Unit,
             onPopBackStack: () -> Unit
-        ): NavEntry<Destination> {
+        ): NavEntry<Any> {
             return NavEntry(this) {
                 LayoutListScreen(
                     layoutType = type,

@@ -12,7 +12,7 @@ airshipModule {
 }
 
 android {
-    namespace 'com.urbanairship.automation'
+    namespace = 'com.urbanairship.automation'
 
     room {
         schemaDirectory("$projectDir/schemas")

@@ -7,7 +7,7 @@ plugins {
 description = "Airship Android Live Update extension."
 
 android {
-    namespace 'com.urbanairship.liveupdate'
+    namespace = 'com.urbanairship.liveupdate'
 
     room {
         schemaDirectory("$projectDir/schemas")

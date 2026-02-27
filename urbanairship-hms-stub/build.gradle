@@ -7,9 +7,8 @@ android {
 
     defaultConfig {
         minSdkVersion rootProject.minSdkVersion
-        targetSdkVersion rootProject.targetSdkVersion
     }
-    namespace 'com.urbanairship.hms_stub'
+    namespace = 'com.urbanairship.hms_stub'
 }
 
 dependencies {
