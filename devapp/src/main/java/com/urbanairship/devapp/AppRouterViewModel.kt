@@ -31,7 +31,7 @@ interface Destination: NavKey {
     fun navigationEntry(
         onNavigate: (Destination) -> Unit,
         onPopBackStack: () -> Unit,
-    ): NavEntry<Destination>
+    ): NavEntry<Any>
 }
 
 class AppRouterViewModel(
@@ -133,8 +133,8 @@ class AppRouterViewModel(
             _activeBackStack.update(block)
         }
     }
-    fun navigationEntry(destination: Destination): NavEntry<Destination> {
-        return destination.navigationEntry(
+    fun navigationEntry(destination: Any): NavEntry<Any> {
+        return (destination as Destination).navigationEntry(
             onNavigate = { navigate(it) },
             onPopBackStack = ::pop
         )
@@ -186,7 +186,7 @@ class AppRouterViewModel(
         override fun navigationEntry(
             onNavigate: (Destination) -> Unit,
             onPopBackStack: () -> Unit,
-        ): NavEntry<Destination> {
+        ): NavEntry<Any> {
             return when (this) {
                 is Home -> NavEntry(this) { HomeScreen(onNavigate) }
                 is PreferenceCenter -> NavEntry(this) { PreferenceCenterScreen("app_default") }

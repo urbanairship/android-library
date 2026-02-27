@@ -1,6 +1,5 @@
 plugins {
     id 'airship-module'
-    id 'kotlin-android'
 }
 
 description = "Airship Layout Rendering Library"
@@ -15,7 +14,6 @@ android {
     defaultConfig {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
-        targetSdk rootProject.targetSdkVersion
     }
 
     testOptions {
@@ -25,7 +23,7 @@ android {
         }
     }
 
-    namespace 'com.urbanairship.android.layout'
+    namespace = 'com.urbanairship.android.layout'
 }
 
 dependencies {
@@ -35,7 +33,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     // AndroidX
-    implementation(libs.androidx.core)
+    implementation(libs.androidx.corektx)
     implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.appcompat)

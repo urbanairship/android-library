@@ -26,12 +26,12 @@ android {
         schemaDirectory("$projectDir/schemas")
     }
 
-    namespace 'com.urbanairship'
+    namespace = 'com.urbanairship'
 }
 
 dependencies {
     // Required
-    api(libs.androidx.core)
+    api(libs.androidx.corektx)
     api(libs.androidx.appcompat)
     api(libs.androidx.fragment.fragment)
     api(libs.androidx.annotation)

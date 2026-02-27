@@ -16,5 +16,5 @@ dependencies {
 }
 
 android {
-    namespace 'com.urbanairship.push.hms'
+    namespace = 'com.urbanairship.push.hms'
 }

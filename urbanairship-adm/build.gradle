@@ -10,5 +10,5 @@ dependencies {
 }
 
 android {
-    namespace 'com.urbanairship.push.adm'
+    namespace = 'com.urbanairship.push.adm'
 }

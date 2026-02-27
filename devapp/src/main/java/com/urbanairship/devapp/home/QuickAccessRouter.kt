@@ -21,7 +21,7 @@ data object QuickAccess {
         override fun navigationEntry(
             onNavigate: (Destination) -> Unit,
             onPopBackStack: () -> Unit
-        ): NavEntry<Destination> {
+        ): NavEntry<Any> {
             return NavEntry(this) {
                 NamedUserScreen(
                     onNavigateUp = onPopBackStack
@@ -38,7 +38,7 @@ data object QuickAccess {
         override fun navigationEntry(
             onNavigate: (Destination) -> Unit,
             onPopBackStack: () -> Unit
-        ): NavEntry<Destination> {
+        ): NavEntry<Any> {
             return NavEntry(this) {
                 LayoutsHomeScreen(
                     onNavigate = onNavigate,

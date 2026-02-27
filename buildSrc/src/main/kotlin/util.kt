@@ -7,9 +7,3 @@ import org.gradle.kotlin.dsl.provideDelegate
 internal fun Project.prop(name: String) = findProperty(name)?.toString()
 
 internal fun env(name: String) = System.getenv(name)
-
-internal val Project.libs: VersionCatalog
-    get() = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")
-
-internal fun VersionCatalog.requiredVersion(alias: String): String =
-    findVersion(alias).get().requiredVersion
