@@ -25,12 +25,15 @@ view:
         width: 100%
         height: auto
       view:
-        type: linear_layout
+        type: scroll_layout
         direction: vertical
-        items:
-          #
-          # Markdown Support
-          #
+        view:
+          type: linear_layout
+          direction: vertical
+          items:
+            #
+            # Markdown Support
+            #
           - margin:
               top: 8
               bottom: 8
@@ -94,7 +97,23 @@ view:
               height: auto
             view:
               type: label
-              text: Normal, **Bold**, *Italic*, ==Highlighted==, ==***Highlighted + Bold + Italic***==
+              text: |
+                Normal, **Bold**, *Italic*, ==Highlighted==, ==***Highlighted + Bold + Italic***==
+                1. Snake_case Protection
+                Expectation: snake_case_variable remains plain. _Italic_ inside parens (_like this_) works.
+                Actual: snake_case_variable vs (_italic_) vs __bold_snake_case__
+  
+                2. Intraword Emphasis
+                Expectation: Asterisks, tildes, and highlights work inside words. Underscores do NOT.
+                Actual: un*frigging*believable (italic), del~~ete~~d (strike), h==igh==light (highlight), not_italic_ized (plain).
+  
+                3. Mixed & Nested
+                Expectation: Bold, italic, strike, and highlight all working together.
+                Actual: **Bold**, *Italic*, ~~Strike~~, ==Highlight==. Nested: **Bold with *italic* inside**. ***Bold and italic***.
+  
+                4. Links & Edge Cases
+                Expectation: Links work normally. Punctuation doesn't break formatting.
+                Actual: [ Link to Google ](https://google.com). *Italic!* **Bold?** ~~Strike.~~
               text_appearance:
                 alignment: start
                 font_size: 14
@@ -148,7 +167,7 @@ view:
               height: auto
             view:
               type: label
-              text: "==Markdown formatting will *preserve* **symbols**, **punctuation**, & **newlines** in the original text:\n\n!@#$%^&*()_+-=[]{}|;':,.<>=="
+              text: "foo*cool*bar ==Markdown formatting will *preserve* **symbols**, **punctuation**, & **newlines** in the original text:\n\n!@#$%^&*()_+-=[]{}|;':,.<>=="
               text_appearance:
                 alignment: start
                 font_size: 14

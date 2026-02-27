@@ -30,20 +30,20 @@ private const val linkTag = """<a href="$2">$1</a>"""
 
 /** Matches `***bold + italic***` not preceded or followed by `*` */
 private val boldAndItalicRegexStar = """(?<!\*)\*\*\*(?!\*)(.*?)(?<!\*)\*\*\*(?!\*)""".toRegex()
-/** Matches `___bold + italic___` not preceded or followed by `_` */
-private val boldAndItalicRegexBar = """(?<!_)___(?!_)(.*?)(?<!_)___(?!_)""".toRegex()
+/** Matches `___bold + italic___` preceded by a word boundary and not followed by `_` */
+private val boldAndItalicRegexBar = """\b___(?!_)(.*?)(?<!_)___\b""".toRegex()
 private const val boldAndItalicTag = """<b><i>$1</i></b>"""
 
 /** Matches `**bold**` not preceded or followed by `*` */
 private val boldRegexStar = """(?<!\*)\*\*(?!\*)(.*?)(?<!\*)\*\*(?!\*)""".toRegex()
-/** Matches `__bold__` not preceded or followed by `_` */
-private val boldRegexBar = """(?<!_)__(?!_)(.*?)(?<!_)__(?!_)""".toRegex()
+/** Matches `__bold__` preceded by a word boundary and not followed by `_` */
+private val boldRegexBar = """\b__(?!_)(.*?)(?<!_)__\b""".toRegex()
 private const val boldTag = """<b>$1</b>"""
 
 /** Matches `*italic*` not preceded or followed by `*` */
 private val italicRegexStar = """(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)""".toRegex()
-/** Matches `_italic_` not preceded or followed by `_` */
-private val italicRegexBar = """(?<!_)_(?!_)(.*?)(?<!_)_(?!_)""".toRegex()
+/** Matches `_italic_` preceded by a word boundary and not followed by `_` */
+private val italicRegexBar = """\b_(?!_)(.*?)(?<!_)_\b""".toRegex()
 private const val italicTag = """<i>$1</i>"""
 
 /** Matches `~~strikethrough~~` not preceded or followed by `~` */
