@@ -6,11 +6,11 @@ import androidx.annotation.Dimension
 import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.widget.Clippable
 import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
 import kotlin.math.max
 import com.google.android.material.shape.CornerFamily
+import com.google.android.material.shape.CornerSize
 import com.google.android.material.shape.ShapeAppearanceModel
 
 public class Border public constructor(
@@ -110,14 +110,26 @@ public class Border public constructor(
             }
         }
 
+        private enum class Corner {
+            TOP_LEFT,
+            TOP_RIGHT,
+            BOTTOM_LEFT,
+            BOTTOM_RIGHT
+        }
+
+        private enum class CapSide {
+            VERTICAL, HORIZONTAL
+        }
+
         internal fun applyToShape(
             shape: ShapeAppearanceModel.Builder,
             toPxConverter: (Int) -> Int
         ) {
-            topLeft?.let { shape.setTopLeftCornerSize(toPxConverter(it).toFloat()) }
-            topRight?.let { shape.setTopRightCornerSize(toPxConverter(it).toFloat()) }
-            bottomLeft?.let { shape.setBottomLeftCornerSize(toPxConverter(it).toFloat()) }
-            bottomRight?.let { shape.setBottomRightCornerSize(toPxConverter(it).toFloat()) }
+
+            optimalCornerSize(Corner.TOP_LEFT, toPxConverter)?.let(shape::setTopLeftCornerSize)
+            optimalCornerSize(Corner.TOP_RIGHT, toPxConverter)?.let(shape::setTopRightCornerSize)
+            optimalCornerSize(Corner.BOTTOM_LEFT, toPxConverter)?.let(shape::setBottomLeftCornerSize)
+            optimalCornerSize(Corner.BOTTOM_RIGHT, toPxConverter)?.let(shape::setBottomRightCornerSize)
         }
 
         internal fun getRadii(toPxConverter: (Int) -> Float): FloatArray {
@@ -138,8 +150,58 @@ public class Border public constructor(
             }
         }
 
+        private fun optimalCornerSize(
+            corner: Corner,
+            toPxConverter: (Int) -> Int
+        ): CornerSize? {
+            val preferred = when(corner) {
+                Corner.TOP_LEFT -> topLeft
+                Corner.TOP_RIGHT -> topRight
+                Corner.BOTTOM_LEFT -> bottomLeft
+                Corner.BOTTOM_RIGHT -> bottomRight
+            } ?: return null
+
+            return CornerSize { bounds ->
+                val side = if(bounds.width() > bounds.height()) {
+                    CapSide.HORIZONTAL
+                } else {
+                    CapSide.VERTICAL
+                }
+
+                val counterpart = when(corner) {
+                    Corner.TOP_LEFT -> when(side) {
+                        CapSide.VERTICAL -> bottomLeft
+                        CapSide.HORIZONTAL -> topRight
+                    }
+                    Corner.TOP_RIGHT -> when(side) {
+                        CapSide.VERTICAL -> bottomRight
+                        CapSide.HORIZONTAL -> topLeft
+                    }
+                    Corner.BOTTOM_LEFT -> when(side) {
+                        CapSide.VERTICAL -> topLeft
+                        CapSide.HORIZONTAL -> bottomRight
+                    }
+                    Corner.BOTTOM_RIGHT -> when(side) {
+                        CapSide.VERTICAL -> topRight
+                        CapSide.HORIZONTAL -> bottomLeft
+                    }
+                } ?: 0
+
+                val preferredInPixel = toPxConverter(preferred).toFloat()
+                val counterPartInPixel = toPxConverter(counterpart).toFloat()
+
+                return@CornerSize listOf(
+                    max(bounds.width() - counterPartInPixel, 0f),
+                    max(bounds.height() - counterPartInPixel, 0f),
+                    preferredInPixel)
+                .min()
+            }
+        }
+
         internal val maxCornerRadius: Int?
-            get() = listOf(topLeft, topRight, bottomLeft, bottomRight).mapNotNull { it }.maxOrNull()
+            get() {
+                return listOfNotNull(topLeft, topRight, bottomLeft, bottomRight).maxOrNull()
+            }
     }
 
     public companion object {
