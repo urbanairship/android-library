@@ -4,6 +4,15 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.4.0 - March 3, 2026
+
+Minor release with a pair of improvements for Scenes.
+
+### Changes
+
+- Adjusted Markdown rendering in Scenes to be less aggressive when interpreting styling delimiters inside of words
+- Improved Scene border rendering when rounded corners are present
+
 ## Version 20.3.0 - February 24, 2026
 
 Minor release that adds support for Native Message Center. Native content type requires displaying the message content in an Airship Message View. Apps that do not use Airship's message views (e.g. using a WebView directly) should filter out messages where `message.contentType` is not `Message.ContentType.Html`.
