@@ -7,10 +7,6 @@ plugins {
 
 description = "Airship Android SDK Message Center module"
 
-airshipModule {
-    published = true
-}
-
 android {
     namespace = 'com.urbanairship.messagecenter.core'
 
@@ -45,7 +41,7 @@ dependencies {
     implementation(libs.google.material)
 
     // Tests
-    testImplementation(testFixtures(project(":urbanairship-core")))
+    testImplementation project(':urbanairship-test')
 
     // Instrumentation Test
     androidTestImplementation(libs.androidx.test.core)

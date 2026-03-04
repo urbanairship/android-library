@@ -35,4 +35,5 @@ include ':urbanairship-adm',
         ':urbanairship-preference-center-core',
         ':urbanairship-preference-center-compose',
         ':urbanairship-feature-flag',
+        ':urbanairship-test',
         ':devapp'

@@ -1,0 +1,52 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    id 'com.android.library'
+
+}
+
+group = "com.urbanairship.android"
+description = "Airship Android SDK Test Utils library, for internal use only"
+
+android {
+    namespace = 'com.urbanairship.test'
+
+    compileSdk rootProject.compileSdkVersion
+
+    defaultConfig {
+        minSdk rootProject.minSdkVersion
+        targetSdk rootProject.targetSdkVersion
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+        jvmDefault = JvmDefaultMode.ENABLE
+    }
+}
+
+dependencies {
+    api project(':urbanairship-core')
+    api(libs.androidx.room.testing)
+    api(libs.androidx.test.core)
+    api(libs.androidx.test.ext.junit)
+    api(libs.androidx.test.ext.junitktx)
+    api(libs.androidx.test.ext.truth)
+    api(libs.androidx.test.rules)
+    api(libs.androidx.test.runner)
+    api(libs.google.truth)
+    api(libs.junit)
+    api(libs.kotlinx.coroutines.android)
+    api(libs.kotlinx.coroutines.core)
+    api(libs.kotlinx.coroutines.test)
+    api(libs.mockk)
+    api(libs.robolectric.core)
+    api(libs.turbine)
+}

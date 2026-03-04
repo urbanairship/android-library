@@ -4,10 +4,6 @@ plugins {
 
 description = "Airship Layout Rendering Library"
 
-airshipModule {
-    published = true
-}
-
 android {
     compileSdk rootProject.compileSdkVersion
 
@@ -45,5 +41,5 @@ dependencies {
     implementation(libs.google.material)
 
     // Unit Tests
-    testImplementation(testFixtures(project(":urbanairship-core")))
+    testImplementation project(':urbanairship-test')
 }

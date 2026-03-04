@@ -7,10 +7,6 @@ plugins {
 
 description = "Airship Android SDK Automation module"
 
-airshipModule {
-    published = true
-}
-
 android {
     namespace = 'com.urbanairship.automation'
 
@@ -35,7 +31,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     // Tests
-    testImplementation(testFixtures(project(":urbanairship-core")))
+    testImplementation project(':urbanairship-test')
 }
 
 allOpen {

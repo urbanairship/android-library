@@ -7,19 +7,12 @@ plugins {
 
 description = "Airship Android Core SDK"
 
-airshipModule {
-    published = true
-}
-
 android {
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
     sourceSets {
         androidTest.assets.srcDirs += files("$projectDir/schemas".toString())
-    }
-    testFixtures {
-        enable = true
     }
 
     room {
@@ -49,23 +42,8 @@ dependencies {
 
     compileOnly(libs.playservices.base)
 
-    // Unit Test Fixtures
-    // These are exposed to any module that depends on the test fixtures of this module
-    testFixturesApi(libs.androidx.room.testing)
-    testFixturesApi(libs.androidx.test.core)
-    testFixturesApi(libs.androidx.test.ext.junit)
-    testFixturesApi(libs.androidx.test.ext.junitktx)
-    testFixturesApi(libs.androidx.test.ext.truth)
-    testFixturesApi(libs.androidx.test.rules)
-    testFixturesApi(libs.androidx.test.runner)
-    testFixturesApi(libs.google.truth)
-    testFixturesApi(libs.junit)
-    testFixturesApi(libs.kotlinx.coroutines.android)
-    testFixturesApi(libs.kotlinx.coroutines.core)
-    testFixturesApi(libs.kotlinx.coroutines.test)
-    testFixturesApi(libs.mockk)
-    testFixturesApi(libs.robolectric.core)
-    testFixturesApi(libs.turbine)
+    // Unit Tests
+    testImplementation project(':urbanairship-test')
 
     // Instrumentation Test
     androidTestImplementation(libs.androidx.test.core)
