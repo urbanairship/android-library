@@ -5,10 +5,6 @@ plugins {
 
 description = "Airship Android Automation Compose UI."
 
-airshipModule {
-    published = true
-}
-
 android {
     namespace = 'com.urbanairship.automation.compose'
 

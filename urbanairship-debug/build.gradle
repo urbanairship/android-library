@@ -7,10 +7,6 @@ plugins {
 
 description = "Airship Android Debug Tools"
 
-airshipModule {
-    published = true
-}
-
 android {
     namespace = 'com.urbanairship.debug'
 

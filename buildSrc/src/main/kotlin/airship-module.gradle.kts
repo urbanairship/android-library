@@ -1,5 +1,8 @@
 import java.time.Year
 import org.gradle.api.JavaVersion
+import org.gradle.api.publish.maven.MavenPublication
+import org.gradle.plugins.signing.SigningExtension
+import org.gradle.plugins.signing.SigningPlugin
 import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.ExplicitApiMode
@@ -9,26 +12,28 @@ plugins {
     id("com.android.library")
     id("org.jetbrains.dokka")
     id("maven-publish")
-}
-
-interface AirshipModuleExtension {
-    /** Set to `false` to apply common config without publishing or documenting the module. */
-    val published: Property<Boolean>
-}
-
-val ext: AirshipModuleExtension = project.extensions.create("airshipModule")
-ext.published.convention(true)
-
-afterEvaluate {
-    the<AirshipModuleExtension>().published.get().let { published ->
-        if (published) {
-            plugins.apply(AirshipPublishPlugin::class)
-        }
-    }
+    id("com.gradleup.nmcp")
 }
 
 version = getMavenVersion()
 group = "com.urbanairship.android"
+
+//
+// Kotlin
+//
+
+kotlin {
+    explicitApi = ExplicitApiMode.Strict
+
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
+        jvmDefault = JvmDefaultMode.ENABLE
+    }
+}
+
+//
+// Android
+//
 
 android {
     val compileSdkVersion: Int by rootProject
@@ -66,16 +71,78 @@ android {
         targetSdk = targetSdkVersion
         checkOnly += setOf("Interoperability", "NewApi", "InlinedApi")
     }
-}
 
-kotlin {
-    explicitApi = ExplicitApiMode.Warning
-
-    compilerOptions {
-        jvmTarget = JvmTarget.JVM_17
-        jvmDefault = JvmDefaultMode.ENABLE
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
     }
 }
+
+//
+// Signing
+//
+
+val secretKey = env("SIGNING_KEY") ?: prop("signing.key")
+val keyId = env("SIGNING_KEY_ID") ?: prop("signing.keyId")
+val password = env("SIGNING_PASSWORD") ?: prop("signing.password")
+
+if (!secretKey.isNullOrEmpty()) {
+    apply<SigningPlugin>()
+
+    val publishing = the<PublishingExtension>()
+
+    configure<SigningExtension> {
+        isRequired = true
+        sign(publishing.publications)
+        if (keyId != null) {
+            useInMemoryPgpKeys(keyId, secretKey, password)
+        } else {
+            useInMemoryPgpKeys(secretKey, password)
+        }
+    }
+}
+
+//
+// Publishing
+//
+
+afterEvaluate {
+    publishing {
+        publications {
+            register<MavenPublication>("Production") {
+                from(components["release"])
+
+                pom {
+                    name.set(project.name)
+                    description.set(project.description)
+                    url.set("https://github.com/urbanairship/android-library")
+
+                    developers {
+                        developer { name.set("Airship") }
+                    }
+
+                    licenses {
+                        license {
+                            name.set("The Apache Software License, Version 2.0")
+                            url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                            distribution.set("repo")
+                        }
+                    }
+
+                    scm {
+                        connection.set("https://github.com/urbanairship/android-library.git")
+                        url.set("https://github.com/urbanairship/android-library")
+                    }
+                }
+            }
+        }
+    }
+}
+
+//
+// Dokka
+//
 
 dependencies {
     dokkaPlugin("org.jetbrains.dokka:android-documentation-plugin:${libs.requiredVersion("dokka")}")
@@ -90,7 +157,7 @@ dokka {
 
                 sourceLink {
                     localDirectory.set(file("src/main/java"))
-                    remoteUrl("https://github.com/urbanairship/android-library/blob/${project.name}/src/main/java")
+                    remoteUrl("https://github.com/urbanairship/android-library/blob/main/${project.name}/src/main/java")
                     remoteLineSuffix.set("#L")
                 }
             }
@@ -117,6 +184,10 @@ dokka {
     }
 }
 
+//
+// Helpers
+//
+
 internal fun Project.getSdkVersionString(): String {
     val airshipVersionQualifier: String? by project
     val airshipVersion: String by project
@@ -139,6 +210,10 @@ internal fun Project.getMavenVersion(): String {
 
     return parts.joinToString("-")
 }
+
+internal fun Project.prop(name: String) = findProperty(name)?.toString()
+
+internal fun env(name: String) = System.getenv(name)
 
 internal val Project.libs: VersionCatalog
     get() = extensions.getByType(VersionCatalogsExtension::class.java).named("libs")

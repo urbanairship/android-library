@@ -1,3 +1,5 @@
+import java.time.temporal.ChronoUnit
+
 buildscript {
     ext {
         // Airship Version - major.minor.patch
@@ -23,11 +25,30 @@ buildscript {
 }
 
 plugins {
-    id 'airship-publish'
     id 'org.jetbrains.dokka'
 
+    id("com.gradleup.nmcp.aggregation")
     alias(libs.plugins.benmanes.versions)
     alias(libs.plugins.spotless)
+}
+
+def mavenUser = System.getenv("MAVEN_USER") ?: findProperty("maven.user") ?: ""
+def mavenPassword = System.getenv("MAVEN_PASSWORD") ?: findProperty("maven.password") ?: ""
+
+nmcpAggregation {
+    centralPortal {
+        username = mavenUser
+        password = mavenPassword
+
+        publishingType = "AUTOMATIC"
+        validationTimeout = Duration.of(30, ChronoUnit.MINUTES)
+    }
+}
+
+dependencies {
+    allprojects {
+        nmcpAggregation(project(path))
+    }
 }
 
 dependencies {
@@ -38,14 +59,15 @@ dependencies {
     dokka(project(":urbanairship-automation-compose"))
     dokka(project(":urbanairship-core"))
     dokka(project(":urbanairship-fcm"))
+    dokka(project(":urbanairship-feature-flag"))
     dokka(project(":urbanairship-hms"))
     dokka(project(":urbanairship-live-update"))
-    dokka(project(':urbanairship-message-center'))
-    dokka(project(':urbanairship-message-center-core'))
     dokka(project(":urbanairship-preference-center"))
-    dokka(project(":urbanairship-preference-center-core"))
     dokka(project(":urbanairship-preference-center-compose"))
-    dokka(project(":urbanairship-feature-flag"))
+    dokka(project(":urbanairship-preference-center-core"))
+    dokka(project(':urbanairship-message-center'))
+    dokka(project(':urbanairship-message-center-compose'))
+    dokka(project(':urbanairship-message-center-core'))
 }
 
 dokka {

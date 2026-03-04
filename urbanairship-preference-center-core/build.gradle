@@ -6,10 +6,6 @@ plugins {
 
 description = "Airship Preference Center Core."
 
-airshipModule {
-    published = true
-}
-
 android {
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -47,5 +43,5 @@ dependencies {
     implementation(libs.google.material)
 
     // Unit Tests
-    testImplementation(testFixtures(project(":urbanairship-core")))
+    testImplementation project(':urbanairship-test')
 }

@@ -5,10 +5,6 @@ plugins {
 
 description = "Airship Android SDK Message Center Compose module"
 
-airshipModule {
-    published = true
-}
-
 android {
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -61,10 +57,9 @@ dependencies {
     implementation libs.compose.material3
     implementation libs.androidx.lifecycle.runtime.compose
     implementation libs.androidx.lifecycle.viewmodel.compose
-//    implementation libs.androidx.navigation.compose
 
     implementation libs.landscapist.glide
 
     // Unit Tests
-    testImplementation(testFixtures(project(":urbanairship-core")))
+    testImplementation project(':urbanairship-test')
 }

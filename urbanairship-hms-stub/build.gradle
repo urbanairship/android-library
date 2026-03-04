@@ -8,6 +8,7 @@ android {
     defaultConfig {
         minSdkVersion rootProject.minSdkVersion
     }
+
     namespace = 'com.urbanairship.hms_stub'
 }
 

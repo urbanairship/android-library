@@ -6,10 +6,6 @@ plugins {
 
 description = "Airship Preference Center Compose UI."
 
-airshipModule {
-    published = true
-}
-
 android {
     defaultConfig {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -54,5 +50,5 @@ dependencies {
     implementation libs.landscapist.glide
 
     // Unit Tests
-    testImplementation(testFixtures(project(":urbanairship-core")))
+    testImplementation project(':urbanairship-test')
 }

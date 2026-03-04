@@ -64,7 +64,6 @@ dependencies {
     implementation(libs.androidx.activityktx)
     implementation(libs.compose.ui.viewbinding)
     implementation(libs.google.material)
-    implementation(libs.androidx.preference)
     implementation(libs.androidx.lifecycle.viewmodel)
     implementation(libs.androidx.lifecycle.viewmodelktx)
     implementation(libs.androidx.constraintlayout)
