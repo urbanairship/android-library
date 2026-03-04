@@ -18,7 +18,6 @@
         }
       }
     </script>
-<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
 <script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
 <link href="../../../styles/style.css" rel="Stylesheet">
 <link href="../../../styles/main.css" rel="Stylesheet">
@@ -44,7 +43,7 @@
         </div>
         <div class="navigation-controls">
         <ul class="filter-section filter-section_loading" id="filter-section" aria-label="Target filter">
-                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":urbanairship-core/main">androidJvm</button>
+                <button class="platform-tag platform-selector jvm-like" data-active="" aria-pressed="true" data-filter=":urbanairship-core/release">release</button>
             <div class="dropdown filter-section--dropdown" data-role="dropdown" id="filter-section-dropdown">
                 <button class="button button_dropdown filter-section--dropdown-toggle" role="combobox" data-role="dropdown-toggle" aria-controls="platform-tags-listbox" aria-haspopup="listbox" aria-expanded="false" aria-label="Toggle source sets"></button>
                 <ul role="listbox" id="platform-tags-listbox" class="dropdown--list" data-role="dropdown-listbox" aria-label="Target filter">
@@ -55,9 +54,9 @@
                     </div>
                         <li role="option" class="dropdown--option platform-selector-option jvm-like" tabindex="0">
                             <label class="checkbox">
-                                <input type="checkbox" class="checkbox--input" id=":urbanairship-core/main" data-filter=":urbanairship-core/main">
+                                <input type="checkbox" class="checkbox--input" id=":urbanairship-core/release" data-filter=":urbanairship-core/release">
                                 <span class="checkbox--icon"></span>
-                                androidJvm
+                                release
                             </label>
                         </li>
                 </ul>
@@ -91,36 +90,32 @@
         </nav>
         <div id="resizer" class="resizer" data-item-type="BAR"></div>
         <div id="main" data-item-type="SECTION" role="main">
-<div class="main-content" data-page-type="classlike" id="content" pageids="urbanairship-core::com.urbanairship.actions/AddCustomEventAction///PointingToDeclaration//1762731939">
+<div class="main-content" data-page-type="classlike" id="content" pageids="urbanairship-core::com.urbanairship.actions/AddCustomEventAction///PointingToDeclaration//-708863246">
   <div class="breadcrumbs"><a href="../../index.html">urbanairship-core</a><span class="delimiter">/</span><a href="../index.html">com.urbanairship.actions</a><span class="delimiter">/</span><span class="current">AddCustomEventAction</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Add</span><wbr><span>Custom</span><wbr><span>Event</span><wbr><span><span>Action</span></span></h1>
-    <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-      <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">AddCustomEventAction</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">eventRecord<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../com.urbanairship.analytics/-custom-event/index.html">CustomEvent</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a><span class="token operator"> = </span>{
+    <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">AddCustomEventAction</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">eventRecord<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../com.urbanairship.analytics/-custom-event/index.html">CustomEvent</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a><span class="token operator"> = </span>{
         Airship.analytics.recordCustomEvent(it)
-    }</span></span><span class="token punctuation">)</span> : <a href="../-action/index.html">Action</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/urbanairship-core/src/main/java/com/urbanairship/actions/AddCustomEventAction.kt#L46">source</a>)</span></span></div><p class="paragraph">An action that adds a custom event.</p><p class="paragraph">Accepted situations: all</p><p class="paragraph">Accepted argument value - A map of fields for the custom event:</p><ul><li><p class="paragraph"><a href="../../com.urbanairship.analytics/-custom-event/-companion/-e-v-e-n-t_-n-a-m-e.html">com.urbanairship.analytics.CustomEvent.EVENT_NAME</a>: String, Required</p></li><li><p class="paragraph"><a href="../../com.urbanairship.analytics/-custom-event/-companion/-e-v-e-n-t_-v-a-l-u-e.html">com.urbanairship.analytics.CustomEvent.EVENT_VALUE</a>: number as a String or Number</p></li><li></li><li></li><li></li><li><p class="paragraph"><a href="../../com.urbanairship.analytics/-custom-event/-companion/-p-r-o-p-e-r-t-i-e-s.html">com.urbanairship.analytics.CustomEvent.PROPERTIES</a>: JsonMap of Strings, Booleans, Numbers, or arrays of Strings</p></li></ul><p class="paragraph">When a custom event action is triggered from a Message Center Rich Push Message, the interaction type and ID will automatically be filled for the message if they are left blank.</p><p class="paragraph">Result value: <code class="lang-kotlin">null</code></p><p class="paragraph">Default Registration Name: <a href="-companion/-d-e-f-a-u-l-t_-n-a-m-e-s.html">DEFAULT_NAMES</a></p><p class="paragraph">Default Registration Predicate: Rejects <a href="../-action/-situation/-p-u-s-h_-r-e-c-e-i-v-e-d/index.html">Action.Situation.PUSH_RECEIVED</a></p></div>    </div>
+    }</span></span><span class="token punctuation">)</span> : <a href="../-action/index.html">Action</a><span class="source-link-wrapper"><span class="source-link" data-element-type="source-link">(<a href="https://github.com/urbanairship/android-library/blob/main/urbanairship-core/src/main/java/com/urbanairship/actions/AddCustomEventAction.kt#L46">source</a>)</span></span></div><p class="paragraph">An action that adds a custom event.</p><p class="paragraph">Accepted situations: all</p><p class="paragraph">Accepted argument value - A map of fields for the custom event:</p><ul><li><p class="paragraph"><a href="../../com.urbanairship.analytics/-custom-event/-companion/-e-v-e-n-t_-n-a-m-e.html">com.urbanairship.analytics.CustomEvent.EVENT_NAME</a>: String, Required</p></li><li><p class="paragraph"><a href="../../com.urbanairship.analytics/-custom-event/-companion/-e-v-e-n-t_-v-a-l-u-e.html">com.urbanairship.analytics.CustomEvent.EVENT_VALUE</a>: number as a String or Number</p></li><li></li><li></li><li></li><li><p class="paragraph"><a href="../../com.urbanairship.analytics/-custom-event/-companion/-p-r-o-p-e-r-t-i-e-s.html">com.urbanairship.analytics.CustomEvent.PROPERTIES</a>: JsonMap of Strings, Booleans, Numbers, or arrays of Strings</p></li></ul><p class="paragraph">When a custom event action is triggered from a Message Center Rich Push Message, the interaction type and ID will automatically be filled for the message if they are left blank.</p><p class="paragraph">Result value: <code class="lang-kotlin">null</code></p><p class="paragraph">Default Registration Name: <a href="-companion/-d-e-f-a-u-l-t_-n-a-m-e-s.html">DEFAULT_NAMES</a></p><p class="paragraph">Default Registration Predicate: Rejects <a href="../-action/-situation/-p-u-s-h_-r-e-c-e-i-v-e-d/index.html">Action.Situation.PUSH_RECEIVED</a></p></div></div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="CONSTRUCTOR">
         <h2 class="tableheader">Constructors</h2>
-        <div class="table"><a data-name="-254984232%2FConstructors%2F1762731939" anchor-label="AddCustomEventAction" id="-254984232%2FConstructors%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
-          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+        <div class="table"><a data-name="-254984232%2FConstructors%2F-708863246" anchor-label="AddCustomEventAction" id="-254984232%2FConstructors%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-togglable="CONSTRUCTOR" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-add-custom-event-action.html"><span>Add</span><wbr><span>Custom</span><wbr><span>Event</span><wbr><span><span>Action</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-254984232%2FConstructors%2F1762731939"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-254984232%2FConstructors%2F-708863246"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">eventRecord<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../com.urbanairship.analytics/-custom-event/index.html">CustomEvent</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a><span class="token operator"> = </span>{
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">eventRecord<span class="token operator">: </span><span class="token punctuation">(</span><a href="../../com.urbanairship.analytics/-custom-event/index.html">CustomEvent</a><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-unit/index.html">Unit</a><span class="token operator"> = </span>{
         Airship.analytics.recordCustomEvent(it)
-    }</span></span><span class="token punctuation">)</span></div></div>                  </div>
+    }</span></span><span class="token punctuation">)</span></div></div></div>
                 </div>
               </div>
             </div>
@@ -129,36 +124,32 @@
       </div>
       <div data-togglable="TYPE">
         <h2 class="tableheader">Types</h2>
-        <div class="table"><a data-name="-1095970135%2FClasslikes%2F1762731939" anchor-label="AddCustomEventActionPredicate" id="-1095970135%2FClasslikes%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+        <div class="table"><a data-name="-1095970135%2FClasslikes%2F-708863246" anchor-label="AddCustomEventActionPredicate" id="-1095970135%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-add-custom-event-action-predicate/index.html"><span>Add</span><wbr><span>Custom</span><wbr><span>Event</span><wbr><span>Action</span><wbr><span><span>Predicate</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1095970135%2FClasslikes%2F1762731939"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1095970135%2FClasslikes%2F-708863246"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">class </span><a href="-add-custom-event-action-predicate/index.html">AddCustomEventActionPredicate</a> : <a href="../-action-predicate/index.html">ActionPredicate</a></div><div class="brief "><p class="paragraph">Default <a href="index.html">AddCustomEventAction</a> predicate.</p></div></div>                  </div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">class </span><a href="-add-custom-event-action-predicate/index.html">AddCustomEventActionPredicate</a> : <a href="../-action-predicate/index.html">ActionPredicate</a></div><div class="brief "><p class="paragraph">Default <a href="index.html">AddCustomEventAction</a> predicate.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="2074883638%2FClasslikes%2F1762731939" anchor-label="Companion" id="2074883638%2FClasslikes%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+<a data-name="2074883638%2FClasslikes%2F-708863246" anchor-label="Companion" id="2074883638%2FClasslikes%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2074883638%2FClasslikes%2F1762731939"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2074883638%2FClasslikes%2F-708863246"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div>                  </div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div></div>
                 </div>
               </div>
             </div>
@@ -167,36 +158,32 @@
       </div>
       <div data-togglable="FUNCTION">
         <h2 class="tableheader">Functions</h2>
-        <div class="table"><a data-name="746618686%2FFunctions%2F1762731939" anchor-label="acceptsArguments" id="746618686%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+        <div class="table"><a data-name="746618686%2FFunctions%2F-708863246" anchor-label="acceptsArguments" id="746618686%2FFunctions%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="accepts-arguments.html"><span>accepts</span><wbr><span><span>Arguments</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="746618686%2FFunctions%2F1762731939"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="746618686%2FFunctions%2F-708863246"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="accepts-arguments.html"><span class="token function">acceptsArguments</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Called before an action is performed to determine if the the action can accept the arguments.</p></div></div>                  </div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="accepts-arguments.html"><span class="token function">acceptsArguments</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Called before an action is performed to determine if the the action can accept the arguments.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="363893484%2FFunctions%2F1762731939" anchor-label="perform" id="363893484%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+<a data-name="363893484%2FFunctions%2F-708863246" anchor-label="perform" id="363893484%2FFunctions%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="perform.html"><span><span>perform</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="363893484%2FFunctions%2F1762731939"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="363893484%2FFunctions%2F-708863246"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="perform.html"><span class="token function">perform</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-action-result/index.html">ActionResult</a></div><div class="brief "><p class="paragraph">Performs the action.</p></div></div>                  </div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">override </span><span class="token keyword">fun </span><a href="perform.html"><span class="token function">perform</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-action-result/index.html">ActionResult</a></div><div class="brief "><p class="paragraph">Performs the action.</p></div></div></div>
                 </div>
               </div>
             </div>
@@ -205,70 +192,62 @@
       </div>
       <div data-togglable="FUNCTION">
         <h2 class="tableheader">Inherited functions</h2>
-        <div class="table"><a data-name="-417715743%2FFunctions%2F1762731939" anchor-label="onFinish" id="-417715743%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+        <div class="table"><a data-name="-417715743%2FFunctions%2F-708863246" anchor-label="onFinish" id="-417715743%2FFunctions%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-action/on-finish.html"><span>on</span><wbr><span><span>Finish</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-417715743%2FFunctions%2F1762731939"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-417715743%2FFunctions%2F-708863246"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-action/on-finish.html"><span class="token function">onFinish</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a><span class="token punctuation">, </span></span><span class="parameter ">result<span class="token operator">: </span><a href="../-action-result/index.html">ActionResult</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Called after the action performs.</p></div></div>                  </div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-action/on-finish.html"><span class="token function">onFinish</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a><span class="token punctuation">, </span></span><span class="parameter ">result<span class="token operator">: </span><a href="../-action-result/index.html">ActionResult</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Called after the action performs.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1821594098%2FFunctions%2F1762731939" anchor-label="onStart" id="1821594098%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+<a data-name="1821594098%2FFunctions%2F-708863246" anchor-label="onStart" id="1821594098%2FFunctions%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-action/on-start.html"><span>on</span><wbr><span><span>Start</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1821594098%2FFunctions%2F1762731939"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1821594098%2FFunctions%2F-708863246"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-action/on-start.html"><span class="token function">onStart</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Called before an action is performed.</p></div></div>                  </div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-action/on-start.html"><span class="token function">onStart</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Called before an action is performed.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="1977550634%2FFunctions%2F1762731939" anchor-label="run" id="1977550634%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+<a data-name="1977550634%2FFunctions%2F-708863246" anchor-label="run" id="1977550634%2FFunctions%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-action/run.html"><span><span>run</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1977550634%2FFunctions%2F1762731939"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1977550634%2FFunctions%2F-708863246"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-action/run.html"><span class="token function">run</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-action-result/index.html">ActionResult</a></div><div class="brief "><p class="paragraph">Performs the action, with pre/post execution calls, if it accepts the provided arguments.</p></div></div>                  </div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">fun </span><a href="../-action/run.html"><span class="token function">run</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">arguments<span class="token operator">: </span><a href="../-action-arguments/index.html">ActionArguments</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="../-action-result/index.html">ActionResult</a></div><div class="brief "><p class="paragraph">Performs the action, with pre/post execution calls, if it accepts the provided arguments.</p></div></div></div>
                 </div>
               </div>
             </div>
           </div>
-<a data-name="201846269%2FFunctions%2F1762731939" anchor-label="shouldRunOnMainThread" id="201846269%2FFunctions%2F1762731939" data-filterable-set=":urbanairship-core/main"></a>
-          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main">
+<a data-name="201846269%2FFunctions%2F-708863246" anchor-label="shouldRunOnMainThread" id="201846269%2FFunctions%2F-708863246" data-filterable-set=":urbanairship-core/release"></a>
+          <div class="table-row table-row_content" data-filterable-current=":urbanairship-core/release" data-filterable-set=":urbanairship-core/release">
             <div class="main-subrow keyValue ">
               <div class=""><span class="inline-flex">
                   <div><a href="../-action/should-run-on-main-thread.html"><span>should</span><wbr><span>Run</span><wbr><span>On</span><wbr><span>Main</span><wbr><span><span>Thread</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="201846269%2FFunctions%2F1762731939"></span>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="201846269%2FFunctions%2F-708863246"></span>
                     <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                   </span></span></div>
               <div>
                 <div class="title">
-                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":urbanairship-core/main" data-filterable-set=":urbanairship-core/main" data-active="" data-toggle=":urbanairship-core/main">androidJvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/main"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-action/should-run-on-main-thread.html"><span class="token function">shouldRunOnMainThread</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Determines which thread runs the action.</p></div></div>                  </div>
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":urbanairship-core/release"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="../-action/should-run-on-main-thread.html"><span class="token function">shouldRunOnMainThread</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/core/kotlin-stdlib/kotlin/-boolean/index.html">Boolean</a></div><div class="brief "><p class="paragraph">Determines which thread runs the action.</p></div></div></div>
                 </div>
               </div>
             </div>
