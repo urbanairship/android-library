@@ -1,6 +1,5 @@
 package com.urbanairship.android.layout
 
-import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.FormType
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
@@ -8,8 +7,12 @@ import com.urbanairship.android.layout.environment.PagersViewTracker
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.VideoCommandChannel
+import com.urbanairship.android.layout.environment.VideoControlState
+import com.urbanairship.android.layout.environment.VideoGroupBroadcastChannel
 import com.urbanairship.android.layout.environment.makeThomasState
 import com.urbanairship.android.layout.info.BasicToggleLayoutInfo
+import java.util.UUID
 import com.urbanairship.android.layout.info.ButtonLayoutInfo
 import com.urbanairship.android.layout.info.CheckboxControllerInfo
 import com.urbanairship.android.layout.info.CheckboxInfo
@@ -45,6 +48,7 @@ import com.urbanairship.android.layout.info.StateControllerInfo
 import com.urbanairship.android.layout.info.StoryIndicatorInfo
 import com.urbanairship.android.layout.info.TextInputInfo
 import com.urbanairship.android.layout.info.ToggleInfo
+import com.urbanairship.android.layout.info.VideoControllerInfo
 import com.urbanairship.android.layout.info.ViewGroupInfo
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.info.WebViewInfo
@@ -82,6 +86,7 @@ import com.urbanairship.android.layout.model.StoryIndicatorModel
 import com.urbanairship.android.layout.model.TextInputModel
 import com.urbanairship.android.layout.model.ToggleModel
 import com.urbanairship.android.layout.model.VerticalScrollLayoutModel
+import com.urbanairship.android.layout.model.VideoController
 import com.urbanairship.android.layout.model.WebViewModel
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.ViewType
@@ -207,6 +212,24 @@ internal class ThomasModelFactory : ModelFactory {
             createMutableSharedState(ctrl.info.info, environment.stateStorage)
         }
 
+        val videoCommandChannels = controllers
+            .filter { (_, ctrl) -> ctrl.info.info is VideoControllerInfo }
+            .mapValues { VideoCommandChannel() }
+
+        val videoBroadcastChannels = controllers
+            .filter { (_, ctrl) -> ctrl.info.info is VideoControllerInfo }
+            .mapValues { VideoGroupBroadcastChannel() }
+
+        val videoControlGroups = mutableMapOf<Tag, Pair<String, String>>()
+
+        controllers.forEach { (tag, ctrl) ->
+            val info = ctrl.info.info as? VideoControllerInfo ?: return@forEach
+            videoControlGroups[tag] = Pair(
+                info.playGroup ?: UUID.randomUUID().toString(),
+                info.muteGroup ?: UUID.randomUUID().toString()
+            )
+        }
+
         // Loop over processed nodes until we've built all models
         while (processedNodes.isNotEmpty()) {
             // For each pass, find any nodes that can be built (i.e. all their children are built)
@@ -226,11 +249,15 @@ internal class ThomasModelFactory : ModelFactory {
                 }
                 // Setup environment and properties
                 val childEnvironment = environment.withState(
-                    node.controllers.buildLayoutState(layoutStates, environment.pagerTracker)
+                    node.controllers.buildLayoutState(
+                        states = layoutStates,
+                        pagerTracker = environment.pagerTracker,
+                        videoCommandChannels = videoCommandChannels,
+                        videoBroadcastChannels = videoBroadcastChannels,
+                        videoControlGroups = videoControlGroups
+                    )
                 )
-                val properties = ModelProperties(
-                    pagerPageId = node.pagerPageId,
-                )
+                val properties = ModelProperties(pagerPageId = node.pagerPageId)
 
                 // Build model and store it in our builtModels map, so that it can be looked up
                 // in subsequent passes.
@@ -292,6 +319,7 @@ internal class ThomasModelFactory : ModelFactory {
                     State.Checkbox(info.identifier, info.minSelection, info.maxSelection)
                 }
             )
+            is VideoControllerInfo -> SharedState(State.Video(identifier = info.identifier))
             is PagerControllerInfo -> makeState(
                 identifier = info.identifier,
                 default = {
@@ -305,7 +333,6 @@ internal class ThomasModelFactory : ModelFactory {
                     default = { State.Layout(identifier =  identifier) }
                 )
             }
-
             else -> null
         }
     }
@@ -342,10 +369,17 @@ internal class ThomasModelFactory : ModelFactory {
         val radio: Tag?,
         val score: Tag?,
         val layout: Tag?,
-        val story: Tag?
+        val story: Tag?,
+        val video: List<Tag>
     ) {
         @Suppress("UNCHECKED_CAST")
-        fun buildLayoutState(states: Map<Tag, SharedState<State>?>, pagerTracker: PagersViewTracker?): LayoutState {
+        fun buildLayoutState(
+            states: Map<Tag, SharedState<State>?>,
+            pagerTracker: PagersViewTracker?,
+            videoCommandChannels: Map<Tag, VideoCommandChannel>,
+            videoBroadcastChannels: Map<Tag, VideoGroupBroadcastChannel>,
+            videoControlGroups: Map<Tag, Pair<String, String>>
+        ): LayoutState {
             val childForm = form.firstOrNull()
             val parentForm = form.getOrNull(1)
 
@@ -357,6 +391,26 @@ internal class ThomasModelFactory : ModelFactory {
 
             val pagerFlow = pager?.let { states[it] as? SharedState<State.Pager> }
 
+            val videoTag = video.firstOrNull()
+            val parentVideoTag = video.getOrNull(1)
+
+            val videoFlow = videoTag?.let { states[it] as? SharedState<State.Video> }
+
+            val videoControl = videoTag?.let { tag ->
+                val commandChannel = videoCommandChannels[tag] ?: return@let null
+                val broadcastChannel = videoBroadcastChannels[tag] ?: return@let null
+                val (playGroup, muteGroup) = videoControlGroups[tag] ?: return@let null
+                VideoControlState(
+                    commandChannel = commandChannel,
+                    broadcastChannel = broadcastChannel,
+                    parentCommandChannel = parentVideoTag?.let { videoCommandChannels[it] },
+                    parentBroadcastChannel = parentVideoTag?.let { videoBroadcastChannels[it] },
+                    parentVideoState = parentVideoTag?.let { states[it] as? SharedState<State.Video> },
+                    playGroup = playGroup,
+                    muteGroup = muteGroup
+                )
+            }
+
             return LayoutState(
                 thomasForm = formFlow?.let { ThomasForm(it, pagerFlow) },
                 parentForm = parentFormFlow?.let { ThomasForm(it, pagerFlow) },
@@ -365,8 +419,10 @@ internal class ThomasModelFactory : ModelFactory {
                 radio = radio?.let { states[it] as? SharedState<State.Radio> },
                 score = score?.let { states[it] as? SharedState<State.Score> },
                 layout = layoutFlow,
-                thomasState = makeThomasState(formFlow, layoutFlow, pagerFlow),
-                pagerTracker = pagerTracker
+                thomasState = makeThomasState(formFlow, layoutFlow, pagerFlow, videoFlow),
+                pagerTracker = pagerTracker,
+                video = videoFlow,
+                videoControl = videoControl,
             )
         }
 
@@ -377,7 +433,8 @@ internal class ThomasModelFactory : ModelFactory {
             var radio: Tag? = null,
             var score: Tag? = null,
             var layout: Tag? = null,
-            var story: Tag? = null
+            var story: Tag? = null,
+            val video: List<Tag> = emptyList()
         ) {
             fun update(type: ViewType, tag: Tag): Builder = when (type) {
                 ViewType.FORM_CONTROLLER,
@@ -388,6 +445,7 @@ internal class ThomasModelFactory : ModelFactory {
                 ViewType.SCORE_CONTROLLER -> copy(score = tag)
                 ViewType.STATE_CONTROLLER -> copy(layout = tag)
                 ViewType.STORY_INDICATOR -> copy(story = tag)
+                ViewType.VIDEO_CONTROLLER -> copy(video = listOf(tag) + video)
                 else -> this
             }
 
@@ -398,7 +456,8 @@ internal class ThomasModelFactory : ModelFactory {
                 radio = radio,
                 score = score,
                 layout = layout,
-                story = story
+                story = story,
+                video = video.toList()
             )
         }
     }
@@ -545,6 +604,18 @@ internal class ThomasModelFactory : ModelFactory {
                 properties = properties
             )
 
+            is VideoControllerInfo -> VideoController(
+                viewInfo = info,
+                view = children.first().first,
+                videoScope = info.videoScope,
+                muteGroup = info.muteGroup,
+                playGroup = info.playGroup,
+                videoState = environment.layoutState.video
+                    ?: throw ModelFactoryException("Required video state was null for VideoController!"),
+                environment = environment,
+                properties = properties
+            )
+
             is BasicToggleLayoutInfo -> BasicToggleLayoutModel(
                 viewInfo = info,
                 view = children.first().first,
@@ -602,6 +673,7 @@ internal class ThomasModelFactory : ModelFactory {
         is MediaInfo -> MediaModel(
             viewInfo = info,
             pagerState = environment.layoutState.pager,
+            videoState = environment.layoutState.video,
             environment = environment,
             properties = properties
         )

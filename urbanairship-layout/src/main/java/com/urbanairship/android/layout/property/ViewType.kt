@@ -38,6 +38,7 @@ public enum class ViewType(
     SCORE_CONTROLLER("score_controller"),
     SCORE_TOGGLE_LAYOUT("score_toggle_layout"),
     STACK_IMAGE_BUTTON("stack_image_button"),
+    VIDEO_CONTROLLER("video_controller"),
     UNKNOWN("");
 
     public val isFormInput: Boolean
@@ -77,7 +78,8 @@ public enum class ViewType(
             PAGER_CONTROLLER,
             RADIO_INPUT_CONTROLLER,
             STATE_CONTROLLER,
-            SCORE_CONTROLLER
+            SCORE_CONTROLLER,
+            VIDEO_CONTROLLER
         )
 
         public fun from(value: String): ViewType {

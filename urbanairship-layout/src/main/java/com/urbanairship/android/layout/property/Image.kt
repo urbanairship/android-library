@@ -125,7 +125,9 @@ public sealed class Image(
             HEART_FILL("heart_fill", R.drawable.ua_layout_ic_heart_fill),
             PROGRESS_SPINNER("progress_spinner", R.drawable.ua_layout_animated_progress_spinner),
             PAUSE("pause", R.drawable.ua_layout_ic_pause),
-            PLAY("play", R.drawable.ua_layout_ic_play);
+            PLAY("play", R.drawable.ua_layout_ic_play),
+            MUTE("mute", R.drawable.ua_layout_ic_mute),
+            UNMUTE("unmute", R.drawable.ua_layout_ic_unmute);
 
             companion object {
 

@@ -1,0 +1,355 @@
+---
+version: 1
+presentation:
+  type: modal
+  placement_selectors: []
+  android:
+    disable_back_button: false
+  dismiss_on_touch_outside: false
+  default_placement:
+    ignore_safe_area: false
+    size:
+      width: 80%
+      height: 75%
+    position:
+      horizontal: center
+      vertical: center
+    shade_color:
+      default:
+        type: hex
+        hex: "#FFFFFF"
+        alpha: 1
+      selectors:
+        - dark_mode: true
+          color:
+            type: hex
+            hex: "#000000"
+            alpha: 1
+    web: {}
+    border:
+      radius: 0
+      stroke_width: 0
+      stroke_color:
+        default:
+          type: hex
+          hex: "#000000"
+          alpha: 1
+        selectors:
+          - dark_mode: true
+            color:
+              type: hex
+              hex: "#FFFFFF"
+              alpha: 1
+view:
+  type: pager_controller
+  identifier: 3394abac-3e6c-4191-9a91-f5db637983d6
+  view:
+    type: video_controller
+    identifier: videocontrollerid
+    view:
+      type: linear_layout
+      direction: vertical
+      items:
+        - size:
+            width: 100%
+            height: 100%
+          view:
+            type: container
+            items:
+              - identifier: 4017c534-0f42-4670-80b8-155a4fc53c35_pager_container_item
+                position:
+                  horizontal: center
+                  vertical: center
+                size:
+                  width: 100%
+                  height: 100%
+                view:
+                  type: pager
+                  disable_swipe: true
+                  items:
+                    - identifier: 39c0a0b1-0c3f-489a-81d0-caa9d6dbd9f3
+                      type: pager_item
+                      view:
+                        type: container
+                        items:
+                          - identifier: 662dafa1-9961-480e-97e8-6caf34ca83af_main_view_container_item
+                            size:
+                              width: 100%
+                              height: 100%
+                            position:
+                              horizontal: center
+                              vertical: center
+                            ignore_safe_area: false
+                            view:
+                              type: container
+                              items:
+                                - identifier: 15dec3d2-4a79-4dba-ad2b-6d090f00f324_container_item
+                                  margin:
+                                    bottom: 0
+                                    top: 0
+                                    end: 0
+                                    start: 0
+                                  position:
+                                    horizontal: center
+                                    vertical: center
+                                  size:
+                                    width: 100%
+                                    height: 100%
+                                  view:
+                                    type: linear_layout
+                                    direction: vertical
+                                    items:
+                                      - identifier: scroll_container
+                                        size:
+                                          width: 100%
+                                          height: 100%
+                                        view:
+                                          type: scroll_layout
+                                          direction: vertical
+                                          view:
+                                            type: linear_layout
+                                            direction: vertical
+                                            items:
+                                              - identifier: f0945ebe-b6cd-4c31-8c85-a050b968c094
+                                                size:
+                                                  width: 100%
+                                                  height: auto
+                                                view:
+                                                  type: container
+                                                  items:
+                                                    - identifier: f0945ebe-b6cd-4c31-8c85-a050b968c094_linear_container
+                                                      margin:
+                                                        top: 0
+                                                        bottom: 0
+                                                        start: 0
+                                                        end: 0
+                                                      position:
+                                                        horizontal: center
+                                                        vertical: center
+                                                      size:
+                                                        width: 50%
+                                                        height: auto
+                                                      view:
+                                                        type: linear_layout
+                                                        direction: horizontal
+                                                        items:
+                                                          - identifier: fa654ee3-f4c4-40f4-b734-00280b03aa33
+                                                            size:
+                                                              width: 100%
+                                                              height: auto
+                                                            view:
+                                                              type: media
+                                                              identifier: my-video
+                                                              media_fit: center_inside
+                                                              url: https://hangar-dl.urbanairship.com/binary/public/VWDwdOFjRTKLRxCeXTVP6g/8ae8fe3a-380f-474b-9306-e7306b55b62c
+                                                              media_type: video
+                                                              video:
+                                                                aspect_ratio: 0.5625
+                                                                show_controls: false
+                                                                autoplay: true
+                                                                muted: true
+                                                                loop: false
+                                                            margin:
+                                                              top: 0
+                                                              bottom: 0
+                                                              start: 0
+                                                              end: 0
+                                                        background_color:
+                                                          default:
+                                                            type: hex
+                                                            hex: "#FFFFFF"
+                                                            alpha: 1
+                                                          selectors:
+                                                            - dark_mode: true
+                                                              color:
+                                                                type: hex
+                                                                hex: "#000000"
+                                                                alpha: 1
+                                                        border:
+                                                          radius: 0
+                                                margin:
+                                                  top: 20
+                                                  bottom: 0
+                                                  start: 0
+                                                  end: 0
+                                              - view:
+                                                  type: container
+                                                  items:
+                                                    - identifier: 6b3f58bd-9383-479a-a7ae-e234818f3292_container
+                                                      size:
+                                                        width: 100%
+                                                        height: auto
+                                                      view:
+                                                        type: label_button
+                                                        identifier: dismiss--Play/Pause
+                                                        reporting_metadata:
+                                                          trigger_link_id: 6b3f58bd-9383-479a-a7ae-e234818f3292
+                                                          button_id: 6b3f58bd-9383-479a-a7ae-e234818f3292
+                                                          button_action: video_toggle_play
+                                                        label:
+                                                          type: label
+                                                          text: Play/Pause
+                                                          content_description: Play/Pause
+                                                          text_appearance:
+                                                            font_size: 16
+                                                            color:
+                                                              default:
+                                                                type: hex
+                                                                hex: "#000000"
+                                                                alpha: 1
+                                                              selectors:
+                                                                - dark_mode: true
+                                                                  color:
+                                                                    type: hex
+                                                                    hex: "#FFFFFF"
+                                                                    alpha: 1
+                                                            alignment: center
+                                                            styles: []
+                                                            font_families:
+                                                              - sans-serif
+                                                        actions: {}
+                                                        enabled: []
+                                                        button_click:
+                                                          - video_toggle_play
+                                                        localized_content_description:
+                                                          fallback: Dismiss
+                                                          ref: ua_dismiss
+                                                        background_color:
+                                                          default:
+                                                            type: hex
+                                                            hex: "#63AFF1"
+                                                            alpha: 1
+                                                        border:
+                                                          radius: 0
+                                                          stroke_width: 16
+                                                          stroke_color:
+                                                            default:
+                                                              type: hex
+                                                              hex: "#63AFF1"
+                                                              alpha: 1
+                                                        content_description: Play/Pause
+                                                      position:
+                                                        horizontal: center
+                                                        vertical: bottom
+                                                identifier: 6b3f58bd-9383-479a-a7ae-e234818f3292_wrapper
+                                                size:
+                                                  width: 100%
+                                                  height: auto
+                                                margin:
+                                                  top: 8
+                                                  bottom: 8
+                                                  start: 16
+                                                  end: 16
+                                              - identifier: 9268c6a0-9075-45fb-81dc-66d2eb12048a
+                                                margin:
+                                                  top: 8
+                                                  bottom: 8
+                                                  start: 16
+                                                  end: 16
+                                                size:
+                                                  width: 100%
+                                                  height: auto
+                                                view:
+                                                  type: label_button
+                                                  identifier: dismiss--Mute
+                                                  reporting_metadata:
+                                                    trigger_link_id: 9268c6a0-9075-45fb-81dc-66d2eb12048a
+                                                    button_id: 9268c6a0-9075-45fb-81dc-66d2eb12048a
+                                                    button_action: dismiss
+                                                  label:
+                                                    type: label
+                                                    text: Mute / Unmute
+                                                    content_description: Mute
+                                                    text_appearance:
+                                                      font_size: 16
+                                                      color:
+                                                        default:
+                                                          type: hex
+                                                          hex: "#000000"
+                                                          alpha: 1
+                                                        selectors:
+                                                          - dark_mode: true
+                                                            color:
+                                                              type: hex
+                                                              hex: "#FFFFFF"
+                                                              alpha: 1
+                                                      alignment: center
+                                                      styles: []
+                                                      font_families:
+                                                        - sans-serif
+                                                  actions: {}
+                                                  enabled: []
+                                                  button_click:
+                                                    - video_toggle_mute
+                                                  localized_content_description:
+                                                    fallback: Dismiss
+                                                    ref: ua_dismiss
+                                                  background_color:
+                                                    default:
+                                                      type: hex
+                                                      hex: "#63AFF1"
+                                                      alpha: 1
+                                                  border:
+                                                    radius: 0
+                                                    stroke_width: 16
+                                                    stroke_color:
+                                                      default:
+                                                        type: hex
+                                                        hex: "#63AFF1"
+                                                        alpha: 1
+                                                  content_description: Mute
+                                              - identifier: 9075670d-835f-4118-9b0d-d654053f544e_linear_layout_item
+                                                size:
+                                                  width: 100%
+                                                  height: 100%
+                                                view:
+                                                  type: linear_layout
+                                                  direction: horizontal
+                                                  items: []
+                        background_color:
+                          default:
+                            type: hex
+                            hex: "#FFFFFF"
+                            alpha: 1
+                          selectors:
+                            - dark_mode: true
+                              color:
+                                type: hex
+                                hex: "#000000"
+                                alpha: 1
+                      state_actions:
+                        - type: set
+                          key: 39c0a0b1-0c3f-489a-81d0-caa9d6dbd9f3_next
+                ignore_safe_area: false
+              - position:
+                  horizontal: end
+                  vertical: top
+                size:
+                  width: 48
+                  height: 48
+                view:
+                  type: image_button
+                  image:
+                    scale: 0.4
+                    type: icon
+                    icon: close
+                    color:
+                      default:
+                        type: hex
+                        hex: "#000000"
+                        alpha: 1
+                      selectors:
+                        - dark_mode: true
+                          color:
+                            type: hex
+                            hex: "#FFFFFF"
+                            alpha: 1
+                  identifier: dismiss_button
+                  button_click:
+                    - dismiss
+                  localized_content_description:
+                    ref: ua_dismiss
+                    fallback: Dismiss
+                  reporting_metadata:
+                    button_id: dismiss_button
+                    button_action: dismiss

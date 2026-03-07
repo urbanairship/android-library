@@ -6,6 +6,7 @@ import com.urbanairship.android.layout.environment.LayoutState.StateMutation
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.StateControllerInfo
+import com.urbanairship.android.layout.info.StateControllerInfo.Companion.IDENTIFIER
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.model.PageRequest
 import com.urbanairship.android.layout.property.AttributeValue
@@ -43,6 +44,8 @@ internal class LayoutState(
     val radio: SharedState<State.Radio>?,
     val score: SharedState<State.Score>?,
     val layout: SharedState<State.Layout>,
+    val video: SharedState<State.Video>?,
+    val videoControl: VideoControlState?,
     val thomasState: StateFlow<ThomasState>,
     val thomasForm: ThomasForm?,
     val parentForm: ThomasForm?,
@@ -73,7 +76,9 @@ internal class LayoutState(
     companion object {
         val EMPTY = LayoutState(null, null, null,
             layout = SharedState(State.Layout.DEFAULT),
-            thomasState = makeThomasState(null, null, null),
+            video = null,
+            videoControl = null,
+            thomasState = makeThomasState(null, null, null, null),
             thomasForm = null,
             parentForm = null,
             pagerTracker = null,
@@ -142,6 +147,7 @@ internal class LayoutState(
         val value: JsonValue
     ): JsonSerializable {
 
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue = jsonMapOf(
             ID to id,
             KEY to key,
@@ -222,9 +228,7 @@ internal sealed class FormType(
 }
 
 internal sealed class State(val type: Type): JsonSerializable {
-    // TODO(stories): We may want to split that out into a separate
-    //   state flow to avoid a ton of extra updates to pager state?
-    //   Or, we could sprinkle some distinctUntilChanged() calls around and circle back.
+
     internal data class Pager(
         val identifier: String,
         val pageIndex: Int = 0,
@@ -325,6 +329,7 @@ internal sealed class State(val type: Type): JsonSerializable {
                 return pageIds[lastPageIndex]
             }
 
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
             IDENTIFIER to identifier,
@@ -540,6 +545,7 @@ internal sealed class State(val type: Type): JsonSerializable {
             val lastProcessStatus: ThomasFormFieldStatus<*>
         )
 
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
             IDENTIFIER to identifier,
@@ -603,6 +609,7 @@ internal sealed class State(val type: Type): JsonSerializable {
             val identifier: String?,
             val reportingValue: JsonValue
         ) : JsonSerializable {
+            @Throws(JsonException::class)
             override fun toJsonValue(): JsonValue = jsonMapOf(
                 IDENTIFIER to identifier,
                 REPORTING_VALUE to reportingValue
@@ -635,6 +642,7 @@ internal sealed class State(val type: Type): JsonSerializable {
             }
         }
 
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
             IDENTIFIER to identifier,
@@ -688,6 +696,7 @@ internal sealed class State(val type: Type): JsonSerializable {
             val attributeValue: AttributeValue?
         ) : JsonSerializable {
 
+            @Throws(JsonException::class)
             override fun toJsonValue(): JsonValue = jsonMapOf(
                 IDENTIFIER to identifier,
                 REPORTING_VALUE to reportingValue,
@@ -711,6 +720,7 @@ internal sealed class State(val type: Type): JsonSerializable {
             }
         }
 
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
             IDENTIFIER to identifier,
@@ -758,6 +768,7 @@ internal sealed class State(val type: Type): JsonSerializable {
             val attributeValue: AttributeValue?
         ): JsonSerializable {
 
+            @Throws(JsonException::class)
             override fun toJsonValue(): JsonValue = jsonMapOf(
                 IDENTIFIER to identifier,
                 REPORTING_VALUE to reportingValue,
@@ -781,6 +792,7 @@ internal sealed class State(val type: Type): JsonSerializable {
             }
         }
 
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
             IDENTIFIER to identifier,
@@ -814,6 +826,7 @@ internal sealed class State(val type: Type): JsonSerializable {
             mutations.mapValues { it.value.value }
         }
 
+        @Throws(JsonException::class)
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
             MUTATIONS to mutations,
@@ -852,13 +865,109 @@ internal sealed class State(val type: Type): JsonSerializable {
         }
     }
 
+    internal data class Video(
+        val identifier: String?,
+        val videos: Map<String, VideoMediaState> = emptyMap(),
+        val currentVideoId: String? = null,
+        val currentPlayGroup: String? = null,
+        val currentMuteGroup: String? = null,
+        val playGroupState: Map<String, Boolean> = emptyMap(),
+        val muteGroupState: Map<String, Boolean> = emptyMap()
+    ) : State(Type.VIDEO) {
+
+        @Throws(JsonException::class)
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            TYPE to type,
+            IDENTIFIER to identifier,
+            VIDEOS to videos,
+            CURRENT_VIDEO_ID to currentVideoId,
+            CURRENT_PLAY_GROUP to currentPlayGroup,
+            CURRENT_MUTE_GROUP to currentMuteGroup,
+            PLAY_GROUP_STATE to playGroupState,
+            MUTE_GROUP_STATE to muteGroupState
+        ).toJsonValue()
+
+        data class VideoMediaState(
+            val playing: Boolean = false,
+            val muted: Boolean = false
+        ) : JsonSerializable {
+
+            @Throws(JsonException::class)
+            override fun toJsonValue(): JsonValue = jsonMapOf(
+                PLAYING to playing,
+                MUTED to muted
+            ).toJsonValue()
+
+            companion object {
+                private const val PLAYING = "playing"
+                private const val MUTED = "muted"
+
+                @Throws(JsonException::class)
+                fun fromJson(json: JsonValue): VideoMediaState {
+                    val content = json.optMap()
+                    return VideoMediaState(
+                        playing = content.optionalField<Boolean>(PLAYING) ?: false,
+                        muted = content.optionalField<Boolean>(MUTED) ?: false
+                    )
+                }
+            }
+        }
+
+        val current: VideoMediaState?
+            get() = currentVideoId?.let { videos[it] }
+
+        companion object {
+            private const val IDENTIFIER = "identifier"
+            private const val VIDEOS = "videos"
+            private const val CURRENT_VIDEO_ID = "current_video_id"
+            private const val CURRENT_PLAY_GROUP = "current_play_group"
+            private const val CURRENT_MUTE_GROUP = "current_mute_group"
+            private const val PLAY_GROUP_STATE = "play_group_state"
+            private const val MUTE_GROUP_STATE = "mute_group_state"
+
+            @Throws(JsonException::class)
+            fun fromJson(json: JsonValue): Video {
+                val content = json.requireMap()
+
+                val videos: Map<String, VideoMediaState> = content
+                    .optionalMap(VIDEOS)
+                    ?.map
+                    ?.mapValues { VideoMediaState.fromJson(it.value) }
+                    ?: emptyMap()
+
+                val playGroupState: Map<String, Boolean> = content
+                    .optionalMap(PLAY_GROUP_STATE)
+                    ?.map
+                    ?.mapValues { it.value.getBoolean(false) }
+                    ?: emptyMap()
+
+                val muteGroupState: Map<String, Boolean> = content
+                    .optionalMap(MUTE_GROUP_STATE)
+                    ?.map
+                    ?.mapValues { it.value.getBoolean(false) }
+                    ?: emptyMap()
+
+                return Video(
+                    identifier = content.optionalField(IDENTIFIER),
+                    videos = videos,
+                    currentVideoId = content.optionalField(CURRENT_VIDEO_ID),
+                    currentPlayGroup = content.optionalField(CURRENT_PLAY_GROUP),
+                    currentMuteGroup = content.optionalField(CURRENT_MUTE_GROUP),
+                    playGroupState = playGroupState,
+                    muteGroupState = muteGroupState
+                )
+            }
+        }
+    }
+
     enum class Type(private val jsonValue: String): JsonSerializable {
         PAGER("pager"),
         FORM("form"),
         CHECKBOX("checkbox"),
         RADIO("radio"),
         SCORE("score"),
-        LAYOUT("layout");
+        LAYOUT("layout"),
+        VIDEO("video");
 
         override fun toJsonValue(): JsonValue = JsonValue.wrap(jsonValue)
 
@@ -886,6 +995,7 @@ internal sealed class State(val type: Type): JsonSerializable {
                 Type.RADIO -> Radio.fromJson(json)
                 Type.SCORE -> Score.fromJson(json)
                 Type.LAYOUT -> Layout.fromJson(json)
+                Type.VIDEO -> Video.fromJson(json)
             }
         }
     }

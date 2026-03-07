@@ -98,6 +98,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         onViewCreated(view)
 
         updateBackground()
+
         view.addOnAttachStateChangeListener(object : OnAttachStateChangeListener {
             override fun onViewAttachedToWindow(v: AndroidView) {
                 setupViewListeners(view)

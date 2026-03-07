@@ -20,6 +20,7 @@ import androidx.core.view.doOnAttach
 import androidx.core.view.isVisible
 import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ItemProperties
@@ -75,6 +76,36 @@ internal class MediaView(
             model.pagerState?.update { state ->
                 state.copyWithMediaPaused(false)
             }
+            val videoId = model.videoId ?: return
+            val myState = model.videoState?.changes?.value?.videos?.get(videoId)
+            if (myState != null) {
+                if (myState.playing) model.listener?.onResume() else model.listener?.onPause()
+                if (myState.muted) model.listener?.onMute() else model.listener?.onUnmute()
+            }
+        }
+        fun onVideoPlay() {
+            val videoId =  model.videoId ?: return
+            val myState = model.videoState?.changes?.value?.videos?.get(videoId)
+            if (myState?.playing == false) {
+                // State says paused but browser auto-started — correct the browser
+                model.listener?.onPause()
+            }
+        }
+
+        fun onVideoEnded() {
+            val videoId = model.videoId ?: return
+            model.videoState?.update { state ->
+                val current = state.videos[videoId] ?: return@update state
+                state.copy(videos = state.videos + (videoId to current.copy(playing = false)))
+            }
+        }
+
+        fun onVisibilityVisible() {
+            val videoId = model.videoId ?: return
+            val myState = model.videoState?.changes?.value?.videos?.get(videoId)
+            if (myState?.playing == true) {
+                model.listener?.onResume()
+            }
         }
     }
 
@@ -103,7 +134,6 @@ internal class MediaView(
             }
         }
 
-
         model.listener = object : MediaModel.Listener {
             // Use javascript to pause/resume the videos instead of webView.onPause()/onResume()
             // because the WebView triggers an unwanted visibilitychange event.
@@ -120,15 +150,33 @@ internal class MediaView(
             // Use javascript to pause/resume the videos instead of webView.onPause()/onResume()
             // because the WebView triggers an unwanted visibilitychange event.
             override fun onResume() {
-                if (model.viewInfo.video?.autoplay == true) {
-                    val script = when (model.viewInfo.mediaType) {
-                        MediaType.VIDEO -> "videoElement.play();"
-                        MediaType.YOUTUBE -> "player.playVideo();"
-                        MediaType.VIMEO -> "vimeoPlayer.play();"
-                        else -> null
-                    }
-                    script?.let { webView?.evaluateJavascript(it, null) }
+                val script = when (model.viewInfo.mediaType) {
+                    MediaType.VIDEO -> "videoElement.play();"
+                    MediaType.YOUTUBE -> "player.playVideo();"
+                    MediaType.VIMEO -> "vimeoPlayer.play();"
+                    else -> null
                 }
+                script?.let { webView?.evaluateJavascript(it, null) }
+            }
+
+            override fun onMute() {
+                val script = when (model.viewInfo.mediaType) {
+                    MediaType.VIDEO -> "videoElement.muted = true;"
+                    MediaType.YOUTUBE -> "player.mute();"
+                    MediaType.VIMEO -> "vimeoPlayer.setVolume(0);"
+                    else -> null
+                }
+                script?.let { webView?.evaluateJavascript(it, null) }
+            }
+
+            override fun onUnmute() {
+                val script = when (model.viewInfo.mediaType) {
+                    MediaType.VIDEO -> "videoElement.muted = false;"
+                    MediaType.YOUTUBE -> "player.unMute();"
+                    MediaType.VIMEO -> "vimeoPlayer.setVolume(1);"
+                    else -> null
+                }
+                script?.let { webView?.evaluateJavascript(it, null) }
             }
 
             override fun setVisibility(visible: Boolean) {
@@ -351,16 +399,33 @@ internal class MediaView(
                 when (model.viewInfo.mediaType) {
                     MediaType.VIDEO -> {
                         val video = model.viewInfo.video ?: Video.defaultVideo()
+                        val videoId = model.videoId
+                        val videoSnapshot = model.videoState?.changes?.value
+                        val currentVideoState = if (videoId != null) {
+                            videoSnapshot?.videos?.get(videoId)
+                                ?: model.groupPlaying?.let { playing ->
+                                    State.Video.VideoMediaState(
+                                        playing = playing,
+                                        muted = model.groupMuted ?: video.muted
+                                    )
+                                }
+                        } else {
+                            null
+                        }
+
+                        val autoplay = currentVideoState?.playing ?: video.autoplay
+                        val muted = currentVideoState?.muted ?: video.muted
+
                         weakWebView.loadData(
                             String.format(
                                 VIDEO_HTML_FORMAT,
                                 if (video.showControls) "controls" else "",
-                                if (video.autoplay) "autoplay" else "",
-                                if (video.muted) "muted" else "",
+                                if (autoplay) "autoplay" else "",
+                                if (muted) "muted" else "",
                                 if (video.loop) "loop" else "",
                                 model.viewInfo.url,
                                 model.videoStyle,
-                                if (video.autoplay) VIDEO_AUTO_PLAYING_JS_CODE else ""
+                                if (autoplay) VIDEO_AUTO_PLAYING_JS_CODE else ""
                             ),
                             "text/html",
                             "UTF-8"
@@ -373,6 +438,8 @@ internal class MediaView(
                     )
                     MediaType.YOUTUBE -> {
                         val video = model.viewInfo.video ?: Video.defaultVideo()
+                        val autoplay = model.groupPlaying ?: video.autoplay
+                        val muted = model.groupMuted ?: video.muted
                         val videoId = YOUTUBE_ID_RE.find(model.viewInfo.url)?.groupValues?.get(1)
                         videoId?.let {
                             weakWebView.loadDataWithBaseURL(
@@ -380,8 +447,8 @@ internal class MediaView(
                                 String.format(YOUTUBE_HTML_FORMAT,
                                     it,
                                     if (video.showControls) "1" else "0",
-                                    if (video.autoplay) "1" else "0",
-                                    if (video.muted) "1" else "0",
+                                    if (autoplay) "1" else "0",
+                                    if (muted) "1" else "0",
                                     if (video.loop) {
                                         // The YT IFrame API has limited support for looping and requires
                                         // the VIDEO_ID to be passed as the playlist parameter.
@@ -389,8 +456,7 @@ internal class MediaView(
                                     } else {
                                         "0"
                                     },
-                                    // Sets the onPlayerReady function to autoplay the video
-                                    if (video.autoplay) YOUTUBE_AUTO_PLAYING_JS_CODE else ""
+                                    if (autoplay) YOUTUBE_AUTO_PLAYING_JS_CODE else ""
                                 ),
                                 "text/html",
                                 "UTF-8",
@@ -402,12 +468,12 @@ internal class MediaView(
                     }
                     MediaType.VIMEO -> {
                         val video = model.viewInfo.video ?: Video.defaultVideo()
+                        val autoplay = model.groupPlaying ?: video.autoplay
                         weakWebView.loadData(
                             String.format(
                                 VIMEO_HTML_FORMAT,
                                 model.viewInfo.url,
-                                // Sets the onPlayerReady function to autoplay the video
-                                if (video.autoplay) VIMEO_AUTO_PLAYING_JS_CODE else ""
+                                if (autoplay) VIMEO_AUTO_PLAYING_JS_CODE else ""
                             ), "text/html", "UTF-8"
                         )
                     }
@@ -551,16 +617,24 @@ internal class MediaView(
                     let videoElement = document.getElementById("video");
 
                     document.addEventListener("visibilitychange", () => {
-                      if (document.visibilityState === "visible") {
-                        // Autoplaying code placeholder
-                        %s
-                      } else {
-                        videoElement.pause();
-                      }
+                        if (document.visibilityState === "visible") {
+                            VideoListenerInterface.onVisibilityVisible();
+                        } else {
+                            videoElement.pause();
+                        }
                     });
 
                     videoElement.addEventListener("canplay", (event) => {
                       VideoListenerInterface.onVideoReady();
+                    });
+                    videoElement.addEventListener("play", () => {
+                        VideoListenerInterface.onVideoPlay();
+                    });
+                    videoElement.addEventListener("pause", () => {
+                        VideoListenerInterface.onVideoPause();
+                    });
+                    videoElement.addEventListener("ended", () => {
+                        VideoListenerInterface.onVideoEnded();
                     });
                 </script>
             </body>

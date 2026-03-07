@@ -17,7 +17,8 @@ import kotlinx.coroutines.flow.asStateFlow
 internal data class ThomasState(
     val layout: State.Layout?,
     val form: State.Form?,
-    val pager: State.Pager?
+    val pager: State.Pager?,
+    val video: State.Video?
 ): JsonSerializable {
 
     override fun toJsonValue(): JsonValue {
@@ -57,6 +58,13 @@ internal data class ThomasState(
                         )
                     ).toJsonValue())
                 }
+
+                video?.let { video ->
+                    val state = video.current
+                    put(VIDEO, jsonMapOf(
+                        CURRENT to state
+                    ).toJsonValue())
+                }
             }
             .toJsonMap()
             .toJsonValue()
@@ -89,22 +97,25 @@ internal data class ThomasState(
         const val TYPE = "type"
         const val PAGER = "\$pagers"
         const val PAUSED = "paused"
+        const val VIDEO = "\$video"
     }
 }
 
 internal fun makeThomasState(
     formState: SharedState<State.Form>?,
     layoutState: SharedState<State.Layout>?,
-    pagerState: SharedState<State.Pager>?
+    pagerState: SharedState<State.Pager>?,
+    videoState: SharedState<State.Video>?
 ): StateFlow<ThomasState> {
 
     val layout = layoutState
-        ?: return MutableStateFlow(ThomasState(null, null, null)).asStateFlow()
+        ?: return MutableStateFlow(ThomasState(null, null, null, null)).asStateFlow()
 
     return combineStates(
         flow1 = layout.changes,
-        flow2 = formState?.changes ?:MutableStateFlow(null).asStateFlow(),
-        flow3 = pagerState?.changes ?:MutableStateFlow(null).asStateFlow(),
+        flow2 = formState?.changes ?: MutableStateFlow(null).asStateFlow(),
+        flow3 = pagerState?.changes ?: MutableStateFlow(null).asStateFlow(),
+        flow4 = videoState?.changes ?: MutableStateFlow(null).asStateFlow(),
         transform = ::ThomasState
     )
 }

@@ -67,3 +67,17 @@ public fun <T1, T2, T3, TR> combineStates(
         updates = combine(flow1, flow2, flow3, transform)
     )
 }
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public fun <T1, T2, T3, T4, TR> combineStates(
+    flow1: StateFlow<T1>,
+    flow2: StateFlow<T2>,
+    flow3: StateFlow<T3>,
+    flow4: StateFlow<T4>,
+    transform: (t1: T1, t2: T2, t3: T3, t4: T4) -> TR
+): StateFlow<TR> {
+    return DerivedStateFlow(
+        onValue = { transform(flow1.value, flow2.value, flow3.value, flow4.value) },
+        updates = combine(flow1, flow2, flow3, flow4, transform)
+    )
+}

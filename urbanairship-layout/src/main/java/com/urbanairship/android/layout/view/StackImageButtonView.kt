@@ -11,7 +11,6 @@ import android.widget.ImageButton
 import android.widget.ImageView.ScaleType.FIT_CENTER
 import androidx.core.content.ContextCompat
 import androidx.core.view.doOnAttach
-import androidx.core.view.forEach
 import androidx.core.view.isVisible
 import com.urbanairship.Airship
 import com.urbanairship.UALog
@@ -55,20 +54,9 @@ internal class StackImageButtonView(
     private var lastState: StackImageButtonModel.ResolvedState? = null
 
     private val button: CropImageButton by lazy { makeImageButton(model) }
-    private var children = ArrayList<View>()
 
     init {
-        model.viewInfo.items.forEach { item ->
-            when (item) {
-                is StackItemInfo.ShapeItem -> background = buildLayerDrawable(context, item.shape)
-                is StackItemInfo.IconItem -> {
-                    createOrUpdateIcon(item.icon as Image.Icon)
-                }
-                is StackItemInfo.ImageItem -> {
-                    createOrUpdateImage(item)
-                }
-            }
-        }
+        renderItems(model.viewInfo.items)
 
         val baseBackground = this.background
         model.listener = object : ButtonModel.Listener {
@@ -128,25 +116,26 @@ internal class StackImageButtonView(
         val resolvedState = model.resolveState(context, state)
         if (resolvedState == this.lastState) {
             return
-        } else {
-            resolvedState.items?.forEach {
-                when (it) {
-                    is StackItemInfo.ShapeItem -> background = buildLayerDrawable(context, it.shape)
-                    is StackItemInfo.IconItem -> {
-                        createOrUpdateIcon(it.icon as Image.Icon)
-                    }
-                    is StackItemInfo.ImageItem -> createOrUpdateImage(it)
-                }
-            }
+        }
 
-            // Update content description based on resolved state
-            val newContentDescription = model.resolveContentDescription(context, state)
-            if (newContentDescription != button.contentDescription) {
-                button.contentDescription = newContentDescription
-            }
+        resolvedState.items?.let { renderItems(it) }
+
+        val newContentDescription = model.resolveContentDescription(context, state)
+        if (newContentDescription != button.contentDescription) {
+            button.contentDescription = newContentDescription
         }
 
         this.lastState = resolvedState
+    }
+
+    private fun renderItems(items: List<StackItemInfo>) {
+        items.forEach { item ->
+            when (item) {
+                is StackItemInfo.ShapeItem -> background = buildLayerDrawable(context, item.shape)
+                is StackItemInfo.IconItem -> createOrUpdateIcon(item.icon as Image.Icon)
+                is StackItemInfo.ImageItem -> createOrUpdateImage(item)
+            }
+        }
     }
 
     private fun createOrUpdateIcon(icon: Image.Icon) {
@@ -157,12 +146,9 @@ internal class StackImageButtonView(
                 LayoutUtils.pressedColorStateList(icon.tint.resolve(context))
         }
         applyIconRippleEffect(button, model.viewInfo.tapEffect)
-        if (children.isNotEmpty()) {
-            children.removeAll(children)
-            removeView(button)
+        if (button.parent == null) {
+            addView(button)
         }
-        children.add(button)
-        addView(button)
     }
 
     private fun createOrUpdateImage(item: StackItemInfo.ImageItem) {
@@ -181,12 +167,9 @@ internal class StackImageButtonView(
 
             applyImageRippleEffect(button, model.viewInfo.tapEffect, model.viewInfo.border?.radii { dpToPx(context, it) })
 
-            if (children.isNotEmpty()) {
-                children.removeAll(children)
-                removeView(button)
+            if (button.parent == null) {
+                addView(button)
             }
-            children.add(button)
-            addView(button)
 
             var isLoaded = false
 

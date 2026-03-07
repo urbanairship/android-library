@@ -129,4 +129,97 @@ public class LayoutStateTest{
 
         assertEquals(formState, fromJson)
     }
+
+    @Test
+    fun testVideoMediaStateJsonSerialization() {
+        val mediaState = State.Video.VideoMediaState(
+            playing = true,
+            muted = false
+        )
+
+        val json = mediaState.toJsonValue().toString()
+        val fromJson = State.Video.VideoMediaState.fromJson(JsonValue.parseString(json))
+
+        assertEquals(mediaState, fromJson)
+    }
+
+    @Test
+    fun testVideoMediaStateDefaultsJsonSerialization() {
+        val mediaState = State.Video.VideoMediaState()
+
+        val json = mediaState.toJsonValue().toString()
+        val fromJson = State.Video.VideoMediaState.fromJson(JsonValue.parseString(json))
+
+        assertEquals(mediaState, fromJson)
+        assertEquals(false, fromJson.playing)
+        assertEquals(false, fromJson.muted)
+    }
+
+    @Test
+    fun testVideoMediaStateFromEmptyJson() {
+        val fromJson = State.Video.VideoMediaState.fromJson(JsonValue.wrap("{}"))
+
+        assertEquals(false, fromJson.playing)
+        assertEquals(false, fromJson.muted)
+    }
+
+    @Test
+    fun testVideoStateJsonSerialization() {
+        val videoState = State.Video(
+            identifier = "videoControllerId",
+            videos = mapOf(
+                "video1" to State.Video.VideoMediaState(playing = true, muted = false),
+                "video2" to State.Video.VideoMediaState(playing = false, muted = true)
+            ),
+            currentVideoId = "video1"
+        )
+
+        val json = videoState.toJsonValue().toString()
+        val fromJson = State.Video.fromJson(JsonValue.parseString(json))
+
+        assertEquals(videoState, fromJson)
+    }
+
+    @Test
+    fun testVideoStateEmptyVideosJsonSerialization() {
+        val videoState = State.Video(
+            identifier = null,
+            videos = emptyMap(),
+            currentVideoId = null
+        )
+
+        val json = videoState.toJsonValue().toString()
+        val fromJson = State.Video.fromJson(JsonValue.parseString(json))
+
+        assertEquals(videoState, fromJson)
+    }
+
+    @Test
+    fun testVideoStateCurrentReturnsCorrectVideo() {
+        val videoState = State.Video(
+            identifier = "controllerId",
+            videos = mapOf(
+                "video1" to State.Video.VideoMediaState(playing = true, muted = false),
+                "video2" to State.Video.VideoMediaState(playing = false, muted = true)
+            ),
+            currentVideoId = "video2"
+        )
+
+        val current = videoState.current
+
+        assertEquals(State.Video.VideoMediaState(playing = false, muted = true), current)
+    }
+
+    @Test
+    fun testVideoStateCurrentReturnsNullWhenNoCurrentId() {
+        val videoState = State.Video(
+            identifier = "controllerId",
+            videos = mapOf(
+                "video1" to State.Video.VideoMediaState(playing = true, muted = false)
+            ),
+            currentVideoId = null
+        )
+
+        assertEquals(null, videoState.current)
+    }
 }

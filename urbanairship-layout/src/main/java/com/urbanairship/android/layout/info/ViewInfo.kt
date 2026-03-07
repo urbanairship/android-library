@@ -68,6 +68,7 @@ import com.urbanairship.android.layout.property.ViewType.STORY_INDICATOR
 import com.urbanairship.android.layout.property.ViewType.TEXT_INPUT
 import com.urbanairship.android.layout.property.ViewType.TOGGLE
 import com.urbanairship.android.layout.property.ViewType.UNKNOWN
+import com.urbanairship.android.layout.property.ViewType.VIDEO_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.WEB_VIEW
 import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.shape.Shape
@@ -129,6 +130,7 @@ public sealed class ViewInfo : View {
                 SCORE_CONTROLLER -> ScoreControllerInfo(json)
                 SCORE_TOGGLE_LAYOUT -> ScoreToggleLayoutInfo(json)
                 STACK_IMAGE_BUTTON -> StackImageButtonInfo(json)
+                VIDEO_CONTROLLER -> VideoControllerInfo(json)
                 UNKNOWN -> throw JsonException("Unknown view type! '${json.requireField<String>("type")}'")
             }
         }
@@ -537,7 +539,7 @@ internal class EmptyInfo(json: JsonMap) : ViewInfo(), View by view(json)
 
 internal class MediaInfo(
     json: JsonMap
-) : ViewInfo(), View by view(json), Accessible by accessible(json) {
+) : ViewInfo(), View by view(json), Accessible by accessible(json), RecentlyIdentifiable by recentlyIdentifiable(json) {
     val url: String = json.requireField("url")
     val mediaType: MediaType = MediaType.from(json.require("media_type"))
     val mediaFit: MediaFit = MediaFit.from(json.requireField("media_fit"))
@@ -1118,4 +1120,15 @@ internal class ScoreControllerInfo(
     val attributeName: AttributeName? = AttributeName.attributeNameFromJson(json)
 
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
+}
+
+internal class VideoControllerInfo(
+    json: JsonMap
+) : ViewGroupInfo<ViewItemInfo>(), Controller by controller(json) {
+    override val view: ViewInfo = viewInfoFromJson(json.requireField("view"))
+    override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
+
+    val videoScope: List<String>? = json.optionalList("video_scope")?.map { it.optString() }
+    val muteGroup: String? = json.optionalMap("mute_group")?.optionalField("identifier")
+    val playGroup: String? = json.optionalMap("play_group")?.optionalField("identifier")
 }

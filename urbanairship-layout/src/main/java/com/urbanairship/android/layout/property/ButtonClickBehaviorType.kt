@@ -20,6 +20,12 @@ internal enum class ButtonClickBehaviorType(
     PAGER_PAUSE("pager_pause"),
     PAGER_RESUME("pager_resume"),
     PAGER_PAUSE_TOGGLE("pager_toggle_pause"),
+    VIDEO_PLAY("video_play"),
+    VIDEO_PAUSE("video_pause"),
+    VIDEO_TOGGLE_PLAY("video_toggle_play"),
+    VIDEO_MUTE("video_mute"),
+    VIDEO_UNMUTE("video_unmute"),
+    VIDEO_TOGGLE_MUTE("video_toggle_mute"),
     DISMISS("dismiss"),
     CANCEL("cancel");
 
@@ -99,3 +105,33 @@ internal fun List<ButtonClickBehaviorType>.firstPagerNextOrNull(): ButtonClickBe
 
 internal val List<ButtonClickBehaviorType>.hasPagerPauseToggle: Boolean
     get() = contains(ButtonClickBehaviorType.PAGER_PAUSE_TOGGLE)
+
+private val videoBehaviors = listOf(
+    ButtonClickBehaviorType.VIDEO_PLAY,
+    ButtonClickBehaviorType.VIDEO_PAUSE,
+    ButtonClickBehaviorType.VIDEO_TOGGLE_PLAY,
+    ButtonClickBehaviorType.VIDEO_MUTE,
+    ButtonClickBehaviorType.VIDEO_UNMUTE,
+    ButtonClickBehaviorType.VIDEO_TOGGLE_MUTE
+)
+
+internal val List<ButtonClickBehaviorType>.hasVideoBehaviors: Boolean
+    get() = any { videoBehaviors.contains(it) }
+
+internal val List<ButtonClickBehaviorType>.hasVideoPlay: Boolean
+    get() = contains(ButtonClickBehaviorType.VIDEO_PLAY)
+
+internal val List<ButtonClickBehaviorType>.hasVideoPause: Boolean
+    get() = contains(ButtonClickBehaviorType.VIDEO_PAUSE)
+
+internal val List<ButtonClickBehaviorType>.hasVideoPlayToggle: Boolean
+    get() = contains(ButtonClickBehaviorType.VIDEO_TOGGLE_PLAY)
+
+internal val List<ButtonClickBehaviorType>.hasVideoMute: Boolean
+    get() = contains(ButtonClickBehaviorType.VIDEO_MUTE)
+
+internal val List<ButtonClickBehaviorType>.hasVideoUnmute: Boolean
+    get() = contains(ButtonClickBehaviorType.VIDEO_UNMUTE)
+
+internal val List<ButtonClickBehaviorType>.hasVideoMuteToggle: Boolean
+    get() = contains(ButtonClickBehaviorType.VIDEO_TOGGLE_MUTE)

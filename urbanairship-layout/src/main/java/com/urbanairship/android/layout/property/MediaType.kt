@@ -5,12 +5,13 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 
 public enum class MediaType(
-    private val value: String
+    private val value: String,
+    public val isPlayable: Boolean
 ) {
-    IMAGE("image"),
-    VIDEO("video"),
-    YOUTUBE("youtube"),
-    VIMEO("vimeo");
+    IMAGE("image", isPlayable = false),
+    VIDEO("video", isPlayable = true),
+    YOUTUBE("youtube", isPlayable = true),
+    VIMEO("vimeo", isPlayable = true);
 
     override fun toString(): String {
         return name.lowercase()

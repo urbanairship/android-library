@@ -12,9 +12,11 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.VideoCommand
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.event.ReportingEvent.ButtonTap
 import com.urbanairship.android.layout.info.Button
+import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasCancel
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
@@ -24,6 +26,13 @@ import com.urbanairship.android.layout.property.hasPagerNext
 import com.urbanairship.android.layout.property.hasPagerPauseToggle
 import com.urbanairship.android.layout.property.hasPagerPrevious
 import com.urbanairship.android.layout.property.hasTapHandler
+import com.urbanairship.android.layout.property.hasVideoMute
+import com.urbanairship.android.layout.property.hasVideoMuteToggle
+import com.urbanairship.android.layout.property.hasVideoPause
+import com.urbanairship.android.layout.property.hasVideoPlay
+import com.urbanairship.android.layout.property.hasVideoPlayToggle
+import com.urbanairship.android.layout.property.hasVideoBehaviors
+import com.urbanairship.android.layout.property.hasVideoUnmute
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -120,7 +129,7 @@ internal abstract class ButtonModel<T, I: Button>(
             handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
         } else {
             // No FORM_SUBMIT, CANCEL, or DISMISS, so we only need to
-            // handle pager behaviors.
+            // handle pager behaviors, etc.
             if (viewInfo.clickBehaviors.hasPagerNext) {
                 handlePagerNext()
             }
@@ -129,6 +138,10 @@ internal abstract class ButtonModel<T, I: Button>(
             }
             if (viewInfo.clickBehaviors.hasPagerPauseToggle) {
                 handlePagerPauseToggle()
+            }
+            // Handle video controls if present.
+            if (viewInfo.clickBehaviors.hasVideoBehaviors) {
+                handleVideoControls(viewInfo.clickBehaviors)
             }
         }
     }
@@ -205,5 +218,29 @@ internal abstract class ButtonModel<T, I: Button>(
         )
 
         broadcast(LayoutEvent.Finish()).join()
+    }
+
+
+    private fun handleVideoControls(behaviors: List<ButtonClickBehaviorType>) {
+        val channel = layoutState.videoControl?.commandChannel ?: return
+
+        if (behaviors.hasVideoPlay) {
+            channel.send(VideoCommand.Play)
+        }
+        if (behaviors.hasVideoPause) {
+            channel.send(VideoCommand.Pause)
+        }
+        if (behaviors.hasVideoPlayToggle) {
+            channel.send(VideoCommand.TogglePlay)
+        }
+        if (behaviors.hasVideoMute) {
+            channel.send(VideoCommand.Mute)
+        }
+        if (behaviors.hasVideoUnmute) {
+            channel.send(VideoCommand.Unmute)
+        }
+        if (behaviors.hasVideoMuteToggle) {
+            channel.send(VideoCommand.ToggleMute)
+        }
     }
 }
