@@ -3,7 +3,7 @@
 package com.urbanairship.messagecenter
 
 /** Inbox listener. */
-public interface InboxListener {
+public fun interface InboxListener {
 
     /** Called when the inbox is updated. */
     public fun onInboxUpdated()

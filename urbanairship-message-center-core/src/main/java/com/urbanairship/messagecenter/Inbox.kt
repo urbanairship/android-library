@@ -303,7 +303,7 @@ public class Inbox @VisibleForTesting internal constructor(
 
             if (isActive) {
                 expiryRefresh.update { UUID.randomUUID().toString() }
-                refreshResults.tryEmit(RefreshResult.LOCAL)
+                refreshResults.emit(RefreshResult.LOCAL)
             }
         }
     }
@@ -658,7 +658,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun markMessagesRead(messageIds: Set<String>) {
         scope.launch {
             messageDao.markMessagesRead(messageIds)
-            refreshResults.tryEmit(RefreshResult.LOCAL)
+            refreshResults.emit(RefreshResult.LOCAL)
         }
     }
 
@@ -670,7 +670,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun markMessagesRead(vararg messageIds: String) {
         scope.launch {
             messageDao.markMessagesRead(messageIds.toSet())
-            refreshResults.tryEmit(RefreshResult.LOCAL)
+            refreshResults.emit(RefreshResult.LOCAL)
         }
     }
 
@@ -682,7 +682,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun markMessagesUnread(messageIds: Set<String>) {
         scope.launch {
             messageDao.markMessagesUnread(messageIds)
-            refreshResults.tryEmit(RefreshResult.LOCAL)
+            refreshResults.emit(RefreshResult.LOCAL)
         }
     }
 
@@ -694,7 +694,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun markMessagesUnread(vararg messageIds: String) {
         scope.launch {
             messageDao.markMessagesUnread(messageIds.toSet())
-            refreshResults.tryEmit(RefreshResult.LOCAL)
+            refreshResults.emit(RefreshResult.LOCAL)
         }
     }
 
@@ -709,7 +709,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun deleteMessages(messageIds: Set<String>) {
         scope.launch {
             messageDao.markMessagesDeleted(messageIds)
-            refreshResults.tryEmit(RefreshResult.LOCAL)
+            refreshResults.emit(RefreshResult.LOCAL)
         }
     }
 
@@ -724,7 +724,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun deleteMessages(vararg messageIds: String) {
         scope.launch {
             messageDao.markMessagesDeleted(messageIds.toSet())
-            refreshResults.tryEmit(RefreshResult.LOCAL)
+            refreshResults.emit(RefreshResult.LOCAL)
         }
     }
 
@@ -737,7 +737,7 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun deleteAllMessages() {
         scope.launch {
             messageDao.markAllMessagesDeleted()
-            refreshResults.tryEmit(RefreshResult.LOCAL)
+            refreshResults.emit(RefreshResult.LOCAL)
         }
     }
 
@@ -749,7 +749,7 @@ public class Inbox @VisibleForTesting internal constructor(
     private fun deleteAllMessagesInternal() {
         scope.launch {
             messageDao.deleteAllMessages()
-            refreshResults.tryEmit(RefreshResult.LOCAL)
+            refreshResults.emit(RefreshResult.LOCAL)
         }
     }
 
