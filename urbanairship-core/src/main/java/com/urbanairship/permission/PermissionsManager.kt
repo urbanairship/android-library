@@ -32,7 +32,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -98,13 +97,15 @@ public class PermissionsManager internal constructor(
 
     @MainThread
     private suspend fun updatePermissionStatus(permission: Permission, status: PermissionStatus) {
-        permissionStatusMap.update {
+        val previous = permissionStatusMap.getAndUpdate {
             it
                 .toMutableMap()
                 .apply { put(permission, status) }
         }
 
-        permissionsUpdatesFlow.emit(permission to status)
+        if (previous[permission] != status) {
+            permissionsUpdatesFlow.emit(permission to status)
+        }
     }
 
     /**

@@ -552,6 +552,82 @@ public class PermissionsManagerTest {
         }
     }
 
+    @Test
+    public fun testNoSpamListenerOnResumeWithMultiplePermissions(): TestResult = runTest {
+        val locationDelegate: PermissionDelegate = mockk {
+            every { checkPermissionStatus(any(), any()) } answers {
+                secondArg<Consumer<PermissionStatus>>().accept(PermissionStatus.GRANTED)
+            }
+            every { requestPermission(any(), any()) } answers {
+                secondArg<Consumer<PermissionRequestResult>>().accept(PermissionRequestResult.granted())
+            }
+        }
+
+        val notificationsDelegate: PermissionDelegate = mockk {
+            every { checkPermissionStatus(any(), any()) } answers {
+                secondArg<Consumer<PermissionStatus>>().accept(PermissionStatus.DENIED)
+            }
+            every { requestPermission(any(), any()) } answers {
+                secondArg<Consumer<PermissionRequestResult>>().accept(PermissionRequestResult.denied(false))
+            }
+        }
+
+        permissionsManager.setPermissionDelegate(LOCATION, locationDelegate)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, notificationsDelegate)
+        advanceUntilIdle()
+
+        permissionsManager.addOnPermissionStatusChangedListener(mockStatusListener)
+        clearInvocations(mockStatusListener)
+
+        activityMonitor.resumeActivity(Activity())
+        advanceUntilIdle()
+
+        verify(exactly = 0) {
+            mockStatusListener.onPermissionStatusChanged(any(), any())
+        }
+    }
+
+    @Test
+    public fun testListenerOnlyNotifiedForChangedPermission(): TestResult = runTest {
+        var locationStatus = PermissionStatus.GRANTED
+        val locationDelegate: PermissionDelegate = mockk {
+            every { checkPermissionStatus(any(), any()) } answers {
+                secondArg<Consumer<PermissionStatus>>().accept(locationStatus)
+            }
+            every { requestPermission(any(), any()) } answers {
+                secondArg<Consumer<PermissionRequestResult>>().accept(PermissionRequestResult.granted())
+            }
+        }
+
+        val notificationsDelegate: PermissionDelegate = mockk {
+            every { checkPermissionStatus(any(), any()) } answers {
+                secondArg<Consumer<PermissionStatus>>().accept(PermissionStatus.DENIED)
+            }
+            every { requestPermission(any(), any()) } answers {
+                secondArg<Consumer<PermissionRequestResult>>().accept(PermissionRequestResult.denied(false))
+            }
+        }
+
+        permissionsManager.setPermissionDelegate(LOCATION, locationDelegate)
+        permissionsManager.setPermissionDelegate(DISPLAY_NOTIFICATIONS, notificationsDelegate)
+        advanceUntilIdle()
+
+        permissionsManager.addOnPermissionStatusChangedListener(mockStatusListener)
+        clearInvocations(mockStatusListener)
+
+        locationStatus = PermissionStatus.DENIED
+        activityMonitor.resumeActivity(Activity())
+        advanceUntilIdle()
+
+        verify(exactly = 1) {
+            mockStatusListener.onPermissionStatusChanged(LOCATION, PermissionStatus.DENIED)
+        }
+
+        verify(exactly = 0) {
+            mockStatusListener.onPermissionStatusChanged(DISPLAY_NOTIFICATIONS, any())
+        }
+    }
+
     /**
      * Test that the permissions manager can handle a broken
      * delegate that calls the callbacks multiple times
