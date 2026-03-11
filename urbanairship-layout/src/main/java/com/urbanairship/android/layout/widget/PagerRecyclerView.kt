@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.PagerModel
-import com.urbanairship.android.layout.util.isLayoutRtl
 import com.urbanairship.android.layout.view.PagerView
 import kotlin.math.abs
 
@@ -59,7 +58,7 @@ internal class PagerRecyclerView(
         setAdapter(adapter)
 
         // Pass along any calls to apply insets to the view.
-        ViewCompat.setOnApplyWindowInsetsListener(this) { v: View, insets: WindowInsetsCompat ->
+        ViewCompat.setOnApplyWindowInsetsListener(this) { _: View, insets: WindowInsetsCompat ->
             for (index in 0..<childCount) {
                 ViewCompat.dispatchApplyWindowInsets(getChildAt(index), insets)
             }
@@ -75,7 +74,7 @@ internal class PagerRecyclerView(
         return snapHelper
             .findSnapView(layoutManager)
             ?.let(::getChildAdapterPosition)
-            ?: 0
+            ?: NO_POSITION
     }
 
     fun scrollTo(position: Int) {
@@ -109,9 +108,11 @@ internal class PagerRecyclerView(
                     listener?.onScrollTo(calculated, isInternalScroll)
                 }
             }
-            previousPosition = position
+            if (position != NO_POSITION) {
+                previousPosition = position
+            }
 
-            // If the scroll state is idle, scrolling has stopped and we can reset the internal scroll flag.
+            // If the scroll state is idle, scrolling has stopped, and we can reset the internal scroll flag.
             if (state == SCROLL_STATE_IDLE) {
                 isInternalScroll = false
             }
@@ -193,10 +194,7 @@ internal class PagerRecyclerView(
         private class SwipeDisabledSmoothScroller(context: Context) : ThomasSmoothScroller(context) {
 
             override fun calculateDxToMakeVisible(view: View, snapPreference: Int): Int {
-                val layoutManager = getLayoutManager()
-                if (layoutManager == null) {
-                    return 0
-                }
+                val layoutManager = layoutManager ?: return 0
                 val params = view.layoutParams as LayoutParams
                 val left = layoutManager.getDecoratedLeft(view) - params.leftMargin
                 val right = layoutManager.getDecoratedRight(view) + params.rightMargin
@@ -220,7 +218,7 @@ internal class PagerRecyclerView(
     }
 
     /** Custom `PagerSnapHelper` with overrides to remain functional when touch swipes are disabled.  */
-    private class SnapHelper() : PagerSnapHelper() {
+    private class SnapHelper : PagerSnapHelper() {
 
         private var verticalHelper: OrientationHelper? = null
         private var horizontalHelper: OrientationHelper? = null
@@ -242,7 +240,7 @@ internal class PagerRecyclerView(
 
             var closestChild: View? = null
             val center = helper.startAfterPadding + helper.totalSpace / 2
-            var absClosest = Int.Companion.MAX_VALUE
+            var absClosest = Int.MAX_VALUE
 
             for (i in 0..<childCount) {
                 val child = layoutManager.getChildAt(i)

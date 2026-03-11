@@ -77,6 +77,7 @@ internal class PagerModel(
     }
 
     private var scheduledJob: Job? = null
+    private var isManuallyPaused = false
 
     /** Stable viewId for the recycler view.  */
     val recyclerViewId = View.generateViewId()
@@ -166,17 +167,20 @@ internal class PagerModel(
                 val hasPauseOrResumeAction = currentPage.automatedActions?.hasPagerPauseOrResumeAction == true
 
                 if (it.isTouchExplorationEnabled) {
-                    // Always pause for accessibility
+                    UALog.v { "Page change: pausing story (touch exploration)" }
                     pauseStory()
                 } else if (it.isMediaPaused) {
-                    // Media not ready, pause until ready
+                    UALog.v { "Page change: pausing story (media not ready)" }
+                    pauseStory()
+                } else if (isManuallyPaused) {
+                    UALog.v { "Page change: staying paused (manually paused)" }
                     pauseStory()
                 } else {
-                    // Resume if either:
-                    // - Media just became ready (wasMediaPaused)
-                    // - OR no automated pause/resume actions exist
                     if (it.wasMediaPaused || !hasPauseOrResumeAction) {
+                        UALog.v { "Page change: resuming story" }
                         resumeStory()
+                    } else {
+                        UALog.v { "Page change: deferring to automated pause/resume actions" }
                     }
                 }
             }
@@ -241,6 +245,8 @@ internal class PagerModel(
     }
 
     private fun resolve(request: PageRequest): Boolean {
+        scheduledJob?.cancel()
+
         pagerState.update {
             val copy = it.copyWithPageRequest(request)
 
@@ -532,9 +538,11 @@ internal class PagerModel(
                 handlePagerPrevious()
             }
             if (behaviors.hasPagerPause) {
+                isManuallyPaused = true
                 pauseStory()
             }
             if (behaviors.hasPagerResume) {
+                isManuallyPaused = false
                 resumeStory()
             }
         }
@@ -560,8 +568,10 @@ internal class PagerModel(
     @OptIn(DelicateLayoutApi::class)
     private fun handlePagerPauseToggle() {
         if (pagerState.value.isStoryPaused) {
+            isManuallyPaused = false
             resumeStory()
         } else {
+            isManuallyPaused = true
             pauseStory()
         }
     }
@@ -581,9 +591,7 @@ internal class PagerModel(
     }
 
     private fun pauseStory() {
-        if (navigationActionTimer?.isStarted == true || automatedActionsTimers.isNotEmpty()) {
-            UALog.v { "pause story" }
-        }
+        UALog.v { "Pausing story" }
 
         navigationActionTimer?.stop()
         for (timer in automatedActionsTimers) {
@@ -595,9 +603,7 @@ internal class PagerModel(
     }
 
     private fun resumeStory() {
-        if (navigationActionTimer?.isStarted == false || automatedActionsTimers.isNotEmpty()) {
-            UALog.v { "resume story" }
-        }
+        UALog.v { "Resuming story" }
 
         navigationActionTimer?.start()
         for (timer in automatedActionsTimers) {
@@ -636,7 +642,7 @@ internal class PagerModel(
         }
         if (enabled) {
             pauseStory()
-        } else {
+        } else if (!isManuallyPaused) {
             resumeStory()
         }
     }

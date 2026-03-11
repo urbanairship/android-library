@@ -64,49 +64,21 @@ internal class MediaView(
 
     private val activityListener = object : SimpleActivityListener() {
         override fun onActivityPaused(activity: Activity) {
+            model.sendEvent(MediaModel.PlaybackEvent.BackgroundPause)
             webView?.onPause()
         }
         override fun onActivityResumed(activity: Activity) {
             webView?.onResume()
+            model.sendEvent(MediaModel.PlaybackEvent.BackgroundResume)
         }
     }
 
     internal class WebViewListener(private val model: MediaModel) {
-        fun onVideoReady() {
-            model.pagerState?.update { state ->
-                state.copyWithMediaPaused(false)
-            }
-            val videoId = model.videoId ?: return
-            val myState = model.videoState?.changes?.value?.videos?.get(videoId)
-            if (myState != null) {
-                if (myState.playing) model.listener?.onResume() else model.listener?.onPause()
-                if (myState.muted) model.listener?.onMute() else model.listener?.onUnmute()
-            }
-        }
-        fun onVideoPlay() {
-            val videoId =  model.videoId ?: return
-            val myState = model.videoState?.changes?.value?.videos?.get(videoId)
-            if (myState?.playing == false) {
-                // State says paused but browser auto-started — correct the browser
-                model.listener?.onPause()
-            }
-        }
-
-        fun onVideoEnded() {
-            val videoId = model.videoId ?: return
-            model.videoState?.update { state ->
-                val current = state.videos[videoId] ?: return@update state
-                state.copy(videos = state.videos + (videoId to current.copy(playing = false)))
-            }
-        }
-
-        fun onVisibilityVisible() {
-            val videoId = model.videoId ?: return
-            val myState = model.videoState?.changes?.value?.videos?.get(videoId)
-            if (myState?.playing == true) {
-                model.listener?.onResume()
-            }
-        }
+        fun onVideoReady() = model.sendEvent(MediaModel.PlaybackEvent.VideoReady)
+        fun onVideoPlay() = model.sendEvent(MediaModel.PlaybackEvent.JsPlay)
+        fun onVideoPause() = model.sendEvent(MediaModel.PlaybackEvent.JsPause)
+        fun onVideoEnded() = model.sendEvent(MediaModel.PlaybackEvent.VideoEnded)
+        fun onVisibilityVisible() = model.sendEvent(MediaModel.PlaybackEvent.VisibilityVisible)
     }
 
     private val filteredActivityListener =
@@ -135,24 +107,20 @@ internal class MediaView(
         }
 
         model.listener = object : MediaModel.Listener {
-            // Use javascript to pause/resume the videos instead of webView.onPause()/onResume()
-            // because the WebView triggers an unwanted visibilitychange event.
             override fun onPause() {
                 val script = when (model.viewInfo.mediaType) {
                     MediaType.VIDEO -> "videoElement.pause();"
-                    MediaType.YOUTUBE -> "player.pauseVideo();"
+                    MediaType.YOUTUBE -> "if (player && player.pauseVideo) player.pauseVideo();"
                     MediaType.VIMEO -> "vimeoPlayer.pause();"
                     else -> null
                 }
                 script?.let { webView?.evaluateJavascript(it, null) }
             }
 
-            // Use javascript to pause/resume the videos instead of webView.onPause()/onResume()
-            // because the WebView triggers an unwanted visibilitychange event.
             override fun onResume() {
                 val script = when (model.viewInfo.mediaType) {
                     MediaType.VIDEO -> "videoElement.play();"
-                    MediaType.YOUTUBE -> "player.playVideo();"
+                    MediaType.YOUTUBE -> "if (player && player.playVideo) player.playVideo();"
                     MediaType.VIMEO -> "vimeoPlayer.play();"
                     else -> null
                 }
@@ -162,7 +130,7 @@ internal class MediaView(
             override fun onMute() {
                 val script = when (model.viewInfo.mediaType) {
                     MediaType.VIDEO -> "videoElement.muted = true;"
-                    MediaType.YOUTUBE -> "player.mute();"
+                    MediaType.YOUTUBE -> "if (player && player.mute) player.mute();"
                     MediaType.VIMEO -> "vimeoPlayer.setVolume(0);"
                     else -> null
                 }
@@ -172,8 +140,18 @@ internal class MediaView(
             override fun onUnmute() {
                 val script = when (model.viewInfo.mediaType) {
                     MediaType.VIDEO -> "videoElement.muted = false;"
-                    MediaType.YOUTUBE -> "player.unMute();"
+                    MediaType.YOUTUBE -> "if (player && player.unMute) player.unMute();"
                     MediaType.VIMEO -> "vimeoPlayer.setVolume(1);"
+                    else -> null
+                }
+                script?.let { webView?.evaluateJavascript(it, null) }
+            }
+
+            override fun onSeekToBeginning() {
+                val script = when (model.viewInfo.mediaType) {
+                    MediaType.VIDEO -> "videoElement.currentTime = 0;"
+                    MediaType.YOUTUBE -> "if (player && player.seekTo) player.seekTo(0, false);"
+                    MediaType.VIMEO -> "vimeoPlayer.setCurrentTime(0);"
                     else -> null
                 }
                 script?.let { webView?.evaluateJavascript(it, null) }
@@ -375,9 +353,7 @@ internal class MediaView(
 
         @Suppress("DEPRECATION")
         wv.settings.apply {
-            if (model.viewInfo.mediaType == MediaType.VIDEO && model.viewInfo.video?.autoplay == true) {
-                mediaPlaybackRequiresUserGesture = false
-            }
+            mediaPlaybackRequiresUserGesture = false
 
             javaScriptEnabled = true
 
@@ -401,31 +377,25 @@ internal class MediaView(
                         val video = model.viewInfo.video ?: Video.defaultVideo()
                         val videoId = model.videoId
                         val videoSnapshot = model.videoState?.changes?.value
-                        val currentVideoState = if (videoId != null) {
-                            videoSnapshot?.videos?.get(videoId)
-                                ?: model.groupPlaying?.let { playing ->
-                                    State.Video.VideoMediaState(
-                                        playing = playing,
-                                        muted = model.groupMuted ?: video.muted
-                                    )
-                                }
-                        } else {
-                            null
-                        }
+                        val currentVideoState = videoSnapshot?.videos?.get(videoId)
+                            ?: model.groupPlaying?.let { playing ->
+                                State.Video.VideoMediaState(
+                                    playing = playing,
+                                    muted = model.groupMuted ?: video.muted
+                                )
+                            }
 
-                        val autoplay = currentVideoState?.playing ?: video.autoplay
                         val muted = currentVideoState?.muted ?: video.muted
 
                         weakWebView.loadData(
                             String.format(
                                 VIDEO_HTML_FORMAT,
                                 if (video.showControls) "controls" else "",
-                                if (autoplay) "autoplay" else "",
+                                "",
                                 if (muted) "muted" else "",
                                 if (video.loop) "loop" else "",
                                 model.viewInfo.url,
-                                model.videoStyle,
-                                if (autoplay) VIDEO_AUTO_PLAYING_JS_CODE else ""
+                                model.videoStyle
                             ),
                             "text/html",
                             "UTF-8"
@@ -438,25 +408,21 @@ internal class MediaView(
                     )
                     MediaType.YOUTUBE -> {
                         val video = model.viewInfo.video ?: Video.defaultVideo()
-                        val autoplay = model.groupPlaying ?: video.autoplay
                         val muted = model.groupMuted ?: video.muted
-                        val videoId = YOUTUBE_ID_RE.find(model.viewInfo.url)?.groupValues?.get(1)
-                        videoId?.let {
+                        val ytVideoId = YOUTUBE_ID_RE.find(model.viewInfo.url)?.groupValues?.get(1)
+                        ytVideoId?.let {
                             weakWebView.loadDataWithBaseURL(
                                 "https://" + this.context.packageName,
                                 String.format(YOUTUBE_HTML_FORMAT,
                                     it,
                                     if (video.showControls) "1" else "0",
-                                    if (autoplay) "1" else "0",
+                                    "0",
                                     if (muted) "1" else "0",
                                     if (video.loop) {
-                                        // The YT IFrame API has limited support for looping and requires
-                                        // the VIDEO_ID to be passed as the playlist parameter.
                                         "1, \'playlist\': \'$it\'"
                                     } else {
                                         "0"
-                                    },
-                                    if (autoplay) YOUTUBE_AUTO_PLAYING_JS_CODE else ""
+                                    }
                                 ),
                                 "text/html",
                                 "UTF-8",
@@ -467,13 +433,10 @@ internal class MediaView(
                         }
                     }
                     MediaType.VIMEO -> {
-                        val video = model.viewInfo.video ?: Video.defaultVideo()
-                        val autoplay = model.groupPlaying ?: video.autoplay
                         weakWebView.loadData(
                             String.format(
                                 VIMEO_HTML_FORMAT,
-                                model.viewInfo.url,
-                                if (autoplay) VIMEO_AUTO_PLAYING_JS_CODE else ""
+                                model.viewInfo.url
                             ), "text/html", "UTF-8"
                         )
                     }
@@ -612,7 +575,7 @@ internal class MediaView(
         @Language("HTML")
         private val VIDEO_HTML_FORMAT = """
             <body style="margin:0">
-                <video id="video" playsinline %s %s %s %s height="100%%" width="100%%" src="%s" style="%s"></video>
+                <video id="video" playsinline preload="auto" %s %s %s %s height="100%%" width="100%%" src="%s" style="%s"></video>
                 <script>
                     let videoElement = document.getElementById("video");
 
@@ -641,12 +604,6 @@ internal class MediaView(
             """.trimIndent()
 
         @Language("HTML")
-        private val VIDEO_AUTO_PLAYING_JS_CODE = """
-            videoElement.currentTime = 0;
-            videoElement.load();
-        """.trimIndent()
-
-        @Language("HTML")
         private val IMAGE_HTML_FORMAT = """
             <body style="margin:0">
                 <img height="100%%" width="100%%" src="%s"/>
@@ -659,19 +616,15 @@ internal class MediaView(
         @Language("HTML")
         private val YOUTUBE_HTML_FORMAT = """
             <body style="margin:0">
-                <!-- 1. The <iframe> (and video player) will replace this <div> tag. -->
                 <div id="player"></div>
 
                 <script>
-                  // 2. This code loads the IFrame Player API code asynchronously.
                   var tag = document.createElement('script');
 
                   tag.src = "https://www.youtube.com/iframe_api";
                   var firstScriptTag = document.getElementsByTagName('script')[0];
                   firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-                  // 3. This function creates an <iframe> (and YouTube player)
-                  //    after the API code downloads.
                   var player;
                   function onYouTubeIframeAPIReady() {
                     player = new YT.Player('player', {
@@ -687,34 +640,36 @@ internal class MediaView(
                         'loop': %s
                       },
                       events: {
-                        'onReady': onPlayerReady
+                        'onReady': onPlayerReady,
+                        'onStateChange': onPlayerStateChange
                       }
                     });
                   }
 
-                  // 4. The API will call this function when the video player is ready.
                   function onPlayerReady(event) {
                     VideoListenerInterface.onVideoReady();
-                    // Autoplaying code placeholder
-                    %s
                   }
+
+                  function onPlayerStateChange(event) {
+                    if (event.data === YT.PlayerState.PLAYING) {
+                      VideoListenerInterface.onVideoPlay();
+                    } else if (event.data === YT.PlayerState.PAUSED) {
+                      VideoListenerInterface.onVideoPause();
+                    } else if (event.data === YT.PlayerState.ENDED) {
+                      VideoListenerInterface.onVideoEnded();
+                    }
+                  }
+
+                  document.addEventListener("visibilitychange", function() {
+                    if (document.visibilityState === "visible") {
+                      VideoListenerInterface.onVisibilityVisible();
+                    } else if (player && player.pauseVideo) {
+                      player.pauseVideo();
+                    }
+                  });
                 </script>
             </body>
             """.trimIndent()
-
-        @Language("HTML")
-        private val YOUTUBE_AUTO_PLAYING_JS_CODE = """
-            event.target.playVideo();
-
-            document.addEventListener("visibilitychange", () => {
-              if (document.visibilityState === "visible") {
-                event.target.seekTo(0, false);
-                event.target.playVideo();
-              } else {
-                event.target.pauseVideo();
-              }
-            });
-        """.trimIndent()
 
         private val YOUTUBE_ID_RE = Regex("""embed/([a-zA-Z0-9_-]+).*""")
 
@@ -733,26 +688,30 @@ internal class MediaView(
 
                 vimeoPlayer.ready().then(function() {
                     VideoListenerInterface.onVideoReady();
+                });
 
-                    // Autoplaying code placeholder
-                    %s
+                vimeoPlayer.on('play', function() {
+                    VideoListenerInterface.onVideoPlay();
+                });
+
+                vimeoPlayer.on('pause', function() {
+                    VideoListenerInterface.onVideoPause();
+                });
+
+                vimeoPlayer.on('ended', function() {
+                    VideoListenerInterface.onVideoEnded();
+                });
+
+                document.addEventListener("visibilitychange", function() {
+                    if (document.visibilityState === "visible") {
+                        VideoListenerInterface.onVisibilityVisible();
+                    } else {
+                        vimeoPlayer.pause();
+                    }
                 });
               </script>
             </body>
         """.trimIndent()
 
-        @Language("JS")
-        private val VIMEO_AUTO_PLAYING_JS_CODE = """
-            vimeoPlayer.play();
-
-            document.addEventListener("visibilitychange", () => {
-              if (document.visibilityState === "visible") {
-                vimeoPlayer.setCurrentTime(0);
-                vimeoPlayer.play();
-              } else {
-                vimeoPlayer.pause();
-              }
-            });
-        """.trimIndent()
     }
 }

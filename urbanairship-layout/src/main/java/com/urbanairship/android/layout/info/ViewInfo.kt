@@ -85,6 +85,7 @@ import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 import com.urbanairship.json.requireList
 import com.urbanairship.json.requireMap
+import java.util.UUID
 import kotlin.collections.map
 
 /** @hide */
@@ -250,13 +251,13 @@ internal interface Identifiable {
  * We can't assume they will have it since we might have an old definition cached.
  */
 internal interface RecentlyIdentifiable {
-    val identifier: String?
+    val identifier: String
 }
 
-internal class RecentlyIdentifiableInfo(override val identifier: String?) : RecentlyIdentifiable
+internal class RecentlyIdentifiableInfo(override val identifier: String) : RecentlyIdentifiable
 
 private fun recentlyIdentifiable(json: JsonMap): RecentlyIdentifiable =
-    RecentlyIdentifiableInfo(identifier = json.optionalField("identifier"))
+    RecentlyIdentifiableInfo(identifier = json.optionalField("identifier") ?: UUID.randomUUID().toString())
 
 
 internal class IdentifiableInfo(override val identifier: String) : Identifiable

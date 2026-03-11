@@ -8,7 +8,8 @@ internal class Video(
     val showControls: Boolean,
     val autoplay: Boolean,
     val muted: Boolean,
-    val loop: Boolean
+    val loop: Boolean,
+    val autoResetPosition: Boolean
 ) {
 
     companion object {
@@ -18,17 +19,21 @@ internal class Video(
             val autoplay: Boolean = json.optionalField<Boolean>("autoplay") ?: false
             val muted: Boolean = json.optionalField<Boolean>("muted") ?: false
             val loop: Boolean = json.optionalField<Boolean>("loop") ?: false
+            val autoResetPosition: Boolean = json.optionalField<Boolean>("auto_reset_position")
+                ?: (autoplay && !showControls)
 
-            return Video(aspectRatio, showControls, autoplay, muted, loop)
+            return Video(aspectRatio, showControls, autoplay, muted, loop, autoResetPosition)
         }
 
         fun defaultVideo(): Video {
-            val showControls = true
-            val autoplay = false
-            val muted = false
-            val loop = false
-
-            return Video(null, showControls, autoplay, muted, loop)
+            return Video(
+                aspectRatio = null,
+                showControls = true,
+                autoplay = false,
+                muted = false,
+                loop = false,
+                autoResetPosition = false
+            )
         }
     }
 }

@@ -13,11 +13,7 @@ presentation:
   dismiss_on_touch_outside: false
 view:
   type: video_controller
-  identifier: vc-story-multi-1
-  mute_group:
-    identifier: group1
-  play_group:
-    identifier: group1
+  identifier: vc-story-multi
   view:
     type: pager_controller
     identifier: pager-controller-multi
@@ -54,7 +50,7 @@ view:
                   behaviors:
                     - dismiss
             items:
-              # PAGE 1 — tests: video in its own group (group2)
+              # PAGE 1 — tests: first-load autoplay, navigate-away and return (should restart)
               - identifier: story-page-1
                 type: pager_item
                 automated_actions:
@@ -63,82 +59,75 @@ view:
                     behaviors:
                       - pager_next_or_dismiss
                 view:
-                  type: video_controller
-                  identifier: vc-page-1
-                  mute_group:
-                    identifier: group2
-                  play_group:
-                    identifier: group2
-                  view:
-                    type: container
-                    items:
-                      - position:
-                          horizontal: center
-                          vertical: center
-                        size:
-                          width: 100%
-                          height: 100%
-                        ignore_safe_area: true
-                        view:
-                          type: media
-                          identifier: story-video-1
-                          media_type: video
-                          media_fit: center_crop
-                          url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-                          video:
-                            aspect_ratio: 1.77777777777778
-                            autoplay: true
-                            muted: false
-                            loop: true
-                            show_controls: false
-                      - position:
-                          horizontal: center
-                          vertical: top
-                        margin:
-                          top: 28
-                          start: 16
-                          end: 16
-                        size:
-                          width: 100%
-                          height: auto
-                        view:
-                          type: linear_layout
-                          direction: vertical
-                          items:
-                            - size:
-                                width: 100%
-                                height: auto
-                              view:
-                                type: label
-                                text: "1 / 3"
-                                text_appearance:
-                                  font_size: 22
-                                  alignment: center
-                                  color:
-                                    default:
-                                      type: hex
-                                      hex: '#FFFFFF'
-                                      alpha: 1
-                                  styles:
-                                    - bold
-                            - size:
-                                width: 100%
-                                height: auto
-                              margin:
-                                top: 6
-                              view:
-                                type: label
-                                text: "Pause or mute this video shouldn't affect the others."
-                                text_appearance:
-                                  font_size: 14
-                                  alignment: center
-                                  color:
-                                    default:
-                                      type: hex
-                                      hex: '#FFFFFF'
-                                      alpha: 0.85
+                  type: container
+                  items:
+                    - position:
+                        horizontal: center
+                        vertical: center
+                      size:
+                        width: 100%
+                        height: 100%
+                      ignore_safe_area: true
+                      view:
+                        type: media
+                        identifier: story-video-1
+                        media_type: video
+                        media_fit: center_crop
+                        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                        video:
+                          aspect_ratio: 1.77777777777778
+                          autoplay: true
+                          muted: false
+                          loop: true
+                          show_controls: false
+                    - position:
+                        horizontal: center
+                        vertical: top
+                      margin:
+                        top: 28
+                        start: 16
+                        end: 16
+                      size:
+                        width: 100%
+                        height: auto
+                      view:
+                        type: linear_layout
+                        direction: vertical
+                        items:
+                          - size:
+                              width: 100%
+                              height: auto
+                            view:
+                              type: label
+                              text: "1 / 3"
+                              text_appearance:
+                                font_size: 22
+                                alignment: center
+                                color:
+                                  default:
+                                    type: hex
+                                    hex: '#FFFFFF'
+                                    alpha: 1
+                                styles:
+                                  - bold
+                          - size:
+                              width: 100%
+                              height: auto
+                            margin:
+                              top: 6
+                            view:
+                              type: label
+                              text: "Swipe → next. Come back — video should restart."
+                              text_appearance:
+                                font_size: 14
+                                alignment: center
+                                color:
+                                  default:
+                                    type: hex
+                                    hex: '#FFFFFF'
+                                    alpha: 0.85
 
-              # PAGE 2 — tests: video on group1
+              # PAGE 2 — tests: autoplay on new page, navigate back restarts page 1
               - identifier: story-page-2
                 type: pager_item
                 automated_actions:
@@ -147,80 +136,73 @@ view:
                     behaviors:
                       - pager_next_or_dismiss
                 view:
-                  type: video_controller
-                  identifier: vc-page-2
-                  mute_group:
-                    identifier: group1
-                  play_group:
-                    identifier: group1
-                  view:
-                    type: container
-                    items:
-                      - position:
-                          horizontal: center
-                          vertical: center
-                        size:
-                          width: 100%
-                          height: 100%
-                        ignore_safe_area: true
-                        view:
-                          type: media
-                          identifier: story-video-2
-                          media_type: video
-                          media_fit: center_crop
-                          url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-                          video:
-                            aspect_ratio: 1.77777777777778
-                            autoplay: true
-                            muted: false
-                            loop: true
-                            show_controls: false
-                      - position:
-                          horizontal: center
-                          vertical: top
-                        margin:
-                          top: 28
-                          start: 16
-                          end: 16
-                        size:
-                          width: 100%
-                          height: auto
-                        view:
-                          type: linear_layout
-                          direction: vertical
-                          items:
-                            - size:
-                                width: 100%
-                                height: auto
-                              view:
-                                type: label
-                                text: "2 / 3"
-                                text_appearance:
-                                  font_size: 22
-                                  alignment: center
-                                  color:
-                                    default:
-                                      type: hex
-                                      hex: '#FFFFFF'
-                                      alpha: 1
-                                  styles:
-                                    - bold
-                            - size:
-                                width: 100%
-                                height: auto
-                              margin:
-                                top: 6
-                              view:
-                                type: label
-                                text: "Pause or mute this video, the next should be in the same state."
-                                text_appearance:
-                                  font_size: 14
-                                  alignment: center
-                                  color:
-                                    default:
-                                      type: hex
-                                      hex: '#FFFFFF'
-                                      alpha: 0.85
+                  type: container
+                  items:
+                    - position:
+                        horizontal: center
+                        vertical: center
+                      size:
+                        width: 100%
+                        height: 100%
+                      ignore_safe_area: true
+                      view:
+                        type: media
+                        identifier: story-video-2
+                        media_type: video
+                        media_fit: center_crop
+                        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                        video:
+                          aspect_ratio: 1.77777777777778
+                          autoplay: true
+                          muted: false
+                          loop: true
+                          show_controls: false
+                    - position:
+                        horizontal: center
+                        vertical: top
+                      margin:
+                        top: 28
+                        start: 16
+                        end: 16
+                      size:
+                        width: 100%
+                        height: auto
+                      view:
+                        type: linear_layout
+                        direction: vertical
+                        items:
+                          - size:
+                              width: 100%
+                              height: auto
+                            view:
+                              type: label
+                              text: "2 / 3"
+                              text_appearance:
+                                font_size: 22
+                                alignment: center
+                                color:
+                                  default:
+                                    type: hex
+                                    hex: '#FFFFFF'
+                                    alpha: 1
+                                styles:
+                                  - bold
+                          - size:
+                              width: 100%
+                              height: auto
+                            margin:
+                              top: 6
+                            view:
+                              type: label
+                              text: "Swipe ← back — page 1 should autoplay from start."
+                              text_appearance:
+                                font_size: 14
+                                alignment: center
+                                color:
+                                  default:
+                                    type: hex
+                                    hex: '#FFFFFF'
+                                    alpha: 0.85
 
               # PAGE 3 — tests: user pause intent preserved across navigation
               - identifier: story-page-3
@@ -231,80 +213,73 @@ view:
                     behaviors:
                       - pager_next_or_dismiss
                 view:
-                  type: video_controller
-                  identifier: vc-page-3
-                  mute_group:
-                    identifier: group1
-                  play_group:
-                    identifier: group1
-                  view:
-                    type: container
-                    items:
-                      - position:
-                          horizontal: center
-                          vertical: center
-                        size:
-                          width: 100%
-                          height: 100%
-                        ignore_safe_area: true
-                        view:
-                          type: media
-                          identifier: story-video-3
-                          media_type: video
-                          media_fit: center_crop
-                          url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-                          video:
-                            aspect_ratio: 1.77777777777778
-                            autoplay: true
-                            muted: false
-                            loop: true
-                            show_controls: false
-                      - position:
-                          horizontal: center
-                          vertical: top
-                        margin:
-                          top: 28
-                          start: 16
-                          end: 16
-                        size:
-                          width: 100%
-                          height: auto
-                        view:
-                          type: linear_layout
-                          direction: vertical
-                          items:
-                            - size:
-                                width: 100%
-                                height: auto
-                              view:
-                                type: label
-                                text: "3 / 3"
-                                text_appearance:
-                                  font_size: 22
-                                  alignment: center
-                                  color:
-                                    default:
-                                      type: hex
-                                      hex: '#FFFFFF'
-                                      alpha: 1
-                                  styles:
-                                    - bold
-                            - size:
-                                width: 100%
-                                height: auto
-                              margin:
-                                top: 6
-                              view:
-                                type: label
-                                text: "This video should have the same state as Video 2"
-                                text_appearance:
-                                  font_size: 14
-                                  alignment: center
-                                  color:
-                                    default:
-                                      type: hex
-                                      hex: '#FFFFFF'
-                                      alpha: 0.85
+                  type: container
+                  items:
+                    - position:
+                        horizontal: center
+                        vertical: center
+                      size:
+                        width: 100%
+                        height: 100%
+                      ignore_safe_area: true
+                      view:
+                        type: media
+                        identifier: story-video-3
+                        media_type: video
+                        media_fit: center_crop
+                        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+                        video:
+                          aspect_ratio: 1.77777777777778
+                          autoplay: true
+                          muted: false
+                          loop: true
+                          show_controls: false
+                    - position:
+                        horizontal: center
+                        vertical: top
+                      margin:
+                        top: 28
+                        start: 16
+                        end: 16
+                      size:
+                        width: 100%
+                        height: auto
+                      view:
+                        type: linear_layout
+                        direction: vertical
+                        items:
+                          - size:
+                              width: 100%
+                              height: auto
+                            view:
+                              type: label
+                              text: "3 / 3"
+                              text_appearance:
+                                font_size: 22
+                                alignment: center
+                                color:
+                                  default:
+                                    type: hex
+                                    hex: '#FFFFFF'
+                                    alpha: 1
+                                styles:
+                                  - bold
+                          - size:
+                              width: 100%
+                              height: auto
+                            margin:
+                              top: 6
+                            view:
+                              type: label
+                              text: "Pause ↓ then swipe ← back — page 1 should stay paused."
+                              text_appearance:
+                                font_size: 14
+                                alignment: center
+                                color:
+                                  default:
+                                    type: hex
+                                    hex: '#FFFFFF'
+                                    alpha: 0.85
 
         - size:
             height: 5
@@ -381,7 +356,6 @@ view:
                   identifier: play_pause_btn
                   button_click:
                     - pager_toggle_pause
-                    - video_toggle_play
                   localized_content_description:
                     refs:
                       - ua_play
@@ -405,11 +379,11 @@ view:
                           fallback: Pause
                         when_state_matches:
                           scope:
-                            - $video
+                            - $pagers
                             - current
-                            - playing
+                            - paused
                           value:
-                            equals: true
+                            equals: false
                     items:
                       - value:
                           - type: icon
@@ -424,11 +398,11 @@ view:
                               scale: 0.5
                         when_state_matches:
                           scope:
-                            - $video
+                            - $pagers
                             - current
-                            - playing
+                            - paused
                           value:
-                            equals: true
+                            equals: false
               - size:
                   width: 64
                   height: 64

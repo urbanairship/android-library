@@ -49,6 +49,10 @@ internal class TouchAwareWebView(context: Context, val webViewListener: MediaVie
             post { webViewListener?.onVideoPlay() }
         }
         @JavascriptInterface
+        fun onVideoPause() {
+            post { webViewListener?.onVideoPause() }
+        }
+        @JavascriptInterface
         fun onVisibilityVisible() {
             post { webViewListener?.onVisibilityVisible() }
         }
