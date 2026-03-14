@@ -239,10 +239,7 @@ public class AirshipInputValidatorTest {
             )
         }
 
-        try {
-            defaultValidator.validate(request)
-            fail()
-        } catch (_: IllegalArgumentException) { }
+        assertEquals(AirshipInputValidation.Result.Invalid, defaultValidator.validate(request))
     }
 
     @Test
@@ -258,10 +255,7 @@ public class AirshipInputValidatorTest {
             )
         }
 
-        try {
-            defaultValidator.validate(request)
-            fail()
-        } catch (_: IllegalArgumentException) { }
+        assertEquals(AirshipInputValidation.Result.Invalid, defaultValidator.validate(request))
     }
 
     @Test
