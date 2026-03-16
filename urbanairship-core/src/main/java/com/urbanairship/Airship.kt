@@ -74,17 +74,13 @@ public object Airship {
     private val airshipLock = ReentrantLock()
     private var airshipInstance: AirshipInstance? = null
     internal fun requireReadyInstance(): AirshipInstance {
-        airshipLock.withLock {
-            val instance =
-                airshipInstance ?: throw IllegalStateException("TakeOff must be called first.")
-
-            if (status != AirshipStatus.IS_FLYING) {
-                runBlocking {
-                    statusFlow.first { it == AirshipStatus.IS_FLYING }
-                }
-            }
-            return instance
+        val instance = airshipLock.withLock {
+            airshipInstance ?: throw IllegalStateException("TakeOff must be called first.")
         }
+
+        waitForReadyBlocking()
+
+        return instance
     }
 
     internal val components: List<AirshipComponent>
@@ -400,11 +396,11 @@ public object Airship {
                 skipWaitForReady = false
             }
 
-            // Send ready broadcast, some partner plugins use this to integrate with our SDK
-            sendReadyBroadcast(application, config.extendedBroadcastsEnabled)
-
             // Resume waitForReady and starts onReady callbacks
             takeOffCompletedFlow.update { true }
+
+            // Send ready broadcast, some partner plugins use this to integrate with our SDK
+            sendReadyBroadcast(application, config.extendedBroadcastsEnabled)
         }
     }
 

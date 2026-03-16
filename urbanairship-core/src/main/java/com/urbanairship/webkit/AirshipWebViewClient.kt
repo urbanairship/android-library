@@ -334,8 +334,12 @@ internal constructor(
     override fun onReceivedHttpAuthRequest(
         view: WebView, handler: HttpAuthHandler, host: String?, realm: String?
     ) {
-        val credentials = authRequestCredentials[host] ?: return
-        handler.proceed(credentials.username, credentials.password)
+        val credentials = authRequestCredentials[host]
+        if (credentials != null) {
+            handler.proceed(credentials.username, credentials.password)
+        } else {
+            handler.cancel()
+        }
     }
 
     /**

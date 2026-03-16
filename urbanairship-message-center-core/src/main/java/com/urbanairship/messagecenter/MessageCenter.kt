@@ -8,7 +8,6 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Airship
 import com.urbanairship.AirshipComponent
-import com.urbanairship.AirshipExecutors
 import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.Predicate
 import com.urbanairship.PreferenceDataStore
@@ -139,7 +138,7 @@ public constructor(
     public fun initialize() {
         pushManager.addInternalPushListener(pushListener)
         privacyManager.addListener {
-            AirshipExecutors.newSerialExecutor().execute { updateInboxEnabledState() }
+            updateInboxEnabledState()
         }
         updateInboxEnabledState()
     }
@@ -161,17 +160,10 @@ public constructor(
         )
 
     override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
-        return if (privacyManager.isEnabled(PrivacyManager.Feature.MESSAGE_CENTER)) {
-            inbox.performUpdate().fold(onSuccess = { result ->
-                if (result) {
-                    JobResult.SUCCESS
-                } else {
-                    JobResult.RETRY
-                }
-            }, onFailure = { JobResult.FAILURE })
-        } else {
-            JobResult.SUCCESS
-        }
+        return inbox.performUpdate().fold(
+            onSuccess = { if (it) JobResult.SUCCESS else JobResult.RETRY },
+            onFailure = { JobResult.FAILURE }
+        )
     }
 
     /**

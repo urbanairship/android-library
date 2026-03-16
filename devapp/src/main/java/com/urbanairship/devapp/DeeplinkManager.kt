@@ -6,13 +6,24 @@ import java.lang.ref.WeakReference
 internal class DeeplinkManager {
 
     private var routerRef: WeakReference<AppRouterViewModel>? = null
+    private var pendingIntent: Intent? = null
+
     fun setAppRouter(router: AppRouterViewModel) {
         this.routerRef = WeakReference(router)
+        pendingIntent?.let {
+            pendingIntent = null
+            handleDeeplink(it)
+        }
     }
 
     fun handleDeeplink(intent: Intent) {
         val data = intent.data ?: return
-        val router = routerRef?.get() ?: return
+
+        val router = routerRef?.get()
+        if (router == null) {
+            pendingIntent = intent
+            return
+        }
 
         if (!data.scheme.equals(SCHEME, ignoreCase = true) ||
             !data.host.equals(HOST, ignoreCase = true) ) {

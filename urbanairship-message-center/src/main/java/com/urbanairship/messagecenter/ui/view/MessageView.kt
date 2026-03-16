@@ -142,8 +142,9 @@ public class MessageView @JvmOverloads constructor(
     public fun render(state: MessageViewState) {
         when (state) {
             is MessageViewState.MessageContent -> {
-                if (message == state.message) {
+                if (message?.id == state.message.id) {
                     UALog.v("Message already displayed: ${state.message.id}")
+                    message = state.message
                     return
                 }
 
