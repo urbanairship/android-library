@@ -2,6 +2,7 @@
 package com.urbanairship.push.fcm
 
 import android.content.Context
+import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
 import com.urbanairship.Airship.airshipConfigOptions
 import com.urbanairship.AirshipVersionInfo
@@ -22,6 +23,7 @@ import com.google.firebase.messaging.FirebaseMessaging
  *
  * @hide
  */
+@Keep
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class FcmPushProvider public constructor() : PushProvider, AirshipVersionInfo {
 

@@ -1,6 +1,7 @@
 package com.urbanairship.preferencecenter
 
 import android.content.Context
+import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
 import com.urbanairship.BuildConfig
 import com.urbanairship.PreferenceDataStore
@@ -18,6 +19,7 @@ import com.urbanairship.remotedata.RemoteData
  *
  * @hide
  */
+@Keep
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PreferenceCenterModuleFactoryImpl : PreferenceCenterModuleFactory {
 

@@ -18,7 +18,7 @@ public inline fun <T, R> R.tryParse(logError: Boolean = false, parser: (R) -> T)
         parser(this)
     } catch (e: JsonException) {
         if (logError) {
-            UALog.e("Failed to parse json", e)
+            UALog.e(e) { "Failed to parse json" }
         }
         null
     }

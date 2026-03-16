@@ -2,6 +2,7 @@
 package com.urbanairship.push.hms
 
 import android.content.Context
+import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipVersionInfo
 import com.urbanairship.BuildConfig
@@ -19,6 +20,7 @@ import com.huawei.hms.api.HuaweiApiAvailability
  *
  * @hide
  */
+@Keep
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class HmsPushProvider public constructor() : PushProvider, AirshipVersionInfo {
 
