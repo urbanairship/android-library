@@ -33,7 +33,6 @@ internal class DefaultInputValidator(
      *
      * @return The validation result, either valid or invalid.
      */
-    @Throws(IllegalArgumentException::class)
     override suspend fun validate(request: AirshipInputValidation.Request): AirshipInputValidation.Result {
         yield()
 
@@ -89,7 +88,6 @@ internal class DefaultInputValidator(
      *
      * @return The result of the SMS validation, either valid or invalid.
      */
-    @Throws(IllegalArgumentException::class)
     private suspend fun validate(
         sms: AirshipInputValidation.Request.Sms,
         request: AirshipInputValidation.Request
@@ -98,36 +96,50 @@ internal class DefaultInputValidator(
             return AirshipInputValidation.Result.Invalid
         }
 
-        val response = when(val option = sms.validationOptions) {
-            is AirshipInputValidation.Request.Sms.ValidationOptions.Sender -> {
-                apiClient.validateSmsWithSender(
-                    msisdn = sms.rawInput,
-                    sender = option.senderId
-                )
+        val maxRetries = 2
+        var attempts = 0
+
+        for (attempt in 0..maxRetries) {
+            attempts++
+            if (attempt > 0) {
+                kotlinx.coroutines.delay(1000L * attempt)
+                UALog.d { "Retrying SMS validation (attempt ${attempt + 1}) for $request" }
             }
-            is AirshipInputValidation.Request.Sms.ValidationOptions.Prefix -> {
-                apiClient.validateSmsWithPrefix(
-                    msisdn = sms.rawInput,
-                    prefix = option.prefix
-                )
+
+            val response = when (val option = sms.validationOptions) {
+                is AirshipInputValidation.Request.Sms.ValidationOptions.Sender -> {
+                    apiClient.validateSmsWithSender(
+                        msisdn = sms.rawInput,
+                        sender = option.senderId
+                    )
+                }
+                is AirshipInputValidation.Request.Sms.ValidationOptions.Prefix -> {
+                    apiClient.validateSmsWithPrefix(
+                        msisdn = sms.rawInput,
+                        prefix = option.prefix
+                    )
+                }
+            }
+
+            if (response.isClientError) {
+                return AirshipInputValidation.Result.Invalid
+            }
+
+            val result = response.value
+            if (response.isSuccessful && result != null) {
+                return when (result) {
+                    SmsValidatorApiClient.Result.Invalid -> AirshipInputValidation.Result.Invalid
+                    is SmsValidatorApiClient.Result.Valid -> AirshipInputValidation.Result.Valid(result.address)
+                }
+            }
+
+            if (!response.isServerError && response.exception == null) {
+                break
             }
         }
 
-        // Assume client errors are not valid
-        if (response.isClientError) {
-            return AirshipInputValidation.Result.Invalid
-        }
-
-        // Make sure we have a result, if not throw an error
-        val result = response.value
-        if (!response.isSuccessful || result == null) {
-            throw IllegalArgumentException("Failed to validate SMS $request")
-        }
-
-        return when(result) {
-            SmsValidatorApiClient.Result.Invalid -> AirshipInputValidation.Result.Invalid
-            is SmsValidatorApiClient.Result.Valid -> AirshipInputValidation.Result.Valid(result.address)
-        }
+        UALog.e { "SMS validation failed after $attempts attempts for $request, returning Invalid" }
+        return AirshipInputValidation.Result.Invalid
     }
 
     internal companion object {
