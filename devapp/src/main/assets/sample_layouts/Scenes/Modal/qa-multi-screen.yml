@@ -1,0 +1,486 @@
+version: 1
+presentation:
+  type: modal
+  placement_selectors:
+    - placement:
+        ignore_safe_area: false
+        device:
+          lock_orientation: portrait
+        size:
+          width: 60%
+          height: 85%
+        position:
+          horizontal: center
+          vertical: center
+        shade_color:
+          default:
+            type: hex
+            hex: "#000000"
+            alpha: 0.2
+          selectors:
+            - dark_mode: true
+              color:
+                type: hex
+                hex: "#FFFFFF"
+                alpha: 0.2
+        web:
+          ignore_shade: false
+        border:
+          radius: 10
+          stroke_color:
+            default:
+              type: hex
+              hex: "#000000"
+              alpha: 1
+      window_size: large
+      orientation: landscape
+  android:
+    disable_back_button: false
+  dismiss_on_touch_outside: false
+  default_placement:
+    ignore_safe_area: false
+    device:
+      lock_orientation: portrait
+    size:
+      width: 100%
+      height: 100%
+    position:
+      horizontal: center
+      vertical: center
+    shade_color:
+      default:
+        type: hex
+        hex: "#000000"
+        alpha: 0.2
+    web:
+      ignore_shade: true
+view:
+  type: state_controller
+  view:
+    type: pager_controller
+    identifier: 72bff53f-bf7e-4e66-bbdc-3b6d55fc9741
+    view:
+      type: linear_layout
+      direction: vertical
+      items:
+        - size:
+            width: 100%
+            height: 100%
+          view:
+            type: container
+            items:
+              - identifier: 6ed2ce02-6e65-4a49-adfc-ecd63879fc91_pager_container_item
+                position:
+                  horizontal: center
+                  vertical: center
+                size:
+                  width: 100%
+                  height: 100%
+                view:
+                  type: pager
+                  disable_swipe: false
+                  items:
+                    - identifier: 05532414-2e00-4b6d-a1de-5a532e612bbf
+                      type: pager_item
+                      view:
+                        type: container
+                        items:
+                          - identifier: 78166a67-c38a-4528-b73f-e627be6227f7_main_view_container_item
+                            size:
+                              width: 100%
+                              height: 100%
+                            position:
+                              horizontal: center
+                              vertical: center
+                            ignore_safe_area: false
+                            view:
+                              type: container
+                              items:
+                                - identifier: 704c37af-5f02-4c2d-86a7-040d0cac17f4_container_item
+                                  margin:
+                                    bottom: 0
+                                    top: 0
+                                    end: 0
+                                    start: 0
+                                  position:
+                                    horizontal: center
+                                    vertical: center
+                                  size:
+                                    width: 100%
+                                    height: 100%
+                                  view:
+                                    type: linear_layout
+                                    direction: vertical
+                                    items:
+                                      - identifier: scroll_container
+                                        size:
+                                          width: 100%
+                                          height: 100%
+                                        view:
+                                          type: scroll_layout
+                                          direction: vertical
+                                          view:
+                                            type: linear_layout
+                                            direction: vertical
+                                            items:
+                                              - identifier: d256b47f-e928-4934-881d-1fa370bbb6ee
+                                                size:
+                                                  width: 100%
+                                                  height: auto
+                                                margin:
+                                                  top: 48
+                                                  bottom: 8
+                                                  start: 16
+                                                  end: 16
+                                                view:
+                                                  type: label
+                                                  text: QA test
+                                                  content_description: QA test
+                                                  text_appearance:
+                                                    font_size: 29
+                                                    color:
+                                                      default:
+                                                        type: hex
+                                                        hex: "#000000"
+                                                        alpha: 1
+                                                      selectors:
+                                                        - dark_mode: true
+                                                          color:
+                                                            type: hex
+                                                            hex: "#FFFFFF"
+                                                            alpha: 1
+                                                    alignment: start
+                                                    styles:
+                                                      - bold
+                                                    font_families:
+                                                      - sans-serif
+                                                  accessibility_role:
+                                                    type: heading
+                                                    level: 1
+                                                  accessibility_hidden: false
+                                              - identifier: c63040af-f9e1-41da-855d-a175d3f6cf73
+                                                margin:
+                                                  top: 8
+                                                  bottom: 8
+                                                  start: 16
+                                                  end: 16
+                                                size:
+                                                  width: 100%
+                                                  height: auto
+                                                view:
+                                                  type: label_button
+                                                  identifier: next--Next
+                                                  reporting_metadata:
+                                                    trigger_link_id: c63040af-f9e1-41da-855d-a175d3f6cf73
+                                                    button_id: c63040af-f9e1-41da-855d-a175d3f6cf73
+                                                    button_action: next
+                                                  label:
+                                                    type: label
+                                                    text: Next
+                                                    content_description: Next
+                                                    text_appearance:
+                                                      font_size: 14
+                                                      color:
+                                                        default:
+                                                          type: hex
+                                                          hex: "#FFFFFA"
+                                                          alpha: 1
+                                                        selectors:
+                                                          - dark_mode: true
+                                                            color:
+                                                              type: hex
+                                                              hex: "#111111"
+                                                              alpha: 1
+                                                      alignment: center
+                                                      styles:
+                                                        - bold
+                                                      font_families:
+                                                        - sans-serif
+                                                  actions: {}
+                                                  enabled:
+                                                    - pager_next
+                                                  button_click:
+                                                    - pager_next
+                                                  localized_content_description:
+                                                    fallback: Next
+                                                    ref: ua_next
+                                                  background_color:
+                                                    default:
+                                                      type: hex
+                                                      hex: "#000000"
+                                                      alpha: 1
+                                                    selectors:
+                                                      - dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                  border:
+                                                    radius: 4
+                                                    stroke_width: 0
+                                                    stroke_color:
+                                                      default:
+                                                        type: hex
+                                                        hex: "#000000"
+                                                        alpha: 1
+                                                      selectors:
+                                                        - dark_mode: true
+                                                          color:
+                                                            type: hex
+                                                            hex: "#FFFFFF"
+                                                            alpha: 1
+                                                  content_description: Next
+                                              - identifier: b6f6302c-33fc-4b92-8f50-c4025fcc14b5_linear_layout_item
+                                                size:
+                                                  width: 100%
+                                                  height: 100%
+                                                view:
+                                                  type: linear_layout
+                                                  direction: horizontal
+                                                  items: []
+                        background_color:
+                          default:
+                            type: hex
+                            hex: "#FFFFFA"
+                            alpha: 1
+                          selectors:
+                            - dark_mode: true
+                              color:
+                                type: hex
+                                hex: "#111111"
+                                alpha: 1
+                      state_actions:
+                        - type: set
+                          key: 05532414-2e00-4b6d-a1de-5a532e612bbf_next
+                    - identifier: d24908f6-306f-4bb8-b2a4-caafaa32cec1
+                      type: pager_item
+                      view:
+                        type: container
+                        items:
+                          - identifier: 54d544ea-c17a-4126-91be-8ff196d18f11_main_view_container_item
+                            size:
+                              width: 100%
+                              height: 100%
+                            position:
+                              horizontal: center
+                              vertical: center
+                            ignore_safe_area: false
+                            view:
+                              type: container
+                              items:
+                                - identifier: 2ef235b0-44f5-4d20-8822-7d2ba3de0716_container_item
+                                  margin:
+                                    bottom: 0
+                                    top: 0
+                                    end: 0
+                                    start: 0
+                                  position:
+                                    horizontal: center
+                                    vertical: center
+                                  size:
+                                    width: 100%
+                                    height: 100%
+                                  view:
+                                    type: linear_layout
+                                    direction: vertical
+                                    items:
+                                      - identifier: scroll_container
+                                        size:
+                                          width: 100%
+                                          height: 100%
+                                        view:
+                                          type: scroll_layout
+                                          direction: vertical
+                                          view:
+                                            type: linear_layout
+                                            direction: vertical
+                                            items:
+                                              - identifier: 55fef8ed-412a-419f-86f6-c73d836ea87d
+                                                margin:
+                                                  top: 48
+                                                  bottom: 8
+                                                  start: 16
+                                                  end: 16
+                                                size:
+                                                  width: 100%
+                                                  height: auto
+                                                view:
+                                                  type: label_button
+                                                  identifier: previous--Previous
+                                                  reporting_metadata:
+                                                    trigger_link_id: 55fef8ed-412a-419f-86f6-c73d836ea87d
+                                                    button_id: 55fef8ed-412a-419f-86f6-c73d836ea87d
+                                                    button_action: previous
+                                                  label:
+                                                    type: label
+                                                    text: Previous
+                                                    content_description: Previous
+                                                    text_appearance:
+                                                      font_size: 14
+                                                      color:
+                                                        default:
+                                                          type: hex
+                                                          hex: "#FFFFFA"
+                                                          alpha: 1
+                                                        selectors:
+                                                          - dark_mode: true
+                                                            color:
+                                                              type: hex
+                                                              hex: "#111111"
+                                                              alpha: 1
+                                                      alignment: center
+                                                      styles:
+                                                        - bold
+                                                      font_families:
+                                                        - sans-serif
+                                                  actions: {}
+                                                  enabled:
+                                                    - pager_previous
+                                                  button_click:
+                                                    - pager_previous
+                                                  localized_content_description:
+                                                    fallback: Previous
+                                                    ref: ua_previous
+                                                  background_color:
+                                                    default:
+                                                      type: hex
+                                                      hex: "#000000"
+                                                      alpha: 1
+                                                    selectors:
+                                                      - dark_mode: true
+                                                        color:
+                                                          type: hex
+                                                          hex: "#FFFFFF"
+                                                          alpha: 1
+                                                  border:
+                                                    radius: 4
+                                                    stroke_width: 0
+                                                    stroke_color:
+                                                      default:
+                                                        type: hex
+                                                        hex: "#000000"
+                                                        alpha: 1
+                                                      selectors:
+                                                        - dark_mode: true
+                                                          color:
+                                                            type: hex
+                                                            hex: "#FFFFFF"
+                                                            alpha: 1
+                                                  content_description: Previous
+                                              - identifier: 84a86c4a-1ff3-466c-9d06-42cd5d73767e
+                                                size:
+                                                  width: 100%
+                                                  height: auto
+                                                view:
+                                                  type: media
+                                                  media_fit: center_inside
+                                                  url: https://analytics-staging.airshipcareers.com/binary/public/Vl0wyG8kSyCyOUW98Wj4xg/4438cc71-de75-49f1-a02d-5cf2084f1d3a
+                                                  media_type: image
+                                                margin:
+                                                  top: 0
+                                                  bottom: 0
+                                                  start: 0
+                                                  end: 0
+                                              - identifier: 7ba15371-cc1d-4fa7-bec4-a3702ed236b6_linear_layout_item
+                                                size:
+                                                  width: 100%
+                                                  height: 100%
+                                                view:
+                                                  type: linear_layout
+                                                  direction: horizontal
+                                                  items: []
+                        background_color:
+                          default:
+                            type: hex
+                            hex: "#FFFFFA"
+                            alpha: 1
+                          selectors:
+                            - dark_mode: true
+                              color:
+                                type: hex
+                                hex: "#111111"
+                                alpha: 1
+                      state_actions:
+                        - type: set
+                          key: d24908f6-306f-4bb8-b2a4-caafaa32cec1_next
+                  ignore_safe_area: false
+              - position:
+                  horizontal: end
+                  vertical: top
+                size:
+                  width: 48
+                  height: 48
+                view:
+                  type: image_button
+                  image:
+                    scale: 0.4
+                    type: icon
+                    icon: close
+                    color:
+                      default:
+                        type: hex
+                        hex: "#000000"
+                        alpha: 1
+                      selectors:
+                        - dark_mode: true
+                          color:
+                            type: hex
+                            hex: "#FFFFFF"
+                            alpha: 1
+                  identifier: dismiss_button
+                  button_click:
+                    - dismiss
+                  localized_content_description:
+                    ref: ua_dismiss
+                    refs:
+                      - ua_close
+                      - ua_dismiss
+                    fallback: Dismiss
+                  reporting_metadata:
+                    button_id: dismiss_button
+                    button_action: dismiss
+              - margin:
+                  top: 4
+                  bottom: 4
+                  end: 0
+                  start: 0
+                position:
+                  horizontal: center
+                  vertical: bottom
+                size:
+                  height: 14
+                  width: 100%
+                view:
+                  type: pager_indicator
+                  spacing: 0
+                  bindings:
+                    selected:
+                      shapes:
+                        - type: rectangle
+                          border:
+                            radius: 16
+                          scale: 1
+                          aspect_ratio: 2
+                          color:
+                            default:
+                              type: hex
+                              hex: "#000000"
+                              alpha: 1
+                            selectors:
+                              - dark_mode: true
+                                color:
+                                  type: hex
+                                  hex: "#FFFFFF"
+                                  alpha: 1
+                    unselected:
+                      shapes:
+                        - type: ellipse
+                          aspect_ratio: 1
+                          scale: 0.5
+                          color:
+                            default:
+                              type: hex
+                              hex: "#BFBFB0"
+                              alpha: 1
+                  automated_accessibility_actions:
+                    - type: announce

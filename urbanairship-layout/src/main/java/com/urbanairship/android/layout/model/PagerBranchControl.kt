@@ -43,6 +43,8 @@ internal class PagerBranchControl(
             history.add(availablePages.first())
         }
 
+        UALog.v { "ThomasPager BranchControl updateState: history=${history.map { it.identifier }}" }
+
         // Evaluate completion
         val runCompletedStateActions = if (!_isComplete.value) {
             val matched = controllerBranching.completions
@@ -65,7 +67,9 @@ internal class PagerBranchControl(
         val suffix = buildPathFrom(history.last(), state)
         val suffixIds = suffix.mapTo(mutableSetOf()) { it.identifier }
         val deduplicatedPrefix = prefix.filter { it.identifier !in suffixIds }
-        onBranchUpdated(deduplicatedPrefix + suffix, _isComplete.value)
+        val result = deduplicatedPrefix + suffix
+        UALog.v { "ThomasPager BranchControl updateState: prefix=${prefix.map { it.identifier }} suffix=${suffix.map { it.identifier }} result=${result.map { it.identifier }}" }
+        onBranchUpdated(result, _isComplete.value)
 
         // Run completion state actions if we just completed
         if (runCompletedStateActions) {
@@ -81,16 +85,31 @@ internal class PagerBranchControl(
         clearHistoryAfter(id)
         val page = availablePages.firstOrNull { it.identifier == id } ?: return
         if (history.contains(page)) {
+            UALog.v { "ThomasPager BranchControl addToHistory($id): already in history, skipping" }
             return
         }
 
         history.add(page)
+        UALog.v { "ThomasPager BranchControl addToHistory($id): history=${history.map { it.identifier }}" }
+    }
+
+    /**
+     * Ensures the page is in history without clearing anything after it.
+     * Used by resolve(NEXT) to prevent rapid button presses from skipping
+     * intermediate pages, without the destructive side effects of addToHistory.
+     */
+    fun ensureInHistory(id: String) {
+        val page = availablePages.firstOrNull { it.identifier == id } ?: return
+        if (history.contains(page)) return
+        history.add(page)
+        UALog.v { "ThomasPager BranchControl ensureInHistory($id): history=${history.map { it.identifier }}" }
     }
 
     fun removeFromHistory(id: String) {
         scope.launch {
             val page = availablePages.firstOrNull { it.identifier == id } ?: return@launch
             history.remove(page)
+            UALog.v { "ThomasPager BranchControl removeFromHistory($id): history=${history.map { it.identifier }}" }
         }
     }
 
@@ -113,6 +132,7 @@ internal class PagerBranchControl(
                 history.removeLastOrNull()
             }
         }
+        UALog.v { "ThomasPager BranchControl onPageRequest($request): history=${history.map { it.identifier }}" }
     }
 
     private fun buildPathFrom(page: PagerModel.Item, payload: JsonSerializable): List<PagerModel.Item> {

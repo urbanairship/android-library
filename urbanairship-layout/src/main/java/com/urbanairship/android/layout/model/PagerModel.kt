@@ -135,11 +135,18 @@ internal class PagerModel(
                         _allPages.firstOrNull { page -> page.identifier == id }
                     } ?: return@collect
 
+                    UALog.v {
+                        "ThomasPager pageChangeListener: pageIndex=${it.pageIndex} lastPageIndex=${it.lastPageIndex} " +
+                        "currentPageId=${it.currentPageId} previousPageId=${it.previousPageId} " +
+                        "lastDisplayedPageId=${lastDisplayedPageId.value} pageIds=${it.pageIds}"
+                    }
+
                     // If the page list was rebuilt by branching, but we're still on the same
                     // logical page, skip page-transition side effects. This prevents clearing
                     // timers, re-running display actions, and corrupting history when only
                     // the page indices shifted.
                     if (lastDisplayedPageId.value != currentPage.identifier) {
+                        UALog.v { "ThomasPager pageChangeListener: new page ${currentPage.identifier}, running side effects" }
                         // Clear any automated actions scheduled for the previous page.
                         clearAutomatedActions(it.lastPageIndex)
                         if (it.lastPageIndex > it.pageIndex) {
@@ -230,8 +237,23 @@ internal class PagerModel(
                 null
             } ?: state.pageIndex.coerceIn(0, newPageIds.lastIndex.coerceAtLeast(0))
 
+            // Keep lastPageIndex in sync so a pure re-index doesn't look like
+            // a page transition to downstream listeners.
+            val adjustedLastIndex = if (adjustedIndex != state.pageIndex) {
+                adjustedIndex
+            } else {
+                state.lastPageIndex
+            }
+
+            UALog.v {
+                "ThomasPager onPagesDataUpdated: oldPageIds=${state.pageIds} newPageIds=$newPageIds " +
+                "pageIndex ${state.pageIndex} → $adjustedIndex lastPageIndex ${state.lastPageIndex} → $adjustedLastIndex " +
+                "currentId=$currentId"
+            }
+
             state.copy(
                 pageIndex = adjustedIndex,
+                lastPageIndex = adjustedLastIndex,
                 pageIds = newPageIds,
                 durations = newDurations,
                 completed = newCompleted,
@@ -270,15 +292,27 @@ internal class PagerModel(
     private fun resolve(request: PageRequest): Boolean {
         scheduledJob?.cancel()
 
+        var ensurePageId: String? = null
+
         pagerState.update {
             val copy = it.copyWithPageRequest(request)
+            UALog.v { "ThomasPager resolve($request): pageIndex ${it.pageIndex} → ${copy.pageIndex} (pageIds=${it.pageIds})" }
 
             if (copy.pageIndex != it.pageIndex) {
                 branchControl?.onPageRequest(request)
+
+                if (request == PageRequest.NEXT) {
+                    ensurePageId = copy.currentPageId
+                }
             }
 
             copy
         }
+
+        // Add the target page to history after the state update so that
+        // the updateState triggered by the pagerState change uses the old
+        // history and won't reorder pages mid-scroll.
+        ensurePageId?.let { branchControl?.ensureInHistory(it) }
 
         return true
     }
@@ -309,6 +343,8 @@ internal class PagerModel(
         // the page swipe if it was triggered by the user.
         viewScope.launch {
             view.pagerScrolls().collect { (position, isInternalScroll) ->
+                val current = pagerState.changes.value.pageIndex
+                UALog.v { "ThomasPager pagerScroll: position=$position current=$current isInternalScroll=$isInternalScroll" }
                 val request = makePageRequest(position)
                 if (request != null) {
                     if (!resolve(request)) {

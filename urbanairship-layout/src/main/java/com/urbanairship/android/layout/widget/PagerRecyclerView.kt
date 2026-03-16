@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.LinearSmoothScroller
 import androidx.recyclerview.widget.OrientationHelper
 import androidx.recyclerview.widget.PagerSnapHelper
 import androidx.recyclerview.widget.RecyclerView
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.view.PagerView
@@ -29,6 +30,7 @@ internal class PagerRecyclerView(
     private lateinit var snapHelper: PagerSnapHelper
 
     private var isInternalScroll = false
+    private var isSettling = false
 
     private var listener: PagerView.OnScrollListener? = null
 
@@ -79,6 +81,7 @@ internal class PagerRecyclerView(
 
     fun scrollTo(position: Int) {
         val displayed = getDisplayedItemPosition()
+        UALog.v { "ThomasPager RecyclerView scrollTo($position) displayed=$displayed isInternalScroll=$isInternalScroll" }
         if (position == displayed) {
             return
         }
@@ -102,7 +105,19 @@ internal class PagerRecyclerView(
         private var previousPosition = 0
 
         override fun onScrollStateChanged(v: RecyclerView, state: Int) {
+            val stateName = when (state) {
+                SCROLL_STATE_IDLE -> "IDLE"
+                SCROLL_STATE_DRAGGING -> "DRAGGING"
+                SCROLL_STATE_SETTLING -> "SETTLING"
+                else -> "UNKNOWN($state)"
+            }
+            UALog.v { "ThomasPager RecyclerView onScrollStateChanged=$stateName isInternalScroll=$isInternalScroll" }
+
             listener?.onScrollStateChanged(state != SCROLL_STATE_IDLE)
+
+            // Block new user swipes while the snap animation is playing so that
+            // rapid swipes can't accumulate multiple page jumps before IDLE.
+            isSettling = state == SCROLL_STATE_SETTLING && !isInternalScroll
 
             // Only report page position changes once the scroll has fully settled.
             // During DRAGGING/SETTLING, findSnapView can momentarily return an
@@ -110,12 +125,17 @@ internal class PagerRecyclerView(
             // cause a false page change and a visible "bounce."
             if (state == SCROLL_STATE_IDLE) {
                 val position: Int = getDisplayedItemPosition()
+                UALog.v { "ThomasPager RecyclerView IDLE position=$position previousPosition=$previousPosition isInternalScroll=$isInternalScroll" }
                 if (position != NO_POSITION && position != previousPosition) {
                     listener?.onScrollTo(position, isInternalScroll)
                     previousPosition = position
+                } else if (position != NO_POSITION && isInternalScroll) {
+                    // Scroll ended at the same position — the programmatic scroll
+                    // was interrupted/snapped back. Notify so state can be corrected.
+                    listener?.onScrollTo(position, isInternalScroll)
                 }
-
                 isInternalScroll = false
+                isSettling = false
             }
         }
     }
@@ -126,8 +146,15 @@ internal class PagerRecyclerView(
     }
 
     override fun onInterceptTouchEvent(e: MotionEvent): Boolean {
-        // Prevent touch events while animating a programmatic scroll to avoid conflicts.
-        return isInternalScroll || super.onInterceptTouchEvent(e)
+        // Block touches during programmatic scrolls and while the snap animation
+        // is settling after a user swipe — prevents rapid swipes from accumulating
+        // multiple page changes before IDLE.
+        return isInternalScroll || isSettling || super.onInterceptTouchEvent(e)
+    }
+
+    override fun onTouchEvent(e: MotionEvent): Boolean {
+        if (isInternalScroll || isSettling) return true
+        return super.onTouchEvent(e)
     }
 
     private open class ThomasLinearLayoutManager(
@@ -227,10 +254,9 @@ internal class PagerRecyclerView(
         override fun findSnapView(layoutManager: LayoutManager): View? {
             if (layoutManager.canScrollVertically()) {
                 return findCenterView(layoutManager, getVerticalHelper(layoutManager))
-            } else if (layoutManager.canScrollHorizontally()) {
-                return findCenterView(layoutManager, getHorizontalHelper(layoutManager))
             }
-            return null
+            // Always use horizontal helper pagers with disabled swipes are fixed too.
+            return findCenterView(layoutManager, getHorizontalHelper(layoutManager))
         }
 
         fun findCenterView(layoutManager: LayoutManager, helper: OrientationHelper): View? {
