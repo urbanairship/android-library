@@ -33,15 +33,11 @@ internal class PagerBranchControl(
 
     init {
         scope.launch {
-            thomasState.collect {
-                updateState()
-            }
+            thomasState.collect(::updateState)
         }
     }
 
-    private fun updateState() {
-        val payload = thomasState.value
-
+    private fun updateState(state: ThomasState) {
         // Re-evaluate the path based on the current payload
         if (history.isEmpty() && availablePages.isNotEmpty()) {
             history.add(availablePages.first())
@@ -50,7 +46,7 @@ internal class PagerBranchControl(
         // Evaluate completion
         val runCompletedStateActions = if (!_isComplete.value) {
             val matched = controllerBranching.completions
-                .firstOrNull { it.predicate?.apply(payload) != false }
+                .firstOrNull { it.predicate?.apply(state) != false }
 
             val completed = matched != null
 
@@ -62,25 +58,33 @@ internal class PagerBranchControl(
             false
         }
 
-        // Notify branch updated
-        onBranchUpdated(history.dropLast(1) + buildPathFrom(history.last(), payload), _isComplete.value)
+        // Notify branch updated. Deduplicate the prefix against the suffix so that
+        // pages targeted by branching (e.g. language toggles) don't appear twice when
+        // the branching path leads back to a page already visited in the history.
+        val prefix = history.dropLast(1)
+        val suffix = buildPathFrom(history.last(), state)
+        val suffixIds = suffix.mapTo(mutableSetOf()) { it.identifier }
+        val deduplicatedPrefix = prefix.filter { it.identifier !in suffixIds }
+        onBranchUpdated(deduplicatedPrefix + suffix, _isComplete.value)
 
         // Run completion state actions if we just completed
         if (runCompletedStateActions) {
-            performCompletionStateActions(payload)
+            controllerBranching.completions
+                .filter { it.predicate?.apply(state) != false }
+                .mapNotNull { it.stateActions }
+                .flatten()
+                .run(actionsRunner)
         }
     }
 
     fun addToHistory(id: String) {
-        scope.launch {
-            clearHistoryAfter(id)
-            val page = availablePages.firstOrNull { it.identifier == id } ?: return@launch
-            if (history.contains(page)) {
-                return@launch
-            }
-
-            history.add(page)
+        clearHistoryAfter(id)
+        val page = availablePages.firstOrNull { it.identifier == id } ?: return
+        if (history.contains(page)) {
+            return
         }
+
+        history.add(page)
     }
 
     fun removeFromHistory(id: String) {
@@ -132,17 +136,11 @@ internal class PagerBranchControl(
 
         return result.toList()
     }
-
-    private fun performCompletionStateActions(payload: JsonSerializable) {
-        controllerBranching.completions
-            .filter { it.predicate?.apply(payload) != false }
-            .mapNotNull { it.stateActions }
-            .flatten()
-            .run(actionsRunner)
-    }
 }
 
-private fun PageBranching.nextPageId(payload: JsonSerializable): String? {
+private fun PageBranching.nextPageId(
+    payload: JsonSerializable,
+): String? {
     return nextPageSelectors
         ?.firstOrNull { it.predicate?.apply(payload) != false }
         ?.pageId

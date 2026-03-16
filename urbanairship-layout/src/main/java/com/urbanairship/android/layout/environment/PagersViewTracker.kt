@@ -63,7 +63,7 @@ internal class PagersViewTracker {
         private var currentPageViewStartedTime: Duration? = null
 
         fun start(page: ViewedPage, currentDisplayTime: Duration) {
-            if (currentPage == page) { return }
+            if (currentPage?.identifier == page.identifier) { return }
             stop(currentDisplayTime)
             currentPage = page
             currentPageViewStartedTime = currentDisplayTime

@@ -54,7 +54,7 @@ internal data class ThomasState(
                 pager?.let { pager ->
                     put(PAGER, jsonMapOf(
                         CURRENT to jsonMapOf(
-                            PAUSED to pager.isStoryPaused
+                            PAUSED to pager.isManuallyPaused
                         )
                     ).toJsonValue())
                 }

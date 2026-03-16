@@ -41,8 +41,8 @@ internal class TouchAwareWebView(context: Context, val webViewListener: MediaVie
 
     inner class VideoListenerInterface() {
         @JavascriptInterface
-        fun onVideoReady() {
-            post { webViewListener?.onVideoReady() }
+        fun onVideoReady(playing: Boolean, muted: Boolean) {
+            post { webViewListener?.onVideoReady(playing, muted) }
         }
         @JavascriptInterface
         fun onVideoPlay() {
@@ -53,12 +53,12 @@ internal class TouchAwareWebView(context: Context, val webViewListener: MediaVie
             post { webViewListener?.onVideoPause() }
         }
         @JavascriptInterface
-        fun onVisibilityVisible() {
-            post { webViewListener?.onVisibilityVisible() }
-        }
-        @JavascriptInterface
         fun onVideoEnded() {
             post { webViewListener?.onVideoEnded() }
+        }
+        @JavascriptInterface
+        fun onVisibilityChanged(isVisible: Boolean) {
+            post { webViewListener?.onVisibilityChanged(isVisible) }
         }
     }
 }

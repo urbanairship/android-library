@@ -42,11 +42,12 @@ internal class PagerController(
 
     init {
         modelScope.launch {
-            pagerState.changes.map {
-                val history = environment.pagerTracker.viewedPages(it.identifier) ?: emptyList()
-                it.reportingContext(history)
-            }
-                .distinctUntilChanged()
+            pagerState.changes
+                .map {
+                    val history = environment.pagerTracker.viewedPages(it.identifier) ?: emptyList()
+                    it.reportingContext(history)
+                }
+                .distinctUntilChanged { old, new -> old.pageId == new.pageId }
                 .collect(::reportPageView)
         }
 

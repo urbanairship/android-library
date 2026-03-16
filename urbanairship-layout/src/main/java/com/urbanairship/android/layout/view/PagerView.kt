@@ -27,6 +27,9 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.findTargetDescendant
 import com.urbanairship.android.layout.widget.PagerRecyclerView
 import com.urbanairship.util.stringResource
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 internal class PagerView(
     context: Context,
@@ -36,6 +39,7 @@ internal class PagerView(
 
     fun interface OnScrollListener {
         fun onScrollTo(position: Int, isInternalScroll: Boolean)
+        fun onScrollStateChanged(isScrolling: Boolean) {}
     }
 
     interface OnPagerGestureListener {
@@ -71,6 +75,9 @@ internal class PagerView(
             }
         })
     }
+
+    private val _isScrolling = MutableStateFlow(false)
+    val isScrolling: StateFlow<Boolean> = _isScrolling.asStateFlow()
 
     var scrollListener: OnScrollListener? = null
     var gestureListener: OnPagerGestureListener? = null
@@ -123,9 +130,15 @@ internal class PagerView(
         addView(view, MATCH_PARENT, MATCH_PARENT)
         model.listener = modelListener
 
-        view.setPagerScrollListener { position, isInternalScroll ->
-            scrollListener?.onScrollTo(position, isInternalScroll)
-        }
+        view.setPagerScrollListener(object : OnScrollListener {
+            override fun onScrollTo(position: Int, isInternalScroll: Boolean) {
+                scrollListener?.onScrollTo(position, isInternalScroll)
+            }
+
+            override fun onScrollStateChanged(isScrolling: Boolean) {
+                _isScrolling.value = isScrolling
+            }
+        })
 
         // Pass along any calls to apply insets to the view.
         ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
@@ -155,15 +168,20 @@ internal class PagerView(
         }
     }
 
-    override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-        // If a gesture detector is attached, check if the event should be intercepted.
-        // We only want to intercept events that are not within a clickable descendant.
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        // Forward all touch events to the gesture detector so it sees the full
+        // press / release sequence even when onInterceptTouchEvent returns true
+        // (e.g. during a programmatic scroll).
+        // Without this, ACTION_UP can be lost and freeze the story
         gestureDetector?.let { detector ->
             if (!event.isWithinClickableDescendantOf(view)) {
                 detector.onTouchEvent(event)
             }
         }
+        return super.dispatchTouchEvent(event)
+    }
 
+    override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
         return if (model.viewInfo.isSwipeDisabled) {
             // prevent touches to stop the scroll animation
             view.onInterceptTouchEvent(event)
@@ -171,6 +189,10 @@ internal class PagerView(
             // We're just snooping, so always let the event pass through.
             super.onInterceptTouchEvent(event)
         }
+    }
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        return gestureDetector != null || super.onTouchEvent(event)
     }
 
     override fun onAttachedToWindow() {

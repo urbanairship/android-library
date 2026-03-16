@@ -23,9 +23,7 @@ public class LayoutStateTest{
             pageIds = listOf("page1", "page2"),
             durations = listOf(100, 200),
             progress = 50,
-            isMediaPaused = true,
-            wasMediaPaused = false,
-            isStoryPaused = true,
+            isManuallyPaused = true,
             isTouchExplorationEnabled = false,
             branching = PagerControllerBranching(listOf()),
             isScrollDisabled = true

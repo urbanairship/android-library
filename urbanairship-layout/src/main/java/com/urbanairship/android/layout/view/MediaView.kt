@@ -74,11 +74,11 @@ internal class MediaView(
     }
 
     internal class WebViewListener(private val model: MediaModel) {
-        fun onVideoReady() = model.sendEvent(MediaModel.PlaybackEvent.VideoReady)
+        fun onVideoReady(playing: Boolean, muted: Boolean) = model.sendEvent(MediaModel.PlaybackEvent.VideoReady(playing, muted))
         fun onVideoPlay() = model.sendEvent(MediaModel.PlaybackEvent.JsPlay)
         fun onVideoPause() = model.sendEvent(MediaModel.PlaybackEvent.JsPause)
         fun onVideoEnded() = model.sendEvent(MediaModel.PlaybackEvent.VideoEnded)
-        fun onVisibilityVisible() = model.sendEvent(MediaModel.PlaybackEvent.VisibilityVisible)
+        fun onVisibilityChanged(isVisible: Boolean) = model.sendEvent(MediaModel.PlaybackEvent.VisibilityChanged(isVisible))
     }
 
     private val filteredActivityListener =
@@ -99,14 +99,19 @@ internal class MediaView(
             MediaType.VIDEO,
             MediaType.VIMEO,
             MediaType.YOUTUBE -> {
-                model.pagerState?.update { state ->
-                    state.copyWithMediaPaused(true)
-                }
+                model.setMediaLoading(true)
                 configureWebView(model)
             }
         }
 
         model.listener = object : MediaModel.Listener {
+            private fun evalJs(script: String) {
+                UALog.v { "MediaView[${model.videoId}] evaluateJavascript: $script" }
+                webView?.evaluateJavascript(script) { result ->
+                    UALog.v { "MediaView[${model.videoId}] evaluateJavascript '$script' result: $result" }
+                }
+            }
+
             override fun onPause() {
                 val script = when (model.viewInfo.mediaType) {
                     MediaType.VIDEO -> "videoElement.pause();"
@@ -114,7 +119,7 @@ internal class MediaView(
                     MediaType.VIMEO -> "vimeoPlayer.pause();"
                     else -> null
                 }
-                script?.let { webView?.evaluateJavascript(it, null) }
+                script?.let { evalJs(it) }
             }
 
             override fun onResume() {
@@ -124,7 +129,7 @@ internal class MediaView(
                     MediaType.VIMEO -> "vimeoPlayer.play();"
                     else -> null
                 }
-                script?.let { webView?.evaluateJavascript(it, null) }
+                script?.let { evalJs(it) }
             }
 
             override fun onMute() {
@@ -134,7 +139,7 @@ internal class MediaView(
                     MediaType.VIMEO -> "vimeoPlayer.setVolume(0);"
                     else -> null
                 }
-                script?.let { webView?.evaluateJavascript(it, null) }
+                script?.let { evalJs(it) }
             }
 
             override fun onUnmute() {
@@ -144,7 +149,7 @@ internal class MediaView(
                     MediaType.VIMEO -> "vimeoPlayer.setVolume(1);"
                     else -> null
                 }
-                script?.let { webView?.evaluateJavascript(it, null) }
+                script?.let { evalJs(it) }
             }
 
             override fun onSeekToBeginning() {
@@ -154,7 +159,7 @@ internal class MediaView(
                     MediaType.VIMEO -> "vimeoPlayer.setCurrentTime(0);"
                     else -> null
                 }
-                script?.let { webView?.evaluateJavascript(it, null) }
+                script?.let { evalJs(it) }
             }
 
             override fun setVisibility(visible: Boolean) {
@@ -391,7 +396,7 @@ internal class MediaView(
                             String.format(
                                 VIDEO_HTML_FORMAT,
                                 if (video.showControls) "controls" else "",
-                                "",
+                                if (video.autoplay) "autoplay" else "",
                                 if (muted) "muted" else "",
                                 if (video.loop) "loop" else "",
                                 model.viewInfo.url,
@@ -416,7 +421,7 @@ internal class MediaView(
                                 String.format(YOUTUBE_HTML_FORMAT,
                                     it,
                                     if (video.showControls) "1" else "0",
-                                    "0",
+                                    if (video.autoplay) "1" else "0",
                                     if (muted) "1" else "0",
                                     if (video.loop) {
                                         "1, \'playlist\': \'$it\'"
@@ -580,15 +585,12 @@ internal class MediaView(
                     let videoElement = document.getElementById("video");
 
                     document.addEventListener("visibilitychange", () => {
-                        if (document.visibilityState === "visible") {
-                            VideoListenerInterface.onVisibilityVisible();
-                        } else {
-                            videoElement.pause();
-                        }
+                        VideoListenerInterface.onVisibilityChanged(document.visibilityState === "visible");
                     });
+                    VideoListenerInterface.onVisibilityChanged(document.visibilityState === "visible");
 
                     videoElement.addEventListener("canplay", (event) => {
-                      VideoListenerInterface.onVideoReady();
+                      VideoListenerInterface.onVideoReady(!videoElement.paused, videoElement.muted);
                     });
                     videoElement.addEventListener("play", () => {
                         VideoListenerInterface.onVideoPlay();
@@ -647,7 +649,9 @@ internal class MediaView(
                   }
 
                   function onPlayerReady(event) {
-                    VideoListenerInterface.onVideoReady();
+                    var isPlaying = player.getPlayerState() === YT.PlayerState.PLAYING;
+                    var isMuted = player.isMuted();
+                    VideoListenerInterface.onVideoReady(isPlaying, isMuted);
                   }
 
                   function onPlayerStateChange(event) {
@@ -661,12 +665,10 @@ internal class MediaView(
                   }
 
                   document.addEventListener("visibilitychange", function() {
-                    if (document.visibilityState === "visible") {
-                      VideoListenerInterface.onVisibilityVisible();
-                    } else if (player && player.pauseVideo) {
-                      player.pauseVideo();
-                    }
+                    VideoListenerInterface.onVisibilityChanged(document.visibilityState === "visible");
                   });
+                  VideoListenerInterface.onVisibilityChanged(document.visibilityState === "visible");
+
                 </script>
             </body>
             """.trimIndent()
@@ -687,7 +689,11 @@ internal class MediaView(
                 const vimeoPlayer = new Vimeo.Player(vimeoIframe);
 
                 vimeoPlayer.ready().then(function() {
-                    VideoListenerInterface.onVideoReady();
+                    return Promise.all([vimeoPlayer.getPaused(), vimeoPlayer.getVolume()]);
+                }).then(function(values) {
+                    var isPlaying = !values[0];
+                    var isMuted = values[1] === 0;
+                    VideoListenerInterface.onVideoReady(isPlaying, isMuted);
                 });
 
                 vimeoPlayer.on('play', function() {
@@ -703,12 +709,10 @@ internal class MediaView(
                 });
 
                 document.addEventListener("visibilitychange", function() {
-                    if (document.visibilityState === "visible") {
-                        VideoListenerInterface.onVisibilityVisible();
-                    } else {
-                        vimeoPlayer.pause();
-                    }
+                    VideoListenerInterface.onVisibilityChanged(document.visibilityState === "visible");
                 });
+                VideoListenerInterface.onVisibilityChanged(document.visibilityState === "visible");
+
               </script>
             </body>
         """.trimIndent()

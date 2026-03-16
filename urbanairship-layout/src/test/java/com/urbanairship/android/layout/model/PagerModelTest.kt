@@ -19,15 +19,14 @@ import com.urbanairship.json.JsonValue
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.spyk
-import io.mockk.unmockkObject
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -53,6 +52,7 @@ public class PagerModelTest {
     private val testScope = TestScope(testDispatcher)
 
     private val scrollsFlow = MutableSharedFlow<PagerScrollEvent>()
+    private val isScrollingFlow = MutableStateFlow(false)
 
     private val mockReporter: Reporter = mockk(relaxUnitFun = true)
     private val mockActionsRunner: ThomasActionRunner = mockk(relaxUnitFun = true) {
@@ -103,11 +103,14 @@ public class PagerModelTest {
 
         mockkStatic(PagerView::pagerScrolls)
         every { mockView.pagerScrolls() } returns scrollsFlow
+        every { mockView.isScrolling } returns isScrollingFlow
     }
 
     @After
     public fun tearDown() {
         Dispatchers.resetMain()
+
+        isScrollingFlow.value = false
 
         unmockkStatic(Airship::class)
         unmockkStatic(PagerView::pagerScrolls)
@@ -147,20 +150,31 @@ public class PagerModelTest {
             assertTrue(initialState.hasNext)
             assertFalse(initialState.hasPrevious)
 
-            // Simulate a user swipe to the first page.
+            // Simulate a user swipe to the second page.
             scrollsFlow.emit(PagerScrollEvent(position = 1, isInternalScroll = false))
             advanceUntilIdle()
 
-            val scrollingState = awaitItem()
+            val resolvedState = awaitItem()
+            assertEquals(1, resolvedState.pageIndex)
+            assertEquals(0, resolvedState.lastPageIndex)
+            assertFalse(resolvedState.isScrolling)
+
+            // Simulate RecyclerView entering non-idle (DRAGGING/SETTLING).
+            isScrollingFlow.value = true
             advanceUntilIdle()
+
+            val scrollingState = awaitItem()
             assertEquals(1, scrollingState.pageIndex)
             assertEquals(0, scrollingState.lastPageIndex)
             assertTrue(scrollingState.hasNext)
             assertTrue(scrollingState.hasPrevious)
             assertTrue(scrollingState.isScrolling)
 
-            val updatedState = awaitItem()
+            // Simulate the RecyclerView reaching SCROLL_STATE_IDLE (true → false transition).
+            isScrollingFlow.value = false
             advanceUntilIdle()
+
+            val updatedState = awaitItem()
             assertEquals(1, updatedState.pageIndex)
             assertEquals(0, updatedState.lastPageIndex)
             assertTrue(updatedState.hasNext)
@@ -189,8 +203,18 @@ public class PagerModelTest {
             assertTrue(initialState.hasNext)
             assertFalse(initialState.hasPrevious)
 
-            // Simulate an internal scroll to the first page.
+            // Simulate an internal scroll to the second page.
             scrollsFlow.emit(PagerScrollEvent(position = 1, isInternalScroll = true))
+            advanceUntilIdle()
+
+            // resolve() updates pageIndex but does not set isScrolling.
+            val resolvedState = awaitItem()
+            assertEquals(1, resolvedState.pageIndex)
+            assertEquals(0, resolvedState.lastPageIndex)
+            assertFalse(resolvedState.isScrolling)
+
+            // Simulate RecyclerView entering non-idle (DRAGGING/SETTLING).
+            isScrollingFlow.value = true
             advanceUntilIdle()
 
             val scrollingState = awaitItem()
@@ -199,6 +223,10 @@ public class PagerModelTest {
             assertTrue(scrollingState.hasNext)
             assertTrue(scrollingState.hasPrevious)
             assertTrue(scrollingState.isScrolling)
+
+            // Simulate the RecyclerView reaching SCROLL_STATE_IDLE (true → false transition).
+            isScrollingFlow.value = false
+            advanceUntilIdle()
 
             val updatedState = awaitItem()
             assertEquals(1, updatedState.pageIndex)

@@ -237,14 +237,21 @@ internal sealed class State(val type: Type): JsonSerializable {
         val pageIds: List<String> = emptyList(),
         val durations: List<Int?> = emptyList(),
         val progress: Int = 0,
-        val isMediaPaused: Boolean = false,
-        val wasMediaPaused: Boolean = false,
-        val isStoryPaused: Boolean = false,
+        val mediaPausedVideos: Map<String, String> = emptyMap(),
+        val isManuallyPaused: Boolean = false,
         val isTouchExplorationEnabled: Boolean = false,
         val branching: PagerControllerBranching? = null,
         val isScrollDisabled: Boolean = false,
-        var isScrolling: Boolean = false
+        val isScrolling: Boolean = false
     ) : State(Type.PAGER) {
+
+
+        val isMediaPaused: Boolean
+            get() = mediaPausedVideos.any { it.value == currentPageId }
+
+        val isPaused
+            get() = isMediaPaused || isManuallyPaused
+
 
         val hasNext
             get() = pageIndex < pageIds.size - 1 && !isScrollDisabled
@@ -292,12 +299,17 @@ internal sealed class State(val type: Type): JsonSerializable {
             return copy(isScrolling = isScrolling)
         }
 
-        fun copyWithMediaPaused(isMediaPaused: Boolean) =
-            copy(isMediaPaused = isMediaPaused,
-                 wasMediaPaused = this.isMediaPaused && !isMediaPaused)
+        fun copyWithMediaPaused(pageId: String, videoId: String, isPaused: Boolean): Pager {
+            val updatedMap = if (isPaused) {
+                mediaPausedVideos + (videoId to pageId)
+            } else {
+                mediaPausedVideos - videoId
+            }
+            return copy(mediaPausedVideos = updatedMap)
+        }
 
-        fun copyWithStoryPaused(isStoryPaused: Boolean) =
-            copy(isStoryPaused = isStoryPaused)
+        fun copyWithStoryManuallyPaused(isManuallyPaused: Boolean) =
+            copy(isManuallyPaused = isManuallyPaused)
 
         fun copyWithTouchExplorationState(isTouchExplorationEnabled: Boolean) =
             copy(isTouchExplorationEnabled = isTouchExplorationEnabled)
@@ -339,9 +351,7 @@ internal sealed class State(val type: Type): JsonSerializable {
             PAGE_IDS to pageIds,
             DURATIONS to durations,
             PROGRESS to progress,
-            IS_MEDIA_PAUSED to isMediaPaused,
-            WAS_MEDIA_PAUSED to wasMediaPaused,
-            IS_STORY_PAUSED to isStoryPaused,
+            IS_MANUALLY_PAUSED to isManuallyPaused,
             IS_TOUCH_EXPLORATION_ENABLED to isTouchExplorationEnabled,
             BRANCHING to branching,
             IS_SCROLL_DISABLED to isScrollDisabled
@@ -355,9 +365,7 @@ internal sealed class State(val type: Type): JsonSerializable {
             private const val PAGE_IDS = "page_ids"
             private const val DURATIONS = "durations"
             private const val PROGRESS = "progress"
-            private const val IS_MEDIA_PAUSED = "is_media_paused"
-            private const val WAS_MEDIA_PAUSED = "was_media_paused"
-            private const val IS_STORY_PAUSED = "is_story_paused"
+            private const val IS_MANUALLY_PAUSED = "is_manually_paused"
             private const val IS_TOUCH_EXPLORATION_ENABLED = "is_touch_exploration_enabled"
             private const val BRANCHING = "branching"
             private const val IS_SCROLL_DISABLED = "is_scroll_disabled"
@@ -374,9 +382,7 @@ internal sealed class State(val type: Type): JsonSerializable {
                     pageIds = content.requireList(PAGE_IDS).map { it.requireString() },
                     durations = content.requireList(DURATIONS).map { it.integer },
                     progress = content.requireField(PROGRESS),
-                    isMediaPaused = content.requireField(IS_MEDIA_PAUSED),
-                    wasMediaPaused = content.requireField(WAS_MEDIA_PAUSED),
-                    isStoryPaused = content.requireField(IS_STORY_PAUSED),
+                    isManuallyPaused = content.requireField(IS_MANUALLY_PAUSED),
                     isTouchExplorationEnabled = content.requireField(IS_TOUCH_EXPLORATION_ENABLED),
                     branching = content[BRANCHING]?.let(PagerControllerBranching::from),
                     isScrollDisabled = content.requireField(IS_SCROLL_DISABLED)

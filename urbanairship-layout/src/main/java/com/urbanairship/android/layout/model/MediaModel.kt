@@ -31,11 +31,11 @@ internal class MediaModel(
 ) {
 
     internal sealed interface PlaybackEvent {
-        data object VideoReady : PlaybackEvent
+        data class VideoReady(val playing: Boolean, val muted: Boolean) : PlaybackEvent
         data object JsPlay : PlaybackEvent
         data object JsPause : PlaybackEvent
         data object VideoEnded : PlaybackEvent
-        data object VisibilityVisible : PlaybackEvent
+        data class VisibilityChanged(val isVisible: Boolean) : PlaybackEvent
         data class PageVisibilityChanged(val isCurrentPage: Boolean) : PlaybackEvent
         data class VideoStateChanged(val state: State.Video.VideoMediaState) : PlaybackEvent
         data class StoryPauseChanged(val isPaused: Boolean) : PlaybackEvent
@@ -68,6 +68,7 @@ internal class MediaModel(
     private var isSystemPausing = false
     private var jsPlaying = false
     private var jsMuted = false
+    private var isVisible = false
 
     private var events = Channel<PlaybackEvent>(Channel.UNLIMITED)
 
@@ -85,6 +86,11 @@ internal class MediaModel(
 
     /** Media views are shrinkable by default. */
     override var isShrinkable: Boolean = true
+
+    fun setMediaLoading(isLoading: Boolean) {
+        val pageId = properties.pagerPageId ?: return
+        pagerState?.update { state -> state.copyWithMediaPaused(pageId, videoId, isLoading) }
+    }
 
     init {
         if (isPlayableMedia) { registerVideoState() }
@@ -106,6 +112,7 @@ internal class MediaModel(
         isSystemPausing = isStoryPaused() || !isOnCurrentPage()
         jsPlaying = false
         jsMuted = false
+        isVisible = false
         events = Channel(Channel.UNLIMITED)
 
         viewScope.launch {
@@ -182,9 +189,9 @@ internal class MediaModel(
 
         viewScope.launch {
             pagerState?.changes
-                ?.distinctUntilChanged { old, new -> old.isStoryPaused == new.isStoryPaused }
+                ?.distinctUntilChanged { old, new -> old.isManuallyPaused == new.isManuallyPaused }
                 ?.collect {
-                    events.trySend(PlaybackEvent.StoryPauseChanged(it.isStoryPaused))
+                    events.trySend(PlaybackEvent.StoryPauseChanged(it.isManuallyPaused))
                 }
         }
 
@@ -213,10 +220,12 @@ internal class MediaModel(
     }
 
     private fun handlePlaybackEvent(event: PlaybackEvent) {
-        UALog.v { "Media playback event: $event" }
+        UALog.v { "MediaModel[$videoId] playback event: $event" }
         when (event) {
             is PlaybackEvent.VideoReady -> {
-                pagerState?.update { state -> state.copyWithMediaPaused(false) }
+                jsPlaying = event.playing
+                jsMuted = event.muted
+                setMediaLoading(false)
                 val myState = videoState?.changes?.value?.videos?.get(videoId)
                 if (myState != null) {
                     reconcileState()
@@ -240,7 +249,10 @@ internal class MediaModel(
 
             is PlaybackEvent.JsPause -> {
                 jsPlaying = false
-                if (isSystemPausing) return
+                if (isSystemPausing || !isVisible) {
+                    UALog.v { "MediaModel[$videoId] JsPause ignored (system=$isSystemPausing, visible=$isVisible)" }
+                    return
+                }
                 if (videoState != null) {
                     videoState.update { state ->
                         val current = state.videos[videoId] ?: return@update state
@@ -261,9 +273,8 @@ internal class MediaModel(
                 }
             }
 
-            is PlaybackEvent.VisibilityVisible -> {
-                isSystemPausing = false
-                reconcileState()
+            is PlaybackEvent.VisibilityChanged -> {
+                isVisible = event.isVisible
             }
 
             is PlaybackEvent.PageVisibilityChanged -> {
@@ -308,52 +319,73 @@ internal class MediaModel(
     }
 
     private fun reconcileState() {
+        UALog.v { "MediaModel[$videoId] reconcileState: isSystemPausing=$isSystemPausing, jsPlaying=$jsPlaying, jsMuted=$jsMuted" }
+
         if (isSystemPausing) {
-            if (jsPlaying) listener?.onPause()
+            if (jsPlaying) {
+                jsPlaying = false
+                UALog.v { "MediaModel[$videoId] reconcile → pause (system pausing)" }
+                listener?.onPause()
+            }
             return
         }
 
         val desiredPlaying = shouldBePlaying()
         if (desiredPlaying && !jsPlaying) {
+            jsPlaying = true
+            UALog.v { "MediaModel[$videoId] reconcile → resume (desired=$desiredPlaying, js=$jsPlaying)" }
             listener?.onResume()
         } else if (!desiredPlaying && jsPlaying) {
+            jsPlaying = false
+            UALog.v { "MediaModel[$videoId] reconcile → pause (desired=$desiredPlaying, js=$jsPlaying)" }
             listener?.onPause()
         }
 
         val desiredMuted = videoState?.changes?.value?.videos?.get(videoId)?.muted ?: return
         if (desiredMuted && !jsMuted) {
             jsMuted = true
+            UALog.v { "MediaModel[$videoId] reconcile → mute" }
             listener?.onMute()
         } else if (!desiredMuted && jsMuted) {
             jsMuted = false
+            UALog.v { "MediaModel[$videoId] reconcile → unmute" }
             listener?.onUnmute()
         }
     }
 
     private fun isStoryPaused(): Boolean {
-        return pagerState?.changes?.value?.isStoryPaused == true
+        return pagerState?.changes?.value?.isManuallyPaused == true
     }
 
     private fun isOnCurrentPage(): Boolean {
         val pageId = properties.pagerPageId ?: return true
         val pager = pagerState?.changes?.value ?: return true
-        return pager.pageIds.getOrNull(pager.pageIndex) == pageId
+        return pager.currentPageId == pageId
     }
 
     internal fun shouldBePlaying(): Boolean {
-        if (isStoryPaused() || isSystemPausing || !isOnCurrentPage()) {
-            return false
-        }
-
-        if (videoState != null) {
-            return videoState.changes.value.videos[videoId]?.playing == true
-        }
-
+        val storyPaused = isStoryPaused()
+        val onCurrentPage = isOnCurrentPage()
+        val videoStatePlaying = videoState?.changes?.value?.videos?.get(videoId)?.playing
         val autoplay = viewInfo.video?.autoplay ?: false
-        return if (autoplay) {
+
+        val result = if (storyPaused || isSystemPausing || !onCurrentPage) {
+            false
+        } else if (videoState != null) {
+            videoStatePlaying == true
+        } else if (autoplay) {
             desiredPlayState != false
         } else {
             desiredPlayState == true
         }
+
+        UALog.v {
+            "MediaModel[$videoId] shouldBePlaying=$result " +
+            "(storyPaused=$storyPaused, systemPausing=$isSystemPausing, " +
+            "onCurrentPage=$onCurrentPage, videoStatePlaying=$videoStatePlaying, " +
+            "autoplay=$autoplay, desiredPlayState=$desiredPlayState)"
+        }
+
+        return result
     }
 }

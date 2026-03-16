@@ -120,70 +120,77 @@ internal class PagerModel(
         }
 
         // Listen for page changes (or the initial page display)
-        // when we are scrolling and reset isScrolling once the transition completes.
-        modelScope.launch {
-            pagerState.changes.filter {
-                // If current and last are both 0, we're initializing the pager.
-                // Otherwise, we only want to act on changes to the pageIndex.
-                (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex)
-                        && it.progress == 0
-                        && it.isScrolling
-            }.collect {
-                // Page transition has completed - reset isScrolling if it was true
-                pagerState.update { it.copyWithScrolling(false) }
-            }
-        }
-
-        // Listen for page changes (or the initial page display)
         // when we are not scrolling and run any actions for the current page.
         modelScope.launch {
-            pagerState.changes.filter {
-                // If current and last are both 0, we're initializing the pager.
-                // Otherwise, we only want to act on changes to the pageIndex.
-                (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex)
-                        && it.progress == 0
-                        && it.isScrolling.not()
-            }.collect {
-                // Clear any automated actions scheduled for the previous page.
-                clearAutomatedActions(it.lastPageIndex)
-                if (it.lastPageIndex > it.pageIndex) {
-                    it.previousPageId?.let { pageId -> branchControl?.removeFromHistory(pageId) }
+            pagerState.changes
+                .filter {
+                    // If current and last are both 0, we're initializing the pager.
+                    // Otherwise, we only want to act on changes to the pageIndex.
+                    (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex)
+                            && it.progress == 0
+                            && it.isScrolling.not()
                 }
+                .collect {
+                    val currentPage = it.currentPageId?.let { id ->
+                        _allPages.firstOrNull { page -> page.identifier == id }
+                    } ?: return@collect
 
-                // Handle any actions defined for the current page.
-                val currentPage = it.currentPageId?.let { id ->
-                    _allPages.firstOrNull { page -> page.identifier == id }
-                } ?: return@collect
+                    // If the page list was rebuilt by branching, but we're still on the same
+                    // logical page, skip page-transition side effects. This prevents clearing
+                    // timers, re-running display actions, and corrupting history when only
+                    // the page indices shifted.
+                    if (lastDisplayedPageId.value != currentPage.identifier) {
+                        // Clear any automated actions scheduled for the previous page.
+                        clearAutomatedActions(it.lastPageIndex)
+                        if (it.lastPageIndex > it.pageIndex) {
+                            it.previousPageId?.let { pageId -> branchControl?.removeFromHistory(pageId) }
+                        }
 
-                if (lastDisplayedPageId.value != currentPage.identifier) {
-                    lastDisplayedPageId.update { currentPage.identifier }
-                    runStateActions(currentPage.stateActions)
-                }
+                        lastDisplayedPageId.update { currentPage.identifier }
+                        runStateActions(currentPage.stateActions)
 
-                handlePageActions(currentPage.displayActions, currentPage.automatedActions)
-                it.currentPageId?.let { pageId -> branchControl?.addToHistory(pageId) }
+                        handlePageActions(currentPage.displayActions, currentPage.automatedActions)
+                        it.currentPageId?.let { pageId -> branchControl?.addToHistory(pageId) }
+                    }
 
-                // Check if the current page has any automated pause/resume actions
-                val hasPauseOrResumeAction = currentPage.automatedActions?.hasPagerPauseOrResumeAction == true
+                    val hasPauseOrResumeAction = currentPage.automatedActions?.hasPagerPauseOrResumeAction == true
 
-                if (it.isTouchExplorationEnabled) {
-                    UALog.v { "Page change: pausing story (touch exploration)" }
-                    pauseStory()
-                } else if (it.isMediaPaused) {
-                    UALog.v { "Page change: pausing story (media not ready)" }
-                    pauseStory()
-                } else if (isManuallyPaused) {
-                    UALog.v { "Page change: staying paused (manually paused)" }
-                    pauseStory()
-                } else {
-                    if (it.wasMediaPaused || !hasPauseOrResumeAction) {
+                    if (it.isTouchExplorationEnabled) {
+                        UALog.v { "Page change: pausing story (touch exploration)" }
+                        pauseStory()
+                    } else if (isManuallyPaused) {
+                        UALog.v { "Page change: staying paused (manually paused)" }
+                        pauseStory()
+                    } else if (it.isMediaPaused) {
+                        UALog.v { "Page change: pausing timers (media loading)" }
+                        navigationActionTimer?.stop()
+                        for (timer in automatedActionsTimers) {
+                            timer.stop()
+                        }
+                    } else if (!hasPauseOrResumeAction) {
                         UALog.v { "Page change: resuming story" }
                         resumeStory()
                     } else {
                         UALog.v { "Page change: deferring to automated pause/resume actions" }
                     }
                 }
-            }
+        }
+
+        // Restart timers when media on the current page finishes loading.
+        modelScope.launch {
+            pagerState.changes
+                .map { it.isMediaPaused }
+                .distinctUntilChanged()
+                .filter { !it }
+                .collect {
+                    if (!isManuallyPaused) {
+                        UALog.v { "Media ready: restarting timers" }
+                        navigationActionTimer?.start()
+                        for (timer in automatedActionsTimers) {
+                            timer.start()
+                        }
+                    }
+                }
         }
 
         modelScope.launch { wireSwipeSelector() }
@@ -206,12 +213,28 @@ internal class PagerModel(
     private fun onPagesDataUpdated(updated: List<Item>, completed: Boolean) {
         _allPages = updated
         pages = updated.map { it.view }
+
         // Update pager state with our page identifiers
         pagerState.update { state ->
+            val newPageIds = updated.map { it.identifier }
+            val newDurations = updated.map { it.automatedActions?.earliestNavigationAction?.delay }
+            val newCompleted = if (state.branching == null) updated.size == 1 else completed
+
+            // When the page list changes due to branching re-evaluation, the current
+            // pageIndex may point to a different page. Find the current page's identifier
+            // in the new list and adjust the index to stay on the same page.
+            val currentId = state.currentPageId
+            val adjustedIndex = if (currentId != null) {
+                newPageIds.indexOf(currentId).takeIf { it >= 0 }
+            } else {
+                null
+            } ?: state.pageIndex.coerceIn(0, newPageIds.lastIndex.coerceAtLeast(0))
+
             state.copy(
-                pageIds = updated.map { it.identifier },
-                durations = updated.map { it.automatedActions?.earliestNavigationAction?.delay },
-                completed = if (state.branching == null) updated.size == 1 else completed,
+                pageIndex = adjustedIndex,
+                pageIds = newPageIds,
+                durations = newDurations,
+                completed = newCompleted,
             )
         }
 
@@ -252,10 +275,9 @@ internal class PagerModel(
 
             if (copy.pageIndex != it.pageIndex) {
                 branchControl?.onPageRequest(request)
-                copy.copyWithScrolling(isScrolling = true)
-            } else {
-                copy
             }
+
+            copy
         }
 
         return true
@@ -296,16 +318,14 @@ internal class PagerModel(
                     if (!isInternalScroll) {
                         reportPageSwipe(pagerState.changes.value)
                     }
-                } else {
-                    // If no page request, the scrolling is done
-                    pagerState.update { state ->
-                        if (state.isScrolling) {
-                            state.copy(isScrolling = false)
-                        } else {
-                            state
-                        }
-                    }
                 }
+            }
+        }
+
+        // Mirror the RecyclerView's actual scroll state into pagerState.
+        viewScope.launch {
+            view.isScrolling.collect { isScrolling ->
+                pagerState.update { it.copyWithScrolling(isScrolling) }
             }
         }
 
@@ -567,7 +587,7 @@ internal class PagerModel(
 
     @OptIn(DelicateLayoutApi::class)
     private fun handlePagerPauseToggle() {
-        if (pagerState.value.isStoryPaused) {
+        if (pagerState.value.isManuallyPaused) {
             isManuallyPaused = false
             resumeStory()
         } else {
@@ -598,7 +618,7 @@ internal class PagerModel(
             timer.stop()
         }
         pagerState.update {
-            it.copyWithStoryPaused(true)
+            it.copyWithStoryManuallyPaused(true)
         }
     }
 
@@ -610,7 +630,7 @@ internal class PagerModel(
             timer.start()
         }
         pagerState.update {
-            it.copyWithStoryPaused(false)
+            it.copyWithStoryManuallyPaused(false)
         }
     }
 

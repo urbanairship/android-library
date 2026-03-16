@@ -62,7 +62,10 @@ public class PagerControllerTest {
     private val mockView: AnyModel = mockk(relaxed = true)
 
     private val pagerState: SharedState<State.Pager> =
-        spyk(SharedState(State.Pager(identifier = PAGER_ID)))
+        spyk(SharedState(State.Pager(
+            identifier = PAGER_ID,
+            pageIds = listOf(PAGE_0, PAGE_1, PAGE_2)
+        )))
 
     private lateinit var pagerController: PagerController
 
@@ -104,6 +107,34 @@ public class PagerControllerTest {
     }
 
     @Test
+    public fun testReindexSamePageDoesNotReportPageView(): TestResult = runTest {
+        // Simulate branching re-indexing: the page list changes so the current page
+        // moves to a different index, but the page identity stays the same.
+        // This should NOT trigger a duplicate page_view.
+        pagerState.changes.test {
+            val initial = awaitItem()
+            assertEquals(0, initial.pageIndex)
+            assertEquals(PAGE_0, initial.currentPageId)
+
+            // Re-index: same page at a different position in a new page list.
+            pagerState.update {
+                it.copy(
+                    pageIndex = 1,
+                    pageIds = listOf(PAGE_2, PAGE_0, PAGE_1)
+                )
+            }
+
+            val reindexed = awaitItem()
+            assertEquals(1, reindexed.pageIndex)
+            assertEquals(PAGE_0, reindexed.currentPageId)
+
+            // The initial page_view for PAGE_0 was reported during setUp.
+            // The re-index should NOT have produced a second one.
+            verify(exactly = 1) { mockReporter.report(any<ReportingEvent.PageView>()) }
+        }
+    }
+
+    @Test
     public fun testCreateView() {
         val context: Context = mockk(relaxed = true)
         val viewEnv: ViewEnvironment = mockk(relaxed = true)
@@ -115,5 +146,8 @@ public class PagerControllerTest {
 
     private companion object {
         private const val PAGER_ID = "pager-identifier"
+        private const val PAGE_0 = "page-0"
+        private const val PAGE_1 = "page-1"
+        private const val PAGE_2 = "page-2"
     }
 }

@@ -163,6 +163,32 @@ public class PagersViewTrackerTest {
     }
 
     @Test
+    public fun `onPageView does not re-track the same page at a different index`() {
+        val pageEventAtIndex0 = ReportingEvent.PageViewData("pager1", "pageA", 0, 1, 3, false)
+        val pageEventAtIndex2 = ReportingEvent.PageViewData("pager1", "pageA", 2, 1, 3, false)
+
+        tracker.onPageView(pageEventAtIndex0, 1.seconds)
+        tracker.onPageView(pageEventAtIndex2, 2.seconds)
+        tracker.stopAll(5.seconds)
+
+        assertEquals(
+            listOf(
+                ReportingEvent.PageSummaryData(
+                    identifier = "pager1",
+                    viewedPages = listOf(
+                        ReportingEvent.PageSummaryData.PageView(
+                            identifier = "pageA", index = 0, displayTime = 4.seconds
+                        )
+                    ),
+                    pageCount = 3,
+                    completed = false
+                )
+            ),
+            tracker.generateSummaryEvents()
+        )
+    }
+
+    @Test
     public fun `generateSummaryEvents returns empty list if no views tracked`() {
         val summaries = tracker.generateSummaryEvents()
         assertTrue(summaries.isEmpty())

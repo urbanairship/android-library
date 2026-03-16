@@ -102,21 +102,19 @@ internal class PagerRecyclerView(
         private var previousPosition = 0
 
         override fun onScrollStateChanged(v: RecyclerView, state: Int) {
-            val position: Int = getDisplayedItemPosition()
-            if (position != NO_POSITION && position != previousPosition) {
-                val step = if (position > previousPosition) 1 else -1
-                val distance = abs(position - previousPosition)
-                for (i in 0..<distance) {
-                    val calculated = previousPosition + (step * (i + 1))
-                    listener?.onScrollTo(calculated, isInternalScroll)
-                }
-            }
-            if (position != NO_POSITION) {
-                previousPosition = position
-            }
+            listener?.onScrollStateChanged(state != SCROLL_STATE_IDLE)
 
-            // If the scroll state is idle, scrolling has stopped, and we can reset the internal scroll flag.
+            // Only report page position changes once the scroll has fully settled.
+            // During DRAGGING/SETTLING, findSnapView can momentarily return an
+            // adjacent page (e.g. during edge overscroll snap-back), which would
+            // cause a false page change and a visible "bounce."
             if (state == SCROLL_STATE_IDLE) {
+                val position: Int = getDisplayedItemPosition()
+                if (position != NO_POSITION && position != previousPosition) {
+                    listener?.onScrollTo(position, isInternalScroll)
+                    previousPosition = position
+                }
+
                 isInternalScroll = false
             }
         }
