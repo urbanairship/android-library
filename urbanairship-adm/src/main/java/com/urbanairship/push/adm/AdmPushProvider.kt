@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.os.Handler
 import android.os.Looper
+import androidx.annotation.Keep
 import com.urbanairship.AirshipVersionInfo
 import com.urbanairship.UALog
 import com.urbanairship.Airship
@@ -22,6 +23,7 @@ import com.amazon.device.messaging.ADMConstants
  *
  * @hide
  */
+@Keep
 public class AdmPushProvider public constructor() : PushProvider, AirshipVersionInfo {
 
     override val platform: Platform = Platform.AMAZON

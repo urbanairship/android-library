@@ -3,6 +3,7 @@
 package com.urbanairship.debug
 
 import android.content.Context
+import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.analytics.Analytics
@@ -15,6 +16,7 @@ import com.urbanairship.remotedata.RemoteData
  * Debug module factory implementation.
  * @hide
  */
+@Keep
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class DebugModuleFactoryImpl : DebugModuleFactory {
 

@@ -3,6 +3,7 @@
 package com.urbanairship.liveupdate
 
 import android.content.Context
+import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
 import com.urbanairship.BuildConfig
 import com.urbanairship.PreferenceDataStore
@@ -18,6 +19,7 @@ import com.urbanairship.push.PushManager
  *
  * @hide
  */
+@Keep
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class LiveUpdateModuleFactoryImpl : LiveUpdateModuleFactory {
 

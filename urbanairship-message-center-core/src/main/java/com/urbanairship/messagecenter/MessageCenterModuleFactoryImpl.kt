@@ -1,6 +1,7 @@
 package com.urbanairship.messagecenter
 
 import android.content.Context
+import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
 import com.urbanairship.PreferenceDataStore
 import com.urbanairship.PrivacyManager
@@ -21,6 +22,7 @@ import com.urbanairship.push.PushManager
  *
  * @hide
  */
+@Keep
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class MessageCenterModuleFactoryImpl public constructor() : MessageCenterModuleFactory {
     override val airshipVersion: String =  BuildConfig.AIRSHIP_VERSION
