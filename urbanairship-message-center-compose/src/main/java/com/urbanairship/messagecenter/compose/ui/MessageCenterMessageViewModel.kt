@@ -257,6 +257,7 @@ internal class DefaultMessageCenterMessageViewModel(
         }
 
         return when(message.contentType) {
+            is Message.ContentType.Unknown,
             Message.ContentType.Html,
             Message.ContentType.Plain -> {
                 val content = State.MessageContent.Content.Html(WebViewState.INIT)

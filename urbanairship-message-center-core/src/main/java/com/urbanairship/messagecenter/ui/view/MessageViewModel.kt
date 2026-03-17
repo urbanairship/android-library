@@ -153,6 +153,7 @@ public class MessageViewModel(
         }
 
         return when(message.contentType) {
+            is Message.ContentType.Unknown,
             Message.ContentType.Html,
             Message.ContentType.Plain -> {
                 val content = MessageViewState.MessageContent.Content.Html

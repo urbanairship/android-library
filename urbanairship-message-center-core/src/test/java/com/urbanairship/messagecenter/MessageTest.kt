@@ -116,10 +116,11 @@ public class MessageTest {
             "application/vnd.urbanairship.thomas+json; garbage version=foo",
         ).map(JsonValue::wrap)
 
-        invalidJsonTypeCases.forEach { invalidValue ->
-            assertThrows(JsonException::class.java, {
-                Message.ContentType.fromJson(invalidValue)
-            })
+        invalidJsonTypeCases.forEach { value ->
+            val json = JsonValue.wrap(value)
+            val type = Message.ContentType.fromJson(json)
+            val expected = json.string ?: json.toString()
+            assertEquals("Failed for type: $value", Message.ContentType.Unknown(expected), type)
         }
     }
 

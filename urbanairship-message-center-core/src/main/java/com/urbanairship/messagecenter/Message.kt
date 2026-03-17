@@ -51,19 +51,23 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
         public data object Plain : ContentType("text/plain")
         public data class Native(val version: Int) : ContentType(NATIVE_CONTENT_TYPE)
 
+        public data class Unknown(val value: String) : ContentType(value)
+
         internal companion object {
             const val NATIVE_CONTENT_TYPE = "application/vnd.urbanairship.thomas+json"
             private const val VERSION = "version"
 
             @Throws(JsonException::class)
             fun fromJson(value: JsonValue): ContentType {
-                val content = value.requireString()
+                val content = value.string ?: return Unknown(value.toString())
+
                 return when(content) {
                     Html.jsonValue -> Html
                     Plain.jsonValue -> Plain
                     else -> {
                         if (!content.startsWith(NATIVE_CONTENT_TYPE)) {
-                            throw JsonException("Unknown content type: $content")
+                            UALog.w("Unknown content type: $content")
+                            return Unknown(content)
                         }
 
                         val version = content
@@ -73,7 +77,7 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
                             ?.split("=")
                             ?.lastOrNull()
                             ?.let(String::toIntOrNull)
-                            ?: throw JsonException("Unknown content type: $content")
+                            ?: return Unknown(content)
 
                         Native(version)
                     }
