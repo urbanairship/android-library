@@ -4,6 +4,22 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.5.0 - March 17, 2026
+
+Minor release that improves video playback and pager navigation reliability in Scenes, along with several bug fixes. This release also includes updates to proguard rules to support behavior changes in AGP 9. Apps that have migrated to AGP 9.x should update to this version or newer.
+
+### Changes
+
+- Improved video playback lifecycle handling in Scenes
+- Improvements for Scenes with complex branching
+- Fixed `Airship.takeOff` returning before `onReady` callbacks have completed
+- Fixed possible hang when calling `fetchMessages` on Message Center
+- Fixed Message Center inbox update notifications
+- Fixed Message Center message content type parsing
+- Fixed SMS validation error handling
+- Fixed overly frequent permission listener callbacks
+- Updated proguard rules to keep default constructors for Airship classes
+
 ## Version 20.4.0 - March 3, 2026
 
 Minor release with a pair of improvements for Scenes.
