@@ -21,12 +21,14 @@ public class SerialQueue {
     public suspend fun <T> run(operation: suspend () -> T): T {
         val myTask = nextTaskNumber.getAndIncrement()
 
-        return coroutineScope {
-            currentTaskNumber.first { it == myTask }
-            val result = operation.invoke()
-
+        return try {
+            coroutineScope {
+                currentTaskNumber.first { it == myTask }
+                operation.invoke()
+            }
+        } finally {
+            //make sure we don't block the queue in case of exceptions(e.g. scope is cancelled)
             currentTaskNumber.compareAndSet(myTask, myTask.inc())
-            result
         }
     }
 }

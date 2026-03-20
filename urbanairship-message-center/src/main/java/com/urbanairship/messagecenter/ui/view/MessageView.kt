@@ -191,6 +191,7 @@ public class MessageView @JvmOverloads constructor(
             is MessageViewState.Error -> {
                 message = null
                 views.showError(state.error)
+                listener?.onMessageLoadError(state.error)
             }
             is MessageViewState.Loading -> {
                 message = null

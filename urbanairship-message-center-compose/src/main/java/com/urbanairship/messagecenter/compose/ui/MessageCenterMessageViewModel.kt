@@ -2,7 +2,6 @@ package com.urbanairship.messagecenter.compose.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.lifecycle.viewmodel.initializer
@@ -11,7 +10,6 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.LayoutDataStorage
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.iam.content.AirshipLayout
-import com.urbanairship.messagecenter.PersistentLayoutDataStorage
 import com.urbanairship.messagecenter.Inbox
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
@@ -38,15 +36,15 @@ internal interface MessageCenterMessageViewModel {
     ): ThomasListenerInterface
 
     /** [MessageCenterMessage] display states. */
-    sealed class State {
+    sealed class State(open val messageId: String?) {
         /** Loading state. */
-        data object Loading : State()
+        data class Loading(override val messageId: String) : State(messageId)
 
         /** Content state. */
         data class MessageContent(
             val message: Message,
             val content: Content,
-        ) : State() {
+        ) : State(message.id) {
             enum class WebViewState {
                 INIT,
                 LOADING,
@@ -68,7 +66,7 @@ internal interface MessageCenterMessageViewModel {
         }
 
         /** Error state. */
-        data class Error(val error: Type) : State() {
+        data class Error(val error: Type, override val messageId: String) : State(messageId) {
             /** [MessageCenterMessage] error types. */
             enum class Type {
                 /** Failed to fetch the message or refresh the inbox. */
@@ -79,7 +77,7 @@ internal interface MessageCenterMessageViewModel {
         }
 
         /** Empty state (no messages available). */
-        data object Empty : State()
+        data object Empty : State(null)
     }
 
     /** [MessageCenterMessage] UI actions. */
@@ -172,7 +170,7 @@ internal class DefaultMessageCenterMessageViewModel(
             return
         }
 
-        _states.value = State.Loading
+        _states.value = State.Loading(messageId)
 
         viewModelScope.launch {
             _states.value = getOrFetchMessage(messageId)
@@ -244,16 +242,16 @@ internal class DefaultMessageCenterMessageViewModel(
             // If we don't have the message, refresh the inbox
             if (!inbox.fetchMessages()) {
                 // Fetch failed, return an error
-                return State.Error(State.Error.Type.LOAD_FAILED)
+                return State.Error(State.Error.Type.LOAD_FAILED, messageId)
             }
 
             // Try to get the message again, now that we've refreshed
-            inbox.getMessage(messageId) ?: return State.Error(State.Error.Type.UNAVAILABLE)
+            inbox.getMessage(messageId) ?: return State.Error(State.Error.Type.UNAVAILABLE, messageId)
         }
 
         if (message.isExpired) {
             // Message is expired, return an error
-            return State.Error(State.Error.Type.UNAVAILABLE)
+            return State.Error(State.Error.Type.UNAVAILABLE, messageId)
         }
 
         return when(message.contentType) {
@@ -273,7 +271,7 @@ internal class DefaultMessageCenterMessageViewModel(
                     val content = State.MessageContent.Content.Native(layout, viewStore)
                     State.MessageContent(message, content)
                 } else {
-                    State.Error(State.Error.Type.UNAVAILABLE)
+                    State.Error(State.Error.Type.UNAVAILABLE, messageId)
                 }
             }
         }

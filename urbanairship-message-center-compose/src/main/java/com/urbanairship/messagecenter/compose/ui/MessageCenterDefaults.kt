@@ -196,7 +196,7 @@ public object MessageCenterDefaults {
                     state.onAction(MessageCenterMessageViewModel.Action.DeleteCurrentMessage)
                     onMessageDeleted.invoke()
                 },
-                enabled = state.messageId != null
+                enabled = state.viewState is MessageCenterMessageViewModel.State.MessageContent
             ) {
                 Icon(
                     painter = painterResource(com.urbanairship.messagecenter.core.R.drawable.ua_ic_message_center_delete),
