@@ -65,6 +65,119 @@ view:
                         hex: "#FFFF00"
                         alpha: 1
           #
+          # Superscripts & Subscripts
+          #
+          - margin:
+              top: 8
+              bottom: 8
+              start: 8
+              end: 8
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label
+              text: Superscripts & Subscripts
+              text_appearance:
+                alignment: start
+                styles:
+                  - bold
+                font_size: 16
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+          - margin:
+              top: 0
+              bottom: 8
+              start: 8
+              end: 8
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label
+              text: "H,{2},O  —  E = mc^^2^^"
+              text_appearance:
+                alignment: start
+                font_size: 14
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+          - margin:
+              top: 0
+              bottom: 8
+              start: 8
+              end: 8
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label
+              text: "==H,{2},O is highlighted!==  and  ==E = mc^^2^^ too=="
+              text_appearance:
+                alignment: start
+                font_size: 14
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+          - margin:
+              top: 0
+              bottom: 8
+              start: 8
+              end: 8
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label
+              text: "mc^^==2==^^ — only the superscript is highlighted"
+              text_appearance:
+                alignment: start
+                font_size: 14
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+          - margin:
+              top: 0
+              bottom: 8
+              start: 8
+              end: 8
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label
+              text: "~~H,{2},O~~ and ~~mc^^2^^~~ — strikethrough composes"
+              text_appearance:
+                alignment: start
+                font_size: 14
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+          - margin:
+              top: 0
+              bottom: 8
+              start: 8
+              end: 8
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label
+              text: "^^open only, ,{open only — treated as plain text"
+              text_appearance:
+                alignment: start
+                font_size: 14
+                color:
+                  default:
+                    hex: "#000000"
+                    alpha: 1
+          #
           # Styles
           #
           - margin:
