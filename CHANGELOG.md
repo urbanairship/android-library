@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.6.0 - March 25, 2026
+
+Minor release that extends Markdown support in Scenes and improves handling of navigation to invalid Message Center message IDs.
+
+### Changes
+- Added superscript and subscript Markdown support in Scenes (`^^superscript^^` and `,{subscript},`)
+- Updated Message Center to show the message view with an error when attempting to open a message with an invalid message ID, instead of failing to the Messages list
+
 ## Version 20.5.0 - March 17, 2026
 
 Minor release that improves video playback and pager navigation reliability in Scenes, along with several bug fixes. This release also includes updates to proguard rules to support behavior changes in AGP 9. Apps that have migrated to AGP 9.x should update to this version or newer.
