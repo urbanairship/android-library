@@ -19,40 +19,46 @@ internal fun String?.ifNotEmpty(block: (String) -> Unit) {
  * - Bold and italic: `***bold + italic***`
  * - Strikethrough: `~~strikethrough~~`
  * - Highlight: `==highlight==`
+ * - Superscript: `^^superscript^^`
+ * - Subscript: `,{subscript},`
  *
  * All other markdown syntax will be ignored.
  */
 internal fun String.markdownToHtml(): String = basicMarkdownToHtml(this)
 
 /** Matches `[link](url)` */
-private val linkRegex = "\\[(.+?)\\]\\((.+?)\\)".toRegex()
+private val linkRegex = """\[(.+?)]\((.+?)\)""".toRegex()
 private const val linkTag = """<a href="$2">$1</a>"""
 
-/** Matches `***bold + italic***` not preceded or followed by `*` */
-private val boldAndItalicRegexStar = """(?<!\*)\*\*\*(?!\*)(.*?)(?<!\*)\*\*\*(?!\*)""".toRegex()
-/** Matches `___bold + italic___` preceded by a word boundary and not followed by `_` */
-private val boldAndItalicRegexBar = """\b___(?!_)(.*?)(?<!_)___\b""".toRegex()
+/** Matches `***bold + italic***` or `___bold + italic___` */
+private val boldAndItalicRegexStar = """\*\*\*(.*?)\*\*\*""".toRegex()
+private val boldAndItalicRegexBar = """\b___(.*?)___\b""".toRegex()
 private const val boldAndItalicTag = """<b><i>$1</i></b>"""
 
-/** Matches `**bold**` not preceded or followed by `*` */
-private val boldRegexStar = """(?<!\*)\*\*(?!\*)(.*?)(?<!\*)\*\*(?!\*)""".toRegex()
-/** Matches `__bold__` preceded by a word boundary and not followed by `_` */
-private val boldRegexBar = """\b__(?!_)(.*?)(?<!_)__\b""".toRegex()
+/** Matches `**bold**` or `__bold__` */
+private val boldRegexStar = """\*\*(.*?)\*\*""".toRegex()
+private val boldRegexBar = """\b__(.*?)__\b""".toRegex()
 private const val boldTag = """<b>$1</b>"""
 
-/** Matches `*italic*` not preceded or followed by `*` */
-private val italicRegexStar = """(?<!\*)\*(?!\*)(.*?)(?<!\*)\*(?!\*)""".toRegex()
-/** Matches `_italic_` preceded by a word boundary and not followed by `_` */
-private val italicRegexBar = """\b_(?!_)(.*?)(?<!_)_\b""".toRegex()
+/** Matches `*italic*` or `_italic_` */
+private val italicRegexStar = """\*(.*?)\*""".toRegex()
+private val italicRegexBar = """\b_(.*?)_\b""".toRegex()
 private const val italicTag = """<i>$1</i>"""
 
-/** Matches `~~strikethrough~~` not preceded or followed by `~` */
-private val strikethroughRegex = """(?<!~)~~(?!~)(.*?)(?<!~)~~(?!~)""".toRegex()
+/** Matches `~~strikethrough~~` */
+private val strikethroughRegex = """~~(.*?)~~""".toRegex()
 private const val strikethroughTag = """<s>$1</s>"""
 
-/** Matches `==highlight==` not preceded or followed by `=` */
-private val highlightRegex = """(?<!=)==(?!=)(.*?)(?<!=)==(?!=)""".toRegex(RegexOption.DOT_MATCHES_ALL)
+/** Matches `^^superscript^^` */
+private val superscriptRegex = """\^\^(.*?)\^\^""".toRegex()
+private const val superscriptTag = """<sup>$1</sup>"""
 
+/** Matches `,{subscript},` */
+private val subscriptRegex = """,\{(.*?)\},""".toRegex()
+private const val subscriptTag = """<sub>$1</sub>"""
+
+/** Matches `==highlight==` */
+private val highlightRegex = """==([\s\S]+?)==""".toRegex()
 /** Color is replaced later **/
 private const val highlightTag = """<span style="background-color: #4DFFFF00;">$1</span>"""
 
@@ -84,5 +90,9 @@ private fun basicMarkdownToHtml(markdown: String): String =
         .replace(italicRegexBar, italicTag)
         // Replace ~~strikethrough~~ with <s>strikethrough</s>
         .replace(strikethroughRegex, strikethroughTag)
+        // Replace ^^superscript^^ with <sup>superscript</sup>
+        .replace(superscriptRegex, superscriptTag)
+        // Replace ,{subscript}, with <sub>subscript</sub>
+        .replace(subscriptRegex, subscriptTag)
         // Replace ==highlight== with <span style="background-color: #4DFFFF00;">highlight</span>
         .replace(highlightRegex, highlightTag)

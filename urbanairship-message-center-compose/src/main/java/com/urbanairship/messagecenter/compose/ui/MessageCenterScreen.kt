@@ -55,7 +55,7 @@ public fun MessageCenterScreen(
     val isTwoPane = paneState.primary == PaneAdaptedValue.Expanded &&
                         paneState.secondary == PaneAdaptedValue.Expanded
 
-    if (!isTwoPane && state.messageState.messageId != null) {
+    if (!isTwoPane && state.messageState.messageId?.isNotEmpty() == true) {
         LaunchedEffect(state.messageState.messageId) {
             delay(300.milliseconds) // wait for display animation
             scaffoldNavigator.navigateTo(

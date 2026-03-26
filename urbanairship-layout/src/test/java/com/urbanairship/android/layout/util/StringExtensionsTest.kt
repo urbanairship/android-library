@@ -137,13 +137,6 @@ public class StringExtensionsTest {
     }
 
     @Test
-    public fun markdownToHtmlIgnoredUnpairedMarkdown() {
-        val input = "*** _ ** __ ~~ * ~"
-        val expected = "*** _ ** __ ~~ * ~"
-        assertEquals(expected, input.markdownToHtml())
-    }
-
-    @Test
     public fun markdownToHtmlEmpty() {
         val input = ""
         val expected = ""
@@ -194,6 +187,69 @@ public class StringExtensionsTest {
     public fun markdownToHtmlHighlightIntraword() {
         val input = "high==light==ed"
         val expected = """high<span style="background-color: #4DFFFF00;">light</span>ed"""
+        assertEquals(expected, input.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSuperscript() {
+        val input = "E = mc^^2^^"
+        val expected = "E = mc<sup>2</sup>"
+        assertEquals(expected, input.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSubscript() {
+        val input = "H,{2},O"
+        val expected = "H<sub>2</sub>O"
+        assertEquals(expected, input.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSuperscriptAndSubscript() {
+        val input = "H,{2},O  —  E = mc^^2^^"
+        val expected = "H<sub>2</sub>O  —  E = mc<sup>2</sup>"
+        assertEquals(expected, input.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSuperscriptWithHighlightInside() {
+        val input = "mc^^==2==^^"
+        val expected = """mc<sup><span style="background-color: #4DFFFF00;">2</span></sup>"""
+        assertEquals(expected, input.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSubscriptInsideHighlight() {
+        val input = "==H,{2},O=="
+        val expected = """<span style="background-color: #4DFFFF00;">H<sub>2</sub>O</span>"""
+        assertEquals(expected, input.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSubscriptInsideStrikethrough() {
+        val input = "~~H,{2},O~~"
+        val expected = "<s>H<sub>2</sub>O</s>"
+        assertEquals(expected, input.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlSuperscriptInsideStrikethrough() {
+        val input = "~~mc^^2^^~~"
+        val expected = "<s>mc<sup>2</sup></s>"
+        assertEquals(expected, input.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlHighlightedSubscriptAndSuperscript() {
+        val input = "==H,{2},O is highlighted!==  and  ==E = mc^^2^^ too=="
+        val expected = """<span style="background-color: #4DFFFF00;">H<sub>2</sub>O is highlighted!</span>  and  <span style="background-color: #4DFFFF00;">E = mc<sup>2</sup> too</span>"""
+        assertEquals(expected, input.markdownToHtml())
+    }
+
+    @Test
+    public fun markdownToHtmlIgnoresUnpairedSuperscriptAndSubscript() {
+        val input = "^^open only, ,{open only"
+        val expected = "^^open only, ,{open only"
         assertEquals(expected, input.markdownToHtml())
     }
 

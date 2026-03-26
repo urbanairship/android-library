@@ -88,10 +88,28 @@ public open class MessageCenterMessageFragment(
 
     override fun onMessageLoaded(message: Message) {
         setToolbarTitle(message.title)
+
+        val deleteItem = toolbar?.menu?.findItem(R.id.delete)
+        deleteItem?.let { item ->
+            item.isEnabled = true
+            item.icon?.mutate()?.alpha = 255 // Full opacity
+        }
     }
 
     override fun onMessageLoadError(error: MessageViewState.Error.Type) {
         setToolbarTitle(null)
+
+        when(error) {
+            MessageViewState.Error.Type.UNAVAILABLE -> {
+                val deleteItem = toolbar?.menu?.findItem(R.id.delete)
+                deleteItem?.let { item ->
+                    item.isEnabled = false
+                    // Gray out the icon by reducing alpha
+                    item.icon?.mutate()?.alpha = DISABLED_BUTTON_ALPHA
+                }
+            }
+            else -> {}
+        }
     }
 
     override fun onCloseMessage() {
@@ -146,6 +164,8 @@ public open class MessageCenterMessageFragment(
 
         /** Optional `Boolean` argument for the toolbar nav icon visibility. */
         public const val ARG_SHOW_NAV_ICON: String = "show_nav_icon"
+
+        private const val DISABLED_BUTTON_ALPHA = 76 // alpha = 0.3
 
         /**
          * Creates a new instance of [MessageCenterMessageFragment].
