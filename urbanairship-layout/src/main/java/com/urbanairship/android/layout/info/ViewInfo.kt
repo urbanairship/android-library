@@ -68,6 +68,7 @@ import com.urbanairship.android.layout.property.ViewType.STORY_INDICATOR
 import com.urbanairship.android.layout.property.ViewType.TEXT_INPUT
 import com.urbanairship.android.layout.property.ViewType.TOGGLE
 import com.urbanairship.android.layout.property.ViewType.UNKNOWN
+import com.urbanairship.android.layout.property.ViewType.ASYNC_VIEW_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.VIDEO_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.WEB_VIEW
 import com.urbanairship.android.layout.reporting.AttributeName
@@ -83,10 +84,11 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalList
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
-import com.urbanairship.json.requireList
 import com.urbanairship.json.requireMap
 import java.util.UUID
 import kotlin.collections.map
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -114,6 +116,7 @@ public sealed class ViewInfo : View {
                 PAGER -> PagerInfo(json)
                 PAGER_INDICATOR -> PagerIndicatorInfo(json)
                 STORY_INDICATOR -> StoryIndicatorInfo(json)
+                ASYNC_VIEW_CONTROLLER -> AsyncViewControllerInfo(json)
                 FORM_CONTROLLER -> FormControllerInfo(json)
                 NPS_FORM_CONTROLLER -> NpsFormControllerInfo(json)
                 CHECKBOX_CONTROLLER -> CheckboxControllerInfo(json)
@@ -1054,6 +1057,111 @@ internal class PagerControllerInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(
     override val children: List<ViewItemInfo> = listOf(ViewItemInfo(view))
 
     val branching = json["branching"]?.let(PagerControllerBranching::from)
+}
+
+internal class AsyncViewControllerInfo(json: JsonMap) : ViewInfo(), View by view(json),
+    Identifiable by identifiable(json) {
+
+    val placeholder: ViewInfo = viewInfoFromJson(json.requireField(PLACEHOLDER))
+
+    val request: Request = Request.from(json.require(REQUEST))
+    val retryPolicy: RetryPolicy = RetryPolicy.from(json[RETRY])
+
+    internal class Request(
+        val type: Type,
+        val auth: Auth?,
+        val url: String
+    ) {
+
+        internal enum class Type {
+            CONTENT;
+
+            companion object {
+                private const val CONTENT_VALUE = "content"
+
+                @Throws(JsonException::class)
+                fun from(json: JsonValue): Type {
+                    val content = json.requireString()
+                    return when (content.lowercase()) {
+                        CONTENT_VALUE -> CONTENT
+                        else -> throw JsonException("Unknown async view request type: $content")
+                    }
+                }
+            }
+        }
+
+        internal enum class Auth {
+            APP,
+            CHANNEL,
+            CONTACT;
+
+            companion object {
+                private const val APP_VALUE = "app"
+                private const val CHANNEL_VALUE = "channel"
+                private const val CONTACT_VALUE = "contact"
+
+                @Throws(JsonException::class)
+                fun from(json: JsonValue): Auth {
+                    val content = json.requireString()
+                    return when (content.lowercase()) {
+                        APP_VALUE -> APP
+                        CHANNEL_VALUE -> CHANNEL
+                        CONTACT_VALUE -> CONTACT
+                        else -> throw JsonException("Unknown async view auth: $content")
+                    }
+                }
+            }
+        }
+
+        companion object {
+            private const val TYPE = "type"
+            private const val AUTH = "auth"
+            private const val URL = "url"
+
+            @Throws(JsonException::class)
+            fun from(json: JsonValue): Request {
+                val content = json.requireMap()
+
+                return Request(
+                    type = Type.from(content.require(TYPE)),
+                    auth = content[AUTH]?.let(Auth::from),
+                    url = content.requireField(URL)
+                )
+            }
+        }
+    }
+
+    internal class RetryPolicy(
+        val maxRetries: Int,
+        val initialBackoff: Duration,
+        val maxBackoff: Duration,
+    ) {
+        companion object {
+            private const val MAX_RETRIES = "max_retries"
+            private const val INITIAL_BACKOFF_SECONDS = "initial_backoff_seconds"
+            private const val MAX_BACKOFF_SECONDS = "max_backoff_seconds"
+
+            private const val DEFAULT_MAX_RETRIES = 3
+            private val DEFAULT_INITIAL_BACKOFF = 1.seconds
+            private val DEFAULT_MAX_BACKOFF = 10.seconds
+
+            fun from(json: JsonValue?): RetryPolicy {
+                val content = json?.map ?: jsonMapOf()
+
+                return RetryPolicy(
+                    maxRetries = content.optionalField(MAX_RETRIES) ?: DEFAULT_MAX_RETRIES,
+                    initialBackoff = content.optionalField<Int>(INITIAL_BACKOFF_SECONDS)?.seconds ?: DEFAULT_INITIAL_BACKOFF,
+                    maxBackoff = content.optionalField<Int>(MAX_BACKOFF_SECONDS)?.seconds ?: DEFAULT_MAX_BACKOFF
+                )
+            }
+        }
+    }
+
+    companion object {
+        const val PLACEHOLDER = "placeholder"
+        const val REQUEST = "request"
+        const val RETRY = "retry"
+    }
 }
 
 internal open class BaseToggleLayoutInfo(json: JsonMap) :  ViewGroupInfo<ViewItemInfo>(), Identifiable by identifiable(json), View by view(json), Accessible by accessible(json) {

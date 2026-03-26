@@ -41,7 +41,8 @@ public class PagerBranchControlTest {
             layout = State.Layout(identifier = "test-layout"),
             form = null,
             pager = null,
-            video = null
+            video = null,
+            asyncView = null
         )
     )
 

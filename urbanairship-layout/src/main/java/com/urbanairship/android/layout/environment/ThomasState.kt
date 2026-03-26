@@ -2,6 +2,7 @@
 
 package com.urbanairship.android.layout.environment
 
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.info.ViewPropertyOverride
 import com.urbanairship.android.layout.reporting.ThomasFormField
@@ -18,11 +19,13 @@ internal data class ThomasState(
     val layout: State.Layout?,
     val form: State.Form?,
     val pager: State.Pager?,
-    val video: State.Video?
+    val video: State.Video?,
+    val asyncView: State.AsyncView?
 ): JsonSerializable {
 
     override fun toJsonValue(): JsonValue {
         val layout = layout ?: return JsonValue.NULL
+
         return layout.state
             .toMutableMap()
             .apply {
@@ -65,6 +68,12 @@ internal data class ThomasState(
                         CURRENT to state
                     ).toJsonValue())
                 }
+
+                asyncView?.let { state ->
+                    put(ASYNC_VIEW, jsonMapOf(
+                        CURRENT to state
+                    ).toJsonValue())
+                }
             }
             .toJsonMap()
             .toJsonValue()
@@ -98,6 +107,7 @@ internal data class ThomasState(
         const val PAGER = "\$pagers"
         const val PAUSED = "paused"
         const val VIDEO = "\$video"
+        const val ASYNC_VIEW = "\$asyncView"
     }
 }
 
@@ -105,17 +115,19 @@ internal fun makeThomasState(
     formState: SharedState<State.Form>?,
     layoutState: SharedState<State.Layout>?,
     pagerState: SharedState<State.Pager>?,
-    videoState: SharedState<State.Video>?
+    videoState: SharedState<State.Video>?,
+    asyncView: SharedState<State.AsyncView>?
 ): StateFlow<ThomasState> {
 
     val layout = layoutState
-        ?: return MutableStateFlow(ThomasState(null, null, null, null)).asStateFlow()
+        ?: return MutableStateFlow(ThomasState(null, null, null, null, null)).asStateFlow()
 
     return combineStates(
         flow1 = layout.changes,
         flow2 = formState?.changes ?: MutableStateFlow(null).asStateFlow(),
         flow3 = pagerState?.changes ?: MutableStateFlow(null).asStateFlow(),
         flow4 = videoState?.changes ?: MutableStateFlow(null).asStateFlow(),
+        flow5 = asyncView?.changes ?: MutableStateFlow(null).asStateFlow(),
         transform = ::ThomasState
     )
 }

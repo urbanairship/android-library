@@ -6,7 +6,6 @@ import com.urbanairship.android.layout.environment.LayoutState.StateMutation
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.StateControllerInfo
-import com.urbanairship.android.layout.info.StateControllerInfo.Companion.IDENTIFIER
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.model.PageRequest
 import com.urbanairship.android.layout.property.AttributeValue
@@ -43,6 +42,7 @@ internal class LayoutState(
     val checkbox: SharedState<State.Checkbox>?,
     val radio: SharedState<State.Radio>?,
     val score: SharedState<State.Score>?,
+    val asyncView: SharedState<State.AsyncView>?,
     val layout: SharedState<State.Layout>,
     val video: SharedState<State.Video>?,
     val videoControl: VideoControlState?,
@@ -78,11 +78,12 @@ internal class LayoutState(
             layout = SharedState(State.Layout.DEFAULT),
             video = null,
             videoControl = null,
-            thomasState = makeThomasState(null, null, null, null),
+            thomasState = makeThomasState(null, null, null, null, null),
             thomasForm = null,
             parentForm = null,
             pagerTracker = null,
-            score = null
+            score = null,
+            asyncView = null
         )
     }
 
@@ -966,6 +967,88 @@ internal sealed class State(val type: Type): JsonSerializable {
         }
     }
 
+    internal sealed class AsyncView(open val identifier: String): State(Type.ASYNC_VIEW) {
+        data class Idle(override val identifier: String) : AsyncView(identifier)
+
+        data class Loading(override val identifier: String) : AsyncView(identifier)
+
+        data class Error(
+            override val identifier: String,
+            val data: ErrorData
+        ) : AsyncView(identifier) {
+            sealed class ErrorData(): JsonSerializable {
+                data object Timeout: ErrorData()
+                data object Client: ErrorData()
+                data class Server(val code: Int): ErrorData()
+
+                companion object {
+                    private const val TYPE = "type"
+                    private const val TIMEOUT = "timeout"
+                    private const val CLIENT = "client_error"
+                    private const val SERVER = "server_error"
+                    private const val ERROR_CODE = "http_status_code"
+                }
+
+                override fun toJsonValue(): JsonValue {
+                    return when(this) {
+                        Timeout -> jsonMapOf(TYPE to TIMEOUT)
+                        Client -> jsonMapOf(TYPE to CLIENT)
+                        is Server -> jsonMapOf(TYPE to SERVER, ERROR_CODE to code)
+                    }.toJsonValue()
+                }
+            }
+        }
+
+        data class Loaded(
+            override val identifier: String,
+            val data: JsonValue = JsonValue.NULL
+        ): AsyncView(identifier)
+
+        companion object {
+            private const val IDENTIFIER = "identifier"
+            private const val STATUS = "status"
+            private const val DATA = "data"
+
+            private const val IDLE = "idle"
+            private const val LOADING = "loading"
+            private const val ERROR = "error"
+            private const val LOADED = "loaded"
+
+            @Throws(JsonException::class)
+            fun fromJson(json: JsonValue): AsyncView {
+                val content = json.requireMap()
+
+                // default to idle
+                return Idle(
+                    identifier = content.requireField(IDENTIFIER)
+                )
+            }
+        }
+
+        override fun toJsonValue(): JsonValue {
+            return when(this) {
+                is Error -> jsonMapOf(
+                    STATUS to ERROR,
+                    IDENTIFIER to identifier,
+                    DATA to data
+                )
+                is Idle -> jsonMapOf(
+                    STATUS to IDLE,
+                    IDENTIFIER to identifier
+                )
+                is Loaded -> jsonMapOf(
+                    STATUS to LOADED,
+                    IDENTIFIER to identifier,
+                    DATA to data
+                )
+                is Loading -> jsonMapOf(
+                    STATUS to LOADING,
+                    IDENTIFIER to identifier
+                )
+            }.toJsonValue()
+        }
+    }
+
     enum class Type(private val jsonValue: String): JsonSerializable {
         PAGER("pager"),
         FORM("form"),
@@ -973,7 +1056,8 @@ internal sealed class State(val type: Type): JsonSerializable {
         RADIO("radio"),
         SCORE("score"),
         LAYOUT("layout"),
-        VIDEO("video");
+        VIDEO("video"),
+        ASYNC_VIEW("async_view");
 
         override fun toJsonValue(): JsonValue = JsonValue.wrap(jsonValue)
 
@@ -1002,6 +1086,7 @@ internal sealed class State(val type: Type): JsonSerializable {
                 Type.SCORE -> Score.fromJson(json)
                 Type.LAYOUT -> Layout.fromJson(json)
                 Type.VIDEO -> Video.fromJson(json)
+                Type.ASYNC_VIEW -> AsyncView.fromJson(json)
             }
         }
     }

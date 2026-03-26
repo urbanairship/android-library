@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.environment.VideoCommandChannel
 import com.urbanairship.android.layout.environment.VideoControlState
 import com.urbanairship.android.layout.environment.VideoGroupBroadcastChannel
 import com.urbanairship.android.layout.environment.makeThomasState
+import com.urbanairship.android.layout.info.AsyncViewControllerInfo
 import com.urbanairship.android.layout.info.BasicToggleLayoutInfo
 import java.util.UUID
 import com.urbanairship.android.layout.info.ButtonLayoutInfo
@@ -53,6 +54,7 @@ import com.urbanairship.android.layout.info.ViewGroupInfo
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.info.WebViewInfo
 import com.urbanairship.android.layout.model.AnyModel
+import com.urbanairship.android.layout.model.AsyncLayoutModel
 import com.urbanairship.android.layout.model.BasicToggleLayoutModel
 import com.urbanairship.android.layout.model.ButtonLayoutModel
 import com.urbanairship.android.layout.model.CheckboxController
@@ -95,7 +97,11 @@ internal class ModelFactoryException(message: String) : Exception(message)
 
 internal interface ModelFactory {
     @Throws(ModelFactoryException::class)
-    fun create(info: ViewInfo, environment: ModelEnvironment): AnyModel
+    fun create(
+        info: ViewInfo,
+        environment: ModelEnvironment,
+        parentLayoutState: LayoutState? = null
+    ): AnyModel
 }
 
 /** Temporary unique identifier for a layout node. */
@@ -109,23 +115,32 @@ internal class ThomasModelFactory : ModelFactory {
     /** Generated tags by type */
     private val tagIndexMap = mutableMapOf<ViewType, Int>()
 
+    /** Parent layout state for async content */
+    private var parentLayoutState: LayoutState? = null
+
     private lateinit var rootTag: Tag
 
     @Throws(ModelFactoryException::class)
-    override fun create(info: ViewInfo, environment: ModelEnvironment): AnyModel {
-        rootTag = generateTag(info)
-        process(info)
+    override fun create(
+        info: ViewInfo,
+        environment: ModelEnvironment,
+        parentLayoutState: LayoutState?
+    ): AnyModel {
+        rootTag = generateTag(info, parentLayoutState)
+        process(info, parentLayoutState)
+        this.parentLayoutState = parentLayoutState
         return build(environment)
     }
 
-    private fun generateTag(info: ViewInfo): Tag {
+    private fun generateTag(info: ViewInfo, parentLayoutState: LayoutState?): Tag {
+        val prefix = if (parentLayoutState != null) "async_" else ""
         val id = tagIndexMap
             .getOrElse(info.type) { 0 }
             .also { tagIndexMap[info.type] = it + 1 }
-        return "${info.type}_$id"
+        return "$prefix${info.type}_$id"
     }
 
-    private fun process(root: ViewInfo) {
+    private fun process(root: ViewInfo, parentLayoutState: LayoutState?) {
         // Processing stack entry
         data class StackEntry(
             val tag: Tag,
@@ -137,8 +152,21 @@ internal class ThomasModelFactory : ModelFactory {
         // Processing stack
         val stack = ArrayDeque<StackEntry>()
 
-        // Create controllers builder
-        val emptyControllers = Controllers.Builder()
+        // Create controllers builder - initialize with parent controllers if present
+        val initialControllers = parentLayoutState?.let { parent ->
+            Controllers.Builder(
+                form = if (parent.thomasForm != null || parent.parentForm != null) {
+                    listOf(PARENT_FORM_TAG)
+                } else emptyList(),
+                pager = parent.pager?.let { PARENT_PAGER_TAG },
+                checkbox = parent.checkbox?.let { PARENT_CHECKBOX_TAG },
+                radio = parent.radio?.let { PARENT_RADIO_TAG },
+                score = parent.score?.let { PARENT_SCORE_TAG },
+                layout = if (parent.layout != LayoutState.EMPTY.layout) PARENT_LAYOUT_TAG else null,
+                async = parent.asyncView?.let { PARENT_ASYNC_TAG },
+                story = null  // Story doesn't need inheritance
+            )
+        } ?: Controllers.Builder()
 
         // Add root node to the stack
         stack.addFirst(
@@ -146,7 +174,7 @@ internal class ThomasModelFactory : ModelFactory {
                 tag = rootTag,
                 parentTag = null,
                 info = ViewItemInfo(root),
-                controllers = emptyControllers,
+                controllers = initialControllers,
                 pagerPageId = null
             )
         )
@@ -187,7 +215,7 @@ internal class ThomasModelFactory : ModelFactory {
                     val child = children[i]
                     stack.addFirst(
                         StackEntry(
-                            tag = generateTag(child.info),
+                            tag = generateTag(child.info, parentLayoutState),
                             parentTag = tag,
                             info = child,
                             controllers = childControllers,
@@ -207,9 +235,18 @@ internal class ThomasModelFactory : ModelFactory {
         val builtModels = mutableMapOf<Tag, Pair<AnyModel, ItemInfo>>()
 
         // Layout states, passed to model via their model environment when a node references
-        // controllers by tag
-        val layoutStates = controllers.mapValues { (_, ctrl) ->
-            createMutableSharedState(ctrl.info.info, environment.stateStorage)
+        // controllers by tag. Skip parent markers - they'll be handled in buildLayoutState.
+        val layoutStates = controllers.mapValues { (tag, ctrl) ->
+            when (tag) {
+                PARENT_FORM_TAG,
+                PARENT_PAGER_TAG,
+                PARENT_CHECKBOX_TAG,
+                PARENT_RADIO_TAG,
+                PARENT_SCORE_TAG,
+                PARENT_LAYOUT_TAG,
+                PARENT_ASYNC_TAG -> null  // Handled in buildLayoutState
+                else -> createMutableSharedState(ctrl.info.info, environment.stateStorage)  // Create new for async's controllers
+            }
         }
 
         val videoCommandChannels = controllers
@@ -254,7 +291,8 @@ internal class ThomasModelFactory : ModelFactory {
                         pagerTracker = environment.pagerTracker,
                         videoCommandChannels = videoCommandChannels,
                         videoBroadcastChannels = videoBroadcastChannels,
-                        videoControlGroups = videoControlGroups
+                        videoControlGroups = videoControlGroups,
+                        parentLayoutState = parentLayoutState
                     )
                 )
                 val properties = ModelProperties(pagerPageId = node.pagerPageId)
@@ -333,6 +371,10 @@ internal class ThomasModelFactory : ModelFactory {
                     default = { State.Layout(identifier =  identifier) }
                 )
             }
+            is AsyncViewControllerInfo -> makeState(
+                identifier = info.identifier,
+                default = { State.AsyncView.Idle(identifier = info.identifier) }
+            )
             else -> null
         }
     }
@@ -370,7 +412,8 @@ internal class ThomasModelFactory : ModelFactory {
         val score: Tag?,
         val layout: Tag?,
         val story: Tag?,
-        val video: List<Tag>
+        val video: List<Tag>,
+        val async: Tag?
     ) {
         @Suppress("UNCHECKED_CAST")
         fun buildLayoutState(
@@ -378,18 +421,54 @@ internal class ThomasModelFactory : ModelFactory {
             pagerTracker: PagersViewTracker?,
             videoCommandChannels: Map<Tag, VideoCommandChannel>,
             videoBroadcastChannels: Map<Tag, VideoGroupBroadcastChannel>,
-            videoControlGroups: Map<Tag, Pair<String, String>>
+            videoControlGroups: Map<Tag, Pair<String, String>>,
+            parentLayoutState: LayoutState? = null
         ): LayoutState {
             val childForm = form.firstOrNull()
             val parentForm = form.getOrNull(1)
 
-            val formFlow = childForm?.let { states[it] as? SharedState<State.Form> }
-            val parentFormFlow = parentForm?.let { states[it] as? SharedState<State.Form> }
+            // If childForm is parent marker, use parent's SharedState
+            // Fallback to parentForm if thomasForm is null (nested form scenario)
+            val formFlow = when (childForm) {
+                PARENT_FORM_TAG -> parentLayoutState?.thomasForm?.state
+                    ?: parentLayoutState?.parentForm?.state
+                else -> childForm?.let { states[it] as? SharedState<State.Form> }
+            }
 
-            val layoutFlow = layout?.let { states[it] as? SharedState<State.Layout> }
-                ?: LayoutState.EMPTY.layout
+            val parentFormFlow = when (parentForm) {
+                PARENT_FORM_TAG -> parentLayoutState?.parentForm?.state
+                else -> parentForm?.let { states[it] as? SharedState<State.Form> }
+            }
 
-            val pagerFlow = pager?.let { states[it] as? SharedState<State.Pager> }
+            val pagerFlow = when (pager) {
+                PARENT_PAGER_TAG -> parentLayoutState?.pager
+                else -> pager?.let { states[it] as? SharedState<State.Pager> }
+            }
+
+            val checkboxFlow = when (checkbox) {
+                PARENT_CHECKBOX_TAG -> parentLayoutState?.checkbox
+                else -> checkbox?.let { states[it] as? SharedState<State.Checkbox> }
+            }
+
+            val radioFlow = when (radio) {
+                PARENT_RADIO_TAG -> parentLayoutState?.radio
+                else -> radio?.let { states[it] as? SharedState<State.Radio> }
+            }
+
+            val scoreFlow = when (score) {
+                PARENT_SCORE_TAG -> parentLayoutState?.score
+                else -> score?.let { states[it] as? SharedState<State.Score> }
+            }
+
+            val layoutFlow = when (layout) {
+                PARENT_LAYOUT_TAG -> parentLayoutState?.layout
+                else -> layout?.let { states[it] as? SharedState<State.Layout> }
+            } ?: LayoutState.EMPTY.layout
+
+            val asyncFlow = when (async) {
+                PARENT_ASYNC_TAG -> parentLayoutState?.asyncView
+                else -> async?.let { states[it] as? SharedState<State.AsyncView> }
+            }
 
             val videoTag = video.firstOrNull()
             val parentVideoTag = video.getOrNull(1)
@@ -415,14 +494,15 @@ internal class ThomasModelFactory : ModelFactory {
                 thomasForm = formFlow?.let { ThomasForm(it, pagerFlow) },
                 parentForm = parentFormFlow?.let { ThomasForm(it, pagerFlow) },
                 pager = pagerFlow,
-                checkbox = checkbox?.let { states[it] as? SharedState<State.Checkbox> },
-                radio = radio?.let { states[it] as? SharedState<State.Radio> },
-                score = score?.let { states[it] as? SharedState<State.Score> },
+                checkbox = checkboxFlow,
+                radio = radioFlow,
+                score = scoreFlow,
                 layout = layoutFlow,
-                thomasState = makeThomasState(formFlow, layoutFlow, pagerFlow, videoFlow),
+                thomasState = makeThomasState(formFlow, layoutFlow, pagerFlow, videoFlow, asyncFlow),
                 pagerTracker = pagerTracker,
                 video = videoFlow,
                 videoControl = videoControl,
+                asyncView = asyncFlow
             )
         }
 
@@ -434,7 +514,8 @@ internal class ThomasModelFactory : ModelFactory {
             var score: Tag? = null,
             var layout: Tag? = null,
             var story: Tag? = null,
-            val video: List<Tag> = emptyList()
+            val video: List<Tag> = emptyList(),
+            var async: Tag? = null
         ) {
             fun update(type: ViewType, tag: Tag): Builder = when (type) {
                 ViewType.FORM_CONTROLLER,
@@ -446,6 +527,7 @@ internal class ThomasModelFactory : ModelFactory {
                 ViewType.STATE_CONTROLLER -> copy(layout = tag)
                 ViewType.STORY_INDICATOR -> copy(story = tag)
                 ViewType.VIDEO_CONTROLLER -> copy(video = listOf(tag) + video)
+                ViewType.ASYNC_VIEW_CONTROLLER -> copy(async = tag)
                 else -> this
             }
 
@@ -457,7 +539,8 @@ internal class ThomasModelFactory : ModelFactory {
                 score = score,
                 layout = layout,
                 story = story,
-                video = video.toList()
+                video = video.toList(),
+                async = async
             )
         }
     }
@@ -660,6 +743,16 @@ internal class ThomasModelFactory : ModelFactory {
 
             else -> throw ModelFactoryException("Unsupported view type: ${info::class.java.name}")
         }
+
+        is AsyncViewControllerInfo -> AsyncLayoutModel(
+            viewInfo = info,
+            asyncState = environment.layoutState.asyncView
+                ?: throw ModelFactoryException("Required async state was null for AsyncViewController!"),
+            environment = environment,
+            properties = properties,
+            factory = this
+        )
+
         is EmptyInfo -> EmptyModel(
             viewInfo = info,
             environment = environment,
@@ -765,5 +858,16 @@ internal class ThomasModelFactory : ModelFactory {
         )
 
         else -> throw ModelFactoryException("Unsupported view type: ${info::class.java.name}")
+    }
+
+    internal companion object {
+        /** Marker tags for parent controllers in async content */
+        private const val PARENT_FORM_TAG = "__parent_form__"
+        private const val PARENT_PAGER_TAG = "__parent_pager__"
+        private const val PARENT_CHECKBOX_TAG = "__parent_checkbox__"
+        private const val PARENT_RADIO_TAG = "__parent_radio__"
+        private const val PARENT_SCORE_TAG = "__parent_score__"
+        private const val PARENT_LAYOUT_TAG = "__parent_layout__"
+        private const val PARENT_ASYNC_TAG = "__parent_async__"
     }
 }

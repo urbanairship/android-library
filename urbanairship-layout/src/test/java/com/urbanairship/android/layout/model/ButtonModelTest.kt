@@ -2,8 +2,11 @@
 
 package com.urbanairship.android.layout.model
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.Airship
 import com.urbanairship.Platform
+import com.urbanairship.android.layout.environment.LayoutEvent
+import com.urbanairship.android.layout.environment.LayoutEventHandler
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ThomasActionRunner
@@ -12,10 +15,13 @@ import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.view.LabelButtonView
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import io.mockk.clearMocks
+import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
 import io.mockk.mockkStatic
+import io.mockk.spyk
 import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
@@ -33,10 +39,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@RunWith(RobolectricTestRunner::class)
+@RunWith(AndroidJUnit4::class)
 public class ButtonModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
@@ -44,10 +49,12 @@ public class ButtonModelTest {
 
     private val mockReporter: Reporter = mockk(relaxed = true)
     private val mockActionsRunner: ThomasActionRunner = mockk(relaxed = true)
+    private val layoutEventHandler = spyk(LayoutEventHandler(testScope))
     private val mockEnv: ModelEnvironment = mockk(relaxed = true) {
         every { reporter } returns mockReporter
         every { actionsRunner } returns mockActionsRunner
         every { modelScope } returns testScope
+        every { eventHandler } returns layoutEventHandler
     }
 
     private val mockView: LabelButtonView = mockk(relaxed = true)
@@ -58,6 +65,8 @@ public class ButtonModelTest {
     @Before
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
+
+        clearMocks(layoutEventHandler, answers = false, recordedCalls = true, verificationMarks = true)
 
         mockkStatic(Airship::class)
         every { Airship.platform } returns Platform.ANDROID
@@ -106,10 +115,76 @@ public class ButtonModelTest {
         verify { mockActionsRunner.run(any(), any()) }
     }
 
-    private fun makeButton(actions: Map<String, JsonValue>? = null): LabelButtonModel {
+    @Test
+    public fun asyncViewRetry_tapBroadcastsAsyncViewReloadWithButtonIdentifier(): TestResult = runTest(testDispatcher) {
+        val buttonId = "async-retry-button"
+        buttonModel = makeButton(
+            clickBehaviors = listOf(ButtonClickBehaviorType.ASYNC_VIEW_RETRY),
+            identifier = buttonId
+        )
+
+        buttonModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        taps.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) {
+            layoutEventHandler.broadcast(
+                match { it is LayoutEvent.AsyncViewReload && (it as LayoutEvent.AsyncViewReload).identifier == buttonId }
+            )
+        }
+    }
+
+    @Test
+    public fun dismissOnly_tapDoesNotBroadcastAsyncViewReload(): TestResult = runTest(testDispatcher) {
+        buttonModel = makeButton(clickBehaviors = listOf(ButtonClickBehaviorType.DISMISS))
+
+        buttonModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        taps.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 0) {
+            layoutEventHandler.broadcast(match { it is LayoutEvent.AsyncViewReload })
+        }
+    }
+
+    @Test
+    public fun pagerNextThenAsyncViewRetry_tapBroadcastsInOrder(): TestResult = runTest(testDispatcher) {
+        val buttonId = "combo-button"
+        buttonModel = makeButton(
+            clickBehaviors = listOf(
+                ButtonClickBehaviorType.PAGER_NEXT,
+                ButtonClickBehaviorType.ASYNC_VIEW_RETRY
+            ),
+            identifier = buttonId
+        )
+
+        buttonModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        taps.emit(Unit)
+        advanceUntilIdle()
+
+        coVerifyOrder {
+            layoutEventHandler.broadcast(match { it is LayoutEvent.PagerNext })
+            layoutEventHandler.broadcast(
+                match { it is LayoutEvent.AsyncViewReload && (it as LayoutEvent.AsyncViewReload).identifier == buttonId }
+            )
+        }
+    }
+
+    private fun makeButton(
+        actions: Map<String, JsonValue>? = null,
+        clickBehaviors: List<ButtonClickBehaviorType> = listOf(ButtonClickBehaviorType.DISMISS),
+        identifier: String = "test-button"
+    ): LabelButtonModel {
         val mockInfo = mockk<LabelButtonInfo>(relaxed = true) {
             every { this@mockk.actions } returns actions
-            every { this@mockk.clickBehaviors } returns listOf(ButtonClickBehaviorType.DISMISS)
+            every { this@mockk.clickBehaviors } returns clickBehaviors
+            every { this@mockk.identifier } returns identifier
         }
 
         val mockLabel = mockk<LabelModel>(relaxed = true)
