@@ -6,7 +6,7 @@ description = "Airship Android SDK FCM plugin"
 
 dependencies {
     api project(':urbanairship-core')
-    implementation(libs.firebase.messaging)
+    api(libs.firebase.messaging)
     implementation(libs.playservices.base)
 }
 

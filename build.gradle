@@ -3,7 +3,7 @@ import java.time.temporal.ChronoUnit
 buildscript {
     ext {
         // Airship Version - major.minor.patch
-        airshipVersion = '20.6.0'
+        airshipVersion = '20.6.1'
 
         // Airship Version Qualifier beta, release, etc...
         // airshipVersionQualifier = "alpha"
