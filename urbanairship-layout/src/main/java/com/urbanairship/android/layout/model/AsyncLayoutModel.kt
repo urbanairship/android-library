@@ -1,10 +1,13 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
+import android.net.Uri
 import androidx.core.net.toUri
 import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ModelFactory
+import com.urbanairship.android.layout.assets.AssetCacheManager
+import com.urbanairship.android.layout.assets.DefaultAssetFileManager
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
@@ -12,12 +15,17 @@ import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.AsyncViewControllerInfo
 import com.urbanairship.android.layout.info.ViewInfo
+import com.urbanairship.android.layout.util.CachedImage
+import com.urbanairship.android.layout.util.ImageCache
+import com.urbanairship.android.layout.util.NonExtendableImageCache
+import com.urbanairship.android.layout.util.UrlInfo
 import com.urbanairship.android.layout.view.AsyncLayoutView
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.UAHttpStatusUtil
+import java.io.File
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
@@ -52,16 +60,18 @@ internal class AsyncLayoutModel(
 
     private var viewEnvironment: ViewEnvironment? = null
     private var itemProperties: ItemProperties? = null
+    private var cacheManager: AssetCacheManager? = null
 
     init {
         environment.layoutEvents
-            .filter { it is LayoutEvent.AsyncViewReload }
+            .filter { it is LayoutEvent.AsyncViewReload || it is LayoutEvent.Finish }
             .onEach { event ->
                 when (event) {
                     is LayoutEvent.AsyncViewReload -> {
                         val viewEnvironment = viewEnvironment ?: return@onEach
                         loadContent(viewEnvironment, itemProperties)
                     }
+                    is LayoutEvent.Finish -> { cacheManager?.clearCache(viewInfo.identifier) }
                     else -> {}
                 }
             }
@@ -76,6 +86,16 @@ internal class AsyncLayoutModel(
 
         this.viewEnvironment = viewEnvironment
         this.itemProperties = itemProperties
+
+        if (this.cacheManager == null) {
+            this.cacheManager = AssetCacheManager(
+                context = context,
+                fileManager = DefaultAssetFileManager(
+                    context = context,
+                    rootFolder = ASSETS_ROOT
+                )
+            )
+        }
 
         pushViewToDisplay(
             info = viewInfo.placeholder,
@@ -140,9 +160,48 @@ internal class AsyncLayoutModel(
             }
 
             val layout = response.value ?: break
+            val imageCache = viewEnvironment.imageCache()
+            if (imageCache != null) {
+                cacheAssets(layout)?.let(imageCache::tryAddChild)
+            }
             reportLayoutLoaded()
             pushViewToDisplay(layout, viewEnvironment, itemProperties)
             break
+        }
+    }
+
+    private suspend fun cacheAssets(layout: ViewInfo): ImageCache? {
+        val assets = UrlInfo.from(layout).mapNotNull {
+            when(it.type) {
+                UrlInfo.UrlType.IMAGE -> it.url
+                else -> null
+            }
+        }
+
+        if (assets.isEmpty()) {
+            return null
+        }
+
+        val manager = cacheManager ?: run {
+            UALog.d { "Failed to cache assets, no assets cache provided" }
+            return null
+        }
+
+        val storage = manager.cacheAsset(viewInfo.identifier, assets).getOrNull() ?: return null
+
+        return NonExtendableImageCache { url ->
+            storage.cacheUri(url)?.path?.let {
+                val size = storage.getMediaSize(url)
+
+                CachedImage(
+                    path = it,
+                    size =  if (size.width > 0 && size.height > 0) {
+                        size
+                    } else {
+                        null
+                    }
+                )
+            }
         }
     }
 
@@ -236,4 +295,8 @@ internal class AsyncLayoutModel(
         val viewEnvironment: ViewEnvironment,
         val itemProperties: ItemProperties?
     )
+
+    private companion object {
+        private const val ASSETS_ROOT = "com.airship.layout.assets"
+    }
 }

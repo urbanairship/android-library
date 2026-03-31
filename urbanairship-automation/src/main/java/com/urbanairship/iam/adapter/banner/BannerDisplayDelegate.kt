@@ -19,7 +19,7 @@ import com.urbanairship.automation.R
 import com.urbanairship.iam.adapter.DelegatingDisplayAdapter
 import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.iam.assets.AirshipCachedAssets
+import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.Banner
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.info.InAppMessageButtonInfo

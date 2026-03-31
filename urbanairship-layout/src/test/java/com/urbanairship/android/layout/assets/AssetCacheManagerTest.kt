@@ -1,4 +1,4 @@
-package com.urbanairship.iam.assets
+package com.urbanairship.android.layout.assets
 
 import android.content.Context
 import android.net.Uri
@@ -6,8 +6,10 @@ import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.util.toSha256
 import java.io.File
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -148,5 +150,100 @@ public class AssetCacheManagerTest {
         manager.clearCache(testScheduleId)
 
         verify(exactly = 0) { fileManager.moveAsset(any(), any()) }
+        verify(exactly = 1) { fileManager.clearAssets(testScheduleId) }
+    }
+
+    @Test
+    public fun testDuplicateUrlsInList_downloadsOnce(): TestResult = runTest {
+        val testScheduleId = "dup-schedule"
+        val scheduleCacheRoot = File(root.path, testScheduleId).toUri()
+        val url = "http://airship.com/same-asset"
+
+        coEvery { downloader.downloadAsset(any<Uri>()) } answers {
+            val seg = firstArg<Uri>().lastPathSegment ?: ""
+            "file:///tmp/$seg".toUri()
+        }
+
+        every { fileManager.ensureCacheDirectory(any()) } answers {
+            assertEquals(testScheduleId, firstArg())
+            scheduleCacheRoot.toFile()
+        }
+
+        every { fileManager.moveAsset(any(), any()) } just runs
+
+        val hash = requireNotNull(url.toUri().path?.toSha256())
+        val expectedLocal = File(scheduleCacheRoot.toFile(), hash).toUri()
+
+        val flagsDup = mutableMapOf(expectedLocal to false)
+        every { fileManager.assetItemExists(any<Uri>()) } answers {
+            val arg = firstArg<Uri>()
+            val shouldExist = flagsDup[arg] ?: false
+            if (arg == expectedLocal && shouldExist) return@answers true
+            if (shouldExist) {
+                fail()
+            }
+            if (flagsDup.containsKey(arg)) {
+                flagsDup[arg] = true
+            }
+            false
+        }
+
+        manager.cacheAsset(testScheduleId, listOf(url, url)).getOrThrow()
+
+        coVerify(exactly = 1) { downloader.downloadAsset(url.toUri()) }
+        verify(exactly = 1) { fileManager.moveAsset(any(), any()) }
+    }
+
+    @Test
+    public fun testAlreadyCached_skipsDownload(): TestResult = runTest {
+        val testScheduleId = "cached-schedule"
+        val scheduleCacheRoot = File(root.path, testScheduleId).toUri()
+        val url = "http://airship.com/preloaded"
+
+        every { fileManager.ensureCacheDirectory(any()) } answers { scheduleCacheRoot.toFile() }
+        every { fileManager.assetItemExists(any()) } returns true
+
+        manager.cacheAsset(testScheduleId, listOf(url)).getOrThrow()
+
+        coVerify(exactly = 0) { downloader.downloadAsset(any()) }
+        verify(exactly = 0) { fileManager.moveAsset(any(), any()) }
+    }
+
+    @Test
+    public fun testDownloadReturnsNull_throwsIllegalStateException(): TestResult = runTest {
+        val testScheduleId = "fail-schedule"
+        val scheduleCacheRoot = File(root.path, testScheduleId).toUri()
+        val url = "http://airship.com/missing"
+
+        every { fileManager.ensureCacheDirectory(any()) } answers { scheduleCacheRoot.toFile() }
+        every { fileManager.assetItemExists(any()) } returns false
+        coEvery { downloader.downloadAsset(any()) } returns null
+
+        try {
+            manager.cacheAsset(testScheduleId, listOf(url))
+            fail("expected IllegalStateException")
+        } catch (e: IllegalStateException) {
+            assertTrue(e.message!!.contains("Failed to download"))
+        }
+    }
+
+    @Test
+    public fun testEmptyAssetList_succeedsWithoutDownload(): TestResult = runTest {
+        val testScheduleId = "empty-schedule"
+        every { fileManager.ensureCacheDirectory(testScheduleId) } answers {
+            File(root.path, testScheduleId)
+        }
+
+        manager.cacheAsset(testScheduleId, emptyList()).getOrThrow()
+
+        coVerify(exactly = 0) { downloader.downloadAsset(any()) }
+        verify(exactly = 1) { fileManager.ensureCacheDirectory(testScheduleId) }
+    }
+
+    @Test
+    public fun testClearCache_invokesClearAssets(): TestResult = runTest {
+        val id = "clear-me"
+        manager.clearCache(id)
+        verify(exactly = 1) { fileManager.clearAssets(id) }
     }
 }

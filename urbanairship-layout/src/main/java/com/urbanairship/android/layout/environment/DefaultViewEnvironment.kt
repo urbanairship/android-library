@@ -5,6 +5,7 @@ import android.app.Activity
 import android.webkit.WebChromeClient
 import androidx.annotation.RestrictTo
 import com.urbanairship.Predicate
+import com.urbanairship.android.layout.util.ExtendableImageCache
 import com.urbanairship.android.layout.util.Factory
 import com.urbanairship.android.layout.util.ImageCache
 import com.urbanairship.app.ActivityMonitor
@@ -30,7 +31,7 @@ public class DefaultViewEnvironment(
     private val webViewClientFactory: Factory<AirshipWebViewClient> =
         webViewClientFactory ?: Factory { AirshipWebViewClient() }
 
-    private val imageCache: ImageCache = imageCache ?: ImageCache { null }
+    private val imageCache: ImageCache = imageCache ?: ExtendableImageCache()
 
     override fun activityMonitor(): ActivityMonitor = activityMonitor
 

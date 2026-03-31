@@ -5,7 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.iam.InAppMessage
-import com.urbanairship.iam.assets.AirshipCachedAssets
+import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.iam.content.Banner
 import com.urbanairship.iam.content.Custom

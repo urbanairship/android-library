@@ -49,7 +49,7 @@ import com.urbanairship.iam.adapter.DisplayAdapterFactory
 import com.urbanairship.iam.analytics.DefaultInAppDisplayImpressionRuleProvider
 import com.urbanairship.android.layout.analytics.LayoutEventRecorder
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
-import com.urbanairship.iam.assets.AssetCacheManager
+import com.urbanairship.android.layout.assets.AssetCacheManager
 import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
 import com.urbanairship.iam.legacy.LegacyAnalytics
 import com.urbanairship.iam.legacy.LegacyInAppMessaging

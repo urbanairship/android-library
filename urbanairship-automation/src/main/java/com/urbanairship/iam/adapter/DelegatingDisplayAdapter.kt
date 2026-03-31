@@ -13,7 +13,7 @@ import com.urbanairship.util.DerivedStateFlow
 import com.urbanairship.automation.utils.NetworkMonitor
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.iam.assets.AirshipCachedAssets
+import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.getUrlInfos
 import com.urbanairship.iam.resumedActivitiesUpdates
 import kotlinx.coroutines.flow.StateFlow

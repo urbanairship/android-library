@@ -17,11 +17,16 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.AsyncViewControllerInfo
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.util.DelicateLayoutApi
+import com.urbanairship.android.layout.util.ImageCache
 import com.urbanairship.android.layout.util.ThomasViewIdResolver
 import com.urbanairship.json.JsonValue
+import com.urbanairship.util.FileUtils
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.slot
+import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -33,7 +38,10 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import java.io.File
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -298,6 +306,116 @@ public class AsyncLayoutModelTest {
         assertEquals(2, session.requests.size)
     }
 
+    @Test
+    public fun successfulLoad_withEmptyView_nonNullImageCache_doesNotCallTryAddChild(): TestResult =
+        runTest(testDispatcher) {
+            val info = parseAsyncInfo(asyncControllerJson())
+            session.addResponse(200, body = """{"type":"empty_view"}""")
+            val model = newModel(info)
+            val context = RuntimeEnvironment.getApplication()
+            val imageCache = mockk<ImageCache>(relaxed = true)
+            val env = mockk<ViewEnvironment>(relaxed = true) {
+                every { imageCache() } returns imageCache
+            }
+
+            model.state.test {
+                model.createView(context, env, null)
+                advanceUntilIdle()
+                skipItems(2)
+                ensureAllEventsConsumed()
+            }
+
+            verify(exactly = 0) { imageCache.tryAddChild(any()) }
+        }
+
+    @Test
+    public fun successfulLoad_withMediaImage_callsImageCacheTryAddChildWithResolvingChild(): TestResult =
+        runTest(testDispatcher) {
+            mockkStatic(FileUtils::class)
+            try {
+                every { FileUtils.downloadFile(any(), any()) } answers {
+                    (invocation.args[1] as File).apply {
+                        parentFile?.mkdirs()
+                        writeBytes(byteArrayOf(0x42))
+                    }
+                    mockk(relaxed = true)
+                }
+
+                val imageUrl = "https://cdn.example.com/banner.png"
+                val info = parseAsyncInfo(asyncControllerJson())
+                session.addResponse(200, body = mediaImageLayoutJson(imageUrl))
+                val model = newModel(info)
+                val context = RuntimeEnvironment.getApplication()
+
+                val imageCache = mockk<ImageCache>(relaxed = true)
+                val childSlot = slot<ImageCache>()
+                every { imageCache.tryAddChild(capture(childSlot)) } returns "child-1"
+                val env = mockk<ViewEnvironment>(relaxed = true) {
+                    every { imageCache() } returns imageCache
+                }
+
+                model.state.test {
+                    model.createView(context, env, null)
+                    advanceUntilIdle()
+                    skipItems(2)
+                    ensureAllEventsConsumed()
+                }
+
+                verify(exactly = 1) { imageCache.tryAddChild(any()) }
+                val child = childSlot.captured
+                val resolved = child.get(imageUrl)
+                assertNotNull(resolved)
+                assertTrue(resolved!!.path.isNotEmpty())
+            } finally {
+                unmockkStatic(FileUtils::class)
+            }
+        }
+
+    @Test
+    public fun layoutFinish_clearsAsyncAssetCacheDirectory(): TestResult = runTest(testDispatcher) {
+        mockkStatic(FileUtils::class)
+        try {
+            every { FileUtils.downloadFile(any(), any()) } answers {
+                (invocation.args[1] as File).apply {
+                    parentFile?.mkdirs()
+                    writeBytes(byteArrayOf(0x42))
+                }
+                mockk(relaxed = true)
+            }
+
+            val imageUrl = "https://cdn.example.com/clear-me.png"
+            val info = parseAsyncInfo(asyncControllerJson())
+            session.addResponse(200, body = mediaImageLayoutJson(imageUrl))
+            val model = newModel(info)
+            val context = RuntimeEnvironment.getApplication()
+
+            val imageCache = mockk<ImageCache>(relaxed = true)
+            every { imageCache.tryAddChild(any()) } returns "child-1"
+            val env = mockk<ViewEnvironment>(relaxed = true) {
+                every { imageCache() } returns imageCache
+            }
+
+            val cacheSubdir = File(context.cacheDir, "com.airship.layout.assets/${info.identifier}")
+
+            model.state.test {
+                model.createView(context, env, null)
+                advanceUntilIdle()
+                skipItems(2)
+                ensureAllEventsConsumed()
+            }
+
+            assertTrue(cacheSubdir.exists())
+
+            layoutEventHandler.broadcast(LayoutEvent.Finish())
+            advanceUntilIdle()
+            Thread.sleep(500)
+
+            assertFalse(cacheSubdir.exists())
+        } finally {
+            unmockkStatic(FileUtils::class)
+        }
+    }
+
     private fun asyncControllerJson(
         url: String = "https://example.com/layout.json",
         maxRetries: Int = 0
@@ -315,6 +433,15 @@ public class AsyncLayoutModelTest {
                 "initial_backoff_seconds": 1,
                 "max_backoff_seconds": 10
             }
+        }
+    """.trimIndent()
+
+    private fun mediaImageLayoutJson(imageUrl: String): String = """
+        {
+            "type": "media",
+            "url": "$imageUrl",
+            "media_type": "image",
+            "media_fit": "center_inside"
         }
     """.trimIndent()
 }

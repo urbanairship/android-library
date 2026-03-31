@@ -3,7 +3,7 @@ package com.urbanairship.iam.adapter
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.iam.InAppMessage
-import com.urbanairship.iam.assets.AirshipCachedAssets
+import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.Banner
 import com.urbanairship.iam.content.HTML
 import com.urbanairship.iam.content.InAppMessageDisplayContent
