@@ -23,6 +23,7 @@ public interface LayoutDataStorage {
     public suspend fun prepare(restorationId: String)
     public fun getSavedState(): JsonValue?
     public fun saveState(state: JsonValue?)
+    public suspend fun clear()
 }
 
 @OptIn(FlowPreview::class)

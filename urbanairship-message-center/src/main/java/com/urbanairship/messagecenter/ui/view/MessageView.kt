@@ -90,7 +90,7 @@ public class MessageView @JvmOverloads constructor(
             actionRunner = { actions, _ ->
                 DefaultActionRunner.run(actions, Action.Situation.AUTOMATION)
             },
-//            stateStorage = storageFactory?.invoke() //disable state storage
+            stateStorage = storageFactory?.invoke()
         )
     }
 

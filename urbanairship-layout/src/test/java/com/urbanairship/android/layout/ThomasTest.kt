@@ -6,6 +6,7 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.LayoutInfo
+import com.urbanairship.android.layout.info.NativeControlOptions
 import com.urbanairship.android.layout.model.ContainerLayoutModel
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.VerticalPosition
@@ -15,6 +16,7 @@ import com.urbanairship.android.layout.ui.LayoutViewModel
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.extend
 import java.io.IOException
 import io.mockk.every
 import io.mockk.mockk
@@ -31,6 +33,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNotSame
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -81,6 +84,7 @@ public class ThomasTest {
     @Throws(JsonException::class)
     public fun parsesSampleModal() {
         val layout = LayoutInfo(json = readJsonMapResource("modal.json"))
+        assertNull(layout.options)
         assertNotNull(layout)
 
         val presentation = layout.presentation as ModalPresentation
@@ -98,6 +102,30 @@ public class ThomasTest {
         for ((info) in view.items) {
             assertNotSame(info.info.type, ViewType.UNKNOWN)
         }
+    }
+
+    @Test
+    public fun testOptionsParsedWhenPresent() {
+        val base = readJsonMapResource("modal.json")
+        val optionsJson = JsonValue.parseString(
+            """
+            {
+              "state_restoration": {
+                "scope": "instance",
+                "restore_id": "restore-layout-1"
+              }
+            }
+            """
+        )
+        val layout = LayoutInfo(json = base.extend("options" to optionsJson))
+
+        val expectedOptions = NativeControlOptions(
+            stateRestoration = NativeControlOptions.StateRestoration(
+                scope = NativeControlOptions.StateRestoration.Scope.INSTANCE,
+                restoreId = "restore-layout-1"
+            )
+        )
+        assertEquals(expectedOptions, layout.options)
     }
 
     @Test

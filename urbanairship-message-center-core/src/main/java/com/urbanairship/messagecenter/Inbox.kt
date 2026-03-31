@@ -206,7 +206,7 @@ public class Inbox @VisibleForTesting internal constructor(
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun makeViewStateStorage(messageId: String, layout: AirshipLayout): LayoutDataStorage {
+    public fun makeViewStateStorage(messageId: String): LayoutDataStorage {
         return PersistentLayoutDataStorage(
             onFetch = {
                 val current = messageDao.getMessage(messageId)

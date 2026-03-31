@@ -6,6 +6,7 @@ import com.urbanairship.android.layout.LayoutDataStorage
 import com.urbanairship.json.JsonValue
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -28,7 +29,7 @@ public class PersistentLayoutDataStorage(
 
             val state = onFetch()
             if (state?.restorationId != restorationId){
-                clear()
+                reset()
                 return@launch
             }
 
@@ -43,13 +44,17 @@ public class PersistentLayoutDataStorage(
         flush()
     }
 
-    private fun clear() {
-        _cache.update { null }
-        flush()
+    override suspend fun clear() {
+        reset().join()
     }
 
-    private fun flush() {
-        scope.launch {
+    private fun reset(): Job {
+        _cache.update { null }
+        return flush()
+    }
+
+    private fun flush(): Job {
+        return scope.launch {
             val restorationId = _restorationId.value
             val state = _cache.value
 
