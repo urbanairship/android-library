@@ -45,10 +45,16 @@ import org.junit.runner.RunWith
  * Tests for [PushManager].
  */
 @RunWith(AndroidJUnit4::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 public class PushManagerTest {
 
     private var preferenceDataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext())
-    private var privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL)
+    private val testDispatcher = UnconfinedTestDispatcher()
+    private var privacyManager = PrivacyManager(
+        preferenceDataStore,
+        PrivacyManager.Feature.ALL,
+        dispatcher = testDispatcher
+    )
     private val runtimeConfig = TestAirshipRuntimeConfig()
 
     private val mockPushProvider: PushProvider = mockk(relaxed = true) {
@@ -72,9 +78,8 @@ public class PushManagerTest {
     }
     private val activityMonitor = TestActivityMonitor()
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private var pushManager = PushManager(
-        ApplicationProvider.getApplicationContext<Context>(),
+        ApplicationProvider.getApplicationContext(),
         preferenceDataStore,
         runtimeConfig,
         privacyManager,
@@ -85,7 +90,7 @@ public class PushManagerTest {
         mockDispatcher,
         mockNotificationManager,
         activityMonitor,
-        dispatcher = UnconfinedTestDispatcher()
+        dispatcher = testDispatcher
     )
 
     /**
@@ -128,6 +133,7 @@ public class PushManagerTest {
             mockDispatcher,
             mockNotificationManager,
             activityMonitor,
+            dispatcher = testDispatcher
         )
         pushManager.init()
         Assert.assertEquals("token", pushManager.pushToken)
@@ -145,7 +151,8 @@ public class PushManagerTest {
             mockPermissionManager,
             mockDispatcher,
             mockNotificationManager,
-            activityMonitor
+            activityMonitor,
+            dispatcher = testDispatcher
         )
         pushManager.init()
         Assert.assertNull(pushManager.pushToken)
@@ -640,7 +647,7 @@ public class PushManagerTest {
     }
 
     @Test
-    public fun testPermissionStatusChangesUpdatesChannelRegistration(): TestResult = runTest {
+    public fun testPermissionStatusChangesUpdatesChannelRegistration(): TestResult = runTest(testDispatcher) {
 
         val statusUpdates = MutableSharedFlow<Pair<Permission, PermissionStatus>>()
         every { mockPermissionManager.permissionStatusUpdates } returns statusUpdates
