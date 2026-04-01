@@ -15,8 +15,8 @@ import kotlinx.coroutines.runBlocking
 /**
  * Action to schedule actions.
  *
- * Accepted situations: [Action.SITUATION_MANUAL_INVOCATION], [Action.SITUATION_WEB_VIEW_INVOCATION],
- * [Action.SITUATION_AUTOMATION], and [Action.SITUATION_PUSH_RECEIVED].
+ * Accepted situations: [Action.Situation.MANUAL_INVOCATION], [Action.Situation.WEB_VIEW_INVOCATION],
+ * [Action.Situation.AUTOMATION], and [Action.Situation.PUSH_RECEIVED].
  *
  * Result value: Schedule ID.
  *
