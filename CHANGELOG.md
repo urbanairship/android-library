@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.6.1 - March 27, 2026
+
+
+Patch release that fixes a dependency resolution issue with the FCM module introduced in 20.4.0. Apps that depend on `urbanairship-fcm` and reference Firebase Messaging classes directly should update to this version.
+
+### Changes
+- Fixed `firebase-messaging` dependency not being available on the compile classpath
+
 ## Version 20.6.0 - March 25, 2026
 
 Minor release that extends Markdown support in Scenes and improves handling of navigation to invalid Message Center message IDs.

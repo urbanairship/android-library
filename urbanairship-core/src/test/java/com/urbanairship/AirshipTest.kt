@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -45,6 +46,10 @@ public class AirshipTest {
 
     // Assuming TestApplication provides a suitable Application instance via ApplicationProvider
     private val application = ApplicationProvider.getApplicationContext<TestApplication>()
+
+    private val shadowApplication: ShadowApplication
+        get() = Shadows.shadowOf(ApplicationProvider.getApplicationContext<Application>())
+
 
     @Before
     public fun setup() {
@@ -82,8 +87,10 @@ public class AirshipTest {
         Assert.assertTrue(takeOffCallback.checkForReady())
         Assert.assertTrue(testCallback.checkForReady())
 
+        awaitAirshipReadyBroadcast()
+
         // Verify the airship ready intent was fired
-        val intents = getApplicationShadow().broadcastIntents
+        val intents = shadowApplication.broadcastIntents
         Assert.assertEquals(1, intents.size)
         Assert.assertEquals(Airship.ACTION_AIRSHIP_READY, intents[0].action)
         Assert.assertNull(intents[0].extras)
@@ -120,7 +127,9 @@ public class AirshipTest {
         Assert.assertTrue(takeOffCallback.checkForReady())
         Assert.assertTrue(testCallback.checkForReady())
 
-        val intents = getApplicationShadow().broadcastIntents
+        awaitAirshipReadyBroadcast()
+
+        val intents = shadowApplication.broadcastIntents
         Assert.assertEquals(1, intents.size)
         Assert.assertEquals(Airship.ACTION_AIRSHIP_READY, intents[0].action)
         val extras = intents[0].extras
@@ -302,8 +311,20 @@ public class AirshipTest {
         verify { mockComponent1.onAirshipDeepLink(uri) }
     }
 
-    private fun getApplicationShadow(): ShadowApplication {
-        return Shadows.shadowOf(ApplicationProvider.getApplicationContext<Application>())
+    /**
+     * Waits until Robolectric records a broadcast intent with AIRSHIP_READY.
+     *
+     * This is needed because takeOff completes on a thread-pool thread after readiness signals,
+     * so the onReady callbacks are triggered before [Application.sendBroadcast] runs.
+     */
+    private suspend fun awaitAirshipReadyBroadcast(timeout: Duration = 5.seconds) {
+        withTimeout(timeout) {
+            while (
+                shadowApplication.broadcastIntents.none { it.action == Airship.ACTION_AIRSHIP_READY }
+            ) {
+                yield()
+            }
+        }
     }
 
     /**
