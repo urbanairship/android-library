@@ -62,8 +62,7 @@ internal class SceneAction(
             PushMessage::class.java
         )
 
-        val messageId = pushMessage?.richPushMessageId
-            ?: arguments.metadata.getString(ActionArguments.RICH_PUSH_ID_METADATA)
+        val messageId = pushMessage?.sendId
 
         val args = try {
             Arguments.fromJson(arguments.value.toJsonValue())
@@ -78,7 +77,7 @@ internal class SceneAction(
             displayBehavior = InAppMessage.DisplayBehavior.IMMEDIATE
         )
 
-        var schedule = AutomationSchedule(
+        val schedule = AutomationSchedule(
             identifier = messageId ?: UUID.randomUUID().toString(),
             triggers = listOf(AutomationTrigger.activeSession(1u)),
             data = AutomationSchedule.ScheduleData.InAppMessageData(message),

@@ -106,7 +106,7 @@ public class SceneActionTest {
         val metadata = Bundle().apply {
             putParcelable(
                 ActionArguments.PUSH_MESSAGE_METADATA,
-                PushMessage(mapOf(PushMessage.EXTRA_RICH_PUSH_ID to "rich-msg-id")),
+                PushMessage(mapOf(PushMessage.EXTRA_SEND_ID to "rich-msg-id")),
             )
         }
 
@@ -120,29 +120,6 @@ public class SceneActionTest {
                     InAppMessageDisplayContent.AirshipLayoutContent(expectedLayout),
                     message.displayContent,
                 )
-                scheduleJob.complete()
-            },
-        )
-
-        val args = ActionArguments(
-            Action.Situation.MANUAL_INVOCATION,
-            ActionValue.wrap(jsonMapOf("scene" to rawDeflateBase64(MINIMAL_LAYOUT_JSON))),
-            metadata,
-        )
-        action.perform(args)
-        scheduleJob.join()
-    }
-
-    @Test
-    public fun testPerform_messageIdFromMetadata(): TestResult = runTest {
-        val scheduleJob = Job()
-        val metadata = Bundle().apply {
-            putString(ActionArguments.RICH_PUSH_ID_METADATA, "metadata-msg-id")
-        }
-
-        val action = SceneAction(
-            scheduler = { schedule: AutomationSchedule ->
-                assertEquals("metadata-msg-id", schedule.identifier)
                 scheduleJob.complete()
             },
         )
@@ -209,33 +186,6 @@ public class SceneActionTest {
         val result = action.perform(args)
         assertTrue(result is ActionResult.Error)
         assertTrue((result as ActionResult.Error).exception is JsonException)
-    }
-
-    @Test
-    public fun testPerform_richPushIdPreferredOverMetadata(): TestResult = runTest {
-        val scheduleJob = Job()
-        val metadata = Bundle().apply {
-            putParcelable(
-                ActionArguments.PUSH_MESSAGE_METADATA,
-                PushMessage(mapOf(PushMessage.EXTRA_RICH_PUSH_ID to "from-push")),
-            )
-            putString(ActionArguments.RICH_PUSH_ID_METADATA, "from-metadata")
-        }
-
-        val action = SceneAction(
-            scheduler = { schedule: AutomationSchedule ->
-                assertEquals("from-push", schedule.identifier)
-                scheduleJob.complete()
-            },
-        )
-
-        val args = ActionArguments(
-            Action.Situation.MANUAL_INVOCATION,
-            ActionValue.wrap(jsonMapOf("scene" to rawDeflateBase64(MINIMAL_LAYOUT_JSON))),
-            metadata,
-        )
-        action.perform(args)
-        scheduleJob.join()
     }
 
     private fun actionArgs(sceneBase64: String): ActionArguments =
