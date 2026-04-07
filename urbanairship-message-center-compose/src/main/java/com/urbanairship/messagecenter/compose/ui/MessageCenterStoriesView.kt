@@ -1,5 +1,6 @@
 package com.urbanairship.messagecenter.compose.ui
 
+import androidx.annotation.RestrictTo
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -51,6 +52,7 @@ import com.urbanairship.messagecenter.core.R as McCoreR
  * @param onMessageSelected Callback invoked when a message story is selected.
  * @param noMessagesView View to show when there are no messages.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Composable
 public fun MessageCenterStoriesView(
     modifier: Modifier = Modifier,

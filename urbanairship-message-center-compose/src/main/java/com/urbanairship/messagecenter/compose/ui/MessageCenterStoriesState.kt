@@ -1,5 +1,6 @@
 package com.urbanairship.messagecenter.compose.ui
 
+import androidx.annotation.RestrictTo
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -18,6 +19,7 @@ import com.urbanairship.messagecenter.compose.ui.MessageCenterStoriesListViewMod
 /**
  * State holder for the Message Center stories list screen.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Stable
 public class MessageCenterStoriesState internal constructor(
     private val onAction: (Action) -> Unit
@@ -50,6 +52,7 @@ public class MessageCenterStoriesState internal constructor(
  *
  * @param predicate An optional predicate to filter messages.
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Composable
 public fun rememberMessageCenterStoriesState(
     predicate: Predicate<Message>? = null,
