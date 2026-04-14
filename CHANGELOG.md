@@ -4,8 +4,15 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
-## Version 20.6.1 - March 27, 2026
+## Version 20.6.2 - April 14, 2026
 
+Patch release that hardens against a specific WebView crash that can occur on certain Android 16 devices.
+
+### Changes
+
+- Avoid crashing if WebView inflation fails in `HtmlActivity`, which displays Custom HTML IAX messages, when we encounter a known issue on Android 16 that primarly impacts Samsung devices (https://issuetracker.google.com/issues/448359671)
+
+## Version 20.6.1 - March 27, 2026
 
 Patch release that fixes a dependency resolution issue with the FCM module introduced in 20.4.0. Apps that depend on `urbanairship-fcm` and reference Firebase Messaging classes directly should update to this version.
 
