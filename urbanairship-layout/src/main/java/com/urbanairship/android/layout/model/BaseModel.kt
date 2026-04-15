@@ -26,7 +26,7 @@ import com.urbanairship.android.layout.info.View
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
-import com.urbanairship.android.layout.property.OutcomeParams
+import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
@@ -193,7 +193,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
                     if (!triggered.contains(trigger.id) && trigger.triggerWhenStateMatches.apply(state)) {
                         triggered.add(trigger.id)
-                        processOutcomes(trigger.onTrigger.outcomeParams, outcomeHandler)
+                        outcomeProcessor.process(trigger.onTrigger.outcomeParams, delegated = defaultDelegation)
                     }
                 }
             }
@@ -229,7 +229,29 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
     protected val layoutState = environment.layoutState
 
-    protected val outcomeHandler: OutcomeHandler = ModelOutcomeHandler(environment, layoutState)
+    protected open val outcomeProcessor: ThomasOutcomeProcessor =
+        ThomasOutcomeProcessor(environment, layoutState)
+
+    /**
+     * Default delegation callback for outcomes the processor cannot handle directly.
+     * Subclasses can provide their own callback to customize dismiss/action behavior.
+     */
+    protected open val defaultDelegation: suspend (DelegatedOutcome) -> Unit = { outcome ->
+        when (outcome) {
+            is DelegatedOutcome.Dismiss ->
+                environment.eventHandler.broadcast(LayoutEvent.Finish(cancel = outcome.cancel))
+            is DelegatedOutcome.RunActions ->
+                environment.actionsRunner.run(outcome.actions, layoutState.reportingContext())
+            is DelegatedOutcome.FormAction -> when (outcome.command) {
+                Outcome.Form.Command.SUBMIT ->
+                    environment.eventHandler.broadcast(LayoutEvent.SubmitForm(buttonIdentifier = ""))
+                Outcome.Form.Command.VALIDATE ->
+                    environment.eventHandler.broadcast(LayoutEvent.ValidateForm(buttonIdentifier = ""))
+            }
+            is DelegatedOutcome.AsyncViewReload ->
+                environment.eventHandler.broadcast(LayoutEvent.AsyncViewReload(outcome.identifier))
+        }
+    }
 
     protected fun report(event: ReportingEvent) =
         environment.reporter.report(event)
@@ -360,7 +382,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         modelScope.launch {
             for (handler in viewInfo.eventHandlers.orEmpty()) {
                 if (handler.type == type) {
-                    processOutcomes(handler.outcomeParams, outcomeHandler, formValue = value)
+                    outcomeProcessor.process(handler.outcomeParams, formValue = value, delegated = defaultDelegation)
                 }
             }
         }
@@ -423,7 +445,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                     }
                 }
                 .collect {
-                    processOutcomes(it.outcomeParams, outcomeHandler, formValue = lastSelected.value)
+                    outcomeProcessor.process(it.outcomeParams, formValue = lastSelected.value, delegated = defaultDelegation)
                 }
         }
     }

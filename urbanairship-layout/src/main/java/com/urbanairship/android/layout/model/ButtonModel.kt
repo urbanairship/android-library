@@ -105,6 +105,7 @@ internal abstract class ButtonModel<T, I: Button>(
 
     private suspend fun evaluateOutcomes(context: Context) {
         val resolved = params.resolve()
+        val delegation = buttonDelegation(context)
 
         val hasFormValidate = resolved.any {
             it is Outcome.Form && it.command == Outcome.Form.Command.VALIDATE
@@ -118,8 +119,7 @@ internal abstract class ButtonModel<T, I: Button>(
         } else if (hasFormSubmit) {
             handleSubmit(context, resolved)
         } else {
-            val nonFormParams = OutcomeParams(outcomes = resolved)
-            processOutcomes(nonFormParams, buttonOutcomeHandler(context))
+            outcomeProcessor.process(resolved, delegated = delegation)
         }
     }
 
@@ -130,14 +130,12 @@ internal abstract class ButtonModel<T, I: Button>(
         listener?.dismissSoftKeyboard()
 
         val nonFormOutcomes = resolved.filter { it !is Outcome.Form }
+        val delegation = buttonDelegation(context)
         val submitEvent = LayoutEvent.SubmitForm(buttonIdentifier = viewInfo.identifier) {
             if (viewInfo.eventHandlers.hasTapHandler()) {
                 handleViewEvent(EventHandler.Type.TAP)
             }
-            processOutcomes(
-                OutcomeParams(outcomes = nonFormOutcomes),
-                buttonOutcomeHandler(context)
-            )
+            outcomeProcessor.process(nonFormOutcomes, delegated = delegation)
         }
 
         broadcast(submitEvent).join()
@@ -150,15 +148,13 @@ internal abstract class ButtonModel<T, I: Button>(
     ) {
         listener?.dismissSoftKeyboard()
 
+        val delegation = buttonDelegation(context)
         val validateEvent = LayoutEvent.ValidateForm(buttonIdentifier = viewInfo.identifier) {
             if (hasFormSubmit) {
                 handleSubmit(context, resolved)
             } else {
                 val nonFormOutcomes = resolved.filter { it !is Outcome.Form }
-                processOutcomes(
-                    OutcomeParams(outcomes = nonFormOutcomes),
-                    buttonOutcomeHandler(context)
-                )
+                outcomeProcessor.process(nonFormOutcomes, delegated = delegation)
             }
         }
 
@@ -166,31 +162,31 @@ internal abstract class ButtonModel<T, I: Button>(
     }
 
     /**
-     * Creates an [OutcomeHandler] for button-specific outcomes, overriding dismiss
-     * to include button-specific reporting.
+     * Button-specific delegation that overrides dismiss to include reporting
+     * and async-view-reload to use the button's identifier.
      */
-    private fun buttonOutcomeHandler(context: Context): OutcomeHandler {
-        return object : OutcomeHandler by outcomeHandler {
-            override suspend fun dismiss(cancel: Boolean) {
+    private fun buttonDelegation(context: Context): suspend (DelegatedOutcome) -> Unit = { outcome ->
+        when (outcome) {
+            is DelegatedOutcome.Dismiss -> {
                 report(
                     event = ReportingEvent.Dismiss(
                         data = ReportingEvent.DismissData.ButtonTapped(
                             identifier = viewInfo.identifier,
                             description = reportingDescription(context),
-                            cancel = cancel
+                            cancel = outcome.cancel
                         ),
                         displayTime = environment.displayTimer.time.milliseconds,
                         context = layoutState.reportingContext(buttonId = viewInfo.identifier)
                     )
                 )
-                environment.eventHandler.broadcast(LayoutEvent.Finish(cancel = cancel))
+                environment.eventHandler.broadcast(LayoutEvent.Finish(cancel = outcome.cancel))
             }
-
-            override suspend fun asyncViewReload(identifier: String) {
+            is DelegatedOutcome.AsyncViewReload -> {
                 environment.eventHandler.broadcast(
                     LayoutEvent.AsyncViewReload(viewInfo.identifier)
                 )
             }
+            else -> defaultDelegation(outcome)
         }
     }
 }
