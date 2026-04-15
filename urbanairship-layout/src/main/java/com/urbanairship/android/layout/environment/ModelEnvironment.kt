@@ -96,6 +96,14 @@ internal sealed class LayoutEvent {
 
     data object PagerPrevious : LayoutEvent()
 
+    data object PagerStart : LayoutEvent()
+
+    data object PagerEnd : LayoutEvent()
+
+    data object PagerPause : LayoutEvent()
+
+    data object PagerResume : LayoutEvent()
+
     data object PagerPauseToggle : LayoutEvent()
 
     data class AsyncViewReload(val identifier: String) : LayoutEvent()

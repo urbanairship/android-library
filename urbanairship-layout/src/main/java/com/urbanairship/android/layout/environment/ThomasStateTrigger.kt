@@ -1,5 +1,7 @@
 package com.urbanairship.android.layout.environment
 
+import com.urbanairship.android.layout.property.Outcome
+import com.urbanairship.android.layout.property.OutcomeParams
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
@@ -28,12 +30,18 @@ internal data class ThomasStateTrigger(
     }
 }
 
-internal data class TriggerActions(val stateActions: List<StateAction>?) {
+internal data class TriggerActions(
+    val stateActions: List<StateAction>?,
+    val outcomes: List<Outcome>? = null
+) {
+    val outcomeParams: OutcomeParams
+        get() = OutcomeParams(outcomes = outcomes, stateActions = stateActions)
 
     companion object {
         fun fromJson(json: JsonMap): TriggerActions {
             return TriggerActions(
-                stateActions = json.optionalList("state_actions")?.map(StateAction::fromJson)
+                stateActions = json.optionalList("state_actions")?.map(StateAction::fromJson),
+                outcomes = json.optionalList("outcomes")?.let(Outcome::fromList)
             )
         }
     }

@@ -282,14 +282,14 @@ public class PagerModelTest {
         private const val PAGE_1_ID = "page-one-identifier"
         private const val PAGE_2_ID = "page-two-identifier"
         private const val PAGE_3_ID = "page-three-identifier"
-        private val EMPTY_ACTIONS = emptyMap<String, JsonValue>()
+        private val DISPLAY_ACTIONS = mapOf("display_action" to JsonValue.wrap("value"))
         private val EMPTY_AUTOMATED_ACTIONS = emptyList<AutomatedAction>()
         private val EMPTY_ACCESSIBILITY_ACTIONS = emptyList<AccessibilityAction>()
 
         private val ITEMS = listOf(
-            PagerModel.Item(mockk(relaxed = true), PAGE_1_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, null, null),
-            PagerModel.Item(mockk(relaxed = true), PAGE_2_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, null, null),
-            PagerModel.Item(mockk(relaxed = true), PAGE_3_ID, EMPTY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, null, null)
+            PagerModel.Item(mockk(relaxed = true), PAGE_1_ID, DISPLAY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, null, null, null),
+            PagerModel.Item(mockk(relaxed = true), PAGE_2_ID, DISPLAY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, null, null, null),
+            PagerModel.Item(mockk(relaxed = true), PAGE_3_ID, DISPLAY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, null, null, null)
         )
         private val PAGE_IDS = ITEMS.map { it.identifier }
     }

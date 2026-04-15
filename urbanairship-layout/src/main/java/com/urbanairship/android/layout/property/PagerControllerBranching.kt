@@ -54,11 +54,19 @@ internal data class PagerControllerBranching(
         /**
          * State actions to run when the pager completes.
          */
-        val stateActions: List<StateAction>?
+        val stateActions: List<StateAction>?,
+        /**
+         * If defined, stateActions will be ignored.
+         */
+        val outcomes: List<Outcome>? = null
     ): JsonSerializable {
+        val outcomeParams: OutcomeParams
+            get() = OutcomeParams(outcomes = outcomes, stateActions = stateActions)
+
         companion object {
             private const val WHEN_STATE_MATCHES = "when_state_matches"
             private const val STATE_ACTIONS = "state_actions"
+            private const val OUTCOMES = "outcomes"
 
             @Throws(JsonException::class)
             fun from(json: JsonValue): Completion {
@@ -66,7 +74,8 @@ internal data class PagerControllerBranching(
 
                 return Completion(
                     predicate = content[WHEN_STATE_MATCHES]?.let(JsonPredicate::parse),
-                    stateActions = content.optionalList(STATE_ACTIONS)?.map(StateAction::fromJson)
+                    stateActions = content.optionalList(STATE_ACTIONS)?.map(StateAction::fromJson),
+                    outcomes = content.optionalList(OUTCOMES)?.let(Outcome::fromList)
                 )
             }
         }

@@ -584,6 +584,7 @@ internal class ThomasModelFactory : ModelFactory {
                             automatedActions = itemInfo.automatedActions,
                             accessibilityActions = itemInfo.accessibilityActions,
                             stateActions = itemInfo.stateActions,
+                            displayOutcomes = itemInfo.displayOutcomes,
                             branching = itemInfo.branching
                         )
                     } ?: throw ModelFactoryException("PagerItemInfo expected")

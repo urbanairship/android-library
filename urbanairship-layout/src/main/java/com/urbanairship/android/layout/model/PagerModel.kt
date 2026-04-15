@@ -19,17 +19,14 @@ import com.urbanairship.android.layout.property.AutomatedAction
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.DisableSwipeSelector
 import com.urbanairship.android.layout.property.GestureLocation
+import com.urbanairship.android.layout.property.Outcome
+import com.urbanairship.android.layout.property.OutcomeParams
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerGesture
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.earliestNavigationAction
 import com.urbanairship.android.layout.property.firstPagerNextOrNull
-import com.urbanairship.android.layout.property.hasCancelOrDismiss
-import com.urbanairship.android.layout.property.hasPagerNext
-import com.urbanairship.android.layout.property.hasPagerPause
 import com.urbanairship.android.layout.property.hasPagerPauseOrResumeAction
-import com.urbanairship.android.layout.property.hasPagerPrevious
-import com.urbanairship.android.layout.property.hasPagerResume
 import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.android.layout.util.Timer
 import com.urbanairship.android.layout.util.pagerGestures
@@ -68,8 +65,16 @@ internal class PagerModel(
         val automatedActions: List<AutomatedAction>?,
         val accessibilityActions: List<AccessibilityAction>?,
         val stateActions: List<StateAction>?,
+        val displayOutcomes: List<Outcome>?,
         val branching: PageBranching?
-    )
+    ) {
+        val displayOutcomeParams: OutcomeParams
+            get() = OutcomeParams(
+                outcomes = displayOutcomes,
+                stateActions = stateActions,
+                actions = displayActions
+            )
+    }
 
     interface Listener : BaseModel.Listener {
         fun onDataUpdated()
@@ -100,6 +105,30 @@ internal class PagerModel(
     val isSinglePage: Boolean
         get() = branchControl == null && pages.size < 2
 
+    /**
+     * Pager-local outcome handler that directly manipulates pager state
+     * instead of broadcasting layout events (which would go through the event
+     * bus and back). This keeps pager operations synchronous with the caller.
+     */
+    private val pagerOutcomeHandler: OutcomeHandler = object : OutcomeHandler by outcomeHandler {
+        override suspend fun pagerNext() = handlePagerNext(PagerNextFallback.NONE)
+        override suspend fun pagerPrevious() { handlePagerPrevious() }
+        override suspend fun pagerNextOrDismiss() = handlePagerNext(PagerNextFallback.DISMISS)
+        override suspend fun pagerNextOrFirst() = handlePagerNext(PagerNextFallback.FIRST)
+        override suspend fun pagerStart() { resolve(PageRequest.FIRST) }
+        override suspend fun pagerEnd() { resolve(PageRequest.LAST) }
+        override fun pagerPause() {
+            isManuallyPaused = true
+            pauseStory()
+        }
+        override fun pagerResume() {
+            isManuallyPaused = false
+            resumeStory()
+        }
+        override fun pagerTogglePause() { handlePagerPauseToggle() }
+        override suspend fun dismiss(cancel: Boolean) { handleDismiss() }
+    }
+
     init {
         @OptIn(DelicateLayoutApi::class)
         val state = pagerState.value
@@ -112,6 +141,7 @@ internal class PagerModel(
                 thomasState = environment.layoutState.thomasState,
                 onBranchUpdated = ::onPagesDataUpdated,
                 actionsRunner = ::runStateActions,
+                outcomeRunner = { params -> processOutcomes(params, pagerOutcomeHandler) },
             )
             wireBranchControlFlows(branchControl)
         } else {
@@ -119,13 +149,9 @@ internal class PagerModel(
             onPagesDataUpdated(availablePages, state.completed)
         }
 
-        // Listen for page changes (or the initial page display)
-        // when we are not scrolling and run any actions for the current page.
         modelScope.launch {
             pagerState.changes
                 .filter {
-                    // If current and last are both 0, we're initializing the pager.
-                    // Otherwise, we only want to act on changes to the pageIndex.
                     (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex)
                             && it.progress == 0
                             && it.isScrolling.not()
@@ -141,22 +167,18 @@ internal class PagerModel(
                         "lastDisplayedPageId=${lastDisplayedPageId.value} pageIds=${it.pageIds}"
                     }
 
-                    // If the page list was rebuilt by branching, but we're still on the same
-                    // logical page, skip page-transition side effects. This prevents clearing
-                    // timers, re-running display actions, and corrupting history when only
-                    // the page indices shifted.
                     if (lastDisplayedPageId.value != currentPage.identifier) {
                         UALog.v { "ThomasPager pageChangeListener: new page ${currentPage.identifier}, running side effects" }
-                        // Clear any automated actions scheduled for the previous page.
                         clearAutomatedActions(it.lastPageIndex)
                         if (it.lastPageIndex > it.pageIndex) {
                             it.previousPageId?.let { pageId -> branchControl?.removeFromHistory(pageId) }
                         }
 
                         lastDisplayedPageId.update { currentPage.identifier }
-                        runStateActions(currentPage.stateActions)
 
-                        handlePageActions(currentPage.displayActions, currentPage.automatedActions)
+                        processOutcomes(currentPage.displayOutcomeParams, pagerOutcomeHandler)
+
+                        handleAutomatedActions(currentPage.automatedActions)
                         it.currentPageId?.let { pageId -> branchControl?.addToHistory(pageId) }
                     }
 
@@ -183,7 +205,6 @@ internal class PagerModel(
                 }
         }
 
-        // Restart timers when media on the current page finishes loading.
         modelScope.launch {
             pagerState.changes
                 .map { it.isMediaPaused }
@@ -202,14 +223,28 @@ internal class PagerModel(
 
         modelScope.launch { wireSwipeSelector() }
 
-        // Handle pager next and previous events from ButtonModel.
+        // Handle pager events from ButtonModel and other sources.
         environment.layoutEvents
-            .filter { it is LayoutEvent.PagerNext || it is LayoutEvent.PagerPrevious
-                    || it is LayoutEvent.PagerPauseToggle }
+            .filter {
+                it is LayoutEvent.PagerNext || it is LayoutEvent.PagerPrevious
+                        || it is LayoutEvent.PagerPauseToggle
+                        || it is LayoutEvent.PagerStart || it is LayoutEvent.PagerEnd
+                        || it is LayoutEvent.PagerPause || it is LayoutEvent.PagerResume
+            }
             .onEach { event ->
                 when (event) {
                     is LayoutEvent.PagerNext -> handlePagerNext(event.fallback)
                     is LayoutEvent.PagerPrevious -> handlePagerPrevious()
+                    is LayoutEvent.PagerStart -> resolve(PageRequest.FIRST)
+                    is LayoutEvent.PagerEnd -> resolve(PageRequest.LAST)
+                    is LayoutEvent.PagerPause -> {
+                        isManuallyPaused = true
+                        pauseStory()
+                    }
+                    is LayoutEvent.PagerResume -> {
+                        isManuallyPaused = false
+                        resumeStory()
+                    }
                     is LayoutEvent.PagerPauseToggle -> handlePagerPauseToggle()
                     else -> {}
                 }
@@ -221,15 +256,11 @@ internal class PagerModel(
         _allPages = updated
         pages = updated.map { it.view }
 
-        // Update pager state with our page identifiers
         pagerState.update { state ->
             val newPageIds = updated.map { it.identifier }
             val newDurations = updated.map { it.automatedActions?.earliestNavigationAction?.delay }
             val newCompleted = if (state.branching == null) updated.size == 1 else completed
 
-            // When the page list changes due to branching re-evaluation, the current
-            // pageIndex may point to a different page. Find the current page's identifier
-            // in the new list and adjust the index to stay on the same page.
             val currentId = state.currentPageId
             val adjustedIndex = if (currentId != null) {
                 newPageIds.indexOf(currentId).takeIf { it >= 0 }
@@ -237,8 +268,6 @@ internal class PagerModel(
                 null
             } ?: state.pageIndex.coerceIn(0, newPageIds.lastIndex.coerceAtLeast(0))
 
-            // Keep lastPageIndex in sync so a pure re-index doesn't look like
-            // a page transition to downstream listeners.
             val adjustedLastIndex = if (adjustedIndex != state.pageIndex) {
                 adjustedIndex
             } else {
@@ -309,9 +338,6 @@ internal class PagerModel(
             copy
         }
 
-        // Add the target page to history after the state update so that
-        // the updateState triggered by the pagerState change uses the old
-        // history and won't reorder pages mid-scroll.
         ensurePageId?.let { branchControl?.ensureInHistory(it) }
 
         return true
@@ -326,7 +352,6 @@ internal class PagerModel(
     }
 
     override fun onViewAttached(view: PagerView) {
-        // Collect page index changes from state and tell the view to scroll to the current page.
         viewScope.launch {
             pagerState.changes
                 .map { it.pageIndex to it.lastPageIndex }
@@ -339,8 +364,6 @@ internal class PagerModel(
                 }
         }
 
-        // Collect pager scrolls, update pager state, and report
-        // the page swipe if it was triggered by the user.
         viewScope.launch {
             view.pagerScrolls().collect { (position, isInternalScroll) ->
                 val current = pagerState.changes.value.pageIndex
@@ -358,14 +381,12 @@ internal class PagerModel(
             }
         }
 
-        // Mirror the RecyclerView's actual scroll state into pagerState.
         viewScope.launch {
             view.isScrolling.collect { isScrolling ->
                 pagerState.update { it.copyWithScrolling(isScrolling) }
             }
         }
 
-        // If we have gestures defined, collect events from the view and handle them.
         if (viewInfo.gestures != null) {
             viewScope.launch {
                 view.pagerGestures().collect {
@@ -376,7 +397,6 @@ internal class PagerModel(
             UALog.v { "No gestures defined." }
         }
 
-        // Set up accessibility actions and manage touch exploration state
         val accessibilityManager =
             view.context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
         accessibilityManager?.let { am ->
@@ -413,7 +433,6 @@ internal class PagerModel(
         }
     }
 
-    /** Returns a stable viewId for the pager item view at the given adapter `position`.  */
     fun getPageViewId(position: Int): Int = pageViewIds.getOrPut(position) { View.generateViewId() }
 
     private fun makePageRequest(toPosition: Int): PageRequest? {
@@ -475,35 +494,22 @@ internal class PagerModel(
     }
 
     private fun handleAccessibilityAction(action: AccessibilityAction, pagerState: State.Pager) {
-        action.behaviors?.let { evaluateClickBehaviors(it) }
-
-        runActions(action.actions)
-
-        // TODO: Report the accessibility action
+        modelScope.launch {
+            processOutcomes(action.outcomeParams, pagerOutcomeHandler)
+        }
     }
 
-    private fun handlePageActions(
-        displayActions: Map<String, JsonValue>?,
-        automatedActions: List<AutomatedAction>?
-    ) {
-        // Run any display actions for the current page.
-        runActions(displayActions)
-
-        // Run any automated for the current page.
+    private fun handleAutomatedActions(automatedActions: List<AutomatedAction>?) {
         automatedActions?.let { actions ->
-            // The delay of the earliest navigation action determines the duration of
-            // the page display, and can be used to determine the progress value for the
-            // currently displayed page.
             actions.earliestNavigationAction?.let { action ->
                 navigationActionTimer = object : Timer(action.delay.toLong() * 1000L) {
                     override fun onFinish() {
-                        // Clean up the progress timer and this navigation action timer.
                         scheduledJob?.cancel()
                         automatedActionsTimers.remove(this)
 
-                        action.behaviors?.let { evaluateClickBehaviors(it) }
-                        action.actions?.let { runActions(it) }
-
+                        modelScope.launch {
+                            processOutcomes(action.outcomeParams, pagerOutcomeHandler)
+                        }
                         reportAutomatedAction(action, pagerState.changes.value)
                     }
                 }.apply {
@@ -519,15 +525,13 @@ internal class PagerModel(
                 }
             }
 
-            // Run the other automated actions
             actions.filter { it != actions.earliestNavigationAction }.forEach { action ->
                 if (action.delay == 0) {
-                    //  If delay is zero run immediately
-                    action.behaviors?.let { evaluateClickBehaviors(it) }
-                    action.actions?.let { runActions(it) }
+                    modelScope.launch {
+                        processOutcomes(action.outcomeParams, pagerOutcomeHandler)
+                    }
                     reportAutomatedAction(action, pagerState.changes.value)
                 } else {
-                    // otherwise schedule the action
                     scheduleAutomatedAction(action)
                 }
             }
@@ -539,9 +543,9 @@ internal class PagerModel(
             override fun onFinish() {
                 automatedActionsTimers.remove(this)
 
-                action.behaviors?.let { evaluateClickBehaviors(it) }
-                action.actions?.let { runActions(it) }
-
+                modelScope.launch {
+                    processOutcomes(action.outcomeParams, pagerOutcomeHandler)
+                }
                 reportAutomatedAction(action, pagerState.changes.value)
             }
         }
@@ -549,58 +553,30 @@ internal class PagerModel(
         timer.start()
     }
 
-    private fun handleGesture(event: PagerGestureEvent) {
+    private suspend fun handleGesture(event: PagerGestureEvent) {
         UALog.v { "handleGesture: $event" }
 
-        val triggeredGestures = when (event) {
+        val triggeredGestures: List<Pair<PagerGesture, OutcomeParams>> = when (event) {
             is PagerGestureEvent.Tap -> viewInfo.gestures.orEmpty()
                 .filterIsInstance<PagerGesture.Tap>()
                 .filter { it.location == event.location || it.location == GestureLocation.ANY }
-                .map { it to it.behavior }
+                .map { it to it.outcomeParams }
 
             is PagerGestureEvent.Swipe -> viewInfo.gestures.orEmpty()
                 .filterIsInstance<PagerGesture.Swipe>().filter { it.direction == event.direction }
-                .map { it to it.behavior }
+                .map { it to it.outcomeParams }
 
             is Hold -> viewInfo.gestures.orEmpty().filterIsInstance<PagerGesture.Hold>().map {
-                    it to when (event.action) {
-                        Hold.Action.PRESS -> it.pressBehavior
-                        Hold.Action.RELEASE -> it.releaseBehavior
-                    }
+                it to when (event.action) {
+                    Hold.Action.PRESS -> it.pressOutcomeParams
+                    Hold.Action.RELEASE -> it.releaseOutcomeParams
                 }
+            }
         }
 
-        triggeredGestures.forEach { (gesture, gestureBehaviors) ->
-            gestureBehaviors.actions?.let { runActions(it) }
-            gestureBehaviors.behaviors?.let { evaluateClickBehaviors(it) }
-
+        triggeredGestures.forEach { (gesture, params) ->
+            processOutcomes(params, pagerOutcomeHandler)
             reportGesture(gesture, pagerState.changes.value)
-        }
-    }
-
-    private fun evaluateClickBehaviors(behaviors: List<ButtonClickBehaviorType>) {
-        if (behaviors.hasCancelOrDismiss) {
-            // If there's only a CANCEL or DISMISS, and no FORM_SUBMIT, handle
-            // immediately. We don't need to handle pager behaviors, as the layout
-            // will be dismissed.
-            handleDismiss()
-        } else {
-            // No FORM_SUBMIT, CANCEL, or DISMISS, so we only need to
-            // handle pager behaviors.
-            if (behaviors.hasPagerNext) {
-                handlePagerNext(fallback = behaviors.pagerNextFallback)
-            }
-            if (behaviors.hasPagerPrevious) {
-                handlePagerPrevious()
-            }
-            if (behaviors.hasPagerPause) {
-                isManuallyPaused = true
-                pauseStory()
-            }
-            if (behaviors.hasPagerResume) {
-                isManuallyPaused = false
-                resumeStory()
-            }
         }
     }
 
@@ -722,5 +698,6 @@ internal val List<ButtonClickBehaviorType>.pagerNextFallback: PagerNextFallback
 internal enum class PageRequest {
     NEXT,
     BACK,
-    FIRST
+    FIRST,
+    LAST
 }

@@ -26,6 +26,7 @@ import com.urbanairship.android.layout.info.View
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
+import com.urbanairship.android.layout.property.OutcomeParams
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
@@ -182,7 +183,6 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         val triggers = viewInfo.stateTriggers ?: return
         if (triggers.isEmpty()) { return }
 
-
         modelScope.launch {
             val triggered = mutableSetOf<String>()
             layoutState.thomasState.collect { state ->
@@ -193,7 +193,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
                     if (!triggered.contains(trigger.id) && trigger.triggerWhenStateMatches.apply(state)) {
                         triggered.add(trigger.id)
-                        runStateActions(trigger.onTrigger.stateActions)
+                        processOutcomes(trigger.onTrigger.outcomeParams, outcomeHandler)
                     }
                 }
             }
@@ -228,6 +228,8 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     internal val viewScope = CoroutineScope(Dispatchers.Main.immediate + viewJob)
 
     protected val layoutState = environment.layoutState
+
+    protected val outcomeHandler: OutcomeHandler = ModelOutcomeHandler(environment, layoutState)
 
     protected fun report(event: ReportingEvent) =
         environment.reporter.report(event)
@@ -355,9 +357,11 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     }
 
     fun handleViewEvent(type: EventHandler.Type, value: Any? = null) {
-        for (handler in viewInfo.eventHandlers.orEmpty()) {
-            if (handler.type == type) {
-                runStateActions(handler.actions, value)
+        modelScope.launch {
+            for (handler in viewInfo.eventHandlers.orEmpty()) {
+                if (handler.type == type) {
+                    processOutcomes(handler.outcomeParams, outcomeHandler, formValue = value)
+                }
             }
         }
     }
@@ -419,7 +423,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                     }
                 }
                 .collect {
-                    runStateActions(it.actions, lastSelected.value)
+                    processOutcomes(it.outcomeParams, outcomeHandler, formValue = lastSelected.value)
                 }
         }
     }

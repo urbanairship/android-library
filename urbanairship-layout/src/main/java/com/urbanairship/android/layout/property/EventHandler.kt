@@ -3,18 +3,24 @@ package com.urbanairship.android.layout.property
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
+import com.urbanairship.json.optionalList
 import com.urbanairship.json.requireField
 
 internal data class EventHandler(
     val type: Type,
-    val actions: List<StateAction>
+    val actions: List<StateAction>,
+    val outcomes: List<Outcome>? = null
 ) {
     constructor(json: JsonMap) : this(
         type = Type.from(json.requireField<String>("type")),
-        actions = json.requireField<JsonList>("state_actions").map {
+        actions = json.optionalList("state_actions")?.map {
             StateAction.fromJson(it.optMap())
-        }
+        } ?: emptyList(),
+        outcomes = json.optionalList("outcomes")?.let(Outcome::fromList)
     )
+
+    val outcomeParams: OutcomeParams
+        get() = OutcomeParams(outcomes = outcomes, stateActions = actions)
 
     internal enum class Type(val value: String) {
         TAP("tap"),

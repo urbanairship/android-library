@@ -1082,6 +1082,7 @@ public class PagerBranchControlTest {
             automatedActions = null,
             accessibilityActions = null,
             stateActions = null,
+            displayOutcomes = null,
             branching = branching
         )
     }

@@ -14,6 +14,8 @@ import com.urbanairship.android.layout.property.DisableSwipeSelector
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormBehaviorType
+import com.urbanairship.android.layout.property.Outcome
+import com.urbanairship.android.layout.property.OutcomeParams
 import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.Margin
@@ -277,12 +279,19 @@ internal class SafeAreaAwareInfo(override val ignoreSafeArea: Boolean) : SafeAre
 private fun safeAreaAware(json: JsonMap): SafeAreaAware =
     SafeAreaAwareInfo(ignoreSafeArea = json.optionalField("ignore_safe_area") ?: false)
 
-internal data class ValidationAction(val actions: List<StateAction>?) {
+internal data class ValidationAction(
+    val actions: List<StateAction>?,
+    val outcomes: List<Outcome>? = null
+) {
     constructor(json: JsonValue): this(
         actions = json.requireMap().optionalList("state_actions")?.map {
             StateAction.fromJson(it.requireMap())
-        }
+        },
+        outcomes = json.requireMap().optionalList("outcomes")?.let(Outcome::fromList)
     )
+
+    val outcomeParams: OutcomeParams
+        get() = OutcomeParams(outcomes = outcomes, stateActions = actions)
 }
 
 internal interface Validatable {
@@ -364,8 +373,15 @@ internal abstract class FormInfo(json: JsonMap) : ViewGroupInfo<ViewItemInfo>(),
 internal interface Button : View, Accessible, Identifiable {
     val clickBehaviors: List<ButtonClickBehaviorType>
     val actions: Map<String, JsonValue>?
+    val outcomes: List<Outcome>?
     val reportingMetadata: JsonValue?
     val tapEffect: TapEffect
+
+    val outcomeParams: OutcomeParams
+        get() = OutcomeParams(
+            outcomes = outcomes,
+            behaviors = clickBehaviors
+        )
 }
 
 internal open class ButtonInfo(
@@ -377,6 +393,9 @@ internal open class ButtonInfo(
 
     override val actions: Map<String, JsonValue>? =
         json.optionalMap("actions")?.map
+
+    override val outcomes: List<Outcome>? =
+        json.optionalList("outcomes")?.let(Outcome::fromList)
 
     override val reportingMetadata: JsonValue? =
         json.optionalField<JsonValue>("reporting_metadata")
@@ -949,6 +968,10 @@ internal class AccessibilityAction(json: JsonMap) : Accessible by accessible(jso
         ?.let { parseActionsList(it) }
     val behaviors: List<ButtonClickBehaviorType>? = json.optionalList("behaviors")
         ?.let { ButtonClickBehaviorType.fromList(it) }
+    val outcomes: List<Outcome>? = json.optionalList("outcomes")?.let(Outcome::fromList)
+
+    val outcomeParams: OutcomeParams
+        get() = OutcomeParams(outcomes = outcomes, behaviors = behaviors, actions = actions)
 
     override val identifier: String
 
@@ -963,7 +986,6 @@ internal class AccessibilityAction(json: JsonMap) : Accessible by accessible(jso
             return try {
                 AccessibilityAction(json)
             } catch (e: JsonException) {
-                // Fail gracefully without creating the action if fields are missing
                 null
             }
         }
@@ -995,7 +1017,16 @@ internal class PagerItemInfo(
     val accessibilityActions = json.optionalList("accessibility_actions")
         ?.let { AccessibilityAction.fromList(it) }
     val stateActions = json.optionalList("state_actions")?.map(StateAction::fromJson)
+    val displayOutcomes: List<Outcome>? =
+        json.optionalList("display_outcomes")?.let(Outcome::fromList)
     val branching = json["branching"]?.let(PageBranching::from)
+
+    val displayOutcomeParams: OutcomeParams
+        get() = OutcomeParams(
+            outcomes = displayOutcomes,
+            stateActions = stateActions,
+            actions = displayActions
+        )
 }
 
 internal class PagerIndicatorInfo(
