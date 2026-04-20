@@ -794,15 +794,17 @@ public open class PushManager @VisibleForTesting internal constructor(
 
             // Add it
             canonicalIds.add(id)
-            if (canonicalIds.size > MAX_CANONICAL_IDS) {
-                val itemsToDrop = canonicalIds.size - MAX_CANONICAL_IDS
-                canonicalIds.drop(itemsToDrop)
+
+            // Drop older canonical IDs if we're over our max
+            while (canonicalIds.size > MAX_CANONICAL_IDS) {
+                canonicalIds.removeAt(0)
             }
 
             // Store the new list
             preferenceDataStore.put(
                 LAST_CANONICAL_IDS_KEY, JsonValue.wrapOpt(canonicalIds).toString()
             )
+
             return true
         }
     }
@@ -1047,13 +1049,15 @@ public open class PushManager @VisibleForTesting internal constructor(
         /**
          * Key to store the push canonical IDs for push deduping.
          */
-        private const val LAST_CANONICAL_IDS_KEY: String =
+        @VisibleForTesting
+        internal const val LAST_CANONICAL_IDS_KEY: String =
             "com.urbanairship.push.LAST_CANONICAL_IDS"
 
         /**
-         * Max amount of canonical IDs to store.
+         * Max number of canonical IDs to store.
          */
-        private const val MAX_CANONICAL_IDS: Int = 10
+        @VisibleForTesting
+        internal const val MAX_CANONICAL_IDS: Int = 10
 
         /**
          * Action to display a notification.

@@ -17,6 +17,7 @@ import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.ChannelRegistrationPayload
+import com.urbanairship.json.JsonValue
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.permission.Permission
@@ -24,6 +25,8 @@ import com.urbanairship.permission.PermissionPromptFallback
 import com.urbanairship.permission.PermissionRequestResult
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
+import com.urbanairship.push.PushManager.Companion.LAST_CANONICAL_IDS_KEY
+import com.urbanairship.push.PushManager.Companion.MAX_CANONICAL_IDS
 import com.urbanairship.push.notifications.NotificationActionButtonGroup
 import io.mockk.Called
 import io.mockk.clearMocks
@@ -885,6 +888,26 @@ public class PushManagerTest {
                 isPushTokenRegistered = false
             ), pushManager.pushNotificationStatus
         )
+    }
+
+    /** Stored canonical ID history must stay capped so preferences do not grow unbounded. */
+    @Test
+    public fun testIsUniqueCanonicalIdCapsStoredHistory() {
+        repeat(MAX_CANONICAL_IDS + 1) { i ->
+            Assert.assertTrue(pushManager.isUniqueCanonicalId("id-$i"))
+        }
+
+        val jsonString = preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null)
+        Assert.assertNotNull(jsonString)
+
+        val jsonList = JsonValue.parseString(jsonString!!).list
+        Assert.assertNotNull(jsonList)
+        Assert.assertEquals(MAX_CANONICAL_IDS, jsonList!!.size())
+
+        val stored = jsonList.list.mapNotNull { it.string }.toSet()
+        Assert.assertFalse(stored.contains("id-0"))
+        Assert.assertTrue(stored.contains("id-10"))
+        Assert.assertFalse(pushManager.isUniqueCanonicalId("id-10"))
     }
 
     private class TestConsumer<T> : Consumer<T> {
