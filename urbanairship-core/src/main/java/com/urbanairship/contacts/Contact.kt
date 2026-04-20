@@ -179,7 +179,7 @@ public class Contact internal constructor(
         return contactManager.stableContactIdUpdate(now).contactId
     }
 
-    private val channelExtender = AirshipChannel.Extender.Suspending { builder ->
+    private val channelExtender = AirshipChannel.Extender { builder ->
         if (contactManager.lastContactId == null) {
             contactManager.generateDefaultContactIdIfNotSet()
         }

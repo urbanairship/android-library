@@ -117,7 +117,7 @@ public class PushManagerTest {
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
 
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
 
         // Init to verify token does not clear if the delivery type is the same
@@ -166,7 +166,7 @@ public class PushManagerTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
 
         verify { mockAirshipChannel.updateRegistration() }
@@ -180,11 +180,11 @@ public class PushManagerTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
 
         every { mockPushProvider.getRegistrationToken(any()) } throws PushProvider.PushProviderUnavailableException("test")
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
     }
 
@@ -196,11 +196,11 @@ public class PushManagerTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
 
         every { mockPushProvider.getRegistrationToken(any()) } throws PushProvider.RegistrationException("test", true)
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertNull(pushManager.pushToken)
     }
 
@@ -222,7 +222,7 @@ public class PushManagerTest {
         // Register for a token
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
 
         Assert.assertTrue(pushManager.isOptIn)
 
@@ -325,8 +325,8 @@ public class PushManagerTest {
      * Test channel registration extender when push is opted in.
      */
     @Test
-    public fun testChannelRegistrationExtenderOptedIn() {
-        var extender: AirshipChannel.Extender.Blocking? = null
+    public fun testChannelRegistrationExtenderOptedIn() = runTest {
+        var extender: AirshipChannel.Extender? = null
         every { mockAirshipChannel.addChannelRegistrationPayloadExtender(any()) } answers {
             extender = firstArg()
             Assert.assertNotNull(extender)
@@ -337,7 +337,7 @@ public class PushManagerTest {
 
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         pushManager.userNotificationsEnabled = true
         every { mockNotificationManager.areNotificationsEnabled() } returns true
 
@@ -360,9 +360,8 @@ public class PushManagerTest {
      * Test channel registration extender when push is opted out.
      */
     @Test
-    public fun testChannelRegistrationExtenderOptedOut() {
-
-        var extender: AirshipChannel.Extender.Blocking? = null
+    public fun testChannelRegistrationExtenderOptedOut() = runTest {
+        var extender: AirshipChannel.Extender? = null
         every { mockAirshipChannel.addChannelRegistrationPayloadExtender(any()) } answers {
             extender = firstArg()
             Assert.assertNotNull(extender)
@@ -386,8 +385,8 @@ public class PushManagerTest {
     }
 
     @Test
-    public fun testDeliveryTypeAndroidPlatform() {
-        var extender: AirshipChannel.Extender.Blocking? = null
+    public fun testDeliveryTypeAndroidPlatform() = runTest {
+        var extender: AirshipChannel.Extender? = null
         every { mockAirshipChannel.addChannelRegistrationPayloadExtender(any()) } answers {
             extender = firstArg()
         }
@@ -399,6 +398,7 @@ public class PushManagerTest {
         every { mockPushProvider.platform } returns Platform.ANDROID
         every { mockPushProvider.deliveryType } returns PushProvider.DeliveryType.FCM
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        pushManager.performPushRegistration()
 
         val builder = ChannelRegistrationPayload.Builder()
 
@@ -490,7 +490,7 @@ public class PushManagerTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
         verify { mockAirshipChannel.updateRegistration() }
 
@@ -509,7 +509,7 @@ public class PushManagerTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
         verify { mockAirshipChannel.updateRegistration() }
 
@@ -528,7 +528,7 @@ public class PushManagerTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
         verify { mockAirshipChannel.updateRegistration() }
 
@@ -778,7 +778,7 @@ public class PushManagerTest {
         every { mockNotificationManager.areNotificationsEnabled() } returns true
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
 
         Assert.assertEquals(
             PushNotificationStatus(
