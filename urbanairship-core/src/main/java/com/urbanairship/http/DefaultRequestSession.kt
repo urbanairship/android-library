@@ -3,6 +3,7 @@ package com.urbanairship.http
 import android.util.Base64
 import androidx.annotation.RestrictTo
 import com.urbanairship.Airship
+import kotlinx.coroutines.CancellationException
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.Platform
 import com.urbanairship.Provider
@@ -78,6 +79,8 @@ public class DefaultRequestSession : RequestSession {
             } else {
                 result
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             RequestResult(e)
         }
@@ -125,6 +128,8 @@ public class DefaultRequestSession : RequestSession {
                     shouldRetry = false
                 )
             }
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             return RequestResult(RequestException("Request failed: $request", e))
         }
