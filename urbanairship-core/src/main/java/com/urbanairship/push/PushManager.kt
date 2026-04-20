@@ -126,6 +126,9 @@ public open class PushManager @VisibleForTesting internal constructor(
         pushToken?.let { PushTokenResult.Available(it) } ?: PushTokenResult.Pending
     )
 
+    private fun currentTokenResult() =
+        pushToken?.let { PushTokenResult.Available(it) } ?: PushTokenResult.Unavailable
+
     @Volatile
     private var isAirshipReady = false
 
@@ -820,13 +823,13 @@ public open class PushManager @VisibleForTesting internal constructor(
 
         val provider = pushProvider ?: run {
             UALog.i("PushManager - Push registration failed. Missing push provider.")
-            pushTokenResult.value = PushTokenResult.Unavailable
+            pushTokenResult.value = currentTokenResult()
             return JobResult.SUCCESS
         }
 
         if (!provider.isAvailable(context)) {
             UALog.w("PushManager - Push registration failed. Push provider unavailable: %s", provider)
-            pushTokenResult.value = PushTokenResult.Unavailable
+            pushTokenResult.value = currentTokenResult()
             return JobResult.RETRY
         }
 
@@ -837,11 +840,15 @@ public open class PushManager @VisibleForTesting internal constructor(
                 "Push registration failed, provider unavailable. Error: ${e.message}. Will retry.",
                 e
             )
-            pushTokenResult.value = PushTokenResult.Unavailable
+            pushTokenResult.value = currentTokenResult()
             return JobResult.RETRY
         } catch (e: RegistrationException) {
             UALog.d("Push registration failed. Error: %S, Recoverable %s.", e.isRecoverable, e.message, e)
-            clearPushToken()
+            // Avoid clearing the push token on transient errors. Clearing
+            // creates a window where any concurrent CRA would report
+            // opt_in=false to the server. The stale token will be replaced
+            // on the next successful registration attempt.
+            pushTokenResult.value = currentTokenResult()
             return if (e.isRecoverable) {
                 JobResult.RETRY
             } else {
@@ -900,7 +907,20 @@ public open class PushManager @VisibleForTesting internal constructor(
         if (pushProviderClass != null && provider.javaClass == pushProviderClass) {
             val oldToken = preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
             if (token != null && token != oldToken) {
-                clearPushToken()
+                // Store the new token directly instead of clearing. Clearing
+                // creates a window where pushToken is null, and any concurrent
+                // CRA during that window would report opt_in=false to the server,
+                // incorrectly opting the user out of push.
+                preferenceDataStore.put(PUSH_DELIVERY_TYPE, provider.deliveryType.value)
+                preferenceDataStore.put(PUSH_TOKEN_KEY, token)
+                pushTokenResult.value = PushTokenResult.Available(token)
+                updateStatusObserver()
+
+                for (listener: PushTokenListener in pushTokenListeners) {
+                    listener.onPushTokenUpdated(token)
+                }
+
+                airshipChannel.updateRegistration()
             }
         }
         dispatchUpdateJob()
