@@ -52,7 +52,9 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.seconds
@@ -222,6 +224,19 @@ public open class PushManager @VisibleForTesting internal constructor(
                 }
                 else -> {}
             }
+        }
+
+        scope.launch {
+            pushTokenResult
+                .mapNotNull { (it as? PushTokenResult.Available)?.token }
+                .distinctUntilChanged()
+                .collect { token ->
+                    try {
+                        pushTokenListeners.forEach { it.onPushTokenUpdated(token) }
+                    } catch (e: Exception) {
+                        UALog.e(e, "Exception in push token listener")
+                    }
+                }
         }
 
         scope.launch {
@@ -864,10 +879,6 @@ public open class PushManager @VisibleForTesting internal constructor(
             pushTokenResult.value = PushTokenResult.Available(token)
             updateStatusObserver()
 
-            for (listener: PushTokenListener in pushTokenListeners) {
-                listener.onPushTokenUpdated(token)
-            }
-
             if (updateChannelOnChange) {
                 airshipChannel.updateRegistration()
             }
@@ -915,10 +926,6 @@ public open class PushManager @VisibleForTesting internal constructor(
                 preferenceDataStore.put(PUSH_TOKEN_KEY, token)
                 pushTokenResult.value = PushTokenResult.Available(token)
                 updateStatusObserver()
-
-                for (listener: PushTokenListener in pushTokenListeners) {
-                    listener.onPushTokenUpdated(token)
-                }
 
                 airshipChannel.updateRegistration()
             }
