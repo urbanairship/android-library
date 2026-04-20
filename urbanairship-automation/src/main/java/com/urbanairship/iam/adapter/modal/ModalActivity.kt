@@ -11,6 +11,7 @@ import android.widget.TextView
 import androidx.annotation.LayoutRes
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.ViewCompat
+import com.urbanairship.UALog
 import com.urbanairship.actions.run
 import com.urbanairship.automation.R
 import com.urbanairship.iam.InAppMessageActivity
@@ -32,11 +33,11 @@ internal class ModalActivity : InAppMessageActivity<ModalContent>(), InAppButton
 
     private var mediaView: MediaView? = null
 
-    override fun onCreateMessage(savedInstanceState: Bundle?) {
+    override fun onCreateMessage(savedInstanceState: Bundle?): Boolean {
         val messageContent = displayContent?.modal
         if (messageContent == null) {
-            finish()
-            return
+            UALog.e("Failed to create message! Modal display content is null.")
+            return false
         }
 
         val messageAllowsFullscreen = messageContent.allowFullscreenDisplay
@@ -55,8 +56,8 @@ internal class ModalActivity : InAppMessageActivity<ModalContent>(), InAppButton
         // Inflate the content before finding other views
         val content = findViewById<ViewStub>(R.id.modal_content)
         if (content == null) {
-            finish()
-            return
+            UALog.e("Failed to create message! No view found for R.id.modal_content.")
+            return false
         }
 
         content.layoutResource = getTemplate(template)
@@ -134,6 +135,8 @@ internal class ModalActivity : InAppMessageActivity<ModalContent>(), InAppButton
             displayListener?.onUserDismissed()
             finish()
         }
+
+        return true
     }
 
     override fun onButtonClicked(view: View, buttonInfo: InAppMessageButtonInfo) {

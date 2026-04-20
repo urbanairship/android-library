@@ -30,7 +30,7 @@ public class PreferenceDataStore internal constructor(
     private val dao = db.dao
 
     /**
-     * Listener for when preferences changes either by the
+     * Listener for when preferences change either by the
      * current process or a different process.
      */
     public fun interface PreferenceChangeListener {
@@ -43,7 +43,8 @@ public class PreferenceDataStore internal constructor(
         public fun onPreferenceChange(key: String)
     }
 
-    private fun loadPreferences() {
+    @VisibleForTesting
+    internal fun loadPreferences() {
         try {
             val preferencesFromDao = dao.getPreferences()
             val fromStore = preferencesFromDao.map { Preference(it.key, it.value) }
@@ -73,22 +74,33 @@ public class PreferenceDataStore internal constructor(
         }
 
         val fromStore = keys
-            .map { dao.queryValue(it) }
-            .mapNotNull {
-                if (it.value == null) {
-                    UALog.e("Unable to fetch preference value. Deleting: %s", it.key)
-                    try {
-                        dao.delete(it.key)
-                    } catch (ex: Exception) {
-                        UALog.e(ex, "Failed to delete preference %s", it.key)
-                    }
+            .mapNotNull { key ->
+                runCatching {
+                    dao.queryValue(key)
+                }.getOrElse { e ->
+                    deleteValue(key, e)
                     null
+                }
+            }
+            .mapNotNull { entry ->
+                if (entry.value != null) {
+                    Preference(entry.key, entry.value)
                 } else {
-                    Preference(it.key, it.value)
+                    deleteValue(entry.key)
+                    null
                 }
             }
 
         finishLoad(fromStore)
+    }
+
+    private fun deleteValue(key: String, throwable: Throwable? = null) {
+        UALog.e(throwable) { "Unable to fetch preference value. Deleting: $key" }
+        try {
+            dao.delete(key)
+        } catch (e: Exception) {
+            UALog.e(e, "Failed to delete preference $key")
+        }
     }
 
     private fun finishLoad(preferences: List<Preference>) {

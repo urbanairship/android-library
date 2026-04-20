@@ -50,9 +50,14 @@ import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * This class is the primary interface for customizing the display and behavior
@@ -112,6 +117,19 @@ public open class PushManager @VisibleForTesting internal constructor(
 
     @Volatile
     private var shouldDispatchUpdateTokenJob = true
+
+    private sealed class PushTokenResult {
+        data object Pending : PushTokenResult()
+        data class Available(val token: String) : PushTokenResult()
+        data object Unavailable : PushTokenResult()
+    }
+
+    private val pushTokenResult: MutableStateFlow<PushTokenResult> = MutableStateFlow(
+        pushToken?.let { PushTokenResult.Available(it) } ?: PushTokenResult.Pending
+    )
+
+    private fun currentTokenResult() =
+        pushToken?.let { PushTokenResult.Available(it) } ?: PushTokenResult.Unavailable
 
     @Volatile
     private var isAirshipReady = false
@@ -206,6 +224,19 @@ public open class PushManager @VisibleForTesting internal constructor(
                 }
                 else -> {}
             }
+        }
+
+        scope.launch {
+            pushTokenResult
+                .mapNotNull { (it as? PushTokenResult.Available)?.token }
+                .distinctUntilChanged()
+                .collect { token ->
+                    try {
+                        pushTokenListeners.forEach { it.onPushTokenUpdated(token) }
+                    } catch (e: Exception) {
+                        UALog.e(e, "Exception in push token listener")
+                    }
+                }
         }
 
         scope.launch {
@@ -346,24 +377,30 @@ public open class PushManager @VisibleForTesting internal constructor(
     }
 
     private val channelExtender: AirshipChannel.Extender =
-        object : AirshipChannel.Extender.Blocking {
-            override fun extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder {
-                if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
-                    return builder
-                }
-
-                if (pushToken == null) {
-                    performPushRegistration(false)
-                }
-
-                builder.setPushAddress(pushToken)
-                val provider = pushProvider
-                if (pushToken != null && provider?.platform == Platform.ANDROID) {
-                    builder.setDeliveryType(provider.deliveryType)
-                }
-
-                return builder.setOptIn(isOptIn).setBackgroundEnabled(isPushAvailable)
+        AirshipChannel.Extender { builder ->
+            if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
+                return@Extender builder
             }
+
+            var current = pushTokenResult.value
+            when (current) {
+                is PushTokenResult.Pending -> {
+                    current = withTimeoutOrNull(PUSH_TOKEN_REGISTRATION_TIMEOUT) {
+                        pushTokenResult.first { it !is PushTokenResult.Pending }
+                    } ?: pushTokenResult.value
+                }
+                is PushTokenResult.Unavailable -> dispatchUpdateJob()
+                is PushTokenResult.Available -> Unit
+            }
+
+            val token = (current as? PushTokenResult.Available)?.token
+            builder.setPushAddress(token)
+            val provider = pushProvider
+            if (token != null && provider?.platform == Platform.ANDROID) {
+                builder.setDeliveryType(provider.deliveryType)
+            }
+
+            builder.setOptIn(isOptIn).setBackgroundEnabled(isPushAvailable)
         }
 
 
@@ -376,7 +413,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         }
 
         when (jobInfo.action) {
-            ACTION_UPDATE_PUSH_REGISTRATION -> return performPushRegistration(true)
+            ACTION_UPDATE_PUSH_REGISTRATION -> return performPushRegistration()
 
             ACTION_DISPLAY_NOTIFICATION -> {
                 val message = PushMessage.fromJsonValue(jobInfo.extras.opt(PushProviderBridge.EXTRA_PUSH))
@@ -732,6 +769,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     private fun clearPushToken() {
         preferenceDataStore.remove(PUSH_TOKEN_KEY)
         preferenceDataStore.remove(PUSH_DELIVERY_TYPE)
+        pushTokenResult.value = PushTokenResult.Pending
         updateStatusObserver()
     }
 
@@ -774,15 +812,17 @@ public open class PushManager @VisibleForTesting internal constructor(
 
             // Add it
             canonicalIds.add(id)
-            if (canonicalIds.size > MAX_CANONICAL_IDS) {
-                val itemsToDrop = canonicalIds.size - MAX_CANONICAL_IDS
-                canonicalIds.drop(itemsToDrop)
+
+            // Drop older canonical IDs if we're over our max
+            while (canonicalIds.size > MAX_CANONICAL_IDS) {
+                canonicalIds.removeAt(0)
             }
 
             // Store the new list
             preferenceDataStore.put(
                 LAST_CANONICAL_IDS_KEY, JsonValue.wrapOpt(canonicalIds).toString()
             )
+
             return true
         }
     }
@@ -793,17 +833,18 @@ public open class PushManager @VisibleForTesting internal constructor(
      * @return `true` if push registration either succeeded or is not possible on this device. `false` if
      * registration failed and should be retried.
      */
-    public fun performPushRegistration(updateChannelOnChange: Boolean): JobResult {
+    public fun performPushRegistration(updateChannelOnChange: Boolean = true): JobResult {
         shouldDispatchUpdateTokenJob = false
-//        val currentToken: String? = pushToken
 
         val provider = pushProvider ?: run {
             UALog.i("PushManager - Push registration failed. Missing push provider.")
+            pushTokenResult.value = currentTokenResult()
             return JobResult.SUCCESS
         }
 
         if (!provider.isAvailable(context)) {
             UALog.w("PushManager - Push registration failed. Push provider unavailable: %s", provider)
+            pushTokenResult.value = currentTokenResult()
             return JobResult.RETRY
         }
 
@@ -814,11 +855,15 @@ public open class PushManager @VisibleForTesting internal constructor(
                 "Push registration failed, provider unavailable. Error: ${e.message}. Will retry.",
                 e
             )
+            pushTokenResult.value = currentTokenResult()
             return JobResult.RETRY
         } catch (e: RegistrationException) {
             UALog.d("Push registration failed. Error: %S, Recoverable %s.", e.isRecoverable, e.message, e)
-            clearPushToken()
-
+            // Avoid clearing the push token on transient errors. Clearing
+            // creates a window where any concurrent CRA would report
+            // opt_in=false to the server. The stale token will be replaced
+            // on the next successful registration attempt.
+            pushTokenResult.value = currentTokenResult()
             return if (e.isRecoverable) {
                 JobResult.RETRY
             } else {
@@ -831,15 +876,16 @@ public open class PushManager @VisibleForTesting internal constructor(
 
             preferenceDataStore.put(PUSH_DELIVERY_TYPE, provider.deliveryType.value)
             preferenceDataStore.put(PUSH_TOKEN_KEY, token)
+            pushTokenResult.value = PushTokenResult.Available(token)
             updateStatusObserver()
-
-            for (listener: PushTokenListener in pushTokenListeners) {
-                listener.onPushTokenUpdated(token)
-            }
 
             if (updateChannelOnChange) {
                 airshipChannel.updateRegistration()
             }
+        } else if (token != null) {
+            pushTokenResult.value = PushTokenResult.Available(token)
+        } else {
+            pushTokenResult.value = PushTokenResult.Unavailable
         }
 
         return JobResult.SUCCESS
@@ -872,7 +918,16 @@ public open class PushManager @VisibleForTesting internal constructor(
         if (pushProviderClass != null && provider.javaClass == pushProviderClass) {
             val oldToken = preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
             if (token != null && token != oldToken) {
-                clearPushToken()
+                // Store the new token directly instead of clearing. Clearing
+                // creates a window where pushToken is null, and any concurrent
+                // CRA during that window would report opt_in=false to the server,
+                // incorrectly opting the user out of push.
+                preferenceDataStore.put(PUSH_DELIVERY_TYPE, provider.deliveryType.value)
+                preferenceDataStore.put(PUSH_TOKEN_KEY, token)
+                pushTokenResult.value = PushTokenResult.Available(token)
+                updateStatusObserver()
+
+                airshipChannel.updateRegistration()
             }
         }
         dispatchUpdateJob()
@@ -1021,13 +1076,15 @@ public open class PushManager @VisibleForTesting internal constructor(
         /**
          * Key to store the push canonical IDs for push deduping.
          */
-        private const val LAST_CANONICAL_IDS_KEY: String =
+        @VisibleForTesting
+        internal const val LAST_CANONICAL_IDS_KEY: String =
             "com.urbanairship.push.LAST_CANONICAL_IDS"
 
         /**
-         * Max amount of canonical IDs to store.
+         * Max number of canonical IDs to store.
          */
-        private const val MAX_CANONICAL_IDS: Int = 10
+        @VisibleForTesting
+        internal const val MAX_CANONICAL_IDS: Int = 10
 
         /**
          * Action to display a notification.
@@ -1052,5 +1109,6 @@ public open class PushManager @VisibleForTesting internal constructor(
         public const val PUSH_TOKEN_KEY: String = "$KEY_PREFIX.REGISTRATION_TOKEN_KEY"
         public const val REQUEST_PERMISSION_KEY: String = "$KEY_PREFIX.REQUEST_PERMISSION_KEY"
         private const val UA_NOTIFICATION_BUTTON_GROUP_PREFIX: String = "ua_"
+        private val PUSH_TOKEN_REGISTRATION_TIMEOUT = 10.seconds
     }
 }

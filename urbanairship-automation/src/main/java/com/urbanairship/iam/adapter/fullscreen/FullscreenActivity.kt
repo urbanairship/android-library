@@ -9,6 +9,7 @@ import android.widget.TextView
 import androidx.annotation.LayoutRes
 import androidx.core.graphics.drawable.DrawableCompat
 import androidx.core.view.ViewCompat
+import com.urbanairship.UALog
 import com.urbanairship.actions.run
 import com.urbanairship.automation.R
 import com.urbanairship.iam.InAppMessageActivity
@@ -28,11 +29,12 @@ import kotlin.math.max
 internal class FullscreenActivity : InAppMessageActivity<FullscreenContent>(), InAppButtonLayout.ButtonClickListener {
 
     private var mediaView: MediaView? = null
-    override fun onCreateMessage(savedInstanceState: Bundle?) {
-        val messageContent = this.displayContent?.fullscreen
+
+    override fun onCreateMessage(savedInstanceState: Bundle?): Boolean {
+        val messageContent = displayContent?.fullscreen
         if (messageContent == null) {
-            finish()
-            return
+            UALog.e("Failed to create message! Fullscreen display content is null.")
+            return false
         }
 
         val template = normalizeTemplate(messageContent)
@@ -113,6 +115,8 @@ internal class FullscreenActivity : InAppMessageActivity<FullscreenContent>(), I
                 insets
             }
         }
+
+        return true
     }
 
     override fun onButtonClicked(view: View, buttonInfo: InAppMessageButtonInfo) {

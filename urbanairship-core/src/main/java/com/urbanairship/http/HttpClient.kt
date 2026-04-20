@@ -3,7 +3,7 @@ package com.urbanairship.http
 import android.net.Uri
 
 internal interface HttpClient {
-    fun <T> execute(
+    suspend fun <T> execute(
         url: Uri,
         method: String,
         headers: Map<String, String>,

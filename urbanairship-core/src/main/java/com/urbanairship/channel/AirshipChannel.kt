@@ -21,8 +21,6 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.audience.AudienceOverridesProvider
-import com.urbanairship.channel.AirshipChannel.Extender.Blocking
-import com.urbanairship.channel.AirshipChannel.Extender.Suspending
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.AuthTokenProvider
 import com.urbanairship.job.JobDispatcher
@@ -562,10 +560,7 @@ public class AirshipChannel internal constructor(
         builder.setTags(shouldSetTags, if (shouldSetTags) tags else null).setIsActive(activityMonitor.isAppForegrounded)
 
         for (extender in channelRegistrationPayloadExtenders) {
-            builder = when (extender) {
-                is Suspending -> extender.extend(builder)
-                is Blocking -> extender.extend(builder)
-            }
+            builder = extender.extend(builder)
         }
 
         if (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
@@ -608,26 +603,11 @@ public class AirshipChannel internal constructor(
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public sealed interface Extender {
+    public fun interface Extender {
 
         /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        public fun interface Suspending : Extender {
-            public suspend fun extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder
-        }
-
-        /** @hide */
-        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        public fun interface Blocking : Extender {
-            public fun extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder
-        }
-    }
-
-    public suspend fun Extender.extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder {
-        return when (this) {
-            is Suspending -> extend(builder)
-            is Blocking -> extend(builder)
-        }
+        public suspend fun extend(builder: ChannelRegistrationPayload.Builder): ChannelRegistrationPayload.Builder
     }
 
     internal companion object {
