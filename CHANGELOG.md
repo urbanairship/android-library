@@ -4,6 +4,17 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.6.3 - April 20, 2026
+
+Patch release with several push reliability improvements.
+
+### Changes
+
+- Fixed a race condition in `PushManager` that could cause false push opt-outs when FCM tokens rotate or registration fails transiently
+- Fixed `SQLiteBlobTooBigException` errors in `PreferenceDataStore` for large stored values
+- Fixed invalid JSON logging
+- Fixed unnecessary backoff when Airship's WorkManager jobs are cancelled externally
+
 ## Version 20.6.2 - April 14, 2026
 
 Patch release that hardens against a specific WebView crash that can occur on certain Android 16 devices.
