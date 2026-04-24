@@ -9,6 +9,7 @@ com.urbanairship.embedded
 com.urbanairship.iam
 com.urbanairship.iam.actions
 com.urbanairship.iam.adapter
+com.urbanairship.iam.assets
 com.urbanairship.iam.content
 com.urbanairship.iam.info
 com.urbanairship.iam.legacy
