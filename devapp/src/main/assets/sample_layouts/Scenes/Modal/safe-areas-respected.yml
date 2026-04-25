@@ -8,7 +8,7 @@ presentation:
     shade_color:
       default:
         hex: '#000000'
-        alpha: 0.5
+        alpha: 0
     ignore_safe_area: false
 view:
   type: container

@@ -39,6 +39,11 @@ internal class ModalView(
 
     private val modalFrame: ViewGroup
 
+    /** The modal frame's min height as declared by the layout (e.g. `min_height: 100%`). */
+    private val initialModalFrameMinHeight: Int
+
+    private var lastAppliedImeBottom: Int = 0
+
     private var clickOutsideListener: OnClickListener? = null
 
     init {
@@ -95,6 +100,8 @@ internal class ModalView(
             .build()
 
         constraints.applyTo(this)
+        initialModalFrameMinHeight =
+            constraints.getConstraint(modalFrame.id).layout.heightMin.coerceAtLeast(0)
         shadeColor?.let { setBackgroundColor(it) }
 
         if (viewEnvironment.isIgnoringSafeAreas) {
@@ -121,6 +128,57 @@ internal class ModalView(
 
     fun setOnClickOutsideListener(listener: OnClickListener?) {
         clickOutsideListener = listener
+    }
+
+    /**
+     * Called by [ModalActivity] when the IME bottom inset changes.
+     *
+     * The activity already accounts for the IME by adding it to the ModalView's bottom
+     * padding, so we don't need to move the modal frame ourselves here. What we *do*
+     * need to do is prevent the frame's declared `min_height` (e.g. `100%`) from
+     * forcing the MATCH_CONSTRAINT height to overflow the shrunken inner area. We
+     * clamp `matchConstraintMinHeight` directly on the LayoutParams so the change
+     * lands in the current measure pass without relying on a ConstraintSet
+     * clone/applyTo round-trip (which wasn't reliably round-tripping the override).
+     */
+    internal fun applyKeyboardInset(imeBottom: Int) {
+        if (lastAppliedImeBottom == imeBottom) return
+        lastAppliedImeBottom = imeBottom
+
+        clampModalFrameMinHeight()
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+
+        // On API < 28 without ignoreSafeArea, adjustResize shrinks this view when the IME
+        // shows, but onApplyWindowInsets is not re-dispatched. Re-clamp here so the modal
+        // frame's min height tracks the resized window.
+        post {
+            clampModalFrameMinHeight()
+        }
+    }
+
+    private fun clampModalFrameMinHeight() {
+        val lp = modalFrame.layoutParams as? LayoutParams ?: return
+        if (height <= 0) return
+
+        // The space available to the modal frame inside the ModalView (after padding
+        // and the frame's own margins). When the IME is up, ModalView.paddingBottom
+        // already includes the IME height, so this naturally shrinks.
+        val availableHeight =
+            height - paddingTop - paddingBottom - lp.topMargin - lp.bottomMargin
+
+        val newMinHeight = when {
+            availableHeight <= 0 -> initialModalFrameMinHeight
+            availableHeight < initialModalFrameMinHeight -> availableHeight
+            else -> initialModalFrameMinHeight
+        }
+
+        if (lp.matchConstraintMinHeight != newMinHeight) {
+            lp.matchConstraintMinHeight = newMinHeight
+            modalFrame.layoutParams = lp
+        }
     }
 
     private fun applyShadow(view: View, color: Int, elevation: Float) {

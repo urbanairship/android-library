@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.6.4 - April 24, 2026
+
+Patch release that fixes keyboard resize handling in modal scenes.
+
+### Changes
+
+- Fixed modal scenes so content resizes correctly when the soft keyboard appears, closing a gap between content and the keyboard on older API levels
+
 ## Version 20.6.3 - April 20, 2026
 
 Patch release with several push reliability improvements.
