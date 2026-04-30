@@ -65,7 +65,7 @@ public class SceneActionTest {
     public fun testPerform_schedulesCompressedScene(): TestResult = runTest {
         val scheduleJob = Job()
         val clock = TestClock().apply { currentTimeMillis = 9_876_543_210L }
-        val expectedLayout = AirshipLayout.fromJson(JsonValue.parseString(MINIMAL_LAYOUT_JSON))
+        val expectedLayout = AirshipLayout(JsonValue.parseString(MINIMAL_LAYOUT_JSON))
 
         val action = SceneAction(
             clock = clock,
@@ -102,7 +102,7 @@ public class SceneActionTest {
     @Test
     public fun testPerform_messageIdFromRichPush(): TestResult = runTest {
         val scheduleJob = Job()
-        val expectedLayout = AirshipLayout.fromJson(JsonValue.parseString(MINIMAL_LAYOUT_JSON))
+        val expectedLayout = AirshipLayout(JsonValue.parseString(MINIMAL_LAYOUT_JSON))
         val metadata = Bundle().apply {
             putParcelable(
                 ActionArguments.PUSH_MESSAGE_METADATA,
@@ -168,7 +168,7 @@ public class SceneActionTest {
     }
 
     @Test
-    public fun testPerform_jsonMissingLayoutReturnsError() {
+    public fun testPerform_invalidLayoutJsonReturnsError() {
         val action = SceneAction(scheduler = { throw AssertionError("scheduler must not run") })
         val args = actionArgs(encodedScenePayload("""{"version":1}"""))
         val result = action.perform(args)
@@ -207,17 +207,15 @@ public class SceneActionTest {
     private companion object {
         private val MINIMAL_LAYOUT_JSON = """
             {
-              "layout": {
-                "version": 1,
-                "presentation": {
-                  "type": "embedded",
-                  "embedded_id": "home_banner",
-                  "default_placement": {
-                    "size": { "width": "50%", "height": "50%" }
-                  }
-                },
-                "view": { "type": "container", "items": [] }
-              }
+              "version": 1,
+              "presentation": {
+                "type": "embedded",
+                "embedded_id": "home_banner",
+                "default_placement": {
+                  "size": { "width": "50%", "height": "50%" }
+                }
+              },
+              "view": { "type": "container", "items": [] }
             }
         """.trimIndent()
     }
