@@ -220,7 +220,7 @@ private fun NativeContentView(
         actionRunner = { actions, _ ->
             DefaultActionRunner.run(actions, AutomationAction.Situation.AUTOMATION)
         },
-//        stateStorage = content.store //disable state storage
+        stateStorage = content.store
     )
 
     DisposableEffect(message.id) {

@@ -99,9 +99,9 @@ internal class PagerView(
     private val view: PagerRecyclerView = PagerRecyclerView(context, model, viewEnvironment)
 
     private val modelListener = object : PagerModel.Listener {
-        override fun scrollTo(position: Int) {
+        override fun scrollTo(position: Int, animate: Boolean) {
             if (position != NO_POSITION) {
-                view.scrollTo(position)
+                view.scrollTo(position, animate)
             }
         }
 

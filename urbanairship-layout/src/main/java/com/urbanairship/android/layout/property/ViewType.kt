@@ -39,6 +39,7 @@ public enum class ViewType(
     SCORE_TOGGLE_LAYOUT("score_toggle_layout"),
     STACK_IMAGE_BUTTON("stack_image_button"),
     VIDEO_CONTROLLER("video_controller"),
+    ASYNC_VIEW_CONTROLLER("async_view_controller"),
     UNKNOWN("");
 
     public val isFormInput: Boolean
@@ -72,6 +73,7 @@ public enum class ViewType(
         )
 
         private val CONTROLLERS = listOf(
+            ASYNC_VIEW_CONTROLLER,
             CHECKBOX_CONTROLLER,
             FORM_CONTROLLER,
             NPS_FORM_CONTROLLER,

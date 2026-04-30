@@ -1,9 +1,10 @@
-package com.urbanairship.iam.assets
+package com.urbanairship.android.layout.assets
 
 import android.content.Context
 import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.android.layout.assets.DefaultAssetDownloader
 import com.urbanairship.util.FileUtils
 import com.urbanairship.util.toURL
 import io.mockk.every

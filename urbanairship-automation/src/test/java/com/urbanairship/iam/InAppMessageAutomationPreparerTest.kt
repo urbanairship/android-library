@@ -5,8 +5,8 @@ import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.iam.adapter.DisplayAdapter
 import com.urbanairship.iam.adapter.DisplayAdapterFactory
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
-import com.urbanairship.iam.assets.AirshipCachedAssets
-import com.urbanairship.iam.assets.AssetCacheManager
+import com.urbanairship.android.layout.assets.AirshipCachedAssets
+import com.urbanairship.android.layout.assets.AssetCacheManager
 import com.urbanairship.iam.content.Banner
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.coordinator.DisplayCoordinator

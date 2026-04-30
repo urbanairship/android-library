@@ -48,8 +48,9 @@ import com.urbanairship.iam.actions.ScheduleAction
 import com.urbanairship.iam.adapter.DisplayAdapterFactory
 import com.urbanairship.iam.analytics.DefaultInAppDisplayImpressionRuleProvider
 import com.urbanairship.android.layout.analytics.LayoutEventRecorder
+import com.urbanairship.iam.actions.SceneAction
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
-import com.urbanairship.iam.assets.AssetCacheManager
+import com.urbanairship.android.layout.assets.AssetCacheManager
 import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
 import com.urbanairship.iam.legacy.LegacyAnalytics
 import com.urbanairship.iam.legacy.LegacyInAppMessaging
@@ -216,6 +217,11 @@ private class AutomationActionsManifest: ActionsManifest {
         LandingPageAction.DEFAULT_NAMES to {
             ActionRegistry.Entry(
                 action = LandingPageAction()
+            )
+        },
+        SceneAction.DEFAULT_NAMES to {
+            ActionRegistry.Entry(
+                action = SceneAction()
             )
         }
     )

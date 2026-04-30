@@ -26,6 +26,7 @@ internal enum class ButtonClickBehaviorType(
     VIDEO_MUTE("video_mute"),
     VIDEO_UNMUTE("video_unmute"),
     VIDEO_TOGGLE_MUTE("video_toggle_mute"),
+    ASYNC_VIEW_RETRY("async_view_retry"),
     DISMISS("dismiss"),
     CANCEL("cancel");
 
@@ -105,6 +106,9 @@ internal fun List<ButtonClickBehaviorType>.firstPagerNextOrNull(): ButtonClickBe
 
 internal val List<ButtonClickBehaviorType>.hasPagerPauseToggle: Boolean
     get() = contains(ButtonClickBehaviorType.PAGER_PAUSE_TOGGLE)
+
+internal val List<ButtonClickBehaviorType>.hasAsyncViewRetry: Boolean
+    get() = contains(ButtonClickBehaviorType.ASYNC_VIEW_RETRY)
 
 private val videoBehaviors = listOf(
     ButtonClickBehaviorType.VIDEO_PLAY,

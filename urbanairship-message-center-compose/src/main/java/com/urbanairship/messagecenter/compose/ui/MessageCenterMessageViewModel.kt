@@ -56,7 +56,7 @@ internal interface MessageCenterMessageViewModel {
                 data class Html(val webViewState: WebViewState = WebViewState.INIT): Content()
                 data class Native(
                     val layout: AirshipLayout,
-                    val store: LayoutDataStorage
+                    val store: LayoutDataStorage?
                 ): Content()
             }
 
@@ -265,9 +265,7 @@ internal class DefaultMessageCenterMessageViewModel(
             is Message.ContentType.Native -> {
                 val layout = inbox.loadMessageLayout(message)
                 if (layout != null) {
-                    val viewStore = inbox.makeViewStateStorage(message.id, layout)
-                    viewStore.prepare("static") //TODO: replace with the restorationId from layout
-
+                    val viewStore = makeStateStorage(message.id, layout)
                     val content = State.MessageContent.Content.Native(layout, viewStore)
                     State.MessageContent(message, content)
                 } else {
@@ -275,6 +273,18 @@ internal class DefaultMessageCenterMessageViewModel(
                 }
             }
         }
+    }
+
+    private suspend fun makeStateStorage(messageId: String, layout: AirshipLayout): LayoutDataStorage? {
+        val viewStore = inbox.makeViewStateStorage(messageId)
+        val options = layout.layoutInfo.options?.stateRestoration
+
+        if (options == null) {
+            viewStore.clear()
+            return null
+        }
+
+        return viewStore.apply { prepare(options.restoreId) }
     }
 
     companion object {

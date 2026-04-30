@@ -7,7 +7,7 @@ import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.display.DisplayArgsLoader
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.util.Factory
-import com.urbanairship.android.layout.util.ImageCache
+import com.urbanairship.android.layout.util.NonExtendableImageCache
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.webkit.AirshipWebViewClient
@@ -65,7 +65,7 @@ public class DisplayArgsLoaderTest : TestCase() {
     @Test
     @Throws(DisplayArgsLoader.LoadException::class)
     public fun testParcelable() {
-        val imageCache = ImageCache { null }
+        val imageCache = NonExtendableImageCache { null }
         val clientFactory: Factory<AirshipWebViewClient> = Factory { AirshipWebViewClient() }
         val displayArgs = DisplayArgs(layoutInfo, listener, activityMonitor,  mockk(), clientFactory, imageCache)
         val loader: DisplayArgsLoader = DisplayArgsLoader.newLoader(displayArgs)

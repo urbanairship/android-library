@@ -1,8 +1,9 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.iam.assets
+package com.urbanairship.android.layout.assets
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import androidx.core.net.toUri
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
@@ -23,8 +24,10 @@ import kotlinx.coroutines.withContext
 
 /**
  * Downloads and caches asset files in filesystem using cancelable thread-safe tasks.
+ * @hide
  */
-internal class AssetCacheManager(
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class AssetCacheManager(
     context: Context,
     private val downloader: AssetDownloader = DefaultAssetDownloader(context),
     private val fileManager: AssetFileManager = DefaultAssetFileManager(context),
@@ -34,7 +37,7 @@ internal class AssetCacheManager(
     private val tasks = mutableMapOf<String, Deferred<Result<AirshipCachedAssets>>>()
     private val lock = ReentrantLock()
 
-    val downloadSemaphore = Semaphore(MAX_CONCURRENT_DOWNLOADS)
+    private val downloadSemaphore = Semaphore(MAX_CONCURRENT_DOWNLOADS)
 
     /**
      * Cache assets for a given identifier.
@@ -42,12 +45,12 @@ internal class AssetCacheManager(
      * Downloads assets from remote paths and stores them in an identifier-named cache directory with consistent and unique file names
      * derived from their remote paths using sha256.
      *
-     * @param identifier directory within the root cache directory, usually a schedule ID.
+     * @param identifier directory within the root cache directory.
      * @param assets array of remote URLs for assets associated with the identifier.
      *
      * @return A [Result] of [AirshipCachedAssets].
      */
-    suspend fun cacheAsset(
+    public suspend fun cacheAsset(
         identifier: String, assets: List<String>
     ): Result<AirshipCachedAssets> {
         // Await the running task, if it exists
@@ -85,7 +88,7 @@ internal class AssetCacheManager(
             }
 
             val endTime = System.currentTimeMillis()
-            UALog.d { "Inapp message $identifier: ${assets.size} in ${endTime - startTime}ms" }
+            UALog.d { "AssetsManager: Cached $identifier: ${assets.size} in ${endTime - startTime}ms" }
 
             if (isActive) {
                 Result.success(cache)
@@ -102,21 +105,23 @@ internal class AssetCacheManager(
     /**
      * Clears the cache directory associated with the identifier.
      *
-     * @param identifier the directory within the root cache directory, usually a schedule ID.
+     * @param identifier the directory within the root cache directory.
      */
-    suspend fun clearCache(identifier: String) = withContext(dispatcher) {
-        // Remove and cancel the running task, if it exists
-        lock.withLock { tasks.remove(identifier) }?.cancel()
+    public suspend fun clearCache(identifier: String) {
+        withContext(dispatcher) {
+            // Remove and cancel the running task, if it exists
+            lock.withLock { tasks.remove(identifier) }?.cancel()
 
-        try {
-            fileManager.clearAssets(identifier)
-        } catch (ex: Exception) {
-            UALog.e(ex) { "Failed to clear cache" }
+            try {
+                fileManager.clearAssets(identifier)
+            } catch (ex: Exception) {
+                UALog.e(ex) { "Failed to clear cache" }
+            }
         }
     }
 
     internal companion object {
-        /** The number of allowed concurrent downloads to be shared across all messages. */
+        /** The number of allowed concurrent downloads. */
         private const val MAX_CONCURRENT_DOWNLOADS = 6
     }
 }

@@ -1,11 +1,12 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.iam.assets
+package com.urbanairship.android.layout.assets
 
 import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.os.storage.StorageManager
+import androidx.annotation.RestrictTo
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import com.urbanairship.UALog
@@ -15,38 +16,40 @@ import java.io.IOException
 
 /**
  * Wrapper for the filesystem that is responsible for asset-caching related file and directory operations
+ * @hide
  */
-internal interface AssetFileManager {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public interface AssetFileManager {
 
     /**
      * Gets or creates the root directory
      */
     @Throws(IOException::class)
-    fun getRootDirectory(): Uri
+    public fun getRootDirectory(): Uri
 
     /**
      * Gets or creates cache directory based on the root directory with the provided identifier (usually a schedule ID) and returns its full cache URI
      */
     @Throws(IOException::class)
-    fun ensureCacheDirectory(identifier: String): File
+    public fun ensureCacheDirectory(identifier: String): File
 
     /**
      * Checks if asset file or directory exists at cache URI
      */
     @Throws(IOException::class)
-    fun assetItemExists(cacheUri: Uri): Boolean
+    public fun assetItemExists(cacheUri: Uri): Boolean
 
     /**
      * Moves the asset from a temporary URI to its asset cache directory
      */
     @Throws(IOException::class)
-    fun moveAsset(from: Uri, to: Uri)
+    public fun moveAsset(from: Uri, to: Uri)
 
     /**
      * Clears all assets corresponding to the provided identifier
      */
     @Throws(IOException::class)
-    fun clearAssets(identifier: String)
+    public fun clearAssets(identifier: String)
 }
 
 

@@ -14,7 +14,7 @@ import com.urbanairship.iam.adapter.InAppDisplayArgs
 import com.urbanairship.iam.adapter.InAppDisplayArgsLoader
 import com.urbanairship.iam.adapter.InAppMessageDisplayListener
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.iam.assets.AirshipCachedAssets
+import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.json.JsonMap
 import com.urbanairship.util.timer.ActiveTimer

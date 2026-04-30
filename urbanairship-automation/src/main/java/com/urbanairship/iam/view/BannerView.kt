@@ -26,7 +26,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.customview.widget.ViewDragHelper
 import com.urbanairship.android.layout.util.Timer
 import com.urbanairship.automation.R
-import com.urbanairship.iam.assets.AirshipCachedAssets
+import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.Banner
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import kotlin.math.roundToInt

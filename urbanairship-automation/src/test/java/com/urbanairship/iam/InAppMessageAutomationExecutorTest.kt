@@ -17,7 +17,7 @@ import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.android.layout.analytics.events.LayoutEvent
 import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
-import com.urbanairship.iam.assets.AssetCacheManager
+import com.urbanairship.android.layout.assets.AssetCacheManager
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.coordinator.DisplayCoordinator

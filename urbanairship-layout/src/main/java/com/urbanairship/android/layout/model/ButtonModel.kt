@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.event.ReportingEvent.ButtonTap
 import com.urbanairship.android.layout.info.Button
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
+import com.urbanairship.android.layout.property.hasAsyncViewRetry
 import com.urbanairship.android.layout.property.hasCancel
 import com.urbanairship.android.layout.property.hasCancelOrDismiss
 import com.urbanairship.android.layout.property.hasFormSubmit
@@ -139,9 +140,14 @@ internal abstract class ButtonModel<T, I: Button>(
             if (viewInfo.clickBehaviors.hasPagerPauseToggle) {
                 handlePagerPauseToggle()
             }
+
             // Handle video controls if present.
             if (viewInfo.clickBehaviors.hasVideoBehaviors) {
                 handleVideoControls(viewInfo.clickBehaviors)
+            }
+
+            if (viewInfo.clickBehaviors.hasAsyncViewRetry) {
+                handleAsyncViewReload()
             }
         }
     }
@@ -202,6 +208,10 @@ internal abstract class ButtonModel<T, I: Button>(
 
     private suspend fun handlePagerPauseToggle()  {
         broadcast(LayoutEvent.PagerPauseToggle).join()
+    }
+
+    private suspend fun handleAsyncViewReload() {
+        broadcast(LayoutEvent.AsyncViewReload(viewInfo.identifier)).join()
     }
 
     private suspend fun handleDismiss(context: Context, isCancel: Boolean) {

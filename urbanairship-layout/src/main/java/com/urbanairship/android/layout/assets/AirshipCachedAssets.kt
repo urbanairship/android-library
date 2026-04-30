@@ -1,12 +1,13 @@
 /* Copyright Airship and Contributors */
 
-package com.urbanairship.iam.assets
+package com.urbanairship.android.layout.assets
 
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Parcel
 import android.os.Parcelable
 import android.util.Size
+import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.core.net.toUri
 import com.urbanairship.UALog
@@ -52,24 +53,9 @@ public interface AirshipCachedAssets : Parcelable {
     public fun getMediaSize(remoteUrl: String): Size
 }
 
-internal class EmptyAirshipCachedAssets : AirshipCachedAssets {
-    override fun cacheUri(remoteUrl: String): Uri? = null
-    override fun isCached(remoteUrl: String): Boolean = false
-    override fun getMediaSize(remoteUrl: String): Size = Size(-1, -1)
-
-    override fun describeContents(): Int = 0
-    override fun writeToParcel(dest: Parcel, flags: Int) { }
-
-    companion object CREATOR: Parcelable.Creator<EmptyAirshipCachedAssets> {
-        override fun createFromParcel(source: Parcel?): EmptyAirshipCachedAssets {
-            return EmptyAirshipCachedAssets()
-        }
-
-        override fun newArray(size: Int): Array<EmptyAirshipCachedAssets?> = arrayOfNulls(size)
-    }
-}
-
-internal class DefaultAirshipCachedAssets(
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class DefaultAirshipCachedAssets(
     private val directory: File,
     private val fileManager: AssetFileManager
 ): AirshipCachedAssets {
@@ -215,7 +201,7 @@ internal class DefaultAirshipCachedAssets(
         }
     }
 
-    companion object CREATOR: Parcelable.Creator<AirshipCachedAssets> {
+    public companion object CREATOR: Parcelable.Creator<AirshipCachedAssets> {
         @VisibleForTesting
         internal const val METADATA_EXTENSION = ".metadata"
         private const val METADATA_IMAGE_WIDTH = "width"

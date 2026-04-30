@@ -13,13 +13,15 @@ public data class LayoutInfo(
     public val version: Int,
     public val presentation: BasePresentation,
     public val view: ViewInfo,
-    public val hash: Int
+    public val hash: Int,
+    public val options: NativeControlOptions? = null
 ) {
     public constructor(json: JsonMap) : this(
         version = json.requireField("version"),
         presentation = BasePresentation.fromJson(json.requireField("presentation")),
         view = viewInfoFromJson(json.requireField("view")),
-        hash = json.hashCode()
+        hash = json.hashCode(),
+        options = json["options"]?.let(NativeControlOptions::fromJson)
     )
 
     public val isEmbedded: Boolean

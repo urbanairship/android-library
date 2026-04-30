@@ -30,7 +30,7 @@ import com.urbanairship.Fonts
 import com.urbanairship.UALog.d
 import com.urbanairship.UALog.e
 import com.urbanairship.automation.R
-import com.urbanairship.iam.assets.AirshipCachedAssets
+import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.iam.info.InAppMessageMediaInfo
 import com.urbanairship.iam.info.InAppMessageTextInfo

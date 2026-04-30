@@ -6,10 +6,10 @@ import androidx.activity.addCallback
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import com.urbanairship.activity.ThemedActivity
+import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.adapter.InAppDisplayArgs
 import com.urbanairship.iam.adapter.InAppDisplayArgsLoader
 import com.urbanairship.iam.adapter.InAppMessageDisplayListener
-import com.urbanairship.iam.assets.AirshipCachedAssets
 import com.urbanairship.iam.assets.EmptyAirshipCachedAssets
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.util.parcelableExtra

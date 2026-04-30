@@ -163,9 +163,7 @@ public class MessageViewModel(
             is Message.ContentType.Native -> {
                 val layout = inbox.loadMessageLayout(message)
                 if (layout != null) {
-                    _viewStateStorage = inbox
-                        .makeViewStateStorage(message.id, layout)
-                        .apply { prepare("static") } //TODO: replace with restorationId from layout
+                    _viewStateStorage = makeViewStateStorage(message.id, layout)
 
                     val content = MessageViewState.MessageContent.Content.Native(layout)
                     MessageViewState.MessageContent(message, content)
@@ -174,6 +172,19 @@ public class MessageViewModel(
                 }
             }
         }
+    }
+
+    private suspend fun makeViewStateStorage(messageId: String, layout: AirshipLayout): LayoutDataStorage? {
+        val storage = inbox.makeViewStateStorage(messageId)
+
+        val options = layout.layoutInfo.options?.stateRestoration
+        if (options == null) {
+            storage.clear()
+            return null
+        }
+
+        storage.prepare(options.restoreId)
+        return storage
     }
 
     public companion object {

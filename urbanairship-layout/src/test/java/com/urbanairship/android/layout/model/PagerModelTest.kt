@@ -260,7 +260,7 @@ public class PagerModelTest {
         // Sanity check
         assertEquals(1, state.pageIndex)
 
-        verify { mockViewListener.scrollTo(1) }
+        verify { mockViewListener.scrollTo(1, any()) }
         // Verify actions were also run on display of the next page
         verify(exactly = 2) { mockActionsRunner.run(any(), any()) }
     }

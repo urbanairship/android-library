@@ -36,6 +36,10 @@ internal class ThomasForm(
 
     val scope = CoroutineScope(validationDispatcher + SupervisorJob())
 
+    /** The underlying SharedState for this form. Used for async layout state inheritance. */
+    val state: SharedState<State.Form>
+        get() = feed
+
     val validationMode: FormValidationMode
         get() = feed.changes.value.validationMode
 

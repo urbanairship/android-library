@@ -1,10 +1,11 @@
-package com.urbanairship.iam.assets
+package com.urbanairship.android.layout.assets
 
 import android.content.Context
 import androidx.core.net.toFile
 import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.android.layout.assets.DefaultAssetFileManager
 import java.io.File
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue

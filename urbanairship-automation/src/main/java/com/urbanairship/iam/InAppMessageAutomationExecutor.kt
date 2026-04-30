@@ -8,6 +8,8 @@ import com.urbanairship.UALog
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.run
 import com.urbanairship.android.layout.analytics.DisplayResult
+import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
+import com.urbanairship.android.layout.assets.AssetCacheManager
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.engine.InterruptedBehavior
@@ -16,8 +18,6 @@ import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
-import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
-import com.urbanairship.iam.assets.AssetCacheManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

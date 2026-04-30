@@ -13,7 +13,7 @@ import com.urbanairship.iam.adapter.fullscreen.FullscreenDisplayDelegate
 import com.urbanairship.iam.adapter.html.HtmlDisplayDelegate
 import com.urbanairship.iam.adapter.layout.AirshipLayoutDisplayDelegate
 import com.urbanairship.iam.adapter.modal.ModalDisplayDelegate
-import com.urbanairship.iam.assets.AirshipCachedAssets
+import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.content.InAppMessageDisplayContent.BannerContent
 import com.urbanairship.iam.content.InAppMessageDisplayContent.FullscreenContent

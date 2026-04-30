@@ -220,4 +220,106 @@ public class LayoutStateTest{
 
         assertEquals(null, videoState.current)
     }
+
+    @Test
+    fun testAsyncViewIdleJsonSerialization() {
+        val expected = jsonMapOf(
+            "status" to "idle",
+            "identifier" to "async-1"
+        )
+        assertEquals(
+            expected,
+            State.AsyncView.Idle("async-1").toJsonValue().requireMap()
+        )
+    }
+
+    @Test
+    fun testAsyncViewLoadingJsonSerialization() {
+        val expected = jsonMapOf(
+            "status" to "loading",
+            "identifier" to "async-1"
+        )
+        assertEquals(
+            expected,
+            State.AsyncView.Loading("async-1").toJsonValue().requireMap()
+        )
+    }
+
+    @Test
+    fun testAsyncViewLoadedJsonSerializationWithNullData() {
+        val expected = jsonMapOf(
+            "status" to "loaded",
+            "identifier" to "async-1",
+            "data" to JsonValue.NULL
+        )
+        assertEquals(
+            expected,
+            State.AsyncView.Loaded("async-1").toJsonValue().requireMap()
+        )
+    }
+
+    @Test
+    fun testAsyncViewLoadedJsonSerializationWithPayload() {
+        val payload = jsonMapOf("view" to jsonMapOf("type" to "label", "text" to "hi"))
+        val expected = jsonMapOf(
+            "status" to "loaded",
+            "identifier" to "async-1",
+            "data" to payload
+        )
+        assertEquals(
+            expected,
+            State.AsyncView.Loaded("async-1", payload.toJsonValue()).toJsonValue().requireMap()
+        )
+    }
+
+    @Test
+    fun testAsyncViewErrorJsonSerializationTimeout() {
+        val expected = jsonMapOf(
+            "status" to "error",
+            "identifier" to "async-1",
+            "data" to jsonMapOf("type" to "timeout")
+        )
+        assertEquals(
+            expected,
+            State.AsyncView.Error(
+                "async-1",
+                State.AsyncView.Error.ErrorData.Timeout
+            ).toJsonValue().requireMap()
+        )
+    }
+
+    @Test
+    fun testAsyncViewErrorJsonSerializationClient() {
+        val expected = jsonMapOf(
+            "status" to "error",
+            "identifier" to "async-1",
+            "data" to jsonMapOf("type" to "client_error")
+        )
+        assertEquals(
+            expected,
+            State.AsyncView.Error(
+                "async-1",
+                State.AsyncView.Error.ErrorData.Client
+            ).toJsonValue().requireMap()
+        )
+    }
+
+    @Test
+    fun testAsyncViewErrorJsonSerializationServer() {
+        val expected = jsonMapOf(
+            "status" to "error",
+            "identifier" to "async-1",
+            "data" to jsonMapOf(
+                "type" to "server_error",
+                "http_status_code" to 502
+            )
+        )
+        assertEquals(
+            expected,
+            State.AsyncView.Error(
+                "async-1",
+                State.AsyncView.Error.ErrorData.Server(502)
+            ).toJsonValue().requireMap()
+        )
+    }
 }

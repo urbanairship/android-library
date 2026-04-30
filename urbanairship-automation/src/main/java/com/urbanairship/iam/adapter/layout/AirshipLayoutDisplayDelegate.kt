@@ -9,13 +9,14 @@ import com.urbanairship.android.layout.analytics.DisplayResult
 import com.urbanairship.android.layout.analytics.LayoutListener
 import com.urbanairship.android.layout.display.DisplayException
 import com.urbanairship.android.layout.util.CachedImage
+import com.urbanairship.android.layout.util.ExtendableImageCache
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.embedded.EmbeddedViewManager
 import com.urbanairship.iam.InAppMessageWebViewClient
 import com.urbanairship.iam.actions.InAppActionRunner
 import com.urbanairship.iam.adapter.DelegatingDisplayAdapter
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.iam.assets.AirshipCachedAssets
+import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.javascript.NativeBridge
 import com.urbanairship.json.JsonMap
@@ -66,7 +67,7 @@ internal class AirshipLayoutDisplayDelegate(
             webViewClientFactory = { InAppMessageWebViewClient( NativeBridge(actionRunner), messageExtras) },
             priority = priority,
             extras = extras,
-            imageCache = { url ->
+            imageCache = ExtendableImageCache { url ->
                 assets?.cacheUri(url)?.path?.let {
                     val size = assets.getMediaSize(url)
 
