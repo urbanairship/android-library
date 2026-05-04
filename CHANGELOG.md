@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.7.0 - April 30, 2026
+
+Minor release that adds support for Native Message Center.
+
+### Changes
+
+- Added support for rendering Native Content in Message Center.
+
 ## Version 20.6.4 - April 24, 2026
 
 Patch release that fixes keyboard resize handling in modal scenes.
