@@ -89,7 +89,11 @@ internal abstract class ButtonModel<T, I: Button>(
     }
 
     private suspend fun evaluateOutcomes(context: Context) {
-        val resolved = viewInfo.outcomes
+        val tapHandlerOutcomes = viewInfo.eventHandlers
+            .orEmpty()
+            .filter { it.type == EventHandler.Type.TAP }
+            .flatMap { it.outcomes.orEmpty() }
+        val resolved = tapHandlerOutcomes + viewInfo.outcomes
         val delegation = buttonDelegation(context)
 
         val hasFormValidate = resolved.any {
