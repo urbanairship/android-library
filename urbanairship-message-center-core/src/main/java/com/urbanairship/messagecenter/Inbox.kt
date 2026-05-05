@@ -143,7 +143,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scheduleUpdateIfEnabled(UpdateType.REQUIRED)
     }
 
-    private val channelRegistrationPayloadExtender = AirshipChannel.Extender.Suspending { builder ->
+    private val channelRegistrationPayloadExtender = AirshipChannel.Extender { builder ->
         if (isEnabled.get()) {
             builder.setUserId(user.id)
         } else {

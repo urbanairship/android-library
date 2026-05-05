@@ -17,6 +17,7 @@ import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.channel.ChannelRegistrationPayload
+import com.urbanairship.json.JsonValue
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.permission.Permission
@@ -24,6 +25,8 @@ import com.urbanairship.permission.PermissionPromptFallback
 import com.urbanairship.permission.PermissionRequestResult
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
+import com.urbanairship.push.PushManager.Companion.LAST_CANONICAL_IDS_KEY
+import com.urbanairship.push.PushManager.Companion.MAX_CANONICAL_IDS
 import com.urbanairship.push.notifications.NotificationActionButtonGroup
 import io.mockk.Called
 import io.mockk.clearMocks
@@ -117,7 +120,7 @@ public class PushManagerTest {
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
 
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
 
         // Init to verify token does not clear if the delivery type is the same
@@ -166,7 +169,7 @@ public class PushManagerTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
 
         verify { mockAirshipChannel.updateRegistration() }
@@ -180,28 +183,30 @@ public class PushManagerTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
 
         every { mockPushProvider.getRegistrationToken(any()) } throws PushProvider.PushProviderUnavailableException("test")
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
     }
 
     /**
-     * Test registration exceptions clear the token.
+     * Test registration exceptions preserve the existing token to avoid
+     * race conditions where a concurrent CRA could find a null token and
+     * report opt_in=false to the server.
      */
     @Test
     public fun tesRegistrationException() {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
 
         every { mockPushProvider.getRegistrationToken(any()) } throws PushProvider.RegistrationException("test", true)
-        pushManager.performPushRegistration(true)
-        Assert.assertNull(pushManager.pushToken)
+        pushManager.performPushRegistration()
+        Assert.assertEquals("token", pushManager.pushToken)
     }
 
     /**
@@ -222,7 +227,7 @@ public class PushManagerTest {
         // Register for a token
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
 
         Assert.assertTrue(pushManager.isOptIn)
 
@@ -325,8 +330,8 @@ public class PushManagerTest {
      * Test channel registration extender when push is opted in.
      */
     @Test
-    public fun testChannelRegistrationExtenderOptedIn() {
-        var extender: AirshipChannel.Extender.Blocking? = null
+    public fun testChannelRegistrationExtenderOptedIn() = runTest {
+        var extender: AirshipChannel.Extender? = null
         every { mockAirshipChannel.addChannelRegistrationPayloadExtender(any()) } answers {
             extender = firstArg()
             Assert.assertNotNull(extender)
@@ -337,7 +342,7 @@ public class PushManagerTest {
 
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         pushManager.userNotificationsEnabled = true
         every { mockNotificationManager.areNotificationsEnabled() } returns true
 
@@ -360,9 +365,8 @@ public class PushManagerTest {
      * Test channel registration extender when push is opted out.
      */
     @Test
-    public fun testChannelRegistrationExtenderOptedOut() {
-
-        var extender: AirshipChannel.Extender.Blocking? = null
+    public fun testChannelRegistrationExtenderOptedOut() = runTest {
+        var extender: AirshipChannel.Extender? = null
         every { mockAirshipChannel.addChannelRegistrationPayloadExtender(any()) } answers {
             extender = firstArg()
             Assert.assertNotNull(extender)
@@ -386,8 +390,8 @@ public class PushManagerTest {
     }
 
     @Test
-    public fun testDeliveryTypeAndroidPlatform() {
-        var extender: AirshipChannel.Extender.Blocking? = null
+    public fun testDeliveryTypeAndroidPlatform() = runTest {
+        var extender: AirshipChannel.Extender? = null
         every { mockAirshipChannel.addChannelRegistrationPayloadExtender(any()) } answers {
             extender = firstArg()
         }
@@ -399,6 +403,7 @@ public class PushManagerTest {
         every { mockPushProvider.platform } returns Platform.ANDROID
         every { mockPushProvider.deliveryType } returns PushProvider.DeliveryType.FCM
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        pushManager.performPushRegistration()
 
         val builder = ChannelRegistrationPayload.Builder()
 
@@ -490,7 +495,7 @@ public class PushManagerTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
         verify { mockAirshipChannel.updateRegistration() }
 
@@ -500,7 +505,10 @@ public class PushManagerTest {
         }
 
         pushManager.onTokenChanged(mockPushProvider.javaClass, "some-other-token")
-        Assert.assertNull(pushManager.pushToken)
+        // Token should be stored immediately to avoid race conditions where
+        // a concurrent CRA could find a null token and opt the user out
+        Assert.assertEquals("some-other-token", pushManager.pushToken)
+        verify(exactly = 2) { mockAirshipChannel.updateRegistration() }
         verify { mockDispatcher.dispatch(any()) }
     }
 
@@ -509,7 +517,7 @@ public class PushManagerTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
         verify { mockAirshipChannel.updateRegistration() }
 
@@ -528,7 +536,7 @@ public class PushManagerTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
         verify { mockAirshipChannel.updateRegistration() }
 
@@ -540,6 +548,55 @@ public class PushManagerTest {
         pushManager.onTokenChanged(null, null)
         Assert.assertEquals("token", pushManager.pushToken)
         verify { mockDispatcher.dispatch(any()) }
+    }
+
+    /**
+     * Test that a CRA built after onTokenChanged still reports correct
+     * opt-in status. Reproduces the race condition where clearPushToken
+     * would null out the token, causing any concurrent CRA to report
+     * opt_in=false and background=false to the server.
+     */
+    @Test
+    public fun testOnTokenChangeDoesNotCauseOptOut() = runTest {
+        // Capture the channel extender
+        var extender: AirshipChannel.Extender? = null
+        every { mockAirshipChannel.addChannelRegistrationPayloadExtender(any()) } answers {
+            extender = firstArg()
+        }
+
+        pushManager.init()
+        Assert.assertNotNull(extender)
+
+        // Set up an opted-in user with a valid token
+        every { mockPushProvider.isAvailable(any()) } returns true
+        every { mockPushProvider.getRegistrationToken(any()) } returns "original-token"
+        every { mockPushProvider.platform } returns Platform.ANDROID
+        pushManager.performPushRegistration(true)
+        pushManager.userNotificationsEnabled = true
+        every { mockNotificationManager.areNotificationsEnabled() } returns true
+
+        // Verify opted in
+        Assert.assertTrue(pushManager.isOptIn)
+        Assert.assertEquals("original-token", pushManager.pushToken)
+
+        // Simulate FCM token refresh - this is the race trigger.
+        // Make getRegistrationToken throw so the extender's recovery
+        // attempt fails, simulating FCM being temporarily unavailable.
+        every { mockPushProvider.getRegistrationToken(any()) } throws
+            PushProvider.RegistrationException("FCM temporarily unavailable", true)
+
+        pushManager.onTokenChanged(mockPushProvider.javaClass, "new-token")
+
+        // Build a CRA payload as if a concurrent CRA fired right now.
+        // With the fix, the token should be "new-token" and opt_in=true.
+        // Without the fix, pushToken would be null, causing opt_in=false.
+        val builder = ChannelRegistrationPayload.Builder()
+        val payload = extender?.extend(builder)?.build()
+
+        Assert.assertNotNull(payload)
+        Assert.assertEquals("new-token", payload?.pushAddress)
+        Assert.assertTrue("opt_in should be true after token change", payload!!.optIn)
+        Assert.assertTrue("backgroundEnabled should be true after token change", payload.backgroundEnabled)
     }
 
     @Test
@@ -778,7 +835,7 @@ public class PushManagerTest {
         every { mockNotificationManager.areNotificationsEnabled() } returns true
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.getRegistrationToken(any()) } returns "token"
-        pushManager.performPushRegistration(true)
+        pushManager.performPushRegistration()
 
         Assert.assertEquals(
             PushNotificationStatus(
@@ -885,6 +942,26 @@ public class PushManagerTest {
                 isPushTokenRegistered = false
             ), pushManager.pushNotificationStatus
         )
+    }
+
+    /** Stored canonical ID history must stay capped so preferences do not grow unbounded. */
+    @Test
+    public fun testIsUniqueCanonicalIdCapsStoredHistory() {
+        repeat(MAX_CANONICAL_IDS + 1) { i ->
+            Assert.assertTrue(pushManager.isUniqueCanonicalId("id-$i"))
+        }
+
+        val jsonString = preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null)
+        Assert.assertNotNull(jsonString)
+
+        val jsonList = JsonValue.parseString(jsonString!!).list
+        Assert.assertNotNull(jsonList)
+        Assert.assertEquals(MAX_CANONICAL_IDS, jsonList!!.size())
+
+        val stored = jsonList.list.mapNotNull { it.string }.toSet()
+        Assert.assertFalse(stored.contains("id-0"))
+        Assert.assertTrue(stored.contains("id-10"))
+        Assert.assertFalse(pushManager.isUniqueCanonicalId("id-10"))
     }
 
     private class TestConsumer<T> : Consumer<T> {

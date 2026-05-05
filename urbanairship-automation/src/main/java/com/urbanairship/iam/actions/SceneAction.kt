@@ -108,7 +108,7 @@ internal class SceneAction(
                     ?.let { String(it, StandardCharsets.UTF_8) }
                     ?: throw JsonException("Invalid scene payload")
 
-                val scene = AirshipLayout.fromJson(JsonValue.parseString(sceneJson))
+                val scene = AirshipLayout(JsonValue.parseString(sceneJson))
                 return Arguments(scene)
             }
         }
@@ -121,6 +121,6 @@ internal class SceneAction(
 
         /** Default registry names. */
         @JvmStatic
-        public val DEFAULT_NAMES: Set<String> = setOf("scene_action", "^sla")
+        public val DEFAULT_NAMES: Set<String> = setOf("scene_action", "^sc")
     }
 }

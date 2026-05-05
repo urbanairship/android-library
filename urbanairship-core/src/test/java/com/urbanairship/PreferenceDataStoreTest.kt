@@ -6,10 +6,11 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
-import app.cash.turbine.test
-import kotlinx.coroutines.test.TestResult
-import kotlinx.coroutines.test.runTest
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.verify
 import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -18,6 +19,12 @@ public class PreferenceDataStoreTest {
 
     private var context: Context = ApplicationProvider.getApplicationContext()
     private var testPrefs = PreferenceDataStore.inMemoryStore(context)
+
+    val mockDao = mockk<PreferenceDataDao>(relaxed = true)
+    val mockDb = mockk<PreferenceDataDatabase> {
+        every { dao } returns mockDao
+
+    }
 
     @Test
     public fun testIsSet() {
@@ -102,11 +109,7 @@ public class PreferenceDataStoreTest {
         )
         val value = JsonValue.wrap(map)
 
-        val testObject: JsonSerializable = object : JsonSerializable {
-            override fun toJsonValue(): JsonValue {
-                return value
-            }
-        }
+        val testObject = JsonSerializable { value }
 
         testPrefs.put("value", testObject)
         Assert.assertEquals(value, testPrefs.getJsonValue("value"))
@@ -120,13 +123,45 @@ public class PreferenceDataStoreTest {
      */
     @Test
     public fun testJsonSerializableNullJsonValue() {
-        val testObject: JsonSerializable = object : JsonSerializable {
-            override fun toJsonValue(): JsonValue {
-                return JsonValue.NULL
-            }
-        }
+        val testObject = JsonSerializable { JsonValue.NULL }
 
         testPrefs.put("value", testObject)
         Assert.assertTrue(testPrefs.getJsonValue("value").isNull)
+    }
+
+    /**
+     * When batch load fails, per-key fallback should delete corrupt rows and still load others.
+     */
+    @Test
+    public fun fallbackLoadDeletesKeyWhenQueryValueThrows() {
+
+        every { mockDao.getPreferences() } throws RuntimeException("batch load failed")
+        every { mockDao.queryKeys() } returns listOf("bad", "good")
+        every { mockDao.queryValue("bad") } throws RuntimeException("row read failed")
+        every { mockDao.queryValue("good") } returns PreferenceData("good", "saved")
+
+        val store = PreferenceDataStore(mockDb)
+        store.loadPreferences()
+
+        verify { mockDao.delete("bad") }
+        Assert.assertEquals("saved", store.getString("good", null))
+    }
+
+    /**
+     * When batch load fails and a row has a null value, that key should be deleted from the store.
+     */
+    @Test
+    public fun fallbackLoadDeletesKeyWhenValueIsNull() {
+
+        every { mockDao.getPreferences() } throws RuntimeException("batch load failed")
+        every { mockDao.queryKeys() } returns listOf("empty", "good")
+        every { mockDao.queryValue("empty") } returns PreferenceData("empty", null)
+        every { mockDao.queryValue("good") } returns PreferenceData("good", "ok")
+
+        val store = PreferenceDataStore(mockDb)
+        store.loadPreferences()
+
+        verify { mockDao.delete("empty") }
+        Assert.assertEquals("ok", store.getString("good", null))
     }
 }

@@ -13,28 +13,31 @@ import java.net.MalformedURLException
 import java.net.URL
 import java.net.URLConnection
 import java.util.zip.GZIPOutputStream
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 internal class DefaultHttpClient : HttpClient {
-    override fun <T> execute(
+    override suspend fun <T> execute(
         url: Uri,
         method: String,
         headers: Map<String, String>,
         body: RequestBody?,
         followRedirects: Boolean,
         parser: ResponseParser<T>
-    ): Response<T> {
+    ): Response<T> = suspendCancellableCoroutine { continuation ->
         val actualUrl: URL = try {
             URL(url.toString())
         } catch (e: MalformedURLException) {
-            throw RequestException("Failed to build URL", e)
+            continuation.resumeWithException(RequestException("Failed to build URL", e))
+            return@suspendCancellableCoroutine
         }
 
-        var conn: HttpURLConnection? = null
+        val connection = openConnection(actualUrl) as HttpURLConnection
+        continuation.invokeOnCancellation { connection.disconnect() }
 
-        return try {
-            conn = openConnection(actualUrl) as HttpURLConnection
-
-            conn.apply {
+        try {
+            connection.apply {
                 requestMethod = method
                 doInput = true
                 useCaches = false
@@ -44,45 +47,42 @@ internal class DefaultHttpClient : HttpClient {
                 instanceFollowRedirects = followRedirects
             }
 
-            headers.forEach { entry ->
-                conn.setRequestProperty(entry.key, entry.value)
+            headers.forEach { (key, value) ->
+                connection.setRequestProperty(key, value)
             }
 
             body?.let { requestBody ->
-                conn.doOutput = true
-                conn.setRequestProperty("Content-Type", requestBody.contentType)
+                connection.doOutput = true
+                connection.setRequestProperty("Content-Type", requestBody.contentType)
 
                 if (requestBody.compress) {
-                    conn.setRequestProperty("Content-Encoding", "gzip")
+                    connection.setRequestProperty("Content-Encoding", "gzip")
                 }
 
-                conn.outputStream.use { out -> out.write(requestBody.content, gzip = requestBody.compress) }
+                connection.outputStream.use { out -> out.write(requestBody.content, gzip = requestBody.compress) }
             }
 
             val responseBody: String? = try {
-                conn.inputStream.readFully()
+                connection.inputStream.readFully()
             } catch (ex: IOException) {
-                conn.errorStream?.readFully() ?: run {
-                    UALog.e("Error stream was null for response code: ${conn.responseCode}")
+                connection.errorStream?.readFully() ?: run {
+                    UALog.e("Error stream was null for response code: ${connection.responseCode}")
                     null
                 }
             }
 
-            val responseHeaders = mapHeaders(conn.headerFields)
-            val parsedResult = parser.parseResponse(
-                conn.responseCode,
-                responseHeaders,
-                responseBody
-            )
+            val responseHeaders = mapHeaders(connection.headerFields)
+            val parsedResult = parser.parseResponse(connection.responseCode, responseHeaders, responseBody)
 
-            Response(
-                conn.responseCode,
-                parsedResult,
-                responseBody,
-                responseHeaders,
-            )
+            if (continuation.isActive) {
+                continuation.resume(Response(connection.responseCode, parsedResult, responseBody, responseHeaders))
+            }
+        } catch (e: Exception) {
+            if (continuation.isActive) {
+                continuation.resumeWithException(e)
+            }
         } finally {
-            conn?.disconnect()
+            connection.disconnect()
         }
     }
 

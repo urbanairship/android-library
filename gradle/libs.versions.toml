@@ -67,8 +67,8 @@ playservices-location = '21.3.0'
 firebase-messaging = '25.0.1'
 
 # Glide (image loader)
-glide = '5.0.5'
-landscapist-glide = '2.6.1'
+glide = '4.16.0'
+landscapist-glide = '2.5.2'
 
 # LeakCanary (for dev/debug builds)
 leakcanary = '2.14'
