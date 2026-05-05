@@ -79,13 +79,15 @@ internal open class ThomasOutcomeProcessor(
 
     protected open suspend fun handlePagerStep(outcome: Outcome.PagerStepNavigation) {
         when (outcome.direction) {
-            Outcome.PagerStepNavigation.Direction.NEXT -> when (outcome.boundaryBehavior) {
-                Outcome.PagerStepNavigation.BoundaryBehavior.DISMISS ->
-                    environment.eventHandler.broadcast(LayoutEvent.Pager.Next(PagerNextFallback.DISMISS))
-                Outcome.PagerStepNavigation.BoundaryBehavior.WRAP ->
-                    environment.eventHandler.broadcast(LayoutEvent.Pager.Next(PagerNextFallback.FIRST))
-                Outcome.PagerStepNavigation.BoundaryBehavior.IGNORE ->
-                    environment.eventHandler.broadcast(LayoutEvent.Pager.Next(PagerNextFallback.NONE))
+            Outcome.PagerStepNavigation.Direction.NEXT -> {
+                when (outcome.boundaryBehavior) {
+                    Outcome.PagerStepNavigation.BoundaryBehavior.DISMISS ->
+                        environment.eventHandler.broadcast(LayoutEvent.Pager.Next(PagerNextFallback.DISMISS))
+                    Outcome.PagerStepNavigation.BoundaryBehavior.WRAP ->
+                        environment.eventHandler.broadcast(LayoutEvent.Pager.Next(PagerNextFallback.FIRST))
+                    Outcome.PagerStepNavigation.BoundaryBehavior.IGNORE ->
+                        environment.eventHandler.broadcast(LayoutEvent.Pager.Next(PagerNextFallback.NONE))
+                }
             }
             Outcome.PagerStepNavigation.Direction.PREVIOUS ->
                 environment.eventHandler.broadcast(LayoutEvent.Pager.Previous)

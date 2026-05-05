@@ -45,7 +45,7 @@ internal data class AutomatedAction(
  * If no such action exists, returns `null`.
  */
 internal val List<AutomatedAction>.earliestNavigationAction: AutomatedAction?
-    get() = firstOrNull { it.outcomes.any { outcome -> outcome.isNavigationOutcome } }
+    get() = firstOrNull { it.outcomes.firstOrNull { outcome -> outcome.isNavigationOutcome } != null }
 
 /**
  * Returns true if the automated action has pause or resume behaviors

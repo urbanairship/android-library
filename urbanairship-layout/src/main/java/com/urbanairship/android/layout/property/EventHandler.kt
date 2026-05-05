@@ -8,7 +8,8 @@ import com.urbanairship.json.requireField
 
 internal data class EventHandler(
     val type: Type,
-    val outcomes: List<Outcome>? = null
+    // It's unexpected that outcomes are null, but we might return an empty List.
+    val outcomes: List<Outcome>
 ) {
     constructor(json: JsonMap) : this(
         type = Type.from(json.requireField<String>("type")),

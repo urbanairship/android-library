@@ -17,7 +17,7 @@ internal sealed class PagerGesture : Identifiable {
         override val identifier: String,
         override val reportingMetadata: JsonValue?,
         val location: GestureLocation,
-        val outcomes: List<Outcome>? = null
+        val outcomes: List<Outcome>
     ) : PagerGesture() {
         companion object {
             @Throws(JsonException::class)
@@ -41,7 +41,7 @@ internal sealed class PagerGesture : Identifiable {
         override val identifier: String,
         override val reportingMetadata: JsonValue?,
         val direction: GestureDirection,
-        val outcomes: List<Outcome>? = null
+        val outcomes: List<Outcome>
     ) : PagerGesture() {
         companion object {
 
@@ -65,8 +65,8 @@ internal sealed class PagerGesture : Identifiable {
     data class Hold(
         override val identifier: String,
         override val reportingMetadata: JsonValue?,
-        val pressOutcomes: List<Outcome>? = null,
-        val releaseOutcomes: List<Outcome>? = null
+        val pressOutcomes: List<Outcome>,
+        val releaseOutcomes: List<Outcome>
     ) : PagerGesture() {
         companion object {
             @Throws(JsonException::class)

@@ -141,7 +141,7 @@ internal class PagerBranchControl(
         UALog.v { "ThomasPager BranchControl onPageRequest($request): history=${history.map { it.identifier }}" }
     }
 
-    internal fun buildPathFrom(page: PagerModel.Item, payload: JsonSerializable): List<PagerModel.Item> {
+    private fun buildPathFrom(page: PagerModel.Item, payload: JsonSerializable): List<PagerModel.Item> {
         var pageIndex = availablePages.indexOf(page)
         if (pageIndex < 0) { return emptyList() }
 
@@ -163,19 +163,7 @@ internal class PagerBranchControl(
         return result.toList()
     }
 
-    internal fun currentPathPageIds(): List<String> {
-        val state = thomasState.value
-        val historySnapshot = if (history.isEmpty() && availablePages.isNotEmpty()) {
-            listOf(availablePages.first())
-        } else history.toList()
-
-        val prefix = historySnapshot.dropLast(1)
-        val suffix = buildPathFrom(historySnapshot.last(), state)
-        val suffixIds = suffix.mapTo(mutableSetOf()) { it.identifier }
-        return (prefix.filter { it.identifier !in suffixIds } + suffix).map { it.identifier }
-    }
-
-    internal fun recomputeNow() {
+    internal fun requestPathRebuild() {
         updateState(thomasState.value)
     }
 }

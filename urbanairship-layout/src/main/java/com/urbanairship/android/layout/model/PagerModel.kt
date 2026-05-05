@@ -110,7 +110,7 @@ internal class PagerModel(
             if (outcomes.isNullOrEmpty()) return
             for (outcome in outcomes) {
                 if (outcome is Outcome.PagerStepNavigation || outcome is Outcome.PagerJumpNavigation) {
-                    branchControl?.recomputeNow()
+                    branchControl?.requestPathRebuild()
                 }
                 super.process(listOf(outcome), formValue, delegated)
             }
@@ -612,7 +612,7 @@ internal class PagerModel(
     }
 
     private fun handlePagerNext(fallback: PagerNextFallback) {
-        branchControl?.recomputeNow()
+        branchControl?.requestPathRebuild()
         @OptIn(DelicateLayoutApi::class)
         if (pagerState.value.hasNext) {
             resolve(PageRequest.NEXT)
