@@ -79,9 +79,9 @@ internal class PagerRecyclerView(
             ?: NO_POSITION
     }
 
-    fun scrollTo(position: Int) {
+    fun scrollTo(position: Int, animate: Boolean = true) {
         val displayed = getDisplayedItemPosition()
-        UALog.v { "ThomasPager RecyclerView scrollTo($position) displayed=$displayed isInternalScroll=$isInternalScroll" }
+        UALog.v { "ThomasPager RecyclerView scrollTo($position) displayed=$displayed isInternalScroll=$isInternalScroll animate=$animate" }
         if (position == displayed) {
             return
         }
@@ -94,7 +94,14 @@ internal class PagerRecyclerView(
             isInternalScroll = true
         }
 
-        smoothScrollToPosition(position)
+        if (animate) {
+            smoothScrollToPosition(position)
+        } else {
+            scrollToPosition(position)
+            // scrollToPosition doesn't trigger onScrollStateChanged, so post
+            // a synthetic idle to clear isInternalScroll and report position.
+            post { recyclerScrollListener.onScrollStateChanged(this, SCROLL_STATE_IDLE) }
+        }
     }
 
     fun setPagerScrollListener(listener: PagerView.OnScrollListener?) {

@@ -12,6 +12,7 @@ import java.lang.ref.WeakReference
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withContext
 
 @VisibleForTesting
@@ -69,6 +70,9 @@ public interface JobRunner {
                         entry.jobHandler.invoke(jobInfo)
                     }
                 }
+            } catch (e: CancellationException) {
+                // Rethrow cancellation exceptions to properly cancel out the task on work manager
+                throw e
             } catch (e: Exception) {
                 // Log the exception but don't let it propagate to other entries
                 // The exception is caught here so it doesn't break the FIFO queue for other jobs

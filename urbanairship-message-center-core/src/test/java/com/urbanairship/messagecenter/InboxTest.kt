@@ -70,7 +70,7 @@ public class InboxTest {
     private val db = MessageDatabase.createInMemoryDatabase(context, testDispatcher)
     private val spyMessageDao: MessageDao = spyk(db.dao)
 
-    private lateinit var extender: AirshipChannel.Extender.Suspending
+    private lateinit var extender: AirshipChannel.Extender
 
     private val clock = TestClock()
     private val taskSleeper = TestTaskSleeper(clock) { sleep ->
@@ -108,7 +108,7 @@ public class InboxTest {
         every { mockChannel.id } returns "some-channel"
         every { mockChannel.channelIdFlow } returns MutableStateFlow("some-channel")
 
-        val argument = slot<AirshipChannel.Extender.Suspending>()
+        val argument = slot<AirshipChannel.Extender>()
 
         inbox = Inbox(
             dataStore = dataStore,

@@ -66,7 +66,7 @@ public class DefaultRequestSessionTest {
         val expectedHeaders = request.headers + expectedDefaultHeaders
         val result: Response<String?> = Response(200, "neat", "neat", emptyMap())
 
-        every<Response<String?>> {
+        coEvery<Response<String?>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns result
 
@@ -74,7 +74,7 @@ public class DefaultRequestSessionTest {
             requestSession.execute(request, testParser), RequestResult(result, false)
         )
 
-        verify {
+        coVerify {
             mockClient.execute(
                 Uri.parse("some uri"),
                 request.method,
@@ -100,12 +100,12 @@ public class DefaultRequestSessionTest {
         expectedHeaders["Authorization"] =
             "Basic ${Base64.encodeToString("foo:bar".toByteArray(), Base64.NO_WRAP)}"
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
         requestSession.execute(request, testParser)
-        verify {
+        coVerify {
             mockClient.execute(
                 Uri.parse("some uri"),
                 request.method,
@@ -132,12 +132,12 @@ public class DefaultRequestSessionTest {
         expectedHeaders["Authorization"] =
             "Basic ${Base64.encodeToString(credentials.toByteArray(), Base64.NO_WRAP)}"
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
         requestSession.execute(request, testParser)
-        verify {
+        coVerify {
             mockClient.execute(
                 Uri.parse("some uri"), request.method, expectedHeaders, null, true, testParser
             )
@@ -157,12 +157,12 @@ public class DefaultRequestSessionTest {
         val expectedHeaders = (request.headers + expectedDefaultHeaders).toMutableMap()
         expectedHeaders["Authorization"] = "Bearer some token"
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
         requestSession.execute(request, testParser)
-        verify {
+        coVerify {
             mockClient.execute(
                 Uri.parse("some uri"), request.method, expectedHeaders, null, true, testParser
             )
@@ -194,12 +194,12 @@ public class DefaultRequestSessionTest {
 
         val expectedHeaders = (request.headers + expectedDefaultHeaders + authHeaders)
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
         requestSession.execute(request, testParser)
-        verify {
+        coVerify {
             mockClient.execute(
                 Uri.parse("some uri"), request.method, expectedHeaders, null, true, testParser
             )
@@ -232,12 +232,12 @@ public class DefaultRequestSessionTest {
 
         val expectedHeaders = (request.headers + expectedDefaultHeaders + authHeaders)
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
         requestSession.execute(request, testParser)
-        verify {
+        coVerify {
             mockClient.execute(
                 Uri.parse("some uri"), request.method, expectedHeaders, null, true, testParser
             )
@@ -267,12 +267,12 @@ public class DefaultRequestSessionTest {
 
         val expectedHeaders = (request.headers + expectedDefaultHeaders + authHeaders)
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
         requestSession.execute(request, testParser)
-        verify {
+        coVerify {
             mockClient.execute(
                 Uri.parse("some uri"), request.method, expectedHeaders, null, true, testParser
             )
@@ -289,7 +289,7 @@ public class DefaultRequestSessionTest {
             headers = mapOf("foo" to "bar")
         )
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
@@ -311,7 +311,7 @@ public class DefaultRequestSessionTest {
             IllegalArgumentException("neat")
         )
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
@@ -335,7 +335,7 @@ public class DefaultRequestSessionTest {
 
         coEvery { mockAuthProvider.expireToken("first") } just runs
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returnsMany listOf(
             Response(401, "neat", "neat", emptyMap()), Response(200, "neat", "neat", emptyMap())
@@ -356,7 +356,7 @@ public class DefaultRequestSessionTest {
         secondRequestHeaders["X-UA-Appkey"] = appConfig.appKey
         secondRequestHeaders["X-UA-Auth-Type"] = "SDK-JWT"
 
-        verify {
+        coVerify {
             mockClient.execute(
                 Uri.parse("some uri"), request.method, firstRequestHeaders, null, true, testParser
             )
@@ -396,12 +396,12 @@ public class DefaultRequestSessionTest {
 
         val expectedHeaders = (request.headers + expectedDefaultHeaders + authHeaders)
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
         requestSession.execute(request, testParser)
-        verify {
+        coVerify {
             mockClient.execute(
                 Uri.parse("some uri"), request.method, expectedHeaders, null, true, testParser
             )
@@ -418,7 +418,7 @@ public class DefaultRequestSessionTest {
             headers = mapOf("foo" to "bar")
         )
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
@@ -438,7 +438,7 @@ public class DefaultRequestSessionTest {
         requestSession.contactAuthTokenProvider = mockAuthProvider
         coEvery { mockAuthProvider.fetchToken("some contact ID") } throws IllegalArgumentException("neat")
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returns Response(200, "neat", "neat", emptyMap())
 
@@ -461,7 +461,7 @@ public class DefaultRequestSessionTest {
         )
         coEvery { mockAuthProvider.expireToken("first") } just runs
 
-        every<Response<String>> {
+        coEvery<Response<String>> {
             mockClient.execute(any(), any(), any(), any(), any(), any())
         } returnsMany listOf(
             Response(401, "neat", "neat", emptyMap()), Response(200, "neat", "neat", emptyMap())
@@ -482,7 +482,7 @@ public class DefaultRequestSessionTest {
         secondRequestHeaders["X-UA-Appkey"] = appConfig.appKey
         secondRequestHeaders["X-UA-Auth-Type"] = "SDK-JWT"
 
-        verify {
+        coVerify {
             mockClient.execute(
                 Uri.parse("some uri"), request.method, firstRequestHeaders, null, true, testParser
             )

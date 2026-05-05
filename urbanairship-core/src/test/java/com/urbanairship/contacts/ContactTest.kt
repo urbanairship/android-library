@@ -188,10 +188,7 @@ public class ContactTest {
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
-            builder = when (it) {
-                is AirshipChannel.Extender.Suspending -> it.extend(builder)
-                is AirshipChannel.Extender.Blocking -> it.extend(builder)
-            }
+            builder = it.extend(builder)
         }
 
         assertEquals("some contact id", builder.build().contactId)
@@ -215,10 +212,7 @@ public class ContactTest {
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
-            builder = when (it) {
-                is AirshipChannel.Extender.Suspending -> it.extend(builder)
-                is AirshipChannel.Extender.Blocking -> it.extend(builder)
-            }
+            builder = it.extend(builder)
         }
 
         assertEquals("some stable verified id", builder.build().contactId)
@@ -252,10 +246,7 @@ public class ContactTest {
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
-            builder = when (it) {
-                is AirshipChannel.Extender.Suspending -> it.extend(builder)
-                is AirshipChannel.Extender.Blocking -> it.extend(builder)
-            }
+            builder = it.extend(builder)
         }
 
         assertEquals("some stable verified id", builder.build().contactId)
@@ -276,10 +267,7 @@ public class ContactTest {
 
         var builder = ChannelRegistrationPayload.Builder()
         extenders.forEach {
-            builder = when (it) {
-                is AirshipChannel.Extender.Suspending -> it.extend(builder)
-                is AirshipChannel.Extender.Blocking -> it.extend(builder)
-            }
+            builder = it.extend(builder)
         }
 
         assertEquals("last contact id", builder.build().contactId)

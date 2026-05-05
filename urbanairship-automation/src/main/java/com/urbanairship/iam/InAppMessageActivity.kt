@@ -65,7 +65,11 @@ internal abstract class InAppMessageActivity<T: InAppMessageDisplayContent> : Th
             return
         }
 
-        onCreateMessage(savedInstanceState)
+        val createdSuccessfully = onCreateMessage(savedInstanceState)
+        if (!createdSuccessfully) {
+            finish()
+            return
+        }
 
         onBackPressedDispatcher.addCallback(this) {
             displayListener?.onUserDismissed()
@@ -84,12 +88,11 @@ internal abstract class InAppMessageActivity<T: InAppMessageDisplayContent> : Th
     }
 
     /**
-     * Called during [.onCreate] after the in-app message and display handler are parsed
-     * from the intent.
+     * Called during [onCreate], after the in-app message and display handler are parsed from the intent.
      *
      * @param savedInstanceState The saved instance state.
      */
-    protected abstract fun onCreateMessage(savedInstanceState: Bundle?)
+    protected abstract fun onCreateMessage(savedInstanceState: Bundle?): Boolean
 
     override fun onResume() {
         super.onResume()

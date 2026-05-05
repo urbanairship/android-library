@@ -9,11 +9,13 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.util.TypedValue
+import android.view.InflateException
 import android.view.View
 import android.view.ViewTreeObserver
 import android.webkit.WebView
 import android.widget.ImageButton
 import android.widget.ProgressBar
+import androidx.annotation.RestrictTo
 import androidx.core.graphics.drawable.DrawableCompat
 import com.urbanairship.UALog
 import com.urbanairship.Airship
@@ -44,19 +46,33 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
     private var url: String? = null
     private val delayedLoadRunnable = Runnable { load() }
 
-    override fun onCreateMessage(savedInstanceState: Bundle?) {
+    override fun onCreateMessage(savedInstanceState: Bundle?): Boolean {
         val messageContent = displayContent?.html
         if (messageContent == null) {
-            finish()
-            return
+            UALog.e("Failed to create message! HTML display content is null.")
+            return false
         }
-        var borderRadius = 0f
-        if (isFullScreen(messageContent)) {
+
+        val isFullScreen = isFullScreen(messageContent)
+
+        val borderRadius = if (isFullScreen) 0f else messageContent.borderRadius
+
+        val layoutRes = if (isFullScreen) {
             setTheme(R.style.UrbanAirship_InAppHtml_Activity_Fullscreen)
-            setContentView(R.layout.ua_iam_html_fullscreen)
+            R.layout.ua_iam_html_fullscreen
         } else {
-            setContentView(R.layout.ua_iam_html)
-            borderRadius = messageContent.borderRadius
+            R.layout.ua_iam_html
+        }
+
+        try {
+            setContentView(layoutRes)
+        } catch (e: InflateException) {
+            if (!e.isApi16WebViewRedirectResourcesException()) {
+                throw e
+            }
+
+            UALog.e(e, "Failed to create HTML in-app message due to a WebView initialization error.")
+            return false
         }
 
         val progressBar = findViewById<ProgressBar>(R.id.progress)
@@ -71,9 +87,8 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
         url = messageContent.url
 
         if (!Airship.urlAllowList.isAllowed(url, UrlAllowList.Scope.OPEN_URL)) {
-            UALog.e("HTML in-app message URL is not allowed. Unable to display message.")
-            finish()
-            return
+            UALog.e("Failed to create message! HTML in-app message URL is not allowed.")
+            return false
         }
 
         val extras = args.extras ?: emptyJsonMap()
@@ -144,6 +159,8 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
                 content.setClipPathBorderRadius(borderRadius)
             }
         }
+
+        return true
     }
 
     private fun reportButtonTap(json: JsonValue) {
@@ -277,3 +294,18 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
         private const val RETRY_DELAY_MS: Long = 20_000 // 20 seconds
     }
 }
+
+private const val FAILED_RESOURCES_IMPL_REDIRECT = "failed to redirect ResourcesImpl"
+
+/**
+ * Detects the Android 16 WebView initialization bug that throws while registering WebView
+ * resources into the process AssetManager.
+ *
+ * Ref: https://issuetracker.google.com/issues/448359671
+ */
+private fun Throwable.isApi16WebViewRedirectResourcesException(): Boolean =
+    generateSequence(this) { it.cause }.any { throwable ->
+        val message = throwable.message ?: return@any false
+        (throwable is Resources.NotFoundException || throwable is RuntimeException) &&
+                message.contains(FAILED_RESOURCES_IMPL_REDIRECT)
+    }

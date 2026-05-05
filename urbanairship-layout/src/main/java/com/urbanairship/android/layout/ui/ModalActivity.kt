@@ -6,15 +6,14 @@ import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
-import android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS
-import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
-import android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RestrictTo
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat.setDecorFitsSystemWindows
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModelProvider
@@ -36,7 +35,6 @@ import com.urbanairship.android.layout.property.ModalPlacement
 import com.urbanairship.android.layout.property.Orientation
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.LayoutData
-import com.urbanairship.android.layout.util.FullScreenAdjustResizeWorkaround.Companion.applyAdjustResizeWorkaround
 import com.urbanairship.android.layout.view.ModalView
 import com.urbanairship.util.parcelableExtra
 import kotlin.time.Duration.Companion.milliseconds
@@ -56,6 +54,7 @@ public class ModalActivity : AppCompatActivity() {
     }
 
     private val isAtLeastApi35 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM
+    private val isAtLeastApi28 = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
 
     private lateinit var loader: DisplayArgsLoader
     private lateinit var externalListener: ThomasListenerInterface
@@ -67,6 +66,10 @@ public class ModalActivity : AppCompatActivity() {
     private var dismissReported = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Always enable edge-to-edge for this Activity.
+        // If the displayed layout does not ignore safe areas,
+        // we'll inset it to only draw in the safe area.
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
 
         loader = parcelableExtra(EXTRA_DISPLAY_ARGS_LOADER) ?: run {
@@ -101,7 +104,7 @@ public class ModalActivity : AppCompatActivity() {
             val placement = presentation.getResolvedPlacement(this)
             setOrientationLock(placement)
 
-            val shouldInsetLayout = handleIgnoreSafeAreas(placement.shouldIgnoreSafeArea())
+            handleIgnoreSafeAreas(placement.shouldIgnoreSafeArea())
 
             modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
@@ -136,28 +139,58 @@ public class ModalActivity : AppCompatActivity() {
 
             setContentView(view)
 
-            // Inset the layout if we're on Android 35+ and forced to ignore safe areas.
-            if (shouldInsetLayout) {
-                ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->
-                    val insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
-                    v.updatePadding(
-                        top = insets.top,
-                        bottom = insets.bottom,
-                        left = insets.left,
-                        right = insets.right
-                    )
-                    WindowInsetsCompat.CONSUMED
+            ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->
+                val systemBarInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
+                val imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
+                val ignoreSafeArea = placement.shouldIgnoreSafeArea()
+
+                when {
+                    ignoreSafeArea -> {
+                        // Extend edge-to-edge for system bars, but keep content above the IME.
+                        v.updatePadding(
+                            top = 0,
+                            bottom = imeInsets.bottom,
+                            left = 0,
+                            right = 0
+                        )
+                        view.applyKeyboardInset(imeInsets.bottom)
+                        // Subtract IME from the system-bar bottom so children respecting
+                        // safe areas don't re-apply navbar padding inside the IME region.
+                        val adjustedSystemBars = Insets.of(
+                            systemBarInsets.left,
+                            systemBarInsets.top,
+                            systemBarInsets.right,
+                            maxOf(0, systemBarInsets.bottom - imeInsets.bottom)
+                        )
+                        WindowInsetsCompat.Builder(windowInsets)
+                            .setInsets(WindowInsetsCompat.Type.systemBars(), adjustedSystemBars)
+                            .build()
+                    }
+                    isAtLeastApi28 -> {
+                        // Absorb system-bar and IME insets as padding on the ModalView.
+                        // The modalFrame uses MATCH_CONSTRAINT, so it naturally fills the
+                        // remaining inner area without any margin gymnastics.
+                        v.updatePadding(
+                            top = systemBarInsets.top,
+                            bottom = maxOf(systemBarInsets.bottom, imeInsets.bottom),
+                            left = systemBarInsets.left,
+                            right = systemBarInsets.right
+                        )
+                        view.applyKeyboardInset(imeInsets.bottom)
+                        WindowInsetsCompat.CONSUMED
+                    }
+                    else -> {
+                        // API 27 and below: enableEdgeToEdge + setDecorFitsSystemWindows(true)
+                        // means the decor absorbs system-bar insets AND adjustResize shrinks
+                        // the window when the IME shows. ModalView handles the resulting
+                        // size change via onSizeChanged().
+                        v.updatePadding(0, 0, 0, 0)
+                        WindowInsetsCompat.CONSUMED
+                    }
                 }
-
-                ViewCompat.requestApplyInsets(view)
             }
 
-            if (placement.shouldIgnoreSafeArea()) {
-                // Apply workaround for adjustResize not working with fullscreen activities,
-                // so that the keyboard does not cover the modal when we're ignoring safe areas.
-                // ref: https://issuetracker.google.com/issues/36911528
-                applyAdjustResizeWorkaround()
-            }
+            ViewCompat.requestApplyInsets(view)
         } catch (e: LoadException) {
             UALog.e(e, "Failed to load model!")
             finish()
@@ -169,7 +202,7 @@ public class ModalActivity : AppCompatActivity() {
 
     /** Override to optionally disable the back button. */
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        // If the back button is pressed and it's disabled, we ignore it.
+        // If the back button is pressed, and it's disabled, we ignore it.
         if (keyCode == KeyEvent.KEYCODE_BACK && disableBackButton) {
             UALog.v("Ignored back button press. Back button is disabled for this Scene.")
             return true
@@ -221,30 +254,14 @@ public class ModalActivity : AppCompatActivity() {
         dismissReported = true
     }
 
-    /**
-     * Handles safe areas if necessary, and returns a boolean indicating whether insets should be
-     * applied at the top level.
-     */
-    private fun handleIgnoreSafeAreas(shouldIgnoreSafeArea: Boolean): Boolean {
-        // If we're on API 35+, edge-to-edge mode is enabled by default. We'll handle this by
-        // considering all layouts on API 35+ as ignoring safe areas. For a layout that doesn't
-        // ignore safe areas, we'll return true so that insets can be applied to the layout at the
-        // top level.
-        if (isAtLeastApi35 || shouldIgnoreSafeArea) {
-            enableEdgeToEdge()
-
-            if (!isAtLeastApi35) {
-                if (Build.VERSION.SDK_INT > Build.VERSION_CODES.Q) {
-                    window.addFlags(FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS or
-                            FLAG_LAYOUT_NO_LIMITS or FLAG_LAYOUT_IN_SCREEN
-                    )
-                }
-
-                transparentSystemBars()
-            }
+    private fun handleIgnoreSafeAreas(shouldIgnoreSafeArea: Boolean) {
+        when {
+            // If we're ignoring safe area and on API 34 or below, make the system bars transparent.
+            shouldIgnoreSafeArea && !isAtLeastApi35 -> transparentSystemBars()
+            // AppCompat decor on API 27 and below doesn't truly go edge-to-edge with a translucent
+            // window. We'll let the platform keep us in the safe area.
+            !shouldIgnoreSafeArea && !isAtLeastApi28 -> setDecorFitsSystemWindows(window, true)
         }
-
-        return isAtLeastApi35 && !shouldIgnoreSafeArea
     }
 
     @Suppress("DEPRECATION")
@@ -258,20 +275,18 @@ public class ModalActivity : AppCompatActivity() {
     private fun setOrientationLock(placement: ModalPlacement) {
         try {
             if (placement.orientationLock != null) {
-                if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O) {
+                requestedOrientation = if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O) {
                     when (placement.orientationLock) {
-                        Orientation.PORTRAIT ->
-                            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                        Orientation.LANDSCAPE ->
-                            requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                        Orientation.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                        Orientation.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
                     }
                 } else {
                     // Orientation locking isn't allowed on API 26 for transparent activities,
                     // so we'll do the best we can and inherit the parent activity's orientation.
                     // If the parent activity is locked to an orientation, we'll be locked to that
                     // orientation, too. Otherwise, rotation will be allowed even though the layout
-                    // requested it not be.
-                    requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_BEHIND
+                    // requested it to not be.
+                    ActivityInfo.SCREEN_ORIENTATION_BEHIND
                 }
             }
         } catch (e: Exception) {
