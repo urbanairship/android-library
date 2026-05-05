@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.actions
 
+import com.urbanairship.UALog
 import com.urbanairship.actions.Action.Situation
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -41,6 +42,11 @@ public class ActionRegistry {
         val holder = EntryHolder(entryBlock)
 
         lock.withLock {
+            namesToRegister.forEach { name ->
+                if (actionsMap.containsKey(name)) {
+                    UALog.w("Action name collision: \"$name\" is already registered and will be overwritten.")
+                }
+            }
             actionsMap.putAll(namesToRegister.associateWith { holder })
         }
     }

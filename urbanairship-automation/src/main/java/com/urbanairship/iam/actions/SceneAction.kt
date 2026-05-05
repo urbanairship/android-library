@@ -121,6 +121,6 @@ internal class SceneAction(
 
         /** Default registry names. */
         @JvmStatic
-        public val DEFAULT_NAMES: Set<String> = setOf("scene_action", "^sla")
+        public val DEFAULT_NAMES: Set<String> = setOf("scene_action", "^sc")
     }
 }
