@@ -50,14 +50,14 @@ import com.urbanairship.messagecenter.core.R as McCoreR
  * @param modifier The [Modifier] to be applied to this screen.
  * @param state The [MessageCenterStoriesState] representing the state of the screen.
  * @param onMessageSelected Callback invoked when a message story is selected.
- * @param noMessagesView View to show when there are no messages.
+ * @param placeholder View to show when there are no messages.
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Composable
 public fun MessageCenterStoriesView(
     modifier: Modifier = Modifier,
     state: MessageCenterStoriesState = rememberMessageCenterStoriesState(),
-    noMessagesView: @Composable () -> Unit = {},
+    placeholder: @Composable () -> Unit = {},
     onMessageSelected: (Message) -> Unit,
 ) {
     Surface(
@@ -70,7 +70,7 @@ public fun MessageCenterStoriesView(
             is State.Content -> StoriesContentView(
                 messages = viewState.messages,
                 onMessageSelected = onMessageSelected,
-                noMessagesView = noMessagesView,
+                noMessagesView = placeholder,
             )
         }
     }
