@@ -580,10 +580,8 @@ internal class ThomasModelFactory : ModelFactory {
                         PagerModel.Item(
                             view = model,
                             identifier = itemInfo.identifier,
-                            displayActions = itemInfo.displayActions,
                             automatedActions = itemInfo.automatedActions,
                             accessibilityActions = itemInfo.accessibilityActions,
-                            stateActions = itemInfo.stateActions,
                             displayOutcomes = itemInfo.displayOutcomes,
                             branching = itemInfo.branching
                         )

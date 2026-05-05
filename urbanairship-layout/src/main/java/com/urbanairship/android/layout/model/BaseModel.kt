@@ -193,7 +193,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
                     if (!triggered.contains(trigger.id) && trigger.triggerWhenStateMatches.apply(state)) {
                         triggered.add(trigger.id)
-                        outcomeProcessor.process(trigger.onTrigger.outcomeParams, delegated = defaultDelegation)
+                        outcomeProcessor.process(trigger.onTrigger.outcomes, delegated = defaultDelegation)
                     }
                 }
             }
@@ -241,13 +241,9 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
             is DelegatedOutcome.Dismiss ->
                 environment.eventHandler.broadcast(LayoutEvent.Finish(cancel = outcome.cancel))
             is DelegatedOutcome.RunActions ->
-                environment.actionsRunner.run(outcome.actions, layoutState.reportingContext())
-            is DelegatedOutcome.FormAction -> when (outcome.command) {
-                Outcome.Form.Command.SUBMIT ->
-                    environment.eventHandler.broadcast(LayoutEvent.SubmitForm(buttonIdentifier = ""))
-                Outcome.Form.Command.VALIDATE ->
-                    environment.eventHandler.broadcast(LayoutEvent.ValidateForm(buttonIdentifier = ""))
-            }
+                runActions(outcome.actions, layoutState.reportingContext())
+            is DelegatedOutcome.FormAction ->
+                throw IllegalStateException("Models supporting FormAction Outcome requires correct implementation")
             is DelegatedOutcome.AsyncViewReload ->
                 environment.eventHandler.broadcast(LayoutEvent.AsyncViewReload(outcome.identifier))
         }
@@ -382,7 +378,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         modelScope.launch {
             for (handler in viewInfo.eventHandlers.orEmpty()) {
                 if (handler.type == type) {
-                    outcomeProcessor.process(handler.outcomeParams, formValue = value, delegated = defaultDelegation)
+                    outcomeProcessor.process(handler.outcomes, formValue = value, delegated = defaultDelegation)
                 }
             }
         }
@@ -445,7 +441,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                     }
                 }
                 .collect {
-                    outcomeProcessor.process(it.outcomeParams, formValue = lastSelected.value, delegated = defaultDelegation)
+                    outcomeProcessor.process(it.outcomes, formValue = lastSelected.value, delegated = defaultDelegation)
                 }
         }
     }

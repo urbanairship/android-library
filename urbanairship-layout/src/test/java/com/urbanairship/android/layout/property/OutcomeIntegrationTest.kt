@@ -13,10 +13,15 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Tests that all container types (EventHandler, AutomatedAction, PagerGesture,
- * TriggerActions, PagerControllerBranching.Completion) correctly parse `outcomes`
- * from JSON and produce valid [OutcomeParams] that either use outcomes or fall back
- * to legacy fields.
+ * Tests that each container type (EventHandler, AutomatedAction, PagerGesture,
+ * TriggerActions, PagerControllerBranching.Completion) correctly translates its
+ * JSON input — both the new `outcomes` format and the legacy fields — into the
+ * resolved [Outcome] list it exposes.
+ *
+ * The resolver itself (precedence between new/legacy formats, conversion of legacy
+ * state actions / behaviors / actions into outcomes) is unit-tested in [OutcomeTest].
+ * These tests only verify the JSON-to-resolver wiring at each holder boundary —
+ * i.e. that each holder hands the right JSON fields to [OutcomeResolver.resolve].
  */
 @RunWith(AndroidJUnit4::class)
 public class OutcomeIntegrationTest {
@@ -37,15 +42,9 @@ public class OutcomeIntegrationTest {
 
         val handler = EventHandler(json)
         assertEquals(EventHandler.Type.TAP, handler.type)
-        assertNotNull(handler.outcomes)
         assertEquals(2, handler.outcomes!!.size)
-        assertTrue(handler.actions.isEmpty())
-
-        val params = handler.outcomeParams
-        val resolved = params.resolve()
-        assertEquals(2, resolved.size)
-        assertTrue(resolved[0] is Outcome.Dismiss)
-        assertTrue(resolved[1] is Outcome.PagerStepNavigation)
+        assertTrue(handler.outcomes!![0] is Outcome.Dismiss)
+        assertTrue(handler.outcomes!![1] is Outcome.PagerStepNavigation)
     }
 
     @Test
@@ -58,17 +57,23 @@ public class OutcomeIntegrationTest {
         }""").requireMap()
 
         val handler = EventHandler(json)
-        assertNull(handler.outcomes)
-        assertEquals(1, handler.actions.size)
+        assertEquals(EventHandler.Type.FORM_INPUT, handler.type)
+        assertEquals(1, handler.outcomes!!.size)
 
-        val params = handler.outcomeParams
-        val resolved = params.resolve()
-        assertEquals(1, resolved.size)
-        assertTrue(resolved[0] is Outcome.SetStateAction)
+        val setState = handler.outcomes!!.single() as Outcome.SetStateAction
+        val action = setState.action as StateAction.SetState
+        assertEquals("color", action.key)
+        assertEquals(JsonValue.wrap("red"), action.value)
     }
 
+    /**
+     * Smoke test that holders route through [OutcomeResolver]: when both the new
+     * `outcomes` field and legacy fields are present, the new format wins.
+     * The resolver's precedence rule itself is covered by [OutcomeTest]; we only
+     * need one end-to-end check here to catch wiring regressions.
+     */
     @Test
-    public fun testEventHandlerOutcomesTakePrecedence() {
+    public fun testNewOutcomesTakePrecedenceOverLegacyFields() {
         val json = JsonValue.parseString("""{
             "type": "tap",
             "state_actions": [
@@ -80,9 +85,8 @@ public class OutcomeIntegrationTest {
         }""").requireMap()
 
         val handler = EventHandler(json)
-        val resolved = handler.outcomeParams.resolve()
-        assertEquals(1, resolved.size)
-        assertTrue(resolved[0] is Outcome.Dismiss)
+        assertEquals(1, handler.outcomes!!.size)
+        assertTrue(handler.outcomes!![0] is Outcome.Dismiss)
     }
 
     // =========================================================================
@@ -102,18 +106,14 @@ public class OutcomeIntegrationTest {
         val action = AutomatedAction.from(json)
         assertEquals("auto-1", action.identifier)
         assertEquals(5, action.delay)
-        assertNotNull(action.outcomes)
-        assertNull(action.behaviors)
-        assertNull(action.actions)
+        assertEquals(1, action.outcomes.size)
 
-        val resolved = action.outcomeParams.resolve()
-        assertEquals(1, resolved.size)
-        val outcome = resolved[0] as Outcome.PagerStepNavigation
+        val outcome = action.outcomes.single() as Outcome.PagerStepNavigation
         assertEquals(Outcome.PagerStepNavigation.BoundaryBehavior.DISMISS, outcome.boundaryBehavior)
     }
 
     @Test
-    public fun testAutomatedActionWithLegacyBehaviors() {
+    public fun testAutomatedActionWithLegacyBehaviorsAndActions() {
         val json = JsonValue.parseString("""{
             "identifier": "auto-2",
             "delay": 3,
@@ -122,31 +122,9 @@ public class OutcomeIntegrationTest {
         }""").requireMap()
 
         val action = AutomatedAction.from(json)
-        assertNull(action.outcomes)
-        assertNotNull(action.behaviors)
-        assertNotNull(action.actions)
-
-        val resolved = action.outcomeParams.resolve()
-        assertEquals(2, resolved.size)
-        assertTrue(resolved[0] is Outcome.PagerStepNavigation)
-        assertTrue(resolved[1] is Outcome.AirshipAction)
-    }
-
-    @Test
-    public fun testAutomatedActionOutcomesTakePrecedence() {
-        val json = JsonValue.parseString("""{
-            "identifier": "auto-3",
-            "behaviors": ["dismiss"],
-            "actions": { "add_tags": ["vip"] },
-            "outcomes": [
-                { "type": "pager_playback", "identifier": "pp-1", "command": "pause" }
-            ]
-        }""").requireMap()
-
-        val action = AutomatedAction.from(json)
-        val resolved = action.outcomeParams.resolve()
-        assertEquals(1, resolved.size)
-        assertTrue(resolved[0] is Outcome.PagerPlayback)
+        assertEquals(2, action.outcomes.size)
+        assertTrue(action.outcomes[0] is Outcome.PagerStepNavigation)
+        assertTrue(action.outcomes[1] is Outcome.AirshipAction)
     }
 
     // =========================================================================
@@ -260,12 +238,8 @@ public class OutcomeIntegrationTest {
 
         val gesture = PagerGesture.from(json) as PagerGesture.Tap
         assertEquals("tap-1", gesture.identifier)
-        assertNull(gesture.behavior)
-        assertNotNull(gesture.outcomes)
-
-        val resolved = gesture.outcomeParams.resolve()
-        assertEquals(1, resolved.size)
-        assertTrue(resolved[0] is Outcome.PagerStepNavigation)
+        assertEquals(1, gesture.outcomes!!.size)
+        assertTrue(gesture.outcomes!![0] is Outcome.PagerStepNavigation)
     }
 
     @Test
@@ -280,32 +254,8 @@ public class OutcomeIntegrationTest {
         }""").requireMap()
 
         val gesture = PagerGesture.from(json) as PagerGesture.Tap
-        assertNotNull(gesture.behavior)
-        assertNull(gesture.outcomes)
-
-        val resolved = gesture.outcomeParams.resolve()
-        assertEquals(1, resolved.size)
-        assertTrue(resolved[0] is Outcome.PagerStepNavigation)
-    }
-
-    @Test
-    public fun testPagerGestureTapOutcomesTakePrecedence() {
-        val json = JsonValue.parseString("""{
-            "type": "tap",
-            "identifier": "tap-3",
-            "location": "any",
-            "behavior": {
-                "behaviors": ["dismiss"]
-            },
-            "outcomes": [
-                { "type": "pager_playback", "identifier": "pp-1", "command": "toggle" }
-            ]
-        }""").requireMap()
-
-        val gesture = PagerGesture.from(json) as PagerGesture.Tap
-        val resolved = gesture.outcomeParams.resolve()
-        assertEquals(1, resolved.size)
-        assertTrue(resolved[0] is Outcome.PagerPlayback)
+        assertEquals(1, gesture.outcomes!!.size)
+        assertTrue(gesture.outcomes!![0] is Outcome.PagerStepNavigation)
     }
 
     // =========================================================================
@@ -324,12 +274,8 @@ public class OutcomeIntegrationTest {
         }""").requireMap()
 
         val gesture = PagerGesture.from(json) as PagerGesture.Swipe
-        assertNull(gesture.behavior)
-        assertNotNull(gesture.outcomes)
-
-        val resolved = gesture.outcomeParams.resolve()
-        assertEquals(1, resolved.size)
-        assertTrue(resolved[0] is Outcome.Dismiss)
+        assertEquals(1, gesture.outcomes!!.size)
+        assertTrue(gesture.outcomes!![0] is Outcome.Dismiss)
     }
 
     // =========================================================================
@@ -350,16 +296,11 @@ public class OutcomeIntegrationTest {
         }""").requireMap()
 
         val gesture = PagerGesture.from(json) as PagerGesture.Hold
-        assertNull(gesture.pressBehavior)
-        assertNull(gesture.releaseBehavior)
+        assertEquals(1, gesture.pressOutcomes!!.size)
+        assertEquals(Outcome.PagerPlayback.Command.PAUSE, (gesture.pressOutcomes!![0] as Outcome.PagerPlayback).command)
 
-        val pressResolved = gesture.pressOutcomeParams.resolve()
-        assertEquals(1, pressResolved.size)
-        assertEquals(Outcome.PagerPlayback.Command.PAUSE, (pressResolved[0] as Outcome.PagerPlayback).command)
-
-        val releaseResolved = gesture.releaseOutcomeParams.resolve()
-        assertEquals(1, releaseResolved.size)
-        assertEquals(Outcome.PagerPlayback.Command.RESUME, (releaseResolved[0] as Outcome.PagerPlayback).command)
+        assertEquals(1, gesture.releaseOutcomes!!.size)
+        assertEquals(Outcome.PagerPlayback.Command.RESUME, (gesture.releaseOutcomes!![0] as Outcome.PagerPlayback).command)
     }
 
     @Test
@@ -376,16 +317,11 @@ public class OutcomeIntegrationTest {
         }""").requireMap()
 
         val gesture = PagerGesture.from(json) as PagerGesture.Hold
-        assertNotNull(gesture.pressBehavior)
-        assertNotNull(gesture.releaseBehavior)
+        assertEquals(1, gesture.pressOutcomes!!.size)
+        assertTrue(gesture.pressOutcomes!![0] is Outcome.PagerPlayback)
 
-        val pressResolved = gesture.pressOutcomeParams.resolve()
-        assertEquals(1, pressResolved.size)
-        assertTrue(pressResolved[0] is Outcome.PagerPlayback)
-
-        val releaseResolved = gesture.releaseOutcomeParams.resolve()
-        assertEquals(1, releaseResolved.size)
-        assertTrue(releaseResolved[0] is Outcome.PagerPlayback)
+        assertEquals(1, gesture.releaseOutcomes!!.size)
+        assertTrue(gesture.releaseOutcomes!![0] is Outcome.PagerPlayback)
     }
 
     // =========================================================================
@@ -402,13 +338,9 @@ public class OutcomeIntegrationTest {
         }""").requireMap()
 
         val trigger = TriggerActions.fromJson(json)
-        assertNull(trigger.stateActions)
-        assertNotNull(trigger.outcomes)
-
-        val resolved = trigger.outcomeParams.resolve()
-        assertEquals(2, resolved.size)
-        assertTrue(resolved[0] is Outcome.SetStateAction)
-        assertTrue(resolved[1] is Outcome.Dismiss)
+        assertEquals(2, trigger.outcomes.size)
+        assertTrue(trigger.outcomes[0] is Outcome.SetStateAction)
+        assertTrue(trigger.outcomes[1] is Outcome.Dismiss)
     }
 
     @Test
@@ -420,29 +352,8 @@ public class OutcomeIntegrationTest {
         }""").requireMap()
 
         val trigger = TriggerActions.fromJson(json)
-        assertNotNull(trigger.stateActions)
-        assertNull(trigger.outcomes)
-
-        val resolved = trigger.outcomeParams.resolve()
-        assertEquals(1, resolved.size)
-        assertTrue(resolved[0] is Outcome.SetStateAction)
-    }
-
-    @Test
-    public fun testTriggerActionsOutcomesTakePrecedence() {
-        val json = JsonValue.parseString("""{
-            "state_actions": [
-                { "type": "set", "key": "ignored", "value": "should_not_appear" }
-            ],
-            "outcomes": [
-                { "type": "dismiss", "identifier": "d-1" }
-            ]
-        }""").requireMap()
-
-        val trigger = TriggerActions.fromJson(json)
-        val resolved = trigger.outcomeParams.resolve()
-        assertEquals(1, resolved.size)
-        assertTrue(resolved[0] is Outcome.Dismiss)
+        assertEquals(1, trigger.outcomes.size)
+        assertTrue(trigger.outcomes[0] is Outcome.SetStateAction)
     }
 
     // =========================================================================
@@ -459,11 +370,8 @@ public class OutcomeIntegrationTest {
 
         val completion = PagerControllerBranching.Completion.from(json)
         assertNull(completion.predicate)
-        assertNotNull(completion.outcomes)
-
-        val resolved = completion.outcomeParams.resolve()
-        assertEquals(1, resolved.size)
-        assertTrue(resolved[0] is Outcome.SetStateAction)
+        assertEquals(1, completion.outcomes.size)
+        assertTrue(completion.outcomes[0] is Outcome.SetStateAction)
     }
 
     @Test
@@ -475,28 +383,7 @@ public class OutcomeIntegrationTest {
         }""")
 
         val completion = PagerControllerBranching.Completion.from(json)
-        assertNull(completion.outcomes)
-        assertNotNull(completion.stateActions)
-
-        val resolved = completion.outcomeParams.resolve()
-        assertEquals(1, resolved.size)
-        assertTrue(resolved[0] is Outcome.SetStateAction)
-    }
-
-    @Test
-    public fun testCompletionOutcomesTakePrecedence() {
-        val json = JsonValue.parseString("""{
-            "state_actions": [
-                { "type": "set", "key": "ignored", "value": "no" }
-            ],
-            "outcomes": [
-                { "type": "dismiss", "identifier": "d-1" }
-            ]
-        }""")
-
-        val completion = PagerControllerBranching.Completion.from(json)
-        val resolved = completion.outcomeParams.resolve()
-        assertEquals(1, resolved.size)
-        assertTrue(resolved[0] is Outcome.Dismiss)
+        assertEquals(1, completion.outcomes.size)
+        assertTrue(completion.outcomes[0] is Outcome.SetStateAction)
     }
 }

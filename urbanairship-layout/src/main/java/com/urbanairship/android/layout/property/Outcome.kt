@@ -309,7 +309,7 @@ internal sealed class Outcome : Identifiable {
 
     /**
      * Internal-only outcome used to represent the legacy ASYNC_VIEW_RETRY behavior.
-     * Not parseable from JSON — only produced by [behaviorToOutcome].
+     * Not parseable from JSON — only produced by [ButtonClickBehaviorType.toOutcome].
      */
     data class AsyncViewReload(
         override val identifier: String
@@ -337,99 +337,37 @@ internal sealed class Outcome : Identifiable {
         }
 
         @Throws(JsonException::class)
-        fun fromList(json: JsonList): List<Outcome> =
-            if (json.isEmpty) emptyList() else json.map { fromJson(it) }
+        fun fromList(json: JsonList): List<Outcome> = json.map { fromJson(it) }
     }
 }
 
-/**
- * Holds either explicit [outcomes] (new format) or legacy fields ([stateActions], [behaviors],
- * [actions]). When [outcomes] is non-null, legacy fields are ignored.
- *
- * Call [resolve] to get a unified list of [Outcome] regardless of which format was provided.
- */
-internal data class OutcomeParams(
-    val outcomes: List<Outcome>? = null,
-    val stateActions: List<StateAction>? = null,
-    val behaviors: List<ButtonClickBehaviorType>? = null,
-    val actions: Map<String, JsonValue>? = null
-) {
-    fun resolve(): List<Outcome> {
+internal object OutcomeResolver {
+    fun resolve(
+        outcomes: List<Outcome>? = null,
+        stateActions: List<StateAction>? = null,
+        behaviors: List<ButtonClickBehaviorType>? = null,
+        actions: Map<String, JsonValue>? = null): List<Outcome> {
+
         if (outcomes != null) return outcomes
-
-        val result = mutableListOf<Outcome>()
-
-        stateActions?.forEach { action ->
-            val identifier = when (action) {
-                is StateAction.ClearState -> "state_action_clear"
-                is StateAction.SetState -> "state_action_set_${action.key}"
-                is StateAction.SetFormValue -> "state_action_set_form_value_${action.key}"
+        return buildList {
+            stateActions?.forEach { add(Outcome.SetStateAction(stateActionId(it), it)) }
+            behaviors?.forEach { add(it.toOutcome()) }
+            if (!actions.isNullOrEmpty()) {
+                add(Outcome.AirshipAction("actions_payload", actions))
             }
-            result.add(Outcome.SetStateAction(identifier = identifier, action = action))
         }
-
-        behaviors?.forEach { behavior ->
-            result.add(behaviorToOutcome(behavior))
-        }
-
-        if (!actions.isNullOrEmpty()) {
-            result.add(
-                Outcome.AirshipAction(
-                    identifier = "actions_payload",
-                    actions = actions
-                )
-            )
-        }
-
-        return result
     }
 
-    val hasFormOutcome: Boolean
-        get() {
-            if (outcomes != null) {
-                return outcomes.any { it is Outcome.Form }
-            }
-            return behaviors?.any {
-                it == ButtonClickBehaviorType.FORM_SUBMIT || it == ButtonClickBehaviorType.FORM_VALIDATE
-            } == true
-        }
-
-    val hasForwardOutcome: Boolean
-        get() {
-            if (outcomes != null) {
-                return outcomes.any { outcome ->
-                    (outcome is Outcome.PagerStepNavigation && outcome.direction == Outcome.PagerStepNavigation.Direction.NEXT) ||
-                    (outcome is Outcome.PagerJumpNavigation && outcome.page == Outcome.PagerJumpNavigation.Page.END) ||
-                    (outcome is Outcome.PagerPlayback && outcome.command == Outcome.PagerPlayback.Command.RESUME)
-                }
-            }
-            val advanceBehaviors = listOf(
-                ButtonClickBehaviorType.PAGER_NEXT,
-                ButtonClickBehaviorType.PAGER_NEXT_OR_DISMISS,
-                ButtonClickBehaviorType.PAGER_NEXT_OR_FIRST,
-                ButtonClickBehaviorType.PAGER_RESUME
-            )
-            return behaviors?.any { advanceBehaviors.contains(it) } == true
-        }
-
-    companion object {
-        val EMPTY = OutcomeParams()
-
-        /**
-         * Build from a JSON source that may have `outcomes`, `state_actions`, `behaviors`, and `actions`.
-         */
-        fun fromButton(json: JsonMap): OutcomeParams = OutcomeParams(
-            outcomes = json.optionalList("outcomes")?.let(Outcome::fromList),
-            stateActions = null,
-            behaviors = json.optionalList("button_click")?.let(ButtonClickBehaviorType::fromList),
-            actions = json.optionalMap("actions")?.map
-        )
+    internal fun stateActionId(action: StateAction): String = when (action) {
+        is StateAction.ClearState -> "state_action_clear"
+        is StateAction.SetState -> "state_action_set_${action.key}"
+        is StateAction.SetFormValue -> "state_action_set_form_value_${action.key}"
     }
 }
 
-private fun behaviorToOutcome(behavior: ButtonClickBehaviorType): Outcome {
-    val identifier = "behavior_${behavior.name.lowercase()}"
-    return when (behavior) {
+internal fun ButtonClickBehaviorType.toOutcome(): Outcome {
+    val identifier = "behavior_${name.lowercase()}"
+    return when (this) {
         ButtonClickBehaviorType.PAGER_NEXT -> Outcome.PagerStepNavigation(
             identifier = identifier,
             direction = Outcome.PagerStepNavigation.Direction.NEXT

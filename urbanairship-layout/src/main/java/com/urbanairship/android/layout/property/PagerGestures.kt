@@ -17,83 +17,79 @@ internal sealed class PagerGesture : Identifiable {
         override val identifier: String,
         override val reportingMetadata: JsonValue?,
         val location: GestureLocation,
-        val behavior: PagerGestureBehavior?,
         val outcomes: List<Outcome>? = null
     ) : PagerGesture() {
-        val outcomeParams: OutcomeParams
-            get() = OutcomeParams(
-                outcomes = outcomes,
-                behaviors = behavior?.behaviors,
-                actions = behavior?.actions
-            )
-
         companion object {
             @Throws(JsonException::class)
-            fun from(json: JsonMap): Tap = Tap(
-                identifier = json.requireField("identifier"),
-                reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
-                location = GestureLocation.from(json.requireField("location")),
-                behavior = json.optionalMap("behavior")?.let(PagerGestureBehavior::from),
-                outcomes = json.optionalList("outcomes")?.let(Outcome::fromList)
-            )
+            fun from(json: JsonMap): Tap {
+                val behavior = json.optionalMap("behavior")
+                return Tap(
+                    identifier = json.requireField("identifier"),
+                    reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
+                    location = GestureLocation.from(json.requireField("location")),
+                    outcomes = OutcomeResolver.resolve(
+                        outcomes = json.optionalList("outcomes")?.let(Outcome::fromList),
+                        behaviors = behavior?.optionalList("behaviors")
+                            ?.let { ButtonClickBehaviorType.fromList(it) },
+                        actions = behavior?.optionalMap("actions")?.map
+                    )
+                )
+            }
         }
     }
     data class Swipe(
         override val identifier: String,
         override val reportingMetadata: JsonValue?,
         val direction: GestureDirection,
-        val behavior: PagerGestureBehavior?,
         val outcomes: List<Outcome>? = null
     ) : PagerGesture() {
-        val outcomeParams: OutcomeParams
-            get() = OutcomeParams(
-                outcomes = outcomes,
-                behaviors = behavior?.behaviors,
-                actions = behavior?.actions
-            )
-
         companion object {
+
             @Throws(JsonException::class)
-            fun from(json: JsonMap): Swipe = Swipe(
-                identifier = json.requireField("identifier"),
-                reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
-                direction = GestureDirection.from(json.requireField("direction")),
-                behavior = json.optionalMap("behavior")?.let(PagerGestureBehavior::from),
-                outcomes = json.optionalList("outcomes")?.let(Outcome::fromList)
-            )
+            fun from(json: JsonMap): Swipe {
+                val behavior = json.optionalMap("behavior")
+                return Swipe(
+                    identifier = json.requireField("identifier"),
+                    reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
+                    direction = GestureDirection.from(json.requireField("direction")),
+                    outcomes = OutcomeResolver.resolve(
+                        outcomes = json.optionalList("outcomes")?.let(Outcome::fromList),
+                        behaviors = behavior?.optionalList("behaviors")
+                            ?.let { ButtonClickBehaviorType.fromList(it) },
+                        actions = behavior?.optionalMap("actions")?.map
+                    )
+                )
+            }
         }
     }
     data class Hold(
         override val identifier: String,
         override val reportingMetadata: JsonValue?,
-        val pressBehavior: PagerGestureBehavior?,
-        val releaseBehavior: PagerGestureBehavior?,
         val pressOutcomes: List<Outcome>? = null,
         val releaseOutcomes: List<Outcome>? = null
     ) : PagerGesture() {
-        val pressOutcomeParams: OutcomeParams
-            get() = OutcomeParams(
-                outcomes = pressOutcomes,
-                behaviors = pressBehavior?.behaviors,
-                actions = pressBehavior?.actions
-            )
-        val releaseOutcomeParams: OutcomeParams
-            get() = OutcomeParams(
-                outcomes = releaseOutcomes,
-                behaviors = releaseBehavior?.behaviors,
-                actions = releaseBehavior?.actions
-            )
-
         companion object {
             @Throws(JsonException::class)
-            fun from(json: JsonMap): Hold = Hold(
-                identifier = json.requireField("identifier"),
-                reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
-                pressBehavior = json.optionalMap("press_behavior")?.let(PagerGestureBehavior::from),
-                releaseBehavior = json.optionalMap("release_behavior")?.let(PagerGestureBehavior::from),
-                pressOutcomes = json.optionalList("press_outcomes")?.let(Outcome::fromList),
-                releaseOutcomes = json.optionalList("release_outcomes")?.let(Outcome::fromList)
-            )
+            fun from(json: JsonMap): Hold {
+                val pressBehavior = json.optionalMap("press_behavior")
+                val releaseBehavior = json.optionalMap("release_behavior")
+                return Hold(
+                    identifier = json.requireField("identifier"),
+                    reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
+                    pressOutcomes = OutcomeResolver.resolve(
+                        outcomes = json.optionalList("press_outcomes")?.let(Outcome::fromList),
+                        behaviors = pressBehavior?.optionalList("behaviors")
+                            ?.let { ButtonClickBehaviorType.fromList(it) },
+                        actions   = pressBehavior?.optionalMap("actions")?.map
+                    ),
+                    releaseOutcomes = OutcomeResolver.resolve(
+                        outcomes = json.optionalList("release_outcomes")?.let(Outcome::fromList),
+                        behaviors = releaseBehavior?.optionalList("behaviors")
+                            ?.let { ButtonClickBehaviorType.fromList(it) },
+                        actions   = releaseBehavior?.optionalMap("actions")?.map
+                    )
+                )
+            }
         }
     }
 
@@ -111,20 +107,6 @@ internal sealed class PagerGesture : Identifiable {
         fun fromList(json: JsonList): List<PagerGesture> {
             return if (json.isEmpty) emptyList() else json.map { from(it.optMap()) }
         }
-    }
-}
-
-internal data class PagerGestureBehavior(
-    val actions: Map<String, JsonValue>?,
-    val behaviors: List<ButtonClickBehaviorType>?
-) {
-    companion object {
-        fun from(json: JsonMap): PagerGestureBehavior = PagerGestureBehavior(
-            actions = json.optionalField<JsonMap>("actions")?.map,
-            behaviors = json.optionalField<JsonList>("behaviors")?.let {
-                ButtonClickBehaviorType.fromList(it)
-            }
-        )
     }
 }
 

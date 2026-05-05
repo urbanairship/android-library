@@ -6,7 +6,7 @@ import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.Outcome
-import com.urbanairship.android.layout.property.OutcomeParams
+import com.urbanairship.android.layout.property.OutcomeResolver
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.json.JsonValue
 import io.mockk.every
@@ -151,7 +151,7 @@ public class ProcessOutcomesTest {
         val action = StateAction.SetFormValue(key = "email")
         val (processor, delegation, _) = makeTestSetup()
         processor.process(
-            OutcomeParams(stateActions = listOf(action)),
+            OutcomeResolver.resolve(stateActions = listOf(action)),
             formValue = "test@example.com",
             delegated = delegation
         )
@@ -260,53 +260,58 @@ public class ProcessOutcomesTest {
     @Test
     fun testEmptyOutcomesNoOp() = runTest {
         val (processor, delegation, calls) = makeTestSetup()
-        processor.process(OutcomeParams(outcomes = emptyList()), delegated = delegation)
+        processor.process(emptyList(), delegated = delegation)
         assertTrue(calls.isEmpty())
     }
 
     @Test
-    fun testEmptyParamsNoOp() = runTest {
+    fun testNullOutcomesNoOp() = runTest {
         val (processor, delegation, calls) = makeTestSetup()
-        processor.process(OutcomeParams.EMPTY, delegated = delegation)
+        processor.process(null, delegated = delegation)
         assertTrue(calls.isEmpty())
     }
 
     // =========================================================================
     // Legacy behavior → outcome → dispatch pipeline (end-to-end)
+    //
+    // These exercise the OutcomeResolver path: legacy ButtonClickBehaviorType
+    // values are resolved into Outcomes, then handed to the processor. This
+    // verifies the same end-to-end behavior the production code follows when
+    // a layout uses the legacy `button_click` JSON field instead of `outcomes`.
     // =========================================================================
 
     @Test
     fun testLegacyPagerNextDispatch() = runTest {
         val processor = TestProcessor()
-        processor.process(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT)))
+        processor.process(resolveBehavior(ButtonClickBehaviorType.PAGER_NEXT))
         assertEquals(listOf("pagerNext"), processor.callNames)
     }
 
     @Test
     fun testLegacyPagerPreviousDispatch() = runTest {
         val processor = TestProcessor()
-        processor.process(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_PREVIOUS)))
+        processor.process(resolveBehavior(ButtonClickBehaviorType.PAGER_PREVIOUS))
         assertEquals(listOf("pagerPrevious"), processor.callNames)
     }
 
     @Test
     fun testLegacyPagerNextOrDismissDispatch() = runTest {
         val processor = TestProcessor()
-        processor.process(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT_OR_DISMISS)))
+        processor.process(resolveBehavior(ButtonClickBehaviorType.PAGER_NEXT_OR_DISMISS))
         assertEquals(listOf("pagerNextOrDismiss"), processor.callNames)
     }
 
     @Test
     fun testLegacyPagerNextOrFirstDispatch() = runTest {
         val processor = TestProcessor()
-        processor.process(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT_OR_FIRST)))
+        processor.process(resolveBehavior(ButtonClickBehaviorType.PAGER_NEXT_OR_FIRST))
         assertEquals(listOf("pagerNextOrFirst"), processor.callNames)
     }
 
     @Test
     fun testLegacyDismissDispatch() = runTest {
         val (processor, delegation, calls) = makeTestSetup()
-        processor.process(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.DISMISS)), delegated = delegation)
+        processor.process(resolveBehavior(ButtonClickBehaviorType.DISMISS), delegated = delegation)
         assertEquals(listOf("dismiss"), calls.map { it.name })
         assertEquals(false, calls[0].args["cancel"])
     }
@@ -314,7 +319,7 @@ public class ProcessOutcomesTest {
     @Test
     fun testLegacyCancelDispatch() = runTest {
         val (processor, delegation, calls) = makeTestSetup()
-        processor.process(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.CANCEL)), delegated = delegation)
+        processor.process(resolveBehavior(ButtonClickBehaviorType.CANCEL), delegated = delegation)
         assertEquals(listOf("dismiss"), calls.map { it.name })
         assertEquals(true, calls[0].args["cancel"])
     }
@@ -322,35 +327,35 @@ public class ProcessOutcomesTest {
     @Test
     fun testLegacyPagerPauseDispatch() = runTest {
         val processor = TestProcessor()
-        processor.process(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_PAUSE)))
+        processor.process(resolveBehavior(ButtonClickBehaviorType.PAGER_PAUSE))
         assertEquals(listOf("pagerPause"), processor.callNames)
     }
 
     @Test
     fun testLegacyPagerResumeDispatch() = runTest {
         val processor = TestProcessor()
-        processor.process(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_RESUME)))
+        processor.process(resolveBehavior(ButtonClickBehaviorType.PAGER_RESUME))
         assertEquals(listOf("pagerResume"), processor.callNames)
     }
 
     @Test
     fun testLegacyPagerPauseToggleDispatch() = runTest {
         val processor = TestProcessor()
-        processor.process(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_PAUSE_TOGGLE)))
+        processor.process(resolveBehavior(ButtonClickBehaviorType.PAGER_PAUSE_TOGGLE))
         assertEquals(listOf("pagerTogglePause"), processor.callNames)
     }
 
     @Test
     fun testLegacyFormSubmitDispatch() = runTest {
         val (processor, delegation, calls) = makeTestSetup()
-        processor.process(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.FORM_SUBMIT)), delegated = delegation)
+        processor.process(resolveBehavior(ButtonClickBehaviorType.FORM_SUBMIT), delegated = delegation)
         assertEquals(listOf("formSubmit"), calls.map { it.name })
     }
 
     @Test
     fun testLegacyFormValidateDispatch() = runTest {
         val (processor, delegation, calls) = makeTestSetup()
-        processor.process(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.FORM_VALIDATE)), delegated = delegation)
+        processor.process(resolveBehavior(ButtonClickBehaviorType.FORM_VALIDATE), delegated = delegation)
         assertEquals(listOf("formValidate"), calls.map { it.name })
     }
 
@@ -360,11 +365,12 @@ public class ProcessOutcomesTest {
         val delegatedCalls = mutableListOf<Call>()
         val delegation = makeDelegation(delegatedCalls)
 
-        processor.process(OutcomeParams(
+        val outcomes = OutcomeResolver.resolve(
             stateActions = listOf(StateAction.SetState(key = "k", value = JsonValue.wrap("v"))),
             behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT, ButtonClickBehaviorType.DISMISS),
             actions = mapOf("deep_link" to JsonValue.wrap("app://x"))
-        ), delegated = delegation)
+        )
+        processor.process(outcomes, delegated = delegation)
 
         assertEquals(listOf("pagerNext"), processor.callNames)
         assertEquals(listOf("dismiss", "runAirshipActions"), delegatedCalls.map { it.name })
@@ -380,4 +386,7 @@ public class ProcessOutcomesTest {
         val delegation = makeDelegation(calls)
         return Triple(processor, delegation, calls)
     }
+
+    private fun resolveBehavior(behavior: ButtonClickBehaviorType): List<Outcome> =
+        OutcomeResolver.resolve(behaviors = listOf(behavior))
 }

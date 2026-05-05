@@ -12,10 +12,11 @@ import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.info.PagerInfo
 import com.urbanairship.android.layout.property.AutomatedAction
+import com.urbanairship.android.layout.property.Outcome
+import com.urbanairship.json.JsonValue
 import com.urbanairship.android.layout.util.PagerScrollEvent
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
-import com.urbanairship.json.JsonValue
 import app.cash.turbine.test
 import io.mockk.every
 import io.mockk.mockk
@@ -282,14 +283,19 @@ public class PagerModelTest {
         private const val PAGE_1_ID = "page-one-identifier"
         private const val PAGE_2_ID = "page-two-identifier"
         private const val PAGE_3_ID = "page-three-identifier"
-        private val DISPLAY_ACTIONS = mapOf("display_action" to JsonValue.wrap("value"))
         private val EMPTY_AUTOMATED_ACTIONS = emptyList<AutomatedAction>()
         private val EMPTY_ACCESSIBILITY_ACTIONS = emptyList<AccessibilityAction>()
+        private val DISPLAY_OUTCOMES = listOf(
+            Outcome.AirshipAction(
+                identifier = "display_action_outcome",
+                actions = mapOf("display_action" to JsonValue.wrap("value"))
+            )
+        )
 
         private val ITEMS = listOf(
-            PagerModel.Item(mockk(relaxed = true), PAGE_1_ID, DISPLAY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, null, null, null),
-            PagerModel.Item(mockk(relaxed = true), PAGE_2_ID, DISPLAY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, null, null, null),
-            PagerModel.Item(mockk(relaxed = true), PAGE_3_ID, DISPLAY_ACTIONS, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, null, null, null)
+            PagerModel.Item(mockk(relaxed = true), PAGE_1_ID, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, DISPLAY_OUTCOMES, null),
+            PagerModel.Item(mockk(relaxed = true), PAGE_2_ID, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, DISPLAY_OUTCOMES, null),
+            PagerModel.Item(mockk(relaxed = true), PAGE_3_ID, EMPTY_AUTOMATED_ACTIONS, EMPTY_ACCESSIBILITY_ACTIONS, DISPLAY_OUTCOMES, null)
         )
         private val PAGE_IDS = ITEMS.map { it.identifier }
     }

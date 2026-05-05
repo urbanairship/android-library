@@ -6,7 +6,6 @@ import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.VideoCommand
 import com.urbanairship.android.layout.property.Outcome
-import com.urbanairship.android.layout.property.OutcomeParams
 import com.urbanairship.json.JsonValue
 import kotlinx.coroutines.launch
 
@@ -36,20 +35,11 @@ internal open class ThomasOutcomeProcessor(
     protected val layoutState: LayoutState
 ) {
     suspend fun process(
-        params: OutcomeParams,
+        outcomes: List<Outcome>?,
         formValue: Any? = null,
         delegated: suspend (DelegatedOutcome) -> Unit = {}
     ) {
-        for (outcome in params.resolve()) {
-            resolve(outcome, formValue, delegated)
-        }
-    }
-
-    suspend fun process(
-        outcomes: List<Outcome>,
-        formValue: Any? = null,
-        delegated: suspend (DelegatedOutcome) -> Unit = {}
-    ) {
+        if (outcomes.isNullOrEmpty()) return
         for (outcome in outcomes) {
             resolve(outcome, formValue, delegated)
         }

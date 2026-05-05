@@ -7,8 +7,6 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
-import junit.framework.TestCase.assertNotNull
-import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -186,67 +184,67 @@ public class OutcomeTest {
     }
 
     // =========================================================================
-    // OutcomeType enum
+    // Outcome.Type enum
     // =========================================================================
 
     @Test
     public fun testOutcomeTypeFromValidValues() {
-        assertEquals(OutcomeType.AIRSHIP_ACTION, OutcomeType.from("airship_action"))
-        assertEquals(OutcomeType.DISMISS, OutcomeType.from("dismiss"))
-        assertEquals(OutcomeType.PAGER_PLAYBACK, OutcomeType.from("pager_playback"))
-        assertEquals(OutcomeType.PAGER_JUMP_NAVIGATION, OutcomeType.from("pager_jump_navigation"))
-        assertEquals(OutcomeType.PAGER_STEP_NAVIGATION, OutcomeType.from("pager_step_navigation"))
-        assertEquals(OutcomeType.MEDIA_PLAYBACK, OutcomeType.from("media_playback"))
-        assertEquals(OutcomeType.MEDIA_AUDIO, OutcomeType.from("media_audio"))
-        assertEquals(OutcomeType.STATE_ACTION, OutcomeType.from("state_action"))
-        assertEquals(OutcomeType.FORM, OutcomeType.from("form"))
+        assertEquals(Outcome.Type.AIRSHIP_ACTION, parseType("airship_action"))
+        assertEquals(Outcome.Type.DISMISS, parseType("dismiss"))
+        assertEquals(Outcome.Type.PAGER_PLAYBACK, parseType("pager_playback"))
+        assertEquals(Outcome.Type.PAGER_JUMP_NAVIGATION, parseType("pager_jump_navigation"))
+        assertEquals(Outcome.Type.PAGER_STEP_NAVIGATION, parseType("pager_step_navigation"))
+        assertEquals(Outcome.Type.MEDIA_PLAYBACK, parseType("media_playback"))
+        assertEquals(Outcome.Type.MEDIA_AUDIO, parseType("media_audio"))
+        assertEquals(Outcome.Type.STATE_ACTION, parseType("state_action"))
+        assertEquals(Outcome.Type.FORM, parseType("form"))
     }
 
     @Test(expected = JsonException::class)
     public fun testOutcomeTypeFromInvalidThrows() {
-        OutcomeType.from("not_a_type")
+        parseType("not_a_type")
     }
 
     // =========================================================================
-    // OutcomeParams.resolve – outcomes take precedence
+    // OutcomeResolver.resolve – outcomes take precedence over legacy fields
     // =========================================================================
 
     @Test
     public fun testResolveReturnsOutcomesWhenPresent() {
         val outcomes = listOf(Outcome.Dismiss(identifier = "d-1"))
-        val params = OutcomeParams(
+        val resolved = OutcomeResolver.resolve(
             outcomes = outcomes,
             stateActions = listOf(StateAction.ClearState),
             behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT),
             actions = mapOf("add_tags" to JsonValue.wrap("vip"))
         )
-        assertEquals(outcomes, params.resolve())
+        assertEquals(outcomes, resolved)
     }
 
     @Test
     public fun testResolveIgnoresLegacyWhenOutcomesPresent() {
-        val params = OutcomeParams(
+        val resolved = OutcomeResolver.resolve(
             outcomes = emptyList(),
             stateActions = listOf(StateAction.ClearState),
             behaviors = listOf(ButtonClickBehaviorType.DISMISS)
         )
-        assertTrue(params.resolve().isEmpty())
+        assertTrue(resolved.isEmpty())
     }
 
     @Test
-    public fun testResolveEmptyParams() {
-        assertTrue(OutcomeParams().resolve().isEmpty())
-        assertTrue(OutcomeParams.EMPTY.resolve().isEmpty())
+    public fun testResolveEmptyArgs() {
+        assertTrue(OutcomeResolver.resolve().isEmpty())
     }
 
     // =========================================================================
-    // OutcomeParams.resolve – legacy state actions
+    // OutcomeResolver.resolve – legacy state actions
     // =========================================================================
 
     @Test
     public fun testResolveConvertsSetState() {
-        val params = OutcomeParams(stateActions = listOf(StateAction.SetState(key = "k", value = JsonValue.wrap("v"))))
-        val resolved = params.resolve()
+        val resolved = OutcomeResolver.resolve(
+            stateActions = listOf(StateAction.SetState(key = "k", value = JsonValue.wrap("v")))
+        )
         assertEquals(1, resolved.size)
         val outcome = resolved[0] as Outcome.SetStateAction
         val action = outcome.action as StateAction.SetState
@@ -256,8 +254,9 @@ public class OutcomeTest {
 
     @Test
     public fun testResolveConvertsClearState() {
-        val params = OutcomeParams(stateActions = listOf(StateAction.ClearState))
-        val resolved = params.resolve()
+        val resolved = OutcomeResolver.resolve(
+            stateActions = listOf(StateAction.ClearState)
+        )
         assertEquals(1, resolved.size)
         assertEquals("state_action_clear", resolved[0].identifier)
         assertTrue((resolved[0] as Outcome.SetStateAction).action is StateAction.ClearState)
@@ -265,14 +264,15 @@ public class OutcomeTest {
 
     @Test
     public fun testResolveConvertsSetFormValue() {
-        val params = OutcomeParams(stateActions = listOf(StateAction.SetFormValue(key = "email")))
-        val resolved = params.resolve()
+        val resolved = OutcomeResolver.resolve(
+            stateActions = listOf(StateAction.SetFormValue(key = "email"))
+        )
         assertEquals(1, resolved.size)
         assertEquals("state_action_set_form_value_email", resolved[0].identifier)
     }
 
     // =========================================================================
-    // OutcomeParams.resolve – legacy behaviors (every ButtonClickBehaviorType)
+    // OutcomeResolver.resolve – legacy behaviors (every ButtonClickBehaviorType)
     // =========================================================================
 
     @Test
@@ -387,13 +387,17 @@ public class OutcomeTest {
     }
 
     // =========================================================================
-    // OutcomeParams.resolve – legacy airship actions
+    // OutcomeResolver.resolve – legacy airship actions
     // =========================================================================
 
     @Test
     public fun testResolveConvertsAirshipActions() {
-        val params = OutcomeParams(actions = mapOf("add_tags" to JsonValue.wrap("vip"), "deep_link" to JsonValue.wrap("app://home")))
-        val resolved = params.resolve()
+        val resolved = OutcomeResolver.resolve(
+            actions = mapOf(
+                "add_tags" to JsonValue.wrap("vip"),
+                "deep_link" to JsonValue.wrap("app://home")
+            )
+        )
         assertEquals(1, resolved.size)
         val outcome = resolved[0] as Outcome.AirshipAction
         assertEquals("actions_payload", outcome.identifier)
@@ -402,22 +406,21 @@ public class OutcomeTest {
 
     @Test
     public fun testResolveSkipsEmptyActions() {
-        val params = OutcomeParams(actions = emptyMap())
-        assertTrue(params.resolve().isEmpty())
+        val resolved = OutcomeResolver.resolve(actions = emptyMap())
+        assertTrue(resolved.isEmpty())
     }
 
     // =========================================================================
-    // OutcomeParams.resolve – combined legacy fields
+    // OutcomeResolver.resolve – combined legacy fields (ordering)
     // =========================================================================
 
     @Test
     public fun testResolveCombinesAllLegacyInOrder() {
-        val params = OutcomeParams(
+        val resolved = OutcomeResolver.resolve(
             stateActions = listOf(StateAction.ClearState),
             behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT, ButtonClickBehaviorType.DISMISS),
             actions = mapOf("deep_link" to JsonValue.wrap("app://x"))
         )
-        val resolved = params.resolve()
         assertEquals(4, resolved.size)
         assertTrue(resolved[0] is Outcome.SetStateAction)
         assertTrue(resolved[1] is Outcome.PagerStepNavigation)
@@ -426,110 +429,17 @@ public class OutcomeTest {
     }
 
     // =========================================================================
-    // OutcomeParams.hasFormOutcome
-    // =========================================================================
-
-    @Test
-    public fun testHasFormOutcomeWithOutcomeSubmit() {
-        assertTrue(OutcomeParams(outcomes = listOf(
-            Outcome.Form(identifier = "f-1", command = Outcome.Form.Command.SUBMIT)
-        )).hasFormOutcome)
-    }
-
-    @Test
-    public fun testHasFormOutcomeWithOutcomeValidate() {
-        assertTrue(OutcomeParams(outcomes = listOf(
-            Outcome.Form(identifier = "f-1", command = Outcome.Form.Command.VALIDATE)
-        )).hasFormOutcome)
-    }
-
-    @Test
-    public fun testHasFormOutcomeWithBehaviorFormSubmit() {
-        assertTrue(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.FORM_SUBMIT)).hasFormOutcome)
-    }
-
-    @Test
-    public fun testHasFormOutcomeWithBehaviorFormValidate() {
-        assertTrue(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.FORM_VALIDATE)).hasFormOutcome)
-    }
-
-    @Test
-    public fun testHasFormOutcomeFalseWithOutcomes() {
-        assertFalse(OutcomeParams(outcomes = listOf(Outcome.Dismiss(identifier = "d-1"))).hasFormOutcome)
-    }
-
-    @Test
-    public fun testHasFormOutcomeFalseWithBehaviors() {
-        assertFalse(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT)).hasFormOutcome)
-    }
-
-    @Test
-    public fun testHasFormOutcomeFalseEmpty() {
-        assertFalse(OutcomeParams.EMPTY.hasFormOutcome)
-    }
-
-    // =========================================================================
-    // OutcomeParams.hasForwardOutcome
-    // =========================================================================
-
-    @Test
-    public fun testHasForwardOutcomeStepNext() {
-        assertTrue(OutcomeParams(outcomes = listOf(
-            Outcome.PagerStepNavigation(identifier = "p-1", direction = Outcome.PagerStepNavigation.Direction.NEXT)
-        )).hasForwardOutcome)
-    }
-
-    @Test
-    public fun testHasForwardOutcomeJumpEnd() {
-        assertTrue(OutcomeParams(outcomes = listOf(
-            Outcome.PagerJumpNavigation(identifier = "p-1", page = Outcome.PagerJumpNavigation.Page.END)
-        )).hasForwardOutcome)
-    }
-
-    @Test
-    public fun testHasForwardOutcomePlaybackResume() {
-        assertTrue(OutcomeParams(outcomes = listOf(
-            Outcome.PagerPlayback(identifier = "p-1", command = Outcome.PagerPlayback.Command.RESUME)
-        )).hasForwardOutcome)
-    }
-
-    @Test
-    public fun testHasForwardOutcomeFalseWithPrevious() {
-        assertFalse(OutcomeParams(outcomes = listOf(
-            Outcome.PagerStepNavigation(identifier = "p-1", direction = Outcome.PagerStepNavigation.Direction.PREVIOUS)
-        )).hasForwardOutcome)
-    }
-
-    @Test
-    public fun testHasForwardOutcomeFalseWithJumpStart() {
-        assertFalse(OutcomeParams(outcomes = listOf(
-            Outcome.PagerJumpNavigation(identifier = "p-1", page = Outcome.PagerJumpNavigation.Page.START)
-        )).hasForwardOutcome)
-    }
-
-    @Test
-    public fun testHasForwardOutcomeWithLegacyBehaviors() {
-        assertTrue(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT)).hasForwardOutcome)
-        assertTrue(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT_OR_DISMISS)).hasForwardOutcome)
-        assertTrue(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT_OR_FIRST)).hasForwardOutcome)
-        assertTrue(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_RESUME)).hasForwardOutcome)
-    }
-
-    @Test
-    public fun testHasForwardOutcomeFalseWithLegacyBehaviors() {
-        assertFalse(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.PAGER_PREVIOUS)).hasForwardOutcome)
-        assertFalse(OutcomeParams(behaviors = listOf(ButtonClickBehaviorType.DISMISS)).hasForwardOutcome)
-    }
-
-    // =========================================================================
     // Helpers
     // =========================================================================
 
     private fun parseOutcome(json: String): Outcome =
-        Outcome.fromJson(JsonValue.parseString(json).requireMap())
+        Outcome.fromJson(JsonValue.parseString(json))
+
+    private fun parseType(value: String): Outcome.Type =
+        Outcome.Type.from(JsonValue.wrap(value))
 
     private fun resolveSingleBehavior(behavior: ButtonClickBehaviorType): Outcome {
-        val resolved = OutcomeParams(behaviors = listOf(behavior)).resolve()
+        val resolved = OutcomeResolver.resolve(behaviors = listOf(behavior))
         assertEquals(1, resolved.size)
         return resolved[0]
     }

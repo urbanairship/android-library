@@ -16,8 +16,6 @@ import com.urbanairship.android.layout.event.ReportingEvent.ButtonTap
 import com.urbanairship.android.layout.info.Button
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.Outcome
-import com.urbanairship.android.layout.property.OutcomeParams
-import com.urbanairship.android.layout.property.hasFormSubmit
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
@@ -48,8 +46,6 @@ internal abstract class ButtonModel<T, I: Button>(
 
     override var listener: Listener? = null
 
-    private val params: OutcomeParams = viewInfo.outcomeParams
-
     @CallSuper
     override fun onViewAttached(view: T) {
         pagerState?.let { state ->
@@ -78,17 +74,6 @@ internal abstract class ButtonModel<T, I: Button>(
                     )
                 )
 
-                // Run airship actions from the button only when outcomes are not defined.
-                // When outcomes are present, AirshipAction outcomes handle this instead.
-                if (viewInfo.outcomes == null) {
-                    runActions(viewInfo.actions, reportingContext)
-                }
-
-                // Run tap event handlers (skip if form submit to match legacy behavior).
-                if (viewInfo.eventHandlers.hasTapHandler() && !viewInfo.clickBehaviors.hasFormSubmit) {
-                    handleViewEvent(EventHandler.Type.TAP)
-                }
-
                 evaluateOutcomes(view.context ?: Airship.application)
 
                 if (viewInfo.enableBehaviors?.isNotEmpty() == true) {
@@ -104,7 +89,7 @@ internal abstract class ButtonModel<T, I: Button>(
     }
 
     private suspend fun evaluateOutcomes(context: Context) {
-        val resolved = params.resolve()
+        val resolved = viewInfo.outcomes
         val delegation = buttonDelegation(context)
 
         val hasFormValidate = resolved.any {
