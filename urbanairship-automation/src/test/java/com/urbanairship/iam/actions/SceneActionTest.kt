@@ -58,7 +58,7 @@ public class SceneActionTest {
 
     @Test
     public fun testDefaultNames() {
-        assertEquals(setOf("scene_action", "^sla"), SceneAction.DEFAULT_NAMES)
+        assertEquals(setOf("scene_action", "^sc"), SceneAction.DEFAULT_NAMES)
     }
 
     @Test
