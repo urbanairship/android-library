@@ -40,6 +40,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -251,27 +252,22 @@ internal class PagerModel(
 
         // Handle pager events from ButtonModel and other sources.
         environment.layoutEvents
-            .filter {
-                it is LayoutEvent.PagerNext || it is LayoutEvent.PagerPrevious
-                        || it is LayoutEvent.PagerPauseToggle
-                        || it is LayoutEvent.PagerStart || it is LayoutEvent.PagerEnd
-                        || it is LayoutEvent.PagerPause || it is LayoutEvent.PagerResume
-            }
+            .filterIsInstance<LayoutEvent.Pager>()
             .onEach { event ->
                 when (event) {
-                    is LayoutEvent.PagerNext -> handlePagerNext(event.fallback)
-                    is LayoutEvent.PagerPrevious -> handlePagerPrevious()
-                    is LayoutEvent.PagerStart -> resolve(PageRequest.FIRST)
-                    is LayoutEvent.PagerEnd -> resolve(PageRequest.LAST)
-                    is LayoutEvent.PagerPause -> {
+                    is LayoutEvent.Pager.Next -> handlePagerNext(event.fallback)
+                    is LayoutEvent.Pager.Previous -> handlePagerPrevious()
+                    is LayoutEvent.Pager.Start -> resolve(PageRequest.FIRST)
+                    is LayoutEvent.Pager.End -> resolve(PageRequest.LAST)
+                    is LayoutEvent.Pager.Pause -> {
                         isManuallyPaused = true
                         pauseStory()
                     }
-                    is LayoutEvent.PagerResume -> {
+                    is LayoutEvent.Pager.Resume -> {
                         isManuallyPaused = false
                         resumeStory()
                     }
-                    is LayoutEvent.PagerPauseToggle -> handlePagerPauseToggle()
+                    is LayoutEvent.Pager.PauseToggle -> handlePagerPauseToggle()
                     else -> {}
                 }
             }

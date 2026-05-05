@@ -170,7 +170,7 @@ public class ButtonModelTest {
         advanceUntilIdle()
 
         coVerifyOrder {
-            layoutEventHandler.broadcast(match { it is LayoutEvent.PagerNext })
+            layoutEventHandler.broadcast(match { it is LayoutEvent.Pager.Next })
             layoutEventHandler.broadcast(
                 match { it is LayoutEvent.AsyncViewReload && (it as LayoutEvent.AsyncViewReload).identifier == buttonId }
             )

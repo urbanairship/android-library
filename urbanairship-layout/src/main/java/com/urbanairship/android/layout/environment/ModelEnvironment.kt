@@ -90,25 +90,19 @@ internal sealed class LayoutEvent {
         val state: ThomasState
     ): LayoutEvent()
 
-    data class PagerNext(
-        val fallback: PagerNextFallback
-    ) : LayoutEvent()
-
-    data object PagerPrevious : LayoutEvent()
-
-    data object PagerStart : LayoutEvent()
-
-    data object PagerEnd : LayoutEvent()
-
-    data object PagerPause : LayoutEvent()
-
-    data object PagerResume : LayoutEvent()
-
-    data object PagerPauseToggle : LayoutEvent()
-
     data class AsyncViewReload(val identifier: String) : LayoutEvent()
 
     data class Finish(val cancel: Boolean = false) : LayoutEvent()
+
+    sealed class Pager : LayoutEvent() {
+        data class Next(val fallback: PagerNextFallback) : Pager()
+        data object Previous : Pager()
+        data object Start : Pager()
+        data object End : Pager()
+        data object Pause : Pager()
+        data object Resume : Pager()
+        data object PauseToggle : Pager()
+    }
 }
 
 internal class AttributeHandler(

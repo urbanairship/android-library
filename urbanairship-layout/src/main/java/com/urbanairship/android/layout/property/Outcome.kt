@@ -2,6 +2,10 @@
 package com.urbanairship.android.layout.property
 
 import com.urbanairship.android.layout.info.Identifiable
+import com.urbanairship.android.layout.property.Outcome.PagerJumpNavigation.Page
+import com.urbanairship.android.layout.property.Outcome.PagerPlayback.Command
+import com.urbanairship.android.layout.property.Outcome.PagerStepNavigation.BoundaryBehavior
+import com.urbanairship.android.layout.property.Outcome.PagerStepNavigation.BoundaryBehavior.Companion.from
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
@@ -11,39 +15,63 @@ import com.urbanairship.json.optionalList
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 
-internal enum class OutcomeType(val value: String) {
-    AIRSHIP_ACTION("airship_action"),
-    DISMISS("dismiss"),
-    PAGER_PLAYBACK("pager_playback"),
-    PAGER_JUMP_NAVIGATION("pager_jump_navigation"),
-    PAGER_STEP_NAVIGATION("pager_step_navigation"),
-    MEDIA_PLAYBACK("media_playback"),
-    MEDIA_AUDIO("media_audio"),
-    STATE_ACTION("state_action"),
-    FORM("form");
-
-    companion object {
-        fun from(value: String): OutcomeType =
-            entries.firstOrNull { it.value == value }
-                ?: throw JsonException("Unknown OutcomeType: '$value'")
-    }
-}
-
 internal sealed class Outcome : Identifiable {
-    abstract val type: OutcomeType
+    abstract val type: Type
+
+    internal enum class Type(val value: String) {
+        AIRSHIP_ACTION("airship_action"),
+        DISMISS("dismiss"),
+        PAGER_PLAYBACK("pager_playback"),
+        PAGER_JUMP_NAVIGATION("pager_jump_navigation"),
+        PAGER_STEP_NAVIGATION("pager_step_navigation"),
+        MEDIA_PLAYBACK("media_playback"),
+        MEDIA_AUDIO("media_audio"),
+        STATE_ACTION("state_action"),
+        FORM("form");
+
+        companion object {
+            fun from(value: JsonValue): Type {
+                val content = value.requireString()
+                return entries.firstOrNull { it.value == content }
+                    ?: throw JsonException("Unknown OutcomeType: '$value'")
+            }
+        }
+    }
 
     data class AirshipAction(
         override val identifier: String,
         val actions: Map<String, JsonValue>
     ) : Outcome() {
-        override val type = OutcomeType.AIRSHIP_ACTION
+        override val type = Type.AIRSHIP_ACTION
+
+        companion object {
+            @Throws(JsonException::class)
+            fun from(value: JsonValue): AirshipAction {
+                val content = value.requireMap()
+                return AirshipAction(
+                    identifier = content.requireField("identifier"),
+                    actions = content.requireField<JsonMap>("actions").map
+                )
+            }
+        }
     }
 
     data class Dismiss(
         override val identifier: String,
         val cancel: Boolean = false
     ) : Outcome() {
-        override val type = OutcomeType.DISMISS
+        override val type = Type.DISMISS
+
+        companion object {
+            @Throws(JsonException::class)
+            fun from(value: JsonValue): Dismiss {
+                val content = value.requireMap()
+                return Dismiss(
+                    identifier = content.requireField("identifier"),
+                    cancel = content.optionalField("cancel") ?: false
+                )
+            }
+        }
     }
 
     data class PagerStepNavigation(
@@ -51,16 +79,19 @@ internal sealed class Outcome : Identifiable {
         val direction: Direction,
         val boundaryBehavior: BoundaryBehavior = BoundaryBehavior.IGNORE
     ) : Outcome() {
-        override val type = OutcomeType.PAGER_STEP_NAVIGATION
+        override val type = Type.PAGER_STEP_NAVIGATION
 
         enum class Direction(val value: String) {
             NEXT("next"),
             PREVIOUS("previous");
 
             companion object {
-                fun from(value: String): Direction =
-                    entries.firstOrNull { it.value == value }
+                @Throws(JsonException::class)
+                fun from(value: JsonValue): Direction {
+                    val content = value.requireString()
+                    return entries.firstOrNull { it.value == content }
                         ?: throw JsonException("Unknown PagerStepNavigation direction: '$value'")
+                }
             }
         }
 
@@ -70,9 +101,26 @@ internal sealed class Outcome : Identifiable {
             WRAP("wrap");
 
             companion object {
-                fun from(value: String): BoundaryBehavior =
-                    entries.firstOrNull { it.value == value }
+                @Throws(JsonException::class)
+                fun from(value: JsonValue): BoundaryBehavior {
+                    val content = value.requireString()
+                    return entries.firstOrNull { it.value == content }
                         ?: throw JsonException("Unknown boundary_behavior: '$value'")
+                }
+            }
+        }
+
+        companion object {
+            @Throws(JsonException::class)
+            fun from(value: JsonValue): PagerStepNavigation {
+                val content = value.requireMap()
+                return PagerStepNavigation(
+                    identifier = content.requireField("identifier"),
+                    direction = Direction.from(content.require("direction")),
+                    boundaryBehavior = content["boundary_behavior"]
+                        ?.let(BoundaryBehavior::from)
+                        ?: BoundaryBehavior.IGNORE
+                )
             }
         }
     }
@@ -81,16 +129,30 @@ internal sealed class Outcome : Identifiable {
         override val identifier: String,
         val page: Page
     ) : Outcome() {
-        override val type = OutcomeType.PAGER_JUMP_NAVIGATION
+        override val type = Type.PAGER_JUMP_NAVIGATION
 
         enum class Page(val value: String) {
             START("start"),
             END("end");
 
             companion object {
-                fun from(value: String): Page =
-                    entries.firstOrNull { it.value == value }
+                @Throws(JsonException::class)
+                fun from(value: JsonValue): Page {
+                    val content = value.requireString()
+                    return entries.firstOrNull { it.value == content }
                         ?: throw JsonException("Unknown PagerJumpNavigation page: '$value'")
+                }
+            }
+        }
+
+        companion object {
+            @Throws(JsonException::class)
+            fun from(value: JsonValue): PagerJumpNavigation {
+                val content = value.requireMap()
+                return PagerJumpNavigation(
+                    identifier = content.requireField("identifier"),
+                    page = Page.from(content.require("page"))
+                )
             }
         }
     }
@@ -99,7 +161,7 @@ internal sealed class Outcome : Identifiable {
         override val identifier: String,
         val command: Command
     ) : Outcome() {
-        override val type = OutcomeType.PAGER_PLAYBACK
+        override val type = Type.PAGER_PLAYBACK
 
         enum class Command(val value: String) {
             PAUSE("pause"),
@@ -107,9 +169,23 @@ internal sealed class Outcome : Identifiable {
             TOGGLE("toggle");
 
             companion object {
-                fun from(value: String): Command =
-                    entries.firstOrNull { it.value == value }
+                @Throws(JsonException::class)
+                fun from(value: JsonValue): Command {
+                    val content = value.requireString()
+                    return entries.firstOrNull { it.value == content }
                         ?: throw JsonException("Unknown PagerPlayback command: '$value'")
+                }
+            }
+        }
+
+        companion object {
+            @Throws(JsonException::class)
+            fun from(value: JsonValue): PagerPlayback {
+                val content = value.requireMap()
+                return PagerPlayback(
+                    identifier = content.requireField("identifier"),
+                    command = Command.from(content.require("command"))
+                )
             }
         }
     }
@@ -118,7 +194,7 @@ internal sealed class Outcome : Identifiable {
         override val identifier: String,
         val command: Command
     ) : Outcome() {
-        override val type = OutcomeType.MEDIA_PLAYBACK
+        override val type = Type.MEDIA_PLAYBACK
 
         enum class Command(val value: String) {
             PLAY("play"),
@@ -126,9 +202,23 @@ internal sealed class Outcome : Identifiable {
             TOGGLE("toggle");
 
             companion object {
-                fun from(value: String): Command =
-                    entries.firstOrNull { it.value == value }
+                @Throws(JsonException::class)
+                fun from(value: JsonValue): Command {
+                    val content = value.requireString()
+                    return entries.firstOrNull { it.value == content }
                         ?: throw JsonException("Unknown MediaPlayback command: '$value'")
+                }
+            }
+        }
+
+        companion object {
+            @Throws(JsonException::class)
+            fun from(value: JsonValue): MediaPlayback {
+                val content = value.requireMap()
+                return MediaPlayback(
+                    identifier = content.requireField("identifier"),
+                    command = Command.from(content.require("command"))
+                )
             }
         }
     }
@@ -137,7 +227,7 @@ internal sealed class Outcome : Identifiable {
         override val identifier: String,
         val command: Command
     ) : Outcome() {
-        override val type = OutcomeType.MEDIA_AUDIO
+        override val type = Type.MEDIA_AUDIO
 
         enum class Command(val value: String) {
             MUTE("mute"),
@@ -145,9 +235,23 @@ internal sealed class Outcome : Identifiable {
             TOGGLE("toggle");
 
             companion object {
-                fun from(value: String): Command =
-                    entries.firstOrNull { it.value == value }
+                @Throws(JsonException::class)
+                fun from(value: JsonValue): Command {
+                    val content = value.requireString()
+                    return entries.firstOrNull { it.value == content }
                         ?: throw JsonException("Unknown MediaAudio command: '$value'")
+                }
+            }
+        }
+
+        companion object {
+            @Throws(JsonException::class)
+            fun from(value: JsonValue): MediaAudio {
+                val content = value.requireMap()
+                return MediaAudio(
+                    identifier = content.requireField("identifier"),
+                    command = Command.from(content.require("command"))
+                )
             }
         }
     }
@@ -156,25 +260,51 @@ internal sealed class Outcome : Identifiable {
         override val identifier: String,
         val action: StateAction
     ) : Outcome() {
-        override val type = OutcomeType.STATE_ACTION
+        override val type = Type.STATE_ACTION
+
+        companion object {
+            @Throws(JsonException::class)
+            fun from(value: JsonValue): SetStateAction {
+                val content = value.requireMap()
+                return SetStateAction(
+                    identifier = content.requireField("identifier"),
+                    action = StateAction.fromJson(content.requireField<JsonMap>("action"))
+                )
+            }
+        }
     }
 
     data class Form(
         override val identifier: String,
         val command: Command
     ) : Outcome() {
-        override val type = OutcomeType.FORM
 
-        enum class Command(val value: String) {
-            SUBMIT("submit"),
-            VALIDATE("validate");
+        override val type = Type.FORM
+
+        enum class Command(val value: String) { SUBMIT("submit"), VALIDATE("validate");
 
             companion object {
-                fun from(value: String): Command =
-                    entries.firstOrNull { it.value == value }
+
+                @Throws(JsonException::class)
+                fun from(value: JsonValue): Command {
+                    val content = value.requireString()
+                    return entries.firstOrNull { it.value == content }
                         ?: throw JsonException("Unknown Form command: '$value'")
+                }
             }
         }
+
+        companion object {
+            @Throws(JsonException::class)
+            fun from(value: JsonValue): Form {
+                val content = value.requireMap()
+                return Form(
+                    identifier = content.requireField("identifier"),
+                    command = Command.from(content.require("command"))
+                )
+            }
+        }
+
     }
 
     /**
@@ -184,69 +314,31 @@ internal sealed class Outcome : Identifiable {
     data class AsyncViewReload(
         override val identifier: String
     ) : Outcome() {
-        override val type = OutcomeType.DISMISS
+        override val type = Type.DISMISS
     }
 
     companion object {
         @Throws(JsonException::class)
-        fun fromJson(json: JsonMap): Outcome {
-            val type = OutcomeType.from(json.requireField("type"))
-            val identifier: String = json.requireField("identifier")
+        fun fromJson(value: JsonValue): Outcome {
+            val content = value.requireMap()
+            val type = Type.from(content.require("type"))
 
             return when (type) {
-                OutcomeType.AIRSHIP_ACTION -> AirshipAction(
-                    identifier = identifier,
-                    actions = json.requireField<JsonMap>("actions").map
-                )
-
-                OutcomeType.DISMISS -> Dismiss(
-                    identifier = identifier,
-                    cancel = json.optionalField("cancel") ?: false
-                )
-
-                OutcomeType.PAGER_STEP_NAVIGATION -> PagerStepNavigation(
-                    identifier = identifier,
-                    direction = PagerStepNavigation.Direction.from(json.requireField("direction")),
-                    boundaryBehavior = json.optionalField<String>("boundary_behavior")
-                        ?.let(PagerStepNavigation.BoundaryBehavior::from)
-                        ?: PagerStepNavigation.BoundaryBehavior.IGNORE
-                )
-
-                OutcomeType.PAGER_JUMP_NAVIGATION -> PagerJumpNavigation(
-                    identifier = identifier,
-                    page = PagerJumpNavigation.Page.from(json.requireField("page"))
-                )
-
-                OutcomeType.PAGER_PLAYBACK -> PagerPlayback(
-                    identifier = identifier,
-                    command = PagerPlayback.Command.from(json.requireField("command"))
-                )
-
-                OutcomeType.MEDIA_PLAYBACK -> MediaPlayback(
-                    identifier = identifier,
-                    command = MediaPlayback.Command.from(json.requireField("command"))
-                )
-
-                OutcomeType.MEDIA_AUDIO -> MediaAudio(
-                    identifier = identifier,
-                    command = MediaAudio.Command.from(json.requireField("command"))
-                )
-
-                OutcomeType.STATE_ACTION -> SetStateAction(
-                    identifier = identifier,
-                    action = StateAction.fromJson(json.requireField<JsonMap>("action"))
-                )
-
-                OutcomeType.FORM -> Form(
-                    identifier = identifier,
-                    command = Form.Command.from(json.requireField("command"))
-                )
+                Type.AIRSHIP_ACTION -> AirshipAction.from(value)
+                Type.DISMISS -> Dismiss.from(value)
+                Type.PAGER_STEP_NAVIGATION -> PagerStepNavigation.from(value)
+                Type.PAGER_JUMP_NAVIGATION -> PagerJumpNavigation.from(value)
+                Type.PAGER_PLAYBACK -> PagerPlayback.from(value)
+                Type.MEDIA_PLAYBACK -> MediaPlayback.from(value)
+                Type.MEDIA_AUDIO -> MediaAudio.from(value)
+                Type.STATE_ACTION -> SetStateAction.from(value)
+                Type.FORM -> Form.from(value)
             }
         }
 
         @Throws(JsonException::class)
         fun fromList(json: JsonList): List<Outcome> =
-            if (json.isEmpty) emptyList() else json.map { fromJson(it.requireMap()) }
+            if (json.isEmpty) emptyList() else json.map { fromJson(it) }
     }
 }
 

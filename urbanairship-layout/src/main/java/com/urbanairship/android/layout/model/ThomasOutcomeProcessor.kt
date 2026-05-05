@@ -91,23 +91,23 @@ internal open class ThomasOutcomeProcessor(
         when (outcome.direction) {
             Outcome.PagerStepNavigation.Direction.NEXT -> when (outcome.boundaryBehavior) {
                 Outcome.PagerStepNavigation.BoundaryBehavior.DISMISS ->
-                    environment.eventHandler.broadcast(LayoutEvent.PagerNext(PagerNextFallback.DISMISS))
+                    environment.eventHandler.broadcast(LayoutEvent.Pager.Next(PagerNextFallback.DISMISS))
                 Outcome.PagerStepNavigation.BoundaryBehavior.WRAP ->
-                    environment.eventHandler.broadcast(LayoutEvent.PagerNext(PagerNextFallback.FIRST))
+                    environment.eventHandler.broadcast(LayoutEvent.Pager.Next(PagerNextFallback.FIRST))
                 Outcome.PagerStepNavigation.BoundaryBehavior.IGNORE ->
-                    environment.eventHandler.broadcast(LayoutEvent.PagerNext(PagerNextFallback.NONE))
+                    environment.eventHandler.broadcast(LayoutEvent.Pager.Next(PagerNextFallback.NONE))
             }
             Outcome.PagerStepNavigation.Direction.PREVIOUS ->
-                environment.eventHandler.broadcast(LayoutEvent.PagerPrevious)
+                environment.eventHandler.broadcast(LayoutEvent.Pager.Previous)
         }
     }
 
     protected open suspend fun handlePagerJump(outcome: Outcome.PagerJumpNavigation) {
         when (outcome.page) {
             Outcome.PagerJumpNavigation.Page.START ->
-                environment.eventHandler.broadcast(LayoutEvent.PagerStart)
+                environment.eventHandler.broadcast(LayoutEvent.Pager.Start)
             Outcome.PagerJumpNavigation.Page.END ->
-                environment.eventHandler.broadcast(LayoutEvent.PagerEnd)
+                environment.eventHandler.broadcast(LayoutEvent.Pager.End)
         }
     }
 
@@ -115,11 +115,11 @@ internal open class ThomasOutcomeProcessor(
         environment.modelScope.launch {
             when (outcome.command) {
                 Outcome.PagerPlayback.Command.PAUSE ->
-                    environment.eventHandler.broadcast(LayoutEvent.PagerPause)
+                    environment.eventHandler.broadcast(LayoutEvent.Pager.Pause)
                 Outcome.PagerPlayback.Command.RESUME ->
-                    environment.eventHandler.broadcast(LayoutEvent.PagerResume)
+                    environment.eventHandler.broadcast(LayoutEvent.Pager.Resume)
                 Outcome.PagerPlayback.Command.TOGGLE ->
-                    environment.eventHandler.broadcast(LayoutEvent.PagerPauseToggle)
+                    environment.eventHandler.broadcast(LayoutEvent.Pager.PauseToggle)
             }
         }
     }
