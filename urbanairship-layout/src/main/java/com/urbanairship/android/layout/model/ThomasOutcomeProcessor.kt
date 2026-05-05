@@ -34,7 +34,7 @@ internal open class ThomasOutcomeProcessor(
     protected val environment: ModelEnvironment,
     protected val layoutState: LayoutState
 ) {
-    suspend fun process(
+    open suspend fun process(
         outcomes: List<Outcome>?,
         formValue: Any? = null,
         delegated: suspend (DelegatedOutcome) -> Unit = {}

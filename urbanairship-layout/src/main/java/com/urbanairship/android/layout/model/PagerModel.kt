@@ -102,6 +102,19 @@ internal class PagerModel(
      * bus and back). This keeps pager operations synchronous with the caller.
      */
     private val pagerProcessor = object : ThomasOutcomeProcessor(environment, layoutState) {
+        override suspend fun process(
+            outcomes: List<Outcome>?,
+            formValue: Any?,
+            delegated: suspend (DelegatedOutcome) -> Unit
+        ) {
+            if (outcomes.isNullOrEmpty()) return
+            for (outcome in outcomes) {
+                if (outcome is Outcome.PagerStepNavigation || outcome is Outcome.PagerJumpNavigation) {
+                    branchControl?.recomputeNow()
+                }
+                super.process(listOf(outcome), formValue, delegated)
+            }
+        }
         override suspend fun handlePagerStep(outcome: Outcome.PagerStepNavigation) {
             when (outcome.direction) {
                 Outcome.PagerStepNavigation.Direction.NEXT -> when (outcome.boundaryBehavior) {
@@ -592,11 +605,12 @@ internal class PagerModel(
     }
 
     private fun handlePagerNext(fallback: PagerNextFallback) {
+        branchControl?.recomputeNow()
         @OptIn(DelicateLayoutApi::class)
         if (pagerState.value.hasNext) {
             resolve(PageRequest.NEXT)
         } else {
-            when(fallback) {
+            when (fallback) {
                 PagerNextFallback.NONE -> {}
                 PagerNextFallback.DISMISS -> handleDismiss()
                 PagerNextFallback.FIRST -> resolve(PageRequest.FIRST)
