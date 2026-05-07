@@ -1,10 +1,13 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.contacts
 
+import androidx.annotation.RestrictTo
 import androidx.core.util.ObjectsCompat
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 import java.util.Date
 
 /**
@@ -17,11 +20,13 @@ public class EmailRegistrationOptions private constructor(
     public val isDoubleOptIn: Boolean
 ) : JsonSerializable {
 
-    override fun toJsonValue(): JsonValue {
-        return JsonMap.newBuilder().put(TRANSACTIONAL_OPTED_IN_KEY, transactionalOptedIn)
-            .put(COMMERCIAL_OPTED_IN_KEY, commercialOptedIn).put(PROPERTIES_KEY, properties)
-            .put(DOUBLE_OPT_IN_KEY, isDoubleOptIn).build().toJsonValue()
-    }
+    @Throws(JsonException::class)
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        TRANSACTIONAL_OPTED_IN_KEY to transactionalOptedIn,
+        COMMERCIAL_OPTED_IN_KEY to commercialOptedIn,
+        PROPERTIES_KEY to properties,
+        DOUBLE_OPT_IN_KEY to isDoubleOptIn,
+    ).toJsonValue()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -63,10 +68,15 @@ public class EmailRegistrationOptions private constructor(
         @JvmStatic
         @JvmOverloads
         public fun commercialOptions(
-            commercialOptedIn: Date? = null, transactionalOptedIn: Date? = null, properties: JsonMap? = null
+            commercialOptedIn: Date? = null,
+            transactionalOptedIn: Date? = null,
+            properties: JsonMap? = null
         ): EmailRegistrationOptions {
             return EmailRegistrationOptions(
-                transactionalOptedIn?.time ?: -1, commercialOptedIn?.time ?: -1, properties, false
+                transactionalOptedIn = transactionalOptedIn?.time ?: -1,
+                commercialOptedIn = commercialOptedIn?.time ?: -1,
+                properties = properties,
+                isDoubleOptIn = false
             )
         }
 
@@ -81,14 +91,21 @@ public class EmailRegistrationOptions private constructor(
         @JvmStatic
         @JvmOverloads
         public fun options(
-            transactionalOptedIn: Date? = null, properties: JsonMap? = null, doubleOptIn: Boolean
+            transactionalOptedIn: Date? = null,
+            properties: JsonMap? = null,
+            doubleOptIn: Boolean
         ): EmailRegistrationOptions {
             return EmailRegistrationOptions(
-                transactionalOptedIn?.time ?: -1, -1, properties, doubleOptIn
+                transactionalOptedIn = transactionalOptedIn?.time ?: -1,
+                commercialOptedIn = -1,
+                properties = properties,
+                isDoubleOptIn = doubleOptIn
             )
         }
 
-        internal fun fromJson(value: JsonValue): EmailRegistrationOptions {
+        /** @hide */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+        public fun fromJson(value: JsonValue): EmailRegistrationOptions {
             val map = value.optMap()
             val commercialOptedIn = map.opt(COMMERCIAL_OPTED_IN_KEY).getLong(-1)
             val transactionalOptedIn = map.opt(TRANSACTIONAL_OPTED_IN_KEY).getLong(-1)

@@ -1,25 +1,26 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.contacts
 
+import androidx.annotation.RestrictTo
 import androidx.core.util.ObjectsCompat
 import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 
 /**
  * Sms registration options.
+ *
+ * @property senderId The sender Id.
  */
 public class SmsRegistrationOptions internal constructor(
-    /**
-     * Sender ID
-     */
     public val senderId: String
 ) : JsonSerializable {
 
-    override fun toJsonValue(): JsonValue {
-        return JsonMap.newBuilder().put(SENDER_ID_KEY, senderId).build().toJsonValue()
-    }
+    @Throws(JsonException::class)
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        SENDER_ID_KEY to senderId
+    ).toJsonValue()
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -31,6 +32,7 @@ public class SmsRegistrationOptions internal constructor(
     }
 
     override fun hashCode(): Int = ObjectsCompat.hashCode(senderId)
+
     override fun toString(): String {
         return "SmsRegistrationOptions(senderId='$senderId')"
     }
@@ -49,8 +51,10 @@ public class SmsRegistrationOptions internal constructor(
             return SmsRegistrationOptions(senderId)
         }
 
+        /** @hide */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @Throws(JsonException::class)
-        internal fun fromJson(value: JsonValue): SmsRegistrationOptions {
+        public fun fromJson(value: JsonValue): SmsRegistrationOptions {
             val senderId = value.optMap().opt(SENDER_ID_KEY).requireString()
             return SmsRegistrationOptions(senderId)
         }
