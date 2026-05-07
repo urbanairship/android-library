@@ -94,7 +94,7 @@ internal abstract class ButtonModel<T, I: Button>(
             .filter { it.type == EventHandler.Type.TAP }
             .flatMap { it.outcomes.orEmpty() }
         val resolved = tapHandlerOutcomes + viewInfo.outcomes
-        val delegation = buttonDelegation(context)
+        val delegation = buttonOutcomeHandler(context)
 
         val hasFormValidate = resolved.any {
             it is Outcome.Form && it.command == Outcome.Form.Command.VALIDATE
@@ -108,7 +108,7 @@ internal abstract class ButtonModel<T, I: Button>(
         } else if (hasFormSubmit) {
             handleSubmit(context, resolved)
         } else {
-            outcomeProcessor.process(resolved, delegated = delegation)
+            outcomeProcessor.process(resolved, handlerOutcome = delegation)
         }
     }
 
@@ -119,12 +119,12 @@ internal abstract class ButtonModel<T, I: Button>(
         listener?.dismissSoftKeyboard()
 
         val nonFormOutcomes = resolved.filter { it !is Outcome.Form }
-        val delegation = buttonDelegation(context)
+        val delegation = buttonOutcomeHandler(context)
         val submitEvent = LayoutEvent.SubmitForm(buttonIdentifier = viewInfo.identifier) {
             if (viewInfo.eventHandlers.hasTapHandler()) {
                 handleViewEvent(EventHandler.Type.TAP)
             }
-            outcomeProcessor.process(nonFormOutcomes, delegated = delegation)
+            outcomeProcessor.process(nonFormOutcomes, handlerOutcome = delegation)
         }
 
         broadcast(submitEvent).join()
@@ -137,13 +137,13 @@ internal abstract class ButtonModel<T, I: Button>(
     ) {
         listener?.dismissSoftKeyboard()
 
-        val delegation = buttonDelegation(context)
+        val delegation = buttonOutcomeHandler(context)
         val validateEvent = LayoutEvent.ValidateForm(buttonIdentifier = viewInfo.identifier) {
             if (hasFormSubmit) {
                 handleSubmit(context, resolved)
             } else {
                 val nonFormOutcomes = resolved.filter { it !is Outcome.Form }
-                outcomeProcessor.process(nonFormOutcomes, delegated = delegation)
+                outcomeProcessor.process(nonFormOutcomes, handlerOutcome = delegation)
             }
         }
 
@@ -154,9 +154,9 @@ internal abstract class ButtonModel<T, I: Button>(
      * Button-specific delegation that overrides dismiss to include reporting
      * and async-view-reload to use the button's identifier.
      */
-    private fun buttonDelegation(context: Context): suspend (DelegatedOutcome) -> Unit = { outcome ->
+    private fun buttonOutcomeHandler(context: Context): suspend (HandlerOutcome) -> Unit = { outcome ->
         when (outcome) {
-            is DelegatedOutcome.Dismiss -> {
+            is HandlerOutcome.Dismiss -> {
                 report(
                     event = ReportingEvent.Dismiss(
                         data = ReportingEvent.DismissData.ButtonTapped(
@@ -170,12 +170,12 @@ internal abstract class ButtonModel<T, I: Button>(
                 )
                 environment.eventHandler.broadcast(LayoutEvent.Finish(cancel = outcome.cancel))
             }
-            is DelegatedOutcome.AsyncViewReload -> {
+            is HandlerOutcome.AsyncViewReload -> {
                 environment.eventHandler.broadcast(
                     LayoutEvent.AsyncViewReload(viewInfo.identifier)
                 )
             }
-            else -> defaultDelegation(outcome)
+            else -> defaultHandler(outcome)
         }
     }
 }

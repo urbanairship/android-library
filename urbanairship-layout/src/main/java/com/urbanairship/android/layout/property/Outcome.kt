@@ -2,17 +2,11 @@
 package com.urbanairship.android.layout.property
 
 import com.urbanairship.android.layout.info.Identifiable
-import com.urbanairship.android.layout.property.Outcome.PagerJumpNavigation.Page
-import com.urbanairship.android.layout.property.Outcome.PagerPlayback.Command
-import com.urbanairship.android.layout.property.Outcome.PagerStepNavigation.BoundaryBehavior
-import com.urbanairship.android.layout.property.Outcome.PagerStepNavigation.BoundaryBehavior.Companion.from
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
-import com.urbanairship.json.optionalList
-import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 
 internal sealed class Outcome : Identifiable {
@@ -27,7 +21,8 @@ internal sealed class Outcome : Identifiable {
         MEDIA_PLAYBACK("media_playback"),
         MEDIA_AUDIO("media_audio"),
         STATE_ACTION("state_action"),
-        FORM("form");
+        FORM("form"),
+        ASYNC_VIEW_RETRY("async_view_retry");
 
         companion object {
             fun from(value: JsonValue): Type {
@@ -307,14 +302,20 @@ internal sealed class Outcome : Identifiable {
 
     }
 
-    /**
-     * Internal-only outcome used to represent the legacy ASYNC_VIEW_RETRY behavior.
-     * Not parseable from JSON — only produced by [ButtonClickBehaviorType.toOutcome].
-     */
-    data class AsyncViewReload(
-        override val identifier: String
+    data class AsyncViewRetry(
+        override val identifier: String,
     ) : Outcome() {
-        override val type = Type.DISMISS
+        override val type = Type.ASYNC_VIEW_RETRY
+
+        companion object {
+            @Throws(JsonException::class)
+            fun from(value: JsonValue): AsyncViewRetry {
+                val content = value.requireMap()
+                return AsyncViewRetry(
+                    identifier = content.requireField("identifier")
+                )
+            }
+        }
     }
 
     companion object {
@@ -333,6 +334,7 @@ internal sealed class Outcome : Identifiable {
                 Type.MEDIA_AUDIO -> MediaAudio.from(value)
                 Type.STATE_ACTION -> SetStateAction.from(value)
                 Type.FORM -> Form.from(value)
+                Type.ASYNC_VIEW_RETRY -> AsyncViewRetry.from(value)
             }
         }
 
@@ -346,7 +348,8 @@ internal object OutcomeResolver {
         outcomes: List<Outcome>? = null,
         stateActions: List<StateAction>? = null,
         behaviors: List<ButtonClickBehaviorType>? = null,
-        actions: Map<String, JsonValue>? = null): List<Outcome> {
+        actions: Map<String, JsonValue>? = null):
+            List<Outcome> {
 
         if (outcomes != null) return outcomes
         return buildList {
@@ -432,7 +435,7 @@ internal fun ButtonClickBehaviorType.toOutcome(): Outcome {
             identifier = identifier,
             command = Outcome.Form.Command.VALIDATE
         )
-        ButtonClickBehaviorType.ASYNC_VIEW_RETRY -> Outcome.AsyncViewReload(
+        ButtonClickBehaviorType.ASYNC_VIEW_RETRY -> Outcome.AsyncViewRetry(
             identifier = identifier
         )
     }

@@ -383,7 +383,7 @@ public class OutcomeTest {
     @Test
     public fun testResolveBehaviorAsyncViewRetry() {
         val outcome = resolveSingleBehavior(ButtonClickBehaviorType.ASYNC_VIEW_RETRY)
-        assertTrue(outcome is Outcome.AsyncViewReload)
+        assertTrue(outcome is Outcome.AsyncViewRetry)
     }
 
     // =========================================================================

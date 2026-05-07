@@ -31,7 +31,7 @@ public class ProcessOutcomesTest {
 
     /**
      * Test processor that records pager/video calls directly (since those are handled
-     * internally by the processor) and lets delegated outcomes be tracked externally.
+     * internally by the processor) and lets handle outcomes be tracked externally.
      */
     private inner class TestProcessor : ThomasOutcomeProcessor(mockEnv, mockLayoutState) {
         val calls = mutableListOf<Call>()
@@ -68,36 +68,36 @@ public class ProcessOutcomesTest {
         val callNames: List<String> get() = calls.map { it.name }
     }
 
-    private fun makeDelegation(calls: MutableList<Call>): suspend (DelegatedOutcome) -> Unit = { outcome ->
+    private fun makehandleOutcome(calls: MutableList<Call>): suspend (HandlerOutcome) -> Unit = { outcome ->
         when (outcome) {
-            is DelegatedOutcome.Dismiss -> calls.add(Call("dismiss", mapOf("cancel" to outcome.cancel)))
-            is DelegatedOutcome.RunActions -> calls.add(Call("runAirshipActions", mapOf("actions" to outcome.actions)))
-            is DelegatedOutcome.FormAction -> calls.add(Call(
+            is HandlerOutcome.Dismiss -> calls.add(Call("dismiss", mapOf("cancel" to outcome.cancel)))
+            is HandlerOutcome.RunActions -> calls.add(Call("runAirshipActions", mapOf("actions" to outcome.actions)))
+            is HandlerOutcome.FormAction -> calls.add(Call(
                 when (outcome.command) {
                     Outcome.Form.Command.SUBMIT -> "formSubmit"
                     Outcome.Form.Command.VALIDATE -> "formValidate"
                 }
             ))
-            is DelegatedOutcome.AsyncViewReload -> calls.add(Call("asyncViewReload", mapOf("identifier" to outcome.identifier)))
+            is HandlerOutcome.AsyncViewReload -> calls.add(Call("asyncViewReload", mapOf("identifier" to outcome.identifier)))
         }
     }
 
     // =========================================================================
-    // Delegated outcomes
+    // Handling outcomes
     // =========================================================================
 
     @Test
     fun testDismiss() = runTest {
-        val (processor, delegation, calls) = makeTestSetup()
-        processor.process(listOf(Outcome.Dismiss(identifier = "d-1")), delegated = delegation)
+        val (processor, handleOutcome, calls) = makeTestSetup()
+        processor.process(listOf(Outcome.Dismiss(identifier = "d-1")), handlerOutcome = handleOutcome)
         assertEquals(listOf("dismiss"), calls.map { it.name })
         assertEquals(false, calls[0].args["cancel"])
     }
 
     @Test
     fun testDismissCancel() = runTest {
-        val (processor, delegation, calls) = makeTestSetup()
-        processor.process(listOf(Outcome.Dismiss(identifier = "d-1", cancel = true)), delegated = delegation)
+        val (processor, handleOutcome, calls) = makeTestSetup()
+        processor.process(listOf(Outcome.Dismiss(identifier = "d-1", cancel = true)), handlerOutcome = handleOutcome)
         assertEquals(listOf("dismiss"), calls.map { it.name })
         assertEquals(true, calls[0].args["cancel"])
     }
@@ -105,8 +105,8 @@ public class ProcessOutcomesTest {
     @Test
     fun testAirshipActions() = runTest {
         val actions = mapOf("add_tags" to JsonValue.wrap("vip"))
-        val (processor, delegation, calls) = makeTestSetup()
-        processor.process(listOf(Outcome.AirshipAction(identifier = "aa-1", actions = actions)), delegated = delegation)
+        val (processor, handleOutcome, calls) = makeTestSetup()
+        processor.process(listOf(Outcome.AirshipAction(identifier = "aa-1", actions = actions)), handlerOutcome = handleOutcome)
         assertEquals(listOf("runAirshipActions"), calls.map { it.name })
         @Suppress("UNCHECKED_CAST")
         assertEquals(actions, calls[0].args["actions"] as Map<String, JsonValue>)
@@ -114,22 +114,22 @@ public class ProcessOutcomesTest {
 
     @Test
     fun testFormSubmit() = runTest {
-        val (processor, delegation, calls) = makeTestSetup()
-        processor.process(listOf(Outcome.Form(identifier = "f-1", command = Outcome.Form.Command.SUBMIT)), delegated = delegation)
+        val (processor, handleOutcome, calls) = makeTestSetup()
+        processor.process(listOf(Outcome.Form(identifier = "f-1", command = Outcome.Form.Command.SUBMIT)), handlerOutcome = handleOutcome)
         assertEquals(listOf("formSubmit"), calls.map { it.name })
     }
 
     @Test
     fun testFormValidate() = runTest {
-        val (processor, delegation, calls) = makeTestSetup()
-        processor.process(listOf(Outcome.Form(identifier = "f-1", command = Outcome.Form.Command.VALIDATE)), delegated = delegation)
+        val (processor, handleOutcome, calls) = makeTestSetup()
+        processor.process(listOf(Outcome.Form(identifier = "f-1", command = Outcome.Form.Command.VALIDATE)), handlerOutcome = handleOutcome)
         assertEquals(listOf("formValidate"), calls.map { it.name })
     }
 
     @Test
     fun testAsyncViewReload() = runTest {
-        val (processor, delegation, calls) = makeTestSetup()
-        processor.process(listOf(Outcome.AsyncViewReload(identifier = "avr-1")), delegated = delegation)
+        val (processor, handleOutcome, calls) = makeTestSetup()
+        processor.process(listOf(Outcome.AsyncViewRetry(identifier = "avr-1")), handlerOutcome = handleOutcome)
         assertEquals(listOf("asyncViewReload"), calls.map { it.name })
         assertEquals("avr-1", calls[0].args["identifier"])
     }
@@ -141,19 +141,19 @@ public class ProcessOutcomesTest {
     @Test
     fun testStateActions() = runTest {
         val action = StateAction.SetState(key = "k", value = JsonValue.wrap("v"))
-        val (processor, delegation, _) = makeTestSetup()
-        processor.process(listOf(Outcome.SetStateAction(identifier = "sa-1", action = action)), delegated = delegation)
+        val (processor, handleOutcome, _) = makeTestSetup()
+        processor.process(listOf(Outcome.SetStateAction(identifier = "sa-1", action = action)), handlerOutcome = handleOutcome)
         verify { mockLayoutState.processStateActions(listOf(action), null) }
     }
 
     @Test
     fun testStateActionsFormValuePassthrough() = runTest {
         val action = StateAction.SetFormValue(key = "email")
-        val (processor, delegation, _) = makeTestSetup()
+        val (processor, handleOutcome, _) = makeTestSetup()
         processor.process(
             OutcomeResolver.resolve(stateActions = listOf(action)),
             formValue = "test@example.com",
-            delegated = delegation
+            handlerOutcome = handleOutcome
         )
         verify { mockLayoutState.processStateActions(listOf(action), "test@example.com") }
     }
@@ -244,30 +244,30 @@ public class ProcessOutcomesTest {
     @Test
     fun testMultipleOutcomesProcessedInOrder() = runTest {
         val processor = TestProcessor()
-        val delegatedCalls = mutableListOf<Call>()
-        val delegation = makeDelegation(delegatedCalls)
+        val handleCalls = mutableListOf<Call>()
+        val handleOutcome = makehandleOutcome(handleCalls)
 
         processor.process(listOf(
             Outcome.PagerStepNavigation(identifier = "psn-1", direction = Outcome.PagerStepNavigation.Direction.NEXT),
             Outcome.AirshipAction(identifier = "aa-1", actions = mapOf("x" to JsonValue.wrap("y"))),
             Outcome.Dismiss(identifier = "d-1")
-        ), delegated = delegation)
+        ), handlerOutcome = handleOutcome)
 
         assertEquals(listOf("pagerNext"), processor.callNames)
-        assertEquals(listOf("runAirshipActions", "dismiss"), delegatedCalls.map { it.name })
+        assertEquals(listOf("runAirshipActions", "dismiss"), handleCalls.map { it.name })
     }
 
     @Test
     fun testEmptyOutcomesNoOp() = runTest {
-        val (processor, delegation, calls) = makeTestSetup()
-        processor.process(emptyList(), delegated = delegation)
+        val (processor, handleOutcome, calls) = makeTestSetup()
+        processor.process(emptyList(), handlerOutcome = handleOutcome)
         assertTrue(calls.isEmpty())
     }
 
     @Test
     fun testNullOutcomesNoOp() = runTest {
-        val (processor, delegation, calls) = makeTestSetup()
-        processor.process(null, delegated = delegation)
+        val (processor, handleOutcome, calls) = makeTestSetup()
+        processor.process(null, handlerOutcome = handleOutcome)
         assertTrue(calls.isEmpty())
     }
 
@@ -310,16 +310,16 @@ public class ProcessOutcomesTest {
 
     @Test
     fun testLegacyDismissDispatch() = runTest {
-        val (processor, delegation, calls) = makeTestSetup()
-        processor.process(resolveBehavior(ButtonClickBehaviorType.DISMISS), delegated = delegation)
+        val (processor, handleOutcome, calls) = makeTestSetup()
+        processor.process(resolveBehavior(ButtonClickBehaviorType.DISMISS), handlerOutcome = handleOutcome)
         assertEquals(listOf("dismiss"), calls.map { it.name })
         assertEquals(false, calls[0].args["cancel"])
     }
 
     @Test
     fun testLegacyCancelDispatch() = runTest {
-        val (processor, delegation, calls) = makeTestSetup()
-        processor.process(resolveBehavior(ButtonClickBehaviorType.CANCEL), delegated = delegation)
+        val (processor, handleOutcome, calls) = makeTestSetup()
+        processor.process(resolveBehavior(ButtonClickBehaviorType.CANCEL), handlerOutcome = handleOutcome)
         assertEquals(listOf("dismiss"), calls.map { it.name })
         assertEquals(true, calls[0].args["cancel"])
     }
@@ -347,44 +347,44 @@ public class ProcessOutcomesTest {
 
     @Test
     fun testLegacyFormSubmitDispatch() = runTest {
-        val (processor, delegation, calls) = makeTestSetup()
-        processor.process(resolveBehavior(ButtonClickBehaviorType.FORM_SUBMIT), delegated = delegation)
+        val (processor, handleOutcome, calls) = makeTestSetup()
+        processor.process(resolveBehavior(ButtonClickBehaviorType.FORM_SUBMIT), handlerOutcome = handleOutcome)
         assertEquals(listOf("formSubmit"), calls.map { it.name })
     }
 
     @Test
     fun testLegacyFormValidateDispatch() = runTest {
-        val (processor, delegation, calls) = makeTestSetup()
-        processor.process(resolveBehavior(ButtonClickBehaviorType.FORM_VALIDATE), delegated = delegation)
+        val (processor, handleOutcome, calls) = makeTestSetup()
+        processor.process(resolveBehavior(ButtonClickBehaviorType.FORM_VALIDATE), handlerOutcome = handleOutcome)
         assertEquals(listOf("formValidate"), calls.map { it.name })
     }
 
     @Test
     fun testLegacyCombinedDispatch() = runTest {
         val processor = TestProcessor()
-        val delegatedCalls = mutableListOf<Call>()
-        val delegation = makeDelegation(delegatedCalls)
+        val handleCalls = mutableListOf<Call>()
+        val handleOutcome = makehandleOutcome(handleCalls)
 
         val outcomes = OutcomeResolver.resolve(
             stateActions = listOf(StateAction.SetState(key = "k", value = JsonValue.wrap("v"))),
             behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT, ButtonClickBehaviorType.DISMISS),
             actions = mapOf("deep_link" to JsonValue.wrap("app://x"))
         )
-        processor.process(outcomes, delegated = delegation)
+        processor.process(outcomes, handlerOutcome = handleOutcome)
 
         assertEquals(listOf("pagerNext"), processor.callNames)
-        assertEquals(listOf("dismiss", "runAirshipActions"), delegatedCalls.map { it.name })
+        assertEquals(listOf("dismiss", "runAirshipActions"), handleCalls.map { it.name })
     }
 
     // =========================================================================
     // Helpers
     // =========================================================================
 
-    private fun makeTestSetup(): Triple<ThomasOutcomeProcessor, suspend (DelegatedOutcome) -> Unit, MutableList<Call>> {
+    private fun makeTestSetup(): Triple<ThomasOutcomeProcessor, suspend (HandlerOutcome) -> Unit, MutableList<Call>> {
         val processor = ThomasOutcomeProcessor(mockEnv, mockLayoutState)
         val calls = mutableListOf<Call>()
-        val delegation = makeDelegation(calls)
-        return Triple(processor, delegation, calls)
+        val handleOutcome = makehandleOutcome(calls)
+        return Triple(processor, handleOutcome, calls)
     }
 
     private fun resolveBehavior(behavior: ButtonClickBehaviorType): List<Outcome> =

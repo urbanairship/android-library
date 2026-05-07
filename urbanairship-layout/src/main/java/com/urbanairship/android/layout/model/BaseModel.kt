@@ -7,7 +7,6 @@ import androidx.annotation.VisibleForTesting
 import com.urbanairship.Provider
 import com.urbanairship.Airship
 import com.urbanairship.Platform
-import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
@@ -26,7 +25,6 @@ import com.urbanairship.android.layout.info.View
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
-import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.AttributeName
@@ -193,7 +191,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
                     if (!triggered.contains(trigger.id) && trigger.triggerWhenStateMatches.apply(state)) {
                         triggered.add(trigger.id)
-                        outcomeProcessor.process(trigger.onTrigger.outcomes, delegated = defaultDelegation)
+                        outcomeProcessor.process(trigger.onTrigger.outcomes, handlerOutcome = defaultHandler)
                     }
                 }
             }
@@ -233,18 +231,18 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         ThomasOutcomeProcessor(environment, layoutState)
 
     /**
-     * Default delegation callback for outcomes the processor cannot handle directly.
+     * Default handling callback for outcomes the processor cannot handle directly.
      * Subclasses can provide their own callback to customize dismiss/action behavior.
      */
-    protected open val defaultDelegation: suspend (DelegatedOutcome) -> Unit = { outcome ->
+    protected open val defaultHandler: suspend (HandlerOutcome) -> Unit = { outcome ->
         when (outcome) {
-            is DelegatedOutcome.Dismiss ->
+            is HandlerOutcome.Dismiss ->
                 environment.eventHandler.broadcast(LayoutEvent.Finish(cancel = outcome.cancel))
-            is DelegatedOutcome.RunActions ->
+            is HandlerOutcome.RunActions ->
                 runActions(outcome.actions, layoutState.reportingContext())
-            is DelegatedOutcome.FormAction ->
+            is HandlerOutcome.FormAction ->
                 throw IllegalStateException("Models supporting FormAction Outcome requires correct implementation")
-            is DelegatedOutcome.AsyncViewReload ->
+            is HandlerOutcome.AsyncViewReload ->
                 environment.eventHandler.broadcast(LayoutEvent.AsyncViewReload(outcome.identifier))
         }
     }
@@ -378,7 +376,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         modelScope.launch {
             for (handler in viewInfo.eventHandlers.orEmpty()) {
                 if (handler.type == type) {
-                    outcomeProcessor.process(handler.outcomes, formValue = value, delegated = defaultDelegation)
+                    outcomeProcessor.process(handler.outcomes, formValue = value, handlerOutcome = defaultHandler)
                 }
             }
         }
@@ -441,7 +439,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                     }
                 }
                 .collect {
-                    outcomeProcessor.process(it.outcomes, formValue = lastSelected.value, delegated = defaultDelegation)
+                    outcomeProcessor.process(it.outcomes, formValue = lastSelected.value, handlerOutcome = defaultHandler)
                 }
         }
     }

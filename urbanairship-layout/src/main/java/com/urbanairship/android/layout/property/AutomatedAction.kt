@@ -51,12 +51,12 @@ internal val List<AutomatedAction>.earliestNavigationAction: AutomatedAction?
  * Returns true if the automated action has pause or resume behaviors
  */
 internal val List<AutomatedAction>.hasPagerPauseOrResumeAction: Boolean
-    get() = any {
-        it.outcomes.any { outcome ->
-            outcome is Outcome.PagerPlayback &&
-                    (outcome.command == Outcome.PagerPlayback.Command.PAUSE ||
-                        outcome.command == Outcome.PagerPlayback.Command.RESUME)
-        }
+    get() = any { it.outcomes.any(Outcome::isPagerPlaybackOutcome) }
+
+private val Outcome.isPagerPlaybackOutcome: Boolean
+    get() = when (this) {
+        is Outcome.PagerPlayback -> true
+        else -> false
     }
 
 private val Outcome.isNavigationOutcome: Boolean

@@ -13,19 +13,19 @@ import kotlinx.coroutines.launch
  * Outcomes that the processor cannot resolve internally and must be handled
  * by the caller (dismissal, form actions, running Airship actions, async view reload).
  */
-internal sealed class DelegatedOutcome {
-    data class Dismiss(val cancel: Boolean) : DelegatedOutcome()
-    data class FormAction(val command: Outcome.Form.Command) : DelegatedOutcome()
-    data class RunActions(val actions: Map<String, JsonValue>) : DelegatedOutcome()
-    data class AsyncViewReload(val identifier: String) : DelegatedOutcome()
+internal sealed class HandlerOutcome {
+    data class Dismiss(val cancel: Boolean) : HandlerOutcome()
+    data class FormAction(val command: Outcome.Form.Command) : HandlerOutcome()
+    data class RunActions(val actions: Map<String, JsonValue>) : HandlerOutcome()
+    data class AsyncViewReload(val identifier: String) : HandlerOutcome()
 }
 
 /**
- * Resolves [Outcome] values into state updates (pager, video, state actions) and delegated work.
+ * Resolves [Outcome] values into state updates (pager, video, state actions) and external work.
  *
  * Pager navigation, playback, video, and state actions are handled directly by the processor.
  * Dismiss, form, airship-action, and async-view-reload outcomes are forwarded to the
- * caller-supplied [delegated] callback.
+ * caller-supplied [handleroutcome] callback.
  *
  * Subclasses (e.g. inside [PagerModel]) can override the protected pager methods to manipulate
  * pager state synchronously instead of going through the layout-event bus.
@@ -37,34 +37,34 @@ internal open class ThomasOutcomeProcessor(
     open suspend fun process(
         outcomes: List<Outcome>?,
         formValue: Any? = null,
-        delegated: suspend (DelegatedOutcome) -> Unit = {}
+        handlerOutcome: suspend (HandlerOutcome) -> Unit = {}
     ) {
         if (outcomes.isNullOrEmpty()) return
         for (outcome in outcomes) {
-            resolve(outcome, formValue, delegated)
+            resolve(outcome, formValue, handlerOutcome)
         }
     }
 
     private suspend fun resolve(
         outcome: Outcome,
         formValue: Any?,
-        delegated: suspend (DelegatedOutcome) -> Unit
+        handlerOutcome: suspend (HandlerOutcome) -> Unit
     ) {
         when (outcome) {
             is Outcome.SetStateAction ->
                 layoutState.processStateActions(listOf(outcome.action), formValue)
 
             is Outcome.AirshipAction ->
-                delegated(DelegatedOutcome.RunActions(outcome.actions))
+                handlerOutcome(HandlerOutcome.RunActions(outcome.actions))
 
             is Outcome.Dismiss ->
-                delegated(DelegatedOutcome.Dismiss(outcome.cancel))
+                handlerOutcome(HandlerOutcome.Dismiss(outcome.cancel))
 
             is Outcome.Form ->
-                delegated(DelegatedOutcome.FormAction(outcome.command))
+                handlerOutcome(HandlerOutcome.FormAction(outcome.command))
 
-            is Outcome.AsyncViewReload ->
-                delegated(DelegatedOutcome.AsyncViewReload(outcome.identifier))
+            is Outcome.AsyncViewRetry ->
+                handlerOutcome(HandlerOutcome.AsyncViewReload(outcome.identifier))
 
             is Outcome.PagerStepNavigation -> handlePagerStep(outcome)
             is Outcome.PagerJumpNavigation -> handlePagerJump(outcome)
@@ -82,24 +82,24 @@ internal open class ThomasOutcomeProcessor(
             Outcome.PagerStepNavigation.Direction.NEXT -> {
                 when (outcome.boundaryBehavior) {
                     Outcome.PagerStepNavigation.BoundaryBehavior.DISMISS ->
-                        environment.eventHandler.broadcast(LayoutEvent.Pager.Next(PagerNextFallback.DISMISS))
+                        broadcast(LayoutEvent.Pager.Next(PagerNextFallback.DISMISS))
                     Outcome.PagerStepNavigation.BoundaryBehavior.WRAP ->
-                        environment.eventHandler.broadcast(LayoutEvent.Pager.Next(PagerNextFallback.FIRST))
+                        broadcast(LayoutEvent.Pager.Next(PagerNextFallback.FIRST))
                     Outcome.PagerStepNavigation.BoundaryBehavior.IGNORE ->
-                        environment.eventHandler.broadcast(LayoutEvent.Pager.Next(PagerNextFallback.NONE))
+                        broadcast(LayoutEvent.Pager.Next(PagerNextFallback.NONE))
                 }
             }
             Outcome.PagerStepNavigation.Direction.PREVIOUS ->
-                environment.eventHandler.broadcast(LayoutEvent.Pager.Previous)
+                broadcast(LayoutEvent.Pager.Previous)
         }
     }
 
     protected open suspend fun handlePagerJump(outcome: Outcome.PagerJumpNavigation) {
         when (outcome.page) {
             Outcome.PagerJumpNavigation.Page.START ->
-                environment.eventHandler.broadcast(LayoutEvent.Pager.Start)
+                broadcast(LayoutEvent.Pager.Start)
             Outcome.PagerJumpNavigation.Page.END ->
-                environment.eventHandler.broadcast(LayoutEvent.Pager.End)
+                broadcast(LayoutEvent.Pager.End)
         }
     }
 
@@ -107,11 +107,11 @@ internal open class ThomasOutcomeProcessor(
         environment.modelScope.launch {
             when (outcome.command) {
                 Outcome.PagerPlayback.Command.PAUSE ->
-                    environment.eventHandler.broadcast(LayoutEvent.Pager.Pause)
+                    broadcast(LayoutEvent.Pager.Pause)
                 Outcome.PagerPlayback.Command.RESUME ->
-                    environment.eventHandler.broadcast(LayoutEvent.Pager.Resume)
+                    broadcast(LayoutEvent.Pager.Resume)
                 Outcome.PagerPlayback.Command.TOGGLE ->
-                    environment.eventHandler.broadcast(LayoutEvent.Pager.PauseToggle)
+                    broadcast(LayoutEvent.Pager.PauseToggle)
             }
         }
     }
@@ -121,22 +121,30 @@ internal open class ThomasOutcomeProcessor(
     private fun handleMediaPlayback(outcome: Outcome.MediaPlayback) {
         when (outcome.command) {
             Outcome.MediaPlayback.Command.PLAY ->
-                layoutState.videoControl?.commandChannel?.send(VideoCommand.Play)
+                sendVideoCommand(VideoCommand.Play)
             Outcome.MediaPlayback.Command.PAUSE ->
-                layoutState.videoControl?.commandChannel?.send(VideoCommand.Pause)
+                sendVideoCommand(VideoCommand.Pause)
             Outcome.MediaPlayback.Command.TOGGLE ->
-                layoutState.videoControl?.commandChannel?.send(VideoCommand.TogglePlay)
+                sendVideoCommand(VideoCommand.TogglePlay)
         }
     }
 
     private fun handleMediaAudio(outcome: Outcome.MediaAudio) {
         when (outcome.command) {
             Outcome.MediaAudio.Command.MUTE ->
-                layoutState.videoControl?.commandChannel?.send(VideoCommand.Mute)
+                sendVideoCommand(VideoCommand.Mute)
             Outcome.MediaAudio.Command.UNMUTE ->
-                layoutState.videoControl?.commandChannel?.send(VideoCommand.Unmute)
+                sendVideoCommand(VideoCommand.Unmute)
             Outcome.MediaAudio.Command.TOGGLE ->
-                layoutState.videoControl?.commandChannel?.send(VideoCommand.ToggleMute)
+                sendVideoCommand(VideoCommand.ToggleMute)
         }
+    }
+
+    private suspend fun broadcast(event: LayoutEvent) {
+        environment.eventHandler.broadcast(event)
+    }
+
+    private fun sendVideoCommand(command: VideoCommand) {
+        layoutState.videoControl?.commandChannel?.send(command)
     }
 }

@@ -20,9 +20,12 @@ import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.DisableSwipeSelector
 import com.urbanairship.android.layout.property.GestureLocation
 import com.urbanairship.android.layout.property.Outcome
+import com.urbanairship.android.layout.property.Outcome.PagerJumpNavigation.Page
+import com.urbanairship.android.layout.property.Outcome.PagerPlayback.Command
+import com.urbanairship.android.layout.property.Outcome.PagerStepNavigation.BoundaryBehavior
+import com.urbanairship.android.layout.property.Outcome.PagerStepNavigation.Direction
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerGesture
-import com.urbanairship.android.layout.property.StateAction
 import com.urbanairship.android.layout.property.earliestNavigationAction
 import com.urbanairship.android.layout.property.firstPagerNextOrNull
 import com.urbanairship.android.layout.property.hasPagerPauseOrResumeAction
@@ -31,7 +34,6 @@ import com.urbanairship.android.layout.util.Timer
 import com.urbanairship.android.layout.util.pagerGestures
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
-import com.urbanairship.json.JsonValue
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -101,61 +103,61 @@ internal class PagerModel(
      * instead of broadcasting layout events (which would go through the event
      * bus and back). This keeps pager operations synchronous with the caller.
      */
-    private val pagerProcessor = object : ThomasOutcomeProcessor(environment, layoutState) {
+    private val pagerOutcomeProcessor = object : ThomasOutcomeProcessor(environment, layoutState) {
         override suspend fun process(
             outcomes: List<Outcome>?,
             formValue: Any?,
-            delegated: suspend (DelegatedOutcome) -> Unit
+            handlerOutcome: suspend (HandlerOutcome) -> Unit
         ) {
             if (outcomes.isNullOrEmpty()) return
             for (outcome in outcomes) {
                 if (outcome is Outcome.PagerStepNavigation || outcome is Outcome.PagerJumpNavigation) {
                     branchControl?.requestPathRebuild()
                 }
-                super.process(listOf(outcome), formValue, delegated)
+                super.process(listOf(outcome), formValue, handlerOutcome)
             }
         }
         override suspend fun handlePagerStep(outcome: Outcome.PagerStepNavigation) {
             when (outcome.direction) {
-                Outcome.PagerStepNavigation.Direction.NEXT -> when (outcome.boundaryBehavior) {
-                    Outcome.PagerStepNavigation.BoundaryBehavior.DISMISS ->
+                Direction.NEXT -> when (outcome.boundaryBehavior) {
+                    BoundaryBehavior.DISMISS ->
                         handlePagerNext(PagerNextFallback.DISMISS)
-                    Outcome.PagerStepNavigation.BoundaryBehavior.WRAP ->
+                    BoundaryBehavior.WRAP ->
                         handlePagerNext(PagerNextFallback.FIRST)
-                    Outcome.PagerStepNavigation.BoundaryBehavior.IGNORE ->
+                    BoundaryBehavior.IGNORE ->
                         handlePagerNext(PagerNextFallback.NONE)
                 }
-                Outcome.PagerStepNavigation.Direction.PREVIOUS -> handlePagerPrevious()
+                Direction.PREVIOUS -> handlePagerPrevious()
             }
         }
 
         override suspend fun handlePagerJump(outcome: Outcome.PagerJumpNavigation) {
             when (outcome.page) {
-                Outcome.PagerJumpNavigation.Page.START -> resolve(PageRequest.FIRST)
-                Outcome.PagerJumpNavigation.Page.END -> resolve(PageRequest.LAST)
+                Page.START -> resolve(PageRequest.FIRST)
+                Page.END -> resolve(PageRequest.LAST)
             }
         }
 
         override fun handlePagerPlayback(outcome: Outcome.PagerPlayback) {
             when (outcome.command) {
-                Outcome.PagerPlayback.Command.PAUSE -> {
+                Command.PAUSE -> {
                     isManuallyPaused = true
                     pauseStory()
                 }
-                Outcome.PagerPlayback.Command.RESUME -> {
+                Command.RESUME -> {
                     isManuallyPaused = false
                     resumeStory()
                 }
-                Outcome.PagerPlayback.Command.TOGGLE -> handlePagerPauseToggle()
+                Command.TOGGLE -> handlePagerPauseToggle()
             }
         }
     }
 
-    /** Pager-specific delegation that handles dismiss with reporting. */
-    private val pagerDelegation: suspend (DelegatedOutcome) -> Unit = { outcome ->
+    /** Pager-specific outcome handler that handles dismiss with reporting. */
+    private val pagerOutcomeHandler: suspend (HandlerOutcome) -> Unit = { outcome ->
         when (outcome) {
-            is DelegatedOutcome.Dismiss -> handleDismiss()
-            else -> defaultDelegation(outcome)
+            is HandlerOutcome.Dismiss -> handleDismiss()
+            else -> defaultHandler(outcome)
         }
     }
 
@@ -170,7 +172,7 @@ internal class PagerModel(
                 controllerBranching = branching,
                 thomasState = environment.layoutState.thomasState,
                 onBranchUpdated = ::onPagesDataUpdated,
-                outcomeRunner = { outcomes -> pagerProcessor.process(outcomes, delegated = pagerDelegation) },
+                outcomeRunner = { outcomes -> pagerOutcomeProcessor.process(outcomes, handlerOutcome = pagerOutcomeHandler) },
             )
             wireBranchControlFlows(branchControl)
         } else {
@@ -205,7 +207,7 @@ internal class PagerModel(
 
                         lastDisplayedPageId.update { currentPage.identifier }
 
-                        pagerProcessor.process(currentPage.displayOutcomes, delegated = pagerDelegation)
+                        pagerOutcomeProcessor.process(currentPage.displayOutcomes, handlerOutcome = pagerOutcomeHandler)
 
                         handleAutomatedActions(currentPage.automatedActions)
                         it.currentPageId?.let { pageId -> branchControl?.addToHistory(pageId) }
@@ -280,11 +282,15 @@ internal class PagerModel(
         _allPages = updated
         pages = updated.map { it.view }
 
+        // Update pager state with our page identifiers
         pagerState.update { state ->
             val newPageIds = updated.map { it.identifier }
             val newDurations = updated.map { it.automatedActions?.earliestNavigationAction?.delay }
             val newCompleted = if (state.branching == null) updated.size == 1 else completed
 
+            // When the page list changes due to branching re-evaluation, the current
+            // pageIndex may point to a different page. Find the current page's identifier
+            // in the new list and adjust the index to stay on the same page.
             val currentId = state.currentPageId
             val adjustedIndex = if (currentId != null) {
                 newPageIds.indexOf(currentId).takeIf { it >= 0 }
@@ -292,6 +298,8 @@ internal class PagerModel(
                 null
             } ?: state.pageIndex.coerceIn(0, newPageIds.lastIndex.coerceAtLeast(0))
 
+            // Keep lastPageIndex in sync so a pure re-index doesn't look like
+            // a page transition to downstream listeners.
             val adjustedLastIndex = if (adjustedIndex != state.pageIndex) {
                 adjustedIndex
             } else {
@@ -526,7 +534,7 @@ internal class PagerModel(
 
     private fun handleAccessibilityAction(action: AccessibilityAction, pagerState: State.Pager) {
         modelScope.launch {
-            pagerProcessor.process(action.outcomes, delegated = pagerDelegation)
+            pagerOutcomeProcessor.process(action.outcomes, handlerOutcome = pagerOutcomeHandler)
         }
     }
 
@@ -539,7 +547,7 @@ internal class PagerModel(
                         automatedActionsTimers.remove(this)
 
                         modelScope.launch {
-                            pagerProcessor.process(action.outcomes, delegated = pagerDelegation)
+                            pagerOutcomeProcessor.process(action.outcomes, handlerOutcome = pagerOutcomeHandler)
                         }
                         reportAutomatedAction(action, pagerState.changes.value)
                     }
@@ -559,7 +567,7 @@ internal class PagerModel(
             actions.filter { it != actions.earliestNavigationAction }.forEach { action ->
                 if (action.delay == 0) {
                     modelScope.launch {
-                        pagerProcessor.process(action.outcomes, delegated = pagerDelegation)
+                        pagerOutcomeProcessor.process(action.outcomes, handlerOutcome = pagerOutcomeHandler)
                     }
                     reportAutomatedAction(action, pagerState.changes.value)
                 } else {
@@ -575,7 +583,7 @@ internal class PagerModel(
                 automatedActionsTimers.remove(this)
 
                 modelScope.launch {
-                    pagerProcessor.process(action.outcomes, delegated = pagerDelegation)
+                    pagerOutcomeProcessor.process(action.outcomes, handlerOutcome = pagerOutcomeHandler)
                 }
                 reportAutomatedAction(action, pagerState.changes.value)
             }
@@ -606,7 +614,7 @@ internal class PagerModel(
         }
 
         triggeredGestures.forEach { (gesture, outcomes) ->
-            pagerProcessor.process(outcomes, delegated = pagerDelegation)
+            pagerOutcomeProcessor.process(outcomes, handlerOutcome = pagerOutcomeHandler)
             reportGesture(gesture, pagerState.changes.value)
         }
     }
