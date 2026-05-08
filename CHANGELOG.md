@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.7.1 - May 7, 2026
+
+Patch release that includes minor API changes to allow for email and SMS registration in Airship cross-platform frameworks.
+
+### Changes
+
+- Internal API changes to support email and SMS registration in frameworks.
+
 ## Version 20.7.0 - April 30, 2026
 
 Minor release that adds support for Native Message Center.
@@ -29,7 +37,7 @@ Patch release with several push reliability improvements.
 - Fixed a race condition in `PushManager` that could cause false push opt-outs when FCM tokens rotate or registration fails transiently
 - Fixed `SQLiteBlobTooBigException` errors in `PreferenceDataStore` for large stored values
 - Fixed invalid JSON logging
-- Fixed unnecessary backoff when Airship's WorkManager jobs are cancelled externally
+- Fixed unnecessary backoff when Airship's WorkManager jobs are canceled externally
 
 ## Version 20.6.2 - April 14, 2026
 
