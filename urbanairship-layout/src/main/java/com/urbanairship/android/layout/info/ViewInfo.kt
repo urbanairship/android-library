@@ -280,7 +280,7 @@ private fun safeAreaAware(json: JsonMap): SafeAreaAware =
     SafeAreaAwareInfo(ignoreSafeArea = json.optionalField("ignore_safe_area") ?: false)
 
 internal data class ValidationAction(
-    val outcomes: List<Outcome>? = null
+    val outcomes: List<Outcome>
 ) {
     constructor(json: JsonValue): this(
         outcomes = json.requireMap().let { map ->

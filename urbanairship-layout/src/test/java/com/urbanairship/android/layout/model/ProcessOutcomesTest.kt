@@ -68,7 +68,7 @@ public class ProcessOutcomesTest {
         val callNames: List<String> get() = calls.map { it.name }
     }
 
-    private fun makehandleOutcome(calls: MutableList<Call>): suspend (HandlerOutcome) -> Unit = { outcome ->
+    private fun makeHandleOutcome(calls: MutableList<Call>): suspend (HandlerOutcome) -> Unit = { outcome ->
         when (outcome) {
             is HandlerOutcome.Dismiss -> calls.add(Call("dismiss", mapOf("cancel" to outcome.cancel)))
             is HandlerOutcome.RunActions -> calls.add(Call("runAirshipActions", mapOf("actions" to outcome.actions)))
@@ -245,7 +245,7 @@ public class ProcessOutcomesTest {
     fun testMultipleOutcomesProcessedInOrder() = runTest {
         val processor = TestProcessor()
         val handleCalls = mutableListOf<Call>()
-        val handleOutcome = makehandleOutcome(handleCalls)
+        val handleOutcome = makeHandleOutcome(handleCalls)
 
         processor.process(listOf(
             Outcome.PagerStepNavigation(identifier = "psn-1", direction = Outcome.PagerStepNavigation.Direction.NEXT),
@@ -363,7 +363,7 @@ public class ProcessOutcomesTest {
     fun testLegacyCombinedDispatch() = runTest {
         val processor = TestProcessor()
         val handleCalls = mutableListOf<Call>()
-        val handleOutcome = makehandleOutcome(handleCalls)
+        val handleOutcome = makeHandleOutcome(handleCalls)
 
         val outcomes = OutcomeResolver.resolve(
             stateActions = listOf(StateAction.SetState(key = "k", value = JsonValue.wrap("v"))),
@@ -383,7 +383,7 @@ public class ProcessOutcomesTest {
     private fun makeTestSetup(): Triple<ThomasOutcomeProcessor, suspend (HandlerOutcome) -> Unit, MutableList<Call>> {
         val processor = ThomasOutcomeProcessor(mockEnv, mockLayoutState)
         val calls = mutableListOf<Call>()
-        val handleOutcome = makehandleOutcome(calls)
+        val handleOutcome = makeHandleOutcome(calls)
         return Triple(processor, handleOutcome, calls)
     }
 

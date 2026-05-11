@@ -344,6 +344,13 @@ internal sealed class Outcome : Identifiable {
 }
 
 internal object OutcomeResolver {
+
+    internal const val ACTIONS_PAYLOAD = "actions_payload"
+    internal const val BEHAVIOR_PREFIX = "behavior_"
+    internal const val STATE_ACTION_CLEAR = "state_action_clear"
+    internal const val STATE_ACTION_SET_PREFIX = "state_action_set_"
+    internal const val STATE_ACTION_SET_FORM_VALUE_PREFIX = "state_action_set_form_value_"
+
     fun resolve(
         outcomes: List<Outcome>? = null,
         stateActions: List<StateAction>? = null,
@@ -351,25 +358,27 @@ internal object OutcomeResolver {
         actions: Map<String, JsonValue>? = null):
             List<Outcome> {
 
+        // Precedence: if `outcomes` is present it wins, even when empty.
+        // Legacy stateActions/behaviors/actions are only used when `outcomes` is null.
         if (outcomes != null) return outcomes
         return buildList {
             stateActions?.forEach { add(Outcome.SetStateAction(stateActionId(it), it)) }
             behaviors?.forEach { add(it.toOutcome()) }
             if (!actions.isNullOrEmpty()) {
-                add(Outcome.AirshipAction("actions_payload", actions))
+                add(Outcome.AirshipAction(ACTIONS_PAYLOAD, actions))
             }
         }
     }
 
     internal fun stateActionId(action: StateAction): String = when (action) {
-        is StateAction.ClearState -> "state_action_clear"
-        is StateAction.SetState -> "state_action_set_${action.key}"
-        is StateAction.SetFormValue -> "state_action_set_form_value_${action.key}"
+        is StateAction.ClearState -> STATE_ACTION_CLEAR
+        is StateAction.SetState -> "$STATE_ACTION_SET_PREFIX${action.key}"
+        is StateAction.SetFormValue -> "$STATE_ACTION_SET_FORM_VALUE_PREFIX${action.key}"
     }
 }
 
 internal fun ButtonClickBehaviorType.toOutcome(): Outcome {
-    val identifier = "behavior_${name.lowercase()}"
+    val identifier = "${OutcomeResolver.BEHAVIOR_PREFIX}${name.lowercase()}"
     return when (this) {
         ButtonClickBehaviorType.PAGER_NEXT -> Outcome.PagerStepNavigation(
             identifier = identifier,

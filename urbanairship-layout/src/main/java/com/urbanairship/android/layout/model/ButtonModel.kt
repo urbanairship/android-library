@@ -121,9 +121,6 @@ internal abstract class ButtonModel<T, I: Button>(
         val nonFormOutcomes = resolved.filter { it !is Outcome.Form }
         val delegation = buttonOutcomeHandler(context)
         val submitEvent = LayoutEvent.SubmitForm(buttonIdentifier = viewInfo.identifier) {
-            if (viewInfo.eventHandlers.hasTapHandler()) {
-                handleViewEvent(EventHandler.Type.TAP)
-            }
             outcomeProcessor.process(nonFormOutcomes, handlerOutcome = delegation)
         }
 

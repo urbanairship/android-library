@@ -42,9 +42,9 @@ public class OutcomeIntegrationTest {
 
         val handler = EventHandler(json)
         assertEquals(EventHandler.Type.TAP, handler.type)
-        assertEquals(2, handler.outcomes!!.size)
-        assertTrue(handler.outcomes!![0] is Outcome.Dismiss)
-        assertTrue(handler.outcomes!![1] is Outcome.PagerStepNavigation)
+        assertEquals(2, handler.outcomes.size)
+        assertTrue(handler.outcomes[0] is Outcome.Dismiss)
+        assertTrue(handler.outcomes[1] is Outcome.PagerStepNavigation)
     }
 
     @Test
@@ -58,9 +58,9 @@ public class OutcomeIntegrationTest {
 
         val handler = EventHandler(json)
         assertEquals(EventHandler.Type.FORM_INPUT, handler.type)
-        assertEquals(1, handler.outcomes!!.size)
+        assertEquals(1, handler.outcomes.size)
 
-        val setState = handler.outcomes!!.single() as Outcome.SetStateAction
+        val setState = handler.outcomes.single() as Outcome.SetStateAction
         val action = setState.action as StateAction.SetState
         assertEquals("color", action.key)
         assertEquals(JsonValue.wrap("red"), action.value)
@@ -85,8 +85,8 @@ public class OutcomeIntegrationTest {
         }""").requireMap()
 
         val handler = EventHandler(json)
-        assertEquals(1, handler.outcomes!!.size)
-        assertTrue(handler.outcomes!![0] is Outcome.Dismiss)
+        assertEquals(1, handler.outcomes.size)
+        assertTrue(handler.outcomes[0] is Outcome.Dismiss)
     }
 
     // =========================================================================

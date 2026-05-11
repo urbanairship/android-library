@@ -25,7 +25,7 @@ internal sealed class HandlerOutcome {
  *
  * Pager navigation, playback, video, and state actions are handled directly by the processor.
  * Dismiss, form, airship-action, and async-view-reload outcomes are forwarded to the
- * caller-supplied [handleroutcome] callback.
+ * caller-supplied [handlerOutcome] callback.
  *
  * Subclasses (e.g. inside [PagerModel]) can override the protected pager methods to manipulate
  * pager state synchronously instead of going through the layout-event bus.

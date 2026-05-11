@@ -104,20 +104,8 @@ internal class PagerModel(
      * bus and back). This keeps pager operations synchronous with the caller.
      */
     private val pagerOutcomeProcessor = object : ThomasOutcomeProcessor(environment, layoutState) {
-        override suspend fun process(
-            outcomes: List<Outcome>?,
-            formValue: Any?,
-            handlerOutcome: suspend (HandlerOutcome) -> Unit
-        ) {
-            if (outcomes.isNullOrEmpty()) return
-            for (outcome in outcomes) {
-                if (outcome is Outcome.PagerStepNavigation || outcome is Outcome.PagerJumpNavigation) {
-                    branchControl?.requestPathRebuild()
-                }
-                super.process(listOf(outcome), formValue, handlerOutcome)
-            }
-        }
         override suspend fun handlePagerStep(outcome: Outcome.PagerStepNavigation) {
+            branchControl?.requestPathRebuild()
             when (outcome.direction) {
                 Direction.NEXT -> when (outcome.boundaryBehavior) {
                     BoundaryBehavior.DISMISS ->
@@ -132,6 +120,7 @@ internal class PagerModel(
         }
 
         override suspend fun handlePagerJump(outcome: Outcome.PagerJumpNavigation) {
+            branchControl?.requestPathRebuild()
             when (outcome.page) {
                 Page.START -> resolve(PageRequest.FIRST)
                 Page.END -> resolve(PageRequest.LAST)
@@ -548,8 +537,8 @@ internal class PagerModel(
 
                         modelScope.launch {
                             pagerOutcomeProcessor.process(action.outcomes, handlerOutcome = pagerOutcomeHandler)
+                            reportAutomatedAction(action, pagerState.changes.value)
                         }
-                        reportAutomatedAction(action, pagerState.changes.value)
                     }
                 }.apply {
                     start()
@@ -568,8 +557,8 @@ internal class PagerModel(
                 if (action.delay == 0) {
                     modelScope.launch {
                         pagerOutcomeProcessor.process(action.outcomes, handlerOutcome = pagerOutcomeHandler)
+                        reportAutomatedAction(action, pagerState.changes.value)
                     }
-                    reportAutomatedAction(action, pagerState.changes.value)
                 } else {
                     scheduleAutomatedAction(action)
                 }
@@ -584,8 +573,8 @@ internal class PagerModel(
 
                 modelScope.launch {
                     pagerOutcomeProcessor.process(action.outcomes, handlerOutcome = pagerOutcomeHandler)
+                    reportAutomatedAction(action, pagerState.changes.value)
                 }
-                reportAutomatedAction(action, pagerState.changes.value)
             }
         }
         automatedActionsTimers.add(timer)
