@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.view
 import android.content.Context
 import android.text.Editable
 import android.text.method.ScrollingMovementMethod
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -57,6 +58,8 @@ internal class TextInputView(
     init {
         background = null
         clipToOutline = true
+        orientation = HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
 
         LayoutUtils.applyTextInputModel(input, model)
 
@@ -114,9 +117,10 @@ internal class TextInputView(
             addView(
                 makeLocalePicker(context, model),
                 LayoutParams(WRAP_CONTENT, MATCH_PARENT))
+            addView(input, LayoutParams(0, MATCH_PARENT, 1f))
+        } else {
+            addView(input, LayoutParams(MATCH_PARENT, MATCH_PARENT))
         }
-
-        addView(input, LayoutParams(MATCH_PARENT, MATCH_PARENT))
     }
 
     internal fun textChanges() = input.textChanges()
