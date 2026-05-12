@@ -358,8 +358,9 @@ internal object LayoutUtils {
     fun applyTextInputModel(editText: AppCompatEditText, textInput: TextInputModel) {
         val isMultiline = textInput.viewInfo.inputType == FormInputType.TEXT_MULTILINE
         applyTextAppearance(editText, textInput.viewInfo.textAppearance)
-        val padding = dpToPx(editText.context, 8)
+        val padding = dpToPx(editText.context, 5)
         editText.setPadding(padding, padding, padding, padding)
+        editText.includeFontPadding = false
         editText.inputType = textInput.viewInfo.inputType.typeMask
         editText.isSingleLine = !isMultiline
         editText.gravity = editText.gravity or  // Vertically center single line text inputs, or top align multiline text inputs

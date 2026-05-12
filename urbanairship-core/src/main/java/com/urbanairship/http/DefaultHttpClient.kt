@@ -3,6 +3,7 @@ package com.urbanairship.http
 import android.net.Uri
 import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.ConnectionUtils
 import java.io.IOException
@@ -14,6 +15,7 @@ import java.net.URL
 import java.net.URLConnection
 import java.util.zip.GZIPOutputStream
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
@@ -25,64 +27,79 @@ internal class DefaultHttpClient : HttpClient {
         body: RequestBody?,
         followRedirects: Boolean,
         parser: ResponseParser<T>
-    ): Response<T> = suspendCancellableCoroutine { continuation ->
-        val actualUrl: URL = try {
-            URL(url.toString())
-        } catch (e: MalformedURLException) {
-            continuation.resumeWithException(RequestException("Failed to build URL", e))
-            return@suspendCancellableCoroutine
-        }
-
-        val connection = openConnection(actualUrl) as HttpURLConnection
-        continuation.invokeOnCancellation { connection.disconnect() }
-
-        try {
-            connection.apply {
-                requestMethod = method
-                doInput = true
-                useCaches = false
-                connectTimeout = 60000
-                readTimeout = 60000
-                allowUserInteraction = false
-                instanceFollowRedirects = followRedirects
+    ): Response<T> = withContext(AirshipDispatchers.IO) {
+        suspendCancellableCoroutine { continuation ->
+            val actualUrl: URL = try {
+                URL(url.toString())
+            } catch (e: MalformedURLException) {
+                continuation.resumeWithException(RequestException("Failed to build URL", e))
+                return@suspendCancellableCoroutine
             }
 
-            headers.forEach { (key, value) ->
-                connection.setRequestProperty(key, value)
-            }
+            val connection = openConnection(actualUrl) as HttpURLConnection
+            continuation.invokeOnCancellation { connection.disconnect() }
 
-            body?.let { requestBody ->
-                connection.doOutput = true
-                connection.setRequestProperty("Content-Type", requestBody.contentType)
-
-                if (requestBody.compress) {
-                    connection.setRequestProperty("Content-Encoding", "gzip")
+            try {
+                connection.apply {
+                    requestMethod = method
+                    doInput = true
+                    useCaches = false
+                    connectTimeout = 60000
+                    readTimeout = 60000
+                    allowUserInteraction = false
+                    instanceFollowRedirects = followRedirects
                 }
 
-                connection.outputStream.use { out -> out.write(requestBody.content, gzip = requestBody.compress) }
-            }
-
-            val responseBody: String? = try {
-                connection.inputStream.readFully()
-            } catch (ex: IOException) {
-                connection.errorStream?.readFully() ?: run {
-                    UALog.e("Error stream was null for response code: ${connection.responseCode}")
-                    null
+                headers.forEach { (key, value) ->
+                    connection.setRequestProperty(key, value)
                 }
-            }
 
-            val responseHeaders = mapHeaders(connection.headerFields)
-            val parsedResult = parser.parseResponse(connection.responseCode, responseHeaders, responseBody)
+                body?.let { requestBody ->
+                    connection.doOutput = true
+                    connection.setRequestProperty("Content-Type", requestBody.contentType)
 
-            if (continuation.isActive) {
-                continuation.resume(Response(connection.responseCode, parsedResult, responseBody, responseHeaders))
+                    if (requestBody.compress) {
+                        connection.setRequestProperty("Content-Encoding", "gzip")
+                    }
+
+                    connection.outputStream.use { out ->
+                        out.write(
+                            requestBody.content,
+                            gzip = requestBody.compress
+                        )
+                    }
+                }
+
+                val responseBody: String? = try {
+                    connection.inputStream.readFully()
+                } catch (ex: IOException) {
+                    connection.errorStream?.readFully() ?: run {
+                        UALog.e("Error stream was null for response code: ${connection.responseCode}")
+                        null
+                    }
+                }
+
+                val responseHeaders = mapHeaders(connection.headerFields)
+                val parsedResult =
+                    parser.parseResponse(connection.responseCode, responseHeaders, responseBody)
+
+                if (continuation.isActive) {
+                    continuation.resume(
+                        Response(
+                            connection.responseCode,
+                            parsedResult,
+                            responseBody,
+                            responseHeaders
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                if (continuation.isActive) {
+                    continuation.resumeWithException(e)
+                }
+            } finally {
+                connection.disconnect()
             }
-        } catch (e: Exception) {
-            if (continuation.isActive) {
-                continuation.resumeWithException(e)
-            }
-        } finally {
-            connection.disconnect()
         }
     }
 
@@ -95,7 +112,6 @@ internal class DefaultHttpClient : HttpClient {
             url.openConnection()
         }
     }
-
 
     private fun mapHeaders(headers: Map<String, List<String>>): Map<String, String> {
         return headers.mapValues { (_, value) ->
