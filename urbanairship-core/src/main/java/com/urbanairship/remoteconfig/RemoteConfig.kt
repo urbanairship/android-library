@@ -23,6 +23,7 @@ public data class RemoteConfig(
     public val contactConfig: ContactConfig? = null,
     public val disabledFeatures: PrivacyManager.Feature? = null,
     public val remoteDataRefreshInterval: Long? = null,
+    public val remoteDataForegroundPollingInterval: Duration? = null,
     public val iaaConfig: IAAConfig? = null
 ) : JsonSerializable {
 
@@ -34,6 +35,7 @@ public data class RemoteConfig(
         CONTACT_CONFIG_KEY to contactConfig?.toJsonValue(),
         DISABLED_FEATURES_KEY to disabledFeatures,
         REMOTE_DATA_REFRESH_INTERVAL_KEY to remoteDataRefreshInterval,
+        REMOTE_DATA_FOREGROUND_POLLING_INTERVAL_KEY to remoteDataForegroundPollingInterval?.inWholeMilliseconds,
         IAA_CONFIG to iaaConfig
     ).toJsonValue()
 
@@ -46,6 +48,7 @@ public data class RemoteConfig(
         private const val CONTACT_CONFIG_KEY = "contact_config"
         private const val DISABLED_FEATURES_KEY = "disabled_features"
         private const val REMOTE_DATA_REFRESH_INTERVAL_KEY = "remote_data_refresh_interval"
+        private const val REMOTE_DATA_FOREGROUND_POLLING_INTERVAL_KEY = "remote_data_foreground_polling_interval"
         private const val IAA_CONFIG = "in_app_config"
 
         @Throws(JsonException::class)
@@ -63,6 +66,7 @@ public data class RemoteConfig(
                 },
                 disabledFeatures = json[DISABLED_FEATURES_KEY]?.let(PrivacyManager.Feature::fromJson),
                 remoteDataRefreshInterval = json.optionalField(REMOTE_DATA_REFRESH_INTERVAL_KEY),
+                remoteDataForegroundPollingInterval = json.optionalField<Long>(REMOTE_DATA_FOREGROUND_POLLING_INTERVAL_KEY)?.milliseconds,
                 iaaConfig = json[IAA_CONFIG]?.let(IAAConfig::fromJson)
             )
         }

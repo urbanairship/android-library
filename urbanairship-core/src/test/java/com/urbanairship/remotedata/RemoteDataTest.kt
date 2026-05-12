@@ -8,6 +8,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
+import com.urbanairship.TestTaskSleeper
 import com.urbanairship.contacts.Contact
 import com.urbanairship.contacts.ContactIdUpdate
 import com.urbanairship.job.JobInfo
@@ -79,6 +80,8 @@ public class RemoteDataTest {
 
     private val testClock: TestClock = TestClock()
     private val testActivityMonitor: TestActivityMonitor = TestActivityMonitor()
+    private val pollingGate = kotlinx.coroutines.CompletableDeferred<Unit>()
+    private val testTaskSleeper: TestTaskSleeper = TestTaskSleeper(testClock) { pollingGate.await() }
 
     private val mockContactRemoteDataProvider: RemoteDataProvider = mockk {
         every { this@mockk.source } returns RemoteDataSource.CONTACT
@@ -107,6 +110,7 @@ public class RemoteDataTest {
         activityMonitor = testActivityMonitor,
         refreshManager = mockRefreshManager,
         clock = testClock,
+        taskSleeper = testTaskSleeper,
         coroutineDispatcher = testDispatcher
     )
 
