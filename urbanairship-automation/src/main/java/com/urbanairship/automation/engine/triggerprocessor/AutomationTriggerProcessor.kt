@@ -2,6 +2,7 @@
 
 package com.urbanairship.automation.engine.triggerprocessor
 
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.AutomationTrigger
@@ -13,21 +14,24 @@ import com.urbanairship.automation.engine.TriggerStoreInterface
 import com.urbanairship.automation.engine.TriggerableState
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.util.Clock
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 
 internal class AutomationTriggerProcessor(
     private val store: TriggerStoreInterface,
     private val history: EventsHistory,
-    private val clock: Clock = Clock.DEFAULT_CLOCK
+    private val clock: Clock = Clock.DEFAULT_CLOCK,
+    private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) {
     private val triggerResultsFlow = MutableSharedFlow<TriggerResult>()
     private val isPausedFlow = MutableStateFlow(false)
 
-    private var preparedTriggers = mutableMapOf<String, List<PreparedTrigger>>()
-    private var scheduleGroups = mutableMapOf<String, String>()
+    private val preparedTriggers = mutableMapOf<String, List<PreparedTrigger>>()
+    private val scheduleGroups = mutableMapOf<String, String>()
     private var appSessionState: TriggerableState? = null
 
     fun setPaused(paused: Boolean) {
@@ -36,10 +40,11 @@ internal class AutomationTriggerProcessor(
 
     fun getTriggerResults() : Flow<TriggerResult> = triggerResultsFlow
 
-    suspend fun processEvent(event: AutomationEvent) {
-        ingestEvent(event, preparedTriggers.values.flatMap { it })
+    suspend fun processEvent(event: AutomationEvent): Unit = withContext(dispatcher) {
+        ingestEvent(event, preparedTriggers.values.flatten())
     }
 
+    // Assumes caller is on [dispatcher]. Touches appSessionState via trackStateChange.
     private suspend fun ingestEvent(event: AutomationEvent, triggers: List<PreparedTrigger>, isReplay: Boolean = false) {
         if (!isReplay) {
             trackStateChange(event)
@@ -66,7 +71,7 @@ internal class AutomationTriggerProcessor(
     /**
      * Called once to update all schedules from the DB.
      */
-    suspend fun restoreSchedules(datas: List<AutomationScheduleData>) {
+    suspend fun restoreSchedules(datas: List<AutomationScheduleData>): Unit = withContext(dispatcher) {
         updateSchedules(datas)
         val activeSchedules = datas.map { it.schedule.identifier }
         store.deleteTriggersExcluding(activeSchedules)
@@ -75,7 +80,7 @@ internal class AutomationTriggerProcessor(
     /**
      * Called whenever the schedules are updated
      */
-    suspend fun updateSchedules(datas: List<AutomationScheduleData>) {
+    suspend fun updateSchedules(datas: List<AutomationScheduleData>): Unit = withContext(dispatcher) {
         val sorted = datas.sortedWith(compareBy { it.schedule.priority })
 
         val allNewTriggers = mutableListOf<PreparedTrigger>()
@@ -129,7 +134,7 @@ internal class AutomationTriggerProcessor(
                 }
             }
 
-            preparedTriggers[schedule.identifier] = new
+            preparedTriggers[schedule.identifier] = new.toList()
 
             val newIds = new.map { it.trigger.id }.toSet()
             val oldIds = old.map { it.trigger.id }.toSet()
@@ -143,7 +148,7 @@ internal class AutomationTriggerProcessor(
                 UALog.e("Failed to delete trigger states error : ${e.message}")
             }
 
-            this.updateScheduleState(schedule.identifier, data.scheduleState)
+            updateScheduleState(schedule.identifier, data.scheduleState)
         }
 
         if (allNewTriggers.isNotEmpty()) {
@@ -153,20 +158,26 @@ internal class AutomationTriggerProcessor(
         }
     }
 
-    suspend fun cancel(scheduleIds: List<String>) {
+    suspend fun cancel(scheduleIds: List<String>): Unit = withContext(dispatcher) {
+        removeSchedules(scheduleIds)
+    }
+
+    suspend fun cancel(group: String): Unit = withContext(dispatcher) {
+        val scheduleIds = scheduleGroups.filter { it.value == group }.map { it.key }
+        removeSchedules(scheduleIds)
+    }
+
+    // Assumes caller is on [dispatcher]. Mutates preparedTriggers and scheduleGroups.
+    private suspend fun removeSchedules(scheduleIds: List<String>) {
         scheduleIds.forEach {
-            this.preparedTriggers.remove(it)
-            this.scheduleGroups.remove(it)
+            preparedTriggers.remove(it)
+            scheduleGroups.remove(it)
         }
 
         store.deleteTriggers(scheduleIds)
     }
 
-    suspend fun cancel(group: String) {
-        val scheduleIds = this.scheduleGroups.filter { it.value == group }.map { it.key }
-        cancel(scheduleIds)
-    }
-
+    // Assumes caller is on [dispatcher]. Mutates appSessionState.
     private fun trackStateChange(event: AutomationEvent) {
         when (event) {
             is AutomationEvent.StateChanged -> this.appSessionState = event.state
@@ -174,22 +185,23 @@ internal class AutomationTriggerProcessor(
         }
     }
 
-    suspend fun updateScheduleState(scheduleId: String, state: AutomationScheduleState) {
+    suspend fun updateScheduleState(scheduleId: String, state: AutomationScheduleState): Unit = withContext(dispatcher) {
         when (state) {
             AutomationScheduleState.IDLE -> {
-                this.updateActiveTriggers(scheduleId, type = TriggerExecutionType.EXECUTION)
+                updateActiveTriggers(scheduleId, type = TriggerExecutionType.EXECUTION)
             }
             AutomationScheduleState.TRIGGERED, AutomationScheduleState.PREPARED -> {
-                this.updateActiveTriggers(scheduleId, type = TriggerExecutionType.DELAY_CANCELLATION)
+                updateActiveTriggers(scheduleId, type = TriggerExecutionType.DELAY_CANCELLATION)
             }
             AutomationScheduleState.EXECUTING, AutomationScheduleState.PAUSED, AutomationScheduleState.FINISHED -> {
-                this.updateActiveTriggers(scheduleId, type = null)
+                updateActiveTriggers(scheduleId, type = null)
             }
         }
     }
 
+    // Assumes caller is on [dispatcher]. Reads preparedTriggers and appSessionState.
     private suspend fun updateActiveTriggers(scheduleId: String, type: TriggerExecutionType?) {
-        val triggers = preparedTriggers[scheduleId]?:  return
+        val triggers = preparedTriggers[scheduleId] ?: return
         if (type == null) {
             triggers.forEach { it.disable() }
             return
