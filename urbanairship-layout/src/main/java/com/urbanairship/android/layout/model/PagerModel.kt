@@ -169,9 +169,13 @@ internal class PagerModel(
             onPagesDataUpdated(availablePages, state.completed)
         }
 
+        // Listen for page changes (or the initial page display)
+        // when we are not scrolling and run any actions for the current page.
         modelScope.launch {
             pagerState.changes
                 .filter {
+                    // If current and last are both 0, we're initializing the pager.
+                    // Otherwise, we only want to act on changes to the pageIndex.
                     (it.pageIndex == 0 && it.lastPageIndex == 0 || it.pageIndex != it.lastPageIndex)
                             && it.progress == 0
                             && it.isScrolling.not()
@@ -187,8 +191,13 @@ internal class PagerModel(
                         "lastDisplayedPageId=${lastDisplayedPageId.value} pageIds=${it.pageIds}"
                     }
 
+                    // If the page list was rebuilt by branching, but we're still on the same
+                    // logical page, skip page-transition side effects. This prevents clearing
+                    // timers, re-running display actions, and corrupting history when only
+                    // the page indices shifted.
                     if (lastDisplayedPageId.value != currentPage.identifier) {
                         UALog.v { "ThomasPager pageChangeListener: new page ${currentPage.identifier}, running side effects" }
+                        // Clear any automated actions scheduled for the previous page.
                         clearAutomatedActions(it.lastPageIndex)
                         if (it.lastPageIndex > it.pageIndex) {
                             it.previousPageId?.let { pageId -> branchControl?.removeFromHistory(pageId) }
@@ -225,6 +234,7 @@ internal class PagerModel(
                 }
         }
 
+        // Restart timers when media on the current page finishes loading.
         modelScope.launch {
             pagerState.changes
                 .map { it.isMediaPaused }
@@ -359,6 +369,9 @@ internal class PagerModel(
             copy
         }
 
+        // Add the target page to history after the state update so that
+        // the updateState triggered by the pagerState change uses the old
+        // history and won't reorder pages mid-scroll.
         ensurePageId?.let { branchControl?.ensureInHistory(it) }
 
         return true
@@ -392,6 +405,8 @@ internal class PagerModel(
                 }
         }
 
+        // Collect pager scrolls, update pager state, and report
+        // the page swipe if it was triggered by the user.
         viewScope.launch {
             view.pagerScrolls().collect { (position, isInternalScroll) ->
                 val current = pagerState.changes.value.pageIndex
@@ -409,12 +424,14 @@ internal class PagerModel(
             }
         }
 
+        // Mirror the RecyclerView's actual scroll state into pagerState.
         viewScope.launch {
             view.isScrolling.collect { isScrolling ->
                 pagerState.update { it.copyWithScrolling(isScrolling) }
             }
         }
 
+        // If we have gestures defined, collect events from the view and handle them.
         if (viewInfo.gestures != null) {
             viewScope.launch {
                 view.pagerGestures().collect {
@@ -425,6 +442,7 @@ internal class PagerModel(
             UALog.v { "No gestures defined." }
         }
 
+        // Set up accessibility actions and manage touch exploration state
         val accessibilityManager =
             view.context.getSystemService(Context.ACCESSIBILITY_SERVICE) as? AccessibilityManager
         accessibilityManager?.let { am ->
@@ -441,9 +459,9 @@ internal class PagerModel(
             pagerState.changes
                 .map { state ->  state to _allPages.firstOrNull { it.identifier == state.currentPageId } }
                 .distinctUntilChanged()
-                .collect { (state, currentItem) ->
+                .collect { (_, currentItem) ->
                     view.setAccessibilityActions(currentItem?.accessibilityActions) { action ->
-                        handleAccessibilityAction(action, state)
+                        handleAccessibilityAction(action)
                     }
                 }
         }
@@ -461,6 +479,7 @@ internal class PagerModel(
         }
     }
 
+    /** Returns a stable viewId for the pager item view at the given adapter `position`.  */
     fun getPageViewId(position: Int): Int = pageViewIds.getOrPut(position) { View.generateViewId() }
 
     private fun makePageRequest(toPosition: Int): PageRequest? {
@@ -521,17 +540,22 @@ internal class PagerModel(
         report(event)
     }
 
-    private fun handleAccessibilityAction(action: AccessibilityAction, pagerState: State.Pager) {
+    private fun handleAccessibilityAction(action: AccessibilityAction) {
         modelScope.launch {
             pagerOutcomeProcessor.process(action.outcomes, handlerOutcome = pagerOutcomeHandler)
         }
     }
 
+    // Run any automated for the current page.
     private fun handleAutomatedActions(automatedActions: List<AutomatedAction>?) {
         automatedActions?.let { actions ->
+            // The delay of the earliest navigation action determines the duration of
+            // the page display, and can be used to determine the progress value for the
+            // currently displayed page.
             actions.earliestNavigationAction?.let { action ->
                 navigationActionTimer = object : Timer(action.delay.toLong() * 1000L) {
                     override fun onFinish() {
+                        // Clean up the progress timer and this navigation action timer.
                         scheduledJob?.cancel()
                         automatedActionsTimers.remove(this)
 
@@ -553,6 +577,7 @@ internal class PagerModel(
                 }
             }
 
+            // Run the other automated actions
             actions.filter { it != actions.earliestNavigationAction }.forEach { action ->
                 if (action.delay == 0) {
                     modelScope.launch {
@@ -560,6 +585,7 @@ internal class PagerModel(
                         reportAutomatedAction(action, pagerState.changes.value)
                     }
                 } else {
+                    // otherwise schedule the action
                     scheduleAutomatedAction(action)
                 }
             }
