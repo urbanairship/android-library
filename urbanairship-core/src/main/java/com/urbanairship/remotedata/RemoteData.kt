@@ -26,16 +26,20 @@ import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.util.Clock
+import com.urbanairship.util.TaskSleeper
 import java.security.SecureRandom
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -72,6 +76,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     private val refreshManager: RemoteDataRefreshManager,
     private val activityMonitor: ActivityMonitor = GlobalActivityMonitor.shared(context),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
+    private val taskSleeper: TaskSleeper = TaskSleeper.default,
     coroutineDispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) : JobAwareAirshipComponent(context, preferenceDataStore) {
 
@@ -81,6 +86,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     private val changeTokenLock: Lock = ReentrantLock()
 
     private var startUpRefreshJob: Job? = null
+    private var foregroundPollingJob: Job? = null
 
     private var airshipReady: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
@@ -99,6 +105,10 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     internal fun getRefreshInterval(): Long {
         return config.remoteConfig.remoteDataRefreshInterval ?: DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS
+    }
+
+    internal fun getForegroundPollingInterval(): Duration {
+        return config.remoteConfig.remoteDataForegroundPollingInterval ?: DEFAULT_FOREGROUND_POLLING_INTERVAL
     }
 
     internal constructor(
@@ -146,6 +156,11 @@ public class RemoteData @VisibleForTesting internal constructor(
                 dispatchRefreshJobAsync()
                 lastForegroundDispatchTime = now
             }
+            startForegroundPollingIfNeeded()
+        }
+
+        override fun onBackground(milliseconds: Long) {
+            stopForegroundPolling()
         }
     }
 
@@ -223,6 +238,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     public override fun onAirshipReady() {
         super.onAirshipReady()
         airshipReady.update { true }
+        startForegroundPollingIfNeeded()
     }
 
     public override fun tearDown() {
@@ -230,6 +246,24 @@ public class RemoteData @VisibleForTesting internal constructor(
         activityMonitor.removeApplicationListener(applicationListener)
         privacyManager.removeListener(privacyListener)
         config.removeRemoteConfigListener(configListener)
+        stopForegroundPolling()
+    }
+
+    private fun startForegroundPollingIfNeeded() {
+        if (foregroundPollingJob?.isActive == true) return
+        if (!activityMonitor.isAppForegrounded) return
+        foregroundPollingJob = scope.launch {
+            while (isActive) {
+                taskSleeper.sleep(getForegroundPollingInterval())
+                if (!isActive) return@launch
+                dispatchRefreshJob()
+            }
+        }
+    }
+
+    private fun stopForegroundPolling() {
+        foregroundPollingJob?.cancel()
+        foregroundPollingJob = null
     }
 
     override val jobActions: List<String>
@@ -422,6 +456,11 @@ public class RemoteData @VisibleForTesting internal constructor(
          * Default foreground refresh interval in milliseconds.
          */
         public const val DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS: Long = 10000 // 10 seconds
+
+        /**
+         * Default foreground polling interval.
+         */
+        public val DEFAULT_FOREGROUND_POLLING_INTERVAL: Duration = 10.minutes
 
         /**
          * Maximum random value.
