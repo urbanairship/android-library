@@ -287,6 +287,7 @@ internal sealed class State(val type: Type): JsonSerializable {
                 PageRequest.NEXT -> pageIndex + 1
                 PageRequest.BACK -> max(pageIndex - 1, 0)
                 PageRequest.FIRST -> 0
+                PageRequest.LAST -> pageIds.lastIndex.coerceAtLeast(0)
             }
 
             return if (nextIndex >= 0 && nextIndex < pageIds.size) {

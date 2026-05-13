@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.model
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasState
+import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PageBranching.PageSelector
 import com.urbanairship.android.layout.property.PagerControllerBranching
@@ -54,7 +55,7 @@ public class PagerBranchControlTest {
         lastUpdatedComplete = complete
     }
 
-    private val actionsRunner: (List<StateAction>) -> Unit = {}
+    private val outcomeRunner: suspend (List<Outcome>) -> Unit = {}
 
     @Before
     public fun setup() {
@@ -83,7 +84,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -122,7 +123,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -160,7 +161,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -190,7 +191,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -222,7 +223,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -260,7 +261,7 @@ public class PagerBranchControlTest {
         val completions = listOf(
             PagerControllerBranching.Completion(
                 predicate = completionPredicate,
-                stateActions = null
+                outcomes = emptyList()
             )
         )
 
@@ -269,7 +270,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = completions),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -291,7 +292,7 @@ public class PagerBranchControlTest {
         val completions = listOf(
             PagerControllerBranching.Completion(
                 predicate = null,
-                stateActions = null
+                outcomes = emptyList()
             )
         )
 
@@ -300,7 +301,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = completions),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -317,14 +318,15 @@ public class PagerBranchControlTest {
             key = "action_key",
             value = JsonValue.wrap("action_value")
         )
+        val stateOutcome = Outcome.SetStateAction(identifier = "sa-1", action = stateAction)
 
-        var ranActions: List<StateAction> = emptyList()
-        val captureActionsRunner: (List<StateAction>) -> Unit = { ranActions = it }
+        var ranOutcomes: List<Outcome> = emptyList()
+        val captureOutcomeRunner: suspend (List<Outcome>) -> Unit = { ranOutcomes = it }
 
         val completions = listOf(
             PagerControllerBranching.Completion(
                 predicate = null,
-                stateActions = listOf(stateAction)
+                outcomes = listOf(stateOutcome)
             )
         )
 
@@ -333,13 +335,13 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = completions),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = captureActionsRunner,
+            outcomeRunner = captureOutcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
 
-        assertEquals(1, ranActions.size)
-        assertEquals(stateAction, ranActions.first())
+        assertEquals(1, ranOutcomes.size)
+        assertEquals(stateOutcome, ranOutcomes.first())
     }
 
     @Test
@@ -347,13 +349,16 @@ public class PagerBranchControlTest {
         val a1 = makePage("a1")
 
         var runCount = 0
-        val countingActionsRunner: (List<StateAction>) -> Unit = { runCount++ }
+        val countingOutcomeRunner: suspend (List<Outcome>) -> Unit = { runCount++ }
 
         val completions = listOf(
             PagerControllerBranching.Completion(
                 predicate = null,
-                stateActions = listOf(
-                    StateAction.SetState(key = "k", value = JsonValue.wrap("v"))
+                outcomes = listOf(
+                    Outcome.SetStateAction(
+                        identifier = "sa-1",
+                        action = StateAction.SetState(key = "k", value = JsonValue.wrap("v"))
+                    )
                 )
             )
         )
@@ -363,7 +368,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = completions),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = countingActionsRunner,
+            outcomeRunner = countingOutcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -396,7 +401,7 @@ public class PagerBranchControlTest {
         val completions = listOf(
             PagerControllerBranching.Completion(
                 predicate = completionPredicate,
-                stateActions = null
+                outcomes = emptyList()
             )
         )
 
@@ -405,7 +410,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = completions),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -434,7 +439,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -464,7 +469,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -496,7 +501,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -531,7 +536,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -550,7 +555,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -566,7 +571,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -585,7 +590,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -611,12 +616,12 @@ public class PagerBranchControlTest {
             availablePages = listOf(a1),
             controllerBranching = PagerControllerBranching(
                 completions = listOf(
-                    PagerControllerBranching.Completion(predicate = predicate, stateActions = null)
+                    PagerControllerBranching.Completion(predicate = predicate, outcomes = emptyList())
                 )
             ),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -647,12 +652,12 @@ public class PagerBranchControlTest {
             availablePages = listOf(a1),
             controllerBranching = PagerControllerBranching(
                 completions = listOf(
-                    PagerControllerBranching.Completion(predicate = predicate, stateActions = null)
+                    PagerControllerBranching.Completion(predicate = predicate, outcomes = emptyList())
                 )
             ),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -683,7 +688,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -719,20 +724,26 @@ public class PagerBranchControlTest {
             )
             .build()
 
-        var ranActions: List<StateAction> = emptyList()
-        val captureRunner: (List<StateAction>) -> Unit = { ranActions = it }
+        var ranOutcomes: List<Outcome> = emptyList()
+        val captureRunner: suspend (List<Outcome>) -> Unit = { ranOutcomes = it }
 
-        val firstAction = StateAction.SetState(key = "first", value = JsonValue.wrap("1"))
-        val secondAction = StateAction.SetState(key = "second", value = JsonValue.wrap("2"))
+        val firstOutcome = Outcome.SetStateAction(
+            identifier = "sa-first",
+            action = StateAction.SetState(key = "first", value = JsonValue.wrap("1"))
+        )
+        val secondOutcome = Outcome.SetStateAction(
+            identifier = "sa-second",
+            action = StateAction.SetState(key = "second", value = JsonValue.wrap("2"))
+        )
 
         val completions = listOf(
             PagerControllerBranching.Completion(
                 predicate = firstPredicate,
-                stateActions = listOf(firstAction)
+                outcomes = listOf(firstOutcome)
             ),
             PagerControllerBranching.Completion(
                 predicate = null,
-                stateActions = listOf(secondAction)
+                outcomes = listOf(secondOutcome)
             )
         )
 
@@ -741,15 +752,15 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = completions),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = captureRunner,
+            outcomeRunner = captureRunner,
             scope = testScope
         )
         advanceUntilIdle()
 
         // The second completion (null predicate = implicit match) fires on init.
-        // Both completions are evaluated with filter, so both match. Actions from
+        // Both completions are evaluated with filter, so both match. Outcomes from
         // both should be run.
-        assert(ranActions.isNotEmpty()) { "Expected completion actions to run" }
+        assert(ranOutcomes.isNotEmpty()) { "Expected completion outcomes to run" }
     }
 
     @Test
@@ -767,7 +778,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -818,7 +829,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -922,7 +933,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -951,7 +962,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -1004,7 +1015,7 @@ public class PagerBranchControlTest {
             controllerBranching = PagerControllerBranching(completions = emptyList()),
             thomasState = thomasState,
             onBranchUpdated = onBranchUpdated,
-            actionsRunner = actionsRunner,
+            outcomeRunner = outcomeRunner,
             scope = testScope
         )
         advanceUntilIdle()
@@ -1078,10 +1089,9 @@ public class PagerBranchControlTest {
         return PagerModel.Item(
             view = mockk(relaxed = true),
             identifier = id,
-            displayActions = null,
             automatedActions = null,
             accessibilityActions = null,
-            stateActions = null,
+            displayOutcomes = emptyList(),
             branching = branching
         )
     }

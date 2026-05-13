@@ -4,6 +4,8 @@ package com.urbanairship.android.layout.model
 
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ThomasState
+import com.urbanairship.android.layout.property.Outcome
+import com.urbanairship.android.layout.property.OutcomeResolver
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.property.StateAction
@@ -22,7 +24,7 @@ internal class PagerBranchControl(
     private val controllerBranching: PagerControllerBranching,
     private val thomasState: StateFlow<ThomasState>,
     private val onBranchUpdated: (List<PagerModel.Item>, Boolean) -> Unit,
-    private val actionsRunner: (List<StateAction>) -> Unit,
+    private val outcomeRunner: (suspend (List<Outcome>) -> Unit),
     private val scope: CoroutineScope = CoroutineScope(Dispatchers.Main.immediate + SupervisorJob())
 ) {
 
@@ -71,13 +73,16 @@ internal class PagerBranchControl(
         UALog.v { "ThomasPager BranchControl updateState: prefix=${prefix.map { it.identifier }} suffix=${suffix.map { it.identifier }} result=${result.map { it.identifier }}" }
         onBranchUpdated(result, _isComplete.value)
 
-        // Run completion state actions if we just completed
+        // Run completion outcomes/state actions if we just completed
         if (runCompletedStateActions) {
-            controllerBranching.completions
+            val matchingCompletions = controllerBranching.completions
                 .filter { it.predicate?.apply(state) != false }
-                .mapNotNull { it.stateActions }
-                .flatten()
-                .run(actionsRunner)
+
+            scope.launch {
+                matchingCompletions.forEach { completion ->
+                    outcomeRunner(completion.outcomes)
+                }
+            }
         }
     }
 
@@ -131,6 +136,7 @@ internal class PagerBranchControl(
             PageRequest.BACK -> {
                 history.removeLastOrNull()
             }
+            PageRequest.LAST -> {}
         }
         UALog.v { "ThomasPager BranchControl onPageRequest($request): history=${history.map { it.identifier }}" }
     }
@@ -155,6 +161,10 @@ internal class PagerBranchControl(
         }
 
         return result.toList()
+    }
+
+    internal fun requestPathRebuild() {
+        updateState(thomasState.value)
     }
 }
 
