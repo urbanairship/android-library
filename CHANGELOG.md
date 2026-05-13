@@ -4,6 +4,16 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.7.2 - May 13, 2026
+
+Patch release that fixes a couple of Scene issues and improves remote data refresh behavior for kiosk-style apps. Apps that make use of SMS inputs in Scenes should update to this version or newer.
+
+### Changes
+
+- Fixed SMS text input in Scenes
+- Updated Scene label and label button to improve rendering consistency
+- Improved remote data refresh behavior for kiosk-style apps that stay foregrounded for long periods of time
+
 ## Version 20.7.1 - May 7, 2026
 
 Patch release that includes minor API changes to allow for email and SMS registration in Airship cross-platform frameworks.
