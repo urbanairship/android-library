@@ -36,19 +36,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.ViewModelStoreOwner
 import com.urbanairship.actions.DefaultActionRunner
 import com.urbanairship.actions.run
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
-import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.ui.ThomasLayoutViewFactory
 import com.urbanairship.app.GlobalActivityMonitor
-import com.urbanairship.json.JsonSerializable
-import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State
@@ -56,7 +51,6 @@ import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.S
 import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
 import com.urbanairship.messagecenter.compose.ui.widget.MessageCenterWebView
-import kotlin.time.Duration
 import com.urbanairship.R as CoreR
 import com.urbanairship.actions.Action as AutomationAction
 

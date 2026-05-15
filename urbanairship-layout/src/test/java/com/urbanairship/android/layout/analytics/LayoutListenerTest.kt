@@ -3,12 +3,12 @@ package com.urbanairship.android.layout.analytics
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.android.layout.analytics.events.InAppDisplayEvent
 import com.urbanairship.android.layout.analytics.events.LayoutEvent
-import com.urbanairship.android.layout.analytics.events.InAppFormDisplayEvent
-import com.urbanairship.android.layout.analytics.events.InAppFormResultEvent
-import com.urbanairship.android.layout.analytics.events.InAppGestureEvent
-import com.urbanairship.android.layout.analytics.events.InAppPageActionEvent
-import com.urbanairship.android.layout.analytics.events.InAppPageSwipeEvent
-import com.urbanairship.android.layout.analytics.events.InAppPagerSummaryEvent
+import com.urbanairship.android.layout.analytics.events.LayoutFormDisplayEvent
+import com.urbanairship.android.layout.analytics.events.LayoutFormResultEvent
+import com.urbanairship.android.layout.analytics.events.LayoutGestureEvent
+import com.urbanairship.android.layout.analytics.events.LayoutPageActionEvent
+import com.urbanairship.android.layout.analytics.events.LayoutPageSwipeEvent
+import com.urbanairship.android.layout.analytics.events.LayoutPagerSummaryEvent
 import com.urbanairship.android.layout.analytics.events.LayoutButtonTapEvent
 import com.urbanairship.android.layout.analytics.events.LayoutPageViewEvent
 import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
@@ -57,7 +57,7 @@ public class LayoutListenerTest {
         listener.onReportingEvent(form)
 
         verifyEvents(listOf(
-            Pair(InAppFormResultEvent(form.data), defaultLayoutData))
+            Pair(LayoutFormResultEvent(form.data), defaultLayoutData))
         )
 
         TestCase.assertNull(displayResult)
@@ -77,7 +77,7 @@ public class LayoutListenerTest {
         listener.onReportingEvent(event)
 
         verifyEvents(listOf(
-            Pair(InAppFormDisplayEvent(event.data), defaultLayoutData)
+            Pair(LayoutFormDisplayEvent(event.data), defaultLayoutData)
         ))
 
         TestCase.assertNull(displayResult)
@@ -201,7 +201,7 @@ public class LayoutListenerTest {
         )
 
         verifyEvents(listOf(
-            Pair(InAppGestureEvent(data), defaultLayoutData))
+            Pair(LayoutGestureEvent(data), defaultLayoutData))
         )
     }
 
@@ -219,7 +219,7 @@ public class LayoutListenerTest {
         )
 
         verifyEvents(listOf(
-            Pair(InAppPageActionEvent(data), defaultLayoutData))
+            Pair(LayoutPageActionEvent(data), defaultLayoutData))
         )
     }
 
@@ -242,7 +242,7 @@ public class LayoutListenerTest {
         )
 
         verifyEvents(listOf(
-            Pair(InAppPageSwipeEvent(data), defaultLayoutData))
+            Pair(LayoutPageSwipeEvent(data), defaultLayoutData))
         )
     }
 
@@ -283,7 +283,7 @@ public class LayoutListenerTest {
         )
 
         verifyEvents(listOf(
-            Pair(InAppPagerSummaryEvent(data), defaultLayoutData))
+            Pair(LayoutPagerSummaryEvent(data), defaultLayoutData))
         )
     }
 

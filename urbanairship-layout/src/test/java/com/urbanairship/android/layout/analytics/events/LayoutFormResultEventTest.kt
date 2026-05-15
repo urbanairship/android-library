@@ -42,7 +42,7 @@ public class LayoutFormResultEventTest {
             fieldType = ThomasFormField.FieldType.just(children)
         )
 
-        val event = InAppFormResultEvent(
+        val event = LayoutFormResultEvent(
             data = ReportingEvent.FormResultData(
                 forms = formData
             )

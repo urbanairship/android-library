@@ -11,7 +11,7 @@ import org.junit.runner.RunWith
 public class LayoutPagerCompletedEventTest {
     @Test
     public fun testEvent() {
-        val event = InAppPagerCompletedEvent(
+        val event = LayoutPagerCompletedEvent(
             data = ReportingEvent.PagerCompleteData(
                 identifier = "pager identifier",
                 pageIndex = 3,

@@ -143,16 +143,16 @@ public class AutomationEventFeedTest {
             EventType.FEATURE_FLAG_INTERACTION to listOf(EventAutomationTriggerType.FEATURE_FLAG_INTERACTION),
             EventType.IN_APP_DISPLAY to listOf(EventAutomationTriggerType.IN_APP_DISPLAY),
             EventType.IN_APP_RESOLUTION to listOf(EventAutomationTriggerType.IN_APP_RESOLUTION),
-            EventType.IN_APP_BUTTON_TAP to listOf(EventAutomationTriggerType.IN_APP_BUTTON_TAP),
-            EventType.IN_APP_PERMISSION_RESULT to listOf(EventAutomationTriggerType.IN_APP_PERMISSION_RESULT),
-            EventType.IN_APP_FORM_DISPLAY to listOf(EventAutomationTriggerType.IN_APP_FORM_DISPLAY),
-            EventType.IN_APP_FORM_RESULT to listOf(EventAutomationTriggerType.IN_APP_FORM_RESULT),
-            EventType.IN_APP_GESTURE to listOf(EventAutomationTriggerType.IN_APP_GESTURE),
-            EventType.IN_APP_PAGER_COMPLETED to listOf(EventAutomationTriggerType.IN_APP_PAGER_COMPLETED),
-            EventType.IN_APP_PAGER_SUMMARY to listOf(EventAutomationTriggerType.IN_APP_PAGER_SUMMARY),
-            EventType.IN_APP_PAGE_SWIPE to listOf(EventAutomationTriggerType.IN_APP_PAGE_SWIPE),
-            EventType.IN_APP_PAGE_VIEW to listOf(EventAutomationTriggerType.IN_APP_PAGE_VIEW),
-            EventType.IN_APP_PAGE_ACTION to listOf(EventAutomationTriggerType.IN_APP_PAGE_ACTION)
+            EventType.LAYOUT_BUTTON_TAP to listOf(EventAutomationTriggerType.IN_APP_BUTTON_TAP),
+            EventType.LAYOUT_PERMISSION_RESULT to listOf(EventAutomationTriggerType.IN_APP_PERMISSION_RESULT),
+            EventType.LAYOUT_FORM_DISPLAY to listOf(EventAutomationTriggerType.IN_APP_FORM_DISPLAY),
+            EventType.LAYOUT_FORM_RESULT to listOf(EventAutomationTriggerType.IN_APP_FORM_RESULT),
+            EventType.LAYOUT_GESTURE to listOf(EventAutomationTriggerType.IN_APP_GESTURE),
+            EventType.LAYOUT_PAGER_COMPLETED to listOf(EventAutomationTriggerType.IN_APP_PAGER_COMPLETED),
+            EventType.LAYOUT_PAGER_SUMMARY to listOf(EventAutomationTriggerType.IN_APP_PAGER_SUMMARY),
+            EventType.LAYOUT_PAGE_SWIPE to listOf(EventAutomationTriggerType.IN_APP_PAGE_SWIPE),
+            EventType.LAYOUT_PAGE_VIEW to listOf(EventAutomationTriggerType.IN_APP_PAGE_VIEW),
+            EventType.LAYOUT_PAGE_ACTION to listOf(EventAutomationTriggerType.IN_APP_PAGE_ACTION)
         )
 
         subject.feed.test {

@@ -11,7 +11,7 @@ import org.junit.runner.RunWith
 public class LayoutPageSwipeEventAction {
     @Test
     public fun testEvent() {
-        val event = InAppPageSwipeEvent(
+        val event = LayoutPageSwipeEvent(
             data = ReportingEvent.PageSwipeData(
                 identifier = "pager identifier",
                 toPageIndex = 4,

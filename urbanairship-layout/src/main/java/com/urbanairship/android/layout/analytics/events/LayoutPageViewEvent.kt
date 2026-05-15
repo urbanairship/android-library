@@ -11,7 +11,7 @@ internal class LayoutPageViewEvent @VisibleForTesting constructor(
     override val data: JsonSerializable
 ) : LayoutEvent {
 
-    override val eventType: EventType = EventType.IN_APP_PAGE_VIEW
+    override val eventType: EventType = EventType.LAYOUT_PAGE_VIEW
 
     constructor(eventData: ReportingEvent.PageViewData): this(data = eventData)
 }

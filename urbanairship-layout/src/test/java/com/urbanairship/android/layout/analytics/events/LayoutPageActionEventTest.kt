@@ -11,7 +11,7 @@ import org.junit.runner.RunWith
 public class LayoutPageActionEventTest {
     @Test
     public fun testEvent() {
-        val event = InAppPageActionEvent(
+        val event = LayoutPageActionEvent(
             data = ReportingEvent.PageActionData(
                 identifier = "action id", metadata = JsonValue.wrap("reporting metadata")
             )

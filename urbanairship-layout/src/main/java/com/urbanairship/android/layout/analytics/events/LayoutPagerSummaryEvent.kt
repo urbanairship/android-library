@@ -7,11 +7,11 @@ import com.urbanairship.analytics.EventType
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.json.JsonSerializable
 
-internal class InAppPagerSummaryEvent @VisibleForTesting constructor(
+internal class LayoutPagerSummaryEvent @VisibleForTesting constructor(
     override val data: JsonSerializable
 ) : LayoutEvent {
 
-    override val eventType: EventType = EventType.IN_APP_PAGER_SUMMARY
+    override val eventType: EventType = EventType.LAYOUT_PAGER_SUMMARY
 
     constructor(eventData: ReportingEvent.PageSummaryData): this(data = eventData)
 }

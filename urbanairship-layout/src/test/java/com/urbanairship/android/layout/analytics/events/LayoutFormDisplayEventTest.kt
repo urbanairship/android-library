@@ -11,7 +11,7 @@ import org.junit.runner.RunWith
 public class LayoutFormDisplayEventTest {
     @Test
     public fun testEvent() {
-        val event = InAppFormDisplayEvent(
+        val event = LayoutFormDisplayEvent(
             data = ReportingEvent.FormDisplayData(
                 identifier = "form id", formType = "nps", responseType = "user feedback"
             )

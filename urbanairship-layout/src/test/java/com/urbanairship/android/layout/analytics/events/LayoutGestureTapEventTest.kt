@@ -11,7 +11,7 @@ import org.junit.runner.RunWith
 public class LayoutGestureTapEventTest {
     @Test
     public fun testEvent() {
-        val event = InAppGestureEvent(
+        val event = LayoutGestureEvent(
             data = ReportingEvent.GestureData(
                 identifier = "gesture id", reportingMetadata = JsonValue.wrap("reporting metadata")
             ),

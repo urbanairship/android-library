@@ -13,7 +13,7 @@ import org.junit.runner.RunWith
 public class LayoutPagerSummaryEventTest {
     @Test
     public fun testEvent() {
-        val event = InAppPagerSummaryEvent(
+        val event = LayoutPagerSummaryEvent(
             data = ReportingEvent.PageSummaryData(
                 identifier = "pager identifier",
                 pageCount = 12,
