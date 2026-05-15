@@ -3,7 +3,7 @@ package com.urbanairship.automation.remotedata
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestClock
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.AutomationTrigger
@@ -43,7 +43,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class AutomationRemoteDataSubscriberTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
+    private val dataStore = PreferenceStore.inMemoryStore(context)
     private val clock = TestClock().apply { currentTimeMillis = 1000 }
 
     private val testDispatcher = StandardTestDispatcher()

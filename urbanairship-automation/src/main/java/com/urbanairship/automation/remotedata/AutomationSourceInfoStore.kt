@@ -2,7 +2,7 @@
 
 package com.urbanairship.automation.remotedata
 
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -44,12 +44,12 @@ internal data class AutomationSourceInfo(
 
 /** Stores information about a remote-data source used for scheduling. */
 internal class AutomationSourceInfoStore(
-    private val dataStore: PreferenceDataStore
+    private val dataStore: PreferenceStore
 ) {
 
     fun getSourceInfo(source: RemoteDataSource, contactID: String?): AutomationSourceInfo? {
         val key = makeInfoKey(source, contactID)
-        val json = dataStore.getJsonValue(key)
+        val json = dataStore.sync.getJsonValue(key)
         return if (json.isNull) {
             recoverSource(source, contactID)
         } else {
@@ -59,7 +59,7 @@ internal class AutomationSourceInfoStore(
 
     fun setSourceInfo(info: AutomationSourceInfo, source: RemoteDataSource, contactID: String?) {
         val key = makeInfoKey(source, contactID)
-        dataStore.put(key, info)
+        dataStore.sync.put(key, info)
     }
 
     private fun makeInfoKey(source: RemoteDataSource, contactID: String?): String {
@@ -96,8 +96,8 @@ internal class AutomationSourceInfoStore(
         legacyTimestampKey: String,
         legacySdkVersionKey: String
     ): AutomationSourceInfo? {
-        val lastSDKVersion = dataStore.getString(legacySdkVersionKey, null)
-        val lastUpdate: Long = dataStore.getLong(legacyTimestampKey, -1L)
+        val lastSDKVersion = dataStore.sync.getString(legacySdkVersionKey, null)
+        val lastUpdate: Long = dataStore.sync.getLong(legacyTimestampKey, -1L)
 
         if (lastSDKVersion == null || lastUpdate == -1L) {
             return null
@@ -109,9 +109,9 @@ internal class AutomationSourceInfoStore(
             airshipSDKVersion = lastSDKVersion
         )
 
-        dataStore.put(key, store)
-        dataStore.remove(legacyTimestampKey)
-        dataStore.remove(legacySdkVersionKey)
+        dataStore.sync.put(key, store)
+        dataStore.sync.remove(legacyTimestampKey)
+        dataStore.sync.remove(legacySdkVersionKey)
         return store
     }
 

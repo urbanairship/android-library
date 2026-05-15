@@ -4,7 +4,7 @@ package com.urbanairship.modules.aaid
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipVersionInfo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -20,7 +20,7 @@ public interface AdIdModuleFactory : AirshipVersionInfo {
 
     public fun build(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         analytics: Analytics

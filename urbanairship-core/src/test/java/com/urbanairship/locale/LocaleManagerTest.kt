@@ -3,7 +3,7 @@ package com.urbanairship.locale
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.util.LocaleCompat
 import java.util.Locale
 import app.cash.turbine.test
@@ -22,7 +22,7 @@ import org.junit.runner.RunWith
 public class LocaleManagerTest {
 
     private var context: Context = ApplicationProvider.getApplicationContext()
-    private var localeManager = LocaleManager(context, PreferenceDataStore.inMemoryStore(context))
+    private var localeManager = LocaleManager(context, PreferenceStore.inMemoryStore(context))
 
     @Test
     public fun testGetLocale() {

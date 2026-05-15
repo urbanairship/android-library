@@ -4,7 +4,7 @@ package com.urbanairship.contacts
 
 import androidx.annotation.OpenForTesting
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.channel.AirshipChannel
@@ -49,7 +49,7 @@ import kotlinx.coroutines.withContext
 
 @OpenForTesting
 internal class ContactManager(
-    private val preferenceDataStore: PreferenceDataStore,
+    private val preferenceStore: PreferenceStore,
     private val channel: AirshipChannel,
     private val jobDispatcher: JobDispatcher,
     private val contactApiClient: ContactApiClient,
@@ -89,7 +89,7 @@ internal class ContactManager(
     private var operations: List<OperationEntry>
         get() {
             return operationLock.withLock {
-                val result = _operations ?: preferenceDataStore.optJsonValue(OPERATIONS_KEY)
+                val result = _operations ?: preferenceStore.sync.optJsonValue(OPERATIONS_KEY)
                     ?.tryParse { json ->
                         json.requireList().map { OperationEntry(it) }
                     } ?: emptyList()
@@ -101,7 +101,7 @@ internal class ContactManager(
         set(newValue) {
             operationLock.withLock {
                 _operations = newValue
-                preferenceDataStore.put(OPERATIONS_KEY, newValue.toJsonList())
+                preferenceStore.sync.put(OPERATIONS_KEY, newValue.toJsonList())
             }
         }
 
@@ -111,17 +111,17 @@ internal class ContactManager(
         }
 
     private var anonData: AnonContactData?
-        get() = preferenceDataStore.optJsonValue(ANON_CONTACT_DATA_KEY)?.tryParse { json ->
+        get() = preferenceStore.sync.optJsonValue(ANON_CONTACT_DATA_KEY)?.tryParse { json ->
             AnonContactData.fromJson(json)
         }
-        set(newValue) = preferenceDataStore.put(ANON_CONTACT_DATA_KEY, newValue)
+        set(newValue) = preferenceStore.sync.put(ANON_CONTACT_DATA_KEY, newValue)
 
     private var _identity: ContactIdentity? = null
     private var lastContactIdentity: ContactIdentity?
         get() {
             return identityLock.withLock {
                 val result =
-                    _identity ?: preferenceDataStore.optJsonValue(LAST_CONTACT_IDENTITY_KEY)
+                    _identity ?: preferenceStore.sync.optJsonValue(LAST_CONTACT_IDENTITY_KEY)
                         ?.tryParse { ContactIdentity(it) }
                 _identity = result
                 result
@@ -130,7 +130,7 @@ internal class ContactManager(
         set(newValue) {
             identityLock.withLock {
                 _identity = newValue
-                preferenceDataStore.put(LAST_CONTACT_IDENTITY_KEY, newValue)
+                preferenceStore.sync.put(LAST_CONTACT_IDENTITY_KEY, newValue)
             }
         }
     private val possiblyOrphanedContactId: String?
@@ -188,8 +188,8 @@ internal class ContactManager(
 
     init {
         // Migrate operations -> dated operations
-        preferenceDataStore.optJsonValue(OPERATIONS_KEY)?.let { json ->
-            if (!preferenceDataStore.isSet(OPERATION_ENTRIES_KEY)) {
+        preferenceStore.sync.optJsonValue(OPERATIONS_KEY)?.let { json ->
+            if (!preferenceStore.sync.isSet(OPERATION_ENTRIES_KEY)) {
                 val operations = json.optList()
                     .tryParse(logError = true) { list -> list.map { ContactOperation.fromJson(it) } }
                 operations?.map { OperationEntry(clock.currentTimeMillis(), it) }?.let {
@@ -197,7 +197,7 @@ internal class ContactManager(
                 }
             }
 
-            preferenceDataStore.remove(OPERATIONS_KEY)
+            preferenceStore.sync.remove(OPERATIONS_KEY)
         }
 
         audienceOverridesProvider.pendingContactOverridesDelegate = {

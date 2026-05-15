@@ -3,7 +3,7 @@
 package com.urbanairship.channel
 
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -17,12 +17,12 @@ import kotlin.concurrent.withLock
 
 /** Handles updates for the batch endpoint **/
 internal class ChannelBatchUpdateManager(
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val apiClient: ChannelBatchUpdateApiClient,
     private val audienceOverridesProvider: AudienceOverridesProvider,
 ) {
     constructor(
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         audienceOverridesProvider: AudienceOverridesProvider
     ) : this(
@@ -35,17 +35,17 @@ internal class ChannelBatchUpdateManager(
 
     internal val hasPending: Boolean
     get() {
-        return !dataStore.getJsonValue(UPDATE_DATASTORE_KEY).optList().isEmpty
+        return !dataStore.sync.getJsonValue(UPDATE_DATASTORE_KEY).optList().isEmpty
     }
 
     private var updates: List<AudienceUpdate>
         get() {
-            return dataStore.optJsonValue(UPDATE_DATASTORE_KEY)?.tryParse(true) { json ->
+            return dataStore.sync.optJsonValue(UPDATE_DATASTORE_KEY)?.tryParse(true) { json ->
                 json.optList().map { AudienceUpdate(it.requireMap()) }
             } ?: emptyList()
         }
         set(value) {
-            dataStore.put(UPDATE_DATASTORE_KEY, JsonValue.wrap(value))
+            dataStore.sync.put(UPDATE_DATASTORE_KEY, JsonValue.wrap(value))
         }
 
     init {
@@ -58,7 +58,7 @@ internal class ChannelBatchUpdateManager(
 
     internal fun clearPending() {
         lock.withLock {
-            dataStore.remove(UPDATE_DATASTORE_KEY)
+            dataStore.sync.remove(UPDATE_DATASTORE_KEY)
         }
     }
 
@@ -160,25 +160,25 @@ internal class ChannelBatchUpdateManager(
     @VisibleForTesting
     internal fun migrateData() {
         // List of Lists
-        val attributes = dataStore.getJsonValue(ATTRIBUTE_DATASTORE_KEY).list?.map {
+        val attributes = dataStore.sync.getJsonValue(ATTRIBUTE_DATASTORE_KEY).list?.map {
             AttributeMutation.fromJsonList(it.optList())
         }?.flatten()
 
         // List of Lists
-        val subscriptions = dataStore.getJsonValue(SUBSCRIPTION_LISTS_DATASTORE_KEY).list?.map {
+        val subscriptions = dataStore.sync.getJsonValue(SUBSCRIPTION_LISTS_DATASTORE_KEY).list?.map {
             SubscriptionListMutation.fromJsonList(it.optList())
         }?.flatten()
 
         // Just a list
-        val tags = dataStore.getJsonValue(TAG_GROUP_DATASTORE_KEY).list?.map {
+        val tags = dataStore.sync.getJsonValue(TAG_GROUP_DATASTORE_KEY).list?.map {
             TagGroupsMutation.fromJsonValue(it)
         }
 
         addUpdate(tags, attributes, subscriptions)
 
-        dataStore.remove(ATTRIBUTE_DATASTORE_KEY)
-        dataStore.remove(SUBSCRIPTION_LISTS_DATASTORE_KEY)
-        dataStore.remove(TAG_GROUP_DATASTORE_KEY)
+        dataStore.sync.remove(ATTRIBUTE_DATASTORE_KEY)
+        dataStore.sync.remove(SUBSCRIPTION_LISTS_DATASTORE_KEY)
+        dataStore.sync.remove(TAG_GROUP_DATASTORE_KEY)
     }
 
     internal companion object {

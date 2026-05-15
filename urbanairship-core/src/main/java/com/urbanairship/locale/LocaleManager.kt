@@ -6,7 +6,7 @@ import androidx.annotation.RequiresApi
 import androidx.annotation.RestrictTo
 import androidx.core.os.ConfigurationCompat
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.UALog
 import com.urbanairship.util.LocaleCompat
 import java.util.Locale
@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
  */
 public class LocaleManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)  constructor(
     context: Context,
-    private val preferenceDataStore: PreferenceDataStore,
+    private val preferenceStore: PreferenceStore,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) {
 
@@ -81,13 +81,13 @@ public class LocaleManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)  construc
         synchronized(this) {
             val currentLocale = this.locale
             if (locale != null) {
-                preferenceDataStore.put(LOCALE_OVERRIDE_COUNTRY_KEY, locale.country)
-                preferenceDataStore.put (LOCALE_OVERRIDE_LANGUAGE_KEY, locale.language)
-                preferenceDataStore.put(LOCALE_OVERRIDE_VARIANT_KEY, locale.variant)
+                preferenceStore.sync.put(LOCALE_OVERRIDE_COUNTRY_KEY, locale.country)
+                preferenceStore.sync.put (LOCALE_OVERRIDE_LANGUAGE_KEY, locale.language)
+                preferenceStore.sync.put(LOCALE_OVERRIDE_VARIANT_KEY, locale.variant)
             } else {
-                preferenceDataStore.remove(LOCALE_OVERRIDE_COUNTRY_KEY)
-                preferenceDataStore.remove (LOCALE_OVERRIDE_LANGUAGE_KEY)
-                preferenceDataStore.remove (LOCALE_OVERRIDE_VARIANT_KEY)
+                preferenceStore.sync.remove(LOCALE_OVERRIDE_COUNTRY_KEY)
+                preferenceStore.sync.remove (LOCALE_OVERRIDE_LANGUAGE_KEY)
+                preferenceStore.sync.remove (LOCALE_OVERRIDE_VARIANT_KEY)
             }
 
             if (currentLocale !== this.locale) {
@@ -101,11 +101,11 @@ public class LocaleManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)  construc
      */
     private val localeOverride: Locale?
         get() {
-            val language = preferenceDataStore.getString(LOCALE_OVERRIDE_LANGUAGE_KEY, null)
+            val language = preferenceStore.sync.getString(LOCALE_OVERRIDE_LANGUAGE_KEY, null)
                 ?: return null
-            val country = preferenceDataStore.getString(LOCALE_OVERRIDE_COUNTRY_KEY, null)
+            val country = preferenceStore.sync.getString(LOCALE_OVERRIDE_COUNTRY_KEY, null)
                 ?: return null
-            val variant = preferenceDataStore.getString(LOCALE_OVERRIDE_VARIANT_KEY, null)
+            val variant = preferenceStore.sync.getString(LOCALE_OVERRIDE_VARIANT_KEY, null)
                 ?: return null
 
             return LocaleCompat.of(language, country, variant)

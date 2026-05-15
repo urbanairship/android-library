@@ -4,7 +4,7 @@ package com.urbanairship.remotedata
 
 import android.content.Context
 import android.net.Uri
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.contacts.Contact
 import com.urbanairship.http.RequestAuth
@@ -13,7 +13,7 @@ import java.util.Locale
 
 internal class ContactRemoteDataProvider(
     context: Context,
-    preferenceDataStore: PreferenceDataStore,
+    preferenceStore: PreferenceStore,
     config: AirshipRuntimeConfig,
     private val contact: Contact,
     private val apiClient: RemoteDataApiClient,
@@ -21,7 +21,7 @@ internal class ContactRemoteDataProvider(
 ) : RemoteDataProvider(
     source = RemoteDataSource.CONTACT,
     remoteDataStore = RemoteDataStore(context, config.configOptions.appKey, "ua_remotedata_contact.db"),
-    preferenceDataStore = preferenceDataStore,
+    preferenceStore = preferenceStore,
     defaultEnabled = false
 ) {
     override fun isRemoteDataInfoUpToDate(

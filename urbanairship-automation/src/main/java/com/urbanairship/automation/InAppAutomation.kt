@@ -3,7 +3,7 @@
 package com.urbanairship.automation
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.Airship
 import com.urbanairship.automation.engine.AutomationEngine
@@ -24,7 +24,7 @@ internal constructor(
     public val inAppMessaging: InAppMessagingInterface,
     public val legacyInAppMessaging: LegacyInAppMessagingInterface,
     private val remoteDataSubscriber: AutomationRemoteDataSubscriber,
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val privacyManager: PrivacyManager,
     private val config: AirshipRuntimeConfig
 ) {
@@ -36,13 +36,13 @@ internal constructor(
     public var isPaused: Boolean
         get() {
             synchronized(this) {
-                return dataStore.getBoolean(PAUSED_STORE_KEY, config.configOptions.autoPauseInAppAutomationOnLaunch)
+                return dataStore.sync.getBoolean(PAUSED_STORE_KEY, config.configOptions.autoPauseInAppAutomationOnLaunch)
             }
         }
 
         set(value) {
             synchronized(this) {
-                dataStore.put(PAUSED_STORE_KEY, value)
+                dataStore.sync.put(PAUSED_STORE_KEY, value)
                 engine.setExecutionPaused(value)
             }
         }

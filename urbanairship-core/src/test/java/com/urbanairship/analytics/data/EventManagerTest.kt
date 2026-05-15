@@ -2,7 +2,7 @@ package com.urbanairship.analytics.data
 
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.BaseTestCase
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.analytics.AirshipEventData
@@ -41,10 +41,10 @@ public class EventManagerTest public constructor() : BaseTestCase() {
     private val clock = TestClock()
 
     private val testAirshipRuntimeConfig = TestAirshipRuntimeConfig()
-    private val dataStore: PreferenceDataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext())
+    private val dataStore: PreferenceStore = PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext())
 
     private val eventManager: EventManager = EventManager(
-        preferenceDataStore = dataStore,
+        preferenceStore = dataStore,
         runtimeConfig = testAirshipRuntimeConfig,
         jobDispatcher = mockDispatcher,
         activityMonitor = mockActivityMonitor,
@@ -92,10 +92,10 @@ public class EventManagerTest public constructor() : BaseTestCase() {
     @Test
     public fun testAddEventBeforeNextSendTime(): TestResult = runTest {
         // Set the last send time to the current time so the next send time is minBatchInterval
-        dataStore.put(EventManager.LAST_SEND_KEY, clock.currentTimeMillis)
+        dataStore.sync.put(EventManager.LAST_SEND_KEY, clock.currentTimeMillis)
 
         // Set the minBatchInterval to 20 seconds
-        dataStore.put(EventManager.MIN_BATCH_INTERVAL_KEY, 20000)
+        dataStore.sync.put(EventManager.MIN_BATCH_INTERVAL_KEY, 20000)
 
         // Check it schedules an upload with a time greater than 10 seconds
         every { mockDispatcher.dispatch(any()) } answers {
@@ -137,7 +137,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         coEvery { mockEventDao.getBatch(1) } returns events
 
         // Set the max batch size to 100
-        dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100)
+        dataStore.sync.put(EventManager.MAX_BATCH_SIZE_KEY, 100)
 
         // Set up the response
         val eventResponse: EventResponse = mockk() {
@@ -167,9 +167,9 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         coVerify { mockEventDao.deleteBatch(events) }
 
         // Verify responses are being saved
-        assertEquals(200, dataStore.getInt(EventManager.MAX_TOTAL_DB_SIZE_KEY, 0))
-        assertEquals(300, dataStore.getInt(EventManager.MAX_BATCH_SIZE_KEY, 0))
-        assertEquals(100, dataStore.getInt(EventManager.MIN_BATCH_INTERVAL_KEY, 0))
+        assertEquals(200, dataStore.sync.getInt(EventManager.MAX_TOTAL_DB_SIZE_KEY, 0))
+        assertEquals(300, dataStore.sync.getInt(EventManager.MAX_BATCH_SIZE_KEY, 0))
+        assertEquals(100, dataStore.sync.getInt(EventManager.MIN_BATCH_INTERVAL_KEY, 0))
 
         // Check it schedules an upload
         verify { mockDispatcher.dispatch(any()) }
@@ -181,7 +181,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
     @Test
     public fun testSendEventMaxCount(): TestResult = runTest {
         // Make the match batch size greater than 500
-        dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100000)
+        dataStore.sync.put(EventManager.MAX_BATCH_SIZE_KEY, 100000)
 
         // Fake the resolver to act like it has more than 500 events
         coEvery { mockEventDao.databaseSize() } returns 100000
@@ -211,7 +211,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         coEvery { mockEventDao.databaseSize() } returns 100
         coEvery { mockEventDao.getBatch(1) } returns events
 
-        dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100)
+        dataStore.sync.put(EventManager.MAX_BATCH_SIZE_KEY, 100)
 
         coEvery { mockClient.sendEvents("some channel", eventPayloads, headers) } returns RequestResult(
             response = Response(HttpURLConnection.HTTP_BAD_REQUEST, mockk()),
@@ -233,7 +233,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
     @Test
     public fun testAddingHighPriorityEvents(): TestResult = runTest {
         // Set last send time to year 3005 so next send time is way in the future
-        dataStore.put(EventManager.LAST_SEND_KEY, 32661446400000L)
+        dataStore.sync.put(EventManager.LAST_SEND_KEY, 32661446400000L)
 
         every { mockDispatcher.dispatch(any()) } answers {
             val info: JobInfo = firstArg()

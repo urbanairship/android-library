@@ -10,7 +10,7 @@ import com.urbanairship.Cancelable
 import com.urbanairship.CancelableOperation
 import com.urbanairship.PendingResult
 import com.urbanairship.Predicate
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.UALog
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.android.layout.LayoutDataStorage
@@ -58,7 +58,7 @@ import kotlinx.coroutines.withContext
  * @property user The [User].
  */
 public class Inbox @VisibleForTesting internal constructor(
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     public val user: User,
     private val messageDao: MessageDao,
     private val activityMonitor: ActivityMonitor,
@@ -93,7 +93,7 @@ public class Inbox @VisibleForTesting internal constructor(
      */
     internal constructor(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         airshipChannel: AirshipChannel,
         config: AirshipRuntimeConfig,
         analytics: Analytics,

@@ -3,7 +3,7 @@ package com.urbanairship.channel
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.http.RequestResult
@@ -36,7 +36,7 @@ import org.junit.runner.RunWith
 public class ChannelBatchUpdateManagerTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
+    private val preferenceStore = PreferenceStore.inMemoryStore(context)
 
     private val pendingAudienceDelegate = slot<(String) -> AudienceOverrides.Channel>()
     private val mockAudienceOverridesProvider = mockk<AudienceOverridesProvider> {
@@ -49,7 +49,7 @@ public class ChannelBatchUpdateManagerTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val manager = ChannelBatchUpdateManager(
-        preferenceDataStore,
+        preferenceStore,
         mockApiClient,
         mockAudienceOverridesProvider
     )
@@ -111,7 +111,7 @@ public class ChannelBatchUpdateManagerTest {
     @Test
     public fun testMigrate(): TestResult = runTest {
         // Attributes are stored as a list of lists
-        preferenceDataStore.put(
+        preferenceStore.sync.put(
             "com.urbanairship.push.ATTRIBUTE_DATA_STORE",
             jsonListOf(
                 listOf(
@@ -125,7 +125,7 @@ public class ChannelBatchUpdateManagerTest {
         )
 
         // Subscriptions are stored as a list of lists
-        preferenceDataStore.put(
+        preferenceStore.sync.put(
             "com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS",
             jsonListOf(
                 listOf(
@@ -139,7 +139,7 @@ public class ChannelBatchUpdateManagerTest {
         )
 
         // Tags are stored as a list of mutations
-        preferenceDataStore.put(
+        preferenceStore.sync.put(
             "com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS",
             jsonListOf(
                 TagGroupsMutation.newSetTagsMutation("some group", setOf("tag")),
@@ -150,9 +150,9 @@ public class ChannelBatchUpdateManagerTest {
         manager.migrateData()
 
         // Verify its deleted
-        assertFalse(preferenceDataStore.isSet("com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS"))
-        assertFalse(preferenceDataStore.isSet("com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS"))
-        assertFalse(preferenceDataStore.isSet("com.urbanairship.push.ATTRIBUTE_DATA_STORE"))
+        assertFalse(preferenceStore.sync.isSet("com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS"))
+        assertFalse(preferenceStore.sync.isSet("com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS"))
+        assertFalse(preferenceStore.sync.isSet("com.urbanairship.push.ATTRIBUTE_DATA_STORE"))
 
         // Check expected
         val expectedPending = AudienceOverrides.Channel(

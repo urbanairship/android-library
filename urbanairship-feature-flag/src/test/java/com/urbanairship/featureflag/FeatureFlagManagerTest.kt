@@ -6,7 +6,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.audience.AirshipDeviceAudienceResult
@@ -94,7 +94,7 @@ public class FeatureFlagManagerTest {
 
     private val featureFlags = FeatureFlagManager(
         context = context,
-        dataStore = PreferenceDataStore.inMemoryStore(context),
+        dataStore = PreferenceStore.inMemoryStore(context),
         audienceEvaluator = audienceEvaluator,
         remoteData = remoteDataAccess,
         infoProviderFactory = { infoProvider },

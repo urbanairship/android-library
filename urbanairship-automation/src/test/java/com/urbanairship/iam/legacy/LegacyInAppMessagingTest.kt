@@ -3,7 +3,7 @@ package com.urbanairship.iam.legacy
 import android.graphics.Color
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestClock
 import com.urbanairship.automation.engine.AutomationEngineInterface
 import com.urbanairship.automation.AutomationSchedule
@@ -43,7 +43,7 @@ public class LegacyInAppMessagingTest {
     private val analytics: LegacyAnalytics = mockk(relaxed = true)
     private val engine: AutomationEngineInterface = mockk(relaxed = true)
 
-    private val dataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext())
+    private val dataStore = PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext())
     private val clock = TestClock().apply { currentTimeMillis = 0 }
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -51,7 +51,7 @@ public class LegacyInAppMessagingTest {
         context = ApplicationProvider.getApplicationContext(),
         pushManager = pushManager,
         updates = updates,
-        preferenceDataStore = dataStore,
+        preferenceStore = dataStore,
         automationEngine = engine,
         legacyAnalytics = analytics,
         clock =  clock,

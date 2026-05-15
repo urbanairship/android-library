@@ -18,7 +18,7 @@ public class com/urbanairship/messagecenter/DefaultMultiChoiceModeListener : and
 }
 
 public class com/urbanairship/messagecenter/Inbox {
-	public fun <init> (Landroid/content/Context;Lcom/urbanairship/PreferenceDataStore;Lcom/urbanairship/channel/AirshipChannel;Lcom/urbanairship/AirshipConfigOptions;Lcom/urbanairship/PrivacyManager;)V
+	public fun <init> (Landroid/content/Context;Lcom/urbanairship/preferences/PreferenceStore;Lcom/urbanairship/channel/AirshipChannel;Lcom/urbanairship/AirshipConfigOptions;Lcom/urbanairship/PrivacyManager;)V
 	public fun addListener (Lcom/urbanairship/messagecenter/InboxListener;)V
 	public fun deleteMessages (Ljava/util/Set;)V
 	public fun fetchMessages ()V

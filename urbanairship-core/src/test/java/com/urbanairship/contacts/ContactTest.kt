@@ -3,7 +3,7 @@ package com.urbanairship.contacts
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
@@ -96,8 +96,8 @@ public class ContactTest {
     private val testClock = TestClock()
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
-    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL, dispatcher = UnconfinedTestDispatcher())
+    private val preferenceStore = PreferenceStore.inMemoryStore(context)
+    private val privacyManager = PrivacyManager(preferenceStore, PrivacyManager.Feature.ALL, dispatcher = UnconfinedTestDispatcher())
     private val pushListeners = mutableListOf<PushListener>()
     private val mockPushManager: PushManager = mockk {
         every { this@mockk.addInternalPushListener(capture(pushListeners)) } just runs
@@ -106,7 +106,7 @@ public class ContactTest {
     private val contact: Contact by lazy {
         Contact(
             context = context,
-            preferenceDataStore = preferenceDataStore,
+            preferenceStore = preferenceStore,
             config = config,
             privacyManager = privacyManager,
             airshipChannel = mockChannel,
@@ -775,9 +775,9 @@ public class ContactTest {
             )
         )
 
-        preferenceDataStore.put(Contact.LEGACY_NAMED_USER_ID_KEY, namedUserId)
-        preferenceDataStore.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrap(tags))
-        preferenceDataStore.put(
+        preferenceStore.sync.put(Contact.LEGACY_NAMED_USER_ID_KEY, namedUserId)
+        preferenceStore.sync.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrap(tags))
+        preferenceStore.sync.put(
             Contact.LEGACY_ATTRIBUTE_MUTATION_STORE_KEY, JsonValue.wrap(attributes)
         )
 
@@ -811,9 +811,9 @@ public class ContactTest {
             )
         )
 
-        preferenceDataStore.put(Contact.LEGACY_NAMED_USER_ID_KEY, namedUserId)
-        preferenceDataStore.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrap(tags))
-        preferenceDataStore.put(
+        preferenceStore.sync.put(Contact.LEGACY_NAMED_USER_ID_KEY, namedUserId)
+        preferenceStore.sync.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrap(tags))
+        preferenceStore.sync.put(
             Contact.LEGACY_ATTRIBUTE_MUTATION_STORE_KEY, JsonValue.wrap(attributes)
         )
 
@@ -847,9 +847,9 @@ public class ContactTest {
             )
         )
 
-        preferenceDataStore.put(Contact.LEGACY_NAMED_USER_ID_KEY, namedUserId)
-        preferenceDataStore.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrap(tags))
-        preferenceDataStore.put(
+        preferenceStore.sync.put(Contact.LEGACY_NAMED_USER_ID_KEY, namedUserId)
+        preferenceStore.sync.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrap(tags))
+        preferenceStore.sync.put(
             Contact.LEGACY_ATTRIBUTE_MUTATION_STORE_KEY, JsonValue.wrap(attributes)
         )
 

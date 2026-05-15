@@ -4,7 +4,7 @@ package com.urbanairship.remotedata
 
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.UALog
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.JsonSerializable
@@ -27,7 +27,7 @@ import kotlinx.coroutines.withContext
 internal abstract class RemoteDataProvider(
     var source: RemoteDataSource,
     private val remoteDataStore: RemoteDataStore,
-    private val preferenceDataStore: PreferenceDataStore,
+    private val preferenceStore: PreferenceStore,
     private val defaultEnabled: Boolean = true,
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) {
@@ -37,10 +37,10 @@ internal abstract class RemoteDataProvider(
 
     var isEnabled: Boolean
     get() {
-        return preferenceDataStore.getBoolean(enabledKey, defaultEnabled)
+        return preferenceStore.sync.getBoolean(enabledKey, defaultEnabled)
     }
     set(value) {
-        preferenceDataStore.put(enabledKey, value)
+        preferenceStore.sync.put(enabledKey, value)
     }
 
     private val _statusUpdates = MutableStateFlow(RemoteData.Status.OUT_OF_DATE)
@@ -49,14 +49,14 @@ internal abstract class RemoteDataProvider(
     private var lastRefreshState: LastRefreshState?
         get() {
             return lastRefreshStateLock.withLock {
-                preferenceDataStore.getJsonValue(lastRefreshStateKey).tryParse {
+                preferenceStore.sync.getJsonValue(lastRefreshStateKey).tryParse {
                     LastRefreshState(it)
                 }
             }
         }
         set(value) {
             return lastRefreshStateLock.withLock {
-                preferenceDataStore.put(lastRefreshStateKey, value)
+                preferenceStore.sync.put(lastRefreshStateKey, value)
             }
         }
 

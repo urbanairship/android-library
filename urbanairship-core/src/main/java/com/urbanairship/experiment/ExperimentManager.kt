@@ -6,7 +6,7 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.audience.AudienceEvaluator
@@ -28,7 +28,7 @@ import kotlinx.coroutines.SupervisorJob
 @OpenForTesting
 public class ExperimentManager internal constructor(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     private val remoteData: RemoteData,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val audienceEvaluator: AudienceEvaluator,

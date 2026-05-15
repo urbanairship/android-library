@@ -3,7 +3,7 @@ package com.urbanairship.messagecenter
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.Airship
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.UALog
 import java.io.UnsupportedEncodingException
 import java.util.concurrent.CopyOnWriteArrayList
@@ -14,15 +14,15 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 /** The Airship rich push user. */
 public class User internal constructor(
-    private val preferences: PreferenceDataStore
+    private val preferences: PreferenceStore
 ) {
 
     init {
-        val password = preferences.getString(USER_PASSWORD_KEY, null)
+        val password = preferences.sync.getString(USER_PASSWORD_KEY, null)
         if (!password.isNullOrEmpty()) {
-            val userToken = encode(password, preferences.getString(USER_ID_KEY, null))
-            if (preferences.putSync(USER_TOKEN_KEY, userToken)) {
-                preferences.remove(USER_PASSWORD_KEY)
+            val userToken = encode(password, preferences.sync.getString(USER_ID_KEY, null))
+            if (preferences.sync.putSync(USER_TOKEN_KEY, userToken)) {
+                preferences.sync.remove(USER_PASSWORD_KEY)
             }
         }
     }
@@ -78,7 +78,7 @@ public class User internal constructor(
      */
     internal fun onUpdated(channelId: String) {
         if (channelId != registeredChannelId) {
-            preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId)
+            preferences.sync.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId)
         }
     }
 
@@ -104,8 +104,8 @@ public class User internal constructor(
      */
     internal fun setUser(userCredentials: UserCredentials?) {
         UALog.d("Setting Rich Push user: %s", userCredentials)
-        preferences.put(USER_ID_KEY, userCredentials?.username)
-        preferences.put(USER_TOKEN_KEY, encode(userCredentials?.password, userCredentials?.username))
+        preferences.sync.put(USER_ID_KEY, userCredentials?.username)
+        preferences.sync.put(USER_TOKEN_KEY, encode(userCredentials?.password, userCredentials?.username))
     }
 
     internal val userCredentials: UserCredentials?
@@ -117,24 +117,24 @@ public class User internal constructor(
 
     /** The user's ID. */
     public val id: String?
-        get() = if (preferences.getString(USER_TOKEN_KEY, null) != null) {
-            preferences.getString(USER_ID_KEY, null)
+        get() = if (preferences.sync.getString(USER_TOKEN_KEY, null) != null) {
+            preferences.sync.getString(USER_ID_KEY, null)
         } else {
             null
         }
 
     /** The user's token used for basic auth. */
     public val password: String?
-        get() = if (preferences.getString(USER_ID_KEY, null) != null) {
-            decode(preferences.getString(USER_TOKEN_KEY, null), id)
+        get() = if (preferences.sync.getString(USER_ID_KEY, null) != null) {
+            decode(preferences.sync.getString(USER_TOKEN_KEY, null), id)
         } else {
             null
         }
 
     /** The registered Channel ID stored in the DataStore, or `null` if no Channel ID is stored. */
     internal var registeredChannelId: String
-        get() = preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "") ?: ""
-        set(channelId) = preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId)
+        get() = preferences.sync.getString(USER_REGISTERED_CHANNEL_ID_KEY, "") ?: ""
+        set(channelId) = preferences.sync.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId)
 
 
     /** @hide */

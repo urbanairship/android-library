@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship
 
+import com.urbanairship.preferences.PreferenceStore
+
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RestrictTo
@@ -12,19 +14,19 @@ import com.urbanairship.google.PlayServicesUtils
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DeferredPlatformProvider(
     private val context: Context,
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val privacyManager: PrivacyManager,
     private val pushProviders: () -> PushProviders
 ): Provider<Platform> {
     override fun get(): Platform {
         val existingPlatform = Platform.fromRawValue(
-            rawValue = dataStore.getInt(PLATFORM_KEY, Platform.UNKNOWN.rawValue)
+            rawValue = dataStore.sync.getInt(PLATFORM_KEY, Platform.UNKNOWN.rawValue)
         )
         return if (existingPlatform != Platform.UNKNOWN) {
             existingPlatform
         } else if (privacyManager.isAnyFeatureEnabled) {
             val platform = determinePlatform()
-            dataStore.put(PLATFORM_KEY, platform.rawValue)
+            dataStore.sync.put(PLATFORM_KEY, platform.rawValue)
             platform
         } else {
             Platform.UNKNOWN

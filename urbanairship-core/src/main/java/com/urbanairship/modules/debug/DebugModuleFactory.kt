@@ -4,7 +4,7 @@ package com.urbanairship.modules.debug
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipVersionInfo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.modules.Module
 import com.urbanairship.push.PushManager
@@ -20,7 +20,7 @@ public interface DebugModuleFactory : AirshipVersionInfo {
 
     public fun build(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         remoteData: RemoteData,
         pushManager: PushManager,
         analytics: Analytics

@@ -8,7 +8,7 @@ import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.PendingResult
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 @OpenForTesting
 public class Contact internal constructor(
     context: Context,
-    private val preferenceDataStore: PreferenceDataStore,
+    private val preferenceStore: PreferenceStore,
     private val config: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val airshipChannel: AirshipChannel,
@@ -78,11 +78,11 @@ public class Contact internal constructor(
         audienceOverridesProvider.contactUpdates(contactManager.stableContactIdUpdates)
     ),
     subscriptionListDispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
-) : JobAwareAirshipComponent(context, preferenceDataStore) {
+) : JobAwareAirshipComponent(context, preferenceStore) {
 
     internal constructor(
         context: Context,
-        preferenceDataStore: PreferenceDataStore,
+        preferenceStore: PreferenceStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,
@@ -92,7 +92,7 @@ public class Contact internal constructor(
         smsValidator: AirshipInputValidation.Validator,
     ) : this(
         context,
-        preferenceDataStore,
+        preferenceStore,
         config,
         privacyManager,
         airshipChannel,
@@ -100,7 +100,7 @@ public class Contact internal constructor(
         GlobalActivityMonitor.shared(context),
         Clock.DEFAULT_CLOCK,
         ContactManager(
-            preferenceDataStore,
+            preferenceStore,
             airshipChannel,
             JobDispatcher.shared(context),
             ContactApiClient(config),
@@ -141,8 +141,8 @@ public class Contact internal constructor(
         }
 
     private var lastResolvedDate: Long
-        get() = preferenceDataStore.getLong(LAST_RESOLVED_DATE_KEY, -1)
-        set(newValue) = preferenceDataStore.put(LAST_RESOLVED_DATE_KEY, newValue)
+        get() = preferenceStore.sync.getLong(LAST_RESOLVED_DATE_KEY, -1)
+        set(newValue) = preferenceStore.sync.put(LAST_RESOLVED_DATE_KEY, newValue)
 
     /** The foreground resolve interval from remote config, or the default [FOREGROUND_INTERVAL] if not available. */
     private val foregroundResolveInterval: Long
@@ -257,18 +257,18 @@ public class Contact internal constructor(
 
     private fun migrateNamedUser() {
         if (privacyManager.isContactsEnabled) {
-            val namedUserId = preferenceDataStore.getString(LEGACY_NAMED_USER_ID_KEY, null)
+            val namedUserId = preferenceStore.sync.getString(LEGACY_NAMED_USER_ID_KEY, null)
             if (namedUserId == null) {
                 contactManager.generateDefaultContactIdIfNotSet()
             } else {
                 identify(namedUserId)
                 if (privacyManager.isContactsAudienceEnabled) {
-                    val attributeJson = preferenceDataStore.getJsonValue(
+                    val attributeJson = preferenceStore.sync.getJsonValue(
                         LEGACY_ATTRIBUTE_MUTATION_STORE_KEY
                     )
                     var attributeMutations = AttributeMutation.fromJsonList(attributeJson.optList())
                     attributeMutations = AttributeMutation.collapseMutations(attributeMutations)
-                    val tagsJson = preferenceDataStore.getJsonValue(
+                    val tagsJson = preferenceStore.sync.getJsonValue(
                         LEGACY_TAG_GROUP_MUTATIONS_KEY
                     )
                     var tagGroupMutations = TagGroupsMutation.fromJsonList(tagsJson.optList())
@@ -282,9 +282,9 @@ public class Contact internal constructor(
             }
         }
 
-        preferenceDataStore.remove(LEGACY_TAG_GROUP_MUTATIONS_KEY)
-        preferenceDataStore.remove(LEGACY_ATTRIBUTE_MUTATION_STORE_KEY)
-        preferenceDataStore.remove(LEGACY_NAMED_USER_ID_KEY)
+        preferenceStore.sync.remove(LEGACY_TAG_GROUP_MUTATIONS_KEY)
+        preferenceStore.sync.remove(LEGACY_ATTRIBUTE_MUTATION_STORE_KEY)
+        preferenceStore.sync.remove(LEGACY_NAMED_USER_ID_KEY)
     }
 
     /**

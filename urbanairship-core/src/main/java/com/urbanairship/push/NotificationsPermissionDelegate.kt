@@ -7,7 +7,7 @@ import androidx.annotation.MainThread
 import androidx.annotation.VisibleForTesting
 import androidx.core.util.Consumer
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.permission.PermissionDelegate
@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
  */
 internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
     private val defaultChannelId: String,
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val notificationManager: AirshipNotificationManager,
     private val channelRegistry: NotificationChannelRegistry,
     private val activityMonitor: ActivityMonitor,
@@ -40,7 +40,7 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
 
     constructor(
         defaultChannelId: String,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         notificationManager: AirshipNotificationManager,
         channelRegistry: NotificationChannelRegistry,
         activityMonitor: ActivityMonitor
@@ -61,7 +61,7 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
             when (notificationManager.promptSupport) {
                 AirshipNotificationManager.PromptSupport.COMPAT,
                 AirshipNotificationManager.PromptSupport.SUPPORTED -> {
-                    if (dataStore.getBoolean(PROMPTED_KEY, false)) {
+                    if (dataStore.sync.getBoolean(PROMPTED_KEY, false)) {
                         PermissionStatus.DENIED
                     } else {
                         PermissionStatus.NOT_DETERMINED
@@ -87,7 +87,7 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
                 return
             }
             AirshipNotificationManager.PromptSupport.COMPAT -> {
-                dataStore.put(PROMPTED_KEY, true)
+                dataStore.sync.put(PROMPTED_KEY, true)
                 if (notificationManager.areChannelsCreated()) {
                     callback.accept(PermissionRequestResult.denied(true))
                     return
@@ -112,7 +112,7 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
             }
 
             AirshipNotificationManager.PromptSupport.SUPPORTED -> {
-                dataStore.put(PROMPTED_KEY, true)
+                dataStore.sync.put(PROMPTED_KEY, true)
                 permissionRequestDelegate.requestPermissions(
                     context = context,
                     permission = POST_NOTIFICATION_PERMISSION,

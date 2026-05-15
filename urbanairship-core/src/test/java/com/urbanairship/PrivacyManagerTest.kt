@@ -1,4 +1,6 @@
 package com.urbanairship
+
+import com.urbanairship.preferences.PreferenceStore
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -25,7 +27,7 @@ import org.junit.runner.RunWith
 public class PrivacyManagerTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
+    private val dataStore = PreferenceStore.inMemoryStore(context)
     private lateinit var privacyManager: PrivacyManager
     private val remoteConfigObserver: RemoteConfigObserver = mockk(relaxed = true)
     private var disabledFeatures: PrivacyManager.Feature? = null
@@ -56,23 +58,23 @@ public class PrivacyManagerTest {
     @Test
     public fun testMigrateDataCollectionEnabled() {
         assertEquals(PrivacyManager.Feature.NONE, privacyManager.enabledFeatures)
-        dataStore.put(PrivacyManager.DATA_COLLECTION_ENABLED_KEY, true)
+        dataStore.sync.put(PrivacyManager.DATA_COLLECTION_ENABLED_KEY, true)
 
         privacyManager.migrateData()
         assertEquals(PrivacyManager.Feature.ALL, privacyManager.enabledFeatures)
 
-        assertFalse(dataStore.isSet(PrivacyManager.DATA_COLLECTION_ENABLED_KEY))
+        assertFalse(dataStore.sync.isSet(PrivacyManager.DATA_COLLECTION_ENABLED_KEY))
     }
 
     @Test
     public fun testMigrateDataCollectionDisabled() {
         privacyManager.enable(PrivacyManager.Feature.ALL)
-        dataStore.put(PrivacyManager.DATA_COLLECTION_ENABLED_KEY, false)
+        dataStore.sync.put(PrivacyManager.DATA_COLLECTION_ENABLED_KEY, false)
 
         privacyManager.migrateData()
         assertEquals(PrivacyManager.Feature.NONE, privacyManager.enabledFeatures)
 
-        assertFalse(dataStore.isSet(PrivacyManager.DATA_COLLECTION_ENABLED_KEY))
+        assertFalse(dataStore.sync.isSet(PrivacyManager.DATA_COLLECTION_ENABLED_KEY))
 
         privacyManager.enabledFeatures = PrivacyManager.Feature.NONE
         privacyManager.migrateData()
@@ -81,18 +83,18 @@ public class PrivacyManagerTest {
 
     @Test
     public fun testMigrateModuleEnableFlagsWhenDisabled() {
-        dataStore.put(PrivacyManager.PUSH_ENABLED_KEY, false)
-        dataStore.put(PrivacyManager.ANALYTICS_ENABLED_KEY, false)
-        dataStore.put(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY, false)
-        dataStore.put(PrivacyManager.IAA_ENABLED_KEY, false)
+        dataStore.sync.put(PrivacyManager.PUSH_ENABLED_KEY, false)
+        dataStore.sync.put(PrivacyManager.ANALYTICS_ENABLED_KEY, false)
+        dataStore.sync.put(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY, false)
+        dataStore.sync.put(PrivacyManager.IAA_ENABLED_KEY, false)
 
         privacyManager.enable(PrivacyManager.Feature.ALL)
         privacyManager.migrateData()
 
-        assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY))
-        assertFalse(dataStore.isSet(PrivacyManager.ANALYTICS_ENABLED_KEY))
-        assertFalse(dataStore.isSet(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY))
-        assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY))
+        assertFalse(dataStore.sync.isSet(PrivacyManager.PUSH_ENABLED_KEY))
+        assertFalse(dataStore.sync.isSet(PrivacyManager.ANALYTICS_ENABLED_KEY))
+        assertFalse(dataStore.sync.isSet(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY))
+        assertFalse(dataStore.sync.isSet(PrivacyManager.PUSH_ENABLED_KEY))
 
         assertFalse(
             privacyManager.isAnyEnabled(
@@ -114,18 +116,18 @@ public class PrivacyManagerTest {
 
     @Test
     public fun testMigrateModuleEnableFlagsWhenEnabled() {
-        dataStore.put(PrivacyManager.PUSH_ENABLED_KEY, true)
-        dataStore.put(PrivacyManager.ANALYTICS_ENABLED_KEY, true)
-        dataStore.put(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true)
-        dataStore.put(PrivacyManager.IAA_ENABLED_KEY, true)
+        dataStore.sync.put(PrivacyManager.PUSH_ENABLED_KEY, true)
+        dataStore.sync.put(PrivacyManager.ANALYTICS_ENABLED_KEY, true)
+        dataStore.sync.put(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true)
+        dataStore.sync.put(PrivacyManager.IAA_ENABLED_KEY, true)
 
         privacyManager.enable(PrivacyManager.Feature.NONE)
         privacyManager.migrateData()
 
-        assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY))
-        assertFalse(dataStore.isSet(PrivacyManager.ANALYTICS_ENABLED_KEY))
-        assertFalse(dataStore.isSet(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY))
-        assertFalse(dataStore.isSet(PrivacyManager.PUSH_ENABLED_KEY))
+        assertFalse(dataStore.sync.isSet(PrivacyManager.PUSH_ENABLED_KEY))
+        assertFalse(dataStore.sync.isSet(PrivacyManager.ANALYTICS_ENABLED_KEY))
+        assertFalse(dataStore.sync.isSet(PrivacyManager.PUSH_TOKEN_REGISTRATION_ENABLED_KEY))
+        assertFalse(dataStore.sync.isSet(PrivacyManager.PUSH_ENABLED_KEY))
 
         Assert.assertFalse(
             privacyManager.isAnyEnabled(

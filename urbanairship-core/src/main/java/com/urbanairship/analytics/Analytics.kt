@@ -11,7 +11,7 @@ import androidx.annotation.WorkerThread
 import com.urbanairship.Airship
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.JobAwareAirshipComponent
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.analytics.data.EventManager
@@ -54,7 +54,7 @@ public class Analytics
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public constructor(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     private val runtimeConfig: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val airshipChannel: AirshipChannel,
@@ -147,10 +147,10 @@ public constructor(
     @set:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public var lastReceivedMetadata: String?
         get() {
-            return dataStore.getString(LAST_RECEIVED_METADATA, null)
+            return dataStore.sync.getString(LAST_RECEIVED_METADATA, null)
         }
         set(value) {
-            dataStore.put(LAST_RECEIVED_METADATA, value)
+            dataStore.sync.put(LAST_RECEIVED_METADATA, value)
         }
 
     // Screen state
@@ -175,7 +175,7 @@ public constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public constructor(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         channel: AirshipChannel,
@@ -217,7 +217,7 @@ public constructor(
             if (!privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
                 clearPendingEvents()
                 synchronized(associatedIdentifiersLock) {
-                    dataStore.remove(
+                    dataStore.sync.remove(
                         ASSOCIATED_IDENTIFIERS_KEY
                     )
                 }
@@ -433,7 +433,7 @@ public constructor(
                         UALog.i { "Skipping analytics event addition for duplicate associated identifiers." }
                         return
                     }
-                    dataStore.put(ASSOCIATED_IDENTIFIERS_KEY, identifiers)
+                    dataStore.sync.put(ASSOCIATED_IDENTIFIERS_KEY, identifiers)
                     addEvent(AssociateIdentifiersEvent(identifiers))
                 }
             }
@@ -460,13 +460,13 @@ public constructor(
         get() {
             synchronized(associatedIdentifiersLock) {
                 try {
-                    val value: JsonValue = dataStore.getJsonValue(ASSOCIATED_IDENTIFIERS_KEY)
+                    val value: JsonValue = dataStore.sync.getJsonValue(ASSOCIATED_IDENTIFIERS_KEY)
                     if (!value.isNull) {
                         return AssociatedIdentifiers.fromJson(value)
                     }
                 } catch (e: JsonException) {
                     UALog.e(e) { "Unable to parse associated identifiers." }
-                    dataStore.remove(ASSOCIATED_IDENTIFIERS_KEY)
+                    dataStore.sync.remove(ASSOCIATED_IDENTIFIERS_KEY)
                 }
                 return AssociatedIdentifiers()
             }

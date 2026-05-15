@@ -5,7 +5,7 @@ package com.urbanairship.iam.legacy
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Color
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.UALog
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.AutomationTrigger
@@ -61,7 +61,7 @@ internal class LegacyInAppMessaging(
     private val context: Context,
     private val pushManager: PushManager,
     private val updates: Flow<LegacyInAppMessageUpdate> = LegacyInAppMessageUpdate.updates(pushManager),
-    private val preferenceDataStore: PreferenceDataStore,
+    private val preferenceStore: PreferenceStore,
     private val automationEngine: AutomationEngineInterface,
     private val legacyAnalytics: LegacyAnalytics,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
@@ -97,7 +97,7 @@ internal class LegacyInAppMessaging(
     private suspend fun processNewMessage(message: LegacyInAppMessage) {
         val schedule = createSchedule(message) ?: return
 
-        preferenceDataStore.getString(PENDING_MESSAGE_ID, null)?.let {
+        preferenceStore.sync.getString(PENDING_MESSAGE_ID, null)?.let {
             if (automationEngine.getSchedule(it) != null) {
                 UALog.d("Pending in-app message replaced.")
                 legacyAnalytics.recordReplacedEvent(it, schedule.identifier)
@@ -108,12 +108,12 @@ internal class LegacyInAppMessaging(
 
         // Schedule the new one
         automationEngine.upsertSchedules(listOf(schedule))
-        preferenceDataStore.put(PENDING_MESSAGE_ID, schedule.identifier)
+        preferenceStore.sync.put(PENDING_MESSAGE_ID, schedule.identifier)
     }
 
     private suspend fun processDirectOpen(sendId: String) {
-        if (preferenceDataStore.getString(PENDING_MESSAGE_ID, null) == sendId) {
-            preferenceDataStore.remove(PENDING_MESSAGE_ID)
+        if (preferenceStore.sync.getString(PENDING_MESSAGE_ID, null) == sendId) {
+            preferenceStore.sync.remove(PENDING_MESSAGE_ID)
 
             if (automationEngine.getSchedule(sendId) != null) {
                 UALog.d("Pending in-app message cancelled.")

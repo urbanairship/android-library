@@ -9,7 +9,7 @@ import android.util.Log
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.UALog.logLevel
@@ -53,7 +53,7 @@ import kotlinx.coroutines.launch
 @OpenForTesting
 public class AirshipChannel internal constructor(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     private val runtimeConfig: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val permissionsManager: PermissionsManager,
@@ -75,7 +75,7 @@ public class AirshipChannel internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public constructor(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         permissionsManager: PermissionsManager,
@@ -157,7 +157,7 @@ public class AirshipChannel internal constructor(
 
         privacyManager.addListener {
             if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
-                tagLock.withLock { dataStore.remove(TAGS_KEY) }
+                tagLock.withLock { dataStore.sync.remove(TAGS_KEY) }
                 channelManager.clearPending()
             }
             updateRegistration()
@@ -410,7 +410,7 @@ public class AirshipChannel internal constructor(
                     return emptySet()
                 }
 
-                val tags = dataStore.getJsonValue(TAGS_KEY).optList().mapNotNull {
+                val tags = dataStore.sync.getJsonValue(TAGS_KEY).optList().mapNotNull {
                     it.string
                 }.toSet()
 
@@ -429,7 +429,7 @@ public class AirshipChannel internal constructor(
                     return
                 }
                 val normalizedTags = TagUtils.normalizeTags(tags)
-                dataStore.put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags))
+                dataStore.sync.put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags))
             }
             updateRegistration()
         }
@@ -622,7 +622,7 @@ public class AirshipChannel internal constructor(
          */
         internal const val ACTION_CHANNEL_CREATED = "com.urbanairship.CHANNEL_CREATED"
 
-        // PreferenceDataStore keys
+        // PreferenceStore keys
         private const val TAGS_KEY = "com.urbanairship.push.TAGS"
 
         private const val ACTION_UPDATE_CHANNEL = "ACTION_UPDATE_CHANNEL"

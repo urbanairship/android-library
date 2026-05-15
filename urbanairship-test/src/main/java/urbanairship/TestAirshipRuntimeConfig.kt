@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship
 
+import com.urbanairship.preferences.PreferenceStore
+
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
@@ -11,7 +13,7 @@ import com.urbanairship.remoteconfig.RemoteConfig
 @SuppressLint("VisibleForTests")
 public class TestAirshipRuntimeConfig private constructor(
     private val configProvider: SettableProvider<AirshipConfigOptions>,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     private val platformProvider: SettableProvider<Platform>,
     remoteConfig: RemoteConfig?,
     session: RequestSession? = null
@@ -23,7 +25,7 @@ public class TestAirshipRuntimeConfig private constructor(
         SettableProvider(
             AirshipConfigOptions.Builder().setAppKey("appKey").setAppSecret("appSecret").build()
         ),
-        PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext<Context>()),
+        PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext<Context>()),
         SettableProvider(Platform.ANDROID),
         remoteConfig,
         session

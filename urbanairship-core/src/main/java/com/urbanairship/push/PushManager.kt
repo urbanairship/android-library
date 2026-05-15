@@ -12,7 +12,7 @@ import com.urbanairship.AirshipExecutors
 import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.Platform
 import com.urbanairship.Predicate
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.R
@@ -65,7 +65,7 @@ import kotlin.time.Duration.Companion.seconds
  */
 public open class PushManager @VisibleForTesting internal constructor(
     context: Context,
-    internal val preferenceDataStore: PreferenceDataStore,
+    internal val preferenceStore: PreferenceStore,
     private val config: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val pushProvidersSupplier: () -> PushProviders,
@@ -76,7 +76,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     private val notificationManager: AirshipNotificationManager,
     private val activityMonitor: ActivityMonitor,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
-) : JobAwareAirshipComponent(context, preferenceDataStore, jobDispatcher) {
+) : JobAwareAirshipComponent(context, preferenceStore, jobDispatcher) {
 
 
     public var notificationChannelRegistry: NotificationChannelRegistry =
@@ -173,7 +173,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      * can be accessed from [com.urbanairship.Airship.push].
      *
      * @param context Application context
-     * @param preferenceDataStore The preferences data store.
+     * @param preferenceStore The preferences data store.
      * @param config The airship config options.
      * @param pushProvidersSupplier The push providers supplier.
      * @param airshipChannel The airship channel.
@@ -184,7 +184,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public constructor(
         context: Context,
-        preferenceDataStore: PreferenceDataStore,
+        preferenceStore: PreferenceStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         pushProvidersSupplier: () -> PushProviders,
@@ -193,7 +193,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         permissionsManager: PermissionsManager
     ) : this(
         context,
-        preferenceDataStore,
+        preferenceStore,
         config,
         privacyManager,
         pushProvidersSupplier,
@@ -218,7 +218,7 @@ public open class PushManager @VisibleForTesting internal constructor(
             when(permission) {
                 Permission.DISPLAY_NOTIFICATIONS -> {
                     privacyManager.enable(PrivacyManager.Feature.PUSH)
-                    preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
+                    preferenceStore.sync.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
                     airshipChannel.updateRegistration()
                     updateStatusObserver()
                 }
@@ -256,7 +256,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
         val delegate: PermissionDelegate = NotificationsPermissionDelegate(
             defaultChannelId,
-            preferenceDataStore,
+            preferenceStore,
             notificationManager,
             notificationChannelRegistry,
             activityMonitor
@@ -291,13 +291,13 @@ public open class PushManager @VisibleForTesting internal constructor(
             permissionsManager.checkPermissionStatus(Permission.DISPLAY_NOTIFICATIONS)
         when (status) {
             PermissionStatus.GRANTED -> {
-                preferenceDataStore.put(REQUEST_PERMISSION_KEY, false)
+                preferenceStore.sync.put(REQUEST_PERMISSION_KEY, false)
                 onCheckComplete?.run()
             }
 
             else -> {
                 if (shouldRequestNotificationPermission()) {
-                    preferenceDataStore.put(REQUEST_PERMISSION_KEY, false)
+                    preferenceStore.sync.put(REQUEST_PERMISSION_KEY, false)
                     permissionsManager.requestPermission(Permission.DISPLAY_NOTIFICATIONS)
                     onCheckComplete?.run()
                 } else {
@@ -312,7 +312,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         if (!activityMonitor.isAppForegrounded) return false
         if (!isAirshipReady) return false
         if (!userNotificationsEnabled) return false
-        if (!preferenceDataStore.getBoolean(REQUEST_PERMISSION_KEY, true)) return false
+        if (!preferenceStore.sync.getBoolean(REQUEST_PERMISSION_KEY, true)) return false
         if (!config.configOptions.isPromptForPermissionOnUserNotificationsEnabled) return false
 
         return true
@@ -327,7 +327,7 @@ public open class PushManager @VisibleForTesting internal constructor(
             isPushManagerEnabled = true
             if (pushProvider == null) {
                 pushProvider = resolvePushProvider()
-                val pushDeliveryType = preferenceDataStore.getString(PUSH_DELIVERY_TYPE, null)
+                val pushDeliveryType = preferenceStore.sync.getString(PUSH_DELIVERY_TYPE, null)
                 if (pushProvider?.deliveryType?.value != pushDeliveryType) {
                     clearPushToken()
                 }
@@ -342,8 +342,8 @@ public open class PushManager @VisibleForTesting internal constructor(
             }
 
             isPushManagerEnabled = false
-            preferenceDataStore.remove(PUSH_DELIVERY_TYPE)
-            preferenceDataStore.remove(PUSH_TOKEN_KEY)
+            preferenceStore.sync.remove(PUSH_DELIVERY_TYPE)
+            preferenceStore.sync.remove(PUSH_TOKEN_KEY)
             shouldDispatchUpdateTokenJob = true
         }
     }
@@ -361,7 +361,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     private fun resolvePushProvider(): PushProvider? {
         // Existing provider class
         val pushProviders = pushProvidersSupplier()
-        val existingProviderClass = preferenceDataStore.getString(PROVIDER_CLASS_KEY, null)
+        val existingProviderClass = preferenceStore.sync.getString(PROVIDER_CLASS_KEY, null)
 
         // Try to use the same provider
         if (existingProviderClass?.isNotEmpty() == true) {
@@ -371,7 +371,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
         // Find the best provider for the platform
         val provider = pushProviders.getBestProvider(config.platform)
-        provider?.let { preferenceDataStore.put(PROVIDER_CLASS_KEY, it.javaClass.toString()) }
+        provider?.let { preferenceStore.sync.put(PROVIDER_CLASS_KEY, it.javaClass.toString()) }
 
         return provider
     }
@@ -448,16 +448,16 @@ public open class PushManager @VisibleForTesting internal constructor(
      */
     public var userNotificationsEnabled: Boolean
         get() {
-            return preferenceDataStore.getBoolean(USER_NOTIFICATIONS_ENABLED_KEY, false)
+            return preferenceStore.sync.getBoolean(USER_NOTIFICATIONS_ENABLED_KEY, false)
         }
         set(enabled) {
             if (userNotificationsEnabled == enabled) {
                 return
             }
 
-            preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled)
+            preferenceStore.sync.put(USER_NOTIFICATIONS_ENABLED_KEY, enabled)
             if (enabled) {
-                preferenceDataStore.put(REQUEST_PERMISSION_KEY, true)
+                preferenceStore.sync.put(REQUEST_PERMISSION_KEY, true)
                 checkPermission { airshipChannel.updateRegistration() }
             } else {
                 airshipChannel.updateRegistration()
@@ -521,7 +521,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     public suspend fun enableUserNotificationsSuspending(
         promptFallback: PermissionPromptFallback,
     ) : Boolean {
-        preferenceDataStore.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
+        preferenceStore.sync.put(USER_NOTIFICATIONS_ENABLED_KEY, true)
         val status = permissionsManager.requestPermission(
             permission = Permission.DISPLAY_NOTIFICATIONS,
             fallback = promptFallback
@@ -761,14 +761,14 @@ public open class PushManager @VisibleForTesting internal constructor(
      * Gets the push token.
      */
     public val pushToken: String?
-        get() = preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
+        get() = preferenceStore.sync.getString(PUSH_TOKEN_KEY, null)
 
     /**
      * Clear the push token.
      */
     private fun clearPushToken() {
-        preferenceDataStore.remove(PUSH_TOKEN_KEY)
-        preferenceDataStore.remove(PUSH_DELIVERY_TYPE)
+        preferenceStore.sync.remove(PUSH_TOKEN_KEY)
+        preferenceStore.sync.remove(PUSH_DELIVERY_TYPE)
         pushTokenResult.value = PushTokenResult.Pending
         updateStatusObserver()
     }
@@ -793,7 +793,7 @@ public open class PushManager @VisibleForTesting internal constructor(
 
         synchronized(uniqueIdLock) {
             val jsonList = try {
-                val json = preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null)
+                val json = preferenceStore.sync.getString(LAST_CANONICAL_IDS_KEY, null)
                 JsonValue.parseString(json).list
             } catch (e: JsonException) {
                 UALog.d(e, "Unable to parse canonical Ids.")
@@ -819,7 +819,7 @@ public open class PushManager @VisibleForTesting internal constructor(
             }
 
             // Store the new list
-            preferenceDataStore.put(
+            preferenceStore.sync.put(
                 LAST_CANONICAL_IDS_KEY, JsonValue.wrapOpt(canonicalIds).toString()
             )
 
@@ -874,8 +874,8 @@ public open class PushManager @VisibleForTesting internal constructor(
         if (token != null && token != pushToken) {
             UALog.i("PushManager - Push registration updated.")
 
-            preferenceDataStore.put(PUSH_DELIVERY_TYPE, provider.deliveryType.value)
-            preferenceDataStore.put(PUSH_TOKEN_KEY, token)
+            preferenceStore.sync.put(PUSH_DELIVERY_TYPE, provider.deliveryType.value)
+            preferenceStore.sync.put(PUSH_TOKEN_KEY, token)
             pushTokenResult.value = PushTokenResult.Available(token)
             updateStatusObserver()
 
@@ -916,14 +916,14 @@ public open class PushManager @VisibleForTesting internal constructor(
         }
 
         if (pushProviderClass != null && provider.javaClass == pushProviderClass) {
-            val oldToken = preferenceDataStore.getString(PUSH_TOKEN_KEY, null)
+            val oldToken = preferenceStore.sync.getString(PUSH_TOKEN_KEY, null)
             if (token != null && token != oldToken) {
                 // Store the new token directly instead of clearing. Clearing
                 // creates a window where pushToken is null, and any concurrent
                 // CRA during that window would report opt_in=false to the server,
                 // incorrectly opting the user out of push.
-                preferenceDataStore.put(PUSH_DELIVERY_TYPE, provider.deliveryType.value)
-                preferenceDataStore.put(PUSH_TOKEN_KEY, token)
+                preferenceStore.sync.put(PUSH_DELIVERY_TYPE, provider.deliveryType.value)
+                preferenceStore.sync.put(PUSH_TOKEN_KEY, token)
                 pushTokenResult.value = PushTokenResult.Available(token)
                 updateStatusObserver()
 

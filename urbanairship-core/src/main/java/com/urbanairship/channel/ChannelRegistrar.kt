@@ -4,7 +4,7 @@ package com.urbanairship.channel
 
 import android.content.Context
 import androidx.annotation.RestrictTo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.app.ActivityMonitor
@@ -58,7 +58,7 @@ public sealed class ChannelGenerationMethod {
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ChannelRegistrar(
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val channelApiClient: ChannelApiClient,
     private val activityMonitor: ActivityMonitor,
     private val channelCreateOption: AirshipChannelCreateOption? = null,
@@ -67,7 +67,7 @@ public class ChannelRegistrar(
 ) {
     public constructor(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager
     ) : this(
@@ -84,8 +84,8 @@ public class ChannelRegistrar(
     internal val channelIdFlow: StateFlow<String?> = _channelIdFlow.asStateFlow()
 
     internal var channelId: String?
-        get() = dataStore.getString(CHANNEL_ID_KEY, null)
-        private set(value) = dataStore.put(CHANNEL_ID_KEY, value)
+        get() = dataStore.sync.getString(CHANNEL_ID_KEY, null)
+        private set(value) = dataStore.sync.put(CHANNEL_ID_KEY, value)
 
 
     internal suspend fun updateRegistration(): RegistrationResult {
@@ -158,10 +158,10 @@ public class ChannelRegistrar(
     }
 
     private var lastChannelRegistrationInfo: RegistrationInfo?
-        get() = dataStore.optJsonValue(LAST_CHANNEL_REGISTRATION_INFO)?.tryParse {
+        get() = dataStore.sync.optJsonValue(LAST_CHANNEL_REGISTRATION_INFO)?.tryParse {
             RegistrationInfo(it.requireMap())
         }
-        set(value) = dataStore.put(LAST_CHANNEL_REGISTRATION_INFO, value)
+        set(value) = dataStore.sync.put(LAST_CHANNEL_REGISTRATION_INFO, value)
 
     private suspend fun createChannel(): RegistrationResult {
         val payload = buildCraPayload() ?: return RegistrationResult.FAILED

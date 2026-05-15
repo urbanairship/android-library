@@ -4,7 +4,7 @@ package com.urbanairship.remotedata
 
 import android.content.Context
 import android.net.Uri
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestResult
@@ -12,21 +12,21 @@ import java.util.Locale
 
 internal class AppRemoteDataProvider(
     context: Context,
-    preferenceDataStore: PreferenceDataStore,
+    preferenceStore: PreferenceStore,
     config: AirshipRuntimeConfig,
     private val apiClient: RemoteDataApiClient,
     private val urlFactory: RemoteDataUrlFactory
 ) : RemoteDataProvider(
     source = RemoteDataSource.APP,
     remoteDataStore = RemoteDataStore(context, config.configOptions.appKey, "ua_remotedata.db"),
-    preferenceDataStore = preferenceDataStore,
+    preferenceStore = preferenceStore,
     defaultEnabled = true
 ) {
 
     init {
         // Fixes  17.x -> 16.x -> 17.x issue
-        if (preferenceDataStore.isSet(LAST_REFRESH_METADATA)) {
-            preferenceDataStore.remove(LAST_REFRESH_METADATA)
+        if (preferenceStore.sync.isSet(LAST_REFRESH_METADATA)) {
+            preferenceStore.sync.remove(LAST_REFRESH_METADATA)
             clearLastRefreshState()
         }
     }

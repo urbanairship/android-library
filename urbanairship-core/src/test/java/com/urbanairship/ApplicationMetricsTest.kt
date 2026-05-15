@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship
 
+import com.urbanairship.preferences.PreferenceStore
+
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert
@@ -11,7 +13,7 @@ public class ApplicationMetricsTest : BaseTestCase() {
     private val context = ApplicationProvider.getApplicationContext<Context>()
 
     private val activityMonitor = TestActivityMonitor()
-    private val dataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext())
+    private val dataStore = PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext())
     private val packageManager = Shadows.shadowOf(context.packageManager)
     private val privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL)
 
@@ -50,7 +52,7 @@ public class ApplicationMetricsTest : BaseTestCase() {
 
     @Test
     public fun testGetAppVersionUpdated() {
-        dataStore.put("com.urbanairship.application.metrics.APP_VERSION", 1L)
+        dataStore.sync.put("com.urbanairship.application.metrics.APP_VERSION", 1L)
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 2
 
@@ -67,7 +69,7 @@ public class ApplicationMetricsTest : BaseTestCase() {
         // Last app version should now be 2
         Assert.assertEquals(
             2L,
-            dataStore.getLong("com.urbanairship.application.metrics.APP_VERSION", -1)
+            dataStore.sync.getLong("com.urbanairship.application.metrics.APP_VERSION", -1)
         )
     }
 
@@ -97,13 +99,13 @@ public class ApplicationMetricsTest : BaseTestCase() {
         // Last app version should now be 2
         Assert.assertEquals(
             2L,
-            dataStore.getLong("com.urbanairship.application.metrics.APP_VERSION", -1)
+            dataStore.sync.getLong("com.urbanairship.application.metrics.APP_VERSION", -1)
         )
     }
 
     @Test
     public fun testGetAppVersionUpdatedEqualVersions() {
-        dataStore.put("com.urbanairship.application.metrics.APP_VERSION", 2L)
+        dataStore.sync.put("com.urbanairship.application.metrics.APP_VERSION", 2L)
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 2L
 
@@ -121,13 +123,13 @@ public class ApplicationMetricsTest : BaseTestCase() {
         // Last app version should remain 2
         Assert.assertEquals(
             2L,
-            dataStore.getLong("com.urbanairship.application.metrics.APP_VERSION", -1)
+            dataStore.sync.getLong("com.urbanairship.application.metrics.APP_VERSION", -1)
         )
     }
 
     @Test
     public fun testGetAppVersionUpdatedEarlierVersion() {
-        dataStore.put("com.urbanairship.application.metrics.APP_VERSION", 2L)
+        dataStore.sync.put("com.urbanairship.application.metrics.APP_VERSION", 2L)
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 1L
 
@@ -144,7 +146,7 @@ public class ApplicationMetricsTest : BaseTestCase() {
         // Last app version should remain 1
         Assert.assertEquals(
             1L,
-            dataStore.getLong("com.urbanairship.application.metrics.APP_VERSION", -1)
+            dataStore.sync.getLong("com.urbanairship.application.metrics.APP_VERSION", -1)
         )
     }
 }

@@ -4,7 +4,7 @@ package com.urbanairship.messagecenter
 
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.UALog
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.iam.content.AirshipLayout
@@ -16,14 +16,14 @@ import kotlin.time.Duration.Companion.hours
 /** Job handler for [Inbox] component. */
 internal class InboxJobHandler @VisibleForTesting internal constructor(
     private val user: User,
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val messageDao: MessageDao,
     private val inboxApiClient: InboxApiClient,
 ) {
     internal constructor(
         user: User,
         runtimeConfig: AirshipRuntimeConfig,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         messageDao: MessageDao
     ) : this(
         user = user,
@@ -34,12 +34,12 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
 
     /** Delete saved state from the data store. */
     internal fun removeStoredData() {
-        dataStore.remove(LAST_MESSAGE_REFRESH_TIME)
-        dataStore.remove(LAST_UPDATE_TIME)
+        dataStore.sync.remove(LAST_MESSAGE_REFRESH_TIME)
+        dataStore.sync.remove(LAST_UPDATE_TIME)
     }
 
     suspend fun getOrCreateUserCredentials(channelId: String): UserCredentials? {
-        val lastUpdateTime = dataStore.getLong(LAST_UPDATE_TIME, 0)
+        val lastUpdateTime = dataStore.sync.getLong(LAST_UPDATE_TIME, 0)
         val now = System.currentTimeMillis()
 
         val credentials = user.userCredentials
@@ -58,7 +58,7 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
     ): Boolean {
         UALog.i { "Refreshing inbox messages." }
         val response = inboxApiClient.fetchMessages(
-            userCredentials, channelId, dataStore.getString(LAST_MESSAGE_REFRESH_TIME, null)
+            userCredentials, channelId, dataStore.sync.getString(LAST_MESSAGE_REFRESH_TIME, null)
         )
 
         UALog.v { "Fetch inbox messages response: $response" }
@@ -68,7 +68,7 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
         if (response.isSuccessful && responseValue != null) {
             UALog.i { "InboxJobHandler - Received ${responseValue.size()} inbox messages." }
             updateInbox(responseValue)
-            dataStore.put(LAST_MESSAGE_REFRESH_TIME, response.headers?.get("Last-Modified"))
+            dataStore.sync.put(LAST_MESSAGE_REFRESH_TIME, response.headers?.get("Last-Modified"))
             return true
         }
 
@@ -212,8 +212,8 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
 
         return if (response.isSuccessful && userCredentials != null) {
             UALog.i { "InboxJobHandler - Created Rich Push user: ${userCredentials.username }" }
-            dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis())
-            dataStore.remove(LAST_MESSAGE_REFRESH_TIME)
+            dataStore.sync.put(LAST_UPDATE_TIME, System.currentTimeMillis())
+            dataStore.sync.remove(LAST_MESSAGE_REFRESH_TIME)
             user.onCreated(userCredentials, channelId)
             userCredentials
         } else {
@@ -231,17 +231,17 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
         return when (response.status) {
             HttpURLConnection.HTTP_OK -> {
                 UALog.i { "Rich Push user updated." }
-                dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis())
+                dataStore.sync.put(LAST_UPDATE_TIME, System.currentTimeMillis())
                 user.onUpdated(channelId)
                 userCredentials
             }
             HttpURLConnection.HTTP_UNAUTHORIZED -> {
                 UALog.d { "Re-creating Rich Push user." }
-                dataStore.put(LAST_UPDATE_TIME, 0)
+                dataStore.sync.put(LAST_UPDATE_TIME, 0)
                 createUser(channelId)
             }
             else -> {
-                dataStore.put(LAST_UPDATE_TIME, 0)
+                dataStore.sync.put(LAST_UPDATE_TIME, 0)
                 null
             }
         }

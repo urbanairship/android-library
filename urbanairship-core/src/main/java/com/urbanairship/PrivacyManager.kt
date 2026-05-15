@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship
 
+import com.urbanairship.preferences.PreferenceStore
+
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.config.RemoteConfigObserver
@@ -42,7 +44,7 @@ import kotlinx.coroutines.launch
  * - Manufacturer (if Huawei)
  */
 public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) constructor(
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val defaultEnabledFeatures: Feature,
     private val configObserver: RemoteConfigObserver = RemoteConfigObserver(dataStore),
     resetEnabledFeatures: Boolean = false,
@@ -75,7 +77,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
 
     init {
         if (resetEnabledFeatures) {
-            dataStore.remove(ENABLED_FEATURES_KEY)
+            dataStore.sync.remove(ENABLED_FEATURES_KEY)
         }
 
         migrateData()
@@ -97,12 +99,12 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
 
     private var localEnabledFeature: Feature
         get() {
-            val stored = dataStore.getInt(ENABLED_FEATURES_KEY, defaultEnabledFeatures.rawValue)
+            val stored = dataStore.sync.getInt(ENABLED_FEATURES_KEY, defaultEnabledFeatures.rawValue)
             // Remove deprecated features from the enabled features, if any are set.
             return Feature(stored) and Feature.ALL
         }
         set(value) {
-            dataStore.put(ENABLED_FEATURES_KEY, value.rawValue)
+            dataStore.sync.put(ENABLED_FEATURES_KEY, value.rawValue)
         }
 
     /** The current set of enabled features. */
@@ -235,41 +237,41 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
 
     @VisibleForTesting
     internal fun migrateData() {
-        if (dataStore.isSet(DATA_COLLECTION_ENABLED_KEY)) {
-            if (dataStore.getBoolean(DATA_COLLECTION_ENABLED_KEY, false)) {
+        if (dataStore.sync.isSet(DATA_COLLECTION_ENABLED_KEY)) {
+            if (dataStore.sync.getBoolean(DATA_COLLECTION_ENABLED_KEY, false)) {
                 this.setEnabledFeatures(Feature.ALL)
             } else {
                 this.setEnabledFeatures(Feature.NONE)
             }
-            dataStore.remove(DATA_COLLECTION_ENABLED_KEY)
+            dataStore.sync.remove(DATA_COLLECTION_ENABLED_KEY)
         }
 
-        if (dataStore.isSet(ANALYTICS_ENABLED_KEY)) {
-            if (!dataStore.getBoolean(ANALYTICS_ENABLED_KEY, true)) {
+        if (dataStore.sync.isSet(ANALYTICS_ENABLED_KEY)) {
+            if (!dataStore.sync.getBoolean(ANALYTICS_ENABLED_KEY, true)) {
                 this.disable(Feature.ANALYTICS)
             }
-            dataStore.remove(ANALYTICS_ENABLED_KEY)
+            dataStore.sync.remove(ANALYTICS_ENABLED_KEY)
         }
 
-        if (dataStore.isSet(PUSH_TOKEN_REGISTRATION_ENABLED_KEY)) {
-            if (!dataStore.getBoolean(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true)) {
+        if (dataStore.sync.isSet(PUSH_TOKEN_REGISTRATION_ENABLED_KEY)) {
+            if (!dataStore.sync.getBoolean(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true)) {
                 this.disable(Feature.PUSH)
             }
-            dataStore.remove(PUSH_TOKEN_REGISTRATION_ENABLED_KEY)
+            dataStore.sync.remove(PUSH_TOKEN_REGISTRATION_ENABLED_KEY)
         }
 
-        if (dataStore.isSet(PUSH_ENABLED_KEY)) {
-            if (!dataStore.getBoolean(PUSH_ENABLED_KEY, true)) {
+        if (dataStore.sync.isSet(PUSH_ENABLED_KEY)) {
+            if (!dataStore.sync.getBoolean(PUSH_ENABLED_KEY, true)) {
                 this.disable(Feature.PUSH)
             }
-            dataStore.remove(PUSH_ENABLED_KEY)
+            dataStore.sync.remove(PUSH_ENABLED_KEY)
         }
 
-        if (dataStore.isSet(IAA_ENABLED_KEY)) {
-            if (!dataStore.getBoolean(IAA_ENABLED_KEY, true)) {
+        if (dataStore.sync.isSet(IAA_ENABLED_KEY)) {
+            if (!dataStore.sync.getBoolean(IAA_ENABLED_KEY, true)) {
                 this.disable(Feature.IN_APP_AUTOMATION)
             }
-            dataStore.remove(IAA_ENABLED_KEY)
+            dataStore.sync.remove(IAA_ENABLED_KEY)
         }
     }
 

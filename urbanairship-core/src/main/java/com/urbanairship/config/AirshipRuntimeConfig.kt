@@ -5,7 +5,7 @@ import android.os.Build
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipConfigOptions
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.Provider
 import com.urbanairship.Platform
 import com.urbanairship.annotation.OpenForTesting
@@ -34,7 +34,7 @@ public class AirshipRuntimeConfig internal constructor (
     public constructor(
         configOptionsProvider: Provider<AirshipConfigOptions>,
         requestSession: RequestSession,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         platformProvider: Provider<Platform>
     ): this(
         configOptionsProvider, requestSession, RemoteConfigObserver(dataStore), platformProvider
@@ -189,7 +189,7 @@ public class AirshipRuntimeConfig internal constructor (
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class RemoteConfigObserver(dataStore: PreferenceDataStore) {
+public class RemoteConfigObserver(dataStore: PreferenceStore) {
     private val remoteConfigListeners: MutableList<AirshipRuntimeConfig.ConfigChangeListener> = CopyOnWriteArrayList()
     private val remoteConfigCache: RemoteConfigCache = RemoteConfigCache(dataStore)
 

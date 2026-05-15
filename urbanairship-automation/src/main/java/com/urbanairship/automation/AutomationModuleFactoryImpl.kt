@@ -6,7 +6,7 @@ import android.content.Context
 import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
 import com.urbanairship.ApplicationMetrics
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.ActionsManifest
@@ -75,7 +75,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
 
     override fun build(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,
@@ -181,7 +181,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
             legacyInAppMessaging = LegacyInAppMessaging(
                 context = context,
                 pushManager = pushManager,
-                preferenceDataStore = dataStore,
+                preferenceStore = dataStore,
                 automationEngine = engine,
                 legacyAnalytics = LegacyAnalytics(eventRecorder)
             ),

@@ -8,7 +8,7 @@ import androidx.core.content.pm.PackageInfoCompat
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.JobAwareAirshipComponent
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.UALog
@@ -66,7 +66,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 public class RemoteData @VisibleForTesting internal constructor(
     context: Context,
     private val config: AirshipRuntimeConfig,
-    private val preferenceDataStore: PreferenceDataStore,
+    private val preferenceStore: PreferenceStore,
     private val privacyManager: PrivacyManager,
     private val localeManager: LocaleManager,
     private val pushManager: PushManager,
@@ -78,7 +78,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val taskSleeper: TaskSleeper = TaskSleeper.default,
     coroutineDispatcher: CoroutineDispatcher = AirshipDispatchers.IO
-) : JobAwareAirshipComponent(context, preferenceDataStore) {
+) : JobAwareAirshipComponent(context, preferenceStore) {
 
     private val scope = CoroutineScope(coroutineDispatcher + SupervisorJob())
 
@@ -114,7 +114,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     internal constructor(
         context: Context,
         config: AirshipRuntimeConfig,
-        preferenceDataStore: PreferenceDataStore,
+        preferenceStore: PreferenceStore,
         privacyManager: PrivacyManager,
         localeManager: LocaleManager,
         pushManager: PushManager,
@@ -122,7 +122,7 @@ public class RemoteData @VisibleForTesting internal constructor(
         contact: Contact,
         providers: List<RemoteDataProvider> = createProviders(
             context = context,
-            preferenceDataStore = preferenceDataStore,
+            preferenceStore = preferenceStore,
             config = config,
             pushProvidersProvider = pushProviders,
             contact = contact
@@ -130,7 +130,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     ) : this(
         context = context,
         config = config,
-        preferenceDataStore = preferenceDataStore,
+        preferenceStore = preferenceStore,
         privacyManager = privacyManager,
         localeManager = localeManager,
         pushManager = pushManager,
@@ -283,11 +283,11 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     public val randomValue: Int
         get() {
-            var randomValue = preferenceDataStore.getInt(RANDOM_VALUE_KEY, -1)
+            var randomValue = preferenceStore.sync.getInt(RANDOM_VALUE_KEY, -1)
             if (randomValue == -1) {
                 val random = SecureRandom()
                 randomValue = random.nextInt(MAX_RANDOM_VALUE + 1)
-                preferenceDataStore.put(RANDOM_VALUE_KEY, randomValue)
+                preferenceStore.sync.put(RANDOM_VALUE_KEY, randomValue)
             }
             return randomValue
         }
@@ -378,16 +378,16 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     private fun updateChangeToken() {
         changeTokenLock.withLock {
-            this.dataStore.put(CHANGE_TOKEN_KEY, UUID.randomUUID().toString())
+            this.dataStore.sync.put(CHANGE_TOKEN_KEY, UUID.randomUUID().toString())
         }
     }
 
     private val changeToken: String
         get() {
             return changeTokenLock.withLock {
-                val token = (this.dataStore.getString(CHANGE_TOKEN_KEY, "") ?: "").ifEmpty {
+                val token = (this.dataStore.sync.getString(CHANGE_TOKEN_KEY, "") ?: "").ifEmpty {
                     val token = UUID.randomUUID().toString()
-                    this.dataStore.put(CHANGE_TOKEN_KEY, token)
+                    this.dataStore.sync.put(CHANGE_TOKEN_KEY, token)
                     token
                 }
 
@@ -477,7 +477,7 @@ public class RemoteData @VisibleForTesting internal constructor(
 
         private fun createProviders(
             context: Context,
-            preferenceDataStore: PreferenceDataStore,
+            preferenceStore: PreferenceStore,
             config: AirshipRuntimeConfig,
             pushProvidersProvider: () -> PushProviders,
             contact: Contact
@@ -487,14 +487,14 @@ public class RemoteData @VisibleForTesting internal constructor(
             return listOf(
                 AppRemoteDataProvider(
                     context = context,
-                    preferenceDataStore = preferenceDataStore,
+                    preferenceStore = preferenceStore,
                     config = config,
                     apiClient = apiClient,
                     urlFactory = urlFactory
                 ),
                 ContactRemoteDataProvider(
                     context = context,
-                    preferenceDataStore = preferenceDataStore,
+                    preferenceStore = preferenceStore,
                     config = config,
                     contact = contact,
                     apiClient = apiClient,

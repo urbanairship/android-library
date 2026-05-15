@@ -8,7 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.Airship
 import com.urbanairship.job.JobInfo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.job.JobResult
 import com.urbanairship.push.PushListener
@@ -44,7 +44,7 @@ public class MessageCenterTest {
     private val testDispatcher = StandardTestDispatcher()
     private val unconfinedTestDispatcher = UnconfinedTestDispatcher()
 
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
+    private val dataStore = PreferenceStore.inMemoryStore(context)
     private val shadowApplication: ShadowApplication = Shadows.shadowOf(context as Application?)
     private val privacyManager = mockk<PrivacyManager>(relaxUnitFun = true) {
         every { isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns true
