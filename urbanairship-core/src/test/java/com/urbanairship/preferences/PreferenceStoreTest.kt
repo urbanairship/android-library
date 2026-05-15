@@ -140,6 +140,30 @@ public class PreferenceStoreTest {
     }
 
     @Test
+    public fun throwingDeserializerYieldsNull() {
+        val key = SyncPrefKey.custom<String>(
+            name = "test.throws.on.read",
+            serialize = { it },
+            deserialize = { error("nope") }
+        )
+
+        store.sync.put(key.name, "anything")
+        assertNull(store.get(key))
+    }
+
+    @Test
+    public fun throwingSerializerDropsWrite() {
+        val key = SyncPrefKey.custom<String>(
+            name = "test.throws.on.write",
+            serialize = { error("nope") },
+            deserialize = { it }
+        )
+
+        store.put(key, "anything")
+        assertFalse(store.isSet(key))
+    }
+
+    @Test
     public fun asyncRoundTrip(): Unit = runTest {
         val key = AsyncPrefKey.string("test.async.string")
 
