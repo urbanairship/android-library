@@ -9,6 +9,7 @@ import com.urbanairship.json.jsonMapOf
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -172,6 +173,57 @@ public class PreferenceStoreTest {
 
         store.remove(key)
         assertFalse(store.isSet(key))
+    }
+
+    @Test
+    public fun asyncPutWritesLazyTrue(): Unit = runTest {
+        val key = AsyncPrefKey.string("test.async.write")
+        store.put(key, "value")
+
+        val row = store.sync.dao.findRow(key.name)
+        assertNotNull(row)
+        assertTrue("async put should store row with lazy=true", row!!.lazy)
+    }
+
+    @Test
+    public fun asyncReadMigratesEagerRowToLazy(): Unit = runTest {
+        val keyName = "test.migration.eager.to.lazy"
+        // Pre-condition: write via sync, row is lazy=false (eager).
+        store.put(SyncPrefKey.string(keyName), "value")
+        val before = store.sync.dao.findRow(keyName)
+        assertFalse("sync put should write lazy=false", before!!.lazy)
+
+        // First async read of the same name self-migrates the row.
+        val result = store.get(AsyncPrefKey.string(keyName))
+        assertEquals("value", result)
+
+        val after = store.sync.dao.findRow(keyName)
+        assertTrue("async read should flip the row to lazy=true", after!!.lazy)
+    }
+
+    @Test
+    public fun syncPutResetsLazyToFalse(): Unit = runTest {
+        val keyName = "test.migration.lazy.to.eager"
+        // After an async write the row is lazy=true.
+        store.put(AsyncPrefKey.string(keyName), "first")
+        assertTrue(store.sync.dao.findRow(keyName)!!.lazy)
+
+        // A subsequent sync put resets lazy back to false (eager again).
+        store.put(SyncPrefKey.string(keyName), "second")
+        assertFalse(
+            "sync put should reset lazy=false on an existing row",
+            store.sync.dao.findRow(keyName)!!.lazy
+        )
+    }
+
+    @Test
+    public fun eagerLoadSkipsLazyRows(): Unit = runTest {
+        store.put(AsyncPrefKey.string("test.eager.skip"), "lazy-value")
+        store.put(SyncPrefKey.string("test.eager.include"), "eager-value")
+
+        val eagerKeys = store.sync.dao.queryEagerPreferences().map { it.key }
+        assertTrue("eager key should be in eager load", "test.eager.include" in eagerKeys)
+        assertFalse("lazy key should be skipped", "test.eager.skip" in eagerKeys)
     }
 
     @Test

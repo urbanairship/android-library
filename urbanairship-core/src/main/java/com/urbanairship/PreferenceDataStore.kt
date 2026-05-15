@@ -27,7 +27,7 @@ public class PreferenceDataStore internal constructor(
     private val scope = CoroutineScope(dispatcher)
     private val preferences = MutableStateFlow<Map<String, Preference>>(emptyMap())
 
-    private val dao = db.dao
+    internal val dao: PreferenceDataDao = db.dao
 
     /**
      * Listener for when preferences change either by the
@@ -46,7 +46,7 @@ public class PreferenceDataStore internal constructor(
     @VisibleForTesting
     internal fun loadPreferences() {
         try {
-            val preferencesFromDao = dao.getPreferences()
+            val preferencesFromDao = dao.queryEagerPreferences()
             val fromStore = preferencesFromDao.map { Preference(it.key, it.value) }
             finishLoad(fromStore)
         } catch (e: Exception) {
@@ -57,7 +57,7 @@ public class PreferenceDataStore internal constructor(
 
     private fun fallbackLoad() {
         val keys = try {
-            dao.queryKeys()
+            dao.queryEagerKeys()
         } catch (e: Exception) {
             UALog.e(e, "Failed to load keys.")
             null
