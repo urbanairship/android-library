@@ -9,6 +9,7 @@ import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.UALog
@@ -283,11 +284,11 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     public val randomValue: Int
         get() {
-            var randomValue = preferenceStore.sync.getInt(RANDOM_VALUE_KEY, -1)
+            var randomValue = preferenceStore.get(RANDOM_VALUE_KEY) ?: -1
             if (randomValue == -1) {
                 val random = SecureRandom()
                 randomValue = random.nextInt(MAX_RANDOM_VALUE + 1)
-                preferenceStore.sync.put(RANDOM_VALUE_KEY, randomValue)
+                preferenceStore.put(RANDOM_VALUE_KEY, randomValue)
             }
             return randomValue
         }
@@ -378,16 +379,16 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     private fun updateChangeToken() {
         changeTokenLock.withLock {
-            this.dataStore.sync.put(CHANGE_TOKEN_KEY, UUID.randomUUID().toString())
+            this.dataStore.put(CHANGE_TOKEN_KEY, UUID.randomUUID().toString())
         }
     }
 
     private val changeToken: String
         get() {
             return changeTokenLock.withLock {
-                val token = (this.dataStore.sync.getString(CHANGE_TOKEN_KEY, "") ?: "").ifEmpty {
+                val token = (this.dataStore.get(CHANGE_TOKEN_KEY) ?: "").ifEmpty {
                     val token = UUID.randomUUID().toString()
-                    this.dataStore.sync.put(CHANGE_TOKEN_KEY, token)
+                    this.dataStore.put(CHANGE_TOKEN_KEY, token)
                     token
                 }
 
@@ -449,8 +450,8 @@ public class RemoteData @VisibleForTesting internal constructor(
     public companion object {
 
         // Datastore keys
-        private const val RANDOM_VALUE_KEY = "com.urbanairship.remotedata.RANDOM_VALUE"
-        private const val CHANGE_TOKEN_KEY = "com.urbanairship.remotedata.CHANGE_TOKEN"
+        private val RANDOM_VALUE_KEY = SyncPrefKey.int("com.urbanairship.remotedata.RANDOM_VALUE")
+        private val CHANGE_TOKEN_KEY = SyncPrefKey.string("com.urbanairship.remotedata.CHANGE_TOKEN")
 
         /**
          * Default foreground refresh interval in milliseconds.

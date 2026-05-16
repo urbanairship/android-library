@@ -4,6 +4,7 @@ package com.urbanairship.channel
 
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -34,18 +35,16 @@ internal class ChannelBatchUpdateManager(
     private val lock = ReentrantLock()
 
     internal val hasPending: Boolean
-    get() {
-        return !dataStore.sync.getJsonValue(UPDATE_DATASTORE_KEY).optList().isEmpty
-    }
+        get() = !(dataStore.get(UPDATE_DATASTORE_KEY)?.optList()?.isEmpty ?: true)
 
     private var updates: List<AudienceUpdate>
         get() {
-            return dataStore.sync.optJsonValue(UPDATE_DATASTORE_KEY)?.tryParse(true) { json ->
+            return dataStore.get(UPDATE_DATASTORE_KEY)?.tryParse(true) { json ->
                 json.optList().map { AudienceUpdate(it.requireMap()) }
             } ?: emptyList()
         }
         set(value) {
-            dataStore.sync.put(UPDATE_DATASTORE_KEY, JsonValue.wrap(value))
+            dataStore.put(UPDATE_DATASTORE_KEY, JsonValue.wrap(value))
         }
 
     init {
@@ -58,7 +57,7 @@ internal class ChannelBatchUpdateManager(
 
     internal fun clearPending() {
         lock.withLock {
-            dataStore.sync.remove(UPDATE_DATASTORE_KEY)
+            dataStore.remove(UPDATE_DATASTORE_KEY)
         }
     }
 
@@ -160,35 +159,35 @@ internal class ChannelBatchUpdateManager(
     @VisibleForTesting
     internal fun migrateData() {
         // List of Lists
-        val attributes = dataStore.sync.getJsonValue(ATTRIBUTE_DATASTORE_KEY).list?.map {
+        val attributes = dataStore.get(ATTRIBUTE_DATASTORE_KEY)?.list?.map {
             AttributeMutation.fromJsonList(it.optList())
         }?.flatten()
 
         // List of Lists
-        val subscriptions = dataStore.sync.getJsonValue(SUBSCRIPTION_LISTS_DATASTORE_KEY).list?.map {
+        val subscriptions = dataStore.get(SUBSCRIPTION_LISTS_DATASTORE_KEY)?.list?.map {
             SubscriptionListMutation.fromJsonList(it.optList())
         }?.flatten()
 
         // Just a list
-        val tags = dataStore.sync.getJsonValue(TAG_GROUP_DATASTORE_KEY).list?.map {
+        val tags = dataStore.get(TAG_GROUP_DATASTORE_KEY)?.list?.map {
             TagGroupsMutation.fromJsonValue(it)
         }
 
         addUpdate(tags, attributes, subscriptions)
 
-        dataStore.sync.remove(ATTRIBUTE_DATASTORE_KEY)
-        dataStore.sync.remove(SUBSCRIPTION_LISTS_DATASTORE_KEY)
-        dataStore.sync.remove(TAG_GROUP_DATASTORE_KEY)
+        dataStore.remove(ATTRIBUTE_DATASTORE_KEY)
+        dataStore.remove(SUBSCRIPTION_LISTS_DATASTORE_KEY)
+        dataStore.remove(TAG_GROUP_DATASTORE_KEY)
     }
 
     internal companion object {
         // Migration keys
-        private const val ATTRIBUTE_DATASTORE_KEY = "com.urbanairship.push.ATTRIBUTE_DATA_STORE"
-        private const val TAG_GROUP_DATASTORE_KEY = "com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS"
-        private const val SUBSCRIPTION_LISTS_DATASTORE_KEY = "com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS"
+        private val ATTRIBUTE_DATASTORE_KEY = SyncPrefKey.json("com.urbanairship.push.ATTRIBUTE_DATA_STORE")
+        private val TAG_GROUP_DATASTORE_KEY = SyncPrefKey.json("com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS")
+        private val SUBSCRIPTION_LISTS_DATASTORE_KEY = SyncPrefKey.json("com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS")
 
         // Updates storage key
-        private const val UPDATE_DATASTORE_KEY = "com.urbanairship.channel.PENDING_AUDIENCE_UPDATES"
+        private val UPDATE_DATASTORE_KEY = SyncPrefKey.json("com.urbanairship.channel.PENDING_AUDIENCE_UPDATES")
     }
 }
 

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.http.RequestResult
@@ -110,9 +111,13 @@ public class ChannelBatchUpdateManagerTest {
 
     @Test
     public fun testMigrate(): TestResult = runTest {
+        val attributeKey = SyncPrefKey.json("com.urbanairship.push.ATTRIBUTE_DATA_STORE")
+        val subscriptionKey = SyncPrefKey.json("com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS")
+        val tagsKey = SyncPrefKey.json("com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS")
+
         // Attributes are stored as a list of lists
-        preferenceStore.sync.put(
-            "com.urbanairship.push.ATTRIBUTE_DATA_STORE",
+        preferenceStore.put(
+            attributeKey,
             jsonListOf(
                 listOf(
                     AttributeMutation.newRemoveAttributeMutation("some attribute", 100),
@@ -121,12 +126,12 @@ public class ChannelBatchUpdateManagerTest {
                 listOf(
                     AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrapOpt("neat"), 100)
                 )
-            )
+            ).toJsonValue()
         )
 
         // Subscriptions are stored as a list of lists
-        preferenceStore.sync.put(
-            "com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS",
+        preferenceStore.put(
+            subscriptionKey,
             jsonListOf(
                 listOf(
                     SubscriptionListMutation.newSubscribeMutation("some list", 100),
@@ -135,24 +140,24 @@ public class ChannelBatchUpdateManagerTest {
                 listOf(
                     SubscriptionListMutation.newSubscribeMutation("some other list", 100)
                 )
-            )
+            ).toJsonValue()
         )
 
         // Tags are stored as a list of mutations
-        preferenceStore.sync.put(
-            "com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS",
+        preferenceStore.put(
+            tagsKey,
             jsonListOf(
                 TagGroupsMutation.newSetTagsMutation("some group", setOf("tag")),
                 TagGroupsMutation.newSetTagsMutation("some other group", setOf("tag"))
-            )
+            ).toJsonValue()
         )
 
         manager.migrateData()
 
         // Verify its deleted
-        assertFalse(preferenceStore.sync.isSet("com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS"))
-        assertFalse(preferenceStore.sync.isSet("com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS"))
-        assertFalse(preferenceStore.sync.isSet("com.urbanairship.push.ATTRIBUTE_DATA_STORE"))
+        assertFalse(preferenceStore.isSet(tagsKey))
+        assertFalse(preferenceStore.isSet(subscriptionKey))
+        assertFalse(preferenceStore.isSet(attributeKey))
 
         // Check expected
         val expectedPending = AudienceOverrides.Channel(

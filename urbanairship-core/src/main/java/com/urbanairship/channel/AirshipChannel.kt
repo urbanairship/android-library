@@ -10,6 +10,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.UALog.logLevel
@@ -157,7 +158,7 @@ public class AirshipChannel internal constructor(
 
         privacyManager.addListener {
             if (!privacyManager.isEnabled(PrivacyManager.Feature.TAGS_AND_ATTRIBUTES)) {
-                tagLock.withLock { dataStore.sync.remove(TAGS_KEY) }
+                tagLock.withLock { dataStore.remove(TAGS_KEY) }
                 channelManager.clearPending()
             }
             updateRegistration()
@@ -410,9 +411,9 @@ public class AirshipChannel internal constructor(
                     return emptySet()
                 }
 
-                val tags = dataStore.sync.getJsonValue(TAGS_KEY).optList().mapNotNull {
+                val tags = dataStore.get(TAGS_KEY)?.optList()?.mapNotNull {
                     it.string
-                }.toSet()
+                }?.toSet() ?: emptySet()
 
                 val normalizedTags = TagUtils.normalizeTags(tags)
                 // To prevent the getTags call from constantly logging tag set failures, sync tags
@@ -429,7 +430,7 @@ public class AirshipChannel internal constructor(
                     return
                 }
                 val normalizedTags = TagUtils.normalizeTags(tags)
-                dataStore.sync.put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags))
+                dataStore.put(TAGS_KEY, JsonValue.wrapOpt(normalizedTags))
             }
             updateRegistration()
         }
@@ -623,7 +624,7 @@ public class AirshipChannel internal constructor(
         internal const val ACTION_CHANNEL_CREATED = "com.urbanairship.CHANNEL_CREATED"
 
         // PreferenceStore keys
-        private const val TAGS_KEY = "com.urbanairship.push.TAGS"
+        private val TAGS_KEY = SyncPrefKey.json("com.urbanairship.push.TAGS")
 
         private const val ACTION_UPDATE_CHANNEL = "ACTION_UPDATE_CHANNEL"
     }
