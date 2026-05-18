@@ -14,9 +14,11 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.tryParse
+import java.util.concurrent.locks.ReentrantLock
+import kotlin.concurrent.withLock
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /** Handles updates for the batch endpoint. */
@@ -135,27 +137,26 @@ internal class ChannelBatchUpdateManager(
     }
 
     /**
-     * Owns the on-disk pending-updates list and serializes every access to it through a
-     * single-consumer [Channel]. [Channel.trySend] is synchronous and atomic, so [add] /
-     * [clear] claim their slot in caller-observed order regardless of dispatcher scheduling.
-     * Suspending [read] / [hasPending] / [popFront] post a task with a [CompletableDeferred]
-     * and await it, so they only resolve after every operation enqueued before them has run.
-     * The one-time legacy migration is enqueued at construction so it always wins the queue.
+     * Owns the on-disk pending-updates list and serializes every access to it through a job
+     * chain: each operation launches a coroutine that joins the previous op's [Job] before
+     * running, so writes commit in caller-observed order. The "claim my predecessor and
+     * publish my Job as the new tail" sequence runs under [chainLock] so two concurrent
+     * callers can't both see the same predecessor — the launched jobs form a strict linear
+     * chain. The legacy migration is the first link, enqueued lazily on first use so it
+     * can't race other work the caller did before its first call into this storage.
      */
     internal class Storage(
         private val dataStore: PreferenceStore,
-        scope: CoroutineScope,
+        private val scope: CoroutineScope,
     ) {
-        private val dataQueue = Channel<suspend () -> Unit>(Channel.UNLIMITED)
+        private val chainLock = ReentrantLock()
 
-        init {
-            dataQueue.trySend { migrateInternal() }
-            scope.launch { for (op in dataQueue) op() }
-        }
+        /** Tail of the pending-op chain. Read/written only under [chainLock]. */
+        private var lastOp: Job? = null
 
         /** Fire-and-forget append. */
         fun add(update: AudienceUpdate) {
-            dataQueue.trySend {
+            enqueueOperation {
                 val list = readInternal().toMutableList()
                 list.add(update)
                 writeInternal(list)
@@ -164,19 +165,27 @@ internal class ChannelBatchUpdateManager(
 
         /** Fire-and-forget clear. */
         fun clear() {
-            dataQueue.trySend { dataStore.remove(UPDATE_DATASTORE_KEY) }
+            enqueueOperation { dataStore.remove(UPDATE_DATASTORE_KEY) }
         }
 
-        suspend fun hasPending(): Boolean = enqueueRead {
-            !(dataStore.get(UPDATE_DATASTORE_KEY)?.optList()?.isEmpty ?: true)
+        suspend fun hasPending(): Boolean {
+            val deferred = CompletableDeferred<Boolean>()
+            enqueueOperation {
+                deferred.complete(!(dataStore.get(UPDATE_DATASTORE_KEY)?.optList()?.isEmpty ?: true))
+            }
+            return deferred.await()
         }
 
-        suspend fun read(): List<AudienceUpdate> = enqueueRead { readInternal() }
+        suspend fun read(): List<AudienceUpdate> {
+            val deferred = CompletableDeferred<List<AudienceUpdate>>()
+            enqueueOperation { deferred.complete(readInternal()) }
+            return deferred.await()
+        }
 
         /** Removes [uploaded] from the front of the stored list (in submission order). */
         suspend fun popFront(uploaded: List<AudienceUpdate>) {
             val done = CompletableDeferred<Unit>()
-            dataQueue.trySend {
+            enqueueOperation {
                 val stored = readInternal().toMutableList()
                 uploaded.forEach {
                     if (stored.firstOrNull() == it) {
@@ -192,20 +201,32 @@ internal class ChannelBatchUpdateManager(
         @VisibleForTesting
         internal suspend fun migrate() {
             val done = CompletableDeferred<Unit>()
-            dataQueue.trySend {
+            enqueueOperation {
                 migrateInternal()
                 done.complete(Unit)
             }
             done.await()
         }
 
-        private suspend fun <T> enqueueRead(read: suspend () -> T): T {
-            val deferred = CompletableDeferred<T>()
-            dataQueue.trySend { deferred.complete(read()) }
-            return deferred.await()
+        /**
+         * Appends [block] to the chain. Returns immediately; [block] runs after the prior
+         * tail. The very first call also inserts a migration link at the head so legacy rows
+         * are folded in before any caller op runs.
+         */
+        private fun enqueueOperation(block: suspend () -> Unit) {
+            chainLock.withLock {
+                if (lastOp == null) {
+                    lastOp = scope.launch { migrateInternal() }
+                }
+                val previous = lastOp!!
+                lastOp = scope.launch {
+                    previous.join()
+                    block()
+                }
+            }
         }
 
-        /** Must be invoked from inside [dataQueue]. */
+        /** Must be invoked from within an [enqueueWrite] block. */
         private suspend fun migrateInternal() {
             val attributes = dataStore.get(ATTRIBUTE_DATASTORE_KEY)?.list?.flatMap {
                 AttributeMutation.fromJsonList(it.optList())
@@ -229,13 +250,13 @@ internal class ChannelBatchUpdateManager(
             dataStore.remove(TAG_GROUP_DATASTORE_KEY)
         }
 
-        /** Must be invoked from inside [dataQueue]. */
+        /** Must be invoked from within an [enqueueWrite] block. */
         private suspend fun readInternal(): List<AudienceUpdate> =
             dataStore.get(UPDATE_DATASTORE_KEY)?.tryParse(true) { json ->
                 json.optList().map { AudienceUpdate(it.requireMap()) }
             } ?: emptyList()
 
-        /** Must be invoked from inside [dataQueue]. */
+        /** Must be invoked from within an [enqueueWrite] block. */
         private suspend fun writeInternal(value: List<AudienceUpdate>) {
             dataStore.put(UPDATE_DATASTORE_KEY, JsonValue.wrap(value))
         }
