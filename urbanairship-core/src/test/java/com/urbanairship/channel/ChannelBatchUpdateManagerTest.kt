@@ -3,8 +3,8 @@ package com.urbanairship.channel
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.preferences.AsyncPrefKey
 import com.urbanairship.preferences.PreferenceStore
-import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.http.RequestResult
@@ -39,7 +39,7 @@ public class ChannelBatchUpdateManagerTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
     private val preferenceStore = PreferenceStore.inMemoryStore(context)
 
-    private val pendingAudienceDelegate = slot<(String) -> AudienceOverrides.Channel>()
+    private val pendingAudienceDelegate = slot<suspend (String) -> AudienceOverrides.Channel>()
     private val mockAudienceOverridesProvider = mockk<AudienceOverridesProvider> {
         every {
             this@mockk.pendingChannelOverridesDelegate = capture(pendingAudienceDelegate)
@@ -95,11 +95,11 @@ public class ChannelBatchUpdateManagerTest {
             subscriptions = listOf(SubscriptionListMutation.newSubscribeMutation("some list", 100)),
             attributes = listOf(AttributeMutation.newRemoveAttributeMutation("some attribute", 100))
         )
-        assertTrue(manager.hasPending)
+        assertTrue(manager.hasPending())
 
         manager.clearPending()
         assertEquals(AudienceOverrides.Channel(), pendingAudienceDelegate.captured.invoke("anything"))
-        assertFalse(manager.hasPending)
+        assertFalse(manager.hasPending())
     }
 
     @Test
@@ -111,9 +111,9 @@ public class ChannelBatchUpdateManagerTest {
 
     @Test
     public fun testMigrate(): TestResult = runTest {
-        val attributeKey = SyncPrefKey.json("com.urbanairship.push.ATTRIBUTE_DATA_STORE")
-        val subscriptionKey = SyncPrefKey.json("com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS")
-        val tagsKey = SyncPrefKey.json("com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS")
+        val attributeKey = AsyncPrefKey.json("com.urbanairship.push.ATTRIBUTE_DATA_STORE")
+        val subscriptionKey = AsyncPrefKey.json("com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS")
+        val tagsKey = AsyncPrefKey.json("com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS")
 
         // Attributes are stored as a list of lists
         preferenceStore.put(
@@ -267,7 +267,7 @@ public class ChannelBatchUpdateManagerTest {
             )
         }
 
-        assertFalse(manager.hasPending)
+        assertFalse(manager.hasPending())
     }
 
     @Test
@@ -299,7 +299,7 @@ public class ChannelBatchUpdateManagerTest {
             )
         }
 
-        assertTrue(manager.hasPending)
+        assertTrue(manager.hasPending())
     }
 
     @Test
@@ -332,7 +332,7 @@ public class ChannelBatchUpdateManagerTest {
             )
         }
 
-        assertFalse(manager.hasPending)
+        assertFalse(manager.hasPending())
     }
 
     @Test
@@ -361,6 +361,6 @@ public class ChannelBatchUpdateManagerTest {
             )
         }
 
-        assertTrue(manager.hasPending)
+        assertTrue(manager.hasPending())
     }
 }

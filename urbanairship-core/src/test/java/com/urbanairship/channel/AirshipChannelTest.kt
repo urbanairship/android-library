@@ -623,7 +623,7 @@ public class AirshipChannelTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.SUCCESS
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns true
-        coEvery { mockBatchUpdateManager.hasPending } returns false
+        coEvery { mockBatchUpdateManager.hasPending() } returns false
 
         assertEquals(JobResult.SUCCESS, channel.onPerformJob( replaceJob))
 
@@ -636,7 +636,7 @@ public class AirshipChannelTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.NEEDS_UPDATE
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns true
-        coEvery { mockBatchUpdateManager.hasPending } returns false
+        coEvery { mockBatchUpdateManager.hasPending() } returns false
 
         assertEquals(JobResult.SUCCESS, channel.onPerformJob(keepJob))
 
@@ -651,7 +651,7 @@ public class AirshipChannelTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.NEEDS_UPDATE
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns true
-        coEvery { mockBatchUpdateManager.hasPending } returns true
+        coEvery { mockBatchUpdateManager.hasPending() } returns true
 
         assertEquals(JobResult.SUCCESS, channel.onPerformJob(keepJob))
 
@@ -677,7 +677,7 @@ public class AirshipChannelTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.SUCCESS
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns false
-        coEvery { mockBatchUpdateManager.hasPending } returns false
+        coEvery { mockBatchUpdateManager.hasPending() } returns false
 
         assertEquals(JobResult.FAILURE, channel.onPerformJob(keepJob))
 

@@ -253,7 +253,7 @@ public class AirshipChannel internal constructor(
             return JobResult.FAILURE
         }
 
-        if (registrationResult == RegistrationResult.NEEDS_UPDATE || channelManager.hasPending) {
+        if (registrationResult == RegistrationResult.NEEDS_UPDATE || channelManager.hasPending()) {
             dispatchUpdateJob(conflictStrategy = ConflictStrategy.REPLACE)
         }
 
