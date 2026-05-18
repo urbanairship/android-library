@@ -2,6 +2,7 @@
 package com.urbanairship
 
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 
 import android.content.Context
 import androidx.annotation.RestrictTo
@@ -30,7 +31,7 @@ public class ApplicationMetrics(
                     PrivacyManager.Feature.ANALYTICS, PrivacyManager.Feature.IN_APP_AUTOMATION
                 )
             ) {
-                dataStore.sync.put(LAST_OPEN_KEY, milliseconds)
+                dataStore.put(LAST_OPEN_KEY, milliseconds)
             }
         }
     }
@@ -78,7 +79,7 @@ public class ApplicationMetrics(
      */
     @get:Deprecated("Will be removed in SDK 15.")
     public val lastOpenTimeMillis: Long
-        get() = dataStore.sync.getLong(LAST_OPEN_KEY, -1)
+        get() = dataStore.get(LAST_OPEN_KEY) ?: -1
 
     /**
      * Gets the current app version.
@@ -91,7 +92,7 @@ public class ApplicationMetrics(
             ?: -1
 
     private val lastAppVersion: Long
-        get() = dataStore.sync.getLong(LAST_APP_VERSION_KEY, -1)
+        get() = dataStore.get(LAST_APP_VERSION_KEY) ?: -1
 
     private fun updateData() {
         if (privacyManager.isAnyEnabled(PrivacyManager.Feature.IN_APP_AUTOMATION, PrivacyManager.Feature.ANALYTICS)) {
@@ -102,15 +103,15 @@ public class ApplicationMetrics(
                 appVersionUpdated = true
             }
 
-            dataStore.sync.put(LAST_APP_VERSION_KEY, currentAppVersion)
+            dataStore.put(LAST_APP_VERSION_KEY, currentAppVersion)
         } else {
-            dataStore.sync.remove(LAST_APP_VERSION_KEY)
-            dataStore.sync.remove(LAST_OPEN_KEY)
+            dataStore.remove(LAST_APP_VERSION_KEY)
+            dataStore.remove(LAST_OPEN_KEY)
         }
     }
 
     internal companion object {
-        private const val LAST_OPEN_KEY = "com.urbanairship.application.metrics.LAST_OPEN"
-        private const val LAST_APP_VERSION_KEY = "com.urbanairship.application.metrics.APP_VERSION"
+        private val LAST_OPEN_KEY = SyncPrefKey.long("com.urbanairship.application.metrics.LAST_OPEN")
+        private val LAST_APP_VERSION_KEY = SyncPrefKey.long("com.urbanairship.application.metrics.APP_VERSION")
     }
 }

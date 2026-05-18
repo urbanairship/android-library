@@ -775,9 +775,9 @@ public class ContactTest {
             )
         )
 
-        preferenceStore.sync.put(Contact.LEGACY_NAMED_USER_ID_KEY, namedUserId)
-        preferenceStore.sync.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrap(tags))
-        preferenceStore.sync.put(
+        preferenceStore.put(Contact.LEGACY_NAMED_USER_ID_KEY, namedUserId)
+        preferenceStore.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrap(tags))
+        preferenceStore.put(
             Contact.LEGACY_ATTRIBUTE_MUTATION_STORE_KEY, JsonValue.wrap(attributes)
         )
 
@@ -811,9 +811,9 @@ public class ContactTest {
             )
         )
 
-        preferenceStore.sync.put(Contact.LEGACY_NAMED_USER_ID_KEY, namedUserId)
-        preferenceStore.sync.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrap(tags))
-        preferenceStore.sync.put(
+        preferenceStore.put(Contact.LEGACY_NAMED_USER_ID_KEY, namedUserId)
+        preferenceStore.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrap(tags))
+        preferenceStore.put(
             Contact.LEGACY_ATTRIBUTE_MUTATION_STORE_KEY, JsonValue.wrap(attributes)
         )
 
@@ -847,9 +847,9 @@ public class ContactTest {
             )
         )
 
-        preferenceStore.sync.put(Contact.LEGACY_NAMED_USER_ID_KEY, namedUserId)
-        preferenceStore.sync.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrap(tags))
-        preferenceStore.sync.put(
+        preferenceStore.put(Contact.LEGACY_NAMED_USER_ID_KEY, namedUserId)
+        preferenceStore.put(Contact.LEGACY_TAG_GROUP_MUTATIONS_KEY, JsonValue.wrap(tags))
+        preferenceStore.put(
             Contact.LEGACY_ATTRIBUTE_MUTATION_STORE_KEY, JsonValue.wrap(attributes)
         )
 

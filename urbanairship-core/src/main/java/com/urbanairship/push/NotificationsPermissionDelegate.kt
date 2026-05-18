@@ -8,6 +8,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.core.util.Consumer
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.SimpleActivityListener
 import com.urbanairship.permission.PermissionDelegate
@@ -61,7 +62,7 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
             when (notificationManager.promptSupport) {
                 AirshipNotificationManager.PromptSupport.COMPAT,
                 AirshipNotificationManager.PromptSupport.SUPPORTED -> {
-                    if (dataStore.sync.getBoolean(PROMPTED_KEY, false)) {
+                    if (dataStore.get(PROMPTED_KEY) == true) {
                         PermissionStatus.DENIED
                     } else {
                         PermissionStatus.NOT_DETERMINED
@@ -87,7 +88,7 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
                 return
             }
             AirshipNotificationManager.PromptSupport.COMPAT -> {
-                dataStore.sync.put(PROMPTED_KEY, true)
+                dataStore.put(PROMPTED_KEY, true)
                 if (notificationManager.areChannelsCreated()) {
                     callback.accept(PermissionRequestResult.denied(true))
                     return
@@ -112,7 +113,7 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
             }
 
             AirshipNotificationManager.PromptSupport.SUPPORTED -> {
-                dataStore.sync.put(PROMPTED_KEY, true)
+                dataStore.put(PROMPTED_KEY, true)
                 permissionRequestDelegate.requestPermissions(
                     context = context,
                     permission = POST_NOTIFICATION_PERMISSION,
@@ -122,7 +123,7 @@ internal class NotificationsPermissionDelegate @VisibleForTesting constructor(
     }
 
     companion object {
-        private const val PROMPTED_KEY = "NotificationsPermissionDelegate.prompted"
+        private val PROMPTED_KEY = SyncPrefKey.boolean("NotificationsPermissionDelegate.prompted")
         private const val POST_NOTIFICATION_PERMISSION = "android.permission.POST_NOTIFICATIONS"
     }
 }

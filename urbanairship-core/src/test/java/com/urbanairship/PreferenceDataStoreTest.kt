@@ -135,8 +135,8 @@ public class PreferenceDataStoreTest {
     @Test
     public fun fallbackLoadDeletesKeyWhenQueryValueThrows() {
 
-        every { mockDao.getPreferences() } throws RuntimeException("batch load failed")
-        every { mockDao.queryKeys() } returns listOf("bad", "good")
+        every { mockDao.queryEagerPreferences() } throws RuntimeException("batch load failed")
+        every { mockDao.queryEagerKeys() } returns listOf("bad", "good")
         every { mockDao.queryValue("bad") } throws RuntimeException("row read failed")
         every { mockDao.queryValue("good") } returns PreferenceData("good", "saved")
 
@@ -153,8 +153,8 @@ public class PreferenceDataStoreTest {
     @Test
     public fun fallbackLoadDeletesKeyWhenValueIsNull() {
 
-        every { mockDao.getPreferences() } throws RuntimeException("batch load failed")
-        every { mockDao.queryKeys() } returns listOf("empty", "good")
+        every { mockDao.queryEagerPreferences() } throws RuntimeException("batch load failed")
+        every { mockDao.queryEagerKeys() } returns listOf("empty", "good")
         every { mockDao.queryValue("empty") } returns PreferenceData("empty", null)
         every { mockDao.queryValue("good") } returns PreferenceData("good", "ok")
 

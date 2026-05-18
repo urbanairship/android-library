@@ -96,7 +96,7 @@ public class InboxJobHandlerTest {
     @Throws(RequestException::class)
     public fun testUpdateMessagesNotModified(): TestResult = runTest {
         // Set the last refresh time
-        dataStore.sync.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
+        dataStore.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
 
         // Return a 304 response
         coEvery {
@@ -111,14 +111,14 @@ public class InboxJobHandlerTest {
         assertTrue(jobHandler.syncMessageList(userCredentials, "channelId"))
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
-        assertEquals("some last modified", dataStore.sync.getString(LAST_MESSAGE_REFRESH_TIME, null))
+        assertEquals("some last modified", dataStore.get(LAST_MESSAGE_REFRESH_TIME))
     }
 
     @Test
     @Throws(RequestException::class, JsonException::class)
     public fun testUpdateMessagesEmpty(): TestResult = runTest {
         // Set the last refresh time
-        dataStore.sync.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
+        dataStore.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
         val responseBody = "{ \"messages\": []}"
         val responseHeaders: Map<String, String> = mapOf("Last-Modified" to "some other last modified")
 
@@ -137,14 +137,14 @@ public class InboxJobHandlerTest {
         // Verify LAST_MESSAGE_REFRESH_TIME was updated
         assertEquals(
             "some other last modified",
-            dataStore.sync.getString(LAST_MESSAGE_REFRESH_TIME, null)
+            dataStore.get(LAST_MESSAGE_REFRESH_TIME)
         )
     }
 
     @Test
     public fun testUpdateMessages(): TestResult = runTest {
         // Set the last refresh time
-        dataStore.sync.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
+        dataStore.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
         val responseBody =
             "{ \"messages\": [ {\"message_id\": \"some_mesg_id\"," + "\"message_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/\"," + "\"message_body_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/body/\"," + "\"message_read_url\": \"https://go.urbanairship.com/api/user/userId/messages/message/some_mesg_id/read/\"," + "\"unread\": true, \"message_sent\": \"2010-09-05 12:13 -0000\"," + "\"title\": \"Message title\", \"extra\": { \"some_key\": \"some_value\"}," + "\"content_type\": \"text/html\", \"content_size\": \"128\"}]}"
 
@@ -164,7 +164,7 @@ public class InboxJobHandlerTest {
     @Test
     public fun testUpdateMessagesServerError(): TestResult = runTest {
         // Set the last refresh time
-        dataStore.sync.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
+        dataStore.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
 
         // Return a 500 internal server error
         coEvery {
@@ -179,14 +179,14 @@ public class InboxJobHandlerTest {
         assertFalse(jobHandler.syncMessageList(userCredentials, "channelId"))
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
-        assertEquals("some last modified", dataStore.sync.getString(LAST_MESSAGE_REFRESH_TIME, null))
+        assertEquals("some last modified", dataStore.get(LAST_MESSAGE_REFRESH_TIME))
     }
 
     @Test
     @Throws(RequestException::class, JsonException::class)
     public fun testSyncDeletedMessageStateServerError(): TestResult = runTest {
         // Set the last refresh time
-        dataStore.sync.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
+        dataStore.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
         val responseBody = "{ \"messages\": []}"
 
         // Return a 200 message list response with messages
@@ -249,7 +249,7 @@ public class InboxJobHandlerTest {
     @Throws(RequestException::class, JsonException::class)
     public fun testSyncDeletedMessageStateSucceeds(): TestResult = runTest {
         // Set the last refresh time
-        dataStore.sync.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
+        dataStore.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
         val responseBody = "{ \"messages\": []}"
 
         // Return a 200 message list response with messages
@@ -307,7 +307,7 @@ public class InboxJobHandlerTest {
     @Test
     public fun testSyncReadMessageStateServerError(): TestResult = runTest {
         // Set the last refresh time
-        dataStore.sync.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
+        dataStore.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
         val responseBody = "{ \"messages\": []}"
 
         // Return a 200 message list response with messages
@@ -369,7 +369,7 @@ public class InboxJobHandlerTest {
         user.setUser(UserCredentials("fakeUserId", "password"))
 
         // Set the last refresh time
-        dataStore.sync.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
+        dataStore.put(LAST_MESSAGE_REFRESH_TIME, "some last modified")
         val responseBody = "{ \"messages\": []}"
 
         // Return a 200 message list response with messages

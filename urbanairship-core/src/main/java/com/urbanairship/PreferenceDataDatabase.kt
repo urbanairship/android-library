@@ -19,7 +19,7 @@ import java.io.File
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@Database(entities = [PreferenceData::class], version = 2)
+@Database(entities = [PreferenceData::class], version = 3)
 public abstract class PreferenceDataDatabase public constructor() : RoomDatabase() {
 
     public abstract val dao: PreferenceDataDao
@@ -37,6 +37,13 @@ public abstract class PreferenceDataDatabase public constructor() : RoomDatabase
         public const val NEW_TABLE_NAME: String = "preferences_new"
         public const val COLUMN_NAME_KEY: String = "_id"
         public const val COLUMN_NAME_VALUE: String = "value"
+        public const val COLUMN_NAME_LAZY: String = "lazy"
+
+        internal val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COLUMN_NAME_LAZY INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
         private val MIGRATION_1_2: Migration = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -67,7 +74,7 @@ public abstract class PreferenceDataDatabase public constructor() : RoomDatabase
             val path = File(urbanAirshipNoBackupDirectory, name).absolutePath
 
             return databaseBuilder(context, PreferenceDataDatabase::class.java, path)
-                .addMigrations(MIGRATION_1_2)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .fallbackToDestructiveMigrationOnDowngrade(true)
                 .build()
         }
