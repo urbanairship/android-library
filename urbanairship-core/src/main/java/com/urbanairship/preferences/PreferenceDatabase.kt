@@ -82,7 +82,9 @@ public abstract class PreferenceDatabase public constructor() : RoomDatabase() {
             "com.urbanairship.push.QUIET_TIME_ENABLED",
             "com.urbanairship.push.QUIET_TIME_INTERVAL",
             // Pre-SDK-6 plaintext message-center password (replaced by USER_TOKEN since 2015).
-            "com.urbanairship.user.PASSWORD"
+            "com.urbanairship.user.PASSWORD",
+            // Deprecated lastOpenTimeMillis (deprecation note targeted SDK 15; removed now).
+            "com.urbanairship.application.metrics.LAST_OPEN"
         )
 
         private val MIGRATION_1_2: Migration = object : Migration(1, 2) {

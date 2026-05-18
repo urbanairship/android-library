@@ -4,7 +4,6 @@ package com.urbanairship.modules
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipVersionInfo
-import com.urbanairship.ApplicationMetrics
 import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
@@ -87,7 +86,6 @@ public object Modules {
         meteredUsage: AirshipMeteredUsage,
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
-        metrics: ApplicationMetrics,
         cache: AirshipCache,
         audienceEvaluator: AudienceEvaluator
     ): Module? {
@@ -107,7 +105,6 @@ public object Modules {
                 meteredUsage = meteredUsage,
                 deferredResolver = deferredResolver,
                 eventFeed = eventFeed,
-                metrics = metrics,
                 cache = cache,
                 audienceEvaluator = audienceEvaluator
             )
