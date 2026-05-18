@@ -951,7 +951,7 @@ public class PushManagerTest {
             Assert.assertTrue(pushManager.isUniqueCanonicalId("id-$i"))
         }
 
-        val jsonString = preferenceStore.sync.getString(LAST_CANONICAL_IDS_KEY, null)
+        val jsonString = preferenceStore.get(LAST_CANONICAL_IDS_KEY)
         Assert.assertNotNull(jsonString)
 
         val jsonList = JsonValue.parseString(jsonString!!).list

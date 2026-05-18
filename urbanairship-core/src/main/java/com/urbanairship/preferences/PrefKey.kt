@@ -83,7 +83,8 @@ public class SyncPrefKey<T> private constructor(
          * Key for any [JsonSerializable] type. Values are written as the JSON string form of
          * [JsonSerializable.toJsonValue]; reads parse the stored JSON and invoke [fromJson]. If
          * the stored JSON is unparseable or [fromJson] throws, the read returns `null` and the
-         * error is logged by [PreferenceStore].
+         * error is logged by [PreferenceStore]. The corrupt row is left in place — if a specific
+         * key needs cleanup, handle it inline at the call site.
          */
         public fun <T : JsonSerializable> jsonSerializable(
             name: String,
@@ -157,7 +158,8 @@ public class AsyncPrefKey<T> private constructor(
          * Key for any [JsonSerializable] type. Values are written as the JSON string form of
          * [JsonSerializable.toJsonValue]; reads parse the stored JSON and invoke [fromJson]. If
          * the stored JSON is unparseable or [fromJson] throws, the read returns `null` and the
-         * error is logged by [PreferenceStore].
+         * error is logged by [PreferenceStore]. The corrupt row is left in place — if a specific
+         * key needs cleanup, handle it inline at the call site.
          */
         public fun <T : JsonSerializable> jsonSerializable(
             name: String,

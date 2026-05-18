@@ -126,7 +126,8 @@ public class PreferenceStoreTest {
     public fun corruptStoredValueDeserializesToNull() {
         // Write a non-integer string under an int key directly via the underlying store.
         val key = SyncPrefKey.int("test.corrupt")
-        store.sync.put(key.name, "not-a-number")
+        // Write a String under the same name; the int key's deserializer will fail.
+        store.put(SyncPrefKey.string(key.name), "not-a-number")
 
         assertTrue(store.isSet(key))
         assertNull(store.get(key))
@@ -135,7 +136,7 @@ public class PreferenceStoreTest {
     @Test
     public fun corruptJsonDeserializesToNull() {
         val key = SyncPrefKey.json("test.bad.json")
-        store.sync.put(key.name, "{not valid json")
+        store.put(SyncPrefKey.string(key.name), "{not valid json")
 
         assertNull(store.get(key))
     }
@@ -148,7 +149,7 @@ public class PreferenceStoreTest {
             deserialize = { error("nope") }
         )
 
-        store.sync.put(key.name, "anything")
+        store.put(SyncPrefKey.string(key.name), "anything")
         assertNull(store.get(key))
     }
 
@@ -180,7 +181,7 @@ public class PreferenceStoreTest {
         val key = AsyncPrefKey.string("test.async.write")
         store.put(key, "value")
 
-        val row = store.sync.dao.findRow(key.name)
+        val row = store.dao.findRow(key.name)
         assertNotNull(row)
         assertTrue("async put should store row with lazy=true", row!!.lazy)
     }
@@ -189,16 +190,17 @@ public class PreferenceStoreTest {
     public fun asyncReadMigratesEagerRowToLazy(): Unit = runTest {
         val keyName = "test.migration.eager.to.lazy"
         // Pre-condition: write via sync, row is lazy=false (eager). putSync so the DAO write
-        // commits before we inspect it.
-        store.sync.putSync(keyName, "value")
-        val before = store.sync.dao.findRow(keyName)
+        // commits before we inspect it — the non-blocking put dispatches on PreferenceDataStore's
+        // serial scope, which doesn't share the test dispatcher.
+        store.putSync(SyncPrefKey.string(keyName), "value")
+        val before = store.dao.findRow(keyName)
         assertFalse("sync put should write lazy=false", before!!.lazy)
 
         // First async read of the same name self-migrates the row.
         val result = store.get(AsyncPrefKey.string(keyName))
         assertEquals("value", result)
 
-        val after = store.sync.dao.findRow(keyName)
+        val after = store.dao.findRow(keyName)
         assertTrue("async read should flip the row to lazy=true", after!!.lazy)
     }
 
@@ -207,15 +209,15 @@ public class PreferenceStoreTest {
         val keyName = "test.migration.lazy.to.eager"
         // After an async write the row is lazy=true.
         store.put(AsyncPrefKey.string(keyName), "first")
-        assertTrue(store.sync.dao.findRow(keyName)!!.lazy)
+        assertTrue(store.dao.findRow(keyName)!!.lazy)
 
         // A subsequent sync put resets lazy back to false (eager again).
         // Use putSync so the DAO write commits before we inspect it — the regular put dispatches
         // the write on PreferenceDataStore's serial scope, which doesn't share the test dispatcher.
-        store.sync.putSync(keyName, "second")
+        store.putSync(SyncPrefKey.string(keyName), "second")
         assertFalse(
             "sync put should reset lazy=false on an existing row",
-            store.sync.dao.findRow(keyName)!!.lazy
+            store.dao.findRow(keyName)!!.lazy
         )
     }
 
@@ -223,9 +225,9 @@ public class PreferenceStoreTest {
     public fun eagerLoadSkipsLazyRows(): Unit = runTest {
         store.put(AsyncPrefKey.string("test.eager.skip"), "lazy-value")
         // putSync so the eager write commits before we query the DAO.
-        store.sync.putSync("test.eager.include", "eager-value")
+        store.putSync(SyncPrefKey.string("test.eager.include"), "eager-value")
 
-        val eagerKeys = store.sync.dao.queryEagerPreferences().map { it.key }
+        val eagerKeys = store.dao.queryEagerPreferences().map { it.key }
         assertTrue("eager key should be in eager load", "test.eager.include" in eagerKeys)
         assertFalse("lazy key should be skipped", "test.eager.skip" in eagerKeys)
     }

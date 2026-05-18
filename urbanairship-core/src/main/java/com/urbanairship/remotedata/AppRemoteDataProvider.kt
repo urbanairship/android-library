@@ -5,6 +5,7 @@ package com.urbanairship.remotedata
 import android.content.Context
 import android.net.Uri
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestResult
@@ -25,14 +26,14 @@ internal class AppRemoteDataProvider(
 
     init {
         // Fixes  17.x -> 16.x -> 17.x issue
-        if (preferenceStore.sync.isSet(LAST_REFRESH_METADATA)) {
-            preferenceStore.sync.remove(LAST_REFRESH_METADATA)
+        if (preferenceStore.isSet(LAST_REFRESH_METADATA)) {
+            preferenceStore.remove(LAST_REFRESH_METADATA)
             clearLastRefreshState()
         }
     }
 
     companion object {
-        const val LAST_REFRESH_METADATA = "com.urbanairship.remotedata.LAST_REFRESH_METADATA"
+        val LAST_REFRESH_METADATA = SyncPrefKey.string("com.urbanairship.remotedata.LAST_REFRESH_METADATA")
     }
 
     override fun isRemoteDataInfoUpToDate(

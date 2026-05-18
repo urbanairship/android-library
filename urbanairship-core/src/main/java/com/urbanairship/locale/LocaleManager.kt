@@ -7,6 +7,7 @@ import androidx.annotation.RestrictTo
 import androidx.core.os.ConfigurationCompat
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.UALog
 import com.urbanairship.util.LocaleCompat
 import java.util.Locale
@@ -81,13 +82,13 @@ public class LocaleManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)  construc
         synchronized(this) {
             val currentLocale = this.locale
             if (locale != null) {
-                preferenceStore.sync.put(LOCALE_OVERRIDE_COUNTRY_KEY, locale.country)
-                preferenceStore.sync.put (LOCALE_OVERRIDE_LANGUAGE_KEY, locale.language)
-                preferenceStore.sync.put(LOCALE_OVERRIDE_VARIANT_KEY, locale.variant)
+                preferenceStore.put(LOCALE_OVERRIDE_COUNTRY_KEY, locale.country)
+                preferenceStore.put(LOCALE_OVERRIDE_LANGUAGE_KEY, locale.language)
+                preferenceStore.put(LOCALE_OVERRIDE_VARIANT_KEY, locale.variant)
             } else {
-                preferenceStore.sync.remove(LOCALE_OVERRIDE_COUNTRY_KEY)
-                preferenceStore.sync.remove (LOCALE_OVERRIDE_LANGUAGE_KEY)
-                preferenceStore.sync.remove (LOCALE_OVERRIDE_VARIANT_KEY)
+                preferenceStore.remove(LOCALE_OVERRIDE_COUNTRY_KEY)
+                preferenceStore.remove(LOCALE_OVERRIDE_LANGUAGE_KEY)
+                preferenceStore.remove(LOCALE_OVERRIDE_VARIANT_KEY)
             }
 
             if (currentLocale !== this.locale) {
@@ -101,12 +102,9 @@ public class LocaleManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)  construc
      */
     private val localeOverride: Locale?
         get() {
-            val language = preferenceStore.sync.getString(LOCALE_OVERRIDE_LANGUAGE_KEY, null)
-                ?: return null
-            val country = preferenceStore.sync.getString(LOCALE_OVERRIDE_COUNTRY_KEY, null)
-                ?: return null
-            val variant = preferenceStore.sync.getString(LOCALE_OVERRIDE_VARIANT_KEY, null)
-                ?: return null
+            val language = preferenceStore.get(LOCALE_OVERRIDE_LANGUAGE_KEY) ?: return null
+            val country = preferenceStore.get(LOCALE_OVERRIDE_COUNTRY_KEY) ?: return null
+            val variant = preferenceStore.get(LOCALE_OVERRIDE_VARIANT_KEY) ?: return null
 
             return LocaleCompat.of(language, country, variant)
         }
@@ -131,8 +129,11 @@ public class LocaleManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)  construc
         }
 
     public companion object {
-        public const val LOCALE_OVERRIDE_LANGUAGE_KEY: String = "com.urbanairship.LOCALE_OVERRIDE_LANGUAGE"
-        public const val LOCALE_OVERRIDE_COUNTRY_KEY: String = "com.urbanairship.LOCALE_OVERRIDE_COUNTRY"
-        public const val LOCALE_OVERRIDE_VARIANT_KEY: String = "com.urbanairship.LOCALE_OVERRIDE_VARIANT"
+        public val LOCALE_OVERRIDE_LANGUAGE_KEY: SyncPrefKey<String> =
+            SyncPrefKey.string("com.urbanairship.LOCALE_OVERRIDE_LANGUAGE")
+        public val LOCALE_OVERRIDE_COUNTRY_KEY: SyncPrefKey<String> =
+            SyncPrefKey.string("com.urbanairship.LOCALE_OVERRIDE_COUNTRY")
+        public val LOCALE_OVERRIDE_VARIANT_KEY: SyncPrefKey<String> =
+            SyncPrefKey.string("com.urbanairship.LOCALE_OVERRIDE_VARIANT")
     }
 }

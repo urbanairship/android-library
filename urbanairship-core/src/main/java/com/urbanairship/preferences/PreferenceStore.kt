@@ -20,21 +20,17 @@ import com.urbanairship.UALog
  * logged and the write is dropped; a `deserialize` that throws on [get] is logged and the key is
  * treated as unset.
  *
- * The legacy [sync] accessor exposing the raw [PreferenceDataStore] is retained for call sites
- * that haven't migrated yet.
- *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
-    /**
-     * Direct access to the underlying eager [PreferenceDataStore]. Prefer the typed [get] /
-     * [put] overloads; this accessor is retained for call sites that haven't migrated to typed
-     * keys.
-     */
-    public val sync: PreferenceDataStore,
-    private val async: AsyncPreferenceStore = AsyncPreferenceStore(sync.dao)
+    private val syncStore: PreferenceDataStore,
+    private val asyncStore: AsyncPreferenceStore = AsyncPreferenceStore(syncStore.dao)
 ) {
+
+    /** Test-only window into the DAO for verifying lazy-column state. */
+    @VisibleForTesting
+    internal val dao: com.urbanairship.PreferenceDataDao get() = syncStore.dao
 
     // region Sync typed access
 
@@ -43,8 +39,13 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
      * cannot be deserialized, or deserialization throws (errors are logged).
      */
     public fun <T> get(key: SyncPrefKey<T>): T? {
-        val stored = sync.getString(key.name, null) ?: return null
-        return tryDeserialize(key, stored)
+        val stored = syncStore.getString(key.name, null) ?: return null
+        return try {
+            key.deserialize(stored)
+        } catch (e: Throwable) {
+            UALog.e(e) { "Failed to deserialize preference ${key.name}" }
+            null
+        }
     }
 
     /**
@@ -53,20 +54,32 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
      */
     public fun <T> put(key: SyncPrefKey<T>, value: T?) {
         if (value == null) {
-            sync.remove(key.name)
+            syncStore.remove(key.name)
             return
         }
         val serialized = trySerialize(key, value) ?: return
-        sync.put(key.name, serialized)
+        syncStore.put(key.name, serialized)
+    }
+
+    /**
+     * Blocking variant of [put] that waits for the underlying database write to commit and
+     * returns `true` on success. Use this only when subsequent logic depends on the write being
+     * durable — e.g., a migration that deletes the legacy key only if the new key was written.
+     * Passing `null` removes the key (also blocking).
+     */
+    public fun <T> putSync(key: SyncPrefKey<T>, value: T?): Boolean {
+        if (value == null) return syncStore.putSync(key.name, null)
+        val serialized = trySerialize(key, value) ?: return false
+        return syncStore.putSync(key.name, serialized)
     }
 
     /** Removes [key]. */
     public fun remove(key: SyncPrefKey<*>) {
-        sync.remove(key.name)
+        syncStore.remove(key.name)
     }
 
     /** Returns `true` if [key] has any stored value (even one that fails to deserialize). */
-    public fun isSet(key: SyncPrefKey<*>): Boolean = sync.isSet(key.name)
+    public fun isSet(key: SyncPrefKey<*>): Boolean = syncStore.isSet(key.name)
 
     // endregion
 
@@ -78,8 +91,13 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
      * self-migrated to `lazy = true` on first access so future takeoffs skip it.
      */
     public suspend fun <T> get(key: AsyncPrefKey<T>): T? {
-        val stored = async.getString(key.name) ?: return null
-        return tryDeserialize(key, stored)
+        val stored = asyncStore.getString(key.name) ?: return null
+        return try {
+            key.deserialize(stored)
+        } catch (e: Throwable) {
+            UALog.e(e) { "Failed to deserialize preference ${key.name}" }
+            null
+        }
     }
 
     /**
@@ -88,29 +106,22 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
      */
     public suspend fun <T> put(key: AsyncPrefKey<T>, value: T?) {
         if (value == null) {
-            async.remove(key.name)
+            asyncStore.remove(key.name)
             return
         }
         val serialized = trySerialize(key, value) ?: return
-        async.put(key.name, serialized)
+        asyncStore.put(key.name, serialized)
     }
 
     /** Removes [key]. */
     public suspend fun remove(key: AsyncPrefKey<*>) {
-        async.remove(key.name)
+        asyncStore.remove(key.name)
     }
 
     /** Returns `true` if [key] has any stored value (even one that fails to deserialize). */
-    public suspend fun isSet(key: AsyncPrefKey<*>): Boolean = async.isSet(key.name)
+    public suspend fun isSet(key: AsyncPrefKey<*>): Boolean = asyncStore.isSet(key.name)
 
     // endregion
-
-    private fun <T> tryDeserialize(key: PrefKey<T>, stored: String): T? = try {
-        key.deserialize(stored)
-    } catch (e: Throwable) {
-        UALog.e(e) { "Failed to deserialize preference ${key.name}" }
-        null
-    }
 
     private fun <T> trySerialize(key: PrefKey<T>, value: T): String? = try {
         key.serialize(value)
@@ -121,7 +132,7 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun tearDown() {
-        sync.tearDown()
+        syncStore.tearDown()
     }
 
     public companion object {

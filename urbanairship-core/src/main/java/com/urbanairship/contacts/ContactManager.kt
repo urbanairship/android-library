@@ -5,6 +5,7 @@ package com.urbanairship.contacts
 import androidx.annotation.OpenForTesting
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.channel.AirshipChannel
@@ -89,10 +90,9 @@ internal class ContactManager(
     private var operations: List<OperationEntry>
         get() {
             return operationLock.withLock {
-                val result = _operations ?: preferenceStore.sync.optJsonValue(OPERATIONS_KEY)
-                    ?.tryParse { json ->
-                        json.requireList().map { OperationEntry(it) }
-                    } ?: emptyList()
+                val result = _operations ?: preferenceStore.get(OPERATIONS_KEY)?.tryParse { json ->
+                    json.requireList().map { OperationEntry(it) }
+                } ?: emptyList()
 
                 _operations = result
                 result
@@ -101,7 +101,7 @@ internal class ContactManager(
         set(newValue) {
             operationLock.withLock {
                 _operations = newValue
-                preferenceStore.sync.put(OPERATIONS_KEY, newValue.toJsonList())
+                preferenceStore.put(OPERATIONS_KEY, newValue.toJsonList().toJsonValue())
             }
         }
 
@@ -111,18 +111,16 @@ internal class ContactManager(
         }
 
     private var anonData: AnonContactData?
-        get() = preferenceStore.sync.optJsonValue(ANON_CONTACT_DATA_KEY)?.tryParse { json ->
-            AnonContactData.fromJson(json)
+        get() = preferenceStore.get(ANON_CONTACT_DATA_KEY)
+        set(newValue) {
+            preferenceStore.put(ANON_CONTACT_DATA_KEY, newValue)
         }
-        set(newValue) = preferenceStore.sync.put(ANON_CONTACT_DATA_KEY, newValue)
 
     private var _identity: ContactIdentity? = null
     private var lastContactIdentity: ContactIdentity?
         get() {
             return identityLock.withLock {
-                val result =
-                    _identity ?: preferenceStore.sync.optJsonValue(LAST_CONTACT_IDENTITY_KEY)
-                        ?.tryParse { ContactIdentity(it) }
+                val result = _identity ?: preferenceStore.get(LAST_CONTACT_IDENTITY_KEY)
                 _identity = result
                 result
             }
@@ -130,7 +128,7 @@ internal class ContactManager(
         set(newValue) {
             identityLock.withLock {
                 _identity = newValue
-                preferenceStore.sync.put(LAST_CONTACT_IDENTITY_KEY, newValue)
+                preferenceStore.put(LAST_CONTACT_IDENTITY_KEY, newValue)
             }
         }
     private val possiblyOrphanedContactId: String?
@@ -188,8 +186,8 @@ internal class ContactManager(
 
     init {
         // Migrate operations -> dated operations
-        preferenceStore.sync.optJsonValue(OPERATIONS_KEY)?.let { json ->
-            if (!preferenceStore.sync.isSet(OPERATION_ENTRIES_KEY)) {
+        preferenceStore.get(OPERATIONS_KEY)?.let { json ->
+            if (!preferenceStore.isSet(OPERATION_ENTRIES_KEY)) {
                 val operations = json.optList()
                     .tryParse(logError = true) { list -> list.map { ContactOperation.fromJson(it) } }
                 operations?.map { OperationEntry(clock.currentTimeMillis(), it) }?.let {
@@ -197,7 +195,7 @@ internal class ContactManager(
                 }
             }
 
-            preferenceStore.sync.remove(OPERATIONS_KEY)
+            preferenceStore.remove(OPERATIONS_KEY)
         }
 
         audienceOverridesProvider.pendingContactOverridesDelegate = {
@@ -1007,11 +1005,17 @@ internal class ContactManager(
     }
 
     companion object {
-        private const val OPERATIONS_KEY = "com.urbanairship.contacts.OPERATIONS"
-        private const val OPERATION_ENTRIES_KEY = "com.urbanairship.contacts.OPERATION_ENTRIES"
+        private val OPERATIONS_KEY = SyncPrefKey.json("com.urbanairship.contacts.OPERATIONS")
+        private val OPERATION_ENTRIES_KEY = SyncPrefKey.string("com.urbanairship.contacts.OPERATION_ENTRIES")
 
-        private const val ANON_CONTACT_DATA_KEY = "com.urbanairship.contacts.ANON_CONTACT_DATA_KEY"
-        private const val LAST_CONTACT_IDENTITY_KEY = "com.urbanairship.contacts.LAST_CONTACT_IDENTITY_KEY"
+        private val ANON_CONTACT_DATA_KEY = SyncPrefKey.jsonSerializable(
+            name = "com.urbanairship.contacts.ANON_CONTACT_DATA_KEY",
+            fromJson = AnonContactData::fromJson
+        )
+        private val LAST_CONTACT_IDENTITY_KEY = SyncPrefKey.jsonSerializable(
+            name = "com.urbanairship.contacts.LAST_CONTACT_IDENTITY_KEY",
+            fromJson = ::ContactIdentity
+        )
         internal const val IDENTITY_RATE_LIMIT = "Contact.identify"
         internal const val UPDATE_RATE_LIMIT = "Contact.update"
     }

@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.channel.AirshipChannel
 import app.cash.turbine.test
 import io.mockk.every
@@ -86,20 +87,20 @@ public class UserTest {
         user.setUser(UserCredentials(fakeUserId, fakeUserId))
         assertNotEquals(
             fakeToken,
-            dataStore.sync.getString("com.urbanairship.user.USER_TOKEN", fakeToken)
+            dataStore.get(SyncPrefKey.string("com.urbanairship.user.USER_TOKEN")) ?: fakeToken
         )
     }
 
     /** Test migrate old token storage. */
     @Test
     public fun testMigrateToken() {
-        dataStore.sync.put("com.urbanairship.user.PASSWORD", fakeToken)
-        dataStore.sync.put("com.urbanairship.user.ID", fakeUserId)
+        dataStore.put(SyncPrefKey.string("com.urbanairship.user.PASSWORD"), fakeToken)
+        dataStore.put(SyncPrefKey.string("com.urbanairship.user.ID"), fakeUserId)
 
         val newUser = User(dataStore)
         assertEquals("User ID should match", fakeUserId, newUser.id)
         assertEquals("User password should match", fakeToken, newUser.password)
-        assertNull(dataStore.sync.getString("com.urbanairship.user.PASSWORD", null))
+        assertNull(dataStore.get(SyncPrefKey.string("com.urbanairship.user.PASSWORD")))
     }
 
     /** Tests update user starts the rich push service and notifies the listener on success */
@@ -147,7 +148,7 @@ public class UserTest {
     public fun testShouldUpdateFalse() {
         // Set a channel ID
         every { mockChannel.id } returns fakeChannelId
-        dataStore.sync.put("com.urbanairship.user.REGISTERED_CHANNEL_ID", fakeChannelId)
+        dataStore.put(SyncPrefKey.string("com.urbanairship.user.REGISTERED_CHANNEL_ID"), fakeChannelId)
     }
 
     /** Listener that captures the last update user result */
