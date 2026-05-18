@@ -11,12 +11,11 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 /**
  * Eager preference store. Loads all non-lazy rows from the database at startup and keeps them
  * in an in-memory map; subsequent reads are synchronous, writes are scheduled on a serial
- * dispatcher (or block via [putSync]).
+ * dispatcher.
  *
  * Values are stored as raw strings — typed conversion is handled one level up in
  * [PreferenceStore] via [SyncPrefKey] / [AsyncPrefKey]. Reached only through that wrapper.
@@ -117,24 +116,18 @@ public class EagerPreferenceStore internal constructor(
         }
     }
 
-    /**
-     * Blocking variant of [put] — waits for the database write to commit. Returns `true` on
-     * success. Use only when correctness depends on the write being durable (e.g., a migration
-     * that deletes the legacy key only if the new key was written).
-     *
-     * Writes are scheduled on the same serial dispatcher as [put], so a concurrent [put]
-     * cannot reorder the DB writes relative to the cache updates.
-     */
-    public fun putSync(key: String, value: String?): Boolean = runBlocking {
-        val job = cacheLock.withLock {
-            setCacheLocked(key, value)
-            scope.async { writeValue(key, value) }
-        }
-        job.await()
-    }
-
     /** Removes [key]. Equivalent to `put(key, null)`. */
     public fun remove(key: String): Unit = put(key, null)
+
+    /**
+     * Queues a no-op task on the serial dispatcher and awaits it — since the dispatcher
+     * processes work in order, all writes scheduled before this call are guaranteed durable
+     * by the time it returns. For tests that need to inspect DB state after a [put].
+     */
+    @VisibleForTesting
+    internal suspend fun awaitPendingWrites() {
+        scope.async { }.await()
+    }
 
     /**
      * Caller must hold [cacheLock]. Returns `true` if the cache changed.

@@ -35,6 +35,12 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
     @VisibleForTesting
     internal val dao: PreferenceDao get() = database.dao
 
+    /** Test-only: waits for any pending eager-store writes to commit. */
+    @VisibleForTesting
+    internal suspend fun awaitPendingWrites() {
+        eagerStore.awaitPendingWrites()
+    }
+
     // region Sync typed access
 
     /**
@@ -62,18 +68,6 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
         }
         val serialized = trySerialize(key, value) ?: return
         eagerStore.put(key.name, serialized)
-    }
-
-    /**
-     * Blocking variant of [put] that waits for the underlying database write to commit and
-     * returns `true` on success. Use this only when subsequent logic depends on the write being
-     * durable — e.g., a migration that deletes the legacy key only if the new key was written.
-     * Passing `null` removes the key (also blocking).
-     */
-    public fun <T> putSync(key: SyncPrefKey<T>, value: T?): Boolean {
-        if (value == null) return eagerStore.putSync(key.name, null)
-        val serialized = trySerialize(key, value) ?: return false
-        return eagerStore.putSync(key.name, serialized)
     }
 
     /** Removes [key]. */

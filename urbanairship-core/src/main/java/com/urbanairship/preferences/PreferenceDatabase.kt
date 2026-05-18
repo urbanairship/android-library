@@ -80,7 +80,9 @@ public abstract class PreferenceDatabase public constructor() : RoomDatabase() {
             "com.urbanairship.push.SOUND_ENABLED",
             "com.urbanairship.push.VIBRATE_ENABLED",
             "com.urbanairship.push.QUIET_TIME_ENABLED",
-            "com.urbanairship.push.QUIET_TIME_INTERVAL"
+            "com.urbanairship.push.QUIET_TIME_INTERVAL",
+            // Pre-SDK-6 plaintext message-center password (replaced by USER_TOKEN since 2015).
+            "com.urbanairship.user.PASSWORD"
         )
 
         private val MIGRATION_1_2: Migration = object : Migration(1, 2) {

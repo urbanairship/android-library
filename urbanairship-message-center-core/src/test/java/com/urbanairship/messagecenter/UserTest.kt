@@ -91,18 +91,6 @@ public class UserTest {
         )
     }
 
-    /** Test migrate old token storage. */
-    @Test
-    public fun testMigrateToken() {
-        dataStore.put(SyncPrefKey.string("com.urbanairship.user.PASSWORD"), fakeToken)
-        dataStore.put(SyncPrefKey.string("com.urbanairship.user.ID"), fakeUserId)
-
-        val newUser = User(dataStore)
-        assertEquals("User ID should match", fakeUserId, newUser.id)
-        assertEquals("User password should match", fakeToken, newUser.password)
-        assertNull(dataStore.get(SyncPrefKey.string("com.urbanairship.user.PASSWORD")))
-    }
-
     /** Tests update user starts the rich push service and notifies the listener on success */
     @Test
     public fun testRichPushUpdateSuccess(): TestResult = runTest  {

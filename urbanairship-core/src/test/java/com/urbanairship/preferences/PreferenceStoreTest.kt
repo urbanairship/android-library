@@ -189,10 +189,9 @@ public class PreferenceStoreTest {
     @Test
     public fun asyncReadMigratesEagerRowToLazy(): Unit = runTest {
         val keyName = "test.migration.eager.to.lazy"
-        // Pre-condition: write via sync, row is lazy=false (eager). putSync so the DAO write
-        // commits before we inspect it — the non-blocking put dispatches on PreferenceDataStore's
-        // serial scope, which doesn't share the test dispatcher.
-        store.putSync(SyncPrefKey.string(keyName), "value")
+        // Pre-condition: write via sync, row is lazy=false (eager).
+        store.put(SyncPrefKey.string(keyName), "value")
+        store.awaitPendingWrites()
         val before = store.dao.findRow(keyName)
         assertFalse("sync put should write lazy=false", before!!.lazy)
 
@@ -212,9 +211,8 @@ public class PreferenceStoreTest {
         assertTrue(store.dao.findRow(keyName)!!.lazy)
 
         // A subsequent sync put resets lazy back to false (eager again).
-        // Use putSync so the DAO write commits before we inspect it — the regular put dispatches
-        // the write on PreferenceDataStore's serial scope, which doesn't share the test dispatcher.
-        store.putSync(SyncPrefKey.string(keyName), "second")
+        store.put(SyncPrefKey.string(keyName), "second")
+        store.awaitPendingWrites()
         assertFalse(
             "sync put should reset lazy=false on an existing row",
             store.dao.findRow(keyName)!!.lazy
@@ -224,8 +222,8 @@ public class PreferenceStoreTest {
     @Test
     public fun eagerLoadSkipsLazyRows(): Unit = runTest {
         store.put(AsyncPrefKey.string("test.eager.skip"), "lazy-value")
-        // putSync so the eager write commits before we query the DAO.
-        store.putSync(SyncPrefKey.string("test.eager.include"), "eager-value")
+        store.put(SyncPrefKey.string("test.eager.include"), "eager-value")
+        store.awaitPendingWrites()
 
         val eagerKeys = store.dao.queryEagerPreferences().map { it.key }
         assertTrue("eager key should be in eager load", "test.eager.include" in eagerKeys)
