@@ -2,9 +2,8 @@
 package com.urbanairship.messagecenter
 
 import android.net.Uri
-import com.urbanairship.UALog
-import com.urbanairship.Airship
 import com.urbanairship.Platform
+import com.urbanairship.UALog
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.Request
 import com.urbanairship.http.RequestAuth

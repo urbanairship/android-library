@@ -24,6 +24,7 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -200,22 +201,27 @@ private fun NativeContentView(
     onAction: ((Action) -> Unit),
     analyticsBuilder: (onDismissed: () -> Unit) -> ThomasListenerInterface
 ) {
+    val isAlreadyDismissed = remember(message.id) { mutableStateOf(false) }
 
-    onAction(Action.MarkCurrentMessageRead)
+    LaunchedEffect(message.id) {
+        onAction(Action.MarkCurrentMessageRead)
+    }
 
-    val isAlreadyDismissed = remember { mutableStateOf(false) }
+    val activityMonitor = GlobalActivityMonitor.shared(LocalContext.current)
 
-    val args = DisplayArgs(
-        payload = content.layout.layoutInfo,
-        listener = analyticsBuilder {
-            isAlreadyDismissed.value = true
-        },
-        inAppActivityMonitor = GlobalActivityMonitor.shared(LocalContext.current),
-        actionRunner = { actions, _ ->
-            DefaultActionRunner.run(actions, AutomationAction.Situation.AUTOMATION)
-        },
-        stateStorage = content.store
-    )
+    val args = remember(message.id, content) {
+        DisplayArgs(
+            payload = content.layout.layoutInfo,
+            listener = analyticsBuilder {
+                isAlreadyDismissed.value = true
+            },
+            inAppActivityMonitor = activityMonitor,
+            actionRunner = { actions, _ ->
+                DefaultActionRunner.run(actions, AutomationAction.Situation.AUTOMATION)
+            },
+            stateStorage = content.store
+        )
+    }
 
     DisposableEffect(message.id) {
         onDispose {
