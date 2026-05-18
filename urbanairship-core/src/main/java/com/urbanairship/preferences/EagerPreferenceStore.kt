@@ -5,17 +5,16 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
+import com.urbanairship.util.SerialQueue
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 /**
  * Eager preference store. Loads all non-lazy rows from the database at startup and keeps them
- * in an in-memory map; subsequent reads are synchronous, writes are scheduled on a serial
- * dispatcher.
+ * in an in-memory map; subsequent reads are synchronous, writes are queued through a
+ * [SerialQueue] so they commit in submission order.
  *
  * Values are stored as raw strings — typed conversion is handled one level up in
  * [PreferenceStore] via [SyncPrefKey] / [AsyncPrefKey]. Reached only through that wrapper.
@@ -25,10 +24,10 @@ import kotlinx.coroutines.launch
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class EagerPreferenceStore internal constructor(
     private val dao: PreferenceDao,
-    dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
+    private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO)
 ) {
 
-    private val scope = CoroutineScope(dispatcher)
+    private val writeQueue = SerialQueue()
     private val cacheLock = ReentrantLock()
     private val cache: MutableMap<String, String> = mutableMapOf()
 
@@ -102,15 +101,15 @@ public class EagerPreferenceStore internal constructor(
     public fun get(key: String): String? = cacheLock.withLock { cache[key] }
 
     /**
-     * Updates the cache and schedules a DB write on the serial dispatcher. Passing `null` deletes
-     * the row. Returns immediately; the actual disk write completes asynchronously.
+     * Updates the cache and enqueues a DB write on [writeQueue]. Passing `null` deletes the row.
+     * Returns immediately; the actual disk write completes asynchronously.
      *
-     * The cache update and the launch are scheduled atomically under [cacheLock] so the serial
-     * dispatcher receives writes in the same order callers updated the cache.
+     * The cache update and the enqueue happen atomically under [cacheLock] so the write queue
+     * receives writes in the same order callers updated the cache.
      */
     public fun put(key: String, value: String?): Unit = cacheLock.withLock {
         if (setCacheLocked(key, value)) {
-            scope.launch { writeValue(key, value) }
+            scope.launch { writeQueue.run { writeValue(key, value) } }
         }
     }
 
@@ -118,13 +117,14 @@ public class EagerPreferenceStore internal constructor(
     public fun remove(key: String): Unit = put(key, null)
 
     /**
-     * Queues a no-op task on the serial dispatcher and awaits it — since the dispatcher
-     * processes work in order, all writes scheduled before this call are guaranteed durable
-     * by the time it returns. For tests that need to inspect DB state after a [put].
+     * Queues a no-op behind every pending write. Since [writeQueue] is suspension-aware and
+     * processes operations strictly in submission order, the call returns only after every
+     * write enqueued before it has committed. For tests that need to inspect DB state after a
+     * [put].
      */
     @VisibleForTesting
     internal suspend fun awaitPendingWrites() {
-        scope.async { }.await()
+        writeQueue.run { }
     }
 
     /**
