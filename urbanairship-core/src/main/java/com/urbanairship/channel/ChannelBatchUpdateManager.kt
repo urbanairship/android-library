@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 /**
  * Handles updates for the batch endpoint.
  *
- * All preference reads/writes go through [opQueue], an unbuffered FIFO channel drained by a
+ * All preference reads/writes go through [dataQueue], an unbuffered FIFO channel drained by a
  * single consumer coroutine. [Channel.trySend] is synchronous and atomic, so [addUpdate] /
  * [clearPending] claim their slot in caller-observed order without depending on dispatcher
  * scheduling. Suspending reads ([hasPending], [uploadPending], [pendingOverrides]) post a
@@ -46,14 +46,14 @@ internal class ChannelBatchUpdateManager(
         audienceOverridesProvider
     )
 
-    private val opQueue = Channel<suspend () -> Unit>(Channel.UNLIMITED)
+    private val dataQueue = Channel<suspend () -> Unit>(Channel.UNLIMITED)
 
     init {
         // Migration is the first item on the queue; everything else queues behind it.
-        opQueue.trySend { migrateInternal() }
+        dataQueue.trySend { migrateInternal() }
 
         scope.launch {
-            for (op in opQueue) op()
+            for (op in dataQueue) op()
         }
 
         audienceOverridesProvider.pendingChannelOverridesDelegate = {
@@ -83,7 +83,7 @@ internal class ChannelBatchUpdateManager(
             liveUpdates = liveUpdates
         )
 
-        opQueue.trySend {
+        dataQueue.trySend {
             val list = readUpdates().toMutableList()
             list.add(update)
             writeUpdates(list)
@@ -92,7 +92,7 @@ internal class ChannelBatchUpdateManager(
 
     /** Fire-and-forget: synchronously claims its slot on the op queue. */
     internal fun clearPending() {
-        opQueue.trySend { dataStore.remove(UPDATE_DATASTORE_KEY) }
+        dataQueue.trySend { dataStore.remove(UPDATE_DATASTORE_KEY) }
     }
 
     internal suspend fun uploadPending(channelId: String): Boolean {
@@ -140,7 +140,7 @@ internal class ChannelBatchUpdateManager(
 
     private suspend fun popAudienceUpdates(uploaded: List<AudienceUpdate>) {
         val done = CompletableDeferred<Unit>()
-        opQueue.trySend {
+        dataQueue.trySend {
             val stored = readUpdates().toMutableList()
             uploaded.forEach {
                 if (stored.firstOrNull() == it) {
@@ -176,7 +176,7 @@ internal class ChannelBatchUpdateManager(
      */
     private suspend fun <T> enqueueRead(read: suspend () -> T): T {
         val deferred = CompletableDeferred<T>()
-        opQueue.trySend {
+        dataQueue.trySend {
             deferred.complete(read())
         }
         return deferred.await()
@@ -185,14 +185,14 @@ internal class ChannelBatchUpdateManager(
     @VisibleForTesting
     internal suspend fun migrateData() {
         val done = CompletableDeferred<Unit>()
-        opQueue.trySend {
+        dataQueue.trySend {
             migrateInternal()
             done.complete(Unit)
         }
         done.await()
     }
 
-    /** Must be invoked from inside [opQueue]. */
+    /** Must be invoked from inside [dataQueue]. */
     private suspend fun migrateInternal() {
         val attributes = dataStore.get(ATTRIBUTE_DATASTORE_KEY)?.list?.map {
             AttributeMutation.fromJsonList(it.optList())
@@ -216,13 +216,13 @@ internal class ChannelBatchUpdateManager(
         dataStore.remove(TAG_GROUP_DATASTORE_KEY)
     }
 
-    /** Must be invoked from inside [opQueue]. */
+    /** Must be invoked from inside [dataQueue]. */
     private suspend fun readUpdates(): List<AudienceUpdate> =
         dataStore.get(UPDATE_DATASTORE_KEY)?.tryParse(true) { json ->
             json.optList().map { AudienceUpdate(it.requireMap()) }
         } ?: emptyList()
 
-    /** Must be invoked from inside [opQueue]. */
+    /** Must be invoked from inside [dataQueue]. */
     private suspend fun writeUpdates(value: List<AudienceUpdate>) {
         dataStore.put(UPDATE_DATASTORE_KEY, JsonValue.wrap(value))
     }
