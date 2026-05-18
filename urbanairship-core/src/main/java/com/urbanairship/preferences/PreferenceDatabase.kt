@@ -41,29 +41,25 @@ public abstract class PreferenceDatabase public constructor() : RoomDatabase() {
         public const val COLUMN_NAME_LAZY: String = "lazy"
 
         /**
-         * Adds the `lazy` column and drops preference rows whose keys are no longer used by the
-         * SDK. The obsolete-keys cleanup piggybacks on this migration instead of running at every
-         * takeoff — v3 hasn't shipped yet, so we fold the data scrub in here.
+         * Adds the `lazy` column and drops the v3 obsolete-keys batch in one shot.
+         *
+         * Pattern for retiring more keys later: don't edit [OBSOLETE_KEYS_V3] — users already on
+         * v3 won't re-run this migration. Instead, add an `OBSOLETE_KEYS_V4` array next to a new
+         * `MIGRATION_3_4` and bump the [Database] version.
          */
         internal val MIGRATION_2_3: Migration = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COLUMN_NAME_LAZY INTEGER NOT NULL DEFAULT 0")
-                val placeholders = OBSOLETE_KEYS.joinToString(",") { "?" }
+                val placeholders = OBSOLETE_KEYS_V3.joinToString(",") { "?" }
                 db.execSQL(
                     "DELETE FROM $TABLE_NAME WHERE $COLUMN_NAME_KEY IN ($placeholders)",
-                    OBSOLETE_KEYS
+                    OBSOLETE_KEYS_V3
                 )
             }
         }
 
-        /**
-         * Keys retired by previous SDK versions; dropped by [MIGRATION_2_3].
-         *
-         * Do not edit this list in place once v3 has shipped — users already on v3 will have run
-         * the migration and won't run it again. Retire additional keys via a new MIGRATION_3_4
-         * (and bump the [Database] version) so the cleanup actually executes.
-         */
-        private val OBSOLETE_KEYS = arrayOf<Any>(
+        /** Keys retired by v3; dropped by [MIGRATION_2_3]. */
+        private val OBSOLETE_KEYS_V3 = arrayOf<Any>(
             "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS",
             "com.urbanairship.push.iam.PENDING_IN_APP_MESSAGE",
             "com.urbanairship.push.iam.AUTO_DISPLAY_ENABLED",

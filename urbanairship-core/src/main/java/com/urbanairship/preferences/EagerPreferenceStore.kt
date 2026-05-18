@@ -122,7 +122,7 @@ public class EagerPreferenceStore internal constructor(
      * success. Use only when correctness depends on the write being durable (e.g., a migration
      * that deletes the legacy key only if the new key was written).
      *
-     * The write is scheduled on the same serial dispatcher as [put], so a concurrent [put]
+     * Writes are scheduled on the same serial dispatcher as [put], so a concurrent [put]
      * cannot reorder the DB writes relative to the cache updates.
      */
     public fun putSync(key: String, value: String?): Boolean = runBlocking {

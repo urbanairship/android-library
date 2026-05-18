@@ -11,7 +11,7 @@ import androidx.annotation.RestrictTo
  * path on first async access.
  *
  * DAO failures are logged and degrade to the operation's default (`null` for reads, no-op for
- * writes, `false` for existence checks). [CancellationException] is re-thrown so coroutine
+ * writes, `false` for existence checks). [kotlinx.coroutines.CancellationException] is re-thrown so coroutine
  * cancellation propagates normally.
  *
  * No in-memory cache: SQLite's page cache covers the working set, and a separate cache would
