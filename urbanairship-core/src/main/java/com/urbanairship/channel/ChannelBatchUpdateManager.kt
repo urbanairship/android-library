@@ -16,9 +16,10 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.tryParse
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 /** Handles updates for the batch endpoint. */
@@ -168,23 +169,14 @@ internal class ChannelBatchUpdateManager(
             enqueueOperation { dataStore.remove(UPDATE_DATASTORE_KEY) }
         }
 
-        suspend fun hasPending(): Boolean {
-            val deferred = CompletableDeferred<Boolean>()
-            enqueueOperation {
-                deferred.complete(!(dataStore.get(UPDATE_DATASTORE_KEY)?.optList()?.isEmpty ?: true))
-            }
-            return deferred.await()
-        }
+        suspend fun hasPending(): Boolean = enqueueOperation {
+            !(dataStore.get(UPDATE_DATASTORE_KEY)?.optList()?.isEmpty ?: true)
+        }.await()
 
-        suspend fun read(): List<AudienceUpdate> {
-            val deferred = CompletableDeferred<List<AudienceUpdate>>()
-            enqueueOperation { deferred.complete(readInternal()) }
-            return deferred.await()
-        }
+        suspend fun read(): List<AudienceUpdate> = enqueueOperation { readInternal() }.await()
 
         /** Removes [uploaded] from the front of the stored list (in submission order). */
         suspend fun popFront(uploaded: List<AudienceUpdate>) {
-            val done = CompletableDeferred<Unit>()
             enqueueOperation {
                 val stored = readInternal().toMutableList()
                 uploaded.forEach {
@@ -193,40 +185,38 @@ internal class ChannelBatchUpdateManager(
                     }
                 }
                 writeInternal(stored)
-                done.complete(Unit)
-            }
-            done.await()
+            }.await()
         }
 
         @VisibleForTesting
         internal suspend fun migrate() {
-            val done = CompletableDeferred<Unit>()
-            enqueueOperation {
-                migrateInternal()
-                done.complete(Unit)
-            }
-            done.await()
+            enqueueOperation { migrateInternal() }.await()
         }
 
         /**
-         * Appends [block] to the chain. Returns immediately; [block] runs after the prior
-         * tail. The very first call also inserts a migration link at the head so legacy rows
-         * are folded in before any caller op runs.
+         * Appends [block] to the chain and returns the [Deferred] holding its result. The
+         * block runs after the prior tail completes. The very first call inserts a migration
+         * link at the head so legacy rows are folded in before any caller op runs.
+         *
+         * Awaited callers (`.await()`) get cancellation propagation for free — if the scope
+         * is cancelled the underlying Job is cancelled and `await()` throws, instead of
+         * hanging on an unsignalled `CompletableDeferred`. Fire-and-forget callers ignore
+         * the returned [Deferred].
          */
-        private fun enqueueOperation(block: suspend () -> Unit) {
-            chainLock.withLock {
+        private fun <T> enqueueOperation(block: suspend () -> T): Deferred<T> {
+            return chainLock.withLock {
                 if (lastOp == null) {
                     lastOp = scope.launch { migrateInternal() }
                 }
                 val previous = lastOp!!
-                lastOp = scope.launch {
+                scope.async {
                     previous.join()
                     block()
-                }
+                }.also { lastOp = it }
             }
         }
 
-        /** Must be invoked from within an [enqueueWrite] block. */
+        /** Must be invoked from within an [enqueueOperation] block. */
         private suspend fun migrateInternal() {
             val attributes = dataStore.get(ATTRIBUTE_DATASTORE_KEY)?.list?.flatMap {
                 AttributeMutation.fromJsonList(it.optList())
@@ -256,7 +246,7 @@ internal class ChannelBatchUpdateManager(
                 json.optList().map { AudienceUpdate(it.requireMap()) }
             } ?: emptyList()
 
-        /** Must be invoked from within an [enqueueWrite] block. */
+        /** Must be invoked from within an [enqueueOperation] block. */
         private suspend fun writeInternal(value: List<AudienceUpdate>) {
             dataStore.put(UPDATE_DATASTORE_KEY, JsonValue.wrap(value))
         }
