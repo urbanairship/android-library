@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class EagerPreferenceStore internal constructor(
     private val dao: PreferenceDao,
-    private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO)
+    private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.newSerialDispatcher())
 ) {
 
     private val cacheLock = ReentrantLock()
