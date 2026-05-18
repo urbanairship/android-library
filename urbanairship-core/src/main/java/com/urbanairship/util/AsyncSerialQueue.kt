@@ -10,15 +10,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 /**
- * Serializes async operations through a job chain: each [enqueue] / [enqueueAndAwait] launches
- * a coroutine that [Job.join]s the previous tail before running, so blocks complete in
- * caller-observed order. The "claim my predecessor and publish my Job as the new tail"
- * sequence runs under an internal lock so two concurrent callers can't see the same
- * predecessor — the launched jobs form a strict linear chain.
- *
- * Use [enqueue] for fire-and-forget operations. Use [enqueueAndAwait] when you need the
- * result — it returns via a [kotlinx.coroutines.Deferred], so scope cancellation propagates
- * cleanly through `await()` instead of hanging on a never-completed `CompletableDeferred`.
+ * Serializes async operations in caller-observed submission order. Each enqueued block runs
+ * only after every previously-enqueued block has completed.
  *
  * @hide
  */
