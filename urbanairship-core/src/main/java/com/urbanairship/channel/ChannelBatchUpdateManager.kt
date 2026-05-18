@@ -75,7 +75,7 @@ internal class ChannelBatchUpdateManager(
         var mergedTags = mutableListOf<TagGroupsMutation>()
         var mergedAttributes = mutableListOf<AttributeMutation>()
         var mergedSubLists = mutableListOf<SubscriptionListMutation>()
-        var mergedLiveUpdates = mutableListOf<LiveUpdateMutation>()
+        val mergedLiveUpdates = mutableListOf<LiveUpdateMutation>()
 
         updates.forEach { update ->
             update.tags?.let { mergedTags.addAll(it) }
@@ -94,8 +94,8 @@ internal class ChannelBatchUpdateManager(
         }
 
         val response = apiClient.update(channelId, mergedTags, mergedAttributes, mergedSubLists, mergedLiveUpdates)
-        if (response.isSuccessful || response.isClientError) {
 
+        if (response.isSuccessful || response.isClientError) {
             if (response.isSuccessful) {
                 audienceOverridesProvider.recordChannelUpdate(
                     channelId,
@@ -207,13 +207,13 @@ internal class ChannelBatchUpdateManager(
 
         /** Must be invoked from inside [dataQueue]. */
         private suspend fun migrateInternal() {
-            val attributes = dataStore.get(ATTRIBUTE_DATASTORE_KEY)?.list?.map {
+            val attributes = dataStore.get(ATTRIBUTE_DATASTORE_KEY)?.list?.flatMap {
                 AttributeMutation.fromJsonList(it.optList())
-            }?.flatten()
+            }
 
-            val subscriptions = dataStore.get(SUBSCRIPTION_LISTS_DATASTORE_KEY)?.list?.map {
+            val subscriptions = dataStore.get(SUBSCRIPTION_LISTS_DATASTORE_KEY)?.list?.flatMap {
                 SubscriptionListMutation.fromJsonList(it.optList())
-            }?.flatten()
+            }
 
             val tags = dataStore.get(TAG_GROUP_DATASTORE_KEY)?.list?.map {
                 TagGroupsMutation.fromJsonValue(it)
