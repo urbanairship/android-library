@@ -70,23 +70,21 @@ public class EagerPreferenceStore internal constructor(
             val row = try {
                 dao.findRow(key)
             } catch (e: Throwable) {
-                deleteAsync(key, e)
+                deleteCorruptKey(key, e)
                 continue
             }
             if (row?.value != null) {
                 loaded += key to row.value
             } else {
-                deleteAsync(key)
+                deleteCorruptKey(key)
             }
         }
         applyToCache(loaded)
     }
 
-    private fun deleteAsync(key: String, throwable: Throwable? = null) {
+    private suspend fun deleteCorruptKey(key: String, throwable: Throwable? = null) {
         UALog.e(throwable) { "Unable to fetch preference value. Deleting: $key" }
-        scope.launch {
-            runCatching { dao.delete(key) }.onFailure { UALog.e(it, "Failed to delete preference $key") }
-        }
+        guardDao("delete($key)", Unit) { dao.delete(key) }
     }
 
     private fun applyToCache(entries: List<Pair<String, String?>>) {
