@@ -1,16 +1,15 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.preferences
 
-import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
@@ -108,30 +107,42 @@ public class EagerPreferenceStore internal constructor(
     /**
      * Updates the cache and schedules a DB write on the serial dispatcher. Passing `null` deletes
      * the row. Returns immediately; the actual disk write completes asynchronously.
+     *
+     * The cache update and the launch are scheduled atomically under [cacheLock] so the serial
+     * dispatcher receives writes in the same order callers updated the cache.
      */
-    public fun put(key: String, value: String?) {
-        if (!updateCache(key, value)) return
-        scope.launch { writeValue(key, value) }
+    public fun put(key: String, value: String?): Unit = cacheLock.withLock {
+        if (setCacheLocked(key, value)) {
+            scope.launch { writeValue(key, value) }
+        }
     }
 
     /**
      * Blocking variant of [put] — waits for the database write to commit. Returns `true` on
      * success. Use only when correctness depends on the write being durable (e.g., a migration
      * that deletes the legacy key only if the new key was written).
+     *
+     * The write is scheduled on the same serial dispatcher as [put], so a concurrent [put]
+     * cannot reorder the DB writes relative to the cache updates.
      */
     public fun putSync(key: String, value: String?): Boolean = runBlocking {
-        val written = writeValue(key, value)
-        if (written) updateCache(key, value)
-        written
+        val job = cacheLock.withLock {
+            setCacheLocked(key, value)
+            scope.async { writeValue(key, value) }
+        }
+        job.await()
     }
 
     /** Removes [key]. Equivalent to `put(key, null)`. */
     public fun remove(key: String): Unit = put(key, null)
 
-    private fun updateCache(key: String, value: String?): Boolean = cacheLock.withLock {
+    /**
+     * Caller must hold [cacheLock]. Returns `true` if the cache changed.
+     */
+    private fun setCacheLocked(key: String, value: String?): Boolean {
         val prev = cache[key]
         val absent = !cache.containsKey(key)
-        when {
+        return when {
             value == null && absent -> false
             value != null && prev == value -> false
             value == null -> {
