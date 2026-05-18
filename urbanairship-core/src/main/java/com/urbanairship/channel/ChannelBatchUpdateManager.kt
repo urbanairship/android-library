@@ -15,6 +15,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.tryParse
 import com.urbanairship.util.AsyncSerialQueue
+import com.urbanairship.util.AsyncSerialQueueScope
 import kotlinx.coroutines.CoroutineScope
 
 /** Handles updates for the batch endpoint. */
@@ -185,8 +186,7 @@ internal class ChannelBatchUpdateManager(
             queue.enqueueAndAwait { migrateInternal() }
         }
 
-        /** Must be invoked from within an [queue] block. */
-        private suspend fun migrateInternal() {
+        private suspend fun AsyncSerialQueueScope.migrateInternal() {
             val attributes = dataStore.get(ATTRIBUTE_DATASTORE_KEY)?.list?.flatMap {
                 AttributeMutation.fromJsonList(it.optList())
             }
@@ -209,14 +209,12 @@ internal class ChannelBatchUpdateManager(
             dataStore.remove(TAG_GROUP_DATASTORE_KEY)
         }
 
-        /** Must be invoked from within an [queue] block. */
-        private suspend fun readInternal(): List<AudienceUpdate> =
+        private suspend fun AsyncSerialQueueScope.readInternal(): List<AudienceUpdate> =
             dataStore.get(UPDATE_DATASTORE_KEY)?.tryParse(true) { json ->
                 json.optList().map { AudienceUpdate(it.requireMap()) }
             } ?: emptyList()
 
-        /** Must be invoked from within an [queue] block. */
-        private suspend fun writeInternal(value: List<AudienceUpdate>) {
+        private suspend fun AsyncSerialQueueScope.writeInternal(value: List<AudienceUpdate>) {
             dataStore.put(UPDATE_DATASTORE_KEY, JsonValue.wrap(value))
         }
 
