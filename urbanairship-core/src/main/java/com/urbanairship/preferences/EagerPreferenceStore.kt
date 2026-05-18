@@ -5,16 +5,16 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
-import com.urbanairship.util.SerialQueue
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
 /**
  * Eager preference store. Loads all non-lazy rows from the database at startup and keeps them
- * in an in-memory map; subsequent reads are synchronous, writes are queued through a
- * [SerialQueue] so they commit in submission order.
+ * in an in-memory map; subsequent reads are synchronous, writes are chained so they commit in
+ * submission order.
  *
  * Values are stored as raw strings — typed conversion is handled one level up in
  * [PreferenceStore] via [SyncPrefKey] / [AsyncPrefKey]. Reached only through that wrapper.
@@ -27,9 +27,11 @@ public class EagerPreferenceStore internal constructor(
     private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO)
 ) {
 
-    private val writeQueue = SerialQueue()
     private val cacheLock = ReentrantLock()
     private val cache: MutableMap<String, String> = mutableMapOf()
+
+    /** Tail of the pending-write chain. Read/written only under [cacheLock]. */
+    private var lastWrite: Job? = null
 
     /**
      * Populates the in-memory cache from non-lazy database rows. Falls back to per-key load
@@ -101,15 +103,20 @@ public class EagerPreferenceStore internal constructor(
     public fun get(key: String): String? = cacheLock.withLock { cache[key] }
 
     /**
-     * Updates the cache and enqueues a DB write on [writeQueue]. Passing `null` deletes the row.
-     * Returns immediately; the actual disk write completes asynchronously.
+     * Updates the cache and chains a DB write behind any prior pending writes. Passing `null`
+     * deletes the row. Returns immediately; the actual disk write completes asynchronously.
      *
-     * The cache update and the enqueue happen atomically under [cacheLock] so the write queue
-     * receives writes in the same order callers updated the cache.
+     * The cache update, snapshot of the previous tail, and assignment of the new tail all
+     * happen under [cacheLock], so two concurrent callers can't both see the same predecessor
+     * — the launched jobs form a strict linear chain in caller-observed order.
      */
     public fun put(key: String, value: String?): Unit = cacheLock.withLock {
         if (setCacheLocked(key, value)) {
-            scope.launch { writeQueue.run { writeValue(key, value) } }
+            val previous = lastWrite
+            lastWrite = scope.launch {
+                previous?.join()
+                writeValue(key, value)
+            }
         }
     }
 
@@ -117,14 +124,12 @@ public class EagerPreferenceStore internal constructor(
     public fun remove(key: String): Unit = put(key, null)
 
     /**
-     * Queues a no-op behind every pending write. Since [writeQueue] is suspension-aware and
-     * processes operations strictly in submission order, the call returns only after every
-     * write enqueued before it has committed. For tests that need to inspect DB state after a
-     * [put].
+     * Joins the tail of the write chain — which transitively waits for every write enqueued
+     * before this call. For tests that need to inspect DB state after a [put].
      */
     @VisibleForTesting
     internal suspend fun awaitPendingWrites() {
-        writeQueue.run { }
+        cacheLock.withLock { lastWrite }?.join()
     }
 
     /**
