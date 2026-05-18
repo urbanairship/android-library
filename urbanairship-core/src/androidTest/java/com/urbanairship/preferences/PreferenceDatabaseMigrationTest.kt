@@ -44,6 +44,24 @@ class PreferenceDatabaseMigrationTest {
         Assert.assertFalse(another.lazy)
     }
 
+    /**
+     * The 2→3 migration also drops any rows whose keys appear in the obsolete-keys list.
+     */
+    @Test
+    fun migrate2to3_dropsObsoleteKeys() {
+        var db = helper.createDatabase(TEST_DB, 2)
+        insertV2Row(db, key = "com.urbanairship.chat.CHAT", value = "should-be-deleted")
+        insertV2Row(db, key = "com.urbanairship.push.SOUND_ENABLED", value = "should-be-deleted")
+        insertV2Row(db, key = "still.here", value = "kept")
+        db.close()
+
+        db = helper.runMigrationsAndValidate(TEST_DB, 3, true, PreferenceDatabase.MIGRATION_2_3)
+
+        val rows = readAllRows(db)
+        Assert.assertEquals(1, rows.size)
+        Assert.assertEquals("still.here", rows.single().key)
+    }
+
     private data class Row(val key: String, val value: String?, val lazy: Boolean)
 
     companion object {

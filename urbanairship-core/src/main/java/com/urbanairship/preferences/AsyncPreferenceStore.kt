@@ -2,8 +2,6 @@
 package com.urbanairship.preferences
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.UALog
-import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Thin shim over [PreferenceDao] for `AsyncPrefKey` access.
@@ -31,33 +29,24 @@ public class AsyncPreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) pu
      * Reads the value under [key], returning `null` if unset. If the existing row was flagged
      * eager (`lazy = false`), flips it to `lazy = true` so future takeoffs skip the row.
      */
-    public suspend fun getString(key: String): String? = guard("findRow($key)", null) {
-        val row = dao.findRow(key) ?: return@guard null
+    public suspend fun getString(key: String): String? = guardDao("findRow($key)", null) {
+        val row = dao.findRow(key) ?: return@guardDao null
         if (!row.lazy) dao.markLazy(key)
         row.value
     }
 
     /** Upserts [value] under [key] with `lazy = true`. */
-    public suspend fun put(key: String, value: String): Unit = guard("upsert($key)", Unit) {
+    public suspend fun put(key: String, value: String): Unit = guardDao("upsert($key)", Unit) {
         dao.upsert(PreferenceData(key = key, value = value, lazy = true))
     }
 
     /** Removes [key]. */
-    public suspend fun remove(key: String): Unit = guard("delete($key)", Unit) {
+    public suspend fun remove(key: String): Unit = guardDao("delete($key)", Unit) {
         dao.delete(key)
     }
 
     /** Returns `true` if [key] has any stored value. */
-    public suspend fun isSet(key: String): Boolean = guard("contains($key)", false) {
+    public suspend fun isSet(key: String): Boolean = guardDao("contains($key)", false) {
         dao.contains(key)
-    }
-
-    private inline fun <T> guard(op: String, default: T, block: () -> T): T = try {
-        block()
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: Throwable) {
-        UALog.e(e) { "Async preference op failed: $op" }
-        default
     }
 }

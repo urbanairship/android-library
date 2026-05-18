@@ -40,11 +40,52 @@ public abstract class PreferenceDatabase public constructor() : RoomDatabase() {
         public const val COLUMN_NAME_VALUE: String = "value"
         public const val COLUMN_NAME_LAZY: String = "lazy"
 
+        /**
+         * Adds the `lazy` column and drops preference rows whose keys are no longer used by the
+         * SDK. The obsolete-keys cleanup piggybacks on this migration instead of running at every
+         * takeoff — v3 hasn't shipped yet, so we fold the data scrub in here.
+         */
         internal val MIGRATION_2_3: Migration = object : Migration(2, 3) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE $TABLE_NAME ADD COLUMN $COLUMN_NAME_LAZY INTEGER NOT NULL DEFAULT 0")
+                val placeholders = OBSOLETE_KEYS.joinToString(",") { "?" }
+                db.execSQL(
+                    "DELETE FROM $TABLE_NAME WHERE $COLUMN_NAME_KEY IN ($placeholders)",
+                    OBSOLETE_KEYS
+                )
             }
         }
+
+        /**
+         * Keys retired by previous SDK versions; dropped by [MIGRATION_2_3].
+         *
+         * Do not edit this list in place once v3 has shipped — users already on v3 will have run
+         * the migration and won't run it again. Retire additional keys via a new MIGRATION_3_4
+         * (and bump the [Database] version) so the cleanup actually executes.
+         */
+        private val OBSOLETE_KEYS = arrayOf<Any>(
+            "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS",
+            "com.urbanairship.push.iam.PENDING_IN_APP_MESSAGE",
+            "com.urbanairship.push.iam.AUTO_DISPLAY_ENABLED",
+            "com.urbanairship.push.iam.LAST_DISPLAYED_ID",
+            "com.urbanairship.nameduser.CHANGE_TOKEN_KEY",
+            "com.urbanairship.nameduser.LAST_UPDATED_TOKEN_KEY",
+            "com.urbanairship.iam.tags.TAG_PREFER_LOCAL_DATA_TIME",
+            "com.urbanairship.chat.CHAT",
+            "com.urbanairship.user.LAST_MESSAGE_REFRESH_TIME",
+            "com.urbanairship.push.LAST_REGISTRATION_TIME",
+            "com.urbanairship.push.LAST_REGISTRATION_PAYLOAD",
+            "com.urbanairship.remotedata.LAST_REFRESH_APP_VERSION",
+            "com.urbanairship.remotedata.LAST_MODIFIED",
+            "com.urbanairship.remotedata.LAST_REFRESH_TIME",
+            "com.urbanairship.iam.data.last_payload_info",
+            "com.urbanairship.iam.data.LAST_PAYLOAD_METADATA",
+            "com.urbanairship.iam.data.contact_last_payload_info",
+            "com.urbanairship.push.SOUND_ENABLED",
+            "com.urbanairship.push.VIBRATE_ENABLED",
+            "com.urbanairship.push.QUIET_TIME_ENABLED",
+            "com.urbanairship.push.QUIET_TIME_INTERVAL"
+        )
 
         private val MIGRATION_1_2: Migration = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
