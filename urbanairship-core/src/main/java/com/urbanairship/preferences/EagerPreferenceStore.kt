@@ -26,15 +26,13 @@ import kotlinx.coroutines.runBlocking
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class EagerPreferenceStore internal constructor(
-    private val db: PreferenceDatabase,
+    private val dao: PreferenceDao,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()
 ) {
 
     private val scope = CoroutineScope(dispatcher)
     private val cacheLock = ReentrantLock()
     private val cache: MutableMap<String, String> = mutableMapOf()
-
-    internal val dao: PreferenceDao = db.dao
 
     /**
      * Populates the in-memory cache from non-lazy database rows. Falls back to per-key load
@@ -101,11 +99,6 @@ public class EagerPreferenceStore internal constructor(
         }
     }
 
-    /** Closes the underlying database. */
-    public fun tearDown() {
-        db.close()
-    }
-
     /** Returns `true` if the cache has a value for [key]. */
     public fun isSet(key: String): Boolean = cacheLock.withLock { cache.containsKey(key) }
 
@@ -168,24 +161,10 @@ public class EagerPreferenceStore internal constructor(
         false
     }
 
-    public companion object {
+    internal companion object {
 
-        /** Loads (or creates) the eager preference store backed by the on-disk database. */
-        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        public suspend fun load(
-            context: Context, configOptions: AirshipConfigOptions
-        ): EagerPreferenceStore {
-            val db = PreferenceDatabase.createDatabase(context, configOptions)
-            val store = EagerPreferenceStore(db)
-            if (db.exists(context)) {
-                store.loadPreferences()
-            }
-            return store
-        }
-
-        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        @VisibleForTesting
-        public fun inMemoryStore(context: Context): EagerPreferenceStore =
-            EagerPreferenceStore(PreferenceDatabase.createInMemoryDatabase(context))
+        /** Constructs an [EagerPreferenceStore] from [dao] and populates the in-memory cache. */
+        internal suspend fun load(dao: PreferenceDao): EagerPreferenceStore =
+            EagerPreferenceStore(dao).also { it.loadPreferences() }
     }
 }

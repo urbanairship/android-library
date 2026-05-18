@@ -20,17 +20,21 @@ import kotlinx.coroutines.runBlocking
  * logged and the write is dropped; a `deserialize` that throws on [get] is logged and the key is
  * treated as unset.
  *
+ * [PreferenceStore] owns the [PreferenceDatabase] lifecycle — both substores receive the [dao]
+ * but don't own it.
+ *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
-    private val eagerStore: EagerPreferenceStore,
-    private val asyncStore: AsyncPreferenceStore = AsyncPreferenceStore(eagerStore.dao)
+    private val database: PreferenceDatabase,
+    private val eagerStore: EagerPreferenceStore = EagerPreferenceStore(database.dao),
+    private val asyncStore: AsyncPreferenceStore = AsyncPreferenceStore(database.dao)
 ) {
 
     /** Test-only window into the DAO for verifying lazy-column state. */
     @VisibleForTesting
-    internal val dao: PreferenceDao get() = eagerStore.dao
+    internal val dao: PreferenceDao get() = database.dao
 
     // region Sync typed access
 
@@ -132,7 +136,7 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun tearDown() {
-        eagerStore.tearDown()
+        database.close()
     }
 
     private fun cleanupObsoleteKeys() {
@@ -181,14 +185,17 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun load(context: Context, configOptions: AirshipConfigOptions): PreferenceStore =
             runBlocking {
-                PreferenceStore(EagerPreferenceStore.load(context, configOptions))
-                    .also { it.cleanupObsoleteKeys() }
+                val database = PreferenceDatabase.createDatabase(context, configOptions)
+                PreferenceStore(
+                    database = database,
+                    eagerStore = EagerPreferenceStore.load(database.dao)
+                ).also { it.cleanupObsoleteKeys() }
             }
 
         /** Builds an in-memory store for tests. @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @VisibleForTesting
         public fun inMemoryStore(context: Context): PreferenceStore =
-            PreferenceStore(EagerPreferenceStore.inMemoryStore(context))
+            PreferenceStore(PreferenceDatabase.createInMemoryDatabase(context))
     }
 }

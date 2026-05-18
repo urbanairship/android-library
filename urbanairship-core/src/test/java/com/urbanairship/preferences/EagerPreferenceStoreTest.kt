@@ -4,7 +4,6 @@ package com.urbanairship.preferences
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -21,9 +20,6 @@ import org.junit.runner.RunWith
 public class EagerPreferenceStoreTest {
 
     private val mockDao = mockk<PreferenceDao>(relaxed = true)
-    private val mockDb = mockk<PreferenceDatabase> {
-        every { dao } returns mockDao
-    }
 
     @Test
     public fun fallbackLoadDeletesKeyWhenFindRowThrows(): Unit = runTest {
@@ -32,7 +28,7 @@ public class EagerPreferenceStoreTest {
         coEvery { mockDao.findRow("bad") } throws RuntimeException("row read failed")
         coEvery { mockDao.findRow("good") } returns PreferenceData("good", "saved")
 
-        val store = EagerPreferenceStore(mockDb)
+        val store = EagerPreferenceStore(mockDao)
         store.loadPreferences()
 
         coVerify { mockDao.delete("bad") }
@@ -46,7 +42,7 @@ public class EagerPreferenceStoreTest {
         coEvery { mockDao.findRow("empty") } returns PreferenceData("empty", null)
         coEvery { mockDao.findRow("good") } returns PreferenceData("good", "ok")
 
-        val store = EagerPreferenceStore(mockDb)
+        val store = EagerPreferenceStore(mockDao)
         store.loadPreferences()
 
         coVerify { mockDao.delete("empty") }
