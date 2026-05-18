@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship
 
+import com.urbanairship.preferences.PreferenceStore
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -24,10 +26,10 @@ public class ChannelCapture @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public c
     context: Context,
     private val configOptions: AirshipConfigOptions,
     private val airshipChannel: AirshipChannel,
-    preferenceDataStore: PreferenceDataStore,
+    preferenceStore: PreferenceStore,
     private val activityMonitor: ActivityMonitor,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
-) : AirshipComponent(context, preferenceDataStore) {
+) : AirshipComponent(context, preferenceStore) {
 
     private var clipboardManager: ClipboardManager? = null
     private val listener: ApplicationListener

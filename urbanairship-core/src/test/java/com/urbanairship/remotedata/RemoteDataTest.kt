@@ -3,7 +3,7 @@
 package com.urbanairship.remotedata
 
 import androidx.test.core.app.ApplicationProvider
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
@@ -54,7 +54,7 @@ public class RemoteDataTest {
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private var config: TestAirshipRuntimeConfig = TestAirshipRuntimeConfig()
-    private val dataStore: PreferenceDataStore = PreferenceDataStore.inMemoryStore(
+    private val dataStore: PreferenceStore = PreferenceStore.inMemoryStore(
         ApplicationProvider.getApplicationContext()
     )
 
@@ -99,7 +99,7 @@ public class RemoteDataTest {
 
     private val remoteData = RemoteData(
         context = ApplicationProvider.getApplicationContext(),
-        preferenceDataStore = dataStore,
+        preferenceStore = dataStore,
         config = config,
         privacyManager = privacyManager,
         localeManager = mockLocaleManager,

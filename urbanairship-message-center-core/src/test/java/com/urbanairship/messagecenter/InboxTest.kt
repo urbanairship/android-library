@@ -6,7 +6,7 @@ import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.Predicate
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.TestTaskSleeper
@@ -77,7 +77,7 @@ public class InboxTest {
         clock.currentTimeMillis += sleep.inWholeMilliseconds
     }
 
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
+    private val dataStore = PreferenceStore.inMemoryStore(context)
 
     private val runtimeConfig = TestAirshipRuntimeConfig(
         RemoteConfig(

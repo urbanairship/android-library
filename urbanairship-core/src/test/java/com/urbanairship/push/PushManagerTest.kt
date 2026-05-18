@@ -8,7 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.Platform
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.R
@@ -51,10 +51,10 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalCoroutinesApi::class)
 public class PushManagerTest {
 
-    private var preferenceDataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext())
+    private var preferenceStore = PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext())
     private val testDispatcher = UnconfinedTestDispatcher()
     private var privacyManager = PrivacyManager(
-        preferenceDataStore,
+        preferenceStore,
         PrivacyManager.Feature.ALL,
         dispatcher = testDispatcher
     )
@@ -83,7 +83,7 @@ public class PushManagerTest {
 
     private var pushManager = PushManager(
         ApplicationProvider.getApplicationContext(),
-        preferenceDataStore,
+        preferenceStore,
         runtimeConfig,
         privacyManager,
         pushProvidersProvider,
@@ -126,7 +126,7 @@ public class PushManagerTest {
         // Init to verify token does not clear if the delivery type is the same
         pushManager = PushManager(
             ApplicationProvider.getApplicationContext<Context>(),
-            preferenceDataStore!!,
+            preferenceStore!!,
             runtimeConfig,
             privacyManager,
             pushProvidersProvider,
@@ -145,7 +145,7 @@ public class PushManagerTest {
         every { mockPushProvider.deliveryType } returns PushProvider.DeliveryType.ADM
         pushManager = PushManager(
             ApplicationProvider.getApplicationContext<Context>(),
-            preferenceDataStore,
+            preferenceStore,
             runtimeConfig,
             privacyManager,
             pushProvidersProvider,
@@ -951,7 +951,7 @@ public class PushManagerTest {
             Assert.assertTrue(pushManager.isUniqueCanonicalId("id-$i"))
         }
 
-        val jsonString = preferenceDataStore.getString(LAST_CANONICAL_IDS_KEY, null)
+        val jsonString = preferenceStore.get(LAST_CANONICAL_IDS_KEY)
         Assert.assertNotNull(jsonString)
 
         val jsonList = JsonValue.parseString(jsonString!!).list

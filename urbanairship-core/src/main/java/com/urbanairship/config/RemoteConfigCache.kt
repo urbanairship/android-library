@@ -2,7 +2,8 @@
 package com.urbanairship.config
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.remoteconfig.RemoteConfig
 
 /**
@@ -10,7 +11,7 @@ import com.urbanairship.remoteconfig.RemoteConfig
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class RemoteConfigCache(
-    private val preferences: PreferenceDataStore
+    private val preferences: PreferenceStore
 ) {
 
     private val lock = Any()
@@ -19,9 +20,8 @@ internal class RemoteConfigCache(
     internal val config: RemoteConfig
         get() {
             synchronized(lock) {
-                return _remoteConfig ?: RemoteConfig.fromJson(
-                    preferences.getJsonValue(REMOTE_CONFIG_KEY)
-                ).also { _remoteConfig = it }
+                return _remoteConfig ?: (preferences.get(REMOTE_CONFIG_KEY) ?: RemoteConfig())
+                    .also { _remoteConfig = it }
             }
         }
 
@@ -38,6 +38,9 @@ internal class RemoteConfigCache(
 
     private companion object {
 
-        private const val REMOTE_CONFIG_KEY = "com.urbanairship.config.REMOTE_CONFIG_KEY"
+        private val REMOTE_CONFIG_KEY = SyncPrefKey.jsonSerializable(
+            name = "com.urbanairship.config.REMOTE_CONFIG_KEY",
+            fromJson = RemoteConfig::fromJson
+        )
     }
 }

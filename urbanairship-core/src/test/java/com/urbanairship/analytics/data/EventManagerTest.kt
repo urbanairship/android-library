@@ -2,7 +2,7 @@ package com.urbanairship.analytics.data
 
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.BaseTestCase
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.analytics.AirshipEventData
@@ -41,10 +41,10 @@ public class EventManagerTest public constructor() : BaseTestCase() {
     private val clock = TestClock()
 
     private val testAirshipRuntimeConfig = TestAirshipRuntimeConfig()
-    private val dataStore: PreferenceDataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext())
+    private val dataStore: PreferenceStore = PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext())
 
     private val eventManager: EventManager = EventManager(
-        preferenceDataStore = dataStore,
+        preferenceStore = dataStore,
         runtimeConfig = testAirshipRuntimeConfig,
         jobDispatcher = mockDispatcher,
         activityMonitor = mockActivityMonitor,
@@ -167,9 +167,9 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         coVerify { mockEventDao.deleteBatch(events) }
 
         // Verify responses are being saved
-        assertEquals(200, dataStore.getInt(EventManager.MAX_TOTAL_DB_SIZE_KEY, 0))
-        assertEquals(300, dataStore.getInt(EventManager.MAX_BATCH_SIZE_KEY, 0))
-        assertEquals(100, dataStore.getInt(EventManager.MIN_BATCH_INTERVAL_KEY, 0))
+        assertEquals(200, dataStore.get(EventManager.MAX_TOTAL_DB_SIZE_KEY) ?: 0)
+        assertEquals(300, dataStore.get(EventManager.MAX_BATCH_SIZE_KEY) ?: 0)
+        assertEquals(100, dataStore.get(EventManager.MIN_BATCH_INTERVAL_KEY) ?: 0)
 
         // Check it schedules an upload
         verify { mockDispatcher.dispatch(any()) }

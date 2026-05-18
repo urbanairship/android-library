@@ -4,7 +4,8 @@ package com.urbanairship.channel
 
 import android.content.Context
 import androidx.annotation.RestrictTo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.app.ActivityMonitor
@@ -58,7 +59,7 @@ public sealed class ChannelGenerationMethod {
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ChannelRegistrar(
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val channelApiClient: ChannelApiClient,
     private val activityMonitor: ActivityMonitor,
     private val channelCreateOption: AirshipChannelCreateOption? = null,
@@ -67,7 +68,7 @@ public class ChannelRegistrar(
 ) {
     public constructor(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager
     ) : this(
@@ -84,7 +85,7 @@ public class ChannelRegistrar(
     internal val channelIdFlow: StateFlow<String?> = _channelIdFlow.asStateFlow()
 
     internal var channelId: String?
-        get() = dataStore.getString(CHANNEL_ID_KEY, null)
+        get() = dataStore.get(CHANNEL_ID_KEY)
         private set(value) = dataStore.put(CHANNEL_ID_KEY, value)
 
 
@@ -158,9 +159,7 @@ public class ChannelRegistrar(
     }
 
     private var lastChannelRegistrationInfo: RegistrationInfo?
-        get() = dataStore.optJsonValue(LAST_CHANNEL_REGISTRATION_INFO)?.tryParse {
-            RegistrationInfo(it.requireMap())
-        }
+        get() = dataStore.get(LAST_CHANNEL_REGISTRATION_INFO)
         set(value) = dataStore.put(LAST_CHANNEL_REGISTRATION_INFO, value)
 
     private suspend fun createChannel(): RegistrationResult {
@@ -290,8 +289,11 @@ public class ChannelRegistrar(
 
     private companion object {
 
-        private const val CHANNEL_ID_KEY = "com.urbanairship.push.CHANNEL_ID"
-        private const val LAST_CHANNEL_REGISTRATION_INFO = "com.urbanairship.channel.LAST_CHANNEL_REGISTRATION_INFO"
+        private val CHANNEL_ID_KEY = SyncPrefKey.string("com.urbanairship.push.CHANNEL_ID")
+        private val LAST_CHANNEL_REGISTRATION_INFO = SyncPrefKey.jsonSerializable(
+            name = "com.urbanairship.channel.LAST_CHANNEL_REGISTRATION_INFO",
+            fromJson = { RegistrationInfo(it.requireMap()) }
+        )
         private const val CHANNEL_REREGISTRATION_INTERVAL_MS: Long = 24 * 60 * 60 * 1000 // 24H
     }
 }

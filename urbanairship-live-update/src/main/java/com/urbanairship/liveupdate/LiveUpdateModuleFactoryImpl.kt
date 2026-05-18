@@ -6,7 +6,7 @@ import android.content.Context
 import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
 import com.urbanairship.BuildConfig
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -28,7 +28,7 @@ public class LiveUpdateModuleFactoryImpl : LiveUpdateModuleFactory {
 
     override fun build(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,

@@ -4,7 +4,7 @@ package com.urbanairship.modules.liveupdate
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipVersionInfo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -21,7 +21,7 @@ public interface LiveUpdateModuleFactory : AirshipVersionInfo {
 
     public fun build(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,

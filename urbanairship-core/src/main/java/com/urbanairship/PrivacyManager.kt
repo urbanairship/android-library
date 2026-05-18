@@ -1,6 +1,9 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship
 
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
+
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.config.RemoteConfigObserver
@@ -42,7 +45,7 @@ import kotlinx.coroutines.launch
  * - Manufacturer (if Huawei)
  */
 public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) constructor(
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val defaultEnabledFeatures: Feature,
     private val configObserver: RemoteConfigObserver = RemoteConfigObserver(dataStore),
     resetEnabledFeatures: Boolean = false,
@@ -97,7 +100,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
 
     private var localEnabledFeature: Feature
         get() {
-            val stored = dataStore.getInt(ENABLED_FEATURES_KEY, defaultEnabledFeatures.rawValue)
+            val stored = dataStore.get(ENABLED_FEATURES_KEY) ?: defaultEnabledFeatures.rawValue
             // Remove deprecated features from the enabled features, if any are set.
             return Feature(stored) and Feature.ALL
         }
@@ -236,7 +239,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
     @VisibleForTesting
     internal fun migrateData() {
         if (dataStore.isSet(DATA_COLLECTION_ENABLED_KEY)) {
-            if (dataStore.getBoolean(DATA_COLLECTION_ENABLED_KEY, false)) {
+            if (dataStore.get(DATA_COLLECTION_ENABLED_KEY) == true) {
                 this.setEnabledFeatures(Feature.ALL)
             } else {
                 this.setEnabledFeatures(Feature.NONE)
@@ -245,28 +248,28 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
         }
 
         if (dataStore.isSet(ANALYTICS_ENABLED_KEY)) {
-            if (!dataStore.getBoolean(ANALYTICS_ENABLED_KEY, true)) {
+            if (dataStore.get(ANALYTICS_ENABLED_KEY) == false) {
                 this.disable(Feature.ANALYTICS)
             }
             dataStore.remove(ANALYTICS_ENABLED_KEY)
         }
 
         if (dataStore.isSet(PUSH_TOKEN_REGISTRATION_ENABLED_KEY)) {
-            if (!dataStore.getBoolean(PUSH_TOKEN_REGISTRATION_ENABLED_KEY, true)) {
+            if (dataStore.get(PUSH_TOKEN_REGISTRATION_ENABLED_KEY) == false) {
                 this.disable(Feature.PUSH)
             }
             dataStore.remove(PUSH_TOKEN_REGISTRATION_ENABLED_KEY)
         }
 
         if (dataStore.isSet(PUSH_ENABLED_KEY)) {
-            if (!dataStore.getBoolean(PUSH_ENABLED_KEY, true)) {
+            if (dataStore.get(PUSH_ENABLED_KEY) == false) {
                 this.disable(Feature.PUSH)
             }
             dataStore.remove(PUSH_ENABLED_KEY)
         }
 
         if (dataStore.isSet(IAA_ENABLED_KEY)) {
-            if (!dataStore.getBoolean(IAA_ENABLED_KEY, true)) {
+            if (dataStore.get(IAA_ENABLED_KEY) == false) {
                 this.disable(Feature.IN_APP_AUTOMATION)
             }
             dataStore.remove(IAA_ENABLED_KEY)
@@ -274,24 +277,28 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
     }
 
     internal companion object {
-        private const val ENABLED_FEATURES_KEY = "com.urbanairship.PrivacyManager.enabledFeatures"
+        private val ENABLED_FEATURES_KEY = SyncPrefKey.int("com.urbanairship.PrivacyManager.enabledFeatures")
 
         // legacy keys for migration
         @VisibleForTesting
-        val DATA_COLLECTION_ENABLED_KEY: String = "com.urbanairship.DATA_COLLECTION_ENABLED"
+        val DATA_COLLECTION_ENABLED_KEY: SyncPrefKey<Boolean> =
+            SyncPrefKey.boolean("com.urbanairship.DATA_COLLECTION_ENABLED")
 
         @VisibleForTesting
-        val ANALYTICS_ENABLED_KEY: String = "com.urbanairship.analytics.ANALYTICS_ENABLED"
+        val ANALYTICS_ENABLED_KEY: SyncPrefKey<Boolean> =
+            SyncPrefKey.boolean("com.urbanairship.analytics.ANALYTICS_ENABLED")
 
         @VisibleForTesting
-        val PUSH_TOKEN_REGISTRATION_ENABLED_KEY: String =
-            "com.urbanairship.push.PUSH_TOKEN_REGISTRATION_ENABLED"
+        val PUSH_TOKEN_REGISTRATION_ENABLED_KEY: SyncPrefKey<Boolean> =
+            SyncPrefKey.boolean("com.urbanairship.push.PUSH_TOKEN_REGISTRATION_ENABLED")
 
         @VisibleForTesting
-        val PUSH_ENABLED_KEY: String = "com.urbanairship.push.PUSH_ENABLED"
+        val PUSH_ENABLED_KEY: SyncPrefKey<Boolean> =
+            SyncPrefKey.boolean("com.urbanairship.push.PUSH_ENABLED")
 
         @VisibleForTesting
-        val IAA_ENABLED_KEY: String = "com.urbanairship.iam.enabled"
+        val IAA_ENABLED_KEY: SyncPrefKey<Boolean> =
+            SyncPrefKey.boolean("com.urbanairship.iam.enabled")
     }
 
     public class Feature @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) constructor(

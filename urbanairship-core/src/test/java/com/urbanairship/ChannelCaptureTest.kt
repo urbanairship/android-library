@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship
 
+import com.urbanairship.preferences.PreferenceStore
+
 import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
@@ -32,7 +34,7 @@ public class ChannelCaptureTest {
     private val clipboardManager = ApplicationProvider
         .getApplicationContext<Context>()
         .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-    private val dataStore = PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext())
+    private val dataStore = PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext())
     private val activityMonitor = TestActivityMonitor()
     private val dispatcher = StandardTestDispatcher()
 
@@ -42,7 +44,7 @@ public class ChannelCaptureTest {
         context = ApplicationProvider.getApplicationContext(),
         configOptions = configOptions,
         airshipChannel = mockChannel,
-        preferenceDataStore = dataStore,
+        preferenceStore = dataStore,
         activityMonitor = activityMonitor,
         dispatcher = dispatcher
     )

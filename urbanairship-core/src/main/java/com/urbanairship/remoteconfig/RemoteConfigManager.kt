@@ -5,7 +5,7 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.Platform
@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 @OpenForTesting
 public class RemoteConfigManager(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     private val runtimeConfig: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val remoteData: RemoteData,

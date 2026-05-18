@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
 import com.urbanairship.BuildConfig
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.ActionsManifest
@@ -25,7 +25,7 @@ public class PreferenceCenterModuleFactoryImpl : PreferenceCenterModuleFactory {
 
     override fun build(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         privacyManager: PrivacyManager,
         remoteData: RemoteData,
         inputValidator: AirshipInputValidation.Validator

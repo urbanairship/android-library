@@ -3,7 +3,8 @@ package com.urbanairship.messagecenter
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.Airship
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.UALog
 import java.io.UnsupportedEncodingException
 import java.util.concurrent.CopyOnWriteArrayList
@@ -14,13 +15,13 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 /** The Airship rich push user. */
 public class User internal constructor(
-    private val preferences: PreferenceDataStore
+    private val preferences: PreferenceStore
 ) {
 
     init {
-        val password = preferences.getString(USER_PASSWORD_KEY, null)
+        val password = preferences.get(USER_PASSWORD_KEY)
         if (!password.isNullOrEmpty()) {
-            val userToken = encode(password, preferences.getString(USER_ID_KEY, null))
+            val userToken = encode(password, preferences.get(USER_ID_KEY))
             if (preferences.putSync(USER_TOKEN_KEY, userToken)) {
                 preferences.remove(USER_PASSWORD_KEY)
             }
@@ -117,23 +118,23 @@ public class User internal constructor(
 
     /** The user's ID. */
     public val id: String?
-        get() = if (preferences.getString(USER_TOKEN_KEY, null) != null) {
-            preferences.getString(USER_ID_KEY, null)
+        get() = if (preferences.get(USER_TOKEN_KEY) != null) {
+            preferences.get(USER_ID_KEY)
         } else {
             null
         }
 
     /** The user's token used for basic auth. */
     public val password: String?
-        get() = if (preferences.getString(USER_ID_KEY, null) != null) {
-            decode(preferences.getString(USER_TOKEN_KEY, null), id)
+        get() = if (preferences.get(USER_ID_KEY) != null) {
+            decode(preferences.get(USER_TOKEN_KEY), id)
         } else {
             null
         }
 
     /** The registered Channel ID stored in the DataStore, or `null` if no Channel ID is stored. */
     internal var registeredChannelId: String
-        get() = preferences.getString(USER_REGISTERED_CHANNEL_ID_KEY, "") ?: ""
+        get() = preferences.get(USER_REGISTERED_CHANNEL_ID_KEY) ?: ""
         set(channelId) = preferences.put(USER_REGISTERED_CHANNEL_ID_KEY, channelId)
 
 
@@ -142,10 +143,10 @@ public class User internal constructor(
     public companion object {
 
         private const val KEY_PREFIX = "com.urbanairship.user"
-        private const val USER_ID_KEY = "$KEY_PREFIX.ID"
-        private const val USER_PASSWORD_KEY = "$KEY_PREFIX.PASSWORD"
-        private const val USER_TOKEN_KEY = "$KEY_PREFIX.USER_TOKEN"
-        private const val USER_REGISTERED_CHANNEL_ID_KEY = "$KEY_PREFIX.REGISTERED_CHANNEL_ID"
+        private val USER_ID_KEY = SyncPrefKey.string("$KEY_PREFIX.ID")
+        private val USER_PASSWORD_KEY = SyncPrefKey.string("$KEY_PREFIX.PASSWORD")
+        private val USER_TOKEN_KEY = SyncPrefKey.string("$KEY_PREFIX.USER_TOKEN")
+        private val USER_REGISTERED_CHANNEL_ID_KEY = SyncPrefKey.string("$KEY_PREFIX.REGISTERED_CHANNEL_ID")
 
         /**
          * A flag indicating whether the user has been created.

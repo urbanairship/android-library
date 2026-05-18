@@ -1,6 +1,9 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship
 
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
+
 import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.core.content.pm.PackageInfoCompat
@@ -17,7 +20,7 @@ import com.urbanairship.app.SimpleApplicationListener
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ApplicationMetrics(
     private val context: Context,
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val privacyManager: PrivacyManager,
     private val activityMonitor: ActivityMonitor = GlobalActivityMonitor.shared(context)
 ) {
@@ -76,7 +79,7 @@ public class ApplicationMetrics(
      */
     @get:Deprecated("Will be removed in SDK 15.")
     public val lastOpenTimeMillis: Long
-        get() = dataStore.getLong(LAST_OPEN_KEY, -1)
+        get() = dataStore.get(LAST_OPEN_KEY) ?: -1
 
     /**
      * Gets the current app version.
@@ -89,7 +92,7 @@ public class ApplicationMetrics(
             ?: -1
 
     private val lastAppVersion: Long
-        get() = dataStore.getLong(LAST_APP_VERSION_KEY, -1)
+        get() = dataStore.get(LAST_APP_VERSION_KEY) ?: -1
 
     private fun updateData() {
         if (privacyManager.isAnyEnabled(PrivacyManager.Feature.IN_APP_AUTOMATION, PrivacyManager.Feature.ANALYTICS)) {
@@ -108,7 +111,7 @@ public class ApplicationMetrics(
     }
 
     internal companion object {
-        private const val LAST_OPEN_KEY = "com.urbanairship.application.metrics.LAST_OPEN"
-        private const val LAST_APP_VERSION_KEY = "com.urbanairship.application.metrics.APP_VERSION"
+        private val LAST_OPEN_KEY = SyncPrefKey.long("com.urbanairship.application.metrics.LAST_OPEN")
+        private val LAST_APP_VERSION_KEY = SyncPrefKey.long("com.urbanairship.application.metrics.APP_VERSION")
     }
 }

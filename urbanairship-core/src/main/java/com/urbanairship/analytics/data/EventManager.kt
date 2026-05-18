@@ -4,7 +4,8 @@ import android.content.Context
 import android.database.sqlite.SQLiteException
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.UALog
 import com.urbanairship.analytics.AirshipEventData
 import com.urbanairship.analytics.Analytics
@@ -34,7 +35,7 @@ import kotlinx.coroutines.sync.withLock
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class EventManager @VisibleForTesting internal constructor(
-    private val preferenceDataStore: PreferenceDataStore,
+    private val preferenceStore: PreferenceStore,
     private val runtimeConfig: AirshipRuntimeConfig,
     private val jobDispatcher: JobDispatcher,
     private val activityMonitor: ActivityMonitor,
@@ -48,10 +49,10 @@ public class EventManager @VisibleForTesting internal constructor(
 
     public constructor(
         context: Context,
-        preferenceDataStore: PreferenceDataStore,
+        preferenceStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig
     ) : this(
-        preferenceDataStore,
+        preferenceStore,
         runtimeConfig,
         JobDispatcher.shared(context),
         shared(context),
@@ -74,7 +75,7 @@ public class EventManager @VisibleForTesting internal constructor(
         isScheduled.update { current ->
             // If its currently scheduled at an earlier time then skip rescheduling
             if (current) {
-                val previousScheduledTime = preferenceDataStore.getLong(SCHEDULED_SEND_TIME, 0)
+                val previousScheduledTime = preferenceStore.get(SCHEDULED_SEND_TIME) ?: 0
                 val currentDelay = max(
                     (clock.currentTimeMillis() - previousScheduledTime), 0
                 ).milliseconds
@@ -97,7 +98,7 @@ public class EventManager @VisibleForTesting internal constructor(
 
             jobDispatcher.dispatch(jobInfo)
 
-            preferenceDataStore.put(SCHEDULED_SEND_TIME, clock.currentTimeMillis() + nextDelay.inWholeMilliseconds)
+            preferenceStore.put(SCHEDULED_SEND_TIME, clock.currentTimeMillis() + nextDelay.inWholeMilliseconds)
             true
         }
     }
@@ -114,9 +115,7 @@ public class EventManager @VisibleForTesting internal constructor(
         eventLock.withLock {
             eventDao.insert(entity)
             // Handle database max size exceeded
-            val maxSize = preferenceDataStore.getInt(
-                MAX_TOTAL_DB_SIZE_KEY, EventResponse.MAX_TOTAL_DB_SIZE_BYTES
-            )
+            val maxSize = preferenceStore.get(MAX_TOTAL_DB_SIZE_KEY) ?: EventResponse.MAX_TOTAL_DB_SIZE_BYTES
             eventDao.trimDatabase(maxSize)
         }
 
@@ -132,7 +131,7 @@ public class EventManager @VisibleForTesting internal constructor(
                     scheduleEventUpload(maxOf(nextSendDelay, LOW_PRIORITY_BATCH_DELAY))
                 } else {
                     val currentTime = clock.currentTimeMillis()
-                    val lastSendTime = preferenceDataStore.getLong(LAST_SEND_KEY, 0)
+                    val lastSendTime = preferenceStore.get(LAST_SEND_KEY) ?: 0L
                     val sendDelta = currentTime - lastSendTime
                     val minimumWait = max(
                         (runtimeConfig.configOptions.backgroundReportingIntervalMS - sendDelta).toDouble(),
@@ -165,8 +164,8 @@ public class EventManager @VisibleForTesting internal constructor(
      */
     private val nextSendDelay: Duration
         get() {
-            val nextSendTime = preferenceDataStore.getLong(LAST_SEND_KEY, 0) +
-                    preferenceDataStore.getInt(MIN_BATCH_INTERVAL_KEY, EventResponse.MIN_BATCH_INTERVAL_MS)
+            val nextSendTime = (preferenceStore.get(LAST_SEND_KEY) ?: 0L) +
+                    (preferenceStore.get(MIN_BATCH_INTERVAL_KEY) ?: EventResponse.MIN_BATCH_INTERVAL_MS)
 
             return max((nextSendTime - clock.currentTimeMillis()).toDouble(), 0.0).milliseconds
         }
@@ -180,7 +179,7 @@ public class EventManager @VisibleForTesting internal constructor(
      */
     public suspend fun uploadEvents(channelId: String, headers: Map<String, String>): Boolean {
         isScheduled.update {
-            preferenceDataStore.put(LAST_SEND_KEY, clock.currentTimeMillis())
+            preferenceStore.put(LAST_SEND_KEY, clock.currentTimeMillis())
             false
         }
 
@@ -200,7 +199,7 @@ public class EventManager @VisibleForTesting internal constructor(
                 //pull enough events to fill a batch (roughly)
                 val batchEventCount = min(
                     MAX_BATCH_EVENT_COUNT.toDouble(),
-                    (preferenceDataStore.getInt(MAX_BATCH_SIZE_KEY, EventResponse.MAX_BATCH_SIZE_BYTES) / avgSize).toDouble()
+                    ((preferenceStore.get(MAX_BATCH_SIZE_KEY) ?: EventResponse.MAX_BATCH_SIZE_BYTES) / avgSize).toDouble()
                 ).toInt()
 
                 events = eventDao.getBatch(batchEventCount)
@@ -230,9 +229,9 @@ public class EventManager @VisibleForTesting internal constructor(
             }
 
             // Update preferences
-            preferenceDataStore.put(MAX_TOTAL_DB_SIZE_KEY, response.value.maxTotalSize)
-            preferenceDataStore.put(MAX_BATCH_SIZE_KEY, response.value.maxBatchSize)
-            preferenceDataStore.put(MIN_BATCH_INTERVAL_KEY, response.value.minBatchInterval)
+            preferenceStore.put(MAX_TOTAL_DB_SIZE_KEY, response.value.maxTotalSize)
+            preferenceStore.put(MAX_BATCH_SIZE_KEY, response.value.maxBatchSize)
+            preferenceStore.put(MIN_BATCH_INTERVAL_KEY, response.value.minBatchInterval)
 
             // If there are still events left, schedule the next send
             if (eventCount - events.size > 0) {
@@ -249,11 +248,11 @@ public class EventManager @VisibleForTesting internal constructor(
     internal companion object {
 
         const val ACTION_SEND = "ACTION_SEND"
-        const val MAX_TOTAL_DB_SIZE_KEY = "com.urbanairship.analytics.MAX_TOTAL_DB_SIZE"
-        const val MAX_BATCH_SIZE_KEY = "com.urbanairship.analytics.MAX_BATCH_SIZE"
-        const val LAST_SEND_KEY = "com.urbanairship.analytics.LAST_SEND"
-        const val SCHEDULED_SEND_TIME = "com.urbanairship.analytics.SCHEDULED_SEND_TIME"
-        const val MIN_BATCH_INTERVAL_KEY = "com.urbanairship.analytics.MIN_BATCH_INTERVAL"
+        val MAX_TOTAL_DB_SIZE_KEY = SyncPrefKey.int("com.urbanairship.analytics.MAX_TOTAL_DB_SIZE")
+        val MAX_BATCH_SIZE_KEY = SyncPrefKey.int("com.urbanairship.analytics.MAX_BATCH_SIZE")
+        val LAST_SEND_KEY = SyncPrefKey.long("com.urbanairship.analytics.LAST_SEND")
+        val SCHEDULED_SEND_TIME = SyncPrefKey.long("com.urbanairship.analytics.SCHEDULED_SEND_TIME")
+        val MIN_BATCH_INTERVAL_KEY = SyncPrefKey.int("com.urbanairship.analytics.MIN_BATCH_INTERVAL")
 
         /**
          * Max batch event count.

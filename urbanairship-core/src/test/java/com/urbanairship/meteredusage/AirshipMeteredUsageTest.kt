@@ -3,7 +3,7 @@ package com.urbanairship.meteredusage
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.channel.AirshipChannel
@@ -51,7 +51,7 @@ public class AirshipMeteredUsageTest {
 
         manager = AirshipMeteredUsage(
             context = context,
-            dataStore = PreferenceDataStore.inMemoryStore(context),
+            dataStore = PreferenceStore.inMemoryStore(context),
             config = testConfig,
             privacyManager = privacyManager,
             store = eventsStore,
