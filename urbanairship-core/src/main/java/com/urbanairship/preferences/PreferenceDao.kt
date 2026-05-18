@@ -18,7 +18,7 @@ import androidx.room.Transaction
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Dao
-public abstract class PreferenceDao public constructor() {
+public abstract class PreferenceDao {
 
     /** All eager rows. Used by [EagerPreferenceStore] at takeoff. */
     @Transaction

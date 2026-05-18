@@ -2,6 +2,7 @@
 package com.urbanairship.preferences
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.db.guardDao
 
 /**
  * Thin shim over [PreferenceDao] for `AsyncPrefKey` access.
