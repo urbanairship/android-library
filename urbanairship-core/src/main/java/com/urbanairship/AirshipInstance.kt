@@ -40,9 +40,11 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.remoteconfig.RemoteConfigManager
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.util.AppStoreUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.launch
 
 internal class AirshipInstance(
     val application: Application
@@ -88,12 +90,12 @@ internal class AirshipInstance(
 
         UALog.i("Airship taking off!")
 
-        AirshipExecutors.threadPoolExecutor().execute {
+        CoroutineScope(AirshipDispatchers.IO + SupervisorJob()).launch {
             executeTakeOff(configOptions, onReady)
         }
     }
 
-    private fun executeTakeOff(
+    private suspend fun executeTakeOff(
         options: AirshipConfigOptions?,
         onReady: ((AirshipConfigOptions) -> Unit)
     ) {
@@ -117,12 +119,10 @@ internal class AirshipInstance(
         UALog.v(BuildConfig.SDK_VERSION)
 
         this.airshipConfigOptions = resolved
-        this.preferenceStore = runBlocking {
-            PreferenceStore.load(
-                context = application,
-                configOptions = airshipConfigOptions
-            )
-        }
+        this.preferenceStore = PreferenceStore.load(
+            context = application,
+            configOptions = airshipConfigOptions
+        )
 
         initModules()
         onReady(resolved)

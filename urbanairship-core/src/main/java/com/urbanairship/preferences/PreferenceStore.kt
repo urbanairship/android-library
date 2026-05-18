@@ -135,8 +135,7 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
     public companion object {
 
         /**
-         * Loads (or creates) the preference store backed by the on-disk database. Non-suspend
-         * callers should bridge via `runBlocking` themselves.
+         * Loads (or creates) the preference store backed by the on-disk database.
          *
          * @hide
          */
