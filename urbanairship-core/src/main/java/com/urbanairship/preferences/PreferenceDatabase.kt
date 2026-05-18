@@ -1,5 +1,5 @@
 /* Copyright Airship and Contributors */
-package com.urbanairship
+package com.urbanairship.preferences
 
 import android.content.Context
 import androidx.annotation.RestrictTo
@@ -11,18 +11,19 @@ import androidx.room.Room.inMemoryDatabaseBuilder
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.urbanairship.AirshipConfigOptions
 import java.io.File
 
 /**
- * PreferenceData database
+ * Preferences database.
  *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @Database(entities = [PreferenceData::class], version = 3)
-public abstract class PreferenceDataDatabase public constructor() : RoomDatabase() {
+public abstract class PreferenceDatabase public constructor() : RoomDatabase() {
 
-    public abstract val dao: PreferenceDataDao
+    public abstract val dao: PreferenceDao
 
     public fun exists(context: Context): Boolean {
         return openHelper.databaseName == null
@@ -68,20 +69,20 @@ public abstract class PreferenceDataDatabase public constructor() : RoomDatabase
         public fun createDatabase(
             context: Context,
             config: AirshipConfigOptions
-        ): PreferenceDataDatabase {
+        ): PreferenceDatabase {
             val name = config.appKey + "_" + DATABASE_NAME
             val urbanAirshipNoBackupDirectory = File(ContextCompat.getNoBackupFilesDir(context), DATABASE_DIRECTORY_NAME)
             val path = File(urbanAirshipNoBackupDirectory, name).absolutePath
 
-            return databaseBuilder(context, PreferenceDataDatabase::class.java, path)
+            return databaseBuilder(context, PreferenceDatabase::class.java, path)
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
                 .fallbackToDestructiveMigrationOnDowngrade(true)
                 .build()
         }
 
         @VisibleForTesting
-        public fun createInMemoryDatabase(context: Context): PreferenceDataDatabase {
-            return inMemoryDatabaseBuilder(context, PreferenceDataDatabase::class.java)
+        public fun createInMemoryDatabase(context: Context): PreferenceDatabase {
+            return inMemoryDatabaseBuilder(context, PreferenceDatabase::class.java)
                 .allowMainThreadQueries()
                 .build()
         }

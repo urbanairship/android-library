@@ -1,5 +1,5 @@
 /* Copyright Airship and Contributors */
-package com.urbanairship
+package com.urbanairship.preferences
 
 import androidx.annotation.RestrictTo
 import androidx.room.ColumnInfo

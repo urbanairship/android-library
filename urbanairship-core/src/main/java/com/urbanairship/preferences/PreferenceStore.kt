@@ -5,8 +5,8 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipConfigOptions
-import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
+import kotlinx.coroutines.runBlocking
 
 /**
  * Container for Airship preference accessors.
@@ -24,13 +24,13 @@ import com.urbanairship.UALog
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
-    private val syncStore: PreferenceDataStore,
-    private val asyncStore: AsyncPreferenceStore = AsyncPreferenceStore(syncStore.dao)
+    private val eagerStore: EagerPreferenceStore,
+    private val asyncStore: AsyncPreferenceStore = AsyncPreferenceStore(eagerStore.dao)
 ) {
 
     /** Test-only window into the DAO for verifying lazy-column state. */
     @VisibleForTesting
-    internal val dao: com.urbanairship.PreferenceDataDao get() = syncStore.dao
+    internal val dao: PreferenceDao get() = eagerStore.dao
 
     // region Sync typed access
 
@@ -39,7 +39,7 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
      * cannot be deserialized, or deserialization throws (errors are logged).
      */
     public fun <T> get(key: SyncPrefKey<T>): T? {
-        val stored = syncStore.getString(key.name, null) ?: return null
+        val stored = eagerStore.get(key.name) ?: return null
         return try {
             key.deserialize(stored)
         } catch (e: Throwable) {
@@ -54,11 +54,11 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
      */
     public fun <T> put(key: SyncPrefKey<T>, value: T?) {
         if (value == null) {
-            syncStore.remove(key.name)
+            eagerStore.remove(key.name)
             return
         }
         val serialized = trySerialize(key, value) ?: return
-        syncStore.put(key.name, serialized)
+        eagerStore.put(key.name, serialized)
     }
 
     /**
@@ -68,18 +68,18 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
      * Passing `null` removes the key (also blocking).
      */
     public fun <T> putSync(key: SyncPrefKey<T>, value: T?): Boolean {
-        if (value == null) return syncStore.putSync(key.name, null)
+        if (value == null) return eagerStore.putSync(key.name, null)
         val serialized = trySerialize(key, value) ?: return false
-        return syncStore.putSync(key.name, serialized)
+        return eagerStore.putSync(key.name, serialized)
     }
 
     /** Removes [key]. */
     public fun remove(key: SyncPrefKey<*>) {
-        syncStore.remove(key.name)
+        eagerStore.remove(key.name)
     }
 
     /** Returns `true` if [key] has any stored value (even one that fails to deserialize). */
-    public fun isSet(key: SyncPrefKey<*>): Boolean = syncStore.isSet(key.name)
+    public fun isSet(key: SyncPrefKey<*>): Boolean = eagerStore.isSet(key.name)
 
     // endregion
 
@@ -132,20 +132,63 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun tearDown() {
-        syncStore.tearDown()
+        eagerStore.tearDown()
+    }
+
+    private fun cleanupObsoleteKeys() {
+        OBSOLETE_KEYS.forEach { eagerStore.remove(it) }
     }
 
     public companion object {
 
-        /** Loads (or creates) the preference store backed by the on-disk database. @hide */
+        /**
+         * Keys from previous SDK versions that should be deleted on every startup. Cheap enough
+         * to scrub at takeoff rather than tracking a migration version.
+         */
+        private val OBSOLETE_KEYS = arrayOf(
+            "com.urbanairship.TAG_GROUP_HISTORIAN_RECORDS",
+            "com.urbanairship.push.iam.PENDING_IN_APP_MESSAGE",
+            "com.urbanairship.push.iam.AUTO_DISPLAY_ENABLED",
+            "com.urbanairship.push.iam.LAST_DISPLAYED_ID",
+            "com.urbanairship.nameduser.CHANGE_TOKEN_KEY",
+            "com.urbanairship.nameduser.LAST_UPDATED_TOKEN_KEY",
+            "com.urbanairship.iam.tags.TAG_PREFER_LOCAL_DATA_TIME",
+            "com.urbanairship.chat.CHAT",
+            "com.urbanairship.user.LAST_MESSAGE_REFRESH_TIME",
+            "com.urbanairship.push.LAST_REGISTRATION_TIME",
+            "com.urbanairship.push.LAST_REGISTRATION_PAYLOAD",
+            "com.urbanairship.remotedata.LAST_REFRESH_APP_VERSION",
+            "com.urbanairship.remotedata.LAST_MODIFIED",
+            "com.urbanairship.remotedata.LAST_REFRESH_TIME",
+            "com.urbanairship.iam.data.last_payload_info",
+            "com.urbanairship.iam.data.LAST_PAYLOAD_METADATA",
+            "com.urbanairship.iam.data.contact_last_payload_info",
+            "com.urbanairship.push.SOUND_ENABLED",
+            "com.urbanairship.push.VIBRATE_ENABLED",
+            "com.urbanairship.push.QUIET_TIME_ENABLED",
+            "com.urbanairship.push.QUIET_TIME_INTERVAL"
+        )
+
+        /**
+         * Loads (or creates) the preference store backed by the on-disk database.
+         *
+         * Wraps the suspending eager-store load in [runBlocking] because the current `takeOff`
+         * path is non-suspend. Once `takeOff` is converted to a coroutine (planned follow-up),
+         * this becomes a direct suspend call.
+         *
+         * @hide
+         */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun load(context: Context, configOptions: AirshipConfigOptions): PreferenceStore =
-            PreferenceStore(PreferenceDataStore.loadDataStore(context, configOptions))
+            runBlocking {
+                PreferenceStore(EagerPreferenceStore.load(context, configOptions))
+                    .also { it.cleanupObsoleteKeys() }
+            }
 
         /** Builds an in-memory store for tests. @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @VisibleForTesting
         public fun inMemoryStore(context: Context): PreferenceStore =
-            PreferenceStore(PreferenceDataStore.inMemoryStore(context))
+            PreferenceStore(EagerPreferenceStore.inMemoryStore(context))
     }
 }

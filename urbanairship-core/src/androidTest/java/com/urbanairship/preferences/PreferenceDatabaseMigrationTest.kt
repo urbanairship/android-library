@@ -1,5 +1,5 @@
 /* Copyright Airship and Contributors */
-package com.urbanairship
+package com.urbanairship.preferences
 
 import android.content.ContentValues
 import androidx.room.testing.MigrationTestHelper
@@ -12,11 +12,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class PreferenceDataDatabaseMigrationTest {
+class PreferenceDatabaseMigrationTest {
 
     @Rule
     var helper: MigrationTestHelper = MigrationTestHelper(
-        InstrumentationRegistry.getInstrumentation(), PreferenceDataDatabase::class.java
+        InstrumentationRegistry.getInstrumentation(), PreferenceDatabase::class.java
     )
 
     /**
@@ -30,7 +30,7 @@ class PreferenceDataDatabaseMigrationTest {
         insertV2Row(db, key = "another.key", value = "another.value")
         db.close()
 
-        db = helper.runMigrationsAndValidate(TEST_DB, 3, true, PreferenceDataDatabase.MIGRATION_2_3)
+        db = helper.runMigrationsAndValidate(TEST_DB, 3, true, PreferenceDatabase.MIGRATION_2_3)
 
         val rows = readAllRows(db)
         Assert.assertEquals(2, rows.size)
