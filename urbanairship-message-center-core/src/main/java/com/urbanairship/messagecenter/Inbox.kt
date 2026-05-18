@@ -321,7 +321,8 @@ public class Inbox @VisibleForTesting internal constructor(
             } else {
                 // Clean up any Message Center data stored on the device.
                 deleteAllMessagesInternal()
-                inboxJobHandler.removeStoredData()
+                val handler = inboxJobHandler
+                scope.launch { handler.removeStoredData() }
             }
         }
     }
