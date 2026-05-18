@@ -17,7 +17,6 @@ import com.urbanairship.json.tryParse
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -143,8 +142,7 @@ internal class ChannelBatchUpdateManager(
      * running, so writes commit in caller-observed order. The "claim my predecessor and
      * publish my Job as the new tail" sequence runs under [chainLock] so two concurrent
      * callers can't both see the same predecessor — the launched jobs form a strict linear
-     * chain. The legacy migration is the first link, enqueued lazily on first use so it
-     * can't race other work the caller did before its first call into this storage.
+     * chain. The legacy migration is enqueued as the first link at construction.
      */
     internal class Storage(
         private val dataStore: PreferenceStore,
@@ -154,6 +152,10 @@ internal class ChannelBatchUpdateManager(
 
         /** Tail of the pending-op chain. Read/written only under [chainLock]. */
         private var lastOp: Job? = null
+
+        init {
+            enqueueOperation { migrateInternal() }
+        }
 
         /** Fire-and-forget append. */
         fun add(update: AudienceUpdate) {
@@ -169,15 +171,15 @@ internal class ChannelBatchUpdateManager(
             enqueueOperation { dataStore.remove(UPDATE_DATASTORE_KEY) }
         }
 
-        suspend fun hasPending(): Boolean = enqueueOperation {
+        suspend fun hasPending(): Boolean = awaitOperation {
             !(dataStore.get(UPDATE_DATASTORE_KEY)?.optList()?.isEmpty ?: true)
-        }.await()
+        }
 
-        suspend fun read(): List<AudienceUpdate> = enqueueOperation { readInternal() }.await()
+        suspend fun read(): List<AudienceUpdate> = awaitOperation { readInternal() }
 
         /** Removes [uploaded] from the front of the stored list (in submission order). */
         suspend fun popFront(uploaded: List<AudienceUpdate>) {
-            enqueueOperation {
+            awaitOperation {
                 val stored = readInternal().toMutableList()
                 uploaded.forEach {
                     if (stored.firstOrNull() == it) {
@@ -185,35 +187,43 @@ internal class ChannelBatchUpdateManager(
                     }
                 }
                 writeInternal(stored)
-            }.await()
+            }
         }
 
         @VisibleForTesting
         internal suspend fun migrate() {
-            enqueueOperation { migrateInternal() }.await()
+            awaitOperation { migrateInternal() }
         }
 
         /**
-         * Appends [block] to the chain and returns the [Deferred] holding its result. The
-         * block runs after the prior tail completes. The very first call inserts a migration
-         * link at the head so legacy rows are folded in before any caller op runs.
-         *
-         * Awaited callers (`.await()`) get cancellation propagation for free — if the scope
-         * is cancelled the underlying Job is cancelled and `await()` throws, instead of
-         * hanging on an unsignalled `CompletableDeferred`. Fire-and-forget callers ignore
-         * the returned [Deferred].
+         * Appends [block] to the chain. Returns immediately; [block] runs after the prior
+         * tail completes. The very first call (from `init`) sees [lastOp] as `null`, so the
+         * `?.join()` is a no-op — that call enqueues the migration as the first link.
          */
-        private fun <T> enqueueOperation(block: suspend () -> T): Deferred<T> {
-            return chainLock.withLock {
-                if (lastOp == null) {
-                    lastOp = scope.launch { migrateInternal() }
+        private fun enqueueOperation(block: suspend () -> Unit) {
+            chainLock.withLock {
+                val previous = lastOp
+                lastOp = scope.launch {
+                    previous?.join()
+                    block()
                 }
-                val previous = lastOp!!
+            }
+        }
+
+        /**
+         * Awaitable variant of [enqueueOperation] using [scope].async — if the scope is
+         * canceled, the underlying Job is canceled and `await()` throws cleanly instead of
+         * hanging on a never-completed `CompletableDeferred`.
+         */
+        private suspend fun <T> awaitOperation(block: suspend () -> T): T {
+            val deferred = chainLock.withLock {
+                val previous = lastOp
                 scope.async {
-                    previous.join()
+                    previous?.join()
                     block()
                 }.also { lastOp = it }
             }
+            return deferred.await()
         }
 
         /** Must be invoked from within an [enqueueOperation] block. */
@@ -240,7 +250,7 @@ internal class ChannelBatchUpdateManager(
             dataStore.remove(TAG_GROUP_DATASTORE_KEY)
         }
 
-        /** Must be invoked from within an [enqueueWrite] block. */
+        /** Must be invoked from within an [enqueueOperation] block. */
         private suspend fun readInternal(): List<AudienceUpdate> =
             dataStore.get(UPDATE_DATASTORE_KEY)?.tryParse(true) { json ->
                 json.optList().map { AudienceUpdate(it.requireMap()) }
