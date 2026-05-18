@@ -158,7 +158,7 @@ public class EagerPreferenceStore internal constructor(
         }
     }
 
-    private suspend fun writeValue(key: String, value: String?): Boolean = try {
+    private suspend fun writeValue(key: String, value: String?): Boolean = guardDao("writeValue($key)", false) {
         if (value == null) {
             UALog.v("Removing preference: %s", key)
             dao.delete(key)
@@ -167,9 +167,6 @@ public class EagerPreferenceStore internal constructor(
             dao.upsert(PreferenceData(key = key, value = value, lazy = false))
         }
         true
-    } catch (e: Exception) {
-        UALog.e(e, "Failed to write preference %s:%s", key, value)
-        false
     }
 
     internal companion object {
