@@ -1,12 +1,13 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.util
 
+import androidx.annotation.RestrictTo
 import java.text.ParseException
+import java.text.ParsePosition
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
-import androidx.annotation.RestrictTo
 
 /**
  * Date utilities.
@@ -15,53 +16,71 @@ import androidx.annotation.RestrictTo
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public object DateUtils {
 
-    private val ISO_DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
-    private val ALT_ISO_DATE_FORMAT = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
-    private val lock = Any()
+    private val UTC = TimeZone.getTimeZone("UTC")
 
-    init {
-        ISO_DATE_FORMAT.timeZone = TimeZone.getTimeZone("UTC")
-        ALT_ISO_DATE_FORMAT.timeZone = TimeZone.getTimeZone("UTC")
-    }
+    private val FORMAT_NO_MILLIS = format("yyyy-MM-dd'T'HH:mm:ss'Z'")
+    private val FORMAT_WITH_MILLIS = format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 
     /**
-     * Parses an ISO 8601 timestamp.
+     * ISO 8601 parse formats, ordered most-specific first. The first format that consumes
+     * the entire input wins. `XXX`/`XX` accept `Z`, `±HH:MM`, or `±HHMM`.
+     */
+    private val PARSE_FORMATS = listOf(
+        "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
+        "yyyy-MM-dd'T'HH:mm:ss.SSSXX",
+        "yyyy-MM-dd'T'HH:mm:ssXXX",
+        "yyyy-MM-dd'T'HH:mm:ssXX",
+        "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "yyyy-MM-dd'T'HH:mm:ss.SS",
+        "yyyy-MM-dd'T'HH:mm:ss.S",
+        "yyyy-MM-dd'T'HH:mm:ss",
+        "yyyy-MM-dd HH:mm:ss.SSS",
+        "yyyy-MM-dd HH:mm:ss",
+        "yyyy-MM-dd'T'HH:mm",
+        "yyyy-MM-dd HH:mm",
+        "yyyy-MM-dd'T'HH",
+        "yyyy-MM-dd HH",
+        "yyyy-MM-dd",
+        "yyyy-MM",
+        "yyyy",
+    ).map(::format)
+
+    private val lock = Any()
+
+    /**
+     * Parses an ISO 8601 timestamp into epoch milliseconds.
      *
-     * @param timeStamp The ISO time stamp string.
-     * @return The time in milliseconds since Jan. 1, 1970, midnight GMT or -1 if the timestamp was unable
-     * to be parsed.
-     * @throws java.text.ParseException if the timestamp was unable to be parsed.
+     * Accepted forms (UTC unless a zone is specified):
+     *  - `2024`, `2024-01`, `2024-01-15`
+     *  - `2024-01-15T11`, `2024-01-15T11:30`, `2024-01-15T11:30:45` (or with a space separator)
+     *  - `2024-01-15T11:30:45.123` (fractional seconds; 1-3 digits)
+     *  - `2024-01-15T11:30:45Z`
+     *  - `2024-01-15T11:30:45+00:00` / `+0000` / `-05:00`
+     *  - Any combination of the above.
+     *
+     * @throws ParseException if the timestamp cannot be parsed.
      */
     @Throws(ParseException::class)
     public fun parseIso8601(timeStamp: String?): Long {
-        if (timeStamp == null) {
-            throw ParseException("Unable to parse null timestamp", -1)
+        if (timeStamp.isNullOrEmpty()) {
+            throw ParseException("Unable to parse null or empty timestamp", -1)
         }
-
-        try {
-            synchronized(lock) {
-                return try {
-                    ISO_DATE_FORMAT.parse(timeStamp)?.time
-                } catch (_: ParseException) {
-                    ALT_ISO_DATE_FORMAT.parse(timeStamp)?.time
-                } ?: throw ParseException("Unable to parse $timeStamp", -1)
+        synchronized(lock) {
+            for (format in PARSE_FORMATS) {
+                val position = ParsePosition(0)
+                val parsed = format.parse(timeStamp, position)
+                if (parsed != null && position.index == timeStamp.length) {
+                    return parsed.time
+                }
             }
-        } catch (e: Exception) {
-            throw ParseException(
-                "Unexpected issue when attempting to parse $timeStamp - ${e.message}", -1
-            )
         }
+        throw ParseException("Unable to parse $timeStamp", -1)
     }
 
     /**
-     * Parses an ISO 8601 timestamp.
-     *
-     * @param timeStamp The ISO time stamp string.
-     * @param defaultValue The default value
-     * @return The time in milliseconds since Jan. 1, 1970, midnight GMT or the default value
-     * if the timestamp was unable to be parsed.
+     * Parses an ISO 8601 timestamp, returning [defaultValue] if parsing fails.
      */
-    public fun parseIso8601(timeStamp: String, defaultValue: Long): Long {
+    public fun parseIso8601(timeStamp: String?, defaultValue: Long): Long {
         return try {
             parseIso8601(timeStamp)
         } catch (_: ParseException) {
@@ -70,14 +89,18 @@ public object DateUtils {
     }
 
     /**
-     * Creates an ISO 8601 formatted time stamp.
+     * Creates an ISO 8601 timestamp in UTC, e.g. `2024-01-15T12:00:00Z`.
      *
-     * @param milliseconds The time in milliseconds since Jan. 1, 1970, midnight GMT.
-     * @return An ISO 8601 formatted time stamp.
+     * @param milliseconds Epoch milliseconds.
+     * @param includeMillis If true, appends fractional seconds, e.g. `2024-01-15T12:00:00.123Z`.
      */
-    public fun createIso8601TimeStamp(milliseconds: Long): String {
-        synchronized(lock) {
-            return ISO_DATE_FORMAT.format(Date(milliseconds))
-        }
+    @JvmOverloads
+    @JvmStatic
+    public fun createIso8601TimeStamp(milliseconds: Long, includeMillis: Boolean = false): String {
+        val format = if (includeMillis) FORMAT_WITH_MILLIS else FORMAT_NO_MILLIS
+        return synchronized(lock) { format.format(Date(milliseconds)) }
     }
+
+    private fun format(pattern: String): SimpleDateFormat =
+        SimpleDateFormat(pattern, Locale.US).apply { timeZone = UTC }
 }

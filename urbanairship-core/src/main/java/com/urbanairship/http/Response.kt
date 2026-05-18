@@ -94,16 +94,14 @@ public data class Response<T>(
     @VisibleForTesting
     public fun getRetryAfterHeader(timeUnit: TimeUnit, defaultValue: Long, clock: Clock): Long {
         val retryAfter = headers["Retry-After"] ?: return defaultValue
+        retryAfter.toLongOrNull()?.let { seconds ->
+            return timeUnit.convert(seconds, TimeUnit.SECONDS)
+        }
         try {
             val retryDate = DateUtils.parseIso8601(retryAfter)
             val milliseconds = retryDate - clock.currentTimeMillis()
             return timeUnit.convert(milliseconds, TimeUnit.MILLISECONDS)
         } catch (ignored: ParseException) {
-        }
-        try {
-            val seconds = retryAfter.toLong()
-            return timeUnit.convert(seconds, TimeUnit.SECONDS)
-        } catch (ignored: Exception) {
         }
         UALog.e("Invalid RetryAfter header %s", retryAfter)
         return defaultValue
