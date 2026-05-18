@@ -3,10 +3,9 @@ package com.urbanairship.messagecenter
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.Airship
+import com.urbanairship.UALog
 import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.preferences.SyncPrefKey
-import com.urbanairship.UALog
-import java.io.UnsupportedEncodingException
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -17,16 +16,6 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 public class User internal constructor(
     private val preferences: PreferenceStore
 ) {
-
-    init {
-        val password = preferences.get(USER_PASSWORD_KEY)
-        if (!password.isNullOrEmpty()) {
-            val userToken = encode(password, preferences.get(USER_ID_KEY))
-            if (preferences.putSync(USER_TOKEN_KEY, userToken)) {
-                preferences.remove(USER_PASSWORD_KEY)
-            }
-        }
-    }
 
     /** A listener interface for receiving events for user updates. */
     public fun interface Listener {
@@ -105,8 +94,17 @@ public class User internal constructor(
      */
     internal fun setUser(userCredentials: UserCredentials?) {
         UALog.d("Setting Rich Push user: %s", userCredentials)
-        preferences.put(USER_ID_KEY, userCredentials?.username)
-        preferences.put(USER_TOKEN_KEY, encode(userCredentials?.password, userCredentials?.username))
+        val username = userCredentials?.username
+        val password = userCredentials?.password
+        preferences.put(USER_ID_KEY, username)
+        preferences.put(
+            USER_TOKEN_KEY,
+            if (!username.isNullOrEmpty() && !password.isNullOrEmpty()) {
+                xorHexEncode(password, username)
+            } else {
+                null
+            }
+        )
     }
 
     internal val userCredentials: UserCredentials?
@@ -126,10 +124,10 @@ public class User internal constructor(
 
     /** The user's token used for basic auth. */
     public val password: String?
-        get() = if (preferences.get(USER_ID_KEY) != null) {
-            decode(preferences.get(USER_TOKEN_KEY), id)
-        } else {
-            null
+        get() {
+            val id = id ?: return null
+            val token = preferences.get(USER_TOKEN_KEY) ?: return null
+            return xorHexDecode(token, id)
         }
 
     /** The registered Channel ID stored in the DataStore, or `null` if no Channel ID is stored. */
@@ -144,7 +142,6 @@ public class User internal constructor(
 
         private const val KEY_PREFIX = "com.urbanairship.user"
         private val USER_ID_KEY = SyncPrefKey.string("$KEY_PREFIX.ID")
-        private val USER_PASSWORD_KEY = SyncPrefKey.string("$KEY_PREFIX.PASSWORD")
         private val USER_TOKEN_KEY = SyncPrefKey.string("$KEY_PREFIX.USER_TOKEN")
         private val USER_REGISTERED_CHANNEL_ID_KEY = SyncPrefKey.string("$KEY_PREFIX.REGISTERED_CHANNEL_ID")
 
@@ -156,78 +153,37 @@ public class User internal constructor(
         public val isCreated: Boolean
             get() = Airship.messageCenter.user.isUserCreated
 
-        /**
-         * Encode the string with the key.
-         *
-         * @param input The string to encode.
-         * @param key The key used to encode the string.
-         * @return The encoded string.
-         */
-        private fun encode(input: String?, key: String?): String? {
-            if (input.isNullOrEmpty() || key.isNullOrEmpty()) {
-                return null
+        /** XOR [input] with [key] (cycling), return result as lowercase hex. */
+        private fun xorHexEncode(input: String, key: String): String {
+            val inputBytes = input.toByteArray()
+            val keyBytes = key.toByteArray()
+            val out = ByteArray(inputBytes.size)
+            for (i in inputBytes.indices) {
+                out[i] = (inputBytes[i].toInt() xor keyBytes[i % keyBytes.size].toInt()).toByte()
             }
-
-            // xor the two strings together
-            val bytes = xor(input.toByteArray(), key.toByteArray())
-
-            // Format the raw byte array as a hex string
-            val hexHash = StringBuilder()
-            for (b in bytes) {
-                hexHash.append(String.format("%02x", b))
+            return buildString(out.size * 2) {
+                for (b in out) append(String.format("%02x", b))
             }
-            return hexHash.toString()
         }
 
-        /**
-         * Decode the string with the key.
-         *
-         * @param encodedString The string to decode.
-         * @param key The key used to decode the string.
-         * @return The decoded string.
-         */
-        private fun decode(encodedString: String?, key: String?): String? {
-            if (encodedString.isNullOrEmpty() || key.isNullOrEmpty()) {
-                return null
-            }
-
-            val length = encodedString.length
-            // Make sure we have an even number of chars
-            if (length % 2 != 0) {
-                return null
-            }
-
-            try {
-                // Decode the encodedString to a byte array
-                var decodedBytes = ByteArray(length / 2)
+        /** Inverse of [xorHexEncode]. Returns `null` on malformed input. */
+        private fun xorHexDecode(hex: String, key: String): String? {
+            if (hex.length % 2 != 0) return null
+            return try {
+                val bytes = ByteArray(hex.length / 2)
                 var i = 0
-                while (i < length) {
-                    decodedBytes[i / 2] = encodedString.substring(i, i + 2).toByte(16)
+                while (i < hex.length) {
+                    bytes[i / 2] = hex.substring(i, i + 2).toByte(16)
                     i += 2
                 }
-                decodedBytes = xor(decodedBytes, key.toByteArray())
-                return String(decodedBytes, charset("UTF-8"))
-            } catch (e: UnsupportedEncodingException) {
-                UALog.e(e, "RichPushUser - Unable to decode string.")
-            } catch (e: NumberFormatException) {
-                UALog.e(e, "RichPushUser - String contains invalid hex numbers.")
+                val keyBytes = key.toByteArray()
+                for (j in bytes.indices) {
+                    bytes[j] = (bytes[j].toInt() xor keyBytes[j % keyBytes.size].toInt()).toByte()
+                }
+                String(bytes, Charsets.UTF_8)
+            } catch (_: NumberFormatException) {
+                null
             }
-            return null
-        }
-
-        /**
-         * Compare and return the xor value.
-         *
-         * @param a The byte value.
-         * @param b The byte value.
-         * @return The byte result value.
-         */
-        private fun xor(a: ByteArray, b: ByteArray): ByteArray {
-            val out = ByteArray(a.size)
-            for (i in a.indices) {
-                out[i] = (a[i].toInt() xor b[i % b.size].toInt()).toByte()
-            }
-            return out
         }
     }
 }

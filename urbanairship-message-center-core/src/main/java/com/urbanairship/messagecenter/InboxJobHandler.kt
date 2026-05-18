@@ -4,8 +4,8 @@ package com.urbanairship.messagecenter
 
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
+import com.urbanairship.preferences.AsyncPrefKey
 import com.urbanairship.preferences.PreferenceStore
-import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.UALog
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.iam.content.AirshipLayout
@@ -34,7 +34,7 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
     )
 
     /** Delete saved state from the data store. */
-    internal fun removeStoredData() {
+    internal suspend fun removeStoredData() {
         dataStore.remove(LAST_MESSAGE_REFRESH_TIME)
         dataStore.remove(LAST_UPDATE_TIME)
     }
@@ -251,9 +251,9 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
     internal companion object {
 
         @VisibleForTesting
-        internal val LAST_MESSAGE_REFRESH_TIME = SyncPrefKey.string("com.urbanairship.messages.LAST_MESSAGE_REFRESH_TIME")
+        internal val LAST_MESSAGE_REFRESH_TIME = AsyncPrefKey.string("com.urbanairship.messages.LAST_MESSAGE_REFRESH_TIME")
 
-        internal val LAST_UPDATE_TIME = SyncPrefKey.long("com.urbanairship.user.LAST_UPDATE_TIME")
+        internal val LAST_UPDATE_TIME = AsyncPrefKey.long("com.urbanairship.user.LAST_UPDATE_TIME")
 
         internal val USER_UPDATE_INTERVAL_MS = 24.hours.inWholeMilliseconds
     }
