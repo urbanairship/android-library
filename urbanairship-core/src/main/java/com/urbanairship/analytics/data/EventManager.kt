@@ -4,8 +4,9 @@ import android.content.Context
 import android.database.sqlite.SQLiteException
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
+import com.urbanairship.AirshipDispatchers
+import com.urbanairship.preferences.AsyncPrefKey
 import com.urbanairship.preferences.PreferenceStore
-import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.UALog
 import com.urbanairship.analytics.AirshipEventData
 import com.urbanairship.analytics.Analytics
@@ -23,8 +24,8 @@ import kotlin.math.min
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -41,11 +42,12 @@ public class EventManager @VisibleForTesting internal constructor(
     private val activityMonitor: ActivityMonitor,
     private val eventDao: EventDao,
     private val apiClient: EventApiClient,
-    private val clock: Clock = Clock.DEFAULT_CLOCK
+    private val clock: Clock = Clock.DEFAULT_CLOCK,
+    private val scope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO)
 ) {
     private val eventLock = Mutex()
-
-    private val isScheduled = MutableStateFlow(false)
+    private val scheduleLock = Mutex()
+    private var isScheduled = false
 
     public constructor(
         context: Context,
@@ -61,45 +63,46 @@ public class EventManager @VisibleForTesting internal constructor(
     )
 
     /**
-     * Schedule a batch event upload at a given time in the future.
+     * Schedule a batch event upload at a given time in the future. Returns immediately;
+     * the actual scheduling happens on [scope].
      *
      * @param delay The initial delay.
      */
     public fun scheduleEventUpload(delay: Duration) {
-        var nextDelay = delay
-
         UALog.v("Requesting to schedule event upload with delay $delay")
 
-        var conflictStrategy = JobInfo.ConflictStrategy.REPLACE
+        scope.launch {
+            scheduleLock.withLock {
+                var nextDelay = delay
+                var conflictStrategy = JobInfo.ConflictStrategy.REPLACE
 
-        isScheduled.update { current ->
-            // If its currently scheduled at an earlier time then skip rescheduling
-            if (current) {
-                val previousScheduledTime = preferenceStore.get(SCHEDULED_SEND_TIME) ?: 0
-                val currentDelay = max(
-                    (clock.currentTimeMillis() - previousScheduledTime), 0
-                ).milliseconds
+                if (isScheduled) {
+                    val previousScheduledTime = preferenceStore.get(SCHEDULED_SEND_TIME) ?: 0
+                    val currentDelay = max(
+                        (clock.currentTimeMillis() - previousScheduledTime), 0
+                    ).milliseconds
 
-                if (currentDelay < nextDelay) {
-                    UALog.v("Event upload already scheduled for an earlier time.")
-                    conflictStrategy = JobInfo.ConflictStrategy.KEEP
-                    nextDelay = currentDelay
+                    if (currentDelay < nextDelay) {
+                        UALog.v("Event upload already scheduled for an earlier time.")
+                        conflictStrategy = JobInfo.ConflictStrategy.KEEP
+                        nextDelay = currentDelay
+                    }
                 }
+
+                UALog.v("Scheduling upload in $nextDelay ms.")
+                val jobInfo = JobInfo.newBuilder()
+                    .setAction(ACTION_SEND)
+                    .setNetworkAccessRequired(true)
+                    .setScope(Analytics::class.java.name)
+                    .setMinDelay(nextDelay)
+                    .setConflictStrategy(conflictStrategy)
+                    .build()
+
+                jobDispatcher.dispatch(jobInfo)
+
+                preferenceStore.put(SCHEDULED_SEND_TIME, clock.currentTimeMillis() + nextDelay.inWholeMilliseconds)
+                isScheduled = true
             }
-
-            UALog.v("Scheduling upload in $nextDelay ms.")
-            val jobInfo = JobInfo.newBuilder()
-                .setAction(ACTION_SEND)
-                .setNetworkAccessRequired(true)
-                .setScope(Analytics::class.java.name)
-                .setMinDelay(nextDelay)
-                .setConflictStrategy(conflictStrategy)
-                .build()
-
-            jobDispatcher.dispatch(jobInfo)
-
-            preferenceStore.put(SCHEDULED_SEND_TIME, clock.currentTimeMillis() + nextDelay.inWholeMilliseconds)
-            true
         }
     }
 
@@ -123,19 +126,19 @@ public class EventManager @VisibleForTesting internal constructor(
             Event.Priority.HIGH -> scheduleEventUpload(HIGH_PRIORITY_BATCH_DELAY)
             Event.Priority.NORMAL -> {
                 scheduleEventUpload(
-                    maxOf(nextSendDelay, NORMAL_PRIORITY_BATCH_DELAY)
+                    maxOf(nextSendDelay(), NORMAL_PRIORITY_BATCH_DELAY)
                 )
             }
             Event.Priority.LOW -> {
                 if (activityMonitor.isAppForegrounded) {
-                    scheduleEventUpload(maxOf(nextSendDelay, LOW_PRIORITY_BATCH_DELAY))
+                    scheduleEventUpload(maxOf(nextSendDelay(), LOW_PRIORITY_BATCH_DELAY))
                 } else {
                     val currentTime = clock.currentTimeMillis()
                     val lastSendTime = preferenceStore.get(LAST_SEND_KEY) ?: 0L
                     val sendDelta = currentTime - lastSendTime
                     val minimumWait = max(
                         (runtimeConfig.configOptions.backgroundReportingIntervalMS - sendDelta).toDouble(),
-                        nextSendDelay.inWholeMilliseconds.toDouble()
+                        nextSendDelay().inWholeMilliseconds.toDouble()
                     ).milliseconds
 
                     scheduleEventUpload(maxOf(minimumWait, LOW_PRIORITY_BATCH_DELAY))
@@ -162,13 +165,12 @@ public class EventManager @VisibleForTesting internal constructor(
      *
      * @return A delay.
      */
-    private val nextSendDelay: Duration
-        get() {
-            val nextSendTime = (preferenceStore.get(LAST_SEND_KEY) ?: 0L) +
-                    (preferenceStore.get(MIN_BATCH_INTERVAL_KEY) ?: EventResponse.MIN_BATCH_INTERVAL_MS)
+    private suspend fun nextSendDelay(): Duration {
+        val nextSendTime = (preferenceStore.get(LAST_SEND_KEY) ?: 0L) +
+                (preferenceStore.get(MIN_BATCH_INTERVAL_KEY) ?: EventResponse.MIN_BATCH_INTERVAL_MS)
 
-            return max((nextSendTime - clock.currentTimeMillis()).toDouble(), 0.0).milliseconds
-        }
+        return max((nextSendTime - clock.currentTimeMillis()).toDouble(), 0.0).milliseconds
+    }
 
     /**
      * Uploads events.
@@ -178,9 +180,9 @@ public class EventManager @VisibleForTesting internal constructor(
      * @return `true` if the events uploaded, otherwise `false`.
      */
     public suspend fun uploadEvents(channelId: String, headers: Map<String, String>): Boolean {
-        isScheduled.update {
+        scheduleLock.withLock {
             preferenceStore.put(LAST_SEND_KEY, clock.currentTimeMillis())
-            false
+            isScheduled = false
         }
 
         val eventCount: Int
@@ -248,11 +250,11 @@ public class EventManager @VisibleForTesting internal constructor(
     internal companion object {
 
         const val ACTION_SEND = "ACTION_SEND"
-        val MAX_TOTAL_DB_SIZE_KEY = SyncPrefKey.int("com.urbanairship.analytics.MAX_TOTAL_DB_SIZE")
-        val MAX_BATCH_SIZE_KEY = SyncPrefKey.int("com.urbanairship.analytics.MAX_BATCH_SIZE")
-        val LAST_SEND_KEY = SyncPrefKey.long("com.urbanairship.analytics.LAST_SEND")
-        val SCHEDULED_SEND_TIME = SyncPrefKey.long("com.urbanairship.analytics.SCHEDULED_SEND_TIME")
-        val MIN_BATCH_INTERVAL_KEY = SyncPrefKey.int("com.urbanairship.analytics.MIN_BATCH_INTERVAL")
+        val MAX_TOTAL_DB_SIZE_KEY = AsyncPrefKey.int("com.urbanairship.analytics.MAX_TOTAL_DB_SIZE")
+        val MAX_BATCH_SIZE_KEY = AsyncPrefKey.int("com.urbanairship.analytics.MAX_BATCH_SIZE")
+        val LAST_SEND_KEY = AsyncPrefKey.long("com.urbanairship.analytics.LAST_SEND")
+        val SCHEDULED_SEND_TIME = AsyncPrefKey.long("com.urbanairship.analytics.SCHEDULED_SEND_TIME")
+        val MIN_BATCH_INTERVAL_KEY = AsyncPrefKey.int("com.urbanairship.analytics.MIN_BATCH_INTERVAL")
 
         /**
          * Max batch event count.
