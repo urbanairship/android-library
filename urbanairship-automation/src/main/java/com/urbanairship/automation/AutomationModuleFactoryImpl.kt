@@ -30,6 +30,7 @@ import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProc
 import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
+import com.urbanairship.automation.remotedata.AutomationSourceInfoStore
 import com.urbanairship.automation.storage.AutomationDatabase
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.utils.NetworkMonitor
@@ -186,7 +187,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 legacyAnalytics = LegacyAnalytics(eventRecorder)
             ),
             remoteDataSubscriber = AutomationRemoteDataSubscriber(
-                dataStore = dataStore,
+                sourceInfoStore = AutomationSourceInfoStore(dataStore),
                 remoteDataAccess = remoteDataAccess,
                 engine = engine,
                 frequencyLimitManager = frequencyLimits
