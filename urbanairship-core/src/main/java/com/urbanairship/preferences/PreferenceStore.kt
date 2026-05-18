@@ -6,7 +6,6 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.UALog
-import kotlinx.coroutines.runBlocking
 
 /**
  * Container for Airship preference accessors.
@@ -142,23 +141,21 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
     public companion object {
 
         /**
-         * Loads (or creates) the preference store backed by the on-disk database.
-         *
-         * Wraps the suspending eager-store load in [runBlocking] because the current `takeOff`
-         * path is non-suspend. Once `takeOff` is converted to a coroutine (planned follow-up),
-         * this becomes a direct suspend call.
+         * Loads (or creates) the preference store backed by the on-disk database. Non-suspend
+         * callers should bridge via `runBlocking` themselves.
          *
          * @hide
          */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-        public fun load(context: Context, configOptions: AirshipConfigOptions): PreferenceStore =
-            runBlocking {
-                val database = PreferenceDatabase.createDatabase(context, configOptions)
-                PreferenceStore(
-                    database = database,
-                    eagerStore = EagerPreferenceStore.load(database.dao)
-                )
-            }
+        public suspend fun load(
+            context: Context, configOptions: AirshipConfigOptions
+        ): PreferenceStore {
+            val database = PreferenceDatabase.createDatabase(context, configOptions)
+            return PreferenceStore(
+                database = database,
+                eagerStore = EagerPreferenceStore.load(database.dao)
+            )
+        }
 
         /** Builds an in-memory store for tests. @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
