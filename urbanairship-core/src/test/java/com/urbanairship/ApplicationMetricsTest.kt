@@ -2,12 +2,15 @@
 package com.urbanairship
 
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import org.junit.Assert
 import org.junit.Test
 import org.robolectric.Shadows
+
+private val APP_VERSION_KEY = SyncPrefKey.long("com.urbanairship.application.metrics.APP_VERSION")
 
 public class ApplicationMetricsTest : BaseTestCase() {
     private val context = ApplicationProvider.getApplicationContext<Context>()
@@ -52,7 +55,7 @@ public class ApplicationMetricsTest : BaseTestCase() {
 
     @Test
     public fun testGetAppVersionUpdated() {
-        dataStore.sync.put("com.urbanairship.application.metrics.APP_VERSION", 1L)
+        dataStore.put(APP_VERSION_KEY, 1L)
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 2
 
@@ -69,7 +72,7 @@ public class ApplicationMetricsTest : BaseTestCase() {
         // Last app version should now be 2
         Assert.assertEquals(
             2L,
-            dataStore.sync.getLong("com.urbanairship.application.metrics.APP_VERSION", -1)
+            dataStore.get(APP_VERSION_KEY) ?: -1L
         )
     }
 
@@ -99,13 +102,13 @@ public class ApplicationMetricsTest : BaseTestCase() {
         // Last app version should now be 2
         Assert.assertEquals(
             2L,
-            dataStore.sync.getLong("com.urbanairship.application.metrics.APP_VERSION", -1)
+            dataStore.get(APP_VERSION_KEY) ?: -1L
         )
     }
 
     @Test
     public fun testGetAppVersionUpdatedEqualVersions() {
-        dataStore.sync.put("com.urbanairship.application.metrics.APP_VERSION", 2L)
+        dataStore.put(APP_VERSION_KEY, 2L)
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 2L
 
@@ -123,13 +126,13 @@ public class ApplicationMetricsTest : BaseTestCase() {
         // Last app version should remain 2
         Assert.assertEquals(
             2L,
-            dataStore.sync.getLong("com.urbanairship.application.metrics.APP_VERSION", -1)
+            dataStore.get(APP_VERSION_KEY) ?: -1L
         )
     }
 
     @Test
     public fun testGetAppVersionUpdatedEarlierVersion() {
-        dataStore.sync.put("com.urbanairship.application.metrics.APP_VERSION", 2L)
+        dataStore.put(APP_VERSION_KEY, 2L)
         val info = packageManager.getInternalMutablePackageInfo(TestApplication.getApplication().packageName)
         info.longVersionCode = 1L
 
@@ -146,7 +149,7 @@ public class ApplicationMetricsTest : BaseTestCase() {
         // Last app version should remain 1
         Assert.assertEquals(
             1L,
-            dataStore.sync.getLong("com.urbanairship.application.metrics.APP_VERSION", -1)
+            dataStore.get(APP_VERSION_KEY) ?: -1L
         )
     }
 }

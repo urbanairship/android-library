@@ -9,7 +9,9 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.PendingResult
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.PrivacyManager
+import com.urbanairship.json.JsonValue
 import com.urbanairship.UALog
 import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.app.ActivityMonitor
@@ -141,8 +143,8 @@ public class Contact internal constructor(
         }
 
     private var lastResolvedDate: Long
-        get() = preferenceStore.sync.getLong(LAST_RESOLVED_DATE_KEY, -1)
-        set(newValue) = preferenceStore.sync.put(LAST_RESOLVED_DATE_KEY, newValue)
+        get() = preferenceStore.get(LAST_RESOLVED_DATE_KEY) ?: -1
+        set(newValue) = preferenceStore.put(LAST_RESOLVED_DATE_KEY, newValue)
 
     /** The foreground resolve interval from remote config, or the default [FOREGROUND_INTERVAL] if not available. */
     private val foregroundResolveInterval: Long
@@ -257,20 +259,18 @@ public class Contact internal constructor(
 
     private fun migrateNamedUser() {
         if (privacyManager.isContactsEnabled) {
-            val namedUserId = preferenceStore.sync.getString(LEGACY_NAMED_USER_ID_KEY, null)
+            val namedUserId = preferenceStore.get(LEGACY_NAMED_USER_ID_KEY)
             if (namedUserId == null) {
                 contactManager.generateDefaultContactIdIfNotSet()
             } else {
                 identify(namedUserId)
                 if (privacyManager.isContactsAudienceEnabled) {
-                    val attributeJson = preferenceStore.sync.getJsonValue(
-                        LEGACY_ATTRIBUTE_MUTATION_STORE_KEY
-                    )
+                    val attributeJson = preferenceStore.get(LEGACY_ATTRIBUTE_MUTATION_STORE_KEY)
+                        ?: JsonValue.NULL
                     var attributeMutations = AttributeMutation.fromJsonList(attributeJson.optList())
                     attributeMutations = AttributeMutation.collapseMutations(attributeMutations)
-                    val tagsJson = preferenceStore.sync.getJsonValue(
-                        LEGACY_TAG_GROUP_MUTATIONS_KEY
-                    )
+                    val tagsJson = preferenceStore.get(LEGACY_TAG_GROUP_MUTATIONS_KEY)
+                        ?: JsonValue.NULL
                     var tagGroupMutations = TagGroupsMutation.fromJsonList(tagsJson.optList())
                     tagGroupMutations = TagGroupsMutation.collapseMutations(tagGroupMutations)
                     if (attributeMutations.isNotEmpty() || tagGroupMutations.isNotEmpty()) {
@@ -282,9 +282,9 @@ public class Contact internal constructor(
             }
         }
 
-        preferenceStore.sync.remove(LEGACY_TAG_GROUP_MUTATIONS_KEY)
-        preferenceStore.sync.remove(LEGACY_ATTRIBUTE_MUTATION_STORE_KEY)
-        preferenceStore.sync.remove(LEGACY_NAMED_USER_ID_KEY)
+        preferenceStore.remove(LEGACY_TAG_GROUP_MUTATIONS_KEY)
+        preferenceStore.remove(LEGACY_ATTRIBUTE_MUTATION_STORE_KEY)
+        preferenceStore.remove(LEGACY_NAMED_USER_ID_KEY)
     }
 
     /**
@@ -604,18 +604,18 @@ public class Contact internal constructor(
     internal companion object {
 
         @VisibleForTesting
-        internal val LEGACY_NAMED_USER_ID_KEY = "com.urbanairship.nameduser.NAMED_USER_ID_KEY"
+        internal val LEGACY_NAMED_USER_ID_KEY = SyncPrefKey.string("com.urbanairship.nameduser.NAMED_USER_ID_KEY")
 
         @VisibleForTesting
-        internal val LEGACY_ATTRIBUTE_MUTATION_STORE_KEY = "com.urbanairship.nameduser.ATTRIBUTE_MUTATION_STORE_KEY"
+        internal val LEGACY_ATTRIBUTE_MUTATION_STORE_KEY = SyncPrefKey.json("com.urbanairship.nameduser.ATTRIBUTE_MUTATION_STORE_KEY")
 
         @VisibleForTesting
-        internal val LEGACY_TAG_GROUP_MUTATIONS_KEY = "com.urbanairship.nameduser.PENDING_TAG_GROUP_MUTATIONS_KEY"
+        internal val LEGACY_TAG_GROUP_MUTATIONS_KEY = SyncPrefKey.json("com.urbanairship.nameduser.PENDING_TAG_GROUP_MUTATIONS_KEY")
 
         @VisibleForTesting
         internal val ACTION_UPDATE_CONTACT = "ACTION_UPDATE_CONTACT"
 
-        private const val LAST_RESOLVED_DATE_KEY = "com.urbanairship.contacts.LAST_RESOLVED_DATE_KEY"
+        private val LAST_RESOLVED_DATE_KEY = SyncPrefKey.long("com.urbanairship.contacts.LAST_RESOLVED_DATE_KEY")
 
         /** Default foreground refresh interval. */
         private val FOREGROUND_INTERVAL = TimeUnit.MINUTES.toMillis(60)

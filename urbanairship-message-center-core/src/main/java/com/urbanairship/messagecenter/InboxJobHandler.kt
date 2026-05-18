@@ -5,6 +5,7 @@ package com.urbanairship.messagecenter
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.UALog
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.iam.content.AirshipLayout
@@ -34,12 +35,12 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
 
     /** Delete saved state from the data store. */
     internal fun removeStoredData() {
-        dataStore.sync.remove(LAST_MESSAGE_REFRESH_TIME)
-        dataStore.sync.remove(LAST_UPDATE_TIME)
+        dataStore.remove(LAST_MESSAGE_REFRESH_TIME)
+        dataStore.remove(LAST_UPDATE_TIME)
     }
 
     suspend fun getOrCreateUserCredentials(channelId: String): UserCredentials? {
-        val lastUpdateTime = dataStore.sync.getLong(LAST_UPDATE_TIME, 0)
+        val lastUpdateTime = dataStore.get(LAST_UPDATE_TIME) ?: 0L
         val now = System.currentTimeMillis()
 
         val credentials = user.userCredentials
@@ -58,7 +59,7 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
     ): Boolean {
         UALog.i { "Refreshing inbox messages." }
         val response = inboxApiClient.fetchMessages(
-            userCredentials, channelId, dataStore.sync.getString(LAST_MESSAGE_REFRESH_TIME, null)
+            userCredentials, channelId, dataStore.get(LAST_MESSAGE_REFRESH_TIME)
         )
 
         UALog.v { "Fetch inbox messages response: $response" }
@@ -68,7 +69,7 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
         if (response.isSuccessful && responseValue != null) {
             UALog.i { "InboxJobHandler - Received ${responseValue.size()} inbox messages." }
             updateInbox(responseValue)
-            dataStore.sync.put(LAST_MESSAGE_REFRESH_TIME, response.headers?.get("Last-Modified"))
+            dataStore.put(LAST_MESSAGE_REFRESH_TIME, response.headers?.get("Last-Modified"))
             return true
         }
 
@@ -212,8 +213,8 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
 
         return if (response.isSuccessful && userCredentials != null) {
             UALog.i { "InboxJobHandler - Created Rich Push user: ${userCredentials.username }" }
-            dataStore.sync.put(LAST_UPDATE_TIME, System.currentTimeMillis())
-            dataStore.sync.remove(LAST_MESSAGE_REFRESH_TIME)
+            dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis())
+            dataStore.remove(LAST_MESSAGE_REFRESH_TIME)
             user.onCreated(userCredentials, channelId)
             userCredentials
         } else {
@@ -231,17 +232,17 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
         return when (response.status) {
             HttpURLConnection.HTTP_OK -> {
                 UALog.i { "Rich Push user updated." }
-                dataStore.sync.put(LAST_UPDATE_TIME, System.currentTimeMillis())
+                dataStore.put(LAST_UPDATE_TIME, System.currentTimeMillis())
                 user.onUpdated(channelId)
                 userCredentials
             }
             HttpURLConnection.HTTP_UNAUTHORIZED -> {
                 UALog.d { "Re-creating Rich Push user." }
-                dataStore.sync.put(LAST_UPDATE_TIME, 0)
+                dataStore.put(LAST_UPDATE_TIME, 0L)
                 createUser(channelId)
             }
             else -> {
-                dataStore.sync.put(LAST_UPDATE_TIME, 0)
+                dataStore.put(LAST_UPDATE_TIME, 0L)
                 null
             }
         }
@@ -250,9 +251,9 @@ internal class InboxJobHandler @VisibleForTesting internal constructor(
     internal companion object {
 
         @VisibleForTesting
-        internal const val LAST_MESSAGE_REFRESH_TIME = "com.urbanairship.messages.LAST_MESSAGE_REFRESH_TIME"
+        internal val LAST_MESSAGE_REFRESH_TIME = SyncPrefKey.string("com.urbanairship.messages.LAST_MESSAGE_REFRESH_TIME")
 
-        internal const val LAST_UPDATE_TIME = "com.urbanairship.user.LAST_UPDATE_TIME"
+        internal val LAST_UPDATE_TIME = SyncPrefKey.long("com.urbanairship.user.LAST_UPDATE_TIME")
 
         internal val USER_UPDATE_INTERVAL_MS = 24.hours.inWholeMilliseconds
     }

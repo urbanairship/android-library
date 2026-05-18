@@ -2,6 +2,7 @@
 package com.urbanairship
 
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 
 import android.content.Context
 import android.os.Build
@@ -20,13 +21,13 @@ internal class DeferredPlatformProvider(
 ): Provider<Platform> {
     override fun get(): Platform {
         val existingPlatform = Platform.fromRawValue(
-            rawValue = dataStore.sync.getInt(PLATFORM_KEY, Platform.UNKNOWN.rawValue)
+            rawValue = dataStore.get(PLATFORM_KEY) ?: Platform.UNKNOWN.rawValue
         )
         return if (existingPlatform != Platform.UNKNOWN) {
             existingPlatform
         } else if (privacyManager.isAnyFeatureEnabled) {
             val platform = determinePlatform()
-            dataStore.sync.put(PLATFORM_KEY, platform.rawValue)
+            dataStore.put(PLATFORM_KEY, platform.rawValue)
             platform
         } else {
             Platform.UNKNOWN
@@ -57,9 +58,7 @@ internal class DeferredPlatformProvider(
     }
 
     companion object {
-        /**
-         * Push provider class preference key.
-         */
-        private const val PLATFORM_KEY = "com.urbanairship.application.device.PLATFORM"
+        /** Push provider class preference key. */
+        private val PLATFORM_KEY = SyncPrefKey.int("com.urbanairship.application.device.PLATFORM")
     }
 }

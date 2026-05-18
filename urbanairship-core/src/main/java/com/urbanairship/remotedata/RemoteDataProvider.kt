@@ -5,6 +5,7 @@ package com.urbanairship.remotedata
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.UALog
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.JsonSerializable
@@ -31,16 +32,21 @@ internal abstract class RemoteDataProvider(
     private val defaultEnabled: Boolean = true,
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) {
-    private val enabledKey: String = "RemoteDataProvider.${source.name}_enabled"
-    private val lastRefreshStateKey: String = "RemoteDataProvider.${source.name}_refresh_state"
+    private val enabledKey: SyncPrefKey<Boolean> =
+        SyncPrefKey.boolean("RemoteDataProvider.${source.name}_enabled")
+    private val lastRefreshStateKey: SyncPrefKey<LastRefreshState> =
+        SyncPrefKey.jsonSerializable(
+            name = "RemoteDataProvider.${source.name}_refresh_state",
+            fromJson = ::LastRefreshState
+        )
     private val lastRefreshStateLock = ReentrantLock()
 
     var isEnabled: Boolean
     get() {
-        return preferenceStore.sync.getBoolean(enabledKey, defaultEnabled)
+        return preferenceStore.get(enabledKey) ?: defaultEnabled
     }
     set(value) {
-        preferenceStore.sync.put(enabledKey, value)
+        preferenceStore.put(enabledKey, value)
     }
 
     private val _statusUpdates = MutableStateFlow(RemoteData.Status.OUT_OF_DATE)
@@ -49,14 +55,12 @@ internal abstract class RemoteDataProvider(
     private var lastRefreshState: LastRefreshState?
         get() {
             return lastRefreshStateLock.withLock {
-                preferenceStore.sync.getJsonValue(lastRefreshStateKey).tryParse {
-                    LastRefreshState(it)
-                }
+                preferenceStore.get(lastRefreshStateKey)
             }
         }
         set(value) {
             return lastRefreshStateLock.withLock {
-                preferenceStore.sync.put(lastRefreshStateKey, value)
+                preferenceStore.put(lastRefreshStateKey, value)
             }
         }
 

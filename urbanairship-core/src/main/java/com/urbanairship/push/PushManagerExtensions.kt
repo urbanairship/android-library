@@ -25,7 +25,7 @@ get() {
  * @return `true` if the notifications are enabled, otherwise `false.
  */
 public suspend fun PushManager.enableUserNotifications(promptFallback: PermissionPromptFallback = PermissionPromptFallback.None): Boolean {
-    preferenceStore.sync.put(PushManager.USER_NOTIFICATIONS_ENABLED_KEY, true)
+    preferenceStore.put(PushManager.USER_NOTIFICATIONS_ENABLED_KEY, true)
     val result = permissionsManager.requestPermission(
         permission = Permission.DISPLAY_NOTIFICATIONS,
         fallback = promptFallback
