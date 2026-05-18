@@ -136,10 +136,9 @@ public class EventManager @VisibleForTesting internal constructor(
                     val currentTime = clock.currentTimeMillis()
                     val lastSendTime = preferenceStore.get(LAST_SEND_KEY) ?: 0L
                     val sendDelta = currentTime - lastSendTime
-                    val minimumWait = max(
-                        (runtimeConfig.configOptions.backgroundReportingIntervalMS - sendDelta).toDouble(),
-                        nextSendDelay().inWholeMilliseconds.toDouble()
-                    ).milliseconds
+                    val backgroundReportingInterval = runtimeConfig.configOptions.backgroundReportingIntervalMS
+                    val minimumWait = (backgroundReportingInterval - sendDelta).milliseconds
+                        .coerceAtLeast(nextSendDelay())
 
                     scheduleEventUpload(maxOf(minimumWait, LOW_PRIORITY_BATCH_DELAY))
                 }
@@ -169,7 +168,7 @@ public class EventManager @VisibleForTesting internal constructor(
         val nextSendTime = (preferenceStore.get(LAST_SEND_KEY) ?: 0L) +
                 (preferenceStore.get(MIN_BATCH_INTERVAL_KEY) ?: EventResponse.MIN_BATCH_INTERVAL_MS)
 
-        return max((nextSendTime - clock.currentTimeMillis()).toDouble(), 0.0).milliseconds
+        return (nextSendTime - clock.currentTimeMillis()).milliseconds.coerceAtLeast(Duration.ZERO)
     }
 
     /**
