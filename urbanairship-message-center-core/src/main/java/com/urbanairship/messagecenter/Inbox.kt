@@ -320,8 +320,12 @@ public class Inbox @VisibleForTesting internal constructor(
                 scheduleUpdate(UpdateType.BEST_ATTEMPT)
             } else {
                 // Clean up any Message Center data stored on the device.
-                deleteAllMessagesInternal()
-                inboxJobHandler.removeStoredData()
+                val handler = inboxJobHandler
+                scope.launch {
+                    messageDao.deleteAllMessages()
+                    refreshResults.emit(RefreshResult.LOCAL)
+                    handler.removeStoredData()
+                }
             }
         }
     }
@@ -737,18 +741,6 @@ public class Inbox @VisibleForTesting internal constructor(
     public fun deleteAllMessages() {
         scope.launch {
             messageDao.markAllMessagesDeleted()
-            refreshResults.emit(RefreshResult.LOCAL)
-        }
-    }
-
-    /**
-     * Delete all message data stored on the device.
-     *
-     * @hide
-     */
-    private fun deleteAllMessagesInternal() {
-        scope.launch {
-            messageDao.deleteAllMessages()
             refreshResults.emit(RefreshResult.LOCAL)
         }
     }
