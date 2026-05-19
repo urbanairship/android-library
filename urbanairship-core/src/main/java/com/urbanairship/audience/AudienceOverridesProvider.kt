@@ -29,7 +29,7 @@ public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
     }
 
     internal var stableContactIdDelegate: (suspend () -> String)? = null
-    internal var pendingChannelOverridesDelegate: ((String) -> AudienceOverrides.Channel)? = null
+    internal var pendingChannelOverridesDelegate: (suspend (String) -> AudienceOverrides.Channel)? = null
     internal var pendingContactOverridesDelegate: ((String) -> AudienceOverrides.Contact)? = null
 
     private val records = CachedList<Record<*>>(clock)
