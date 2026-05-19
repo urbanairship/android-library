@@ -25,13 +25,18 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 public class EventManagerTest public constructor() : BaseTestCase() {
 
     private val mockDispatcher: JobDispatcher = mockk(relaxed = true)
@@ -43,6 +48,13 @@ public class EventManagerTest public constructor() : BaseTestCase() {
     private val testAirshipRuntimeConfig = TestAirshipRuntimeConfig()
     private val dataStore: PreferenceStore = PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext())
 
+    /**
+     * Drive the fire-and-forget [EventManager.scheduleEventUpload] launches from each test's
+     * own [runTest] scheduler, so the test can `advanceUntilIdle()` to flush them before
+     * verifying interactions with mocks.
+     */
+    private val testDispatcher = StandardTestDispatcher()
+
     private val eventManager: EventManager = EventManager(
         preferenceStore = dataStore,
         runtimeConfig = testAirshipRuntimeConfig,
@@ -50,7 +62,8 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         activityMonitor = mockActivityMonitor,
         eventDao = mockEventDao,
         apiClient = mockClient,
-        clock = clock
+        clock = clock,
+        scope = CoroutineScope(testDispatcher)
     )
 
     private val testEvent = AirshipEventData(
@@ -65,7 +78,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      * Tests adding an event after the next send time schedules an upload with a 10 second delay.
      */
     @Test
-    public fun testAddEventAfterNextSendTime(): TestResult = runTest {
+    public fun testAddEventAfterNextSendTime(): TestResult = runTest(testDispatcher.scheduler) {
         val entity = EventEntity(testEvent)
 
         every { mockDispatcher.dispatch(any()) } answers {
@@ -83,6 +96,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         coVerify(exactly = 1) { mockEventDao.insert(entity) }
 
         // Check it schedules an upload
+        advanceUntilIdle()
         verify { mockDispatcher.dispatch(any()) }
     }
 
@@ -90,7 +104,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      * Tests adding an event  before the next send time schedules an upload with the remaining delay.
      */
     @Test
-    public fun testAddEventBeforeNextSendTime(): TestResult = runTest {
+    public fun testAddEventBeforeNextSendTime(): TestResult = runTest(testDispatcher.scheduler) {
         // Set the last send time to the current time so the next send time is minBatchInterval
         dataStore.put(EventManager.LAST_SEND_KEY, clock.currentTimeMillis)
 
@@ -109,6 +123,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
 
         eventManager.addEvent(testEvent, Event.Priority.NORMAL)
 
+        advanceUntilIdle()
         verify { mockDispatcher.dispatch(any()) }
     }
 
@@ -116,7 +131,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      * Tests sending events
      */
     @Test
-    public fun testSendingEvents(): TestResult = runTest {
+    public fun testSendingEvents(): TestResult = runTest(testDispatcher.scheduler) {
         val data = JsonValue.parseString("{ \"body\": \"firstEventBody\" }")
         val payload = EventIdAndData(1, "firstEvent", data)
         val events = listOf(payload)
@@ -172,6 +187,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         assertEquals(100, dataStore.get(EventManager.MIN_BATCH_INTERVAL_KEY) ?: 0)
 
         // Check it schedules an upload
+        advanceUntilIdle()
         verify { mockDispatcher.dispatch(any()) }
     }
 
@@ -179,7 +195,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      * Test event batching only sends a max of 500 events.
      */
     @Test
-    public fun testSendEventMaxCount(): TestResult = runTest {
+    public fun testSendEventMaxCount(): TestResult = runTest(testDispatcher.scheduler) {
         // Make the match batch size greater than 500
         dataStore.put(EventManager.MAX_BATCH_SIZE_KEY, 100000)
 
@@ -199,7 +215,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      */
     @Test
     @Throws(RequestException::class, JsonException::class)
-    public fun testSendEventsFails(): TestResult = runTest {
+    public fun testSendEventsFails(): TestResult = runTest(testDispatcher.scheduler) {
         val data = JsonValue.parseString("{ \"body\": \"firstEventBody\" }")
         val payload = EventIdAndData(1, "firstEvent", data)
         val events = listOf(payload)
@@ -231,7 +247,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      * Test adding a region event schedules an upload immediately.
      */
     @Test
-    public fun testAddingHighPriorityEvents(): TestResult = runTest {
+    public fun testAddingHighPriorityEvents(): TestResult = runTest(testDispatcher.scheduler) {
         // Set last send time to year 3005 so next send time is way in the future
         dataStore.put(EventManager.LAST_SEND_KEY, 32661446400000L)
 
@@ -247,6 +263,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         eventManager.addEvent(testEvent, Event.Priority.HIGH)
 
         // Check it schedules an upload
+        advanceUntilIdle()
         verify { mockDispatcher.dispatch(any()) }
     }
 
@@ -254,7 +271,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
      * Test delete all.
      */
     @Test
-    public fun testDeleteAll(): TestResult = runTest {
+    public fun testDeleteAll(): TestResult = runTest(testDispatcher.scheduler) {
         coEvery { mockEventDao.deleteAll() } returns Unit
 
         eventManager.deleteEvents()
