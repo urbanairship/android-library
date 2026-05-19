@@ -2,8 +2,8 @@
 
 package com.urbanairship.automation.remotedata
 
+import com.urbanairship.preferences.AsyncPrefKey
 import com.urbanairship.preferences.PreferenceStore
-import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
@@ -48,26 +48,26 @@ internal class AutomationSourceInfoStore(
     private val dataStore: PreferenceStore
 ) {
 
-    fun getSourceInfo(source: RemoteDataSource, contactID: String?): AutomationSourceInfo? {
+    suspend fun getSourceInfo(source: RemoteDataSource, contactID: String?): AutomationSourceInfo? {
         return dataStore.get(infoKey(source, contactID)) ?: recoverSource(source, contactID)
     }
 
-    fun setSourceInfo(info: AutomationSourceInfo, source: RemoteDataSource, contactID: String?) {
+    suspend fun setSourceInfo(info: AutomationSourceInfo, source: RemoteDataSource, contactID: String?) {
         dataStore.put(infoKey(source, contactID), info)
     }
 
-    private fun infoKey(source: RemoteDataSource, contactID: String?): SyncPrefKey<AutomationSourceInfo> {
+    private fun infoKey(source: RemoteDataSource, contactID: String?): AsyncPrefKey<AutomationSourceInfo> {
         val name = when (source) {
             RemoteDataSource.CONTACT -> "$SOURCE_INFO_KEY_PREFIX.$source.${contactID ?: ""}"
             else -> "$SOURCE_INFO_KEY_PREFIX.$source"
         }
-        return SyncPrefKey.jsonSerializable(
+        return AsyncPrefKey.jsonSerializable(
             name = name,
             fromJson = { AutomationSourceInfo.fromJson(it) ?: throw JsonException("Failed to parse AutomationSourceInfo") }
         )
     }
 
-    private fun recoverSource(source: RemoteDataSource, contactID: String?): AutomationSourceInfo? {
+    private suspend fun recoverSource(source: RemoteDataSource, contactID: String?): AutomationSourceInfo? {
         return when (source) {
             RemoteDataSource.APP -> {
                 recoverStore(
@@ -87,10 +87,10 @@ internal class AutomationSourceInfoStore(
         }
     }
 
-    private fun recoverStore(
-        key: SyncPrefKey<AutomationSourceInfo>,
-        legacyTimestampKey: SyncPrefKey<Long>,
-        legacySdkVersionKey: SyncPrefKey<String>
+    private suspend fun recoverStore(
+        key: AsyncPrefKey<AutomationSourceInfo>,
+        legacyTimestampKey: AsyncPrefKey<Long>,
+        legacySdkVersionKey: AsyncPrefKey<String>
     ): AutomationSourceInfo? {
         val lastSDKVersion = dataStore.get(legacySdkVersionKey)
         val lastUpdate: Long = dataStore.get(legacyTimestampKey) ?: -1L
@@ -115,9 +115,9 @@ internal class AutomationSourceInfoStore(
         private const val SOURCE_INFO_KEY_PREFIX = "AutomationSourceInfo"
 
         // Legacy store keys
-        private val LEGACY_APP_LAST_PAYLOAD_TIMESTAMP_KEY = SyncPrefKey.long("com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP")
-        private val LEGACY_APP_LAST_SDK_VERSION_KEY = SyncPrefKey.string("com.urbanairship.iaa.last_sdk_version")
-        private val LEGACY_CONTACT_LAST_PAYLOAD_TIMESTAMP_KEY = SyncPrefKey.long("com.urbanairship.iam.data.contact_last_payload_timestamp")
-        private val LEGACY_CONTACT_LAST_SDK_VERSION_KEY = SyncPrefKey.string("com.urbanairship.iaa.contact_last_sdk_version")
+        private val LEGACY_APP_LAST_PAYLOAD_TIMESTAMP_KEY = AsyncPrefKey.long("com.urbanairship.iam.data.LAST_PAYLOAD_TIMESTAMP")
+        private val LEGACY_APP_LAST_SDK_VERSION_KEY = AsyncPrefKey.string("com.urbanairship.iaa.last_sdk_version")
+        private val LEGACY_CONTACT_LAST_PAYLOAD_TIMESTAMP_KEY = AsyncPrefKey.long("com.urbanairship.iam.data.contact_last_payload_timestamp")
+        private val LEGACY_CONTACT_LAST_SDK_VERSION_KEY = AsyncPrefKey.string("com.urbanairship.iaa.contact_last_sdk_version")
     }
 }
