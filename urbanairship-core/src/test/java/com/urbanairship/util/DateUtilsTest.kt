@@ -97,6 +97,29 @@ public class DateUtilsTest {
     }
 
     @Test
+    public fun testParseHttpDateImfFixdate() {
+        // RFC 7231 §7.1.1.1 IMF-fixdate (preferred form)
+        Assert.assertEquals(1689012646000L, DateUtils.parseHttpDate("Mon, 10 Jul 2023 18:10:46 GMT"))
+    }
+
+    @Test
+    public fun testParseHttpDateRfc850() {
+        // RFC 850 obsolete form, still supported per RFC 7231
+        Assert.assertEquals(1689012646000L, DateUtils.parseHttpDate("Monday, 10-Jul-23 18:10:46 GMT"))
+    }
+
+    @Test
+    public fun testParseHttpDateAsctime() {
+        // asctime obsolete form, still supported per RFC 7231
+        Assert.assertEquals(1689012646000L, DateUtils.parseHttpDate("Mon Jul 10 18:10:46 2023"))
+    }
+
+    @Test(expected = ParseException::class)
+    public fun testParseHttpDateRejectsIso8601() {
+        DateUtils.parseHttpDate("2023-07-10T18:10:46Z")
+    }
+
+    @Test
     public fun testCreateTimeStamp() {
         Assert.assertEquals("2015-04-01T12:00:00Z", createIso8601TimeStamp(1427889600000L))
         Assert.assertEquals("1970-01-01T00:00:00Z", createIso8601TimeStamp(0))

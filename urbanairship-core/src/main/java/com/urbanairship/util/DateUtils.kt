@@ -31,6 +31,16 @@ public object DateUtils {
     private val FRACTIONAL_SECONDS = Regex("""(\d{2}:\d{2}:\d{2})\.(\d+)""")
 
     /**
+     * RFC 7231 HTTP-date formats: IMF-fixdate (preferred) and the two obsolete forms
+     * (RFC 850 and asctime). All are anchored to GMT/UTC.
+     */
+    private val HTTP_DATE_FORMATS = listOf(
+        "EEE, dd MMM yyyy HH:mm:ss 'GMT'",
+        "EEEE, dd-MMM-yy HH:mm:ss 'GMT'",
+        "EEE MMM d HH:mm:ss yyyy",
+    ).map(::format)
+
+    /**
      * ISO 8601 parse formats, ordered most-specific first. The first format that consumes
      * the entire input wins. `XXX`/`XX` accept `Z`, `±HH:MM`, or `±HHMM`. Inputs are
      * normalized to 3-digit fractional seconds before parsing.
@@ -98,6 +108,28 @@ public object DateUtils {
             }
             "${match.groupValues[1]}.$padded"
         }
+
+    /**
+     * Parses an RFC 7231 HTTP-date into epoch milliseconds.
+     *
+     * @throws ParseException if the input is null, empty, or not a recognized HTTP-date.
+     */
+    @Throws(ParseException::class)
+    public fun parseHttpDate(timeStamp: String?): Long {
+        if (timeStamp.isNullOrEmpty()) {
+            throw ParseException("Unable to parse null or empty HTTP-date", -1)
+        }
+        synchronized(lock) {
+            for (format in HTTP_DATE_FORMATS) {
+                val position = ParsePosition(0)
+                val parsed = format.parse(timeStamp, position)
+                if (parsed != null && position.index == timeStamp.length) {
+                    return parsed.time
+                }
+            }
+        }
+        throw ParseException("Unable to parse HTTP-date $timeStamp", -1)
+    }
 
     /**
      * Parses an ISO 8601 timestamp, returning [defaultValue] if parsing fails.

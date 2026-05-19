@@ -7,12 +7,8 @@ import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.util.Clock
-import com.urbanairship.util.DateUtils
 import com.urbanairship.util.UAHttpStatusUtil
-import java.text.ParseException
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Parses a response.
@@ -100,7 +96,7 @@ public data class RequestResult<T>(
      */
     public val locationHeader: Uri?
         get() {
-            val location = headers?.get("Location") ?: return null
+            val location = header("Location") ?: return null
             return try {
                 Uri.parse(location)
             } catch (e: Exception) {
@@ -110,23 +106,23 @@ public data class RequestResult<T>(
         }
 
     /**
-     * Returns the retry-after header as a [Duration], or null if absent or unparseable.
-     * Accepts an integer or decimal number of seconds (per RFC 7231) or an ISO 8601 HTTP-date.
+     * Returns the retry-after header as a non-negative [Duration], or null if absent or
+     * unparseable. Accepts a non-negative integer or decimal number of seconds (per RFC
+     * 7231 §7.1.3, with a permissive extension for fractional seconds), an RFC 7231
+     * HTTP-date, or an ISO 8601 timestamp.
      */
     public fun getRetryAfterHeader(): Duration? = getRetryAfterHeader(Clock.DEFAULT_CLOCK)
 
     @VisibleForTesting
     public fun getRetryAfterHeader(clock: Clock): Duration? {
-        val retryAfter = headers?.get("Retry-After") ?: return null
-        retryAfter.toDoubleOrNull()?.takeIf { it.isFinite() }?.let { return it.seconds }
-        try {
-            val retryDate = DateUtils.parseIso8601(retryAfter)
-            return (retryDate - clock.currentTimeMillis()).milliseconds
-        } catch (ignored: ParseException) {
-        }
+        val retryAfter = header("Retry-After")?.trim() ?: return null
+        parseRetryAfter(retryAfter, clock)?.let { return it.coerceAtLeast(Duration.ZERO) }
         UALog.e("Invalid RetryAfter header %s", retryAfter)
         return null
     }
+
+    private fun header(name: String): String? =
+        headers?.entries?.firstOrNull { it.key.equals(name, ignoreCase = true) }?.value
 }
 
 /**
