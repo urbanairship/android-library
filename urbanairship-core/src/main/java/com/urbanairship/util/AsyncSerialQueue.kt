@@ -4,6 +4,7 @@ package com.urbanairship.util
 import androidx.annotation.RestrictTo
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -16,6 +17,7 @@ import kotlinx.coroutines.launch
  */
 @DslMarker
 @Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public annotation class AsyncSerialQueueDsl
 
 /**
@@ -46,31 +48,43 @@ public class AsyncSerialQueue(private val scope: CoroutineScope) {
 
     /**
      * Appends [block] to the chain and returns immediately. [block] runs after the prior
-     * tail completes.
+     * tail completes. Non-cancellation throws are suppressed to keep the chain and the
+     * underlying [scope] alive.
      */
     public fun enqueue(block: suspend AsyncSerialQueueScope.() -> Unit) {
         lock.withLock {
             val previous = lastOp
             lastOp = scope.launch {
                 previous?.join()
-                AsyncSerialQueueScopeImpl.block()
+                runBlockSafely { block() }
             }
         }
     }
 
     /**
      * Appends [block] to the chain and suspends until it completes, returning its result.
-     * If the underlying [scope] is cancelled before [block] runs, `await()` throws
-     * [kotlinx.coroutines.CancellationException] instead of hanging.
+     * Wraps the block in [Result] so failures surface through [kotlinx.coroutines.Deferred.await] without
+     * cancelling the underlying [scope].
      */
     public suspend fun <T> enqueueAndAwait(block: suspend AsyncSerialQueueScope.() -> T): T {
         val deferred = lock.withLock {
             val previous = lastOp
             scope.async {
                 previous?.join()
-                AsyncSerialQueueScopeImpl.block()
+                runBlockSafely { block() }
             }.also { lastOp = it }
         }
-        return deferred.await()
+        return deferred.await().getOrThrow()
     }
+
+    /**
+     * Runs [block] in the queue's receiver scope and returns the outcome as a [Result].
+     * [CancellationException] is rethrown so coroutine cancellation propagates normally
+     * instead of being captured.
+     */
+    private suspend inline fun <T> runBlockSafely(
+        crossinline block: suspend AsyncSerialQueueScope.() -> T
+    ): Result<T> = runCatching {
+        AsyncSerialQueueScopeImpl.block()
+    }.onFailure { if (it is CancellationException) throw it }
 }
