@@ -488,13 +488,13 @@ public class ContactApiClientTest {
                              "action":"set",
                              "value":"Bob",
                              "key":"name",
-                             "timestamp":"1970-01-01T00:00:00"
+                             "timestamp":"1970-01-01T00:00:00.100Z"
                           },
                           {
                              "action":"set",
                              "value":"Loblaw",
                              "key":"last_name",
-                             "timestamp":"1970-01-01T00:00:00"
+                             "timestamp":"1970-01-01T00:00:00.200Z"
                           }
                        ],
                        "subscription_lists":[
@@ -502,13 +502,13 @@ public class ContactApiClientTest {
                              "action":"subscribe",
                              "list_id":"burgers",
                              "scope":"app",
-                             "timestamp":"1970-01-01T00:00:00"
+                             "timestamp":"1970-01-01T00:00:00Z"
                           },
                           {
                              "action":"unsubscribe",
                              "list_id":"burritos",
                              "scope":"sms",
-                             "timestamp":"1970-01-01T00:00:00"
+                             "timestamp":"1970-01-01T00:00:00Z"
                           }
                        ],
                        "tags":{

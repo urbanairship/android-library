@@ -9,9 +9,9 @@ import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.JsonValue
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.Duration
 
 /**
  * @hide
@@ -98,7 +98,7 @@ public class DeferredResolver internal constructor(
                 response.locationHeader?.let {
                     addUrlMapping(request.uri, it)
                 }
-                val retryDelay = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0)
+                val retryDelay = response.getRetryAfterHeader() ?: Duration.ZERO
                 UALog.d { "Failed to resolve deferred: $resolvedUrl with status code: $statusCode. Retry after $retryDelay." }
                 return DeferredResult.RetriableError(
                     retryAfter = retryDelay,
@@ -108,7 +108,7 @@ public class DeferredResolver internal constructor(
             307 -> {
                 val redirect = response.locationHeader
                 if (redirect == null) {
-                    val retryDelay = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, 0)
+                    val retryDelay = response.getRetryAfterHeader() ?: Duration.ZERO
                     UALog.d { "Failed to resolve deferred: $resolvedUrl with status code: $statusCode. Retry after $retryDelay." }
                     return DeferredResult.RetriableError(
                         retryAfter = retryDelay,
@@ -117,8 +117,8 @@ public class DeferredResolver internal constructor(
                 }
                 addUrlMapping(request.uri, redirect)
 
-                val retryDelay = response.getRetryAfterHeader(TimeUnit.MILLISECONDS, -1)
-                if (retryDelay > 0) {
+                val retryDelay = response.getRetryAfterHeader()
+                if (retryDelay != null && retryDelay > Duration.ZERO) {
                     UALog.d { "Failed to resolve deferred: $resolvedUrl with status code: $statusCode. Retry after $retryDelay." }
                     return DeferredResult.RetriableError(retryDelay, statusCode = statusCode)
                 }

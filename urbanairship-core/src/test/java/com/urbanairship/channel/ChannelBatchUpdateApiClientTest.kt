@@ -101,25 +101,25 @@ public class ChannelBatchUpdateApiClientTest {
                              "action":"set",
                              "value":"Bob",
                              "key":"name",
-                             "timestamp":"1970-01-01T00:00:00"
+                             "timestamp":"1970-01-01T00:00:00.100Z"
                           },
                           {
                              "action":"set",
                              "value":"Loblaw",
                              "key":"last_name",
-                             "timestamp":"1970-01-01T00:00:00"
+                             "timestamp":"1970-01-01T00:00:00.200Z"
                           }
                        ],
                        "subscription_lists":[
                           {
                              "action":"subscribe",
                              "list_id":"burgers",
-                             "timestamp":"1970-01-01T00:00:00"
+                             "timestamp":"1970-01-01T00:00:00Z"
                           },
                           {
                              "action":"unsubscribe",
                              "list_id":"burritos",
-                             "timestamp":"1970-01-01T00:00:00"
+                             "timestamp":"1970-01-01T00:00:00Z"
                           }
                        ],
                        "tags":{
