@@ -45,12 +45,18 @@ public class DateUtilsTest {
 
     @Test
     public fun testParseFractionalSeconds() {
+        // ISO 8601: the fractional part is a decimal fraction of a second.
+        // .5 / .50 / .500 all mean 500ms, not 5/50/500ms-as-int.
+        Assert.assertEquals(1689012646500L, parseIso8601("2023-07-10T18:10:46.5"))
+        Assert.assertEquals(1689012646500L, parseIso8601("2023-07-10T18:10:46.50"))
+        Assert.assertEquals(1689012646500L, parseIso8601("2023-07-10T18:10:46.500"))
         // .203 -> 203ms past the second
         Assert.assertEquals(1689012646203L, parseIso8601("2023-07-10T18:10:46.203"))
-        // .00 -> exactly on the second
+        // .12 -> 120ms past the second
+        Assert.assertEquals(1689012646120L, parseIso8601("2023-07-10T18:10:46.12"))
+        // .00 / .000 -> exactly on the second
         Assert.assertEquals(1672308930000L, parseIso8601("2022-12-29T10:15:30.00"))
-        // .5 -> 5ms past the second (SimpleDateFormat semantics: S is the value, not a fraction)
-        Assert.assertEquals(1689012646005L, parseIso8601("2023-07-10T18:10:46.5"))
+        Assert.assertEquals(1672308930000L, parseIso8601("2022-12-29T10:15:30.000"))
     }
 
     @Test

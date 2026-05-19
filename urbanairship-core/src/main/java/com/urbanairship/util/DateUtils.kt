@@ -22,8 +22,18 @@ public object DateUtils {
     private val FORMAT_WITH_MILLIS = format("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
 
     /**
+     * Matches the fractional-seconds component of an ISO 8601 timestamp (the `.` after
+     * `HH:mm:ss` and one-or-more digits). Used to normalize the fraction to exactly 3
+     * digits before parsing — ISO 8601 treats the fraction as a decimal of a second
+     * (`.5` = 500 ms), but `SimpleDateFormat`'s `S` interprets the digits literally
+     * (`.5` = 5 ms).
+     */
+    private val FRACTIONAL_SECONDS = Regex("""(\d{2}:\d{2}:\d{2})\.(\d+)""")
+
+    /**
      * ISO 8601 parse formats, ordered most-specific first. The first format that consumes
-     * the entire input wins. `XXX`/`XX` accept `Z`, `±HH:MM`, or `±HHMM`.
+     * the entire input wins. `XXX`/`XX` accept `Z`, `±HH:MM`, or `±HHMM`. Inputs are
+     * normalized to 3-digit fractional seconds before parsing.
      */
     private val PARSE_FORMATS = listOf(
         "yyyy-MM-dd'T'HH:mm:ss.SSSXXX",
@@ -31,8 +41,6 @@ public object DateUtils {
         "yyyy-MM-dd'T'HH:mm:ssXXX",
         "yyyy-MM-dd'T'HH:mm:ssXX",
         "yyyy-MM-dd'T'HH:mm:ss.SSS",
-        "yyyy-MM-dd'T'HH:mm:ss.SS",
-        "yyyy-MM-dd'T'HH:mm:ss.S",
         "yyyy-MM-dd'T'HH:mm:ss",
         "yyyy-MM-dd HH:mm:ss.SSS",
         "yyyy-MM-dd HH:mm:ss",
@@ -53,7 +61,8 @@ public object DateUtils {
      * Accepted forms (UTC unless a zone is specified):
      *  - `2024`, `2024-01`, `2024-01-15`
      *  - `2024-01-15T11`, `2024-01-15T11:30`, `2024-01-15T11:30:45` (or with a space separator)
-     *  - `2024-01-15T11:30:45.123` (fractional seconds; 1-3 digits)
+     *  - `2024-01-15T11:30:45.123` (fractional seconds, treated as a decimal of a second
+     *    per ISO 8601; truncated to millisecond precision)
      *  - `2024-01-15T11:30:45Z`
      *  - `2024-01-15T11:30:45+00:00` / `+0000` / `-05:00`
      *  - Any combination of the above.
@@ -65,17 +74,30 @@ public object DateUtils {
         if (timeStamp.isNullOrEmpty()) {
             throw ParseException("Unable to parse null or empty timestamp", -1)
         }
+        // Normalize fractional seconds to 3 digits up front. SimpleDateFormat's `S` is
+        // lenient and would otherwise consume `.5` as 5 ms instead of 500 ms.
+        val normalized = normalizeFractionalSeconds(timeStamp)
         synchronized(lock) {
             for (format in PARSE_FORMATS) {
                 val position = ParsePosition(0)
-                val parsed = format.parse(timeStamp, position)
-                if (parsed != null && position.index == timeStamp.length) {
+                val parsed = format.parse(normalized, position)
+                if (parsed != null && position.index == normalized.length) {
                     return parsed.time
                 }
             }
         }
         throw ParseException("Unable to parse $timeStamp", -1)
     }
+
+    private fun normalizeFractionalSeconds(input: String): String =
+        FRACTIONAL_SECONDS.replace(input) { match ->
+            val fraction = match.groupValues[2]
+            val padded = when {
+                fraction.length >= 3 -> fraction.substring(0, 3)
+                else -> fraction.padEnd(3, '0')
+            }
+            "${match.groupValues[1]}.$padded"
+        }
 
     /**
      * Parses an ISO 8601 timestamp, returning [defaultValue] if parsing fails.
