@@ -29,7 +29,6 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.remoteconfig.RetryingQueueConfig
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.time.Duration.Companion.seconds
 
 internal interface AutomationPreparerDelegate<DataIn, DataOut> {
     suspend fun prepare(data: DataIn, preparedScheduleInfo: PreparedScheduleInfo) : Result<DataOut>
@@ -316,7 +315,7 @@ internal class AutomationPreparer internal constructor(
             }
 
             is DeferredResult.RetriableError -> {
-                RetryingQueue.Result.Retry(retryAfter = result.retryAfter?.seconds)
+                RetryingQueue.Result.Retry(retryAfter = result.retryAfter)
             }
 
             is DeferredResult.TimedOut -> {

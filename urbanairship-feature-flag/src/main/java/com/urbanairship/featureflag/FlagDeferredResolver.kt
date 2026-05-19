@@ -17,7 +17,9 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
 import kotlin.math.max
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -105,20 +107,20 @@ internal class FlagDeferredResolver(
                 return Result.success(DeferredFlag.NotFound)
             }
             is DeferredResult.RetriableError -> {
-                val backOff = result.retryAfter ?: DEFAULT_BACKOFF_MS
-                if (!allowRetry || backOff > IMMEDIATE_BACKOFF_RETRY_MS) {
-                    backOffIntervals[requestId] = clock.currentTimeMillis() + backOff
+                val backOff = result.retryAfter ?: DEFAULT_BACKOFF
+                if (!allowRetry || backOff > IMMEDIATE_BACKOFF_RETRY) {
+                    backOffIntervals[requestId] = clock.currentTimeMillis() + backOff.inWholeMilliseconds
                     return Result.failure(FeatureFlagEvaluationException.ConnectionError(
                         statusCode = result.statusCode,
                         errorDescription = if (!allowRetry) {
                             "Retries are not allowed"
                         } else {
-                            "Unable to immediately retry. Try again in $backOff ms."
+                            "Unable to immediately retry. Try again in $backOff."
                         }
                     ))
                 }
 
-                if (backOff > 0) {
+                if (backOff > Duration.ZERO) {
                     delay(backOff)
                 }
 
@@ -136,8 +138,8 @@ internal class FlagDeferredResolver(
 
     private companion object {
         const val MIN_CACHE_TIME_MS: ULong = 60000u
-        const val DEFAULT_BACKOFF_MS: Long = 30000
-        const val IMMEDIATE_BACKOFF_RETRY_MS = 5000
+        val DEFAULT_BACKOFF: Duration = 30.seconds
+        val IMMEDIATE_BACKOFF_RETRY: Duration = 5.seconds
     }
 }
 

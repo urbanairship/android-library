@@ -5,8 +5,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
-import java.util.concurrent.TimeUnit
 import junit.framework.TestCase
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -30,7 +31,7 @@ public class ResponseTest {
     @Test
     public fun testNullRetryAfterHeader() {
         val response = Response<Void?>(200, null)
-        TestCase.assertEquals(-1, response.getRetryAfterHeader(TimeUnit.MILLISECONDS, -1))
+        TestCase.assertNull(response.getRetryAfterHeader())
     }
 
     @Test
@@ -39,7 +40,15 @@ public class ResponseTest {
         val clock: Clock = TestClock()
 
         val response = Response<Void?>(200, null, null, headers)
-        TestCase.assertEquals(2, response.getRetryAfterHeader(TimeUnit.MINUTES, -1, clock))
+        TestCase.assertEquals(2.minutes, response.getRetryAfterHeader(clock))
+    }
+
+    @Test
+    public fun testRetryAfterFractionalSeconds() {
+        // RFC 7231 allows decimal seconds.
+        val headers = mapOf("Retry-After" to "1.5")
+        val response = Response<Void?>(200, null, null, headers)
+        TestCase.assertEquals(1500.milliseconds, response.getRetryAfterHeader())
     }
 
     @Test
@@ -51,10 +60,8 @@ public class ResponseTest {
 
         val response = Response<Void?>(200, null, null, headers)
         TestCase.assertEquals(
-            DateUtils.parseIso8601(futureTimeStamp, -1) - clock.currentTimeMillis(),
-            response.getRetryAfterHeader(
-                TimeUnit.MILLISECONDS, -1, clock
-            )
+            (DateUtils.parseIso8601(futureTimeStamp, -1) - clock.currentTimeMillis()).milliseconds,
+            response.getRetryAfterHeader(clock)
         )
     }
 
@@ -63,6 +70,6 @@ public class ResponseTest {
         val headers = mapOf("Retry-After" to "what")
 
         val response = Response<Void?>(200, null, null, headers)
-        TestCase.assertEquals(-1, response.getRetryAfterHeader(TimeUnit.MILLISECONDS, -1))
+        TestCase.assertNull(response.getRetryAfterHeader())
     }
 }

@@ -10,7 +10,9 @@ import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.UAHttpStatusUtil
 import java.text.ParseException
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Parses a response.
@@ -108,30 +110,22 @@ public data class RequestResult<T>(
         }
 
     /**
-     * Returns the retry-after header if set.
-     *
-     * @param timeUnit The resulting time unit.
-     * @param defaultValue The default value.
-     * @return The retry-after in the time unit if set, otherwise the defaultValue.
+     * Returns the retry-after header as a [Duration], or null if absent or unparseable.
+     * Accepts an integer or decimal number of seconds (per RFC 7231) or an ISO 8601 HTTP-date.
      */
-    public fun getRetryAfterHeader(timeUnit: TimeUnit, defaultValue: Long): Long {
-        return getRetryAfterHeader(timeUnit, defaultValue, Clock.DEFAULT_CLOCK)
-    }
+    public fun getRetryAfterHeader(): Duration? = getRetryAfterHeader(Clock.DEFAULT_CLOCK)
 
     @VisibleForTesting
-    public fun getRetryAfterHeader(timeUnit: TimeUnit, defaultValue: Long, clock: Clock): Long {
-        val retryAfter = headers?.get("Retry-After") ?: return defaultValue
-        retryAfter.toLongOrNull()?.let { seconds ->
-            return timeUnit.convert(seconds, TimeUnit.SECONDS)
-        }
+    public fun getRetryAfterHeader(clock: Clock): Duration? {
+        val retryAfter = headers?.get("Retry-After") ?: return null
+        retryAfter.toDoubleOrNull()?.takeIf { it.isFinite() }?.let { return it.seconds }
         try {
             val retryDate = DateUtils.parseIso8601(retryAfter)
-            val milliseconds = retryDate - clock.currentTimeMillis()
-            return timeUnit.convert(milliseconds, TimeUnit.MILLISECONDS)
+            return (retryDate - clock.currentTimeMillis()).milliseconds
         } catch (ignored: ParseException) {
         }
         UALog.e("Invalid RetryAfter header %s", retryAfter)
-        return defaultValue
+        return null
     }
 }
 
