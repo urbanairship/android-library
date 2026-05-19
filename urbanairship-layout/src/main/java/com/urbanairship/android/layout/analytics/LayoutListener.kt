@@ -4,16 +4,16 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ThomasListenerInterface
-import com.urbanairship.android.layout.analytics.events.LayoutButtonTapEvent
+import com.urbanairship.android.layout.analytics.events.InAppButtonTapEvent
 import com.urbanairship.android.layout.analytics.events.InAppDisplayEvent
-import com.urbanairship.android.layout.analytics.events.LayoutFormDisplayEvent
-import com.urbanairship.android.layout.analytics.events.LayoutFormResultEvent
-import com.urbanairship.android.layout.analytics.events.LayoutGestureEvent
-import com.urbanairship.android.layout.analytics.events.LayoutPageActionEvent
-import com.urbanairship.android.layout.analytics.events.LayoutPageSwipeEvent
-import com.urbanairship.android.layout.analytics.events.LayoutPageViewEvent
-import com.urbanairship.android.layout.analytics.events.LayoutPagerCompletedEvent
-import com.urbanairship.android.layout.analytics.events.LayoutPagerSummaryEvent
+import com.urbanairship.android.layout.analytics.events.InAppFormDisplayEvent
+import com.urbanairship.android.layout.analytics.events.InAppFormResultEvent
+import com.urbanairship.android.layout.analytics.events.InAppGestureEvent
+import com.urbanairship.android.layout.analytics.events.InAppPageActionEvent
+import com.urbanairship.android.layout.analytics.events.InAppPageSwipeEvent
+import com.urbanairship.android.layout.analytics.events.InAppPageViewEvent
+import com.urbanairship.android.layout.analytics.events.InAppPagerCompletedEvent
+import com.urbanairship.android.layout.analytics.events.InAppPagerSummaryEvent
 import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.json.JsonSerializable
@@ -38,7 +38,7 @@ public class LayoutListener (
         when (event) {
             is ReportingEvent.ButtonTap -> {
                 analytics.recordEvent(
-                    event = LayoutButtonTapEvent(event.data),
+                    event = InAppButtonTapEvent(event.data),
                     layoutContext = event.context
                 )
             }
@@ -73,49 +73,49 @@ public class LayoutListener (
             }
             is ReportingEvent.FormDisplay -> {
                 analytics.recordEvent(
-                    event = LayoutFormDisplayEvent(event.data),
+                    event = InAppFormDisplayEvent(event.data),
                     layoutContext = event.context
                 )
             }
             is ReportingEvent.FormResult -> {
                 analytics.recordEvent(
-                    event = LayoutFormResultEvent(event.data),
+                    event = InAppFormResultEvent(event.data),
                     layoutContext = event.context
                 )
             }
             is ReportingEvent.Gesture -> {
                 analytics.recordEvent(
-                    event = LayoutGestureEvent(event.data),
+                    event = InAppGestureEvent(event.data),
                     layoutContext = event.context
                 )
             }
             is ReportingEvent.PageAction -> {
                 analytics.recordEvent(
-                    event = LayoutPageActionEvent(event.data),
+                    event = InAppPageActionEvent(event.data),
                     layoutContext = event.context
                 )
             }
             is ReportingEvent.PagerSummary -> {
                 analytics.recordEvent(
-                    event = LayoutPagerSummaryEvent(event.data),
+                    event = InAppPagerSummaryEvent(event.data),
                     layoutContext = event.context
                 )
             }
             is ReportingEvent.PageSwipe -> {
                 analytics.recordEvent(
-                    event = LayoutPageSwipeEvent(event.data),
+                    event = InAppPageSwipeEvent(event.data),
                     layoutContext = event.context
                 )
             }
             is ReportingEvent.PageView -> {
                 analytics.recordEvent(
-                    event = LayoutPageViewEvent(event.data),
+                    event = InAppPageViewEvent(event.data),
                     layoutContext = event.context
                 )
             }
             is ReportingEvent.PagerComplete -> {
                 analytics.recordEvent(
-                    event = LayoutPagerCompletedEvent(event.data),
+                    event = InAppPagerCompletedEvent(event.data),
                     layoutContext = event.context
                 )
             }

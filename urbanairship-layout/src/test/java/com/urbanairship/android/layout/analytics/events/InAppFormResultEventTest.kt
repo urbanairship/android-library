@@ -11,7 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class LayoutFormResultEventTest {
+public class InAppFormResultEventTest {
     @Test
     public fun testEvent() {
         val children = setOf(
@@ -42,7 +42,7 @@ public class LayoutFormResultEventTest {
             fieldType = ThomasFormField.FieldType.just(children)
         )
 
-        val event = LayoutFormResultEvent(
+        val event = InAppFormResultEvent(
             data = ReportingEvent.FormResultData(
                 forms = formData
             )

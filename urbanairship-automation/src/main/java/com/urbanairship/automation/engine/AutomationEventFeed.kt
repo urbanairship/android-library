@@ -224,7 +224,7 @@ internal val AirshipEventFeed.Event.toAutomationEvents: List<AutomationEvent.Eve
                         )
                     }
 
-                    EventType.LAYOUT_BUTTON_TAP -> {
+                    EventType.IN_APP_BUTTON_TAP -> {
                         listOf(
                             AutomationEvent.Event(
                                 triggerType = EventAutomationTriggerType.IN_APP_BUTTON_TAP,
@@ -233,7 +233,7 @@ internal val AirshipEventFeed.Event.toAutomationEvents: List<AutomationEvent.Eve
                         )
                     }
 
-                    EventType.LAYOUT_PERMISSION_RESULT -> {
+                    EventType.IN_APP_PERMISSION_RESULT -> {
                         listOf(
                             AutomationEvent.Event(
                                 triggerType = EventAutomationTriggerType.IN_APP_PERMISSION_RESULT,
@@ -242,7 +242,7 @@ internal val AirshipEventFeed.Event.toAutomationEvents: List<AutomationEvent.Eve
                         )
                     }
 
-                    EventType.LAYOUT_FORM_DISPLAY -> {
+                    EventType.IN_APP_FORM_DISPLAY -> {
                         listOf(
                             AutomationEvent.Event(
                                 triggerType = EventAutomationTriggerType.IN_APP_FORM_DISPLAY,
@@ -251,7 +251,7 @@ internal val AirshipEventFeed.Event.toAutomationEvents: List<AutomationEvent.Eve
                         )
                     }
 
-                    EventType.LAYOUT_FORM_RESULT -> {
+                    EventType.IN_APP_FORM_RESULT -> {
                         listOf(
                             AutomationEvent.Event(
                                 triggerType = EventAutomationTriggerType.IN_APP_FORM_RESULT,
@@ -260,7 +260,7 @@ internal val AirshipEventFeed.Event.toAutomationEvents: List<AutomationEvent.Eve
                         )
                     }
 
-                    EventType.LAYOUT_GESTURE -> {
+                    EventType.IN_APP_GESTURE -> {
                         listOf(
                             AutomationEvent.Event(
                                 triggerType = EventAutomationTriggerType.IN_APP_GESTURE,
@@ -269,7 +269,7 @@ internal val AirshipEventFeed.Event.toAutomationEvents: List<AutomationEvent.Eve
                         )
                     }
 
-                    EventType.LAYOUT_PAGER_COMPLETED -> {
+                    EventType.IN_APP_PAGER_COMPLETED -> {
                         listOf(
                             AutomationEvent.Event(
                                 triggerType =  EventAutomationTriggerType.IN_APP_PAGER_COMPLETED,
@@ -278,7 +278,7 @@ internal val AirshipEventFeed.Event.toAutomationEvents: List<AutomationEvent.Eve
                         )
                     }
 
-                    EventType.LAYOUT_PAGER_SUMMARY -> {
+                    EventType.IN_APP_PAGER_SUMMARY -> {
                         listOf(
                             AutomationEvent.Event(
                                 triggerType = EventAutomationTriggerType.IN_APP_PAGER_SUMMARY,
@@ -287,7 +287,7 @@ internal val AirshipEventFeed.Event.toAutomationEvents: List<AutomationEvent.Eve
                         )
                     }
 
-                    EventType.LAYOUT_PAGE_SWIPE -> {
+                    EventType.IN_APP_PAGE_SWIPE -> {
                         listOf(
                             AutomationEvent.Event(
                                 triggerType = EventAutomationTriggerType.IN_APP_PAGE_SWIPE,
@@ -296,7 +296,7 @@ internal val AirshipEventFeed.Event.toAutomationEvents: List<AutomationEvent.Eve
                         )
                     }
 
-                    EventType.LAYOUT_PAGE_VIEW -> {
+                    EventType.IN_APP_PAGE_VIEW -> {
                         listOf(
                             AutomationEvent.Event(
                                 triggerType = EventAutomationTriggerType.IN_APP_PAGE_VIEW,
@@ -305,7 +305,7 @@ internal val AirshipEventFeed.Event.toAutomationEvents: List<AutomationEvent.Eve
                         )
                     }
 
-                    EventType.LAYOUT_PAGE_ACTION -> {
+                    EventType.IN_APP_PAGE_ACTION -> {
                         listOf(
                             AutomationEvent.Event(
                                 triggerType = EventAutomationTriggerType.IN_APP_PAGE_ACTION,

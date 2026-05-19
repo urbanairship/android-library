@@ -13,7 +13,7 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.iam.analytics.InAppCustomEventContext
 import com.urbanairship.android.layout.analytics.LayoutEventMessageId
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
-import com.urbanairship.android.layout.analytics.events.LayoutPermissionResultEvent
+import com.urbanairship.android.layout.analytics.events.InAppPermissionResultEvent
 import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
@@ -57,7 +57,7 @@ public class InAppActionRunnerTest {
 
         verify {
             analytics.recordEvent(
-                LayoutPermissionResultEvent(
+                InAppPermissionResultEvent(
                     permission = Permission.LOCATION,
                     startingStatus = PermissionStatus.GRANTED,
                     endingStatus = PermissionStatus.DENIED
@@ -115,7 +115,7 @@ public class InAppActionRunnerTest {
 
         verify {
             analytics.recordEvent(
-                LayoutPermissionResultEvent(
+                InAppPermissionResultEvent(
                     permission = Permission.LOCATION,
                     startingStatus = PermissionStatus.GRANTED,
                     endingStatus = PermissionStatus.DENIED

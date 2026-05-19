@@ -8,10 +8,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class LayoutPageActionEventTest {
+public class InAppPageActionEventTest {
     @Test
     public fun testEvent() {
-        val event = LayoutPageActionEvent(
+        val event = InAppPageActionEvent(
             data = ReportingEvent.PageActionData(
                 identifier = "action id", metadata = JsonValue.wrap("reporting metadata")
             )

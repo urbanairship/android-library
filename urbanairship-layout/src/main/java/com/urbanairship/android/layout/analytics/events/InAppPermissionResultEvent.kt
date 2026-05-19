@@ -13,7 +13,7 @@ import com.urbanairship.permission.PermissionStatus
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class LayoutPermissionResultEvent(
+public class InAppPermissionResultEvent(
     permission: Permission,
     startingStatus: PermissionStatus,
     endingStatus: PermissionStatus
@@ -25,7 +25,7 @@ public class LayoutPermissionResultEvent(
         endingStatus = endingStatus.value
     )
 
-    override val eventType: EventType = EventType.LAYOUT_PERMISSION_RESULT
+    override val eventType: EventType = EventType.IN_APP_PERMISSION_RESULT
     override val data: JsonSerializable = reportData
 
     private data class PermissionResultData(
@@ -50,7 +50,7 @@ public class LayoutPermissionResultEvent(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as LayoutPermissionResultEvent
+        other as InAppPermissionResultEvent
 
         if (reportData != other.reportData) return false
         if (eventType != other.eventType) return false

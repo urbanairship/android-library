@@ -10,10 +10,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class LayoutPagerSummaryEventTest {
+public class InAppPagerSummaryEventTest {
     @Test
     public fun testEvent() {
-        val event = LayoutPagerSummaryEvent(
+        val event = InAppPagerSummaryEvent(
             data = ReportingEvent.PageSummaryData(
                 identifier = "pager identifier",
                 pageCount = 12,

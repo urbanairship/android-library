@@ -9,10 +9,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class LayoutPermissionResultEventTest {
+public class InAppPermissionResultEventTest {
     @Test
     public fun testEvent() {
-        val event = LayoutPermissionResultEvent(
+        val event = InAppPermissionResultEvent(
             permission = Permission.DISPLAY_NOTIFICATIONS,
             startingStatus = PermissionStatus.DENIED,
             endingStatus = PermissionStatus.GRANTED

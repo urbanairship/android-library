@@ -207,7 +207,7 @@ private fun NativeContentView(
         onAction(Action.MarkCurrentMessageRead)
     }
 
-    val activityMonitor = GlobalActivityMonitor.shared(LocalContext.current)
+    val context = LocalContext.current
 
     val args = remember(message.id, content) {
         DisplayArgs(
@@ -215,7 +215,7 @@ private fun NativeContentView(
             listener = analyticsBuilder {
                 isAlreadyDismissed.value = true
             },
-            inAppActivityMonitor = activityMonitor,
+            inAppActivityMonitor = GlobalActivityMonitor.shared(context),
             actionRunner = { actions, _ ->
                 DefaultActionRunner.run(actions, AutomationAction.Situation.AUTOMATION)
             },

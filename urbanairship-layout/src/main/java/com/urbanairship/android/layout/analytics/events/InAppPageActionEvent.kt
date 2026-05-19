@@ -7,11 +7,11 @@ import com.urbanairship.analytics.EventType
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.json.JsonSerializable
 
-internal class LayoutButtonTapEvent @VisibleForTesting constructor(
+internal class InAppPageActionEvent @VisibleForTesting constructor(
     override val data: JsonSerializable
 ) : LayoutEvent {
 
-    override val eventType: EventType = EventType.LAYOUT_BUTTON_TAP
+    override val eventType: EventType = EventType.IN_APP_PAGE_ACTION
 
-    constructor(info: ReportingEvent.ButtonTapData): this(data = info)
+    constructor(eventData: ReportingEvent.PageActionData): this(data = eventData)
 }

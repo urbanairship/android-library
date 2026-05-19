@@ -8,24 +8,26 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class LayoutFormDisplayEventTest {
+public class InAppPagerCompletedEventTest {
     @Test
     public fun testEvent() {
-        val event = LayoutFormDisplayEvent(
-            data = ReportingEvent.FormDisplayData(
-                identifier = "form id", formType = "nps", responseType = "user feedback"
+        val event = InAppPagerCompletedEvent(
+            data = ReportingEvent.PagerCompleteData(
+                identifier = "pager identifier",
+                pageIndex = 3,
+                pageCount = 12,
+                pageIdentifier = "page identifier"
             )
         )
-
         val expected = """
             {
-               "form_identifier":"form id",
-               "form_type":"nps",
-               "form_response_type":"user feedback"
+               "page_count":12,
+               "pager_identifier":"pager identifier",
+               "page_index":3,
+               "page_identifier":"page identifier"
             }
         """.trimIndent()
-
-        assertEquals("in_app_form_display", event.eventType.reportingName)
+        assertEquals("in_app_pager_completed", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

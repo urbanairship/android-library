@@ -8,30 +8,32 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class LayoutPageSwipeEventAction {
+public class InAppPageViewEventTest {
     @Test
     public fun testEvent() {
-        val event = LayoutPageSwipeEvent(
-            data = ReportingEvent.PageSwipeData(
+        val event = InAppPageViewEvent(
+            data = ReportingEvent.PageViewData(
                 identifier = "pager identifier",
-                toPageIndex = 4,
-                toPageIdentifier = "to page identifier",
-                fromPageIndex = 3,
-                fromPageIdentifier = "from page identifier"
+                pageIdentifier = "page identifier",
+                pageIndex = 3,
+                pageViewCount = 31,
+                pageCount = 12,
+                completed = false
             ),
         )
 
         val expected = """
             {
+               "page_identifier":"page identifier",
+               "page_index":3,
+               "viewed_count":31,
+               "page_count":12,
                "pager_identifier":"pager identifier",
-               "from_page_index":3,
-               "to_page_identifier":"to page identifier",
-               "from_page_identifier":"from page identifier",
-               "to_page_index":4
+               "completed":false
             }
         """.trimIndent()
 
-        assertEquals("in_app_page_swipe", event.eventType.reportingName)
+        assertEquals("in_app_page_view", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

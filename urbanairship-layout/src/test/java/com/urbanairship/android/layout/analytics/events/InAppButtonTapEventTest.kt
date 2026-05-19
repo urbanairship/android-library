@@ -8,10 +8,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class LayoutButtonTapEventTest {
+public class InAppButtonTapEventTest {
     @Test
     public fun testEvent() {
-        val event = LayoutButtonTapEvent(
+        val event = InAppButtonTapEvent(
             data = ReportingEvent.ButtonTapData(
                 identifier = "button id", reportingMetadata = JsonValue.wrap("reporting metadata")
             )

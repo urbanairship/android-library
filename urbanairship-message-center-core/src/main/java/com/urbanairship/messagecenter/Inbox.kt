@@ -201,8 +201,9 @@ public class Inbox @VisibleForTesting internal constructor(
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public suspend fun loadMessageLayout(message: Message): AirshipLayout? =
-        inboxJobHandler.loadAirshipLayout(message)
+    public suspend fun loadMessageLayout(message: Message): AirshipLayout? {
+        return scope.async { inboxJobHandler.loadAirshipLayout(message) }.await()
+    }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun makeViewStateStorage(messageId: String): LayoutDataStorage {
