@@ -4,7 +4,6 @@ package com.urbanairship.automation.engine
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.ApplicationMetrics
 import com.urbanairship.Platform
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.EventType
@@ -82,9 +81,7 @@ internal sealed class AutomationEvent {
         }
 }
 
-/** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class AutomationEventFeed(
+internal class AutomationEventFeed(
     private val applicationMetrics: ApplicationMetrics,
     private val activityMonitor: ActivityMonitor,
     private val eventFeed: AirshipEventFeed,
@@ -111,7 +108,7 @@ public class AutomationEventFeed(
 
                 stream.emit(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
-                if (applicationMetrics.appVersionUpdated) {
+                if (applicationMetrics.isAppVersionUpdated()) {
                     appSessionState.update { it.copy(versionUpdated = applicationMetrics.currentAppVersion.toString()) }
                 }
             }

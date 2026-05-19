@@ -5,7 +5,7 @@ package com.urbanairship.automation
 import android.content.Context
 import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
-import com.urbanairship.ApplicationMetrics
+import com.urbanairship.automation.engine.ApplicationMetrics
 import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.actions.ActionRegistry
@@ -87,10 +87,14 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         meteredUsage: AirshipMeteredUsage,
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
-        metrics: ApplicationMetrics,
         cache: AirshipCache,
         audienceEvaluator: AudienceEvaluator
     ): Module {
+        val metrics = ApplicationMetrics(
+            context = context,
+            dataStore = dataStore,
+            privacyManager = privacyManager
+        )
         val assetManager = AssetCacheManager(context)
         val eventRecorder = LayoutEventRecorder(analytics, meteredUsage)
         val scheduleConditionNotifier = ScheduleConditionsChangedNotifier()

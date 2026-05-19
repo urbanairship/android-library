@@ -332,11 +332,6 @@ internal class AirshipInstance(
             meteredUsage = meteredUsageManager,
             deferredResolver = deferredResolver,
             eventFeed = eventFeed,
-            metrics = ApplicationMetrics(
-                context = application,
-                dataStore = preferenceStore,
-                privacyManager = privacyManager
-            ),
             cache = cache,
             audienceEvaluator = audienceEvaluator
         )

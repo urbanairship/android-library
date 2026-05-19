@@ -4,7 +4,6 @@ package com.urbanairship.modules.automation
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipVersionInfo
-import com.urbanairship.ApplicationMetrics
 import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.analytics.AirshipEventFeed
@@ -41,7 +40,6 @@ public interface AutomationModuleFactory : AirshipVersionInfo {
         meteredUsage: AirshipMeteredUsage,
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
-        metrics: ApplicationMetrics,
         cache: AirshipCache,
         audienceEvaluator: AudienceEvaluator
     ): Module
