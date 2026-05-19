@@ -8,6 +8,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.launch
 
 /**
@@ -53,10 +54,11 @@ public class AsyncSerialQueue(private val scope: CoroutineScope) {
      */
     public fun enqueue(block: suspend AsyncSerialQueueScope.() -> Unit) {
         lock.withLock {
-            val previous = lastOp
+            var previous = lastOp
             lastOp = scope.launch {
                 previous?.join()
-                runBlockSafely { block() }
+                previous = null
+                runLink { block() }
             }
         }
     }
@@ -68,10 +70,11 @@ public class AsyncSerialQueue(private val scope: CoroutineScope) {
      */
     public suspend fun <T> enqueueAndAwait(block: suspend AsyncSerialQueueScope.() -> T): T {
         val deferred = lock.withLock {
-            val previous = lastOp
+            var previous = lastOp
             scope.async {
                 previous?.join()
-                runBlockSafely { block() }
+                previous = null
+                runLink { block() }
             }.also { lastOp = it }
         }
         return deferred.await().getOrThrow()
@@ -80,11 +83,16 @@ public class AsyncSerialQueue(private val scope: CoroutineScope) {
     /**
      * Runs [block] in the queue's receiver scope and returns the outcome as a [Result].
      * [CancellationException] is rethrown so coroutine cancellation propagates normally
-     * instead of being captured.
+     * instead of being captured. After the block finishes, clears [lastOp] if this coroutine
+     * is still the tail so an idle queue doesn't retain its last completed Job/Deferred.
      */
-    private suspend inline fun <T> runBlockSafely(
+    private suspend inline fun <T> runLink(
         crossinline block: suspend AsyncSerialQueueScope.() -> T
-    ): Result<T> = runCatching {
-        AsyncSerialQueueScopeImpl.block()
-    }.onFailure { if (it is CancellationException) throw it }
+    ): Result<T> = try {
+        runCatching { AsyncSerialQueueScopeImpl.block() }
+            .onFailure { if (it is CancellationException) throw it }
+    } finally {
+        val self = currentCoroutineContext()[Job]
+        lock.withLock { if (lastOp === self) lastOp = null }
+    }
 }
