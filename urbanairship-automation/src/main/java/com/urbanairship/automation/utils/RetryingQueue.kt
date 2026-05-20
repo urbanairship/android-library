@@ -77,9 +77,7 @@ internal class RetryingQueue(
 
     private suspend fun awaitTasksTurn(tasks: StateFlow<Set<PriorityTaskId>>, priorityTaskId: PriorityTaskId) {
         tasks.first { update ->
-            update.sortedWith(
-                compareBy({ it.priority }, { it.identifier})
-            ).firstOrNull() == priorityTaskId
+            update.minWithOrNull(PRIORITY_ORDER) == priorityTaskId
         }
     }
 
@@ -196,6 +194,8 @@ internal class RetryingQueue(
         private const val DEFAULT_PENDING_RESULTS = 2
         private const val DEFAULT_INITIAL_BACK_OFF = 15
         private const val DEFAULT_MAX_BACK_OFF = 60
+
+        private val PRIORITY_ORDER = compareBy<PriorityTaskId>({ it.priority }, { it.identifier })
     }
 
     private data class PriorityTaskId(
