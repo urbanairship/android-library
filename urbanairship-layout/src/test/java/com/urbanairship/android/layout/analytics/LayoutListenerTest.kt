@@ -9,8 +9,8 @@ import com.urbanairship.android.layout.analytics.events.InAppGestureEvent
 import com.urbanairship.android.layout.analytics.events.InAppPageActionEvent
 import com.urbanairship.android.layout.analytics.events.InAppPageSwipeEvent
 import com.urbanairship.android.layout.analytics.events.InAppPagerSummaryEvent
-import com.urbanairship.android.layout.analytics.events.InAppButtonTapEvent
-import com.urbanairship.android.layout.analytics.events.InAppPageViewEvent
+import com.urbanairship.android.layout.analytics.events.LayoutButtonTapEvent
+import com.urbanairship.android.layout.analytics.events.LayoutPageViewEvent
 import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.reporting.LayoutData
@@ -98,7 +98,7 @@ public class LayoutListenerTest {
         )
 
         verifyEvents(listOf(
-            Pair(InAppButtonTapEvent(data), defaultLayoutData))
+            Pair(LayoutButtonTapEvent(data), defaultLayoutData))
         )
 
         TestCase.assertNull(displayResult)
@@ -182,7 +182,7 @@ public class LayoutListenerTest {
         )
 
         verifyEvents(listOf(
-            Pair(InAppPageViewEvent(data), defaultLayoutData))
+            Pair(LayoutPageViewEvent(data), defaultLayoutData))
         )
     }
 

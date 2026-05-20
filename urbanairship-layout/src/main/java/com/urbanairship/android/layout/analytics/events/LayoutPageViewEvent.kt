@@ -7,7 +7,7 @@ import com.urbanairship.analytics.EventType
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.json.JsonSerializable
 
-internal class InAppPageViewEvent @VisibleForTesting constructor(
+internal class LayoutPageViewEvent @VisibleForTesting constructor(
     override val data: JsonSerializable
 ) : LayoutEvent {
 

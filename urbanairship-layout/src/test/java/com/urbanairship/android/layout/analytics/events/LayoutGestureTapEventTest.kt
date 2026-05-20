@@ -8,22 +8,23 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class InAppPageActionEventTest {
+public class LayoutGestureTapEventTest {
     @Test
     public fun testEvent() {
-        val event = InAppPageActionEvent(
-            data = ReportingEvent.PageActionData(
-                identifier = "action id", metadata = JsonValue.wrap("reporting metadata")
-            )
+        val event = InAppGestureEvent(
+            data = ReportingEvent.GestureData(
+                identifier = "gesture id", reportingMetadata = JsonValue.wrap("reporting metadata")
+            ),
         )
 
         val expected = """
             {
                "reporting_metadata":"reporting metadata",
-               "action_identifier":"action id"
+               "gesture_identifier":"gesture id"
             }
         """.trimIndent()
-        assertEquals("in_app_page_action", event.eventType.reportingName)
+
+        assertEquals("in_app_gesture", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

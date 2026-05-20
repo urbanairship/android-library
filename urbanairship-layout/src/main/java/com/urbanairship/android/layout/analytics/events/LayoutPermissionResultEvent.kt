@@ -13,7 +13,7 @@ import com.urbanairship.permission.PermissionStatus
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class InAppPermissionResultEvent(
+public class LayoutPermissionResultEvent(
     permission: Permission,
     startingStatus: PermissionStatus,
     endingStatus: PermissionStatus
@@ -50,7 +50,7 @@ public class InAppPermissionResultEvent(
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
 
-        other as InAppPermissionResultEvent
+        other as LayoutPermissionResultEvent
 
         if (reportData != other.reportData) return false
         if (eventType != other.eventType) return false

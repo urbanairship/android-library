@@ -8,23 +8,24 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class InAppGestureTapEventTest {
+public class LayoutFormDisplayEventTest {
     @Test
     public fun testEvent() {
-        val event = InAppGestureEvent(
-            data = ReportingEvent.GestureData(
-                identifier = "gesture id", reportingMetadata = JsonValue.wrap("reporting metadata")
-            ),
+        val event = InAppFormDisplayEvent(
+            data = ReportingEvent.FormDisplayData(
+                identifier = "form id", formType = "nps", responseType = "user feedback"
+            )
         )
 
         val expected = """
             {
-               "reporting_metadata":"reporting metadata",
-               "gesture_identifier":"gesture id"
+               "form_identifier":"form id",
+               "form_type":"nps",
+               "form_response_type":"user feedback"
             }
         """.trimIndent()
 
-        assertEquals("in_app_gesture", event.eventType.reportingName)
+        assertEquals("in_app_form_display", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }

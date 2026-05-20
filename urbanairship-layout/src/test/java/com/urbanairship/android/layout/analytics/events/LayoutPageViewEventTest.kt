@@ -8,10 +8,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class InAppPageViewEventTest {
+public class LayoutPageViewEventTest {
     @Test
     public fun testEvent() {
-        val event = InAppPageViewEvent(
+        val event = LayoutPageViewEvent(
             data = ReportingEvent.PageViewData(
                 identifier = "pager identifier",
                 pageIdentifier = "page identifier",

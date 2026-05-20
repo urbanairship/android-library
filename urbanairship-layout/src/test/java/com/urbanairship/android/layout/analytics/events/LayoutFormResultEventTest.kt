@@ -11,7 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class InAppFormResultEventTest {
+public class LayoutFormResultEventTest {
     @Test
     public fun testEvent() {
         val children = setOf(

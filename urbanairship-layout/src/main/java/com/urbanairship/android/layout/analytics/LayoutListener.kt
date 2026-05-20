@@ -4,14 +4,14 @@ import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ThomasListenerInterface
-import com.urbanairship.android.layout.analytics.events.InAppButtonTapEvent
+import com.urbanairship.android.layout.analytics.events.LayoutButtonTapEvent
 import com.urbanairship.android.layout.analytics.events.InAppDisplayEvent
 import com.urbanairship.android.layout.analytics.events.InAppFormDisplayEvent
 import com.urbanairship.android.layout.analytics.events.InAppFormResultEvent
 import com.urbanairship.android.layout.analytics.events.InAppGestureEvent
 import com.urbanairship.android.layout.analytics.events.InAppPageActionEvent
 import com.urbanairship.android.layout.analytics.events.InAppPageSwipeEvent
-import com.urbanairship.android.layout.analytics.events.InAppPageViewEvent
+import com.urbanairship.android.layout.analytics.events.LayoutPageViewEvent
 import com.urbanairship.android.layout.analytics.events.InAppPagerCompletedEvent
 import com.urbanairship.android.layout.analytics.events.InAppPagerSummaryEvent
 import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
@@ -38,7 +38,7 @@ public class LayoutListener (
         when (event) {
             is ReportingEvent.ButtonTap -> {
                 analytics.recordEvent(
-                    event = InAppButtonTapEvent(event.data),
+                    event = LayoutButtonTapEvent(event.data),
                     layoutContext = event.context
                 )
             }
@@ -109,7 +109,7 @@ public class LayoutListener (
             }
             is ReportingEvent.PageView -> {
                 analytics.recordEvent(
-                    event = InAppPageViewEvent(event.data),
+                    event = LayoutPageViewEvent(event.data),
                     layoutContext = event.context
                 )
             }

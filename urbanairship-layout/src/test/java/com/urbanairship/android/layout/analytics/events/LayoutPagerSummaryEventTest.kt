@@ -10,7 +10,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class InAppPagerSummaryEventTest {
+public class LayoutPagerSummaryEventTest {
     @Test
     public fun testEvent() {
         val event = InAppPagerSummaryEvent(

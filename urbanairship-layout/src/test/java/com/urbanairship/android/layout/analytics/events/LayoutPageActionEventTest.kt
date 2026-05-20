@@ -8,26 +8,22 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class InAppPagerCompletedEventTest {
+public class LayoutPageActionEventTest {
     @Test
     public fun testEvent() {
-        val event = InAppPagerCompletedEvent(
-            data = ReportingEvent.PagerCompleteData(
-                identifier = "pager identifier",
-                pageIndex = 3,
-                pageCount = 12,
-                pageIdentifier = "page identifier"
+        val event = InAppPageActionEvent(
+            data = ReportingEvent.PageActionData(
+                identifier = "action id", metadata = JsonValue.wrap("reporting metadata")
             )
         )
+
         val expected = """
             {
-               "page_count":12,
-               "pager_identifier":"pager identifier",
-               "page_index":3,
-               "page_identifier":"page identifier"
+               "reporting_metadata":"reporting metadata",
+               "action_identifier":"action id"
             }
         """.trimIndent()
-        assertEquals("in_app_pager_completed", event.eventType.reportingName)
+        assertEquals("in_app_page_action", event.eventType.reportingName)
         assertEquals(JsonValue.parseString(expected), event.data.toJsonValue())
     }
 }
