@@ -18,22 +18,35 @@ import java.util.Date
 /**
  * An action that sets attributes.
  *
+ * Accepts two argument formats:
+ *
+ * **Dictionary format**
+ * ```json
+ * {
+ *     "channel": {
+ *         "set": { "key": "value" },
+ *         "remove": ["attribute"]
+ *     },
+ *     "named_user": {
+ *         "set": { "key": "value" },
+ *         "remove": ["attribute"]
+ *     }
+ * }
+ * ```
+ *
+ * **Array format** — each element describes a single operation:
+ * ```json
+ * [
+ *     { "action": "set",    "type": "channel",    "name": "color",   "value": "blue" },
+ *     { "action": "remove", "type": "channel",    "name": "color" },
+ *     { "action": "set",    "type": "named_user", "name": "score",   "value": 42 },
+ *     { "action": "set",    "type": "channel",    "name": "attr#id", "value": { "key": "val", "exp": 1779840000 } }
+ * ]
+ * ```
+ * For JSON object values, `name` must be `"attributeName#instanceId"` with both parts non-empty.
+ * The optional `"exp"` key inside the object is a Unix timestamp (seconds) for the expiration date.
  *
  * Accepted situations: all
- *
- *
- * Accepted argument value types: A JSON payload for setting or removing attributes. An example JSON payload:
- * ```
- * {
- *  "channel": {
- *      set: {"key_1": value_1, "key_2": value_2},
- *      remove: ["attribute_1", "attribute_2", "attribute_3"]
- *  },
- *  "named_user": {
- *      set: {"key_4": value_4, "key_5": value_5},
- *      remove: ["attribute_4", "attribute_5", "attribute_6"]
- *  }
- * ```
  */
 public class SetAttributesAction public constructor(
     private val channelProvider: () -> AirshipChannel = { Airship.channel },
@@ -65,8 +78,7 @@ public class SetAttributesAction public constructor(
                     when(val unwrapped = item.value) {
                         is AttributeActionArgs.Value.DateValue -> editor.setAttribute(item.name, unwrapped.value)
                         is AttributeActionArgs.Value.NumberValue -> {
-                            val number = unwrapped.value
-                            when(number) {
+                            when(val number = unwrapped.value) {
                                 is Int -> editor.setAttribute(item.name, number)
                                 is Long -> editor.setAttribute(item.name, number)
                                 is Float -> editor.setAttribute(item.name, number)
@@ -74,14 +86,12 @@ public class SetAttributesAction public constructor(
                             }
                         }
                         is AttributeActionArgs.Value.StringValue -> editor.setAttribute(item.name, unwrapped.value)
-                        is AttributeActionArgs.Value.Json -> {
-                            val expirable = unwrapped.value
-                            editor.setAttribute(
-                                attribute = expirable.name,
-                                instanceId = expirable.instanceId,
-                                expiration = expirable.expiration,
-                                json = expirable.value)
-                        }
+                        is AttributeActionArgs.Value.Json -> editor.setAttribute(
+                            attribute = unwrapped.attributeName,
+                            instanceId = unwrapped.instanceId,
+                            expiration = unwrapped.expiration,
+                            json = unwrapped.value
+                        )
                     }
                 }
             }
@@ -212,78 +222,55 @@ public class SetAttributesAction public constructor(
 
             data class NumberValue(val value: Number) : Value()
             data class DateValue(val value: Date) : Value()
-            data class Json(val value: ExpirableValue) : Value()
+            data class Json(
+                val attributeName: String,
+                val instanceId: String,
+                val expiration: Date?,
+                val value: JsonMap
+            ) : Value()
 
             override fun toJsonValue(): JsonValue {
                 return when (this) {
                     is StringValue -> JsonValue.wrap(value)
                     is NumberValue -> JsonValue.wrap(value)
                     is DateValue -> JsonValue.wrap(value.time)
-                    is Json -> value.toJsonValue()
-                }
-            }
-
-            class ExpirableValue(
-                val name: String, val instanceId: String, val expiration: Date?, val value: JsonMap
-            ) : JsonSerializable {
-
-                companion object {
-
-                    private const val KEY_EXPIRATION = "exp"
-
-                    @Throws(JsonException::class)
-                    fun fromJson(value: JsonValue): ExpirableValue {
-                        val content = value.requireMap()
-                        if (content.size() != 1) {
-                            throw JsonException("Only one entry in $value is allowed")
-                        }
-
-                        val key = content.keySet().firstOrNull()
-                            ?: throw JsonException("Empty input data")
-                        if (!key.contains("#")) {
-                            throw JsonException("Invalid key format: $key")
-                        }
-
-                        val data = content.values().firstOrNull()?.requireMap()?.map?.toMutableMap()
-                            ?: throw JsonException("Invalid value format: $content")
-
-                        val components = key.split("#")
-                        if (components.size != 2 || components.any { it.isEmpty() }) {
-                            throw JsonException("Invalid key format: $key")
-                        }
-
-                        return ExpirableValue(
-                            name = components[0],
-                            instanceId = components[1],
-                            expiration = convertToData(data.remove(KEY_EXPIRATION)),
-                            value = data.toJsonMap()
-                        )
-                    }
-
-                    fun convertToData(value: JsonValue?): Date? {
-                        val number = value?.number ?: return null
-                        return Date(number.toLong() * 1000)
-                    }
-                }
-
-                override fun toJsonValue(): JsonValue {
-                    val content =
-                        JsonMap.newBuilder().putAll(value).putOpt(KEY_EXPIRATION, expiration?.time)
+                    is Json -> {
+                        val content = JsonMap.newBuilder()
+                            .putAll(value)
+                            .putOpt(KEY_EXPIRATION, expiration?.let { it.time / 1000 })
                             .build()
-
-                    return jsonMapOf("$name#$value" to content).toJsonValue()
+                        content.toJsonValue()
+                    }
                 }
             }
 
             companion object {
 
+                private const val KEY_EXPIRATION = "exp"
+
                 @Throws(JsonException::class)
-                fun fromJson(value: JsonValue): Value {
+                fun fromJson(value: JsonValue, name: String? = null): Value {
                     return when (val converted = value.value) {
                         is String -> StringValue(converted)
                         is Long -> DateValue(Date(converted * 1000))
                         is Number -> NumberValue(converted)
-                        is JsonSerializable -> Json(ExpirableValue.fromJson(converted.toJsonValue()))
+                        is JsonSerializable -> {
+                            val attrName = name
+                                ?: throw JsonException("Name is required for JSON object attribute values")
+                            val components = attrName.split("#")
+                            if (components.size != 2 || components.any { it.isEmpty() }) {
+                                throw JsonException("Invalid name format: $attrName")
+                            }
+                            val data = converted.toJsonValue().requireMap().map.toMutableMap()
+                            val expiration = data.remove(KEY_EXPIRATION)?.number
+                                ?.let { Date(it.toLong() * 1000) }
+                            Json(
+                                attributeName = components[0],
+                                instanceId = components[1],
+                                expiration = expiration,
+                                value = data.toJsonMap()
+                            )
+                        }
                         else -> throw JsonException("Unsupported value type: $converted")
                     }
                 }
@@ -317,7 +304,7 @@ public class SetAttributesAction public constructor(
                     Action.SET -> Set(
                         editor = editor,
                         name = name,
-                        value = Value.fromJson(content.require(KEY_VALUE))
+                        value = Value.fromJson(content.require(KEY_VALUE), name)
                     )
 
                     Action.REMOVE -> Remove(editor, name)
