@@ -126,7 +126,7 @@ public class SceneActionTest {
 
         val args = ActionArguments(
             Action.Situation.MANUAL_INVOCATION,
-            ActionValue.wrap(jsonMapOf("scene" to rawDeflateBase64(MINIMAL_LAYOUT_JSON))),
+            ActionValue.wrap(jsonMapOf("dsl" to rawDeflateBase64(MINIMAL_LAYOUT_JSON))),
             metadata,
         )
         action.perform(args)
@@ -138,7 +138,7 @@ public class SceneActionTest {
         val action = SceneAction(scheduler = { throw AssertionError("scheduler must not run") })
         val args = ActionArguments(
             Action.Situation.MANUAL_INVOCATION,
-            ActionValue.wrap(jsonMapOf("scene" to "@@@not-valid-base64@@@")),
+            ActionValue.wrap(jsonMapOf("dsl" to "@@@not-valid-base64@@@")),
         )
         val result = action.perform(args)
         assertTrue(result is ActionResult.Error)
@@ -151,7 +151,7 @@ public class SceneActionTest {
         val action = SceneAction(scheduler = { throw AssertionError("scheduler must not run") })
         val args = ActionArguments(
             Action.Situation.MANUAL_INVOCATION,
-            ActionValue.wrap(jsonMapOf("scene" to garbage)),
+            ActionValue.wrap(jsonMapOf("dsl" to garbage)),
         )
         val result = action.perform(args)
         assertTrue(result is ActionResult.Error)
@@ -191,7 +191,7 @@ public class SceneActionTest {
     private fun actionArgs(sceneBase64: String): ActionArguments =
         ActionArguments(
             Action.Situation.MANUAL_INVOCATION,
-            ActionValue.wrap(jsonMapOf("scene" to sceneBase64)),
+            ActionValue.wrap(jsonMapOf("dsl" to sceneBase64)),
         )
 
     private fun encodedScenePayload(layoutJson: String): String = rawDeflateBase64(layoutJson)
