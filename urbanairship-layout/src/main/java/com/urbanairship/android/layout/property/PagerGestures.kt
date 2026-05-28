@@ -6,6 +6,8 @@ import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
+import com.urbanairship.json.optionalList
+import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 
 internal sealed class PagerGesture : Identifiable {
@@ -15,48 +17,79 @@ internal sealed class PagerGesture : Identifiable {
         override val identifier: String,
         override val reportingMetadata: JsonValue?,
         val location: GestureLocation,
-        val behavior: PagerGestureBehavior
+        val outcomes: List<Outcome>
     ) : PagerGesture() {
         companion object {
             @Throws(JsonException::class)
-            fun from(json: JsonMap): Tap = Tap(
-                identifier = json.requireField("identifier"),
-                reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
-                location = GestureLocation.from(json.requireField("location")),
-                behavior = PagerGestureBehavior.from(json.requireField("behavior"))
-            )
+            fun from(json: JsonMap): Tap {
+                val behavior = json.optionalMap("behavior")
+                return Tap(
+                    identifier = json.requireField("identifier"),
+                    reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
+                    location = GestureLocation.from(json.requireField("location")),
+                    outcomes = OutcomeResolver.resolve(
+                        outcomes = json.optionalList("outcomes")?.let(Outcome::fromList),
+                        behaviors = behavior?.optionalList("behaviors")
+                            ?.let { ButtonClickBehaviorType.fromList(it) },
+                        actions = behavior?.optionalMap("actions")?.map
+                    )
+                )
+            }
         }
     }
     data class Swipe(
         override val identifier: String,
         override val reportingMetadata: JsonValue?,
         val direction: GestureDirection,
-        val behavior: PagerGestureBehavior
+        val outcomes: List<Outcome>
     ) : PagerGesture() {
         companion object {
+
             @Throws(JsonException::class)
-            fun from(json: JsonMap): Swipe = Swipe(
-                identifier = json.requireField("identifier"),
-                reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
-                direction = GestureDirection.from(json.requireField("direction")),
-                behavior = PagerGestureBehavior.from(json.requireField("behavior"))
-            )
+            fun from(json: JsonMap): Swipe {
+                val behavior = json.optionalMap("behavior")
+                return Swipe(
+                    identifier = json.requireField("identifier"),
+                    reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
+                    direction = GestureDirection.from(json.requireField("direction")),
+                    outcomes = OutcomeResolver.resolve(
+                        outcomes = json.optionalList("outcomes")?.let(Outcome::fromList),
+                        behaviors = behavior?.optionalList("behaviors")
+                            ?.let { ButtonClickBehaviorType.fromList(it) },
+                        actions = behavior?.optionalMap("actions")?.map
+                    )
+                )
+            }
         }
     }
     data class Hold(
         override val identifier: String,
         override val reportingMetadata: JsonValue?,
-        val pressBehavior: PagerGestureBehavior,
-        val releaseBehavior: PagerGestureBehavior
+        val pressOutcomes: List<Outcome>,
+        val releaseOutcomes: List<Outcome>
     ) : PagerGesture() {
         companion object {
             @Throws(JsonException::class)
-            fun from(json: JsonMap): Hold = Hold(
-                identifier = json.requireField("identifier"),
-                reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
-                pressBehavior = PagerGestureBehavior.from(json.requireField("press_behavior")),
-                releaseBehavior = PagerGestureBehavior.from(json.requireField("release_behavior"))
-            )
+            fun from(json: JsonMap): Hold {
+                val pressBehavior = json.optionalMap("press_behavior")
+                val releaseBehavior = json.optionalMap("release_behavior")
+                return Hold(
+                    identifier = json.requireField("identifier"),
+                    reportingMetadata = json.optionalField<JsonValue>("reporting_metadata"),
+                    pressOutcomes = OutcomeResolver.resolve(
+                        outcomes = json.optionalList("press_outcomes")?.let(Outcome::fromList),
+                        behaviors = pressBehavior?.optionalList("behaviors")
+                            ?.let { ButtonClickBehaviorType.fromList(it) },
+                        actions   = pressBehavior?.optionalMap("actions")?.map
+                    ),
+                    releaseOutcomes = OutcomeResolver.resolve(
+                        outcomes = json.optionalList("release_outcomes")?.let(Outcome::fromList),
+                        behaviors = releaseBehavior?.optionalList("behaviors")
+                            ?.let { ButtonClickBehaviorType.fromList(it) },
+                        actions   = releaseBehavior?.optionalMap("actions")?.map
+                    )
+                )
+            }
         }
     }
 
@@ -74,20 +107,6 @@ internal sealed class PagerGesture : Identifiable {
         fun fromList(json: JsonList): List<PagerGesture> {
             return if (json.isEmpty) emptyList() else json.map { from(it.optMap()) }
         }
-    }
-}
-
-internal data class PagerGestureBehavior(
-    val actions: Map<String, JsonValue>?,
-    val behaviors: List<ButtonClickBehaviorType>?
-) {
-    companion object {
-        fun from(json: JsonMap): PagerGestureBehavior = PagerGestureBehavior(
-            actions = json.optionalField<JsonMap>("actions")?.map,
-            behaviors = json.optionalField<JsonList>("behaviors")?.let {
-                ButtonClickBehaviorType.fromList(it)
-            }
-        )
     }
 }
 

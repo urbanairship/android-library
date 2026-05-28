@@ -51,14 +51,13 @@ internal data class PagerControllerBranching(
          * implicit match.
          */
         val predicate: JsonPredicate?,
-        /**
-         * State actions to run when the pager completes.
-         */
-        val stateActions: List<StateAction>?
+        val outcomes: List<Outcome>
     ): JsonSerializable {
+
         companion object {
             private const val WHEN_STATE_MATCHES = "when_state_matches"
             private const val STATE_ACTIONS = "state_actions"
+            private const val OUTCOMES = "outcomes"
 
             @Throws(JsonException::class)
             fun from(json: JsonValue): Completion {
@@ -66,14 +65,17 @@ internal data class PagerControllerBranching(
 
                 return Completion(
                     predicate = content[WHEN_STATE_MATCHES]?.let(JsonPredicate::parse),
-                    stateActions = content.optionalList(STATE_ACTIONS)?.map(StateAction::fromJson)
+                    outcomes = OutcomeResolver.resolve(
+                        outcomes = content.optionalList(OUTCOMES)?.let(Outcome::fromList),
+                        stateActions = content.optionalList(STATE_ACTIONS)?.map(StateAction::fromJson)
+                    )
                 )
             }
         }
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             WHEN_STATE_MATCHES to predicate,
-            STATE_ACTIONS to stateActions
+            OUTCOMES to outcomes
         ).toJsonValue()
     }
 }

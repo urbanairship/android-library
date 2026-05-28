@@ -6,34 +6,17 @@ import android.content.Context
 import android.view.View
 import androidx.annotation.CallSuper
 import com.urbanairship.Airship
-import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
-import com.urbanairship.android.layout.environment.VideoCommand
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.event.ReportingEvent.ButtonTap
 import com.urbanairship.android.layout.info.Button
-import com.urbanairship.android.layout.property.ButtonClickBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
-import com.urbanairship.android.layout.property.hasAsyncViewRetry
-import com.urbanairship.android.layout.property.hasCancel
-import com.urbanairship.android.layout.property.hasCancelOrDismiss
-import com.urbanairship.android.layout.property.hasFormSubmit
-import com.urbanairship.android.layout.property.hasFormValidate
-import com.urbanairship.android.layout.property.hasPagerNext
-import com.urbanairship.android.layout.property.hasPagerPauseToggle
-import com.urbanairship.android.layout.property.hasPagerPrevious
+import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.hasTapHandler
-import com.urbanairship.android.layout.property.hasVideoMute
-import com.urbanairship.android.layout.property.hasVideoMuteToggle
-import com.urbanairship.android.layout.property.hasVideoPause
-import com.urbanairship.android.layout.property.hasVideoPlay
-import com.urbanairship.android.layout.property.hasVideoPlayToggle
-import com.urbanairship.android.layout.property.hasVideoBehaviors
-import com.urbanairship.android.layout.property.hasVideoUnmute
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -82,7 +65,6 @@ internal abstract class ButtonModel<T, I: Button>(
 
                 val reportingContext = layoutState.reportingContext(buttonId = viewInfo.identifier)
 
-                // Report button tap event.
                 report(
                     event = ButtonTap(
                         data = ReportingEvent.ButtonTapData(
@@ -92,15 +74,7 @@ internal abstract class ButtonModel<T, I: Button>(
                     )
                 )
 
-                // Run any actions.
-                runActions(viewInfo.actions, reportingContext)
-
-                // Run any handlers for tap events.
-                if (viewInfo.eventHandlers.hasTapHandler() && !viewInfo.clickBehaviors.hasFormSubmit) {
-                    handleViewEvent(EventHandler.Type.TAP)
-                }
-
-                evaluateClickBehaviors(view.context ?: Airship.application)
+                evaluateOutcomes(view.context ?: Airship.application)
 
                 if (viewInfo.enableBehaviors?.isNotEmpty() == true) {
                     val currentPager = layoutState.pager?.changes?.value
@@ -114,143 +88,91 @@ internal abstract class ButtonModel<T, I: Button>(
         }
     }
 
-    private suspend fun evaluateClickBehaviors(context: Context) {
-        if (viewInfo.clickBehaviors.hasFormValidate) {
-            // If we have a FORM_VALIDATE behavior, handle it first and then
-            // handle the rest of the behaviors after validating.
-            handleFormValidation(context)
-        } else if (viewInfo.clickBehaviors.hasFormSubmit) {
-            // If we have a FORM_SUBMIT behavior, handle it first and then
-            // handle the rest of the behaviors after submitting.
-            handleSubmit(context)
-        } else if (viewInfo.clickBehaviors.hasCancelOrDismiss) {
-            // If there's only a CANCEL or DISMISS, and no FORM_SUBMIT, handle
-            // immediately. We don't need to handle pager behaviors, as the layout
-            // will be dismissed.
-            handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
+    private suspend fun evaluateOutcomes(context: Context) {
+        val tapHandlerOutcomes = viewInfo.eventHandlers
+            .orEmpty()
+            .filter { it.type == EventHandler.Type.TAP }
+            .flatMap { it.outcomes.orEmpty() }
+        val resolved = tapHandlerOutcomes + viewInfo.outcomes
+        val delegation = buttonOutcomeHandler(context)
+
+        val hasFormValidate = resolved.any {
+            it is Outcome.Form && it.command == Outcome.Form.Command.VALIDATE
+        }
+        val hasFormSubmit = resolved.any {
+            it is Outcome.Form && it.command == Outcome.Form.Command.SUBMIT
+        }
+
+        if (hasFormValidate) {
+            handleFormValidation(context, resolved, hasFormSubmit)
+        } else if (hasFormSubmit) {
+            handleSubmit(context, resolved)
         } else {
-            // No FORM_SUBMIT, CANCEL, or DISMISS, so we only need to
-            // handle pager behaviors, etc.
-            if (viewInfo.clickBehaviors.hasPagerNext) {
-                handlePagerNext()
-            }
-            if (viewInfo.clickBehaviors.hasPagerPrevious) {
-                handlePagerPrevious()
-            }
-            if (viewInfo.clickBehaviors.hasPagerPauseToggle) {
-                handlePagerPauseToggle()
-            }
-
-            // Handle video controls if present.
-            if (viewInfo.clickBehaviors.hasVideoBehaviors) {
-                handleVideoControls(viewInfo.clickBehaviors)
-            }
-
-            if (viewInfo.clickBehaviors.hasAsyncViewRetry) {
-                handleAsyncViewReload()
-            }
+            outcomeProcessor.process(resolved, handlerOutcome = delegation)
         }
     }
 
-    private suspend fun handleSubmit(context: Context) {
-        // Dismiss the keyboard, if it's open.
+    private suspend fun handleSubmit(
+        context: Context,
+        resolved: List<Outcome>
+    ) {
         listener?.dismissSoftKeyboard()
 
+        val nonFormOutcomes = resolved.filter { it !is Outcome.Form }
+        val delegation = buttonOutcomeHandler(context)
         val submitEvent = LayoutEvent.SubmitForm(buttonIdentifier = viewInfo.identifier) {
-            // Run any handlers for tap events.
-            if (viewInfo.eventHandlers.hasTapHandler()) {
-                handleViewEvent(EventHandler.Type.TAP)
-            }
-
-            // After submitting, handle the rest of the behaviors.
-            if (viewInfo.clickBehaviors.hasCancelOrDismiss) {
-                handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
-            }
-            if (viewInfo.clickBehaviors.hasPagerNext) {
-                handlePagerNext()
-            }
-            if (viewInfo.clickBehaviors.hasPagerPrevious) {
-                handlePagerPrevious()
-            }
+            outcomeProcessor.process(nonFormOutcomes, handlerOutcome = delegation)
         }
 
         broadcast(submitEvent).join()
     }
 
-    private suspend fun handleFormValidation(context: Context) {
-        // Dismiss the keyboard, if it's open.
+    private suspend fun handleFormValidation(
+        context: Context,
+        resolved: List<Outcome>,
+        hasFormSubmit: Boolean
+    ) {
         listener?.dismissSoftKeyboard()
 
+        val delegation = buttonOutcomeHandler(context)
         val validateEvent = LayoutEvent.ValidateForm(buttonIdentifier = viewInfo.identifier) {
-            // After validating, handle the rest of the behaviors.
-            if (viewInfo.clickBehaviors.hasFormSubmit) {
-                handleSubmit(context)
-            }
-            if (viewInfo.clickBehaviors.hasCancelOrDismiss) {
-                handleDismiss(context, viewInfo.clickBehaviors.hasCancel)
-            }
-            if (viewInfo.clickBehaviors.hasPagerNext) {
-                handlePagerNext()
-            }
-            if (viewInfo.clickBehaviors.hasPagerPrevious) {
-                handlePagerPrevious()
+            if (hasFormSubmit) {
+                handleSubmit(context, resolved)
+            } else {
+                val nonFormOutcomes = resolved.filter { it !is Outcome.Form }
+                outcomeProcessor.process(nonFormOutcomes, handlerOutcome = delegation)
             }
         }
 
         broadcast(validateEvent).join()
     }
 
-    private suspend fun handlePagerNext() = broadcast(
-        LayoutEvent.PagerNext(viewInfo.clickBehaviors.pagerNextFallback)
-    ).join()
-
-    private suspend fun handlePagerPrevious() = broadcast(LayoutEvent.PagerPrevious).join()
-
-    private suspend fun handlePagerPauseToggle()  {
-        broadcast(LayoutEvent.PagerPauseToggle).join()
-    }
-
-    private suspend fun handleAsyncViewReload() {
-        broadcast(LayoutEvent.AsyncViewReload(viewInfo.identifier)).join()
-    }
-
-    private suspend fun handleDismiss(context: Context, isCancel: Boolean) {
-        report(
-            event = ReportingEvent.Dismiss(
-                data = ReportingEvent.DismissData.ButtonTapped(
-                    identifier = viewInfo.identifier,
-                    description = reportingDescription(context),
-                    cancel = isCancel
-                ),
-                displayTime = environment.displayTimer.time.milliseconds,
-                context = layoutState.reportingContext(buttonId = viewInfo.identifier)
-            )
-        )
-
-        broadcast(LayoutEvent.Finish()).join()
-    }
-
-
-    private fun handleVideoControls(behaviors: List<ButtonClickBehaviorType>) {
-        val channel = layoutState.videoControl?.commandChannel ?: return
-
-        if (behaviors.hasVideoPlay) {
-            channel.send(VideoCommand.Play)
-        }
-        if (behaviors.hasVideoPause) {
-            channel.send(VideoCommand.Pause)
-        }
-        if (behaviors.hasVideoPlayToggle) {
-            channel.send(VideoCommand.TogglePlay)
-        }
-        if (behaviors.hasVideoMute) {
-            channel.send(VideoCommand.Mute)
-        }
-        if (behaviors.hasVideoUnmute) {
-            channel.send(VideoCommand.Unmute)
-        }
-        if (behaviors.hasVideoMuteToggle) {
-            channel.send(VideoCommand.ToggleMute)
+    /**
+     * Button-specific delegation that overrides dismiss to include reporting
+     * and async-view-reload to use the button's identifier.
+     */
+    private fun buttonOutcomeHandler(context: Context): suspend (HandlerOutcome) -> Unit = { outcome ->
+        when (outcome) {
+            is HandlerOutcome.Dismiss -> {
+                report(
+                    event = ReportingEvent.Dismiss(
+                        data = ReportingEvent.DismissData.ButtonTapped(
+                            identifier = viewInfo.identifier,
+                            description = reportingDescription(context),
+                            cancel = outcome.cancel
+                        ),
+                        displayTime = environment.displayTimer.time.milliseconds,
+                        context = layoutState.reportingContext(buttonId = viewInfo.identifier)
+                    )
+                )
+                environment.eventHandler.broadcast(LayoutEvent.Finish(cancel = outcome.cancel))
+            }
+            is HandlerOutcome.AsyncViewReload -> {
+                environment.eventHandler.broadcast(
+                    LayoutEvent.AsyncViewReload(viewInfo.identifier)
+                )
+            }
+            else -> defaultHandler(outcome)
         }
     }
 }
