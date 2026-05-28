@@ -10,6 +10,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.extend
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonMap
@@ -234,13 +235,7 @@ public class SetAttributesAction public constructor(
                     is StringValue -> JsonValue.wrap(value)
                     is NumberValue -> JsonValue.wrap(value)
                     is DateValue -> JsonValue.wrap(value.time)
-                    is Json -> {
-                        val content = JsonMap.newBuilder()
-                            .putAll(value)
-                            .putOpt(KEY_EXPIRATION, expiration?.let { it.time / 1000 })
-                            .build()
-                        content.toJsonValue()
-                    }
+                    is Json -> (expiration?.let { value.extend(KEY_EXPIRATION to it.time / 1000) } ?: value).toJsonValue()
                 }
             }
 
@@ -257,22 +252,27 @@ public class SetAttributesAction public constructor(
                         is JsonSerializable -> {
                             val attrName = name
                                 ?: throw JsonException("Name is required for JSON object attribute values")
-                            val components = attrName.split("#")
-                            if (components.size != 2 || components.any { it.isEmpty() }) {
-                                throw JsonException("Invalid name format: $attrName")
-                            }
-                            val data = converted.toJsonValue().requireMap().map.toMutableMap()
-                            val expiration = data.remove(KEY_EXPIRATION)?.number
-                                ?.let { Date(it.toLong() * 1000) }
-                            Json(
-                                attributeName = components[0],
-                                instanceId = components[1],
-                                expiration = expiration,
-                                value = data.toJsonMap()
-                            )
+                            parseJsonValue(attrName, converted)
                         }
                         else -> throw JsonException("Unsupported value type: $converted")
                     }
+                }
+
+                @Throws(JsonException::class)
+                private fun parseJsonValue(name: String, converted: JsonSerializable): Json {
+                    val components = name.split("#")
+                    if (components.size != 2 || components.any { it.isEmpty() }) {
+                        throw JsonException("Invalid name format: $name")
+                    }
+                    val data = converted.toJsonValue().requireMap().map.toMutableMap()
+                    val expiration = data.remove(KEY_EXPIRATION)?.number
+                        ?.let { Date(it.toLong() * 1000) }
+                    return Json(
+                        attributeName = components[0],
+                        instanceId = components[1],
+                        expiration = expiration,
+                        value = data.toJsonMap()
+                    )
                 }
 
                 @Throws(IllegalArgumentException::class)
