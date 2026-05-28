@@ -663,6 +663,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markMessagesRead(messageIds)
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
@@ -675,6 +676,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markMessagesRead(messageIds.toSet())
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
@@ -687,6 +689,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markMessagesUnread(messageIds)
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
@@ -699,6 +702,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markMessagesUnread(messageIds.toSet())
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
@@ -714,6 +718,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markMessagesDeleted(messageIds)
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
@@ -729,6 +734,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markMessagesDeleted(messageIds.toSet())
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
@@ -742,6 +748,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markAllMessagesDeleted()
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
