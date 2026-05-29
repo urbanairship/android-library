@@ -12,6 +12,7 @@ import androidx.core.view.doOnAttach
 import androidx.core.view.isVisible
 import com.urbanairship.Airship
 import com.urbanairship.android.layout.R
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ButtonModel
@@ -21,6 +22,7 @@ import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
 import com.urbanairship.android.layout.util.ThomasImageSizeResolver
 import com.urbanairship.android.layout.util.debouncedClicks
@@ -33,11 +35,14 @@ import kotlinx.coroutines.flow.Flow
 internal class ImageButtonView(
     context: Context,
     model: ImageButtonModel,
-    viewEnvironment: ViewEnvironment,
+    private val viewEnvironment: ViewEnvironment,
     private val itemProperties: ItemProperties?,
     ) : FrameLayout(context), BaseView, TappableView {
 
     private var visibilityChangeListener: BaseView.VisibilityChangeListener? = null
+    private var currentState: ThomasState? = null
+    private var lastImageUrl: String? = null
+    private var imageReloader: ((String) -> Unit)? = null
 
     private val button: CropImageButton by lazy { makeImageButton(model) }
 
@@ -45,8 +50,10 @@ internal class ImageButtonView(
 
         when (val image = model.viewInfo.image) {
             is Image.Url -> {
-                val cached = viewEnvironment.imageCache()?.get(image.url)
-                val url = cached?.path ?: image.url
+                val resolvedUrl = image.resolveUrl(ResourceUtils.isUiModeNight(context))
+                lastImageUrl = resolvedUrl
+                val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
+                val url = cached?.path ?: resolvedUrl
 
                 doOnAttach {
                     val parentLayoutParams = layoutParams
@@ -76,6 +83,7 @@ internal class ImageButtonView(
                             .build()
                     )
 
+                    imageReloader = { newUrl -> loadImage(newUrl) }
                     loadImage(url)
 
                     // Listen for visibility changes to load images for default GONE views,
@@ -123,6 +131,19 @@ internal class ImageButtonView(
 
             override fun setBackground(old: Background?, new: Background) {
                 LayoutUtils.updateBackground(this@ImageButtonView, baseBackground, old, new)
+            }
+
+            override fun onStateUpdated(state: ThomasState) {
+                currentState = state
+                val resolvedImage = model.resolveImage(state)
+                if (resolvedImage is Image.Url) {
+                    val newUrl = resolvedImage.resolveUrl(ResourceUtils.isUiModeNight(context))
+                    if (newUrl != lastImageUrl) {
+                        lastImageUrl = newUrl
+                        val cached = viewEnvironment.imageCache()?.get(newUrl)
+                        imageReloader?.invoke(cached?.path ?: newUrl)
+                    }
+                }
             }
         }
     }

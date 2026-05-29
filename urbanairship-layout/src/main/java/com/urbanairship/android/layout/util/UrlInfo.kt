@@ -27,15 +27,24 @@ public class UrlInfo(
             when(info) {
                 is MediaInfo -> {
                     when (info.mediaType) {
-                        MediaType.IMAGE -> result.add(UrlInfo(UrlType.IMAGE, info.url))
+                        MediaType.IMAGE -> {
+                            result.add(UrlInfo(UrlType.IMAGE, info.url))
+                            info.urlSelectors.mapTo(result) { UrlInfo(UrlType.IMAGE, it.url) }
+                        }
                         MediaType.VIDEO,
                         MediaType.YOUTUBE,
-                        MediaType.VIMEO -> result.add(UrlInfo(UrlType.VIDEO, info.url))
+                        MediaType.VIMEO -> {
+                            result.add(UrlInfo(UrlType.VIDEO, info.url))
+                            info.urlSelectors.mapTo(result) { UrlInfo(UrlType.VIDEO, it.url) }
+                        }
                     }
                 }
                 is ImageButtonInfo -> {
                     when(info.image) {
-                        is Image.Url -> result.add(UrlInfo(UrlType.IMAGE, info.image.url))
+                        is Image.Url -> {
+                            result.add(UrlInfo(UrlType.IMAGE, info.image.url))
+                            info.image.urlSelectors.mapTo(result) { UrlInfo(UrlType.IMAGE, it.url) }
+                        }
                         is Image.Icon -> {}
                     }
                 }
