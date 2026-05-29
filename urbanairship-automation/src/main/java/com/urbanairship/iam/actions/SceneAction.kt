@@ -97,12 +97,12 @@ internal class SceneAction(
         val scene: AirshipLayout
     ) {
         companion object {
-            private const val KEY_SCENE = "scene"
+            private const val KEY_DSL = "dsl"
 
             @Throws(JsonException::class)
             fun fromJson(value: JsonValue): Arguments {
                 val sceneJson = value.requireMap()
-                    .requireField<String>(KEY_SCENE)
+                    .requireField<String>(KEY_DSL)
                     .base64Decoded()
                     ?.rawDeflateInflate()
                     ?.let { String(it, StandardCharsets.UTF_8) }
