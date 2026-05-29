@@ -4,6 +4,15 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.7.3 - May 29, 2026
+
+Patch release that fixed two potential crashes. Apps upgrading from older SDK major versions (prior to 20.x) should update to this version or newer.
+
+### Changes
+
+- Fixed a potential crash in `AutomationStoreMigrator` that could occur when migrating old automation schedule data
+- Harden the analytics event screen (from `urbanairship-debug`) against crashes if event types that are no longer supported are encountered
+
 ## Version 20.7.2 - May 13, 2026
 
 Patch release that fixes a couple of Scene issues and improves remote data refresh behavior for kiosk-style apps. Apps that make use of SMS inputs in Scenes should update to this version or newer.
