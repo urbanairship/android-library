@@ -37,7 +37,6 @@ public class AdmPushProvider public constructor() : PushProvider, AirshipVersion
     override val airshipVersion: String = BuildConfig.AIRSHIP_VERSION
     override val packageVersion: String = BuildConfig.SDK_VERSION
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     @Throws(RegistrationException::class)
     override suspend fun getRegistrationToken(context: Context): String? {
         AdmWrapper.getRegistrationId(context)?.let { return it }
@@ -98,37 +97,9 @@ public class AdmPushProvider public constructor() : PushProvider, AirshipVersion
         return "ADM Push Provider $airshipVersion"
     }
 
-    private class RegistrationReceiver : BroadcastReceiver() {
-
-        var registrationToken: String? = null
-        var error: String? = null
-
-        override fun onReceive(context: Context, intent: Intent?) {
-            if (intent?.extras != null && ADMConstants.LowLevel.ACTION_APP_REGISTRATION_EVENT == intent.action) {
-                val error = intent.extras?.getString(ADMConstants.LowLevel.EXTRA_ERROR)
-                if (error == null) {
-                    this.registrationToken = intent.getStringExtra(ADMConstants.LowLevel.EXTRA_REGISTRATION_ID)
-                    return
-                }
-
-                UALog.e("ADM error occurred: $error")
-                this.error = error
-            }
-
-            if (this.isOrderedBroadcast) {
-                resultCode = Activity.RESULT_OK
-            }
-
-            synchronized(this) {
-                (this as Object).notifyAll()
-            }
-        }
-    }
-
     private companion object {
         private const val AMAZON_SEND_PERMISSION = "com.amazon.device.messaging.permission.SEND"
         private var isAdmDependencyAvailable: Boolean? = null
         private val REGISTRATION_TIMEOUT = 10.seconds
-
     }
 }
