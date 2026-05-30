@@ -11,6 +11,7 @@ import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
 import java.util.Locale
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -133,7 +134,7 @@ public class DeferredResolverTest {
         var result = resolver.resolve(originalRequest) { it } as? DeferredResult.RetriableError
         assertNotNull(result)
         assertEquals(requestSession.lastRequest.url, originalRequest.uri)
-        assertEquals(123000L, result!!.retryAfter)
+        assertEquals(123.seconds, result!!.retryAfter)
 
         result = resolver.resolve(originalRequest) { it } as? DeferredResult.RetriableError
         assertNotNull(result)
@@ -169,7 +170,7 @@ public class DeferredResolverTest {
         assertNotNull(result)
         assertEquals(requestSession.lastRequest.url, originalRequest.uri)
         assertEquals(1, requestSession.requests.size)
-        assertEquals(123000L, result!!.retryAfter)
+        assertEquals(123.seconds, result!!.retryAfter)
     }
 
     @Test

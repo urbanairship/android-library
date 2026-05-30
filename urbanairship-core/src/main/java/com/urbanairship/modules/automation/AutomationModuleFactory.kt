@@ -4,8 +4,7 @@ package com.urbanairship.modules.automation
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipVersionInfo
-import com.urbanairship.ApplicationMetrics
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
@@ -30,7 +29,7 @@ public interface AutomationModuleFactory : AirshipVersionInfo {
 
     public fun build(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,
@@ -41,7 +40,6 @@ public interface AutomationModuleFactory : AirshipVersionInfo {
         meteredUsage: AirshipMeteredUsage,
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
-        metrics: ApplicationMetrics,
         cache: AirshipCache,
         audienceEvaluator: AudienceEvaluator
     ): Module

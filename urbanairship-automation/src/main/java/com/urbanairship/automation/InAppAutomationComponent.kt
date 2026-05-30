@@ -4,11 +4,11 @@ package com.urbanairship.automation
 
 import android.content.Context
 import com.urbanairship.AirshipComponent
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 
 internal class InAppAutomationComponent(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     internal val automation: InAppAutomation,
 ) : AirshipComponent(context, dataStore) {
 

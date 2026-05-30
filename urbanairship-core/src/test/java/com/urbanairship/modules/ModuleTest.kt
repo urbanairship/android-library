@@ -5,7 +5,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.AirshipComponent
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.modules.Module.Companion.singleComponent
 import io.mockk.mockk
@@ -19,7 +19,7 @@ import org.junit.runner.RunWith
 public class ModuleTest {
 
     private var context: Context = ApplicationProvider.getApplicationContext()
-    private var dataStore = PreferenceDataStore.inMemoryStore(context)
+    private var dataStore = PreferenceStore.inMemoryStore(context)
 
     @Test
     public fun testGetComponents() {
@@ -28,6 +28,6 @@ public class ModuleTest {
         TestCase.assertEquals(setOf(component), module.components)
     }
 
-    public class TestComponent(context: Context, dataStore: PreferenceDataStore) :
+    public class TestComponent(context: Context, dataStore: PreferenceStore) :
         AirshipComponent(context, dataStore)
 }

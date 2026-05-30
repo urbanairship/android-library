@@ -8,8 +8,9 @@ import com.urbanairship.UALog
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.UAHttpStatusUtil
-import java.text.ParseException
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Model object containing response information from a request.
@@ -71,7 +72,7 @@ public data class Response<T>(
      */
     val locationHeader: Uri?
         get() {
-            val location = headers["Location"] ?: return null
+            val location = header("Location") ?: return null
             return try {
                 Uri.parse(location)
             } catch (e: Exception) {
@@ -81,31 +82,39 @@ public data class Response<T>(
         }
 
     /**
-     * Returns the retry-after header if set.
-     *
-     * @param timeUnit The resulting time unit.
-     * @param defaultValue The default value.
-     * @return The retry-after in the time unit if set, otherwise the defaultValue.
+     * Returns the retry-after header as a non-negative [Duration], or null if absent or
+     * unparseable. Accepts a non-negative integer or decimal number of seconds (per RFC
+     * 7231 §7.1.3, with a permissive extension for fractional seconds), an RFC 7231
+     * HTTP-date, or an ISO 8601 timestamp.
      */
-    public fun getRetryAfterHeader(timeUnit: TimeUnit, defaultValue: Long): Long {
-        return getRetryAfterHeader(timeUnit, defaultValue, Clock.DEFAULT_CLOCK)
-    }
+    public fun getRetryAfterHeader(): Duration? = getRetryAfterHeader(Clock.DEFAULT_CLOCK)
 
     @VisibleForTesting
-    public fun getRetryAfterHeader(timeUnit: TimeUnit, defaultValue: Long, clock: Clock): Long {
-        val retryAfter = headers["Retry-After"] ?: return defaultValue
-        try {
-            val retryDate = DateUtils.parseIso8601(retryAfter)
-            val milliseconds = retryDate - clock.currentTimeMillis()
-            return timeUnit.convert(milliseconds, TimeUnit.MILLISECONDS)
-        } catch (ignored: ParseException) {
-        }
-        try {
-            val seconds = retryAfter.toLong()
-            return timeUnit.convert(seconds, TimeUnit.SECONDS)
-        } catch (ignored: Exception) {
-        }
+    public fun getRetryAfterHeader(clock: Clock): Duration? {
+        val retryAfter = header("Retry-After")?.trim() ?: return null
+        parseRetryAfter(retryAfter, clock)?.let { return it.coerceAtLeast(Duration.ZERO) }
         UALog.e("Invalid RetryAfter header %s", retryAfter)
-        return defaultValue
+        return null
     }
+
+    private fun header(name: String): String? =
+        headers.entries.firstOrNull { it.key.equals(name, ignoreCase = true) }?.value
+}
+
+private val DELAY_SECONDS = Regex("""\d+(\.\d+)?""")
+
+internal fun parseRetryAfter(value: String, clock: Clock): Duration? {
+    // RFC 7231 §7.1.3: delay-seconds = 1*DIGIT (extended to allow fractional seconds).
+    if (DELAY_SECONDS.matches(value)) {
+        return value.toDouble().seconds
+    }
+    // Number-like but not strict (negative, scientific, leading +): reject outright.
+    // Otherwise, SimpleDateFormat would happily parse e.g. "-5" as year -5 BC.
+    if (value.toDoubleOrNull() != null) {
+        return null
+    }
+    val date = runCatching { DateUtils.parseIso8601(value) }.getOrNull()
+        ?: runCatching { DateUtils.parseHttpDate(value) }.getOrNull()
+        ?: return null
+    return (date - clock.currentTimeMillis()).milliseconds
 }

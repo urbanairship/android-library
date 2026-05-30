@@ -5,7 +5,7 @@ import android.app.Activity
 import androidx.core.util.Consumer
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.permission.PermissionRequestResult
 import com.urbanairship.permission.PermissionStatus
@@ -24,7 +24,7 @@ import org.junit.runner.RunWith
 public class NotificationsPermissionDelegateTest {
 
     private val defaultChannelId = UUID.randomUUID().toString()
-    private val dataStore = PreferenceDataStore.inMemoryStore(
+    private val dataStore = PreferenceStore.inMemoryStore(
         ApplicationProvider.getApplicationContext()
     )
     private val channelRegistry: NotificationChannelRegistry = mockk(relaxed = true)

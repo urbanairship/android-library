@@ -10,7 +10,7 @@ import com.urbanairship.Cancelable
 import com.urbanairship.CancelableOperation
 import com.urbanairship.PendingResult
 import com.urbanairship.Predicate
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.UALog
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.android.layout.LayoutDataStorage
@@ -58,7 +58,7 @@ import kotlinx.coroutines.withContext
  * @property user The [User].
  */
 public class Inbox @VisibleForTesting internal constructor(
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     public val user: User,
     private val messageDao: MessageDao,
     private val activityMonitor: ActivityMonitor,
@@ -93,7 +93,7 @@ public class Inbox @VisibleForTesting internal constructor(
      */
     internal constructor(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         airshipChannel: AirshipChannel,
         config: AirshipRuntimeConfig,
         analytics: Analytics,
@@ -320,8 +320,12 @@ public class Inbox @VisibleForTesting internal constructor(
                 scheduleUpdate(UpdateType.BEST_ATTEMPT)
             } else {
                 // Clean up any Message Center data stored on the device.
-                deleteAllMessagesInternal()
-                inboxJobHandler.removeStoredData()
+                val handler = inboxJobHandler
+                scope.launch {
+                    messageDao.deleteAllMessages()
+                    refreshResults.emit(RefreshResult.LOCAL)
+                    handler.removeStoredData()
+                }
             }
         }
     }
@@ -659,6 +663,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markMessagesRead(messageIds)
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
@@ -671,6 +676,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markMessagesRead(messageIds.toSet())
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
@@ -683,6 +689,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markMessagesUnread(messageIds)
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
@@ -695,6 +702,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markMessagesUnread(messageIds.toSet())
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
@@ -710,6 +718,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markMessagesDeleted(messageIds)
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
@@ -725,6 +734,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markMessagesDeleted(messageIds.toSet())
             refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 
@@ -738,18 +748,7 @@ public class Inbox @VisibleForTesting internal constructor(
         scope.launch {
             messageDao.markAllMessagesDeleted()
             refreshResults.emit(RefreshResult.LOCAL)
-        }
-    }
-
-    /**
-     * Delete all message data stored on the device.
-     *
-     * @hide
-     */
-    private fun deleteAllMessagesInternal() {
-        scope.launch {
-            messageDao.deleteAllMessages()
-            refreshResults.emit(RefreshResult.LOCAL)
+            scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
         }
     }
 

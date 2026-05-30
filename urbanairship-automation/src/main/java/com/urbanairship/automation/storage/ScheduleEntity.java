@@ -42,14 +42,14 @@ public class ScheduleEntity {
     public long executionStateChangeDate;
     @Nullable public String triggerContext;
     public int appState;
-    public List<String> screens;
+    @Nullable public List<String> screens;
     public long seconds;
     @Nullable public String regionId;
     @Nullable public String audience;
     public JsonValue campaigns;
     public JsonValue reportingContext;
 
-    public List<String> frequencyConstraintIds;
+    @Nullable public List<String> frequencyConstraintIds;
 
     @Nullable public String messageType;
     public boolean bypassHoldoutGroups;

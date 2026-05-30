@@ -6,7 +6,7 @@ import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.AirshipComponent
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.Airship
 import com.urbanairship.channel.AirshipChannel
@@ -30,7 +30,7 @@ public class LiveUpdateManager
 @VisibleForTesting
 internal constructor(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     config: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val pushManager: PushManager,
@@ -44,7 +44,7 @@ internal constructor(
 
     public constructor(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         channel: AirshipChannel,

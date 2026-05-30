@@ -15,7 +15,7 @@ import com.urbanairship.json.JsonValue
 public object Converters {
 
     @TypeConverter
-    public fun stringArrayFromString(value: String): List<String>? {
+    public fun stringArrayFromString(value: String?): List<String>? {
         try {
             return JsonValue.parseString(value)
                 .optList()

@@ -6,7 +6,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.Airship
 import com.urbanairship.Platform
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
@@ -51,7 +51,7 @@ import org.robolectric.RobolectricTestRunner
 public class AirshipChannelTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
+    private val preferenceStore = PreferenceStore.inMemoryStore(context)
 
     private val localeChange = MutableSharedFlow<Locale>()
 
@@ -64,7 +64,7 @@ public class AirshipChannelTest {
             )
         )
     )
-    private val privacyManager = PrivacyManager(preferenceDataStore, PrivacyManager.Feature.ALL, dispatcher = UnconfinedTestDispatcher())
+    private val privacyManager = PrivacyManager(preferenceStore, PrivacyManager.Feature.ALL, dispatcher = UnconfinedTestDispatcher())
     private val testDispatcher = StandardTestDispatcher()
     private val mockLocaleManager = mockk<LocaleManager>() {
         every { localeUpdates } returns localeChange
@@ -104,7 +104,7 @@ public class AirshipChannelTest {
 
     private val channel = AirshipChannel(
         context,
-        preferenceDataStore,
+        preferenceStore,
         testConfig,
         privacyManager,
         mockPermissionsManager,
@@ -623,7 +623,7 @@ public class AirshipChannelTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.SUCCESS
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns true
-        coEvery { mockBatchUpdateManager.hasPending } returns false
+        coEvery { mockBatchUpdateManager.hasPending() } returns false
 
         assertEquals(JobResult.SUCCESS, channel.onPerformJob( replaceJob))
 
@@ -636,7 +636,7 @@ public class AirshipChannelTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.NEEDS_UPDATE
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns true
-        coEvery { mockBatchUpdateManager.hasPending } returns false
+        coEvery { mockBatchUpdateManager.hasPending() } returns false
 
         assertEquals(JobResult.SUCCESS, channel.onPerformJob(keepJob))
 
@@ -651,7 +651,7 @@ public class AirshipChannelTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.NEEDS_UPDATE
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns true
-        coEvery { mockBatchUpdateManager.hasPending } returns true
+        coEvery { mockBatchUpdateManager.hasPending() } returns true
 
         assertEquals(JobResult.SUCCESS, channel.onPerformJob(keepJob))
 
@@ -677,7 +677,7 @@ public class AirshipChannelTest {
         every { mockRegistrar.channelId } returns "some channel id"
         coEvery { mockRegistrar.updateRegistration() } returns RegistrationResult.SUCCESS
         coEvery { mockBatchUpdateManager.uploadPending("some channel id") } returns false
-        coEvery { mockBatchUpdateManager.hasPending } returns false
+        coEvery { mockBatchUpdateManager.hasPending() } returns false
 
         assertEquals(JobResult.FAILURE, channel.onPerformJob(keepJob))
 

@@ -3,7 +3,7 @@ package com.urbanairship.iam.coordinator
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.AirshipLayout
@@ -18,7 +18,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class DisplayCoordinatorManagerTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
+    private val dataStore = PreferenceStore.inMemoryStore(context)
     private val activityMonitor: ActivityMonitor = mockk(relaxed = true)
     private val manager = DisplayCoordinatorManager(dataStore, activityMonitor)
 

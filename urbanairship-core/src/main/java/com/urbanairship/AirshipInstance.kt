@@ -35,12 +35,16 @@ import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.modules.Module
 import com.urbanairship.modules.Modules
 import com.urbanairship.permission.PermissionsManager
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.push.PushManager
 import com.urbanairship.remoteconfig.RemoteConfigManager
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.util.AppStoreUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 internal class AirshipInstance(
     val application: Application
@@ -50,7 +54,7 @@ internal class AirshipInstance(
     val imageLoader: ImageLoader = AirshipGlideImageLoader
 
     lateinit var actionRegistry: ActionRegistry
-    lateinit var preferenceDataStore: PreferenceDataStore
+    lateinit var preferenceStore: PreferenceStore
     lateinit var urlAllowList: UrlAllowList
     lateinit var remoteData: RemoteData
     lateinit var inputValidator: AirshipInputValidation.Validator
@@ -86,12 +90,12 @@ internal class AirshipInstance(
 
         UALog.i("Airship taking off!")
 
-        AirshipExecutors.threadPoolExecutor().execute {
+        CoroutineScope(AirshipDispatchers.IO + SupervisorJob()).launch {
             executeTakeOff(configOptions, onReady)
         }
     }
 
-    private fun executeTakeOff(
+    private suspend fun executeTakeOff(
         options: AirshipConfigOptions?,
         onReady: ((AirshipConfigOptions) -> Unit)
     ) {
@@ -115,7 +119,7 @@ internal class AirshipInstance(
         UALog.v(BuildConfig.SDK_VERSION)
 
         this.airshipConfigOptions = resolved
-        this.preferenceDataStore = PreferenceDataStore.loadDataStore(
+        this.preferenceStore = PreferenceStore.load(
             context = application,
             configOptions = airshipConfigOptions
         )
@@ -129,15 +133,15 @@ internal class AirshipInstance(
 
     internal fun tearDown() {
         components.value.forEach { it.tearDown() }
-        preferenceDataStore.tearDown()
+        preferenceStore.tearDown()
     }
 
     private fun initModules() {
 
-        val remoteConfigObserver = RemoteConfigObserver(preferenceDataStore)
+        val remoteConfigObserver = RemoteConfigObserver(preferenceStore)
 
         this.privacyManager = PrivacyManager(
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             defaultEnabledFeatures = airshipConfigOptions.enabledFeatures,
             configObserver = remoteConfigObserver,
             resetEnabledFeatures = airshipConfigOptions.resetEnabledFeatures
@@ -147,7 +151,7 @@ internal class AirshipInstance(
 
         this.localeManager = LocaleManager(
             context = application,
-            preferenceDataStore = preferenceDataStore
+            preferenceStore = preferenceStore
         )
 
         val pushProviders = PushProviders.lazyLoader(application, airshipConfigOptions)
@@ -155,7 +159,7 @@ internal class AirshipInstance(
         val audienceOverridesProvider = AudienceOverridesProvider()
         val platformProvider = DeferredPlatformProvider(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             privacyManager = privacyManager,
             pushProviders = pushProviders
         )
@@ -169,14 +173,14 @@ internal class AirshipInstance(
         )
         val channelRegistrar = ChannelRegistrar(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             runtimeConfig = runtimeConfig,
             privacyManager = privacyManager
         )
 
         val channel = AirshipChannel(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             runtimeConfig = runtimeConfig,
             privacyManager = privacyManager,
             permissionsManager = permissionsManager,
@@ -198,7 +202,7 @@ internal class AirshipInstance(
         // Airship components
         val analytics = Analytics(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             runtimeConfig = runtimeConfig,
             privacyManager = privacyManager,
             channel = channel,
@@ -212,7 +216,7 @@ internal class AirshipInstance(
 
         val pushManager = PushManager(
             context = application,
-            preferenceDataStore = preferenceDataStore,
+            preferenceStore = preferenceStore,
             config = runtimeConfig,
             privacyManager = privacyManager,
             pushProvidersSupplier = pushProviders,
@@ -226,14 +230,14 @@ internal class AirshipInstance(
             context = application,
             configOptions = airshipConfigOptions,
             airshipChannel = channel,
-            preferenceDataStore = preferenceDataStore,
+            preferenceStore = preferenceStore,
             activityMonitor = GlobalActivityMonitor.shared(application)
         )
         localComponents.add(channelCapture)
 
         val contact = Contact(
             context = application,
-            preferenceDataStore = preferenceDataStore,
+            preferenceStore = preferenceStore,
             config = runtimeConfig,
             privacyManager = privacyManager,
             airshipChannel = channel,
@@ -251,7 +255,7 @@ internal class AirshipInstance(
         this.remoteData = RemoteData(
             context = application,
             config = runtimeConfig,
-            preferenceDataStore = preferenceDataStore,
+            preferenceStore = preferenceStore,
             privacyManager = privacyManager,
             localeManager = localeManager,
             pushManager = pushManager,
@@ -262,7 +266,7 @@ internal class AirshipInstance(
 
         val meteredUsageManager = AirshipMeteredUsage(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             config = runtimeConfig,
             privacyManager = privacyManager,
             contact = contact,
@@ -272,7 +276,7 @@ internal class AirshipInstance(
 
         val remoteConfigManager = RemoteConfigManager(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             runtimeConfig = runtimeConfig,
             privacyManager = privacyManager,
             remoteData = remoteData
@@ -285,7 +289,7 @@ internal class AirshipInstance(
         // Experiments
         val experimentManager = ExperimentManager(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             remoteData = remoteData,
             audienceEvaluator = audienceEvaluator
         )
@@ -294,7 +298,7 @@ internal class AirshipInstance(
         // Debug
         val debugModule = Modules.debug(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             remoteData = remoteData,
             pushManager = pushManager,
             analytics = analytics
@@ -304,7 +308,7 @@ internal class AirshipInstance(
         // Message Center
         val messageCenterModule = Modules.messageCenter(
             context = application,
-            preferenceDataStore = preferenceDataStore,
+            preferenceStore = preferenceStore,
             config = runtimeConfig,
             privacyManager = privacyManager,
             channel = channel,
@@ -317,7 +321,7 @@ internal class AirshipInstance(
         // Automation
         val automationModule = Modules.automation(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             runtimeConfig = runtimeConfig,
             privacyManager = privacyManager,
             airshipChannel = channel,
@@ -328,11 +332,6 @@ internal class AirshipInstance(
             meteredUsage = meteredUsageManager,
             deferredResolver = deferredResolver,
             eventFeed = eventFeed,
-            metrics = ApplicationMetrics(
-                context = application,
-                dataStore = preferenceDataStore,
-                privacyManager = privacyManager
-            ),
             cache = cache,
             audienceEvaluator = audienceEvaluator
         )
@@ -341,7 +340,7 @@ internal class AirshipInstance(
         // Ad Id
         val adIdModule = Modules.adId(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             runtimeConfig = runtimeConfig,
             privacyManager = privacyManager,
             analytics = analytics
@@ -351,7 +350,7 @@ internal class AirshipInstance(
         // Preference Center
         val preferenceCenter = Modules.preferenceCenter(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             privacyManager = privacyManager,
             remoteData = remoteData,
             validator = inputValidator
@@ -361,7 +360,7 @@ internal class AirshipInstance(
         // Live Updates
         val liveUpdateManager = Modules.liveUpdateManager(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             config = runtimeConfig,
             privacyManager = privacyManager,
             airshipChannel = channel,
@@ -372,7 +371,7 @@ internal class AirshipInstance(
         // Feature flags
         val featureFlags = Modules.featureFlags(
             context = application,
-            dataStore = preferenceDataStore,
+            dataStore = preferenceStore,
             remoteData = remoteData,
             analytics = analytics,
             cache = cache,

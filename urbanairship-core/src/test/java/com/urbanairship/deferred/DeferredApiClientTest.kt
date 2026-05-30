@@ -100,7 +100,7 @@ public class DeferredApiClientTest {
                     "attribute_overrides" to listOf(
                         mapOf(
                             "value" to "attr-value",
-                            "timestamp" to DateUtils.createIso8601TimeStamp(currentDate),
+                            "timestamp" to DateUtils.createIso8601TimeStamp(currentDate, includeMillis = true),
                             "key" to "test-key",
                             "action" to "set"
                         )

@@ -3,7 +3,8 @@
 package com.urbanairship.automation
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.PrivacyManager
 import com.urbanairship.Airship
 import com.urbanairship.automation.engine.AutomationEngine
@@ -24,7 +25,7 @@ internal constructor(
     public val inAppMessaging: InAppMessagingInterface,
     public val legacyInAppMessaging: LegacyInAppMessagingInterface,
     private val remoteDataSubscriber: AutomationRemoteDataSubscriber,
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val privacyManager: PrivacyManager,
     private val config: AirshipRuntimeConfig
 ) {
@@ -36,7 +37,7 @@ internal constructor(
     public var isPaused: Boolean
         get() {
             synchronized(this) {
-                return dataStore.getBoolean(PAUSED_STORE_KEY, config.configOptions.autoPauseInAppAutomationOnLaunch)
+                return dataStore.get(PAUSED_STORE_KEY) ?: config.configOptions.autoPauseInAppAutomationOnLaunch
             }
         }
 
@@ -141,7 +142,7 @@ internal constructor(
     }
 
     public companion object {
-        private const val PAUSED_STORE_KEY = "com.urbanairship.iam.paused"
+        private val PAUSED_STORE_KEY = SyncPrefKey.boolean("com.urbanairship.iam.paused")
 
         /**
          * The shared InAppAutomation instance.

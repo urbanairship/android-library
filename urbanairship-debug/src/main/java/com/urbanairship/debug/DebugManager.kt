@@ -5,7 +5,7 @@ package com.urbanairship.debug
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipComponent
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.Airship
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.debug.ui.events.EventEntity
@@ -26,12 +26,12 @@ import kotlinx.coroutines.launch
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DebugManager(
     context: Context,
-    preferenceDataStore: PreferenceDataStore,
+    preferenceStore: PreferenceStore,
     internal val remoteData: RemoteData,
     internal val pushManager: PushManager,
     internal val analytics: Analytics,
     dispatcher: CoroutineDispatcher = Dispatchers.IO
-) : AirshipComponent(context, preferenceDataStore) {
+) : AirshipComponent(context, preferenceStore) {
 
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
 

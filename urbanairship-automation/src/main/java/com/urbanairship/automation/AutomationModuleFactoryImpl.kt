@@ -5,8 +5,8 @@ package com.urbanairship.automation
 import android.content.Context
 import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
-import com.urbanairship.ApplicationMetrics
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.automation.engine.ApplicationMetrics
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.ActionsManifest
@@ -30,6 +30,7 @@ import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProc
 import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
+import com.urbanairship.automation.remotedata.AutomationSourceInfoStore
 import com.urbanairship.automation.storage.AutomationDatabase
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.utils.NetworkMonitor
@@ -75,7 +76,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
 
     override fun build(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,
@@ -86,10 +87,14 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         meteredUsage: AirshipMeteredUsage,
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
-        metrics: ApplicationMetrics,
         cache: AirshipCache,
         audienceEvaluator: AudienceEvaluator
     ): Module {
+        val metrics = ApplicationMetrics(
+            context = context,
+            dataStore = dataStore,
+            privacyManager = privacyManager
+        )
         val assetManager = AssetCacheManager(context)
         val eventRecorder = LayoutEventRecorder(analytics, meteredUsage)
         val scheduleConditionNotifier = ScheduleConditionsChangedNotifier()
@@ -181,12 +186,12 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
             legacyInAppMessaging = LegacyInAppMessaging(
                 context = context,
                 pushManager = pushManager,
-                preferenceDataStore = dataStore,
+                preferenceStore = dataStore,
                 automationEngine = engine,
                 legacyAnalytics = LegacyAnalytics(eventRecorder)
             ),
             remoteDataSubscriber = AutomationRemoteDataSubscriber(
-                dataStore = dataStore,
+                sourceInfoStore = AutomationSourceInfoStore(dataStore),
                 remoteDataAccess = remoteDataAccess,
                 engine = engine,
                 frequencyLimitManager = frequencyLimits

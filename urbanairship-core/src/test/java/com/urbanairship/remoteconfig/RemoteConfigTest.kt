@@ -42,6 +42,7 @@ public class RemoteConfigTest {
                "fetch_contact_remote_data":true,
                "disabled_features": ["push", "analytics"],
                "remote_data_refresh_interval": 21,
+               "remote_data_foreground_polling_interval": 600000,
                "in_app_config": {
                     "additional_audience_check": {
                         "enabled": true,
@@ -78,6 +79,7 @@ public class RemoteConfigTest {
             fetchContactRemoteData = true,
             disabledFeatures = PrivacyManager.Feature.PUSH or PrivacyManager.Feature.ANALYTICS,
             remoteDataRefreshInterval = 21L,
+            remoteDataForegroundPollingInterval = 600_000.milliseconds,
             iaaConfig = IAAConfig(
                 retryingQueue = RetryingQueueConfig(
                     maxConcurrentOperations = 3,

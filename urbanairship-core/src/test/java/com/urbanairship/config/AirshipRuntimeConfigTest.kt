@@ -3,7 +3,7 @@ package com.urbanairship.config
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.AirshipConfigOptions
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestRequestSession
 import com.urbanairship.Airship
 import com.urbanairship.Platform
@@ -19,7 +19,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class AirshipRuntimeConfigTest {
 
-    private val dataStore: PreferenceDataStore = PreferenceDataStore.inMemoryStore(
+    private val dataStore: PreferenceStore = PreferenceStore.inMemoryStore(
         ApplicationProvider.getApplicationContext()
     )
 
@@ -67,7 +67,7 @@ public class AirshipRuntimeConfigTest {
         runtimeConfig = AirshipRuntimeConfig(
             { configOptions },
             TestRequestSession(),
-            PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext()),
+            PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext()),
             { platform })
 
         Assert.assertNull(runtimeConfig.analyticsUrl.baseUrl)
@@ -85,7 +85,7 @@ public class AirshipRuntimeConfigTest {
         runtimeConfig = AirshipRuntimeConfig(
             { configOptions },
             TestRequestSession(),
-            PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext()),
+            PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext()),
             { platform })
 
         Assert.assertEquals(runtimeConfig.analyticsUrl.baseUrl, configOptions.analyticsUrl)

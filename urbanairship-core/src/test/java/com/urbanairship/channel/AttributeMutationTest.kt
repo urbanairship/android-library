@@ -27,7 +27,7 @@ public class AttributeMutationTest {
             "action" to "set",
             "value" to "expected_value",
             "key" to "expected_key",
-            "timestamp" to DateUtils.createIso8601TimeStamp(100)
+            "timestamp" to DateUtils.createIso8601TimeStamp(100, includeMillis = true)
         )
 
         assertEquals(expected, mutation.toJsonValue().map)
@@ -40,7 +40,7 @@ public class AttributeMutationTest {
         val expected = jsonMapOf(
             "action" to "remove",
             "key" to "expected_key",
-            "timestamp" to DateUtils.createIso8601TimeStamp(100)
+            "timestamp" to DateUtils.createIso8601TimeStamp(100, includeMillis = true)
         )
 
         assertEquals(expected, mutation.toJsonValue().map)
@@ -52,7 +52,7 @@ public class AttributeMutationTest {
             {
               "action": "set",
               "key": "players#bob",
-              "timestamp": "2025-04-22T18:05:45",
+              "timestamp": "2025-04-22T18:05:45.000Z",
               "value": {
                 "cool_factor": 70,
                 "is_cool": true,

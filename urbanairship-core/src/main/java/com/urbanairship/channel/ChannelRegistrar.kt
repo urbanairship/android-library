@@ -4,7 +4,9 @@ package com.urbanairship.channel
 
 import android.content.Context
 import androidx.annotation.RestrictTo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.AsyncPrefKey
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.app.ActivityMonitor
@@ -58,7 +60,7 @@ public sealed class ChannelGenerationMethod {
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ChannelRegistrar(
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val channelApiClient: ChannelApiClient,
     private val activityMonitor: ActivityMonitor,
     private val channelCreateOption: AirshipChannelCreateOption? = null,
@@ -67,7 +69,7 @@ public class ChannelRegistrar(
 ) {
     public constructor(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager
     ) : this(
@@ -84,7 +86,7 @@ public class ChannelRegistrar(
     internal val channelIdFlow: StateFlow<String?> = _channelIdFlow.asStateFlow()
 
     internal var channelId: String?
-        get() = dataStore.getString(CHANNEL_ID_KEY, null)
+        get() = dataStore.get(CHANNEL_ID_KEY)
         private set(value) = dataStore.put(CHANNEL_ID_KEY, value)
 
 
@@ -120,11 +122,11 @@ public class ChannelRegistrar(
         return !payload.equals(lastRegistrationInfo.payload, false)
     }
 
-    private fun minimizeUpdatePayload(
+    private suspend fun minimizeUpdatePayload(
         channelId: String,
         payload: ChannelRegistrationPayload
     ): ChannelRegistrationPayload? {
-        val lastRegistrationInfo = this.lastChannelRegistrationInfo ?: return payload
+        val lastRegistrationInfo = getLastChannelRegistrationInfo() ?: return payload
         val location = channelApiClient.createLocation(channelId).toString()
 
         if (location != lastRegistrationInfo.location) {
@@ -151,17 +153,18 @@ public class ChannelRegistrar(
             val payload = buildCraPayload() ?: return true
             !shouldUpdate(
                 payload,
-                lastChannelRegistrationInfo,
+                getLastChannelRegistrationInfo(),
                 channelApiClient.createLocation(channelId).toString()
             )
         }
     }
 
-    private var lastChannelRegistrationInfo: RegistrationInfo?
-        get() = dataStore.optJsonValue(LAST_CHANNEL_REGISTRATION_INFO)?.tryParse {
-            RegistrationInfo(it.requireMap())
-        }
-        set(value) = dataStore.put(LAST_CHANNEL_REGISTRATION_INFO, value)
+    private suspend fun getLastChannelRegistrationInfo(): RegistrationInfo? =
+        dataStore.get(LAST_CHANNEL_REGISTRATION_INFO)
+
+    private suspend fun setLastChannelRegistrationInfo(value: RegistrationInfo?) {
+        dataStore.put(LAST_CHANNEL_REGISTRATION_INFO, value)
+    }
 
     private suspend fun createChannel(): RegistrationResult {
         val payload = buildCraPayload() ?: return RegistrationResult.FAILED
@@ -224,12 +227,12 @@ public class ChannelRegistrar(
             UALog.i { "Airship channel created: ${response.value.identifier}" }
             this.channelId = response.value.identifier
             if (rememberPayload) {
-                this.lastChannelRegistrationInfo = RegistrationInfo(
+                setLastChannelRegistrationInfo(RegistrationInfo(
                     dateMillis = clock.currentTimeMillis(),
                     lastFullUploadMillis = clock.currentTimeMillis(),
                     payload = payload,
                     location = response.value.location
-                )
+                ))
             }
 
             _channelIdFlow.tryEmit(response.value.identifier)
@@ -259,18 +262,18 @@ public class ChannelRegistrar(
         val fullUploadMillis = if (payload == updatePayload) {
             clock.currentTimeMillis()
         } else {
-            lastChannelRegistrationInfo?.lastFullUploadMillis
+            getLastChannelRegistrationInfo()?.lastFullUploadMillis
         }
 
         return if (result.isSuccessful && result.value != null) {
             UALog.i { "Airship channel updated" }
             // Set non-minimized payload as the last sent version, for future comparison
-            this.lastChannelRegistrationInfo = RegistrationInfo(
+            setLastChannelRegistrationInfo(RegistrationInfo(
                 dateMillis = clock.currentTimeMillis(),
                 lastFullUploadMillis = fullUploadMillis,
                 payload = payload,
                 location = result.value.location
-            )
+            ))
             if (isUpToDate()) {
                 RegistrationResult.SUCCESS
             } else {
@@ -278,7 +281,7 @@ public class ChannelRegistrar(
             }
         } else if (result.status == 409) {
             UALog.d { "Channel registration conflict, will recreate channel." }
-            this.lastChannelRegistrationInfo = null
+            setLastChannelRegistrationInfo(null)
             this.channelId = null
             return createChannel()
         } else if (result.isServerError || result.isTooManyRequestsError || result.exception != null) {
@@ -290,8 +293,11 @@ public class ChannelRegistrar(
 
     private companion object {
 
-        private const val CHANNEL_ID_KEY = "com.urbanairship.push.CHANNEL_ID"
-        private const val LAST_CHANNEL_REGISTRATION_INFO = "com.urbanairship.channel.LAST_CHANNEL_REGISTRATION_INFO"
+        private val CHANNEL_ID_KEY = SyncPrefKey.string("com.urbanairship.push.CHANNEL_ID")
+        private val LAST_CHANNEL_REGISTRATION_INFO = AsyncPrefKey.jsonSerializable(
+            name = "com.urbanairship.channel.LAST_CHANNEL_REGISTRATION_INFO",
+            fromJson = { RegistrationInfo(it.requireMap()) }
+        )
         private const val CHANNEL_REREGISTRATION_INTERVAL_MS: Long = 24 * 60 * 60 * 1000 // 24H
     }
 }

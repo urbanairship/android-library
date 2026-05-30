@@ -5,7 +5,7 @@ package com.urbanairship.remotedata
 import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.contacts.Contact
 import com.urbanairship.contacts.ContactIdUpdate
@@ -38,7 +38,7 @@ public class ContactRemoteDataProviderTest {
 
     private val provider: ContactRemoteDataProvider = ContactRemoteDataProvider(
         context,
-        PreferenceDataStore.inMemoryStore(context),
+        PreferenceStore.inMemoryStore(context),
         TestAirshipRuntimeConfig(),
         mockContact,
         mockApiClient,

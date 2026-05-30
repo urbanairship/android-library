@@ -3,7 +3,8 @@ package com.urbanairship.channel
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.AsyncPrefKey
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.http.RequestResult
@@ -36,9 +37,9 @@ import org.junit.runner.RunWith
 public class ChannelBatchUpdateManagerTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
+    private val preferenceStore = PreferenceStore.inMemoryStore(context)
 
-    private val pendingAudienceDelegate = slot<(String) -> AudienceOverrides.Channel>()
+    private val pendingAudienceDelegate = slot<suspend (String) -> AudienceOverrides.Channel>()
     private val mockAudienceOverridesProvider = mockk<AudienceOverridesProvider> {
         every {
             this@mockk.pendingChannelOverridesDelegate = capture(pendingAudienceDelegate)
@@ -49,7 +50,7 @@ public class ChannelBatchUpdateManagerTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val manager = ChannelBatchUpdateManager(
-        preferenceDataStore,
+        preferenceStore,
         mockApiClient,
         mockAudienceOverridesProvider
     )
@@ -94,11 +95,11 @@ public class ChannelBatchUpdateManagerTest {
             subscriptions = listOf(SubscriptionListMutation.newSubscribeMutation("some list", 100)),
             attributes = listOf(AttributeMutation.newRemoveAttributeMutation("some attribute", 100))
         )
-        assertTrue(manager.hasPending)
+        assertTrue(manager.hasPending())
 
         manager.clearPending()
         assertEquals(AudienceOverrides.Channel(), pendingAudienceDelegate.captured.invoke("anything"))
-        assertFalse(manager.hasPending)
+        assertFalse(manager.hasPending())
     }
 
     @Test
@@ -110,9 +111,17 @@ public class ChannelBatchUpdateManagerTest {
 
     @Test
     public fun testMigrate(): TestResult = runTest {
+        val attributeKey = AsyncPrefKey.json("com.urbanairship.push.ATTRIBUTE_DATA_STORE")
+        val subscriptionKey = AsyncPrefKey.json("com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS")
+        val tagsKey = AsyncPrefKey.json("com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS")
+
+        // Use a separate PreferenceStore so the class-level manager's init-time migration
+        // (already in flight against [preferenceStore]) can't race the test puts below.
+        val store = PreferenceStore.inMemoryStore(context)
+
         // Attributes are stored as a list of lists
-        preferenceDataStore.put(
-            "com.urbanairship.push.ATTRIBUTE_DATA_STORE",
+        store.put(
+            attributeKey,
             jsonListOf(
                 listOf(
                     AttributeMutation.newRemoveAttributeMutation("some attribute", 100),
@@ -121,12 +130,12 @@ public class ChannelBatchUpdateManagerTest {
                 listOf(
                     AttributeMutation.newSetAttributeMutation("some attribute", JsonValue.wrapOpt("neat"), 100)
                 )
-            )
+            ).toJsonValue()
         )
 
         // Subscriptions are stored as a list of lists
-        preferenceDataStore.put(
-            "com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS",
+        store.put(
+            subscriptionKey,
             jsonListOf(
                 listOf(
                     SubscriptionListMutation.newSubscribeMutation("some list", 100),
@@ -135,24 +144,33 @@ public class ChannelBatchUpdateManagerTest {
                 listOf(
                     SubscriptionListMutation.newSubscribeMutation("some other list", 100)
                 )
-            )
+            ).toJsonValue()
         )
 
         // Tags are stored as a list of mutations
-        preferenceDataStore.put(
-            "com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS",
+        store.put(
+            tagsKey,
             jsonListOf(
                 TagGroupsMutation.newSetTagsMutation("some group", setOf("tag")),
                 TagGroupsMutation.newSetTagsMutation("some other group", setOf("tag"))
-            )
+            ).toJsonValue()
         )
 
+        // Construct the manager AFTER the legacy data is in place so its init-time
+        // migration sees the data instead of racing the puts above.
+        val pendingDelegate = slot<suspend (String) -> AudienceOverrides.Channel>()
+        val provider = mockk<AudienceOverridesProvider> {
+            every {
+                this@mockk.pendingChannelOverridesDelegate = capture(pendingDelegate)
+            } just runs
+        }
+        val manager = ChannelBatchUpdateManager(store, mockApiClient, provider)
         manager.migrateData()
 
         // Verify its deleted
-        assertFalse(preferenceDataStore.isSet("com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS"))
-        assertFalse(preferenceDataStore.isSet("com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS"))
-        assertFalse(preferenceDataStore.isSet("com.urbanairship.push.ATTRIBUTE_DATA_STORE"))
+        assertFalse(store.isSet(tagsKey))
+        assertFalse(store.isSet(subscriptionKey))
+        assertFalse(store.isSet(attributeKey))
 
         // Check expected
         val expectedPending = AudienceOverrides.Channel(
@@ -172,7 +190,7 @@ public class ChannelBatchUpdateManagerTest {
             )
         )
 
-        assertEquals(expectedPending, pendingAudienceDelegate.captured.invoke("anything"))
+        assertEquals(expectedPending, pendingDelegate.captured.invoke("anything"))
     }
 
     @Test
@@ -262,7 +280,7 @@ public class ChannelBatchUpdateManagerTest {
             )
         }
 
-        assertFalse(manager.hasPending)
+        assertFalse(manager.hasPending())
     }
 
     @Test
@@ -294,7 +312,7 @@ public class ChannelBatchUpdateManagerTest {
             )
         }
 
-        assertTrue(manager.hasPending)
+        assertTrue(manager.hasPending())
     }
 
     @Test
@@ -327,7 +345,7 @@ public class ChannelBatchUpdateManagerTest {
             )
         }
 
-        assertFalse(manager.hasPending)
+        assertFalse(manager.hasPending())
     }
 
     @Test
@@ -356,6 +374,6 @@ public class ChannelBatchUpdateManagerTest {
             )
         }
 
-        assertTrue(manager.hasPending)
+        assertTrue(manager.hasPending())
     }
 }

@@ -1,4 +1,6 @@
 package com.urbanairship
+
+import com.urbanairship.preferences.PreferenceStore
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -25,7 +27,7 @@ import org.junit.runner.RunWith
 public class PrivacyManagerTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
+    private val dataStore = PreferenceStore.inMemoryStore(context)
     private lateinit var privacyManager: PrivacyManager
     private val remoteConfigObserver: RemoteConfigObserver = mockk(relaxed = true)
     private var disabledFeatures: PrivacyManager.Feature? = null

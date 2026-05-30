@@ -6,7 +6,7 @@ import android.os.Looper
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.Predicate
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
 import com.urbanairship.TestTaskSleeper
@@ -77,7 +77,7 @@ public class InboxTest {
         clock.currentTimeMillis += sleep.inWholeMilliseconds
     }
 
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
+    private val dataStore = PreferenceStore.inMemoryStore(context)
 
     private val runtimeConfig = TestAirshipRuntimeConfig(
         RemoteConfig(
@@ -202,6 +202,7 @@ public class InboxTest {
 
         val deletedIds = setOf("1_message_id", "3_message_id", "6_message_id")
 
+        clearMocks(mockScheduler, answers = false, verificationMarks = true)
         inbox.deleteMessages(deletedIds)
         mainLooper.runToEndOfTasks()
         advanceUntilIdle()
@@ -221,6 +222,8 @@ public class InboxTest {
         for (deletedId: String? in deletedIds) {
             assertFalse(messageIds.contains(deletedId))
         }
+
+        verify { mockScheduler(Inbox.UpdateType.BEST_ATTEMPT) }
     }
 
     /** Test mark messages are all marked deleted in the database and the inbox. */
@@ -231,6 +234,7 @@ public class InboxTest {
         assertEquals(10, inbox.getCount())
         advanceUntilIdle()
 
+        clearMocks(mockScheduler, answers = false, verificationMarks = true)
         inbox.deleteAllMessages()
         mainLooper.runToEndOfTasks()
         advanceUntilIdle()
@@ -247,6 +251,8 @@ public class InboxTest {
 
         val messageIds = inbox.getMessageIds()
         assertEquals(0, messageIds.size)
+
+        verify { mockScheduler(Inbox.UpdateType.BEST_ATTEMPT) }
     }
 
     /** Test mark messages are marked read in the database and the inbox. */
@@ -256,6 +262,7 @@ public class InboxTest {
 
         val markedReadIds = setOf("1_message_id", "3_message_id", "6_message_id")
 
+        clearMocks(mockScheduler, answers = false, verificationMarks = true)
         inbox.markMessagesRead(markedReadIds)
         advanceUntilIdle()
 
@@ -274,6 +281,8 @@ public class InboxTest {
             assertTrue(readMessages.containsKey(readId))
             assertFalse(unreadMessages.containsKey(readId))
         }
+
+        verify { mockScheduler(Inbox.UpdateType.BEST_ATTEMPT) }
     }
 
     /** Test mark messages are marked unread in the database and the inbox. */
@@ -293,12 +302,15 @@ public class InboxTest {
         assertEquals(7, inbox.getUnreadCount())
 
         // Mark messages as unread
+        clearMocks(mockScheduler, answers = false, verificationMarks = true)
         inbox.markMessagesUnread(messageIds)
         advanceUntilIdle()
 
         assertEquals(10, inbox.getCount())
         assertEquals(10, inbox.getUnreadCount())
         assertEquals(0, inbox.getReadCount())
+
+        verify { mockScheduler(Inbox.UpdateType.BEST_ATTEMPT) }
     }
 
     /** Test fetch messages starts the AirshipService. */

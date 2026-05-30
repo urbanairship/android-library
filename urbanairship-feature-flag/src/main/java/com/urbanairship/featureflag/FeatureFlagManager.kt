@@ -6,7 +6,7 @@ import android.content.Context
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.Airship
@@ -37,7 +37,7 @@ public enum class FeatureFlagRemoteDataStatus {
 @OpenForTesting
 public class FeatureFlagManager internal constructor(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     private val audienceEvaluator: AudienceEvaluator,
     private val remoteData: FeatureFlagRemoteDataAccess,
     private val infoProviderFactory: () -> DeviceInfoProvider = {

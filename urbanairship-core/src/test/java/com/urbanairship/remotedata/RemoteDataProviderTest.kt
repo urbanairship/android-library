@@ -4,7 +4,7 @@ package com.urbanairship.remotedata
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestClock
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.jsonMapOf
@@ -474,7 +474,7 @@ public class RemoteDataProviderTest {
 internal class TestRemoteDataProvider(context: Context, clock: Clock) : RemoteDataProvider(
     source = RemoteDataSource.APP,
     remoteDataStore = RemoteDataStore(context, "appKey", UUID.randomUUID().toString()),
-    preferenceDataStore = PreferenceDataStore.inMemoryStore(context),
+    preferenceStore = PreferenceStore.inMemoryStore(context),
     clock = clock
 ) {
     var isRemoteDataInfoUpToDateCallback: ((RemoteDataInfo, Locale, Int) -> Boolean)? = null

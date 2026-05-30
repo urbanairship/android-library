@@ -10,7 +10,7 @@ import com.urbanairship.Airship
 import com.urbanairship.AirshipComponent
 import com.urbanairship.JobAwareAirshipComponent
 import com.urbanairship.Predicate
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.analytics.Analytics
@@ -39,7 +39,7 @@ public class MessageCenter
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public constructor(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     private val privacyManager: PrivacyManager,
     public val inbox: Inbox,
     private val pushManager: PushManager,
@@ -93,7 +93,7 @@ public constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     internal constructor(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         channel: AirshipChannel,

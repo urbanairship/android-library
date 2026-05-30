@@ -4,8 +4,7 @@ package com.urbanairship.modules
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipVersionInfo
-import com.urbanairship.ApplicationMetrics
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.Airship
@@ -47,7 +46,7 @@ public object Modules {
 
     public fun messageCenter(
         context: Context,
-        preferenceDataStore: PreferenceDataStore,
+        preferenceStore: PreferenceStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         channel: AirshipChannel,
@@ -60,7 +59,7 @@ public object Modules {
                 MESSAGE_CENTER_MODULE_FACTORY, MessageCenterModuleFactory::class.java
             )?.build(
                 context = context,
-                dataStore = preferenceDataStore,
+                dataStore = preferenceStore,
                 config = config,
                 privacyManager = privacyManager,
                 airshipChannel = channel,
@@ -76,7 +75,7 @@ public object Modules {
 
     public fun automation(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,
@@ -87,7 +86,6 @@ public object Modules {
         meteredUsage: AirshipMeteredUsage,
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
-        metrics: ApplicationMetrics,
         cache: AirshipCache,
         audienceEvaluator: AudienceEvaluator
     ): Module? {
@@ -107,7 +105,6 @@ public object Modules {
                 meteredUsage = meteredUsage,
                 deferredResolver = deferredResolver,
                 eventFeed = eventFeed,
-                metrics = metrics,
                 cache = cache,
                 audienceEvaluator = audienceEvaluator
             )
@@ -119,7 +116,7 @@ public object Modules {
 
     public fun debug(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         remoteData: RemoteData,
         pushManager: PushManager,
         analytics: Analytics
@@ -142,7 +139,7 @@ public object Modules {
 
     public fun adId(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         analytics: Analytics
@@ -165,7 +162,7 @@ public object Modules {
 
     public fun preferenceCenter(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         privacyManager: PrivacyManager,
         remoteData: RemoteData,
         validator: AirshipInputValidation.Validator
@@ -188,7 +185,7 @@ public object Modules {
 
     public fun liveUpdateManager(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,
@@ -213,7 +210,7 @@ public object Modules {
 
     public fun featureFlags(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         remoteData: RemoteData,
         analytics: Analytics,
         cache: AirshipCache,

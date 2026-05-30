@@ -9,7 +9,7 @@ import com.urbanairship.Airship
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.PendingResult
 import com.urbanairship.Platform
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
@@ -57,7 +57,7 @@ public class AnalyticsTest {
     private val mockPermissionsManager: PermissionsManager = mockk(relaxed = true)
     private val mockEventFeed: AirshipEventFeed = mockk(relaxed = true)
 
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
+    private val dataStore = PreferenceStore.inMemoryStore(context)
     private val localeManager = LocaleManager(context, dataStore)
     private val runtimeConfig = TestAirshipRuntimeConfig()
     private val activityMonitor = TestActivityMonitor()

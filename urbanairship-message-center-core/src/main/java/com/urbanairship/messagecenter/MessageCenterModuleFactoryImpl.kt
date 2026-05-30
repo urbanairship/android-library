@@ -3,7 +3,7 @@ package com.urbanairship.messagecenter
 import android.content.Context
 import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.ActionsManifest
@@ -30,7 +30,7 @@ public class MessageCenterModuleFactoryImpl public constructor() : MessageCenter
 
     override fun build(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         config: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         airshipChannel: AirshipChannel,

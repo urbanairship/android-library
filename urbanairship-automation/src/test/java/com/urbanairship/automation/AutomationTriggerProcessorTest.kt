@@ -22,6 +22,10 @@ import app.cash.turbine.test
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -220,6 +224,54 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
         }
     }
 
+    // Smoke test that the public API tolerates parallel calls. Won't reliably
+    // reproduce the ConcurrentModificationException from issue #264 — that
+    // requires a very narrow timing window that's hard to hit in a unit test.
+    // Real protection comes from running every mutating method on a single
+    // SerialExecutor; this test just exercises the surface.
+    @Test
+    public fun testConcurrentMutableMapAccessStress(): TestResult = runTest(timeout = 60.seconds) {
+        val scheduleCount = 16
+        val schedules = List(scheduleCount) { index ->
+            defaultSchedule(
+                identifier = "concurrent-map-schedule-$index",
+                trigger = listOf(
+                    AutomationTrigger.Event(
+                        EventAutomationTrigger(
+                            id = "concurrent-map-trigger-$index",
+                            type = EventAutomationTriggerType.APP_INIT,
+                            goal = 10_000.0,
+                            predicate = null
+                        )
+                    )
+                ),
+                group = if (index % 2 == 0) "concurrent-map-even-group" else null
+            )
+        }
+        val ids = schedules.map { it.schedule.identifier }
+        processor.cancel(ids)
+        processor.restoreSchedules(schedules)
+
+        val parallelism = Dispatchers.Default.limitedParallelism(8)
+        coroutineScope {
+            repeat(400) { iteration ->
+                launch(parallelism) {
+                    when (iteration % 5) {
+                        0 -> processor.processEvent(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
+                        1 -> processor.updateSchedules(schedules)
+                        2 -> processor.processEvent(
+                            AutomationEvent.StateChanged(
+                                TriggerableState(appSessionID = iteration.toString())
+                            )
+                        )
+                        3 -> processor.cancel(listOf("concurrent-map-schedule-${iteration % scheduleCount}"))
+                        else -> processor.cancel("concurrent-map-even-group")
+                    }
+                }
+            }
+        }
+    }
+
     @Test
     public fun testReplayEvents(): TestResult = runTest {
         val triggerOld = AutomationTrigger.Event(
@@ -293,12 +345,16 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
         processor.restoreSchedules(listOf(schedule))
     }
 
-    private fun defaultSchedule(trigger: AutomationTrigger, group: String? = null): AutomationScheduleData {
+    private fun defaultSchedule(
+        identifier: String = "schedule-id",
+        trigger: List<AutomationTrigger>,
+        group: String? = null
+    ): AutomationScheduleData {
         return AutomationScheduleData(
             schedule = AutomationSchedule(
-                identifier = "schedule-id",
+                identifier = identifier,
                 data = AutomationSchedule.ScheduleData.Actions(actions = JsonValue.NULL),
-                triggers = listOf(trigger),
+                triggers = trigger,
                 group = group,
                 created = 0U
             ),
@@ -307,5 +363,9 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
             executionCount = 0,
             triggerSessionId = UUID.randomUUID().toString()
         )
+    }
+
+    private fun defaultSchedule(trigger: AutomationTrigger, group: String? = null): AutomationScheduleData {
+        return defaultSchedule(trigger = listOf(trigger), group = group)
     }
 }

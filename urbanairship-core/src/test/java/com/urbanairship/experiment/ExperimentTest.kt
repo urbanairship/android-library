@@ -68,8 +68,8 @@ public class ExperimentTest {
 
         val expected = Experiment(
             id = "cf9b8c05-05e2-4b8e-a2a3-7ed06d99cc1c",
-            lastUpdated = 1689091609000,
-            created = 1689012646000,
+            lastUpdated = 1689091609003,
+            created = 1689012646203,
             reportingMetadata = jsonMapOf("experiment_id" to "cf9b8c05-05e2-4b8e-a2a3-7ed06d99cc1c"),
             audience = AudienceSelector
                 .newBuilder()
@@ -154,8 +154,8 @@ public class ExperimentTest {
 
         val expected = Experiment(
             id = "cf9b8c05-05e2-4b8e-a2a3-7ed06d99cc1c",
-            lastUpdated = 1689091609000,
-            created = 1689012646000,
+            lastUpdated = 1689091609003,
+            created = 1689012646203,
             reportingMetadata = jsonMapOf("experiment_id" to "cf9b8c05-05e2-4b8e-a2a3-7ed06d99cc1c"),
             audience = AudienceSelector
                 .newBuilder()

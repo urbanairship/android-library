@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestClock
@@ -37,7 +37,7 @@ import org.junit.runner.RunWith
 public class ChannelRegistrarTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
+    private val preferenceStore = PreferenceStore.inMemoryStore(context)
 
     private val testDispatcher = StandardTestDispatcher()
     private val mockClient = mockk<ChannelApiClient> {
@@ -53,7 +53,7 @@ public class ChannelRegistrarTest {
     private var createOption: ChannelGenerationMethod = ChannelGenerationMethod.Automatic
 
     private val registrar = ChannelRegistrar(
-        preferenceDataStore, mockClient, testActivityMonitor,
+        preferenceStore, mockClient, testActivityMonitor,
         channelCreateOption = object : AirshipChannelCreateOption {
             override fun get(): ChannelGenerationMethod {
                 return createOption

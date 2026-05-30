@@ -5,7 +5,7 @@ package com.urbanairship.contacts
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import app.cash.turbine.test
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestClock
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
@@ -72,10 +72,10 @@ public class ContactManagerTest {
         every { this@mockk.pendingContactOverridesDelegate = capture(audienceOverrideSlot) } just runs
     }
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val preferenceDataStore = PreferenceDataStore.inMemoryStore(context)
+    private val preferenceStore = PreferenceStore.inMemoryStore(context)
 
     private val contactManager = ContactManager(
-        preferenceDataStore,
+        preferenceStore,
         mockChannel,
         mockJobDispatcher,
         mockApiClient,

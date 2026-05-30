@@ -5,7 +5,7 @@ package com.urbanairship.meteredusage
 import android.content.Context
 import androidx.annotation.RestrictTo
 import androidx.annotation.WorkerThread
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.JobAwareAirshipComponent
@@ -31,7 +31,7 @@ import kotlin.time.Duration.Companion.seconds
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AirshipMeteredUsage internal constructor(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     private val channel: AirshipChannel,
     private val config: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,

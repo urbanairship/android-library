@@ -8,7 +8,8 @@ import androidx.core.content.pm.PackageInfoCompat
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.JobAwareAirshipComponent
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.PrivacyManager
 import com.urbanairship.PushProviders
 import com.urbanairship.UALog
@@ -26,16 +27,20 @@ import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.util.Clock
+import com.urbanairship.util.TaskSleeper
 import java.security.SecureRandom
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.Lock
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -62,7 +67,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 public class RemoteData @VisibleForTesting internal constructor(
     context: Context,
     private val config: AirshipRuntimeConfig,
-    private val preferenceDataStore: PreferenceDataStore,
+    private val preferenceStore: PreferenceStore,
     private val privacyManager: PrivacyManager,
     private val localeManager: LocaleManager,
     private val pushManager: PushManager,
@@ -72,8 +77,9 @@ public class RemoteData @VisibleForTesting internal constructor(
     private val refreshManager: RemoteDataRefreshManager,
     private val activityMonitor: ActivityMonitor = GlobalActivityMonitor.shared(context),
     private val clock: Clock = Clock.DEFAULT_CLOCK,
+    private val taskSleeper: TaskSleeper = TaskSleeper.default,
     coroutineDispatcher: CoroutineDispatcher = AirshipDispatchers.IO
-) : JobAwareAirshipComponent(context, preferenceDataStore) {
+) : JobAwareAirshipComponent(context, preferenceStore) {
 
     private val scope = CoroutineScope(coroutineDispatcher + SupervisorJob())
 
@@ -81,6 +87,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     private val changeTokenLock: Lock = ReentrantLock()
 
     private var startUpRefreshJob: Job? = null
+    private var foregroundPollingJob: Job? = null
 
     private var airshipReady: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
@@ -101,10 +108,14 @@ public class RemoteData @VisibleForTesting internal constructor(
         return config.remoteConfig.remoteDataRefreshInterval ?: DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS
     }
 
+    internal fun getForegroundPollingInterval(): Duration {
+        return config.remoteConfig.remoteDataForegroundPollingInterval ?: DEFAULT_FOREGROUND_POLLING_INTERVAL
+    }
+
     internal constructor(
         context: Context,
         config: AirshipRuntimeConfig,
-        preferenceDataStore: PreferenceDataStore,
+        preferenceStore: PreferenceStore,
         privacyManager: PrivacyManager,
         localeManager: LocaleManager,
         pushManager: PushManager,
@@ -112,7 +123,7 @@ public class RemoteData @VisibleForTesting internal constructor(
         contact: Contact,
         providers: List<RemoteDataProvider> = createProviders(
             context = context,
-            preferenceDataStore = preferenceDataStore,
+            preferenceStore = preferenceStore,
             config = config,
             pushProvidersProvider = pushProviders,
             contact = contact
@@ -120,7 +131,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     ) : this(
         context = context,
         config = config,
-        preferenceDataStore = preferenceDataStore,
+        preferenceStore = preferenceStore,
         privacyManager = privacyManager,
         localeManager = localeManager,
         pushManager = pushManager,
@@ -146,6 +157,11 @@ public class RemoteData @VisibleForTesting internal constructor(
                 dispatchRefreshJobAsync()
                 lastForegroundDispatchTime = now
             }
+            startForegroundPollingIfNeeded()
+        }
+
+        override fun onBackground(milliseconds: Long) {
+            stopForegroundPolling()
         }
     }
 
@@ -223,6 +239,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     public override fun onAirshipReady() {
         super.onAirshipReady()
         airshipReady.update { true }
+        startForegroundPollingIfNeeded()
     }
 
     public override fun tearDown() {
@@ -230,6 +247,24 @@ public class RemoteData @VisibleForTesting internal constructor(
         activityMonitor.removeApplicationListener(applicationListener)
         privacyManager.removeListener(privacyListener)
         config.removeRemoteConfigListener(configListener)
+        stopForegroundPolling()
+    }
+
+    private fun startForegroundPollingIfNeeded() {
+        if (foregroundPollingJob?.isActive == true) return
+        if (!activityMonitor.isAppForegrounded) return
+        foregroundPollingJob = scope.launch {
+            while (isActive) {
+                taskSleeper.sleep(getForegroundPollingInterval())
+                if (!isActive) return@launch
+                dispatchRefreshJob()
+            }
+        }
+    }
+
+    private fun stopForegroundPolling() {
+        foregroundPollingJob?.cancel()
+        foregroundPollingJob = null
     }
 
     override val jobActions: List<String>
@@ -249,11 +284,11 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     public val randomValue: Int
         get() {
-            var randomValue = preferenceDataStore.getInt(RANDOM_VALUE_KEY, -1)
+            var randomValue = preferenceStore.get(RANDOM_VALUE_KEY) ?: -1
             if (randomValue == -1) {
                 val random = SecureRandom()
                 randomValue = random.nextInt(MAX_RANDOM_VALUE + 1)
-                preferenceDataStore.put(RANDOM_VALUE_KEY, randomValue)
+                preferenceStore.put(RANDOM_VALUE_KEY, randomValue)
             }
             return randomValue
         }
@@ -351,7 +386,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     private val changeToken: String
         get() {
             return changeTokenLock.withLock {
-                val token = (this.dataStore.getString(CHANGE_TOKEN_KEY, "") ?: "").ifEmpty {
+                val token = (this.dataStore.get(CHANGE_TOKEN_KEY) ?: "").ifEmpty {
                     val token = UUID.randomUUID().toString()
                     this.dataStore.put(CHANGE_TOKEN_KEY, token)
                     token
@@ -415,13 +450,18 @@ public class RemoteData @VisibleForTesting internal constructor(
     public companion object {
 
         // Datastore keys
-        private const val RANDOM_VALUE_KEY = "com.urbanairship.remotedata.RANDOM_VALUE"
-        private const val CHANGE_TOKEN_KEY = "com.urbanairship.remotedata.CHANGE_TOKEN"
+        private val RANDOM_VALUE_KEY = SyncPrefKey.int("com.urbanairship.remotedata.RANDOM_VALUE")
+        private val CHANGE_TOKEN_KEY = SyncPrefKey.string("com.urbanairship.remotedata.CHANGE_TOKEN")
 
         /**
          * Default foreground refresh interval in milliseconds.
          */
         public const val DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS: Long = 10000 // 10 seconds
+
+        /**
+         * Default foreground polling interval.
+         */
+        public val DEFAULT_FOREGROUND_POLLING_INTERVAL: Duration = 10.minutes
 
         /**
          * Maximum random value.
@@ -438,7 +478,7 @@ public class RemoteData @VisibleForTesting internal constructor(
 
         private fun createProviders(
             context: Context,
-            preferenceDataStore: PreferenceDataStore,
+            preferenceStore: PreferenceStore,
             config: AirshipRuntimeConfig,
             pushProvidersProvider: () -> PushProviders,
             contact: Contact
@@ -448,14 +488,14 @@ public class RemoteData @VisibleForTesting internal constructor(
             return listOf(
                 AppRemoteDataProvider(
                     context = context,
-                    preferenceDataStore = preferenceDataStore,
+                    preferenceStore = preferenceStore,
                     config = config,
                     apiClient = apiClient,
                     urlFactory = urlFactory
                 ),
                 ContactRemoteDataProvider(
                     context = context,
-                    preferenceDataStore = preferenceDataStore,
+                    preferenceStore = preferenceStore,
                     config = config,
                     contact = contact,
                     apiClient = apiClient,

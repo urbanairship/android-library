@@ -5,7 +5,7 @@ package com.urbanairship.remotedata
 import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.http.RequestResult
@@ -34,7 +34,7 @@ public class AppRemoteDataProviderTest {
 
     private val provider: AppRemoteDataProvider = AppRemoteDataProvider(
         context,
-        PreferenceDataStore.inMemoryStore(context),
+        PreferenceStore.inMemoryStore(context),
         TestAirshipRuntimeConfig(),
         mockApiClient,
         mockUrlFactory

@@ -8,7 +8,7 @@ import com.urbanairship.Airship
 import com.urbanairship.AirshipComponent
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.inputvalidation.AirshipInputValidation
@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
  */
 public class PreferenceCenter internal constructor(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     private val privacyManager: PrivacyManager,
     private val remoteData: RemoteData,
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

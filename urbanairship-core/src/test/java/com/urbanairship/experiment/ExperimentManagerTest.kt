@@ -5,7 +5,7 @@ package com.urbanairship.experiment
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.audience.DeviceInfoProvider
@@ -41,7 +41,7 @@ public class ExperimentManagerTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext<Context>()
 
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
+    private val dataStore = PreferenceStore.inMemoryStore(context)
 
     private val remoteData: RemoteData = mockk()
 

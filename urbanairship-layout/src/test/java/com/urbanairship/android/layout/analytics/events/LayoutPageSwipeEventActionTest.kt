@@ -8,7 +8,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class LayoutPageSwipeEventAction {
+public class LayoutPageSwipeEventActionTest {
     @Test
     public fun testEvent() {
         val event = InAppPageSwipeEvent(

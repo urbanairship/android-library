@@ -3,7 +3,7 @@ package com.urbanairship.liveupdate
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestRequestSession
 import com.urbanairship.Airship
@@ -38,14 +38,14 @@ public class LiveUpdateManagerTest {
     }
     private val registrar: LiveUpdateRegistrar = mockk(relaxUnitFun = true)
 
-    private lateinit var dataStore: PreferenceDataStore
+    private lateinit var dataStore: PreferenceStore
     private lateinit var privacyManager: PrivacyManager
 
     private lateinit var liveUpdateManager: LiveUpdateManager
 
     @Before
     public fun setUp() {
-        dataStore = PreferenceDataStore.inMemoryStore(context)
+        dataStore = PreferenceStore.inMemoryStore(context)
         privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL)
 
         liveUpdateManager = LiveUpdateManager(

@@ -5,7 +5,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.Platform
 import com.urbanairship.http.RequestException
@@ -53,7 +53,7 @@ public class InboxJobHandlerTest {
 
     private val testDispatcher = StandardTestDispatcher()
 
-    private val dataStore: PreferenceDataStore = PreferenceDataStore.inMemoryStore(context)
+    private val dataStore: PreferenceStore = PreferenceStore.inMemoryStore(context)
 
     private val mockMessageDao = mockk<MessageDao>(relaxUnitFun = true) {
         coEvery { getMessageIds() } returns mutableListOf()
@@ -111,7 +111,7 @@ public class InboxJobHandlerTest {
         assertTrue(jobHandler.syncMessageList(userCredentials, "channelId"))
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
-        assertEquals("some last modified", dataStore.getString(LAST_MESSAGE_REFRESH_TIME, null))
+        assertEquals("some last modified", dataStore.get(LAST_MESSAGE_REFRESH_TIME))
     }
 
     @Test
@@ -137,7 +137,7 @@ public class InboxJobHandlerTest {
         // Verify LAST_MESSAGE_REFRESH_TIME was updated
         assertEquals(
             "some other last modified",
-            dataStore.getString(LAST_MESSAGE_REFRESH_TIME, null)
+            dataStore.get(LAST_MESSAGE_REFRESH_TIME)
         )
     }
 
@@ -179,7 +179,7 @@ public class InboxJobHandlerTest {
         assertFalse(jobHandler.syncMessageList(userCredentials, "channelId"))
 
         // Verify LAST_MESSAGE_REFRESH_TIME was not updated
-        assertEquals("some last modified", dataStore.getString(LAST_MESSAGE_REFRESH_TIME, null))
+        assertEquals("some last modified", dataStore.get(LAST_MESSAGE_REFRESH_TIME))
     }
 
     @Test

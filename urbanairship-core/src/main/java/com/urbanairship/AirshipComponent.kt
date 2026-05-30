@@ -9,6 +9,7 @@ import androidx.annotation.WorkerThread
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.job.JobResult
+import com.urbanairship.preferences.PreferenceStore
 
 /**
  * Base class for Airship components.
@@ -16,11 +17,11 @@ import com.urbanairship.job.JobResult
 public abstract class AirshipComponent @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public constructor(
     context: Context,
     /**
-     * @property dataStore The preference data store.
+     * @property dataStore The preference store.
      * @hide
      */
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    protected val dataStore: PreferenceDataStore
+    protected val dataStore: PreferenceStore
 ) {
 
     /**
@@ -81,7 +82,7 @@ public abstract class AirshipComponent @RestrictTo(RestrictTo.Scope.LIBRARY_GROU
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class JobAwareAirshipComponent(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     jobDispatcher: JobDispatcher = JobDispatcher.shared(context)
 ) : AirshipComponent(context, dataStore) {
 

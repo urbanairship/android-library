@@ -21,7 +21,7 @@ internal data class EventEntity(
     val session: String,
     val payload: String,
     val time: Long,
-    val type: EventType
+    val type: String
 ) {
 
     constructor(event: AirshipEventData) : this(
@@ -30,7 +30,6 @@ internal data class EventEntity(
         session = event.sessionId,
         payload = event.body.toString(),
         time = event.timeMs,
-        type = event.type
+        type = event.type.name
     )
-
 }

@@ -4,7 +4,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.json.jsonListOf
 import com.urbanairship.json.jsonMapOf
@@ -57,7 +57,7 @@ public class PreferenceCenterTest {
     }
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
+    private val dataStore = PreferenceStore.inMemoryStore(context)
     private val privacyManager = PrivacyManager(dataStore, PrivacyManager.Feature.ALL)
 
     private val remoteData: RemoteData = mockk()

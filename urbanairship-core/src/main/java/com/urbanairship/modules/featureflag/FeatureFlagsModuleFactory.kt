@@ -3,7 +3,7 @@ package com.urbanairship.modules.featureflag
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipVersionInfo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.cache.AirshipCache
@@ -21,7 +21,7 @@ public interface FeatureFlagsModuleFactory : AirshipVersionInfo {
 
     public fun build(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         remoteData: RemoteData,
         analytics: Analytics,
         cache: AirshipCache,

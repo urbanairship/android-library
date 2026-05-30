@@ -3,7 +3,7 @@ package com.urbanairship.remoteconfig
 
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.BaseTestCase
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.Airship
 import com.urbanairship.Platform
@@ -41,13 +41,13 @@ public class RemoteConfigManagerTest : BaseTestCase() {
     }
 
     private var privacyManager: PrivacyManager = PrivacyManager(
-        PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext()),
+        PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext()),
         PrivacyManager.Feature.ALL
     )
 
     private var remoteConfigManager: RemoteConfigManager = RemoteConfigManager(
         ApplicationProvider.getApplicationContext(),
-        PreferenceDataStore.inMemoryStore(ApplicationProvider.getApplicationContext()),
+        PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext()),
         config,
         privacyManager,
         remoteData,

@@ -3,11 +3,12 @@
 package com.urbanairship.remotedata
 
 import androidx.test.core.app.ApplicationProvider
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
 import com.urbanairship.TestClock
+import com.urbanairship.TestTaskSleeper
 import com.urbanairship.contacts.Contact
 import com.urbanairship.contacts.ContactIdUpdate
 import com.urbanairship.job.JobInfo
@@ -53,7 +54,7 @@ public class RemoteDataTest {
     private val testDispatcher = UnconfinedTestDispatcher()
 
     private var config: TestAirshipRuntimeConfig = TestAirshipRuntimeConfig()
-    private val dataStore: PreferenceDataStore = PreferenceDataStore.inMemoryStore(
+    private val dataStore: PreferenceStore = PreferenceStore.inMemoryStore(
         ApplicationProvider.getApplicationContext()
     )
 
@@ -79,6 +80,8 @@ public class RemoteDataTest {
 
     private val testClock: TestClock = TestClock()
     private val testActivityMonitor: TestActivityMonitor = TestActivityMonitor()
+    private val pollingGate = kotlinx.coroutines.CompletableDeferred<Unit>()
+    private val testTaskSleeper: TestTaskSleeper = TestTaskSleeper(testClock) { pollingGate.await() }
 
     private val mockContactRemoteDataProvider: RemoteDataProvider = mockk {
         every { this@mockk.source } returns RemoteDataSource.CONTACT
@@ -96,7 +99,7 @@ public class RemoteDataTest {
 
     private val remoteData = RemoteData(
         context = ApplicationProvider.getApplicationContext(),
-        preferenceDataStore = dataStore,
+        preferenceStore = dataStore,
         config = config,
         privacyManager = privacyManager,
         localeManager = mockLocaleManager,
@@ -107,6 +110,7 @@ public class RemoteDataTest {
         activityMonitor = testActivityMonitor,
         refreshManager = mockRefreshManager,
         clock = testClock,
+        taskSleeper = testTaskSleeper,
         coroutineDispatcher = testDispatcher
     )
 

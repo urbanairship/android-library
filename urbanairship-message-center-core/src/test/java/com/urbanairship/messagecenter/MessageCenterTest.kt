@@ -4,7 +4,7 @@ package com.urbanairship.messagecenter
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -51,7 +51,7 @@ public class MessageCenterTest {
     private val testDispatcher = StandardTestDispatcher()
     private val unconfinedTestDispatcher = UnconfinedTestDispatcher()
 
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
+    private val dataStore = PreferenceStore.inMemoryStore(context)
     private val shadowApplication: ShadowApplication = Shadows.shadowOf(context as Application?)
     private val privacyManager = mockk<PrivacyManager>(relaxUnitFun = true) {
         every { isEnabled(PrivacyManager.Feature.MESSAGE_CENTER) } returns true

@@ -10,6 +10,7 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import java.util.Locale
 import kotlin.jvm.Throws
+import kotlin.time.Duration
 
 /**
  * @hide
@@ -18,7 +19,7 @@ import kotlin.jvm.Throws
 public sealed class DeferredResult<T> {
     public data class Success<T>(public val result: T) : DeferredResult<T>()
     public data class RetriableError<T>(
-        public val retryAfter: Long? = null,
+        public val retryAfter: Duration? = null,
         public val statusCode: Int? = null,
         public val errorDescription: String? = null
     ) : DeferredResult<T>()

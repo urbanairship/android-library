@@ -3,7 +3,6 @@
 package com.urbanairship.automation.remotedata
 
 import com.urbanairship.AirshipDispatchers
-import com.urbanairship.PreferenceDataStore
 import com.urbanairship.UALog
 import com.urbanairship.Airship
 import com.urbanairship.automation.AutomationSchedule
@@ -23,7 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 internal class AutomationRemoteDataSubscriber (
-    dataStore: PreferenceDataStore,
+    private val sourceInfoStore: AutomationSourceInfoStore,
     private val remoteDataAccess: AutomationRemoteDataAccessInterface,
     private val engine: AutomationEngineInterface,
     private val frequencyLimitManager: FrequencyLimitManager,
@@ -32,7 +31,6 @@ internal class AutomationRemoteDataSubscriber (
 )  {
 
     private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
-    private val sourceInfoStore = AutomationSourceInfoStore(dataStore)
     private val subscriptionState = MutableStateFlow(false)
 
     init {

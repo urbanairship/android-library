@@ -7,6 +7,7 @@ import android.graphics.drawable.RippleDrawable
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Button
 import android.widget.FrameLayout
@@ -46,7 +47,11 @@ internal class LabelButtonView(
         isClickable = true
         isFocusable = true
 
-        val params = LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
+        val innerWidth =
+            if (itemProperties?.size?.width?.isAuto == false) MATCH_PARENT else WRAP_CONTENT
+        val innerHeight =
+            if (itemProperties?.size?.height?.isAuto == false) MATCH_PARENT else WRAP_CONTENT
+        val params = LayoutParams(innerWidth, innerHeight).apply {
             gravity = Gravity.CENTER
         }
 
