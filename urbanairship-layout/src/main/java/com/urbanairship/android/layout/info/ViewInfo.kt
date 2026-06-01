@@ -21,6 +21,7 @@ import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.MarkdownOptions
 import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
+import com.urbanairship.android.layout.property.MediaUrlSelector
 import com.urbanairship.android.layout.property.OutcomeResolver
 import com.urbanairship.android.layout.property.PageBranching
 import com.urbanairship.android.layout.property.PagerControllerBranching
@@ -553,10 +554,27 @@ internal class MediaInfo(
     json: JsonMap
 ) : ViewInfo(), View by view(json), Accessible by accessible(json), RecentlyIdentifiable by recentlyIdentifiable(json) {
     val url: String = json.requireField("url")
+    val urlSelectors: List<MediaUrlSelector> = json.optionalList("url_selectors")
+        ?.let(MediaUrlSelector::fromJsonList) ?: emptyList()
     val mediaType: MediaType = MediaType.from(json.require("media_type"))
     val mediaFit: MediaFit = MediaFit.from(json.requireField("media_fit"))
     val position: Position = json["position"]?.let(Position::fromJson) ?: Position.CENTER
     val video: Video? = json.optionalMap("video")?.let { Video.fromJson(it) }
+    val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
+
+    fun resolveUrl(isDarkMode: Boolean): String =
+        MediaUrlSelector.resolve(url, urlSelectors, isDarkMode)
+
+    internal class ViewOverrides(json: JsonMap) {
+        val url = json.optionalList("url")?.map {
+            ViewPropertyOverride(it) { value -> value.requireString() }
+        }
+        val urlSelectors = json.optionalList("url_selectors")?.map {
+            ViewPropertyOverride(it) { value ->
+                MediaUrlSelector.fromJsonList(value.requireList())
+            }
+        }
+    }
 }
 
 internal class LabelInfo(
@@ -697,6 +715,13 @@ internal class LabelButtonInfo(json: JsonMap) : ButtonInfo(json) {
 
 internal class ImageButtonInfo(json: JsonMap) : ButtonInfo(json) {
     val image: Image = Image.fromJson(json.require("image"))
+    val viewOverrides: ViewOverrides? = json.optionalMap("view_overrides")?.let { ViewOverrides(it) }
+
+    internal class ViewOverrides(json: JsonMap) {
+        val image = json.optionalList("image")?.map {
+            ViewPropertyOverride(it, Image::fromJson)
+        }
+    }
 }
 
 internal class CheckboxInfo(json: JsonMap) : CheckableInfo(json), RecentlyIdentifiable by recentlyIdentifiable(json) {
@@ -762,7 +787,11 @@ internal sealed interface StackItemInfo {
         val imageUrl: String,
         val mediaFit: MediaFit,
         val cropPosition: Position,
-    ) : StackItemInfo
+        val urlSelectors: List<MediaUrlSelector> = emptyList(),
+    ) : StackItemInfo {
+        fun resolveUrl(isDarkMode: Boolean): String =
+            MediaUrlSelector.resolve(imageUrl, urlSelectors, isDarkMode)
+    }
 
     companion object {
         fun fromJson(json: JsonValue): StackItemInfo {
@@ -781,7 +810,9 @@ internal sealed interface StackItemInfo {
                     ImageItem(
                         imageUrl = content.requireField<String>("url"),
                         mediaFit = MediaFit.from(content.requireField("media_fit")),
-                        cropPosition = Position.fromJson(content.requireField("position"))
+                        cropPosition = content["position"]?.let(Position::fromJson) ?: Position.CENTER,
+                        urlSelectors = content.optionalList("url_selectors")
+                            ?.let(MediaUrlSelector::fromJsonList) ?: emptyList(),
                     )
                 }
                 else -> throw IllegalArgumentException("Unknown StackItem type: $type")
