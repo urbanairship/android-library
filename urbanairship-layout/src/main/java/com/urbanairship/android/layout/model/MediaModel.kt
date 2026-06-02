@@ -7,9 +7,11 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.property.EventHandler
+import com.urbanairship.android.layout.property.MediaUrlSelector
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.view.MediaView
 import kotlinx.coroutines.channels.Channel
@@ -90,6 +92,18 @@ internal class MediaModel(
     fun setMediaLoading(isLoading: Boolean) {
         val pageId = properties.pagerPageId ?: return
         pagerState?.update { state -> state.copyWithMediaPaused(pageId, videoId, isLoading) }
+    }
+
+    fun resolveUrl(state: ThomasState?, isDarkMode: Boolean): String {
+        val url = state?.resolveRequired(
+            overrides = viewInfo.viewOverrides?.url,
+            default = viewInfo.url
+        ) ?: viewInfo.url
+        val urlSelectors = state?.resolveOptional(
+            overrides = viewInfo.viewOverrides?.urlSelectors,
+            default = viewInfo.urlSelectors
+        ) ?: viewInfo.urlSelectors
+        return MediaUrlSelector.resolve(url, urlSelectors, isDarkMode)
     }
 
     init {

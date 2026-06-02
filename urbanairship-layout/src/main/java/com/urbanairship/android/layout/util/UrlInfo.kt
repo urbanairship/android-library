@@ -2,6 +2,8 @@ package com.urbanairship.android.layout.util
 
 import com.urbanairship.android.layout.info.ImageButtonInfo
 import com.urbanairship.android.layout.info.MediaInfo
+import com.urbanairship.android.layout.info.StackImageButtonInfo
+import com.urbanairship.android.layout.info.StackItemInfo
 import com.urbanairship.android.layout.info.ViewGroupInfo
 import com.urbanairship.android.layout.info.ViewInfo
 import com.urbanairship.android.layout.info.WebViewInfo
@@ -26,17 +28,48 @@ public class UrlInfo(
 
             when(info) {
                 is MediaInfo -> {
-                    when (info.mediaType) {
-                        MediaType.IMAGE -> result.add(UrlInfo(UrlType.IMAGE, info.url))
+                    val urlType = when (info.mediaType) {
+                        MediaType.IMAGE -> UrlType.IMAGE
                         MediaType.VIDEO,
                         MediaType.YOUTUBE,
-                        MediaType.VIMEO -> result.add(UrlInfo(UrlType.VIDEO, info.url))
+                        MediaType.VIMEO -> UrlType.VIDEO
+                    }
+                    result.add(UrlInfo(urlType, info.url))
+                    info.urlSelectors.mapTo(result) { UrlInfo(urlType, it.url) }
+                    info.viewOverrides?.url?.forEach { it.value?.let { url -> result.add(UrlInfo(urlType, url)) } }
+                    info.viewOverrides?.urlSelectors?.forEach { override ->
+                        override.value?.mapTo(result) { UrlInfo(urlType, it.url) }
                     }
                 }
                 is ImageButtonInfo -> {
                     when(info.image) {
-                        is Image.Url -> result.add(UrlInfo(UrlType.IMAGE, info.image.url))
+                        is Image.Url -> {
+                            result.add(UrlInfo(UrlType.IMAGE, info.image.url))
+                            info.image.urlSelectors.mapTo(result) { UrlInfo(UrlType.IMAGE, it.url) }
+                        }
                         is Image.Icon -> {}
+                    }
+                    info.viewOverrides?.image?.forEach { override ->
+                        (override.value as? Image.Url)?.let { img ->
+                            result.add(UrlInfo(UrlType.IMAGE, img.url))
+                            img.urlSelectors.mapTo(result) { UrlInfo(UrlType.IMAGE, it.url) }
+                        }
+                    }
+                }
+                is StackImageButtonInfo -> {
+                    for (item in info.items) {
+                        if (item is StackItemInfo.ImageItem) {
+                            result.add(UrlInfo(UrlType.IMAGE, item.imageUrl))
+                            item.urlSelectors.mapTo(result) { UrlInfo(UrlType.IMAGE, it.url) }
+                        }
+                    }
+                    info.viewOverrides?.overrides?.forEach { override ->
+                        override.value?.forEach { item ->
+                            if (item is StackItemInfo.ImageItem) {
+                                result.add(UrlInfo(UrlType.IMAGE, item.imageUrl))
+                                item.urlSelectors.mapTo(result) { UrlInfo(UrlType.IMAGE, it.url) }
+                            }
+                        }
                     }
                 }
                 is WebViewInfo -> {

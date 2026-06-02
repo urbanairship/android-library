@@ -7,8 +7,10 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ThomasForm
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.ImageButtonInfo
+import com.urbanairship.android.layout.property.Image
 import com.urbanairship.android.layout.view.ImageButtonView
 
 internal class ImageButtonModel(
@@ -26,6 +28,12 @@ internal class ImageButtonModel(
 ) {
 
     val buttonViewId: Int = View.generateViewId()
+
+    fun resolveImage(state: ThomasState?): Image =
+        state?.resolveRequired(
+            overrides = viewInfo.viewOverrides?.image,
+            default = viewInfo.image
+        ) ?: viewInfo.image
 
     override fun onCreateView(
         context: Context, viewEnvironment: ViewEnvironment, itemProperties: ItemProperties?

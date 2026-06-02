@@ -17,6 +17,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
+import com.urbanairship.json.optionalList
 
 public sealed class Image(
     @JvmField public val type: Type
@@ -39,13 +40,18 @@ public sealed class Image(
     public class Url public constructor(
         @JvmField public val url: String,
         public val mediaFit: MediaFit?,
-        public val position: Position?
+        public val position: Position?,
+        public val urlSelectors: List<MediaUrlSelector> = emptyList(),
     ) : Image(Type.URL) {
+
+        public fun resolveUrl(isDarkMode: Boolean): String =
+            MediaUrlSelector.resolve(url, urlSelectors, isDarkMode)
 
         internal companion object {
             private const val KEY_URL = "url"
             private const val KEY_MEDIA_FIT = "media_fit"
             private const val KEY_POSITION = "position"
+            private const val KEY_URL_SELECTORS = "url_selectors"
 
             @Throws(JsonException::class)
             fun fromJson(json: JsonValue): Url {
@@ -66,7 +72,9 @@ public sealed class Image(
                 return Url(
                     url = content.optionalField(KEY_URL) ?: "",
                     mediaFit = mediaFit,
-                    position = position
+                    position = position,
+                    urlSelectors = content.optionalList(KEY_URL_SELECTORS)
+                        ?.let(MediaUrlSelector::fromJsonList) ?: emptyList(),
                 )
             }
         }

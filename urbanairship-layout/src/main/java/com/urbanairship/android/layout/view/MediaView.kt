@@ -21,6 +21,7 @@ import androidx.core.view.isVisible
 import com.urbanairship.UALog
 import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.ItemProperties
@@ -31,6 +32,7 @@ import com.urbanairship.android.layout.property.MediaType
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.property.Video
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.ThomasImageSizeResolver
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
@@ -88,6 +90,10 @@ internal class MediaView(
     private var webView: TouchAwareWebView? = null
     private var imageView: CropImageView? = null
     private var newBackground: Background? = null
+    private var currentState: ThomasState? = null
+    private var lastMediaUrl: String? = null
+    private var webContentLoader: Runnable? = null
+    private var imageContentLoader: ((String) -> Unit)? = null
 
     init {
         id = model.viewId
@@ -181,6 +187,17 @@ internal class MediaView(
                     newBackground = new
                 }
             }
+
+            override fun onStateUpdated(state: ThomasState) {
+                currentState = state
+                val isDarkMode = ResourceUtils.isUiModeNight(context)
+                val newUrl = model.resolveUrl(state, isDarkMode)
+                if (newUrl == lastMediaUrl) return
+                lastMediaUrl = newUrl
+                val cached = viewEnvironment.imageCache()?.get(newUrl)
+                imageContentLoader?.invoke(cached?.path ?: newUrl)
+                    ?: webContentLoader?.run()
+            }
         }
     }
 
@@ -203,8 +220,10 @@ internal class MediaView(
     override fun isShrinkable(): Boolean = true
 
     private fun configureImageView(model: MediaModel) {
-        val cached = viewEnvironment.imageCache()?.get(model.viewInfo.url)
-        val url = cached?.path ?: model.viewInfo.url
+        val resolvedUrl = model.resolveUrl(currentState, ResourceUtils.isUiModeNight(context))
+        lastMediaUrl = resolvedUrl
+        val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
+        val url = cached?.path ?: resolvedUrl
 
         if (url.endsWith(".svg")) {
             // Load SVGs in a webview because they won't work in an ImageView
@@ -273,6 +292,7 @@ internal class MediaView(
                 Airship.imageLoader.load(context, iv, options)
             }
 
+            imageContentLoader = { newUrl -> loadImage(newUrl) }
             loadImage(url)
         }
     }
@@ -377,6 +397,8 @@ internal class MediaView(
         val webViewWeakReference = WeakReference(wv)
         val load = Runnable {
             webViewWeakReference.get()?.let { weakWebView ->
+                val resolvedUrl = model.resolveUrl(currentState, ResourceUtils.isUiModeNight(context))
+                lastMediaUrl = resolvedUrl
                 when (model.viewInfo.mediaType) {
                     MediaType.VIDEO -> {
                         val video = model.viewInfo.video ?: Video.defaultVideo()
@@ -399,7 +421,7 @@ internal class MediaView(
                                 if (video.autoplay) "autoplay" else "",
                                 if (muted) "muted" else "",
                                 if (video.loop) "loop" else "",
-                                model.viewInfo.url,
+                                resolvedUrl,
                                 model.videoStyle
                             ),
                             "text/html",
@@ -407,14 +429,14 @@ internal class MediaView(
                         )
                     }
                     MediaType.IMAGE -> weakWebView.loadData(
-                        String.format(IMAGE_HTML_FORMAT, model.viewInfo.url),
+                        String.format(IMAGE_HTML_FORMAT, resolvedUrl),
                         "text/html",
                         "UTF-8"
                     )
                     MediaType.YOUTUBE -> {
                         val video = model.viewInfo.video ?: Video.defaultVideo()
                         val muted = model.groupMuted ?: video.muted
-                        val ytVideoId = YOUTUBE_ID_RE.find(model.viewInfo.url)?.groupValues?.get(1)
+                        val ytVideoId = YOUTUBE_ID_RE.find(resolvedUrl)?.groupValues?.get(1)
                         ytVideoId?.let {
                             weakWebView.loadDataWithBaseURL(
                                 "https://" + this.context.packageName,
@@ -433,15 +455,13 @@ internal class MediaView(
                                 "UTF-8",
                                 null
                             )
-                        } ?: model.viewInfo.url.let {
-                            weakWebView.loadUrl(it)
-                        }
+                        } ?: weakWebView.loadUrl(resolvedUrl)
                     }
                     MediaType.VIMEO -> {
                         weakWebView.loadData(
                             String.format(
                                 VIMEO_HTML_FORMAT,
-                                model.viewInfo.url
+                                resolvedUrl
                             ), "text/html", "UTF-8"
                         )
                     }
@@ -467,6 +487,7 @@ internal class MediaView(
         }
 
         addView(frameLayout)
+        webContentLoader = load
         load.run()
     }
 

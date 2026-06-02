@@ -32,6 +32,7 @@ import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.shape.Shape
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.ResourceUtils.dpToPx
 import com.urbanairship.android.layout.util.ThomasImageSizeResolver
 import com.urbanairship.android.layout.util.debouncedClicks
@@ -152,8 +153,9 @@ internal class StackImageButtonView(
     }
 
     private fun createOrUpdateImage(item: StackItemInfo.ImageItem) {
-        val cached = viewEnvironment.imageCache()?.get(item.imageUrl)
-        val url = cached?.path ?: item.imageUrl
+        val resolvedUrl = item.resolveUrl(ResourceUtils.isUiModeNight(context))
+        val cached = viewEnvironment.imageCache()?.get(resolvedUrl)
+        val url = cached?.path ?: resolvedUrl
 
         doOnAttach {
             val parentLayoutParams = layoutParams
