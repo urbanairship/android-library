@@ -168,7 +168,7 @@ internal class LinearLayoutView(
             PERCENT -> 0 to h.getFloat()
         }
 
-        val lp = LayoutParams(width, height, maxWidthPercent, maxHeightPercent).apply {
+        val lp = LayoutParams(width, height, maxWidthPercent, maxHeightPercent, size.aspectRatio?.toFloat() ?: 0f).apply {
             itemInfo.margin?.let { margin ->
                 topMargin = dpToPx(context, margin.top).toInt()
                 bottomMargin = dpToPx(context, margin.bottom).toInt()

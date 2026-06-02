@@ -15,6 +15,7 @@ import java.util.Collections
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * Variant of `LinearLayout` that replaces weight with max percentage sizes.
@@ -216,6 +217,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
         val count = childCount
         val childrenWithMaxPercent = mutableListOf<View>()
+        val ratioFillChildren = mutableListOf<View>()
 
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val widthSize = MeasureSpec.getSize(widthMeasureSpec)
@@ -234,6 +236,16 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
             }
 
             val lp = child.layoutParams as LayoutParams
+
+            // Any height-auto + ratio in a bounded layout: defer to a third pass so ratio items
+            // never overflow the space remaining after siblings are measured.
+            if (lp.aspectRatio > 0f
+                && lp.height == ViewGroup.LayoutParams.WRAP_CONTENT && lp.maxHeightPercent == 0f
+                && (heightMode == MeasureSpec.EXACTLY || heightMode == MeasureSpec.AT_MOST)) {
+                ratioFillChildren.add(child)
+                allFillParent = false
+                continue
+            }
 
             if (lp.maxHeightPercent > 0) {
                 childrenWithMaxPercent.add(child)
@@ -277,6 +289,10 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     lp.width = oldWidth
                 }
 
+                if (lp.aspectRatio > 0f) {
+                    remeasureWithAspectRatio(child, lp, widthMeasureSpec, heightMeasureSpec)
+                }
+
                 val childHeight = child.getMeasuredHeight()
                 val totalLength = this.totalLength
                 this.totalLength =
@@ -309,13 +325,14 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
         // Add in our padding
         totalLength += paddingTop + paddingBottom
+        val totalLengthAfterFirstPass = totalLength
 
         // Check against our minimum height
         var height = totalLength
         height = max(height, suggestedMinimumHeight)
 
         // Reconcile our calculated size with the heightMeasureSpec
-        val heightSizeAndState = resolveSizeAndState(height, heightMeasureSpec, 0)
+        var heightSizeAndState = resolveSizeAndState(height, heightMeasureSpec, 0)
         height = heightSizeAndState and MEASURED_SIZE_MASK
 
         // Either expand children with percentage dimensions to take up available space or shrink them if they extend
@@ -337,6 +354,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
                 val lp = child.layoutParams as LayoutParams
                 if (lp.height == ViewGroup.LayoutParams.WRAP_CONTENT && lp.maxHeightPercent == 0f
+                    && lp.aspectRatio == 0f
                     && child is ShrinkableView && (child as ShrinkableView).isShrinkable()
                 ) {
                     shrinkableChildren.add(child)
@@ -354,7 +372,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     val child = shrinkableChildren.get(i)
                     val lp = child.layoutParams as LayoutParams
 
-                    val newHeight = max(0, (originalHeights[i] * shrinkRatio).toInt())
+                    val newHeight = max(0, (originalHeights[i] * shrinkRatio).roundToInt())
                     val originalWidth = child.measuredWidth
 
                     // Preserve original width based on layout params
@@ -456,6 +474,10 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     val heightSpec = MeasureSpec.makeMeasureSpec(childHeight, MeasureSpec.EXACTLY)
                     child.measure(widthSpec, heightSpec)
 
+                    if (lp.aspectRatio > 0f) {
+                        remeasureWithAspectRatio(child, lp, widthMeasureSpec, heightMeasureSpec)
+                    }
+
                     // Child may now not fit in vertical dimension.
                     childState = combineMeasuredStates(
                         childState,
@@ -494,6 +516,75 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
             totalLength += paddingTop + paddingBottom
         } else {
             alternativeMaxWidth = max(alternativeMaxWidth, percentMaxWidth)
+        }
+
+        // Third pass: measure deferred ratio children using the remaining available height so they
+        // never push siblings off screen. For AT_MOST parents the bound is the spec size minus what
+        // siblings consumed; for EXACTLY the bound is what's left of the fixed parent height.
+        if (ratioFillChildren.isNotEmpty()) {
+            val availW = widthSize - paddingStart - paddingEnd
+            val boundedParentH = if (heightMode == MeasureSpec.AT_MOST)
+                MeasureSpec.getSize(heightMeasureSpec) else height
+            val remaining = (boundedParentH - totalLengthAfterFirstPass).coerceAtLeast(0)
+            var totalRatioHeight = 0
+
+            // Per-child ideal sizes (idealW = column/declared width, idealH = idealW / ratio).
+            val idealWs = IntArray(ratioFillChildren.size)
+            val idealHs = IntArray(ratioFillChildren.size)
+            for (i in ratioFillChildren.indices) {
+                val lp = ratioFillChildren[i].layoutParams as LayoutParams
+                val idealW = when {
+                    lp.maxWidthPercent > 0f ->
+                        ((widthSize * lp.maxWidthPercent).toInt() - lp.marginStart - lp.marginEnd).coerceAtLeast(0)
+                    lp.width != ViewGroup.LayoutParams.WRAP_CONTENT -> lp.width
+                    else -> (availW - lp.marginStart - lp.marginEnd).coerceAtLeast(0)
+                }
+                idealWs[i] = idealW
+                idealHs[i] = (idealW / lp.aspectRatio).toInt()
+            }
+
+            // Greedy fair-share of the remaining height, SwiftUI-style: process
+            // children from smallest ideal height to largest, giving each the
+            // lesser of its natural height and its share of what's left.
+            val childHeights = IntArray(ratioFillChildren.size)
+            val order = ratioFillChildren.indices.sortedBy { idealHs[it] }
+            var heightLeft = remaining
+            var slotsLeft = ratioFillChildren.size
+            for (i in order) {
+                val lp = ratioFillChildren[i].layoutParams as LayoutParams
+                val mainMargin = lp.topMargin + lp.bottomMargin
+                val slot = (heightLeft / slotsLeft - mainMargin).coerceAtLeast(0)
+                val childH = min(idealHs[i], slot)
+                childHeights[i] = childH
+                heightLeft -= (childH + mainMargin)
+                slotsLeft -= 1
+            }
+
+            for (i in ratioFillChildren.indices) {
+                val child = ratioFillChildren[i]
+                val lp = child.layoutParams as LayoutParams
+
+                val childH = childHeights[i]
+                // Derive width to preserve the ratio (matches .aspectRatio(.fit)).
+                val childW = min(idealWs[i], (childH * lp.aspectRatio).toInt()).coerceAtLeast(0)
+
+                child.measure(
+                    MeasureSpec.makeMeasureSpec(childW, MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(childH, MeasureSpec.EXACTLY)
+                )
+                childState = combineMeasuredStates(childState, child.measuredState)
+
+                val measuredWidth = child.measuredWidth + lp.marginStart + lp.marginEnd
+                maxWidth = max(maxWidth, measuredWidth)
+                alternativeMaxWidth = max(alternativeMaxWidth, measuredWidth)
+                totalRatioHeight += child.measuredHeight + lp.topMargin + lp.bottomMargin
+            }
+
+            // For AT_MOST, the first-pass height excluded ratio children; update it now.
+            if (heightMode == MeasureSpec.AT_MOST) {
+                val actualTotal = totalLengthAfterFirstPass + totalRatioHeight
+                heightSizeAndState = resolveSizeAndState(actualTotal, heightMeasureSpec, childState)
+            }
         }
 
         if (!allFillParent && widthMode != MeasureSpec.EXACTLY) {
@@ -551,6 +642,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
         val count = childCount
         val childrenWithMaxPercent = mutableListOf<View>()
+        val ratioFillChildren = mutableListOf<View>()
 
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
 
@@ -569,6 +661,16 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
             }
 
             val lp = child.layoutParams as LayoutParams
+
+            // Any width-auto + ratio in a bounded layout: defer to a third pass so ratio items
+            // never overflow the space remaining after siblings are measured.
+            if (lp.aspectRatio > 0f
+                && lp.width == ViewGroup.LayoutParams.WRAP_CONTENT && lp.maxWidthPercent == 0f
+                && (widthMode == MeasureSpec.EXACTLY || widthMode == MeasureSpec.AT_MOST)) {
+                ratioFillChildren.add(child)
+                allFillParent = false
+                continue
+            }
 
             if (lp.maxWidthPercent > 0) {
                 childrenWithMaxPercent.add(child)
@@ -613,6 +715,10 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     lp.height = oldHeight
                 }
 
+                if (lp.aspectRatio > 0f) {
+                    remeasureWithAspectRatio(child, lp, widthMeasureSpec, heightMeasureSpec)
+                }
+
                 val childWidth = child.measuredWidth
                 val totalLength = this.totalLength
                 this.totalLength = max(
@@ -646,13 +752,14 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
         // Add in our padding
         totalLength += paddingStart + paddingEnd
+        val totalLengthAfterFirstPass = totalLength
 
         // Check against our minimum width
         var width = totalLength
         width = max(width, suggestedMinimumWidth)
 
-        // Reconcile our calculated size with the heightMeasureSpec
-        val widthSizeAndState = resolveSizeAndState(width, widthMeasureSpec, 0)
+        // Reconcile our calculated size with the widthMeasureSpec
+        var widthSizeAndState = resolveSizeAndState(width, widthMeasureSpec, 0)
         width = widthSizeAndState and MEASURED_SIZE_MASK
 
         // Either expand children with percentage dimensions to take up available space or shrink them if they extend
@@ -673,7 +780,8 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                 }
 
                 val lp = child.layoutParams as LayoutParams
-                if (lp.width == ViewGroup.LayoutParams.WRAP_CONTENT && child is ShrinkableView && (child as ShrinkableView).isShrinkable()) {
+                if (lp.width == ViewGroup.LayoutParams.WRAP_CONTENT && lp.aspectRatio == 0f
+                    && child is ShrinkableView && (child as ShrinkableView).isShrinkable()) {
                     shrinkableChildren.add(child)
 
                     val childWidth = child.measuredWidth
@@ -689,7 +797,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     val child = shrinkableChildren[i]
                     val lp = child.layoutParams as LayoutParams
 
-                    val newWidth = max(0, (originalWidths[i] * shrinkRatio).toInt())
+                    val newWidth = max(0, (originalWidths[i] * shrinkRatio).roundToInt())
                     val originalHeight = child.measuredHeight
 
                     // Preserve original height based on layout params
@@ -794,6 +902,10 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     val widthSpec = MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY)
                     child.measure(widthSpec, heightSpec)
 
+                    if (lp.aspectRatio > 0f) {
+                        remeasureWithAspectRatio(child, lp, widthMeasureSpec, heightMeasureSpec)
+                    }
+
                     // Child may now not fit in horizontal dimension.
                     childState = combineMeasuredStates(
                         childState, child.measuredState and MEASURED_STATE_MASK
@@ -831,6 +943,68 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
             totalLength += paddingStart + paddingEnd
         } else {
             alternativeMaxHeight = max(alternativeMaxHeight, percentMaxHeight)
+        }
+
+        // Third pass: measure deferred ratio children using the remaining available width so they
+        // never push siblings off screen.
+        if (ratioFillChildren.isNotEmpty()) {
+            val availH = heightSize - paddingTop - paddingBottom
+            val boundedParentW = if (widthMode == MeasureSpec.AT_MOST)
+                MeasureSpec.getSize(widthMeasureSpec) else width
+            val remaining = (boundedParentW - totalLengthAfterFirstPass).coerceAtLeast(0)
+            var totalRatioWidth = 0
+
+            val idealHs = IntArray(ratioFillChildren.size)
+            val idealWs = IntArray(ratioFillChildren.size)
+            for (i in ratioFillChildren.indices) {
+                val lp = ratioFillChildren[i].layoutParams as LayoutParams
+                val idealH = when {
+                    lp.maxHeightPercent > 0f ->
+                        ((heightSize * lp.maxHeightPercent).toInt() - lp.topMargin - lp.bottomMargin).coerceAtLeast(0)
+                    lp.height != ViewGroup.LayoutParams.WRAP_CONTENT -> lp.height
+                    else -> (availH - lp.topMargin - lp.bottomMargin).coerceAtLeast(0)
+                }
+                idealHs[i] = idealH
+                idealWs[i] = (idealH * lp.aspectRatio).toInt()
+            }
+
+            val childWidths = IntArray(ratioFillChildren.size)
+            val order = ratioFillChildren.indices.sortedBy { idealWs[it] }
+            var widthLeft = remaining
+            var slotsLeft = ratioFillChildren.size
+            for (i in order) {
+                val lp = ratioFillChildren[i].layoutParams as LayoutParams
+                val mainMargin = lp.marginStart + lp.marginEnd
+                val slot = (widthLeft / slotsLeft - mainMargin).coerceAtLeast(0)
+                val childW = min(idealWs[i], slot)
+                childWidths[i] = childW
+                widthLeft -= (childW + mainMargin)
+                slotsLeft -= 1
+            }
+
+            for (i in ratioFillChildren.indices) {
+                val child = ratioFillChildren[i]
+                val lp = child.layoutParams as LayoutParams
+
+                val childW = childWidths[i]
+                val childH = min(idealHs[i], (childW / lp.aspectRatio).toInt()).coerceAtLeast(0)
+
+                child.measure(
+                    MeasureSpec.makeMeasureSpec(childW, MeasureSpec.EXACTLY),
+                    MeasureSpec.makeMeasureSpec(childH, MeasureSpec.EXACTLY)
+                )
+                childState = combineMeasuredStates(childState, child.measuredState)
+
+                val measuredHeight = child.measuredHeight + lp.topMargin + lp.bottomMargin
+                maxHeight = max(maxHeight, measuredHeight)
+                alternativeMaxHeight = max(alternativeMaxHeight, measuredHeight)
+                totalRatioWidth += child.measuredWidth + lp.marginStart + lp.marginEnd
+            }
+
+            if (widthMode == MeasureSpec.AT_MOST) {
+                val actualTotal = totalLengthAfterFirstPass + totalRatioWidth
+                widthSizeAndState = resolveSizeAndState(actualTotal, widthMeasureSpec, childState)
+            }
         }
 
         if (!allFillParent && heightMode != MeasureSpec.EXACTLY) {
@@ -1023,6 +1197,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
         var maxWidthPercent: kotlin.Float = 0f
         var maxHeightPercent: kotlin.Float = 0f
+        var aspectRatio: kotlin.Float = 0f
 
         /**
          * Gravity for the view associated with these LayoutParams.
@@ -1058,10 +1233,12 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
          * @param height the height, either [.MATCH_PARENT], [.WRAP_CONTENT] or a fixed size in pixels
          */
         constructor(
-            width: Int, height: Int, maxWidthPercent: kotlin.Float, maxHeightPercent: kotlin.Float
+            width: Int, height: Int, maxWidthPercent: kotlin.Float, maxHeightPercent: kotlin.Float,
+            aspectRatio: kotlin.Float = 0f
         ) : super(width, height) {
             this.maxWidthPercent = maxWidthPercent
             this.maxHeightPercent = maxHeightPercent
+            this.aspectRatio = aspectRatio
         }
 
         /**
@@ -1076,16 +1253,64 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
         override fun toString(): String {
             return String.format(
-                "LayoutParams{ width = %d, height = %d, maxWidth = %.2f, maxHeight = %.2f }",
+                "LayoutParams{ width = %d, height = %d, maxWidth = %.2f, maxHeight = %.2f, aspectRatio = %.3f }",
                 width,
                 height,
                 maxWidthPercent,
-                maxHeightPercent
+                maxHeightPercent,
+                aspectRatio
             )
         }
     }
 
-     companion object {
+    /**
+     * Re-measures [child] to enforce [LayoutParams.aspectRatio] after initial sizing.
+     *
+     * - One dimension auto: derives the auto dimension from the measured fixed/percent dimension.
+     * - Both auto: fills the primary axis of this layout's orientation and derives the other.
+     * - Both fixed: no-op per spec (explicit values win).
+     */
+    private fun remeasureWithAspectRatio(
+        child: View,
+        lp: LayoutParams,
+        widthMeasureSpec: Int,
+        heightMeasureSpec: Int
+    ) {
+        val ratio = lp.aspectRatio
+        val widthAuto = lp.width == ViewGroup.LayoutParams.WRAP_CONTENT && lp.maxWidthPercent == 0f
+        val heightAuto = lp.height == ViewGroup.LayoutParams.WRAP_CONTENT && lp.maxHeightPercent == 0f
+
+        if (!widthAuto && !heightAuto) return
+
+        val measuredW = child.measuredWidth
+        val measuredH = child.measuredHeight
+
+        val (newW, newH) = when {
+            widthAuto && !heightAuto -> (measuredH * ratio).toInt() to measuredH
+            !widthAuto && heightAuto -> measuredW to (measuredW / ratio).toInt()
+            else -> when (orientation) {
+                OrientationMode.VERTICAL -> {
+                    val parentW = MeasureSpec.getSize(widthMeasureSpec)
+                    if (parentW == 0) return
+                    val avail = parentW - paddingStart - paddingEnd - lp.marginStart - lp.marginEnd
+                    avail to (avail / ratio).toInt()
+                }
+                OrientationMode.HORIZONTAL -> {
+                    val parentH = MeasureSpec.getSize(heightMeasureSpec)
+                    if (parentH == 0) return
+                    val avail = parentH - paddingTop - paddingBottom - lp.topMargin - lp.bottomMargin
+                    (avail * ratio).toInt() to avail
+                }
+            }
+        }
+
+        child.measure(
+            MeasureSpec.makeMeasureSpec(newW, MeasureSpec.EXACTLY),
+            MeasureSpec.makeMeasureSpec(newH, MeasureSpec.EXACTLY)
+        )
+    }
+
+    companion object {
         private const val ACCESSIBILITY_CLASS_NAME =
             "com.urbanairship.android.layout.widget.WeightlessLinearLayout"
     }
