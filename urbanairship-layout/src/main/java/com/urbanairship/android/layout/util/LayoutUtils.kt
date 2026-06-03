@@ -71,6 +71,8 @@ internal object LayoutUtils {
     private const val NBSP = "\u00A0"
     private const val NARROW_NBSP = "\u202F"
 
+    private val TAG_LINE_HEIGHT_PADDING = com.urbanairship.android.layout.R.id.ua_line_height_padding
+
     internal fun updateBackground(
         view: View,
         baseBackground: Drawable?,
@@ -379,6 +381,7 @@ internal object LayoutUtils {
         val context = textView.context
 
         textView.textSize = textAppearance.fontSize.toFloat()
+        textView.includeFontPadding = false
 
         val textColor = textAppearance.color.resolve(context)
         val disabledTextColor = generateDisabledColor(Color.TRANSPARENT, textColor)
@@ -425,7 +428,19 @@ internal object LayoutUtils {
         textView.setTypeface(typeface)
         textView.paintFlags = paintFlags
 
-        textView.setLineSpacing(0f, textAppearance.lineHeightMultiplier?.toFloat() ?: 1f)
+        val prevLineHeightPadding = textView.getTag(TAG_LINE_HEIGHT_PADDING) as? Int ?: 0
+        val newLineHeightPadding = textAppearance.lineHeightMultiplier?.toFloat()?.let { mult ->
+            textView.setLineSpacing(0f, mult)
+            // setLineSpacing skips the last line, so add equivalent bottom padding so
+            // single-line labels and the last line of multi-line labels get the same spacing.
+            val fm = textView.paint.getFontMetricsInt()
+            val naturalHeight = fm.descent - fm.ascent
+            (naturalHeight * (mult - 1f)).roundToInt().coerceAtLeast(0)
+        } ?: 0
+        if (prevLineHeightPadding != newLineHeightPadding) {
+            addPadding(textView, 0, 0, 0, newLineHeightPadding - prevLineHeightPadding)
+            textView.setTag(TAG_LINE_HEIGHT_PADDING, newLineHeightPadding)
+        }
 
         // Letter spacing is in EM units
         textView.letterSpacing = textAppearance.kerning?.toFloat()?.let { kerning ->
