@@ -93,9 +93,34 @@ internal class ModalView(
         addView(modalFrame)
 
         val viewId = modalFrame.id
+        val ignoreSafeArea = placement.shouldIgnoreSafeArea()
+
+        // Percent base: the full window (matches ConstraintLayout's constrainPercent*).
+        val windowWidthPx = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)
+        val windowHeightPx = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea)
+
+        // Overflow bound / fitted-size target: window minus the frame's outer margins.
+        val horizontalMargin = (margin?.start ?: 0) + (margin?.end ?: 0)
+        val verticalMargin = (margin?.top ?: 0) + (margin?.bottom ?: 0)
+        val horizontalMarginPx = ResourceUtils.dpToPx(context, horizontalMargin).toInt()
+        val verticalMarginPx = ResourceUtils.dpToPx(context, verticalMargin).toInt()
+
+        val availableWidthPx = (windowWidthPx - horizontalMarginPx).coerceAtLeast(0)
+        val availableHeightPx = (windowHeightPx - verticalMarginPx).coerceAtLeast(0)
+
         val constraints = ConstraintSetBuilder.newBuilder(context)
             .constrainWithinParent(viewId)
-            .size(size, placement.shouldIgnoreSafeArea(), viewId)
+            .width(size, ignoreSafeArea, viewId)
+            .height(size, ignoreSafeArea, viewId)
+            .aspectRatioWithinBounds(
+                size = size,
+                viewId = viewId,
+                windowWidthPx = windowWidthPx,
+                windowHeightPx = windowHeightPx,
+                availableWidthPx = availableWidthPx,
+                availableHeightPx = availableHeightPx,
+                ignoreSafeArea = ignoreSafeArea
+            )
             .position(position, viewId)
             .build()
 

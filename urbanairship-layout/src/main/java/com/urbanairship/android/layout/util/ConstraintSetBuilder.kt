@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.property.VerticalPosition
+import kotlin.math.roundToInt
 
 public class ConstraintSetBuilder private constructor(
     private val context: Context,
@@ -227,6 +228,92 @@ public class ConstraintSetBuilder private constructor(
         }
         return this
     }
+
+    /**
+     * Bounds-aware variant of [aspectRatio] for window-parented presentations (modal/banner).
+     *
+     * For the one-auto case, [aspectRatio] sets a directional dimension ratio
+     * (`"H,ratio:1"` / `"W,ratio:1"`) which ConstraintLayout resolves with *priority over*
+     * `constrainedWidth`/`constrainedHeight`, so the derived dimension can overflow the parent
+     * (e.g. a `height: auto`, `width: 90%`, `aspect_ratio: 1.778` modal in landscape derives a
+     * height taller than the screen). This method detects that overflow and instead bakes the
+     * largest ratio-preserving box that fits *both* available bounds as explicit pixels — matching
+     * iOS's `.aspectRatio(.fit)`. When the requested rect already fits, behavior is byte-identical
+     * to [aspectRatio]'s one-auto branch.
+     *
+     * Two bases per axis: the **window** dim is the percent base (matching what [width]/[height]
+     * actually render via `constrainPercent*`), while the margin-reduced **available** dim is the
+     * overflow bound and fitted-size target.
+     *
+     * Both-auto and both-fixed delegate to the unchanged [aspectRatio]. This method is *not* used
+     * by embedded/container views, where window-pixel reasoning is wrong for nested parents.
+     */
+    @JvmOverloads
+    public fun aspectRatioWithinBounds(
+        size: Size?,
+        @IdRes viewId: Int,
+        windowWidthPx: Int,
+        windowHeightPx: Int,
+        availableWidthPx: Int,
+        availableHeightPx: Int,
+        ignoreSafeArea: Boolean = false
+    ): ConstraintSetBuilder {
+        val ratio = size?.aspectRatio ?: return this
+        val widthAuto = size.width.isAuto
+        val heightAuto = size.height.isAuto
+
+        // Both-auto and both-fixed: delegate to the shared path (unchanged).
+        if (widthAuto == heightAuto) {
+            return aspectRatio(size, viewId, ignoreSafeArea)
+        }
+
+        // One-auto: resolve the known dimension against the full window (matching what
+        // width()/height() rendered) and derive the other from the ratio.
+        val requestedWidthPx: Double
+        val requestedHeightPx: Double
+        if (heightAuto) {
+            val knownWidthPx = resolveKnownDimensionPx(size.width, windowWidthPx)
+            requestedWidthPx = knownWidthPx
+            requestedHeightPx = knownWidthPx / ratio
+        } else {
+            val knownHeightPx = resolveKnownDimensionPx(size.height, windowHeightPx)
+            requestedHeightPx = knownHeightPx
+            requestedWidthPx = knownHeightPx * ratio
+        }
+
+        val fit = computeAspectRatioFit(
+            requestedWidthPx, requestedHeightPx, ratio, availableWidthPx, availableHeightPx
+        )
+
+        if (fit == null) {
+            // Fits — identical to aspectRatio()'s one-auto branch.
+            if (heightAuto) {
+                constraints.constrainHeight(viewId, ConstraintSet.MATCH_CONSTRAINT)
+                constraints.constrainedHeight(viewId, true)
+                constraints.setDimensionRatio(viewId, "H,$ratio:1")
+            } else {
+                constraints.constrainWidth(viewId, ConstraintSet.MATCH_CONSTRAINT)
+                constraints.constrainedWidth(viewId, true)
+                constraints.setDimensionRatio(viewId, "W,$ratio:1")
+            }
+        } else {
+            // Overflow — bake the fitted px box. A positive width/height makes the dimension
+            // fixed, overriding the MATCH_CONSTRAINT-percent default left by width()/height().
+            // The ratio is preserved exactly by the px math, so no dimension ratio is set.
+            constraints.constrainWidth(viewId, fit.widthPx)
+            constraints.constrainHeight(viewId, fit.heightPx)
+        }
+        return this
+    }
+
+    /** Resolves a known (non-auto) dimension to px against the full window dimension. */
+    private fun resolveKnownDimensionPx(dimension: Size.Dimension, windowDimPx: Int): Double =
+        when (dimension.type) {
+            Size.DimensionType.PERCENT -> dimension.getFloat().toDouble() * windowDimPx
+            Size.DimensionType.ABSOLUTE -> ResourceUtils.dpToPx(context, dimension.getInt()).toDouble()
+            // Not reached in the one-auto path; treat as full window.
+            Size.DimensionType.AUTO -> windowDimPx.toDouble()
+        }
 
     public fun width(size: Size?, @IdRes viewId: Int): ConstraintSetBuilder {
         return width(size, false, viewId)
@@ -446,9 +533,35 @@ public class ConstraintSetBuilder private constructor(
         return constraints
     }
 
+    /** Result of fitting a ratio-locked rect within available bounds. */
+    internal data class AspectRatioFit(val widthPx: Int, val heightPx: Int)
+
     public companion object {
         public fun newBuilder(context: Context): ConstraintSetBuilder {
             return ConstraintSetBuilder(context)
+        }
+
+        /**
+         * Pure fit computation (no [Context], for unit testing).
+         *
+         * Returns `null` when the requested rect fits within both available bounds (caller keeps
+         * the unchanged ratio path). Otherwise returns the largest box with the given [ratio]
+         * (width:height) that fits *both* [availableWidthPx] and [availableHeightPx], as rounded px.
+         */
+        internal fun computeAspectRatioFit(
+            requestedWidthPx: Double,
+            requestedHeightPx: Double,
+            ratio: Double,
+            availableWidthPx: Int,
+            availableHeightPx: Int
+        ): AspectRatioFit? {
+            val fits = requestedWidthPx <= availableWidthPx && requestedHeightPx <= availableHeightPx
+            if (fits) {
+                return null
+            }
+            val fitW = minOf(availableWidthPx.toDouble(), availableHeightPx * ratio)
+            val fitH = fitW / ratio
+            return AspectRatioFit(fitW.roundToInt(), fitH.roundToInt())
         }
     }
 }
