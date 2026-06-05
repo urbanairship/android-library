@@ -734,6 +734,23 @@ public class AnalyticsTest {
     }
 
     @Test
+    public fun testForegroundDoesNotReEmitScreenEvent(): TestResult = runTest(testDispatcher) {
+        analytics.trackScreen("foo")
+        activityMonitor.background()
+        activityMonitor.foreground()
+        advanceUntilIdle()
+
+        // The previous screen is restored for duration tracking.
+        assertThat(analytics.screenState.value).isEqualTo("foo")
+
+        // But foreground must not re-emit a screenview event, otherwise any
+        // IAA with a screenview trigger matching "foo" would re-fire.
+        verify(exactly = 1) {
+            mockEventFeed.emit(AirshipEventFeed.Event.Screen("foo"))
+        }
+    }
+
+    @Test
     public fun testEventFeed(): TestResult = runTest(testDispatcher) {
         analytics.trackScreen("foo")
         verify {
