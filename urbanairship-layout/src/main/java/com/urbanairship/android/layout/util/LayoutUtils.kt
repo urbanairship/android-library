@@ -1,7 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.util
 
-import android.R
+import android.R as AndroidR
+import com.urbanairship.android.layout.R
 import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.Paint
@@ -27,6 +28,7 @@ import androidx.annotation.ColorInt
 import androidx.annotation.FloatRange
 import androidx.annotation.IntRange
 import androidx.annotation.RequiresApi
+import androidx.appcompat.R as AppCompatR
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.graphics.ColorUtils
@@ -71,7 +73,7 @@ internal object LayoutUtils {
     private const val NBSP = "\u00A0"
     private const val NARROW_NBSP = "\u202F"
 
-    private val TAG_LINE_HEIGHT_PADDING = com.urbanairship.android.layout.R.id.ua_line_height_padding
+    private val TAG_LINE_HEIGHT_PADDING = R.id.ua_line_height_padding
 
     internal fun updateBackground(
         view: View,
@@ -120,14 +122,14 @@ internal object LayoutUtils {
         if (border.strokeColor != null) {
             @ColorInt val strokeColor = border.strokeColor.resolve(context)
             shapeDrawable.strokeColor = ColorStateListBuilder()
-                .add(generateDisabledColor(strokeColor), -R.attr.state_enabled)
+                .add(generateDisabledColor(strokeColor), -AndroidR.attr.state_enabled)
                 .add(strokeColor)
                 .build()
         }
 
         @ColorInt val fillColor = backgroundColor?.resolve(context) ?: Color.TRANSPARENT
         shapeDrawable.fillColor = ColorStateListBuilder()
-            .add(generateDisabledColor(fillColor), -R.attr.state_enabled)
+            .add(generateDisabledColor(fillColor), -AndroidR.attr.state_enabled)
             .add(fillColor)
             .build()
 
@@ -170,14 +172,14 @@ internal object LayoutUtils {
         if (border.strokeColor != null) {
             @ColorInt val strokeColor = border.strokeColor.resolve(context)
             strokeDrawable.strokeColor = ColorStateListBuilder()
-                .add(generateDisabledColor(strokeColor), -R.attr.state_enabled)
+                .add(generateDisabledColor(strokeColor), -AndroidR.attr.state_enabled)
                 .add(strokeColor)
                 .build()
         }
 
         @ColorInt val fillColor = backgroundColor?.resolve(context) ?: Color.TRANSPARENT
         backgroundDrawable.fillColor = ColorStateListBuilder()
-            .add(generateDisabledColor(fillColor), -R.attr.state_enabled)
+            .add(generateDisabledColor(fillColor), -AndroidR.attr.state_enabled)
             .add(fillColor)
             .build()
 
@@ -214,7 +216,7 @@ internal object LayoutUtils {
         if (border.strokeColor != null) {
             @ColorInt val strokeColor = border.strokeColor.resolve(context)
             view.strokeColor = ColorStateListBuilder()
-                .add(generateDisabledColor(strokeColor), -R.attr.state_enabled)
+                .add(generateDisabledColor(strokeColor), -AndroidR.attr.state_enabled)
                 .add(strokeColor)
                 .build()
         }
@@ -260,7 +262,7 @@ internal object LayoutUtils {
         val mask = ShapeDrawable(RoundRectShape(radii, null, null))
         val colors = MaterialColors.getColorStateList(
             context,
-            androidx.appcompat.R.attr.colorControlHighlight,
+            AppCompatR.attr.colorControlHighlight,
             ColorStateList.valueOf(Color.TRANSPARENT)
         )
 
@@ -304,7 +306,7 @@ internal object LayoutUtils {
         // Using transparent as the normal color means no tint unless the image is disabled
         val normalColor = Color.TRANSPARENT
         val compatStateList = ColorStateListBuilder()
-            .add(generateDisabledColor(normalColor), -R.attr.state_enabled)
+            .add(generateDisabledColor(normalColor), -AndroidR.attr.state_enabled)
             .add(normalColor)
             .build()
 
@@ -388,7 +390,7 @@ internal object LayoutUtils {
 
         textView.setTextColor(
             ColorStateListBuilder()
-                .add(disabledTextColor, -R.attr.state_enabled)
+                .add(disabledTextColor, -AndroidR.attr.state_enabled)
                 .add(textColor)
                 .build()
         )
@@ -478,7 +480,7 @@ internal object LayoutUtils {
         view.setTrackTintList(checkedColorStateList(trackOn, trackOff))
         view.setThumbTintList(checkedColorStateList(thumbOn, thumbOff))
 
-        view.setBackgroundResource(com.urbanairship.android.layout.R.drawable.ua_layout_imagebutton_ripple)
+        view.setBackgroundResource(R.drawable.ua_layout_imagebutton_ripple)
 
         view.gravity = Gravity.CENTER
     }
@@ -489,11 +491,11 @@ internal object LayoutUtils {
         return ColorStateListBuilder()
             .add(
                 color = generateDisabledColor(checkedColor),
-                R.attr.state_checked, -R.attr.state_enabled)
+                AndroidR.attr.state_checked, -AndroidR.attr.state_enabled)
             .add(
                 color = generateDisabledColor(normalColor),
-                -R.attr.state_checked, -R.attr.state_enabled)
-            .add(checkedColor, R.attr.state_checked)
+                -AndroidR.attr.state_checked, -AndroidR.attr.state_enabled)
+            .add(checkedColor, AndroidR.attr.state_checked)
             .add(normalColor)
             .build()
     }
@@ -502,12 +504,12 @@ internal object LayoutUtils {
         return ColorStateListBuilder()
             .add(
                 color = generatePressedColor(normalColor, Color.BLACK),
-                R.attr.state_pressed)
+                AndroidR.attr.state_pressed)
             .add(
                 color = generateHoveredColor(normalColor, Color.BLACK),
-                R.attr.state_hovered)
+                AndroidR.attr.state_hovered)
             .add(
-                color = generateDisabledColor(normalColor), -R.attr.state_enabled)
+                color = generateDisabledColor(normalColor), -AndroidR.attr.state_enabled)
             .add(normalColor)
             .build()
     }
