@@ -16,11 +16,14 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -357,5 +360,59 @@ public class ChannelBatchUpdateManagerTest {
         }
 
         assertTrue(manager.hasPending)
+    }
+
+    @Test
+    public fun testAddDuringInFlightUploadIsNotLost(): TestResult = runTest {
+        // Regression test for the parameter-shadowing bug in popAudienceUpdates, which
+        // overwrote the entire pending store with the (now-uploaded) snapshot after every
+        // successful upload, destroying any mutation appended during the network round-trip.
+        // Symptom for the customer: Live Updates stuck on START because their SET mutation
+        // was wiped before it could be uploaded.
+        val setA = LiveUpdateMutation.Set("event-a", 100, 100)
+        val setB = LiveUpdateMutation.Set("event-b", 200, 200)
+
+        manager.addUpdate(liveUpdates = listOf(setA))
+
+        // Suspend the API client mid-upload to simulate the network round-trip.
+        val uploadGate = CompletableDeferred<Unit>()
+        coEvery { mockApiClient.update(any(), any(), any(), any(), any()) } coAnswers {
+            uploadGate.await()
+            RequestResult(status = 200, value = null, body = null, headers = null)
+        }
+        coEvery { mockAudienceOverridesProvider.recordChannelUpdate(any(), any(), any(), any()) } just runs
+
+        // Start the upload and let it run until it suspends inside update() on the gate.
+        val upload = async { manager.uploadPending("some channel id") }
+        runCurrent()
+
+        // While the upload is in flight, a second live-update SET arrives.
+        manager.addUpdate(liveUpdates = listOf(setB))
+
+        // Release the network; the upload completes and pops only what it uploaded (setA).
+        uploadGate.complete(Unit)
+        assertTrue(upload.await())
+
+        // setB must NOT have been wiped by the pop.
+        assertTrue(manager.hasPending)
+
+        // A follow-up upload must send setB to the API.
+        coEvery { mockApiClient.update(any(), any(), any(), any(), any()) } returns RequestResult(
+            status = 200,
+            value = null,
+            body = null,
+            headers = null
+        )
+        assertTrue(manager.uploadPending("some channel id"))
+        coVerify {
+            mockApiClient.update(
+                channelId = "some channel id",
+                tags = emptyList(),
+                attributes = emptyList(),
+                subscriptions = emptyList(),
+                liveUpdates = listOf(setB)
+            )
+        }
+        assertFalse(manager.hasPending)
     }
 }

@@ -129,15 +129,18 @@ internal class ChannelBatchUpdateManager(
         }
     }
 
-    private fun popAudienceUpdates(updates: List<AudienceUpdate>) {
+    private fun popAudienceUpdates(uploaded: List<AudienceUpdate>) {
         lock.withLock {
+            // Read the current storage (not the uploaded snapshot) so that any updates
+            // appended during the upload's network round-trip are preserved. The uploaded
+            // updates are always the front prefix, since addUpdate appends to the back.
             val stored = updates.toMutableList()
-            updates.forEach {
-                if (stored[0] == it) {
+            uploaded.forEach {
+                if (stored.firstOrNull() == it) {
                     stored.removeAt(0)
                 }
             }
-            this.updates = stored
+            updates = stored
         }
     }
 
