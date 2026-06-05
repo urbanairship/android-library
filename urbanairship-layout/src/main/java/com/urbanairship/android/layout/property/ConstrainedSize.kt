@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.property
 import com.urbanairship.android.layout.util.PercentUtils
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.optionalField
 
 public class ConstrainedSize public constructor(
     width: String,
@@ -11,8 +12,9 @@ public class ConstrainedSize public constructor(
     minWidth: String?,
     minHeight: String?,
     maxWidth: String?,
-    maxHeight: String?
-) : Size(width, height) {
+    maxHeight: String?,
+    aspectRatio: Double? = null
+) : Size(width, height, aspectRatio) {
 
     @JvmField
     public val minWidth: ConstrainedDimension?
@@ -114,6 +116,7 @@ public class ConstrainedSize public constructor(
         private const val KEY_MIN_HEIGHT = "min_height"
         private const val KEY_MAX_WIDTH = "max_width"
         private const val KEY_MAX_HEIGHT = "max_height"
+        private const val KEY_ASPECT_RATIO = "aspect_ratio"
 
         @Throws(JsonException::class)
         public fun fromJson(json: JsonValue): ConstrainedSize {
@@ -131,7 +134,8 @@ public class ConstrainedSize public constructor(
                 minWidth = content[KEY_MIN_WIDTH]?.coerceString(),
                 minHeight = content[KEY_MIN_HEIGHT]?.coerceString(),
                 maxWidth = content[KEY_MAX_WIDTH]?.coerceString(),
-                maxHeight = content[KEY_MAX_HEIGHT]?.coerceString()
+                maxHeight = content[KEY_MAX_HEIGHT]?.coerceString(),
+                aspectRatio = content.optionalField<Double>(KEY_ASPECT_RATIO)
             )
         }
     }

@@ -349,9 +349,12 @@ public constructor(
         sessionId = UUID.randomUUID().toString()
         UALog.d { "New session: $sessionId" }
 
-        // If the app backgrounded, there should be no current screen
+        // Restore the previous screen so its tracked duration spans the
+        // background/foreground gap, but skip the event feed emit so
+        // screenview triggers don't fire on foreground.
         if (screenState.value == null && previousScreen != null) {
-            trackScreen(previousScreen)
+            _currentScreen.value = previousScreen
+            screenStartTime = clock.currentTimeMillis()
         }
         addEvent(AppForegroundEvent(timeMS))
     }

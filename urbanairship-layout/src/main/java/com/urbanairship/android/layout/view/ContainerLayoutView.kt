@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.view
 
 import android.animation.LayoutTransition
+import kotlin.math.roundToInt
 import android.content.Context
 import android.util.SparseArray
 import android.util.SparseBooleanArray
@@ -9,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.graphics.Insets
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -34,6 +36,10 @@ internal class ContainerLayoutView(
 
     private val frameShouldIgnoreSafeArea = SparseBooleanArray()
     private val frameMargins = SparseArray<Margin>()
+    // frameId -> aspectRatio for height-auto + percent-width items.
+    // ConstraintLayout can't derive ratio height from percent width in AT_MOST parents
+    // (both MATCH_CONSTRAINT), so onMeasure does a two-pass fix for these frames.
+    private val frameHeightRatios = SparseArray<Double>()
 
     init {
         clipChildren = true
@@ -62,8 +68,7 @@ internal class ContainerLayoutView(
         }
     }
 
-    /** Container layouts may be shrunk if they contain any media views. */
-    override fun isShrinkable(): Boolean = model.isShrinkable
+    override fun isShrinkable(): Boolean = true
 
     private fun addItems(items: List<Item>, constraintBuilder: ConstraintSetBuilder) {
         for (item in items) {
@@ -90,6 +95,59 @@ internal class ContainerLayoutView(
 
         frameShouldIgnoreSafeArea.put(frameId, info.ignoreSafeArea)
         frameMargins.put(frameId, info.margin ?: Margin.NONE)
+
+        // Track items that need the 2-pass height fix (percent width + auto height + ratio).
+        val size = info.size
+        if (size.aspectRatio != null && size.height.isAuto && size.width.isPercent) {
+            frameHeightRatios.put(frameId, size.aspectRatio)
+        }
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if (frameHeightRatios.size() == 0) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+            return
+        }
+
+        // First pass: MATCH_CONSTRAINT width (so constrainPercentWidth applies) + WRAP_CONTENT
+        // height (so ratio + MATCH_CONSTRAINT height doesn't corrupt the width measurement).
+        for (i in 0 until frameHeightRatios.size()) {
+            val frame = findViewById<View>(frameHeightRatios.keyAt(i)) ?: continue
+            val lp = frame.layoutParams as ConstraintLayout.LayoutParams
+            lp.width = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
+            lp.height = ViewGroup.LayoutParams.WRAP_CONTENT
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+
+        // Compute correct dimensions. For EXACTLY parents apply .fit — if naturalHeight exceeds
+        // the container height, reduce width proportionally to maintain ratio within bounds.
+        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+        val containerH = MeasureSpec.getSize(heightMeasureSpec)
+        var needsRemeasure = false
+
+        for (i in 0 until frameHeightRatios.size()) {
+            val frameId = frameHeightRatios.keyAt(i)
+            val ratio = frameHeightRatios.valueAt(i)
+            val frame = findViewById<View>(frameId) ?: continue
+            val lp = frame.layoutParams as ConstraintLayout.LayoutParams
+
+            val naturalW = frame.measuredWidth
+            val naturalH = (naturalW / ratio).roundToInt()
+
+            val (correctW, correctH) = if (heightMode == MeasureSpec.EXACTLY && naturalH > containerH) {
+                (containerH * ratio).roundToInt() to containerH
+            } else {
+                naturalW to naturalH
+            }
+
+            if (lp.width != correctW || lp.height != correctH) {
+                lp.width = correctW
+                lp.height = correctH
+                needsRemeasure = true
+            }
+        }
+
+        if (needsRemeasure) super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 
     private inner class WindowInsetsListener(

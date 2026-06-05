@@ -180,6 +180,51 @@ public class ConstraintSetBuilder private constructor(
     ): ConstraintSetBuilder {
         width(size, ignoreSafeArea, viewId, autoValue)
         height(size, ignoreSafeArea, viewId, autoValue)
+        return aspectRatio(size, viewId, ignoreSafeArea)
+    }
+
+    /**
+     * Applies [Size.aspectRatio] after width/height constraints have been set.
+     *
+     * For one-auto cases the non-auto dimension is already set by [width]/[height] (as a real
+     * ConstraintLayout percent or absolute constraint, which is always parent-relative); the
+     * auto dimension is forced to MATCH_CONSTRAINT and derived from it via a directional ratio
+     * prefix (`"H,ratio"` when width is known, `"W,ratio"` when height is known). For both-auto
+     * the ratio has no prefix so ConstraintLayout fits the largest box within the parent.
+     * `constrainedWidth`/`constrainedHeight` caps the derived dimension at the parent's bounds.
+     *
+     * Note: percent dimensions are deliberately NOT converted to a window-pixel max here — that
+     * is screen-relative and wrong for items nested in smaller parents (see git history around
+     * c548af9d). Percent is resolved by ConstraintLayout against the actual parent.
+     */
+    @JvmOverloads
+    public fun aspectRatio(size: Size?, @IdRes viewId: Int, ignoreSafeArea: Boolean = false): ConstraintSetBuilder {
+        val ratio = size?.aspectRatio ?: return this
+        val widthAuto = size.width.isAuto
+        val heightAuto = size.height.isAuto
+
+        when {
+            widthAuto && heightAuto -> {
+                constraints.constrainWidth(viewId, ConstraintSet.MATCH_CONSTRAINT)
+                constraints.constrainHeight(viewId, ConstraintSet.MATCH_CONSTRAINT)
+                constraints.constrainedWidth(viewId, true)
+                constraints.constrainedHeight(viewId, true)
+                constraints.setDimensionRatio(viewId, "$ratio:1")
+            }
+            widthAuto -> {
+                // Height is the known dimension (percent or absolute); derive width from it.
+                constraints.constrainWidth(viewId, ConstraintSet.MATCH_CONSTRAINT)
+                constraints.constrainedWidth(viewId, true)
+                constraints.setDimensionRatio(viewId, "W,$ratio:1")
+            }
+            heightAuto -> {
+                // Width is the known dimension (percent or absolute); derive height from it.
+                constraints.constrainHeight(viewId, ConstraintSet.MATCH_CONSTRAINT)
+                constraints.constrainedHeight(viewId, true)
+                constraints.setDimensionRatio(viewId, "H,$ratio:1")
+            }
+            // Both dimensions fixed — ratio is ignored per spec.
+        }
         return this
     }
 
