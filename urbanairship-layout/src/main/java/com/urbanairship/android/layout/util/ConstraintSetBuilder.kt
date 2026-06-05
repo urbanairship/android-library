@@ -114,21 +114,12 @@ public class ConstraintSetBuilder private constructor(
         for (i in viewIds.indices) {
             val viewId = viewIds[i]
             when (i) {
-                0 -> {
-                    addToHorizontalChain(
-                        viewId, ConstraintSet.PARENT_ID, viewIds[i + 1], 0, horizontalSpacing
-                    )
-                }
-                viewIds.size - 1 -> {
-                    addToHorizontalChain(
-                        viewId, viewIds[i - 1], ConstraintSet.PARENT_ID, horizontalSpacing, 0
-                    )
-                }
-                else -> {
-                    addToHorizontalChain(
-                        viewId, viewIds[i - 1], viewIds[i + 1], horizontalSpacing, horizontalSpacing
-                    )
-                }
+                0 ->
+                    addToHorizontalChain(viewId, ConstraintSet.PARENT_ID, viewIds[1], 0, horizontalSpacing)
+                viewIds.size - 1 ->
+                    addToHorizontalChain(viewId, viewIds[i - 1], ConstraintSet.PARENT_ID, horizontalSpacing, 0)
+                else ->
+                    addToHorizontalChain(viewId, viewIds[i - 1], viewIds[i + 1], horizontalSpacing, horizontalSpacing)
             }
 
             addToVerticalChain(
@@ -230,12 +221,12 @@ public class ConstraintSetBuilder private constructor(
     }
 
     /**
-     * Bounds-aware variant of [aspectRatio] for window-parented presentations (modal/banner).
+     * Bounds aware variant of [aspectRatio] for window-parented presentations (modal/banner).
      *
      * For the one-auto case, [aspectRatio] sets a directional dimension ratio
      * (`"H,ratio:1"` / `"W,ratio:1"`) which ConstraintLayout resolves with *priority over*
      * `constrainedWidth`/`constrainedHeight`, so the derived dimension can overflow the parent
-     * (e.g. a `height: auto`, `width: 90%`, `aspect_ratio: 1.778` modal in landscape derives a
+     * (e.g., a `height: auto`, `width: 90%`, `aspect_ratio: 1.778` modal in landscape derives a
      * height taller than the screen). This method detects that overflow and instead bakes the
      * largest ratio-preserving box that fits *both* available bounds as explicit pixels — matching
      * iOS's `.aspectRatio(.fit)`. When the requested rect already fits, behavior is byte-identical
@@ -243,7 +234,7 @@ public class ConstraintSetBuilder private constructor(
      *
      * Two bases per axis: the **window** dim is the percent base (matching what [width]/[height]
      * actually render via `constrainPercent*`), while the margin-reduced **available** dim is the
-     * overflow bound and fitted-size target.
+     * overflow-bound and fitted-size target.
      *
      * Both-auto and both-fixed delegate to the unchanged [aspectRatio]. This method is *not* used
      * by embedded/container views, where window-pixel reasoning is wrong for nested parents.
@@ -259,6 +250,8 @@ public class ConstraintSetBuilder private constructor(
         ignoreSafeArea: Boolean = false
     ): ConstraintSetBuilder {
         val ratio = size?.aspectRatio ?: return this
+        if (ratio == 0.0) return this
+
         val widthAuto = size.width.isAuto
         val heightAuto = size.height.isAuto
 
