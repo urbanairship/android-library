@@ -6,11 +6,12 @@
 
 ## Version 20.7.4 - June 5, 2026
 
-Patch release that fixes an edge case where Live Updates created in rapid succession could get stuck on START. Only apps that create multiple Live Updates in quick bursts are affected.
+Patch release that fixes an edge case where Live Updates created in rapid succession could get stuck on START, and fixes screenview triggers incorrectly re-firing when the app returns to the foreground.
 
 ### Changes
 
 - Fixed a timing issue where a pending channel update (including a Live Update registration) added within ~300ms of another could be dropped if it arrived while a channel update upload was already in flight
+- Fixed screenview triggers re-firing when the app is brought to the foreground, which could cause In-App Automation rules with screenview triggers to activate unexpectedly
 
 ## Version 20.7.3 - May 29, 2026
 
