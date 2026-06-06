@@ -4,7 +4,7 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
-## Version 20.7.4 - June 5, 2026
+## Version 20.7.4 - June 8, 2026
 
 Patch release that fixes an edge case where Live Updates created in rapid succession could get stuck on START, and fixes screenview triggers incorrectly re-firing when the app returns to the foreground.
 
