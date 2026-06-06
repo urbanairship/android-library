@@ -4,25 +4,36 @@ package com.urbanairship.android.layout.property
 import com.urbanairship.android.layout.util.PercentUtils
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.optionalField
 
 // Note: If a parent defines `auto` for a dimension, children must have either `auto` or `points` for the same dimension
 public open class Size public constructor(
     width: String,
-    height: String
+    height: String,
+    aspectRatio: Double? = null
 ) {
 
     @JvmField
     public val width: Dimension
     @JvmField
     public val height: Dimension
+    /**
+     * Lock width:height ratio (e.g. 16/9 = 1.778).
+     * - One dimension "auto": the auto dimension is derived from the fixed/percent dimension and the ratio.
+     * - Both "auto": fill as much of the available space as possible while maintaining the ratio.
+     * - Both fixed: ignored, explicit values win.
+     */
+    @JvmField
+    public val aspectRatio: Double?
 
     init {
         this.width = Dimension.Companion.of(width)
         this.height = Dimension.Companion.of(height)
+        this.aspectRatio = aspectRatio
     }
 
     override fun toString(): String {
-        return "Size { width=$width, height=$height }"
+        return "Size { width=$width, height=$height, aspectRatio=$aspectRatio }"
     }
 
     public enum class DimensionType {
@@ -112,6 +123,7 @@ public open class Size public constructor(
         private const val SIZE_AUTO = "auto"
         private const val KEY_WIDTH = "width"
         private const val KEY_HEIGHT = "height"
+        private const val KEY_ASPECT_RATIO = "aspect_ratio"
 
 
         @Throws(JsonException::class)
@@ -125,7 +137,7 @@ public open class Size public constructor(
                 throw JsonException("Size requires both width and height!")
             }
 
-            return Size(width, height)
+            return Size(width, height, content.optionalField<Double>(KEY_ASPECT_RATIO))
         }
     }
 }

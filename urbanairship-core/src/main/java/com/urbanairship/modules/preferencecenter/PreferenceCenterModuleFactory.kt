@@ -3,7 +3,7 @@ package com.urbanairship.modules.preferencecenter
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipVersionInfo
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.modules.Module
@@ -19,7 +19,7 @@ public interface PreferenceCenterModuleFactory : AirshipVersionInfo {
 
     public fun build(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         privacyManager: PrivacyManager,
         remoteData: RemoteData,
         inputValidator: AirshipInputValidation.Validator

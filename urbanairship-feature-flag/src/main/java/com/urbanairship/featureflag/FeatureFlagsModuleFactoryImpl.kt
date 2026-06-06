@@ -6,7 +6,7 @@ import android.content.Context
 import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
 import com.urbanairship.BuildConfig
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.audience.AudienceEvaluator
@@ -23,7 +23,7 @@ public class FeatureFlagsModuleFactoryImpl : FeatureFlagsModuleFactory {
 
     override fun build(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         remoteData: RemoteData,
         analytics: Analytics,
         cache: AirshipCache,

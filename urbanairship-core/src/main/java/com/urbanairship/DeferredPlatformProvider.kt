@@ -1,6 +1,9 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship
 
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
+
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RestrictTo
@@ -12,13 +15,13 @@ import com.urbanairship.google.PlayServicesUtils
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal class DeferredPlatformProvider(
     private val context: Context,
-    private val dataStore: PreferenceDataStore,
+    private val dataStore: PreferenceStore,
     private val privacyManager: PrivacyManager,
     private val pushProviders: () -> PushProviders
 ): Provider<Platform> {
     override fun get(): Platform {
         val existingPlatform = Platform.fromRawValue(
-            rawValue = dataStore.getInt(PLATFORM_KEY, Platform.UNKNOWN.rawValue)
+            rawValue = dataStore.get(PLATFORM_KEY) ?: Platform.UNKNOWN.rawValue
         )
         return if (existingPlatform != Platform.UNKNOWN) {
             existingPlatform
@@ -55,9 +58,7 @@ internal class DeferredPlatformProvider(
     }
 
     companion object {
-        /**
-         * Push provider class preference key.
-         */
-        private const val PLATFORM_KEY = "com.urbanairship.application.device.PLATFORM"
+        /** Push provider class preference key. */
+        private val PLATFORM_KEY = SyncPrefKey.int("com.urbanairship.application.device.PLATFORM")
     }
 }

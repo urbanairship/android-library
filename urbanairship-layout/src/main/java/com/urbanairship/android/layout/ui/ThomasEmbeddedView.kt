@@ -91,9 +91,9 @@ internal class ThomasEmbeddedView(
                 if (fillHeight && fillWidth) {
                     matchConstraintWidth(viewId).matchConstraintHeight(viewId)
                 } else if (fillHeight) {
-                    width(size, viewId).matchConstraintHeight(viewId)
+                    width(size, viewId).matchConstraintHeight(viewId).aspectRatio(size, viewId)
                 } else if (fillWidth) {
-                    matchConstraintWidth(viewId).height(size, viewId)
+                    matchConstraintWidth(viewId).height(size, viewId).aspectRatio(size, viewId)
                 } else {
                     size(size, viewId)
                 }

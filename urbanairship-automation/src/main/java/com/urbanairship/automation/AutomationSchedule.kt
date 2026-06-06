@@ -39,7 +39,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
      */
     public val group: String? = null,
     /**
-     * The priority level.
+     * The priority level. Lower numbers are higher priority and are processed
+     * first. Defaults to 0 when unset.
      */
     public val priority: Int? = null,
     /**
@@ -151,7 +152,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
 
         /**
          * Set the priority.
-         * @param priority The priority.
+         * @param priority The priority. Lower numbers are higher priority and are
+         *                 processed first. Defaults to 0 when unset.
          * @return The builder object.
          */
         public fun setPriority(priority: Int?): Builder = apply {

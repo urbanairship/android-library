@@ -24,6 +24,7 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -36,19 +37,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.ViewModelStore
-import androidx.lifecycle.ViewModelStoreOwner
 import com.urbanairship.actions.DefaultActionRunner
 import com.urbanairship.actions.run
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
-import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.ui.ThomasLayoutViewFactory
 import com.urbanairship.app.GlobalActivityMonitor
-import com.urbanairship.json.JsonSerializable
-import com.urbanairship.json.JsonValue
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State
@@ -56,7 +52,6 @@ import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.S
 import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
 import com.urbanairship.messagecenter.compose.ui.widget.MessageCenterWebView
-import kotlin.time.Duration
 import com.urbanairship.R as CoreR
 import com.urbanairship.actions.Action as AutomationAction
 
@@ -206,22 +201,27 @@ private fun NativeContentView(
     onAction: ((Action) -> Unit),
     analyticsBuilder: (onDismissed: () -> Unit) -> ThomasListenerInterface
 ) {
+    val isAlreadyDismissed = remember(message.id) { mutableStateOf(false) }
 
-    onAction(Action.MarkCurrentMessageRead)
+    LaunchedEffect(message.id) {
+        onAction(Action.MarkCurrentMessageRead)
+    }
 
-    val isAlreadyDismissed = remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
-    val args = DisplayArgs(
-        payload = content.layout.layoutInfo,
-        listener = analyticsBuilder {
-            isAlreadyDismissed.value = true
-        },
-        inAppActivityMonitor = GlobalActivityMonitor.shared(LocalContext.current),
-        actionRunner = { actions, _ ->
-            DefaultActionRunner.run(actions, AutomationAction.Situation.AUTOMATION)
-        },
-        stateStorage = content.store
-    )
+    val args = remember(message.id, content) {
+        DisplayArgs(
+            payload = content.layout.layoutInfo,
+            listener = analyticsBuilder {
+                isAlreadyDismissed.value = true
+            },
+            inAppActivityMonitor = GlobalActivityMonitor.shared(context),
+            actionRunner = { actions, _ ->
+                DefaultActionRunner.run(actions, AutomationAction.Situation.AUTOMATION)
+            },
+            stateStorage = content.store
+        )
+    }
 
     DisposableEffect(message.id) {
         onDispose {

@@ -1,7 +1,6 @@
 package com.urbanairship.automation.engine
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.ApplicationMetrics
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.EventType
 import com.urbanairship.app.ActivityMonitor
@@ -11,6 +10,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.util.UUID
 import app.cash.turbine.test
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
@@ -34,7 +34,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class AutomationEventFeedTest {
     private val metrics: ApplicationMetrics = mockk() {
-        every { this@mockk.appVersionUpdated } returns true
+        coEvery { this@mockk.isAppVersionUpdated() } returns true
         every { this@mockk.currentAppVersion } returns 123L
     }
 

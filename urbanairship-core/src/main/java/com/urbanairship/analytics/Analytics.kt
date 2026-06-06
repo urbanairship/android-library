@@ -11,7 +11,8 @@ import androidx.annotation.WorkerThread
 import com.urbanairship.Airship
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.JobAwareAirshipComponent
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.analytics.data.EventManager
@@ -54,7 +55,7 @@ public class Analytics
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public constructor(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     private val runtimeConfig: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val airshipChannel: AirshipChannel,
@@ -146,9 +147,7 @@ public constructor(
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @set:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public var lastReceivedMetadata: String?
-        get() {
-            return dataStore.getString(LAST_RECEIVED_METADATA, null)
-        }
+        get() = dataStore.get(LAST_RECEIVED_METADATA)
         set(value) {
             dataStore.put(LAST_RECEIVED_METADATA, value)
         }
@@ -175,7 +174,7 @@ public constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public constructor(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         channel: AirshipChannel,
@@ -217,9 +216,7 @@ public constructor(
             if (!privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
                 clearPendingEvents()
                 synchronized(associatedIdentifiersLock) {
-                    dataStore.remove(
-                        ASSOCIATED_IDENTIFIERS_KEY
-                    )
+                    dataStore.remove(ASSOCIATED_IDENTIFIERS_KEY)
                 }
             }
         }
@@ -462,16 +459,7 @@ public constructor(
          */
         get() {
             synchronized(associatedIdentifiersLock) {
-                try {
-                    val value: JsonValue = dataStore.getJsonValue(ASSOCIATED_IDENTIFIERS_KEY)
-                    if (!value.isNull) {
-                        return AssociatedIdentifiers.fromJson(value)
-                    }
-                } catch (e: JsonException) {
-                    UALog.e(e) { "Unable to parse associated identifiers." }
-                    dataStore.remove(ASSOCIATED_IDENTIFIERS_KEY)
-                }
-                return AssociatedIdentifiers()
+                return dataStore.get(ASSOCIATED_IDENTIFIERS_KEY) ?: AssociatedIdentifiers()
             }
         }
 
@@ -608,7 +596,10 @@ public constructor(
          * Minimum amount of delay when [.uploadEvents] is called.
          */
         private val SCHEDULE_SEND_DELAY_SECONDS = 10.seconds
-        private const val ASSOCIATED_IDENTIFIERS_KEY = "com.urbanairship.analytics.ASSOCIATED_IDENTIFIERS"
-        private const val LAST_RECEIVED_METADATA = "com.urbanairship.push.LAST_RECEIVED_METADATA"
+        private val ASSOCIATED_IDENTIFIERS_KEY = SyncPrefKey.jsonSerializable(
+            name = "com.urbanairship.analytics.ASSOCIATED_IDENTIFIERS",
+            fromJson = AssociatedIdentifiers::fromJson
+        )
+        private val LAST_RECEIVED_METADATA = SyncPrefKey.string("com.urbanairship.push.LAST_RECEIVED_METADATA")
     }
 }

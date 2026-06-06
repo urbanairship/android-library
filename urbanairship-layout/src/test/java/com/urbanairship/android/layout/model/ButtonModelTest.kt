@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.LabelButtonInfo
 import com.urbanairship.android.layout.property.ButtonClickBehaviorType
+import com.urbanairship.android.layout.property.OutcomeResolver
 import com.urbanairship.android.layout.view.LabelButtonView
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -169,7 +170,7 @@ public class ButtonModelTest {
         advanceUntilIdle()
 
         coVerifyOrder {
-            layoutEventHandler.broadcast(match { it is LayoutEvent.PagerNext })
+            layoutEventHandler.broadcast(match { it is LayoutEvent.Pager.Next })
             layoutEventHandler.broadcast(
                 match { it is LayoutEvent.AsyncViewReload && (it as LayoutEvent.AsyncViewReload).identifier == buttonId }
             )
@@ -182,9 +183,12 @@ public class ButtonModelTest {
         identifier: String = "test-button"
     ): LabelButtonModel {
         val mockInfo = mockk<LabelButtonInfo>(relaxed = true) {
-            every { this@mockk.actions } returns actions
-            every { this@mockk.clickBehaviors } returns clickBehaviors
             every { this@mockk.identifier } returns identifier
+            every { this@mockk.outcomes } returns OutcomeResolver.resolve(
+                outcomes = null,
+                behaviors = clickBehaviors,
+                actions = actions
+            )
         }
 
         val mockLabel = mockk<LabelModel>(relaxed = true)

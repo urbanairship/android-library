@@ -76,7 +76,7 @@ public class AttributeMutation internal constructor(
             require(!jsonValue.isNull) { "Invalid attribute value: $jsonValue" }
 
             return AttributeMutation(
-                ATTRIBUTE_ACTION_SET, key, jsonValue, DateUtils.createIso8601TimeStamp(timestamp)
+                ATTRIBUTE_ACTION_SET, key, jsonValue, DateUtils.createIso8601TimeStamp(timestamp, includeMillis = true)
             )
         }
 
@@ -89,7 +89,7 @@ public class AttributeMutation internal constructor(
          */
         fun newRemoveAttributeMutation(key: String, timestamp: Long): AttributeMutation {
             return AttributeMutation(
-                ATTRIBUTE_ACTION_REMOVE, key, null, DateUtils.createIso8601TimeStamp(timestamp)
+                ATTRIBUTE_ACTION_REMOVE, key, null, DateUtils.createIso8601TimeStamp(timestamp, includeMillis = true)
             )
         }
 

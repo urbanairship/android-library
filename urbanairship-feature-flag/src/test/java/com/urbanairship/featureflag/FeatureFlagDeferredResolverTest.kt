@@ -236,7 +236,7 @@ public class FeatureFlagDeferredResolverTest {
         coEvery { coreResolver.resolve(request, capture(callbackSlot)) } answers {
             if (returnError) {
                 returnError = false
-                DeferredResult.RetriableError<Any>(2L)
+                DeferredResult.RetriableError<Any>(2.milliseconds)
             } else {
                 val deferred = callbackSlot.captured.invoke(jsonMapOf(
                     "is_eligible" to true,
@@ -274,7 +274,7 @@ public class FeatureFlagDeferredResolverTest {
         coEvery { coreResolver.resolve(request, capture(callbackSlot)) } answers {
             if (counter < 2) {
                 counter += 1
-                DeferredResult.RetriableError(2L)
+                DeferredResult.RetriableError(2.milliseconds)
             } else {
                 val deferred = callbackSlot.captured.invoke(jsonMapOf(
                     "is_eligible" to true,

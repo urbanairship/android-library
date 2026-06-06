@@ -414,7 +414,11 @@ public class SetAttributesActionTest {
 
     @Test
     fun acceptReturnsFalseForInvalidJsonValue() {
+        // Cases 1–3: value is a JSON object but outer name has no '#'.
+        // The keys inside value are irrelevant — validation is purely on the outer name.
+        // Cases 4–6: outer name has an invalid '#' structure.
         val inputJsons = listOf(
+            // name has no '#' (value key also has no '#', but that doesn't matter)
             jsonListOf(
                 jsonMapOf(
                     "action" to "set",
@@ -423,28 +427,26 @@ public class SetAttributesActionTest {
                     "value" to jsonMapOf(
                         "json_test" to jsonMapOf(
                             "exp" to 1012,
-                            "nested" to jsonMapOf(
-                                "foo" to "bar"
-                            )
+                            "nested" to jsonMapOf("foo" to "bar")
                         )
                     )
                 )
             ),
+            // name has no '#' (value key has multiple '#', still doesn't matter)
             jsonListOf(
                 jsonMapOf(
                     "action" to "set",
                     "type" to "channel",
                     "name" to "another name",
                     "value" to jsonMapOf(
-                        "json#test#" to jsonMapOf(
+                        "json#te#st#" to jsonMapOf(
                             "exp" to 1012,
-                            "nested" to jsonMapOf(
-                                "foo" to "bar"
-                            )
+                            "nested" to jsonMapOf("foo" to "bar")
                         )
                     )
                 )
             ),
+            // name has no '#' (value key ends with '#', still doesn't matter)
             jsonListOf(
                 jsonMapOf(
                     "action" to "set",
@@ -453,20 +455,132 @@ public class SetAttributesActionTest {
                     "value" to jsonMapOf(
                         "json_test#" to jsonMapOf(
                             "exp" to 1012,
-                            "nested" to jsonMapOf(
-                                "foo" to "bar"
-                            )
+                            "nested" to jsonMapOf("foo" to "bar")
                         )
                     )
+                )
+            ),
+            // name has more than one '#'
+            jsonListOf(
+                jsonMapOf(
+                    "action" to "set",
+                    "type" to "channel",
+                    "name" to "my#attr#id",
+                    "value" to jsonMapOf("some_key" to "value")
+                )
+            ),
+            // name ends with '#' — empty instanceId
+            jsonListOf(
+                jsonMapOf(
+                    "action" to "set",
+                    "type" to "channel",
+                    "name" to "myAttr#",
+                    "value" to jsonMapOf("some_key" to "value")
+                )
+            ),
+            // name starts with '#' — empty attribute name
+            jsonListOf(
+                jsonMapOf(
+                    "action" to "set",
+                    "type" to "channel",
+                    "name" to "#instanceId",
+                    "value" to jsonMapOf("some_key" to "value")
                 )
             )
         )
 
         for (inputJson in inputJsons) {
             val args = ActionTestUtils.createArgs(Action.Situation.MANUAL_INVOCATION, wrap(inputJson))
-            val result = action.acceptsArguments(args)
-            assertFalse(result)
+            assertFalse("expected false for $inputJson", action.acceptsArguments(args))
         }
+    }
+
+    // Mirrors iOS testJsonValueNewFormat
+    @Test
+    fun performWithJsonValueNewFormat() {
+        val attributeMutations = mutableSetOf<AttributeMutation>()
+        val attributeEditor = object : AttributeEditor(clock) {
+            override fun onApply(collapsedMutations: List<AttributeMutation>) {
+                attributeMutations.addAll(collapsedMutations)
+            }
+        }
+
+        every { channel.editAttributes() } returns attributeEditor
+        every { contact.editAttributes() } returns mockk()
+
+        // name carries "attributeName#instanceId", value is the plain JSON object.
+        // exp=1012 (seconds) is within the test-clock's 731-day window (clock set to epoch+1 s).
+        val inputJson = jsonListOf(
+            jsonMapOf(
+                "action" to "set",
+                "type" to "channel",
+                "name" to "myAttributeName#myInstanceID",
+                "value" to jsonMapOf(
+                    "some_custom_key" to "custom_value",
+                    "exp" to 1012
+                )
+            )
+        )
+
+        val args = ActionTestUtils.createArgs(Action.Situation.MANUAL_INVOCATION, wrap(inputJson))
+        val result = action.perform(args)
+
+        assertTrue(result.value.isNull)
+
+        val expectedAttributeMutations = setOf(
+            AttributeMutation.newSetAttributeMutation(
+                key = "myAttributeName#myInstanceID",
+                jsonValue = JsonValue.wrap(mapOf(
+                    "some_custom_key" to "custom_value",
+                    "exp" to 1012
+                )),
+                timestamp = 1000
+            )
+        )
+
+        assertEquals(expectedAttributeMutations, attributeMutations)
+    }
+
+    // Mirrors iOS testJsonValueNewFormatNoExpiration
+    @Test
+    fun performWithJsonValueNewFormatNoExpiration() {
+        val attributeMutations = mutableSetOf<AttributeMutation>()
+        val attributeEditor = object : AttributeEditor(clock) {
+            override fun onApply(collapsedMutations: List<AttributeMutation>) {
+                attributeMutations.addAll(collapsedMutations)
+            }
+        }
+
+        every { channel.editAttributes() } returns attributeEditor
+        every { contact.editAttributes() } returns mockk()
+
+        val inputJson = jsonListOf(
+            jsonMapOf(
+                "action" to "set",
+                "type" to "channel",
+                "name" to "myAttributeName#myInstanceID",
+                "value" to jsonMapOf(
+                    "some_custom_key" to "custom_value"
+                )
+            )
+        )
+
+        val args = ActionTestUtils.createArgs(Action.Situation.MANUAL_INVOCATION, wrap(inputJson))
+        val result = action.perform(args)
+
+        assertTrue(result.value.isNull)
+
+        val expectedAttributeMutations = setOf(
+            AttributeMutation.newSetAttributeMutation(
+                key = "myAttributeName#myInstanceID",
+                jsonValue = JsonValue.wrap(mapOf(
+                    "some_custom_key" to "custom_value"
+                )),
+                timestamp = 1000
+            )
+        )
+
+        assertEquals(expectedAttributeMutations, attributeMutations)
     }
 
     @Test
@@ -481,17 +595,16 @@ public class SetAttributesActionTest {
         every { channel.editAttributes() } returns attributeEditor
         every { contact.editAttributes() } returns attributeEditor
 
+        // name carries attributeName#instanceId, value is the plain JSON object.
         val inputJson = jsonListOf(
             jsonMapOf(
                 "action" to "set",
                 "type" to "channel",
-                "name" to "another name",
+                "name" to "json#test",
                 "value" to jsonMapOf(
-                    "json#test" to jsonMapOf(
-                        "exp" to 1012,
-                        "nested" to jsonMapOf(
-                            "foo" to "bar"
-                        )
+                    "exp" to 1012,
+                    "nested" to jsonMapOf(
+                        "foo" to "bar"
                     )
                 )
             )
@@ -528,16 +641,15 @@ public class SetAttributesActionTest {
         every { channel.editAttributes() } returns attributeEditor
         every { contact.editAttributes() } returns attributeEditor
 
+        // name carries attributeName#instanceId, value is the plain JSON object (no exp).
         val inputJson = jsonListOf(
             jsonMapOf(
                 "action" to "set",
                 "type" to "channel",
-                "name" to "another name",
+                "name" to "json#test",
                 "value" to jsonMapOf(
-                    "json#test" to jsonMapOf(
-                        "nested" to jsonMapOf(
-                            "foo" to "bar"
-                        )
+                    "nested" to jsonMapOf(
+                        "foo" to "bar"
                     )
                 )
             )

@@ -7,7 +7,6 @@ import androidx.annotation.VisibleForTesting
 import com.urbanairship.Provider
 import com.urbanairship.Airship
 import com.urbanairship.Platform
-import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
@@ -182,7 +181,6 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
         val triggers = viewInfo.stateTriggers ?: return
         if (triggers.isEmpty()) { return }
 
-
         modelScope.launch {
             val triggered = mutableSetOf<String>()
             layoutState.thomasState.collect { state ->
@@ -193,7 +191,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
                     if (!triggered.contains(trigger.id) && trigger.triggerWhenStateMatches.apply(state)) {
                         triggered.add(trigger.id)
-                        runStateActions(trigger.onTrigger.stateActions)
+                        outcomeProcessor.process(trigger.onTrigger.outcomes, handlerOutcome = defaultHandler)
                     }
                 }
             }
@@ -228,6 +226,26 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     internal val viewScope = CoroutineScope(Dispatchers.Main.immediate + viewJob)
 
     protected val layoutState = environment.layoutState
+
+    protected open val outcomeProcessor: ThomasOutcomeProcessor =
+        ThomasOutcomeProcessor(environment, layoutState)
+
+    /**
+     * Default handling callback for outcomes the processor cannot handle directly.
+     * Subclasses can provide their own callback to customize dismiss/action behavior.
+     */
+    protected open val defaultHandler: suspend (HandlerOutcome) -> Unit = { outcome ->
+        when (outcome) {
+            is HandlerOutcome.Dismiss ->
+                environment.eventHandler.broadcast(LayoutEvent.Finish(cancel = outcome.cancel))
+            is HandlerOutcome.RunActions ->
+                runActions(outcome.actions, layoutState.reportingContext())
+            is HandlerOutcome.FormAction ->
+                throw IllegalStateException("Models supporting FormAction Outcome requires correct implementation")
+            is HandlerOutcome.AsyncViewReload ->
+                environment.eventHandler.broadcast(LayoutEvent.AsyncViewReload(outcome.identifier))
+        }
+    }
 
     protected fun report(event: ReportingEvent) =
         environment.reporter.report(event)
@@ -355,9 +373,11 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     }
 
     fun handleViewEvent(type: EventHandler.Type, value: Any? = null) {
-        for (handler in viewInfo.eventHandlers.orEmpty()) {
-            if (handler.type == type) {
-                runStateActions(handler.actions, value)
+        modelScope.launch {
+            for (handler in viewInfo.eventHandlers.orEmpty()) {
+                if (handler.type == type) {
+                    outcomeProcessor.process(handler.outcomes, formValue = value, handlerOutcome = defaultHandler)
+                }
             }
         }
     }
@@ -419,7 +439,7 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
                     }
                 }
                 .collect {
-                    runStateActions(it.actions, lastSelected.value)
+                    outcomeProcessor.process(it.outcomes, formValue = lastSelected.value, handlerOutcome = defaultHandler)
                 }
         }
     }

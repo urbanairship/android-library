@@ -3,7 +3,9 @@
 package com.urbanairship.channel
 
 import androidx.annotation.VisibleForTesting
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.AirshipDispatchers
+import com.urbanairship.preferences.AsyncPrefKey
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.audience.AudienceOverrides
 import com.urbanairship.audience.AudienceOverridesProvider
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -12,63 +14,67 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.tryParse
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
+import com.urbanairship.util.AsyncSerialQueue
+import com.urbanairship.util.AsyncSerialQueueScope
+import kotlinx.coroutines.CoroutineScope
 
-/** Handles updates for the batch endpoint **/
+/** Handles updates for the batch endpoint. */
 internal class ChannelBatchUpdateManager(
-    private val dataStore: PreferenceDataStore,
     private val apiClient: ChannelBatchUpdateApiClient,
     private val audienceOverridesProvider: AudienceOverridesProvider,
+    private val storage: Storage,
 ) {
     constructor(
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
+        apiClient: ChannelBatchUpdateApiClient,
+        audienceOverridesProvider: AudienceOverridesProvider,
+        scope: CoroutineScope = CoroutineScope(AirshipDispatchers.IO),
+    ) : this(apiClient, audienceOverridesProvider, Storage(dataStore, scope))
+
+    constructor(
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         audienceOverridesProvider: AudienceOverridesProvider
-    ) : this(
-        dataStore,
-        ChannelBatchUpdateApiClient(runtimeConfig),
-        audienceOverridesProvider
-    )
-
-    private val lock = ReentrantLock()
-
-    internal val hasPending: Boolean
-    get() {
-        return !dataStore.getJsonValue(UPDATE_DATASTORE_KEY).optList().isEmpty
-    }
-
-    private var updates: List<AudienceUpdate>
-        get() {
-            return dataStore.optJsonValue(UPDATE_DATASTORE_KEY)?.tryParse(true) { json ->
-                json.optList().map { AudienceUpdate(it.requireMap()) }
-            } ?: emptyList()
-        }
-        set(value) {
-            dataStore.put(UPDATE_DATASTORE_KEY, JsonValue.wrap(value))
-        }
+    ) : this(dataStore, ChannelBatchUpdateApiClient(runtimeConfig), audienceOverridesProvider)
 
     init {
-        migrateData()
-
         audienceOverridesProvider.pendingChannelOverridesDelegate = {
             this.pendingOverrides()
         }
     }
 
-    internal fun clearPending() {
-        lock.withLock {
-            dataStore.remove(UPDATE_DATASTORE_KEY)
+    internal suspend fun hasPending(): Boolean = storage.hasPending()
+
+    internal fun addUpdate(
+        tags: List<TagGroupsMutation>? = null,
+        attributes: List<AttributeMutation>? = null,
+        subscriptions: List<SubscriptionListMutation>? = null,
+        liveUpdates: List<LiveUpdateMutation>? = null,
+    ) {
+        if (tags.isNullOrEmpty() && attributes.isNullOrEmpty() && subscriptions.isNullOrEmpty() && liveUpdates.isNullOrEmpty()) {
+            return
         }
+        storage.add(
+            AudienceUpdate(
+                tags = tags,
+                attributes = attributes,
+                subscriptions = subscriptions,
+                liveUpdates = liveUpdates
+            )
+        )
+    }
+
+    internal fun clearPending() {
+        storage.clear()
     }
 
     internal suspend fun uploadPending(channelId: String): Boolean {
-        val updates = this.updates
+        val updates = storage.read()
 
         var mergedTags = mutableListOf<TagGroupsMutation>()
         var mergedAttributes = mutableListOf<AttributeMutation>()
         var mergedSubLists = mutableListOf<SubscriptionListMutation>()
-        var mergedLiveUpdates = mutableListOf<LiveUpdateMutation>()
+        val mergedLiveUpdates = mutableListOf<LiveUpdateMutation>()
 
         updates.forEach { update ->
             update.tags?.let { mergedTags.addAll(it) }
@@ -82,13 +88,13 @@ internal class ChannelBatchUpdateManager(
         mergedSubLists = SubscriptionListMutation.collapseMutations(mergedSubLists).toMutableList()
 
         if (mergedTags.isEmpty() && mergedAttributes.isEmpty() && mergedSubLists.isEmpty() && mergedLiveUpdates.isEmpty()) {
-            popAudienceUpdates(updates)
+            storage.popFront(updates)
             return true
         }
 
         val response = apiClient.update(channelId, mergedTags, mergedAttributes, mergedSubLists, mergedLiveUpdates)
-        if (response.isSuccessful || response.isClientError) {
 
+        if (response.isSuccessful || response.isClientError) {
             if (response.isSuccessful) {
                 audienceOverridesProvider.recordChannelUpdate(
                     channelId,
@@ -98,53 +104,15 @@ internal class ChannelBatchUpdateManager(
                 )
             }
 
-            popAudienceUpdates(updates)
+            storage.popFront(updates)
             return true
         }
 
         return false
     }
 
-    internal fun addUpdate(
-        tags: List<TagGroupsMutation>? = null,
-        attributes: List<AttributeMutation>? = null,
-        subscriptions: List<SubscriptionListMutation>? = null,
-        liveUpdates: List<LiveUpdateMutation>? = null,
-    ) {
-        if (tags.isNullOrEmpty() && attributes.isNullOrEmpty() && subscriptions.isNullOrEmpty() && liveUpdates.isNullOrEmpty()) {
-            return
-        }
-
-        val update = AudienceUpdate(
-            tags = tags,
-            attributes = attributes,
-            subscriptions = subscriptions,
-            liveUpdates = liveUpdates
-        )
-
-        lock.withLock {
-            val list = updates.toMutableList()
-            list.add(update)
-            updates = list
-        }
-    }
-
-    private fun popAudienceUpdates(uploaded: List<AudienceUpdate>) {
-        lock.withLock {
-            // Read the current storage (not the uploaded snapshot) so that any updates
-            // appended during the upload's network round-trip are preserved. The uploaded
-            // updates are always the front prefix, since addUpdate appends to the back.
-            val stored = updates.toMutableList()
-            uploaded.forEach {
-                if (stored.firstOrNull() == it) {
-                    stored.removeAt(0)
-                }
-            }
-            updates = stored
-        }
-    }
-
-    private fun pendingOverrides(): AudienceOverrides.Channel {
+    private suspend fun pendingOverrides(): AudienceOverrides.Channel {
+        val updates = storage.read()
         val mergedTags = mutableListOf<TagGroupsMutation>()
         val mergedAttributes = mutableListOf<AttributeMutation>()
         val mergedSubLists = mutableListOf<SubscriptionListMutation>()
@@ -161,41 +129,108 @@ internal class ChannelBatchUpdateManager(
     }
 
     @VisibleForTesting
-    internal fun migrateData() {
-        // List of Lists
-        val attributes = dataStore.getJsonValue(ATTRIBUTE_DATASTORE_KEY).list?.map {
-            AttributeMutation.fromJsonList(it.optList())
-        }?.flatten()
-
-        // List of Lists
-        val subscriptions = dataStore.getJsonValue(SUBSCRIPTION_LISTS_DATASTORE_KEY).list?.map {
-            SubscriptionListMutation.fromJsonList(it.optList())
-        }?.flatten()
-
-        // Just a list
-        val tags = dataStore.getJsonValue(TAG_GROUP_DATASTORE_KEY).list?.map {
-            TagGroupsMutation.fromJsonValue(it)
-        }
-
-        addUpdate(tags, attributes, subscriptions)
-
-        dataStore.remove(ATTRIBUTE_DATASTORE_KEY)
-        dataStore.remove(SUBSCRIPTION_LISTS_DATASTORE_KEY)
-        dataStore.remove(TAG_GROUP_DATASTORE_KEY)
+    internal suspend fun migrateData() {
+        storage.migrate()
     }
 
-    internal companion object {
-        // Migration keys
-        private const val ATTRIBUTE_DATASTORE_KEY = "com.urbanairship.push.ATTRIBUTE_DATA_STORE"
-        private const val TAG_GROUP_DATASTORE_KEY = "com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS"
-        private const val SUBSCRIPTION_LISTS_DATASTORE_KEY = "com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS"
+    /**
+     * Owns the on-disk pending-updates list and serializes every access to it through an
+     * [AsyncSerialQueue]. The legacy migration is enqueued as the first link at construction
+     * so any later read or write queues behind it.
+     */
+    internal class Storage(
+        private val dataStore: PreferenceStore,
+        scope: CoroutineScope,
+    ) {
+        private val queue = AsyncSerialQueue(scope)
 
-        // Updates storage key
-        private const val UPDATE_DATASTORE_KEY = "com.urbanairship.channel.PENDING_AUDIENCE_UPDATES"
+        init {
+            queue.enqueue { migrateInternal() }
+        }
+
+        /** Fire-and-forget append. */
+        fun add(update: AudienceUpdate) {
+            queue.enqueue {
+                val list = readInternal().toMutableList()
+                list.add(update)
+                writeInternal(list)
+            }
+        }
+
+        /** Fire-and-forget clear. */
+        fun clear() {
+            queue.enqueue { dataStore.remove(UPDATE_DATASTORE_KEY) }
+        }
+
+        suspend fun hasPending(): Boolean = queue.enqueueAndAwait {
+            !(dataStore.get(UPDATE_DATASTORE_KEY)?.optList()?.isEmpty ?: true)
+        }
+
+        suspend fun read(): List<AudienceUpdate> = queue.enqueueAndAwait { readInternal() }
+
+        /** Removes [uploaded] from the front of the stored list (in submission order). */
+        suspend fun popFront(uploaded: List<AudienceUpdate>) {
+            queue.enqueueAndAwait {
+                val stored = readInternal().toMutableList()
+                uploaded.forEach {
+                    if (stored.firstOrNull() == it) {
+                        stored.removeAt(0)
+                    }
+                }
+                writeInternal(stored)
+            }
+        }
+
+        @VisibleForTesting
+        internal suspend fun migrate() {
+            queue.enqueueAndAwait { migrateInternal() }
+        }
+
+        private suspend fun AsyncSerialQueueScope.migrateInternal() {
+            val attributes = dataStore.get(ATTRIBUTE_DATASTORE_KEY)?.list?.flatMap {
+                AttributeMutation.fromJsonList(it.optList())
+            }
+
+            val subscriptions = dataStore.get(SUBSCRIPTION_LISTS_DATASTORE_KEY)?.list?.flatMap {
+                SubscriptionListMutation.fromJsonList(it.optList())
+            }
+
+            val tags = dataStore.get(TAG_GROUP_DATASTORE_KEY)?.list?.map {
+                TagGroupsMutation.fromJsonValue(it)
+            }
+
+            if (!tags.isNullOrEmpty() || !attributes.isNullOrEmpty() || !subscriptions.isNullOrEmpty()) {
+                val merged = readInternal() + AudienceUpdate(tags, attributes, subscriptions)
+                writeInternal(merged)
+            }
+
+            dataStore.remove(ATTRIBUTE_DATASTORE_KEY)
+            dataStore.remove(SUBSCRIPTION_LISTS_DATASTORE_KEY)
+            dataStore.remove(TAG_GROUP_DATASTORE_KEY)
+        }
+
+        private suspend fun AsyncSerialQueueScope.readInternal(): List<AudienceUpdate> =
+            dataStore.get(UPDATE_DATASTORE_KEY)?.tryParse(true) { json ->
+                json.optList().map { AudienceUpdate(it.requireMap()) }
+            } ?: emptyList()
+
+        private suspend fun AsyncSerialQueueScope.writeInternal(value: List<AudienceUpdate>) {
+            dataStore.put(UPDATE_DATASTORE_KEY, JsonValue.wrap(value))
+        }
+
+        internal companion object {
+            // Legacy migration keys
+            private val ATTRIBUTE_DATASTORE_KEY = AsyncPrefKey.json("com.urbanairship.push.ATTRIBUTE_DATA_STORE")
+            private val TAG_GROUP_DATASTORE_KEY = AsyncPrefKey.json("com.urbanairship.push.PENDING_TAG_GROUP_MUTATIONS")
+            private val SUBSCRIPTION_LISTS_DATASTORE_KEY = AsyncPrefKey.json("com.urbanairship.push.PENDING_SUBSCRIPTION_MUTATIONS")
+
+            // Updates storage key
+            private val UPDATE_DATASTORE_KEY = AsyncPrefKey.json("com.urbanairship.channel.PENDING_AUDIENCE_UPDATES")
+        }
     }
 }
 
-private data class AudienceUpdate(
+internal data class AudienceUpdate(
     val tags: List<TagGroupsMutation>? = null,
     val attributes: List<AttributeMutation>? = null,
     val subscriptions: List<SubscriptionListMutation>? = null,

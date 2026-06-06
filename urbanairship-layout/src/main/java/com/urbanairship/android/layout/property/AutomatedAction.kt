@@ -5,23 +5,25 @@ import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
+import com.urbanairship.json.optionalList
 import com.urbanairship.json.requireField
 
 internal data class AutomatedAction(
     override val identifier: String,
     val delay: Int = 0,
-    val actions: Map<String, JsonValue>? = null,
-    val behaviors: List<ButtonClickBehaviorType>? = null,
+    val outcomes: List<Outcome>,
     val reportingMetadata: JsonValue? = null
 ) : Identifiable {
     companion object {
         fun from(json: JsonMap): AutomatedAction = AutomatedAction(
             identifier = json.requireField("identifier"),
             delay = json.optionalField<Int>("delay") ?: 0,
-            actions = json.optionalField<JsonMap>("actions")?.map,
-            behaviors = json.optionalField<JsonList>("behaviors")?.let {
-                ButtonClickBehaviorType.fromList(it)
-            },
+            outcomes = OutcomeResolver.resolve(
+                outcomes = json.optionalList("outcomes")?.let(Outcome::fromList),
+                behaviors = json.optionalField<JsonList>("behaviors")
+                    ?.let { ButtonClickBehaviorType.fromList(it) },
+                actions = json.optionalField<JsonMap>("actions")?.map,
+            ),
             reportingMetadata = json.optionalField<JsonValue>("reporting_metadata")
         )
 
@@ -43,10 +45,24 @@ internal data class AutomatedAction(
  * If no such action exists, returns `null`.
  */
 internal val List<AutomatedAction>.earliestNavigationAction: AutomatedAction?
-    get() = firstOrNull { it.behaviors?.hasStoryNavigationBehavior ?: false }
+    get() = firstOrNull { it.outcomes.firstOrNull { outcome -> outcome.isNavigationOutcome } != null }
 
 /**
  * Returns true if the automated action has pause or resume behaviors
  */
 internal val List<AutomatedAction>.hasPagerPauseOrResumeAction: Boolean
-    get() = any { it.behaviors?.hasPagerPause == true || it.behaviors?.hasPagerResume == true }
+    get() = any { it.outcomes.any(Outcome::isPagerPlaybackOutcome) }
+
+private val Outcome.isPagerPlaybackOutcome: Boolean
+    get() = when (this) {
+        is Outcome.PagerPlayback -> true
+        else -> false
+    }
+
+private val Outcome.isNavigationOutcome: Boolean
+    get() = when (this) {
+        is Outcome.PagerStepNavigation -> true
+        is Outcome.PagerJumpNavigation -> true
+        is Outcome.Dismiss -> true
+        else -> false
+    }

@@ -9,7 +9,8 @@ import android.util.Log
 import androidx.annotation.RestrictTo
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
-import com.urbanairship.PreferenceDataStore
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.UALog.logLevel
@@ -53,7 +54,7 @@ import kotlinx.coroutines.launch
 @OpenForTesting
 public class AirshipChannel internal constructor(
     context: Context,
-    dataStore: PreferenceDataStore,
+    dataStore: PreferenceStore,
     private val runtimeConfig: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val permissionsManager: PermissionsManager,
@@ -75,7 +76,7 @@ public class AirshipChannel internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public constructor(
         context: Context,
-        dataStore: PreferenceDataStore,
+        dataStore: PreferenceStore,
         runtimeConfig: AirshipRuntimeConfig,
         privacyManager: PrivacyManager,
         permissionsManager: PermissionsManager,
@@ -252,7 +253,7 @@ public class AirshipChannel internal constructor(
             return JobResult.FAILURE
         }
 
-        if (registrationResult == RegistrationResult.NEEDS_UPDATE || channelManager.hasPending) {
+        if (registrationResult == RegistrationResult.NEEDS_UPDATE || channelManager.hasPending()) {
             dispatchUpdateJob(conflictStrategy = ConflictStrategy.REPLACE)
         }
 
@@ -410,9 +411,9 @@ public class AirshipChannel internal constructor(
                     return emptySet()
                 }
 
-                val tags = dataStore.getJsonValue(TAGS_KEY).optList().mapNotNull {
+                val tags = dataStore.get(TAGS_KEY)?.optList()?.mapNotNull {
                     it.string
-                }.toSet()
+                }?.toSet() ?: emptySet()
 
                 val normalizedTags = TagUtils.normalizeTags(tags)
                 // To prevent the getTags call from constantly logging tag set failures, sync tags
@@ -622,8 +623,8 @@ public class AirshipChannel internal constructor(
          */
         internal const val ACTION_CHANNEL_CREATED = "com.urbanairship.CHANNEL_CREATED"
 
-        // PreferenceDataStore keys
-        private const val TAGS_KEY = "com.urbanairship.push.TAGS"
+        // PreferenceStore keys
+        private val TAGS_KEY = SyncPrefKey.json("com.urbanairship.push.TAGS")
 
         private const val ACTION_UPDATE_CHANNEL = "ACTION_UPDATE_CHANNEL"
     }

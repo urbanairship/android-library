@@ -1,0 +1,118 @@
+# Modal placement aspect_ratio: portrait=9:16, landscape=16:9.
+# Rotate device to see the modal swap between tall and wide.
+version: 1
+presentation:
+  type: modal
+  dismiss_on_touch_outside: true
+  placement_selectors:
+    - orientation: portrait
+      placement:
+        size:
+          width: 80%
+          height: auto
+          aspect_ratio: 0.5625
+        position:
+          horizontal: center
+          vertical: center
+        shade_color:
+          default:
+            hex: '#000000'
+            alpha: 0.6
+        background_color:
+          default:
+            hex: '#1A237E'
+            alpha: 1
+        border:
+          radius: 12
+    - orientation: landscape
+      placement:
+        size:
+          width: 90%
+          height: auto
+          aspect_ratio: 1.778
+        position:
+          horizontal: center
+          vertical: center
+        shade_color:
+          default:
+            hex: '#000000'
+            alpha: 0.6
+        background_color:
+          default:
+            hex: '#1A237E'
+            alpha: 1
+        border:
+          radius: 12
+  default_placement:
+    size:
+      width: 80%
+      height: auto
+      aspect_ratio: 1.0
+    position:
+      horizontal: center
+      vertical: center
+    shade_color:
+      default:
+        hex: '#000000'
+        alpha: 0.6
+    background_color:
+      default:
+        hex: '#1A237E'
+        alpha: 1
+    border:
+      radius: 12
+view:
+  type: container
+  items:
+    - position:
+        horizontal: center
+        vertical: center
+      size:
+        width: 80%
+        height: auto
+      view:
+        type: label
+        text: "Portrait: 9:16 (0.5625)\nLandscape: 16:9 (1.778)\nRotate to compare."
+        text_appearance:
+          font_size: 16
+          alignment: center
+          styles:
+            - bold
+          color:
+            default:
+              hex: '#FFFFFF'
+              alpha: 1
+    - position:
+        horizontal: center
+        vertical: bottom
+      size:
+        width: 60%
+        height: auto
+      margin:
+        bottom: 24
+      view:
+        type: label_button
+        identifier: dismiss_btn
+        background_color:
+          default:
+            hex: '#FFFFFF'
+            alpha: 0.2
+        border:
+          radius: 8
+          stroke_color:
+            default:
+              hex: '#FFFFFF'
+              alpha: 0.6
+          stroke_width: 1
+        button_click:
+          - dismiss
+        label:
+          type: label
+          text: Dismiss
+          text_appearance:
+            font_size: 16
+            alignment: center
+            color:
+              default:
+                hex: '#FFFFFF'
+                alpha: 1

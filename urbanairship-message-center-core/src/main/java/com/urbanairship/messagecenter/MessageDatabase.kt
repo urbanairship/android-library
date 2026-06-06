@@ -2,7 +2,6 @@
 package com.urbanairship.messagecenter
 
 import android.content.Context
-import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import androidx.room.AutoMigration
@@ -15,7 +14,6 @@ import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import com.urbanairship.AirshipConfigOptions
-import com.urbanairship.automation.storage.Converters
 import com.urbanairship.db.RetryingSQLiteOpenHelper
 import com.urbanairship.json.JsonTypeConverters
 import java.io.File

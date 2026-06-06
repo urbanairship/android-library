@@ -1,9 +1,6 @@
 package com.urbanairship.automation.remotedata
 
-import android.content.Context
-import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.PreferenceDataStore
 import com.urbanairship.TestClock
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.AutomationTrigger
@@ -42,8 +39,6 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class AutomationRemoteDataSubscriberTest {
-    private val context: Context = ApplicationProvider.getApplicationContext()
-    private val dataStore = PreferenceDataStore.inMemoryStore(context)
     private val clock = TestClock().apply { currentTimeMillis = 1000 }
 
     private val testDispatcher = StandardTestDispatcher()
@@ -61,8 +56,29 @@ public class AutomationRemoteDataSubscriberTest {
     private val frequencyLimitManager: FrequencyLimitManager = mockk {
         coEvery { this@mockk.setConstraints(any()) } returns Result.success(Unit)
     }
+
+    /**
+     * In-memory stand-in for [AutomationSourceInfoStore] keyed by `(source, contactID)`. Avoids
+     * the real implementation's async DAO calls so `advanceUntilIdle()` is sufficient to drive
+     * the subscriber's processing — Room's executor doesn't participate.
+     */
+    private val sourceInfoState = mutableMapOf<Pair<RemoteDataSource, String?>, AutomationSourceInfo>()
+    private fun keyFor(source: RemoteDataSource, contactID: String?): Pair<RemoteDataSource, String?> =
+        when (source) {
+            RemoteDataSource.APP -> source to null
+            RemoteDataSource.CONTACT -> source to contactID
+        }
+    private val sourceInfoStore: AutomationSourceInfoStore = mockk {
+        coEvery { getSourceInfo(any(), any()) } coAnswers {
+            sourceInfoState[keyFor(firstArg(), secondArg())]
+        }
+        coEvery { setSourceInfo(any(), any(), any()) } coAnswers {
+            sourceInfoState[keyFor(secondArg(), thirdArg())] = firstArg()
+        }
+    }
+
     private var subscriber: AutomationRemoteDataSubscriber = AutomationRemoteDataSubscriber(
-        dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.11", testDispatcher
+        sourceInfoStore, remoteDataAccess, engine, frequencyLimitManager, "1.11", testDispatcher
     )
 
     @Before
@@ -184,7 +200,7 @@ public class AutomationRemoteDataSubscriberTest {
         coEvery { engine.upsertSchedules(any()) } just runs
 
         subscriber = AutomationRemoteDataSubscriber(
-            dataStore, remoteDataAccess, engine, frequencyLimitManager, "1.0.0", testDispatcher
+            sourceInfoStore, remoteDataAccess, engine, frequencyLimitManager, "1.0.0", testDispatcher
         )
         subscriber.subscribe()
         advanceUntilIdle()
@@ -213,7 +229,7 @@ public class AutomationRemoteDataSubscriberTest {
         subscriber.unsubscribe()
         advanceUntilIdle()
 
-        subscriber = AutomationRemoteDataSubscriber(dataStore, remoteDataAccess, engine, frequencyLimitManager, "2.0.0", testDispatcher)
+        subscriber = AutomationRemoteDataSubscriber(sourceInfoStore, remoteDataAccess, engine, frequencyLimitManager, "2.0.0", testDispatcher)
 
         val secondUpdateSchedules = firstUpdateSchedules + makeSchedules(
             source = RemoteDataSource.APP,
