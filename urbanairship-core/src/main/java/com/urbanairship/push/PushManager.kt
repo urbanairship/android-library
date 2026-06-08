@@ -832,7 +832,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      * @return `true` if push registration either succeeded or is not possible on this device. `false` if
      * registration failed and should be retried.
      */
-    public fun performPushRegistration(updateChannelOnChange: Boolean = true): JobResult {
+    public suspend fun performPushRegistration(updateChannelOnChange: Boolean = true): JobResult {
         shouldDispatchUpdateTokenJob = false
 
         val provider = pushProvider ?: run {

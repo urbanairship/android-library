@@ -84,7 +84,7 @@ public interface PushProvider {
      * @throws RegistrationException If the registration fails.
      */
     @Throws(RegistrationException::class)
-    public fun getRegistrationToken(context: Context): String?
+    public suspend fun getRegistrationToken(context: Context): String?
 
     /**
      * If the underlying push provider is currently available.

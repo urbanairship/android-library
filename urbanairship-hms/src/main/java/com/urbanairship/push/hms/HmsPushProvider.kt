@@ -4,16 +4,17 @@ package com.urbanairship.push.hms
 import android.content.Context
 import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
+import com.urbanairship.AirshipDispatchers
 import com.urbanairship.AirshipVersionInfo
 import com.urbanairship.BuildConfig
-import com.urbanairship.UALog
-import com.urbanairship.Airship
 import com.urbanairship.Platform
+import com.urbanairship.UALog
 import com.urbanairship.push.PushProvider
 import com.urbanairship.push.PushProvider.RegistrationException
 import com.huawei.agconnect.config.AGConnectServicesConfig
 import com.huawei.hms.aaid.HmsInstanceId
 import com.huawei.hms.api.HuaweiApiAvailability
+import kotlinx.coroutines.withContext
 
 /**
  * HMS push provider.
@@ -30,16 +31,15 @@ public class HmsPushProvider public constructor() : PushProvider, AirshipVersion
     override val packageVersion: String = BuildConfig.SDK_VERSION
 
     @Throws(RegistrationException::class)
-    override fun getRegistrationToken(context: Context): String? {
-        val token: String?
-
-        try {
-            val appId = AGConnectServicesConfig.fromContext(context).getString(APP_ID_KEY)
-                ?: return null
-
-            token = HmsInstanceId.getInstance(context).getToken(appId, HCM_SCOPE)
-        } catch (e: Exception) {
-            throw RegistrationException("HMS error " + e.message, true, e)
+    override suspend fun getRegistrationToken(context: Context): String? {
+        val token = withContext(AirshipDispatchers.IO) {
+            try {
+                val appId = AGConnectServicesConfig.fromContext(context).getString(APP_ID_KEY)
+                    ?: return@withContext null
+                HmsInstanceId.getInstance(context).getToken(appId, HCM_SCOPE)
+            } catch (e: Exception) {
+                throw RegistrationException("HMS error ${e.message}", true, e)
+            }
         }
 
         if (token.isNullOrEmpty()) {

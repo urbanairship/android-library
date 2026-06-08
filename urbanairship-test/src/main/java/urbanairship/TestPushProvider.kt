@@ -13,7 +13,7 @@ public class TestPushProvider public constructor(
     public var registrationToken: String? = null
 
     @Throws(RegistrationException::class)
-    override fun getRegistrationToken(context: Context): String? {
+    override suspend fun getRegistrationToken(context: Context): String? {
         return registrationToken
     }
 

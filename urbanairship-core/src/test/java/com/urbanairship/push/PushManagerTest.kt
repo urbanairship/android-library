@@ -114,11 +114,11 @@ public class PushManagerTest {
      * Test delivery type changes will clear the previous token.
      */
     @Test
-    public fun testInitClearsPushTokenOnDeliveryChange() {
+    public fun testInitClearsPushTokenOnDeliveryChange() = runTest {
         // Register for a token
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns "token"
 
         pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
@@ -165,10 +165,10 @@ public class PushManagerTest {
      * Test on registering for a push token.
      */
     @Test
-    public fun testPushRegistration() {
+    public fun testPushRegistration() = runTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns "token"
         pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
 
@@ -179,14 +179,14 @@ public class PushManagerTest {
      * Test push provider unavailable exceptions keep the token.
      */
     @Test
-    public fun testPushProviderUnavailableException() {
+    public fun testPushProviderUnavailableException() = runTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns "token"
         pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
 
-        every { mockPushProvider.getRegistrationToken(any()) } throws PushProvider.PushProviderUnavailableException("test")
+        coEvery { mockPushProvider.getRegistrationToken(any()) } throws PushProvider.PushProviderUnavailableException("test")
         pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
     }
@@ -197,14 +197,14 @@ public class PushManagerTest {
      * report opt_in=false to the server.
      */
     @Test
-    public fun tesRegistrationException() {
+    public fun tesRegistrationException() = runTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns "token"
         pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
 
-        every { mockPushProvider.getRegistrationToken(any()) } throws PushProvider.RegistrationException("test", true)
+        coEvery { mockPushProvider.getRegistrationToken(any()) } throws PushProvider.RegistrationException("test", true)
         pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
     }
@@ -213,7 +213,7 @@ public class PushManagerTest {
      * Test OptIn is only true if push and notifications are enabled and we have a push token.
      */
     @Test
-    public fun testOptIn() {
+    public fun testOptIn() = runTest {
         pushManager.init()
 
         // Enable and have permission
@@ -226,7 +226,7 @@ public class PushManagerTest {
 
         // Register for a token
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns "token"
         pushManager.performPushRegistration()
 
         Assert.assertTrue(pushManager.isOptIn)
@@ -341,7 +341,7 @@ public class PushManagerTest {
         verify { mockAirshipChannel.addChannelRegistrationPayloadExtender(any())}
 
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns "token"
         pushManager.performPushRegistration()
         pushManager.userNotificationsEnabled = true
         every { mockNotificationManager.areNotificationsEnabled() } returns true
@@ -372,7 +372,7 @@ public class PushManagerTest {
             Assert.assertNotNull(extender)
         }
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.getRegistrationToken(any()) } returns null
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns null
 
         pushManager.init()
         verify { mockAirshipChannel.addChannelRegistrationPayloadExtender(any()) }
@@ -402,7 +402,7 @@ public class PushManagerTest {
         every { mockPushProvider.isAvailable(any()) } returns true
         every { mockPushProvider.platform } returns Platform.ANDROID
         every { mockPushProvider.deliveryType } returns PushProvider.DeliveryType.FCM
-        every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns "token"
         pushManager.performPushRegistration()
 
         val builder = ChannelRegistrationPayload.Builder()
@@ -491,10 +491,10 @@ public class PushManagerTest {
     }
 
     @Test
-    public fun testOnTokenChange() {
+    public fun testOnTokenChange() = runTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns "token"
         pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
         verify { mockAirshipChannel.updateRegistration() }
@@ -513,10 +513,10 @@ public class PushManagerTest {
     }
 
     @Test
-    public fun testOnTokenChangeSameToken() {
+    public fun testOnTokenChangeSameToken() = runTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns "token"
         pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
         verify { mockAirshipChannel.updateRegistration() }
@@ -532,10 +532,10 @@ public class PushManagerTest {
     }
 
     @Test
-    public fun testOnTokenChangeLegacy() {
+    public fun testOnTokenChangeLegacy() = runTest {
         pushManager.init()
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns "token"
         pushManager.performPushRegistration()
         Assert.assertEquals("token", pushManager.pushToken)
         verify { mockAirshipChannel.updateRegistration() }
@@ -569,7 +569,7 @@ public class PushManagerTest {
 
         // Set up an opted-in user with a valid token
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.getRegistrationToken(any()) } returns "original-token"
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns "original-token"
         every { mockPushProvider.platform } returns Platform.ANDROID
         pushManager.performPushRegistration(true)
         pushManager.userNotificationsEnabled = true
@@ -582,7 +582,7 @@ public class PushManagerTest {
         // Simulate FCM token refresh - this is the race trigger.
         // Make getRegistrationToken throw so the extender's recovery
         // attempt fails, simulating FCM being temporarily unavailable.
-        every { mockPushProvider.getRegistrationToken(any()) } throws
+        coEvery { mockPushProvider.getRegistrationToken(any()) } throws
             PushProvider.RegistrationException("FCM temporarily unavailable", true)
 
         pushManager.onTokenChanged(mockPushProvider.javaClass, "new-token")
@@ -600,7 +600,7 @@ public class PushManagerTest {
     }
 
     @Test
-    public fun testPermissionEnabler() {
+    public fun testPermissionEnabler() = runTest {
         var consumer: Consumer<Permission>? = null
         every { mockPermissionManager.addAirshipEnabler(any()) } answers {
             consumer = firstArg()
@@ -826,7 +826,7 @@ public class PushManagerTest {
     }
 
     @Test
-    public fun testPushStatus() {
+    public fun testPushStatus() = runTest {
         pushManager.init()
         privacyManager.enable(PrivacyManager.Feature.PUSH)
         pushManager.onAirshipReady()
@@ -834,7 +834,7 @@ public class PushManagerTest {
 
         every { mockNotificationManager.areNotificationsEnabled() } returns true
         every { mockPushProvider.isAvailable(any()) } returns true
-        every { mockPushProvider.getRegistrationToken(any()) } returns "token"
+        coEvery { mockPushProvider.getRegistrationToken(any()) } returns "token"
         pushManager.performPushRegistration()
 
         Assert.assertEquals(

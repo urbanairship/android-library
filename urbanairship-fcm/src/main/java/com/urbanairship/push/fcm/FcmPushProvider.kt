@@ -17,6 +17,7 @@ import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.FirebaseApp
 import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.tasks.await
 
 /**
  * FCM push provider.
@@ -33,7 +34,7 @@ public class FcmPushProvider public constructor() : PushProvider, AirshipVersion
     override val packageVersion: String = BuildConfig.SDK_VERSION
 
     @Throws(RegistrationException::class)
-    override fun getRegistrationToken(context: Context): String? {
+    override suspend fun getRegistrationToken(context: Context): String? {
         val firebaseMessaging = try {
             getFirebaseMessaging()
         } catch (e: Exception) {
@@ -43,7 +44,7 @@ public class FcmPushProvider public constructor() : PushProvider, AirshipVersion
         }
 
         try {
-            return Tasks.await(firebaseMessaging.getToken())
+            return firebaseMessaging.token.await()
         } catch (e: Exception) {
             throw RegistrationException("FCM error " + e.message, true, e)
         }
