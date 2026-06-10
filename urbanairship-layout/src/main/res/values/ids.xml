@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright Airship and Contributors -->
+<resources>
+    <!-- View tag used by LayoutUtils to track applied line-height bottom padding -->
+    <item name="ua_line_height_padding" type="id" />
+</resources>

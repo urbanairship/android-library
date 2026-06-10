@@ -1,0 +1,102 @@
+# Banner placement aspect_ratio: portrait=9:16, landscape=16:9.
+# Mirrors aspect-ratio-test-modal-16-9.yaml. Rotate device to see the banner
+# swap between tall and wide. In landscape the 16:9 ratio overflows the window
+# height, so the banner should shrink to fit (ratio preserved) instead of clipping.
+version: 1
+presentation:
+  type: banner
+  duration_milliseconds: 60000
+  placement_selectors:
+    - orientation: portrait
+      placement:
+        position: top
+        size:
+          width: 80%
+          height: auto
+          aspect_ratio: 0.5625
+        background_color:
+          default:
+            hex: '#1A237E'
+            alpha: 1
+        border:
+          radius: 12
+    - orientation: landscape
+      placement:
+        position: top
+        size:
+          width: 90%
+          height: auto
+          aspect_ratio: 1.778
+        background_color:
+          default:
+            hex: '#1A237E'
+            alpha: 1
+        border:
+          radius: 12
+  default_placement:
+    position: top
+    size:
+      width: 80%
+      height: auto
+      aspect_ratio: 1.0
+    background_color:
+      default:
+        hex: '#1A237E'
+        alpha: 1
+    border:
+      radius: 12
+view:
+  type: container
+  items:
+    - position:
+        horizontal: center
+        vertical: center
+      size:
+        width: 80%
+        height: auto
+      view:
+        type: label
+        text: "Portrait: 9:16 (0.5625)\nLandscape: 16:9 (1.778)\nRotate to compare."
+        text_appearance:
+          font_size: 16
+          alignment: center
+          styles:
+            - bold
+          color:
+            default:
+              hex: '#FFFFFF'
+              alpha: 1
+    - position:
+        horizontal: center
+        vertical: bottom
+      size:
+        width: 60%
+        height: auto
+      margin:
+        bottom: 24
+      view:
+        type: label_button
+        identifier: dismiss_btn
+        background_color:
+          default:
+            hex: '#FFFFFF'
+            alpha: 0.2
+        border:
+          radius: 8
+          stroke_color:
+            default:
+              hex: '#FFFFFF'
+              alpha: 0.6
+          stroke_width: 1
+        button_click:
+          - dismiss
+        label:
+          type: label
+          text: Dismiss
+          text_appearance:
+            font_size: 16
+            alignment: center
+            color:
+              default:
+                hex: '#FFFFFF'
+                alpha: 1

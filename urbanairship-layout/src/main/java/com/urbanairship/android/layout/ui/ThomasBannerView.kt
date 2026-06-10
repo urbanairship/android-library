@@ -121,21 +121,13 @@ internal class ThomasBannerView(
     private fun configureBanner() {
         val placement = presentation.getResolvedPlacement(context)
         val size = placement.size
-        val position = placement.position
-        val margin = placement.margin
         val frame = makeFrame(size)
         val containerView = model.createView(context, environment, null)
         frame.addView(containerView)
         addView(frame)
         LayoutUtils.applyBorderAndBackground(frame, null, placement.border, placement.backgroundColor)
 
-        val viewId = frame.id
-        ConstraintSetBuilder.newBuilder(context)
-            .position(position, viewId)
-            .size(size, viewId)
-            .margin(margin, viewId)
-            .build()
-            .applyTo(this)
+        applySizeConstraints()
 
         if (environment.isIgnoringSafeAreas) {
             var lastAppliedInset: WindowInsetsCompat? = null
@@ -164,6 +156,72 @@ internal class ThomasBannerView(
         }.also {
             bannerFrame = it
         }
+
+    /** Window bounds the size constraints were last applied for (loop/churn guard). */
+    private var lastWindowWidth = 0
+    private var lastWindowHeight = 0
+
+    /**
+     * Builds and applies the frame's size/position constraints, fitting any overflowing
+     * `aspect_ratio` within the window (see [ConstraintSetBuilder.aspectRatioWithinBounds]).
+     *
+     * Re-resolves the placement because orientation may select a different one. Called from
+     * [configureBanner] and [onConfigurationChanged] — the latter matters when the host activity
+     * handles its own `configChanges` (no recreate), so the banner view persists and `init` never
+     * re-runs; without re-applying here a portrait-fitted px box would stay stale in landscape.
+     */
+    private fun applySizeConstraints() {
+        val frame = bannerFrame ?: return
+        val placement = presentation.getResolvedPlacement(context)
+        val viewId = frame.id
+        val size = placement.size
+        val margin = placement.margin
+
+        val ignoreSafeArea = false
+
+        // Percent base: the full window (matches ConstraintLayout's constrainPercent*).
+        val windowWidthPx = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)
+        val windowHeightPx = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea)
+
+        // Overflow bound / fitted-size target: window minus the frame's outer margins.
+        val horizontalMargin = (margin?.start ?: 0) + (margin?.end ?: 0)
+        val verticalMargin = (margin?.top ?: 0) + (margin?.bottom ?: 0)
+        val horizontalMarginPx = ResourceUtils.dpToPx(context, horizontalMargin).toInt()
+        val verticalMarginPx = ResourceUtils.dpToPx(context, verticalMargin).toInt()
+
+        val availableWidthPx = (windowWidthPx - horizontalMarginPx).coerceAtLeast(0)
+        val availableHeightPx = (windowHeightPx - verticalMarginPx).coerceAtLeast(0)
+
+        lastWindowWidth = windowWidthPx
+        lastWindowHeight = windowHeightPx
+
+        ConstraintSetBuilder.newBuilder(context)
+            .position(placement.position, viewId)
+            .width(size, ignoreSafeArea, viewId)
+            .height(size, ignoreSafeArea, viewId)
+            .aspectRatioWithinBounds(
+                size = size,
+                viewId = viewId,
+                windowWidthPx = windowWidthPx,
+                windowHeightPx = windowHeightPx,
+                availableWidthPx = availableWidthPx,
+                availableHeightPx = availableHeightPx,
+                ignoreSafeArea = ignoreSafeArea
+            )
+            .margin(margin, viewId)
+            .build()
+            .applyTo(this)
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration?) {
+        super.onConfigurationChanged(newConfig)
+        // Re-fit only when the window bounds actually changed, to avoid layout churn.
+        val windowWidth = ResourceUtils.getWindowWidthPixels(context, false)
+        val windowHeight = ResourceUtils.getWindowHeightPixels(context, false)
+        if (windowWidth != lastWindowWidth || windowHeight != lastWindowHeight) {
+            applySizeConstraints()
+        }
+    }
 
     /**
      * Resumes the banner's timer.

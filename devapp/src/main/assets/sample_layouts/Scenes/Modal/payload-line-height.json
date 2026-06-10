@@ -1,0 +1,702 @@
+{
+  "version": 1,
+  "presentation": {
+    "type": "modal",
+    "placement_selectors": [
+      {
+        "placement": {
+          "ignore_safe_area": false,
+          "device": {
+            "lock_orientation": "portrait"
+          },
+          "size": {
+            "width": "70%",
+            "height": "60%"
+          },
+          "position": {
+            "horizontal": "center",
+            "vertical": "center"
+          },
+          "shade_color": {
+            "default": {
+              "type": "hex",
+              "hex": "#868686",
+              "alpha": 0.2
+            }
+          },
+          "web": {
+            "ignore_shade": false
+          },
+          "border": {
+            "radius": 15,
+            "stroke_color": {
+              "default": {
+                "type": "hex",
+                "hex": "#000000",
+                "alpha": 1
+              }
+            }
+          }
+        },
+        "window_size": "large",
+        "orientation": "portrait"
+      }
+    ],
+    "android": {
+      "disable_back_button": false
+    },
+    "dismiss_on_touch_outside": false,
+    "default_placement": {
+      "ignore_safe_area": false,
+      "device": {
+        "lock_orientation": "portrait"
+      },
+      "size": {
+        "width": "100%",
+        "height": "100%"
+      },
+      "position": {
+        "horizontal": "center",
+        "vertical": "top"
+      },
+      "shade_color": {
+        "default": {
+          "type": "hex",
+          "hex": "#000000",
+          "alpha": 0.2
+        }
+      },
+      "web": {
+        "ignore_shade": true
+      }
+    }
+  },
+  "view": {
+    "type": "pager_controller",
+    "identifier": "2b25a2b8-9652-4ad8-80d1-6729c46311bf",
+    "view": {
+      "type": "linear_layout",
+      "direction": "vertical",
+      "items": [
+        {
+          "size": {
+            "width": "100%",
+            "height": "100%"
+          },
+          "view": {
+            "type": "container",
+            "items": [
+              {
+                "identifier": "37472473-1015-4026-a8a4-61bb69f4807d_pager_container_item",
+                "position": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "size": {
+                  "width": "100%",
+                  "height": "100%"
+                },
+                "view": {
+                  "type": "pager",
+                  "disable_swipe": true,
+                  "items": [
+                    {
+                      "identifier": "cb9ea5a6-a800-4481-8c88-93abf8bbe57b",
+                      "type": "pager_item",
+                      "view": {
+                        "type": "container",
+                        "items": [
+                          {
+                            "identifier": "22556a56-9a7e-48e6-897d-0589fd4e8822_main_view_container_item",
+                            "size": {
+                              "width": "100%",
+                              "height": "100%"
+                            },
+                            "position": {
+                              "horizontal": "center",
+                              "vertical": "center"
+                            },
+                            "ignore_safe_area": false,
+                            "view": {
+                              "type": "container",
+                              "items": [
+                                {
+                                  "identifier": "6a18f436-2142-421c-917c-8df5d5747e05_container_item",
+                                  "margin": {
+                                    "bottom": 0,
+                                    "top": 0,
+                                    "end": 0,
+                                    "start": 0
+                                  },
+                                  "position": {
+                                    "horizontal": "center",
+                                    "vertical": "center"
+                                  },
+                                  "size": {
+                                    "width": "100%",
+                                    "height": "100%"
+                                  },
+                                  "view": {
+                                    "type": "linear_layout",
+                                    "direction": "vertical",
+                                    "items": [
+                                      {
+                                        "identifier": "scroll_container",
+                                        "size": {
+                                          "width": "100%",
+                                          "height": "100%"
+                                        },
+                                        "view": {
+                                          "type": "scroll_layout",
+                                          "direction": "vertical",
+                                          "view": {
+                                            "type": "linear_layout",
+                                            "direction": "vertical",
+                                            "items": [
+                                              {
+                                                "identifier": "f90ced56-486c-498f-a9c7-c5aacf7922d6",
+                                                "size": {
+                                                  "width": "100%",
+                                                  "height": "auto"
+                                                },
+                                                "margin": {
+                                                  "top": 48,
+                                                  "bottom": 0,
+                                                  "start": 16,
+                                                  "end": 16
+                                                },
+                                                "view": {
+                                                  "type": "label",
+                                                  "text": "Text in 900 (Black)",
+                                                  "content_description": "Text in 900 (Black)",
+                                                  "text_appearance": {
+                                                    "font_size": 22,
+                                                    "color": {
+                                                      "default": {
+                                                        "type": "hex",
+                                                        "hex": "#000000",
+                                                        "alpha": 1
+                                                      },
+                                                      "selectors": [
+                                                        {
+                                                          "dark_mode": true,
+                                                          "color": {
+                                                            "type": "hex",
+                                                            "hex": "#FFFFFF",
+                                                            "alpha": 1
+                                                          }
+                                                        }
+                                                      ]
+                                                    },
+                                                    "alignment": "start",
+                                                    "styles": ["bold"],
+                                                    "font_families": [
+                                                      "sans-serif"
+                                                    ],
+                                                    "font_weight": 900
+                                                  },
+                                                  "accessibility_role": {
+                                                    "type": "heading",
+                                                    "level": 1
+                                                  },
+                                                  "accessibility_hidden": false
+                                                }
+                                              },
+                                              {
+                                                "identifier": "7a5d535e-e041-4144-8863-e73e4abb68cf",
+                                                "size": {
+                                                  "width": "100%",
+                                                  "height": "auto"
+                                                },
+                                                "margin": {
+                                                  "top": 0,
+                                                  "bottom": 0,
+                                                  "start": 16,
+                                                  "end": 16
+                                                },
+                                                "view": {
+                                                  "type": "label",
+                                                  "text": "Text in 800 - Letter spacing: 10",
+                                                  "content_description": "Text in 800 - Letter spacing: 10",
+                                                  "text_appearance": {
+                                                    "font_size": 22,
+                                                    "color": {
+                                                      "default": {
+                                                        "type": "hex",
+                                                        "hex": "#000000",
+                                                        "alpha": 1
+                                                      },
+                                                      "selectors": [
+                                                        {
+                                                          "dark_mode": true,
+                                                          "color": {
+                                                            "type": "hex",
+                                                            "hex": "#FFFFFF",
+                                                            "alpha": 1
+                                                          }
+                                                        }
+                                                      ]
+                                                    },
+                                                    "alignment": "start",
+                                                    "styles": ["bold"],
+                                                    "font_families": [
+                                                      "sans-serif"
+                                                    ],
+                                                    "kerning": 10,
+                                                    "font_weight": 800
+                                                  },
+                                                  "accessibility_role": {
+                                                    "type": "heading",
+                                                    "level": 1
+                                                  },
+                                                  "accessibility_hidden": false
+                                                }
+                                              },
+                                              {
+                                                "identifier": "51d61dda-836c-4dde-9953-cd90242958df",
+                                                "size": {
+                                                  "width": "100%",
+                                                  "height": "auto"
+                                                },
+                                                "margin": {
+                                                  "top": 0,
+                                                  "bottom": 0,
+                                                  "start": 16,
+                                                  "end": 16
+                                                },
+                                                "view": {
+                                                  "type": "label",
+                                                  "text": "Text in 700 (Bold) ",
+                                                  "content_description": "Text in 700 (Bold) ",
+                                                  "text_appearance": {
+                                                    "font_size": 22,
+                                                    "color": {
+                                                      "default": {
+                                                        "type": "hex",
+                                                        "hex": "#000000",
+                                                        "alpha": 1
+                                                      },
+                                                      "selectors": [
+                                                        {
+                                                          "dark_mode": true,
+                                                          "color": {
+                                                            "type": "hex",
+                                                            "hex": "#FFFFFF",
+                                                            "alpha": 1
+                                                          }
+                                                        }
+                                                      ]
+                                                    },
+                                                    "alignment": "start",
+                                                    "styles": ["bold"],
+                                                    "font_families": [
+                                                      "sans-serif"
+                                                    ]
+                                                  },
+                                                  "accessibility_role": {
+                                                    "type": "heading",
+                                                    "level": 1
+                                                  },
+                                                  "accessibility_hidden": false
+                                                }
+                                              },
+                                              {
+                                                "identifier": "4cc917ec-be89-482e-ad03-46bdea2106e9",
+                                                "size": {
+                                                  "width": "100%",
+                                                  "height": "auto"
+                                                },
+                                                "margin": {
+                                                  "top": 0,
+                                                  "bottom": 0,
+                                                  "start": 16,
+                                                  "end": 16
+                                                },
+                                                "view": {
+                                                  "type": "label",
+                                                  "text": "Text in 600",
+                                                  "content_description": "Text in 600",
+                                                  "text_appearance": {
+                                                    "font_size": 22,
+                                                    "color": {
+                                                      "default": {
+                                                        "type": "hex",
+                                                        "hex": "#000000",
+                                                        "alpha": 1
+                                                      },
+                                                      "selectors": [
+                                                        {
+                                                          "dark_mode": true,
+                                                          "color": {
+                                                            "type": "hex",
+                                                            "hex": "#FFFFFF",
+                                                            "alpha": 1
+                                                          }
+                                                        }
+                                                      ]
+                                                    },
+                                                    "alignment": "start",
+                                                    "styles": [],
+                                                    "font_families": [
+                                                      "sans-serif"
+                                                    ],
+                                                    "font_weight": 600
+                                                  },
+                                                  "accessibility_role": {
+                                                    "type": "heading",
+                                                    "level": 1
+                                                  },
+                                                  "accessibility_hidden": false
+                                                }
+                                              },
+                                              {
+                                                "identifier": "7ff1cfc6-7a39-43a5-89c3-561c5ad03d60",
+                                                "size": {
+                                                  "width": "100%",
+                                                  "height": "auto"
+                                                },
+                                                "margin": {
+                                                  "top": 0,
+                                                  "bottom": 0,
+                                                  "start": 16,
+                                                  "end": 16
+                                                },
+                                                "view": {
+                                                  "type": "label",
+                                                  "text": "Text in 500",
+                                                  "content_description": "Text in 500",
+                                                  "text_appearance": {
+                                                    "font_size": 22,
+                                                    "color": {
+                                                      "default": {
+                                                        "type": "hex",
+                                                        "hex": "#000000",
+                                                        "alpha": 1
+                                                      },
+                                                      "selectors": [
+                                                        {
+                                                          "dark_mode": true,
+                                                          "color": {
+                                                            "type": "hex",
+                                                            "hex": "#FFFFFF",
+                                                            "alpha": 1
+                                                          }
+                                                        }
+                                                      ]
+                                                    },
+                                                    "alignment": "start",
+                                                    "styles": [],
+                                                    "font_families": [
+                                                      "sans-serif"
+                                                    ],
+                                                    "font_weight": 500
+                                                  },
+                                                  "accessibility_role": {
+                                                    "type": "heading",
+                                                    "level": 1
+                                                  },
+                                                  "accessibility_hidden": false
+                                                }
+                                              },
+                                              {
+                                                "identifier": "983a6782-ca1f-44b4-a52c-f2ea0c45150b",
+                                                "size": {
+                                                  "width": "100%",
+                                                  "height": "auto"
+                                                },
+                                                "margin": {
+                                                  "top": 0,
+                                                  "bottom": 0,
+                                                  "start": 16,
+                                                  "end": 16
+                                                },
+                                                "view": {
+                                                  "type": "label",
+                                                  "text": "Text in 400 (Normal) - Line Height: 6",
+                                                  "content_description": "Text in 400 (Normal) - Line Height: 6",
+                                                  "text_appearance": {
+                                                    "font_size": 22,
+                                                    "color": {
+                                                      "default": {
+                                                        "type": "hex",
+                                                        "hex": "#000000",
+                                                        "alpha": 1
+                                                      },
+                                                      "selectors": [
+                                                        {
+                                                          "dark_mode": true,
+                                                          "color": {
+                                                            "type": "hex",
+                                                            "hex": "#FFFFFF",
+                                                            "alpha": 1
+                                                          }
+                                                        }
+                                                      ]
+                                                    },
+                                                    "alignment": "start",
+                                                    "styles": [],
+                                                    "font_families": [
+                                                      "sans-serif"
+                                                    ],
+                                                    "line_height_multiplier": 6,
+                                                    "font_weight": 400
+                                                  },
+                                                  "accessibility_role": {
+                                                    "type": "heading",
+                                                    "level": 1
+                                                  },
+                                                  "accessibility_hidden": false
+                                                }
+                                              },
+                                              {
+                                                "identifier": "f20c0789-5a3a-4606-b390-7eda785eee0f",
+                                                "size": {
+                                                  "width": "100%",
+                                                  "height": "auto"
+                                                },
+                                                "margin": {
+                                                  "top": 0,
+                                                  "bottom": 0,
+                                                  "start": 16,
+                                                  "end": 16
+                                                },
+                                                "view": {
+                                                  "type": "label",
+                                                  "text": "Text in 300 (Light)",
+                                                  "content_description": "Text in 300 (Light)",
+                                                  "text_appearance": {
+                                                    "font_size": 22,
+                                                    "color": {
+                                                      "default": {
+                                                        "type": "hex",
+                                                        "hex": "#000000",
+                                                        "alpha": 1
+                                                      },
+                                                      "selectors": [
+                                                        {
+                                                          "dark_mode": true,
+                                                          "color": {
+                                                            "type": "hex",
+                                                            "hex": "#FFFFFF",
+                                                            "alpha": 1
+                                                          }
+                                                        }
+                                                      ]
+                                                    },
+                                                    "alignment": "start",
+                                                    "styles": [],
+                                                    "font_families": [
+                                                      "sans-serif"
+                                                    ],
+                                                    "font_weight": 300
+                                                  },
+                                                  "accessibility_role": {
+                                                    "type": "heading",
+                                                    "level": 1
+                                                  },
+                                                  "accessibility_hidden": false
+                                                }
+                                              },
+                                              {
+                                                "identifier": "81176403-7bfb-43c0-b424-33b358885739",
+                                                "size": {
+                                                  "width": "100%",
+                                                  "height": "auto"
+                                                },
+                                                "margin": {
+                                                  "top": 0,
+                                                  "bottom": 0,
+                                                  "start": 16,
+                                                  "end": 16
+                                                },
+                                                "view": {
+                                                  "type": "label",
+                                                  "text": "Text in 200",
+                                                  "content_description": "Text in 200",
+                                                  "text_appearance": {
+                                                    "font_size": 22,
+                                                    "color": {
+                                                      "default": {
+                                                        "type": "hex",
+                                                        "hex": "#000000",
+                                                        "alpha": 1
+                                                      },
+                                                      "selectors": [
+                                                        {
+                                                          "dark_mode": true,
+                                                          "color": {
+                                                            "type": "hex",
+                                                            "hex": "#FFFFFF",
+                                                            "alpha": 1
+                                                          }
+                                                        }
+                                                      ]
+                                                    },
+                                                    "alignment": "start",
+                                                    "styles": [],
+                                                    "font_families": [
+                                                      "sans-serif"
+                                                    ],
+                                                    "font_weight": 200
+                                                  },
+                                                  "accessibility_role": {
+                                                    "type": "heading",
+                                                    "level": 1
+                                                  },
+                                                  "accessibility_hidden": false
+                                                }
+                                              },
+                                              {
+                                                "identifier": "769efa17-3392-4437-b774-4378c5c77f33",
+                                                "size": {
+                                                  "width": "100%",
+                                                  "height": "auto"
+                                                },
+                                                "margin": {
+                                                  "top": 0,
+                                                  "bottom": 8,
+                                                  "start": 16,
+                                                  "end": 16
+                                                },
+                                                "view": {
+                                                  "type": "label",
+                                                  "text": "Text in 100",
+                                                  "content_description": "Text in 100",
+                                                  "text_appearance": {
+                                                    "font_size": 22,
+                                                    "color": {
+                                                      "default": {
+                                                        "type": "hex",
+                                                        "hex": "#000000",
+                                                        "alpha": 1
+                                                      },
+                                                      "selectors": [
+                                                        {
+                                                          "dark_mode": true,
+                                                          "color": {
+                                                            "type": "hex",
+                                                            "hex": "#FFFFFF",
+                                                            "alpha": 1
+                                                          }
+                                                        }
+                                                      ]
+                                                    },
+                                                    "alignment": "start",
+                                                    "styles": [],
+                                                    "font_families": [
+                                                      "sans-serif"
+                                                    ],
+                                                    "font_weight": 100
+                                                  },
+                                                  "accessibility_role": {
+                                                    "type": "heading",
+                                                    "level": 1
+                                                  },
+                                                  "accessibility_hidden": false
+                                                }
+                                              },
+                                              {
+                                                "identifier": "83f214bf-7ee6-4a69-bf9b-d049b13e9e17_linear_layout_item",
+                                                "size": {
+                                                  "width": "100%",
+                                                  "height": "100%"
+                                                },
+                                                "view": {
+                                                  "type": "linear_layout",
+                                                  "direction": "horizontal",
+                                                  "items": []
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                          }
+                        ],
+                        "background_color": {
+                          "default": {
+                            "type": "hex",
+                            "hex": "#FFFFFF",
+                            "alpha": 1
+                          },
+                          "selectors": [
+                            {
+                              "dark_mode": true,
+                              "color": {
+                                "type": "hex",
+                                "hex": "#000000",
+                                "alpha": 1
+                              }
+                            }
+                          ]
+                        }
+                      },
+                      "state_actions": [
+                        {
+                          "type": "set",
+                          "key": "cb9ea5a6-a800-4481-8c88-93abf8bbe57b_next"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "ignore_safe_area": false
+              },
+              {
+                "position": {
+                  "horizontal": "end",
+                  "vertical": "top"
+                },
+                "size": {
+                  "width": 48,
+                  "height": 48
+                },
+                "view": {
+                  "type": "image_button",
+                  "image": {
+                    "scale": 0.4,
+                    "type": "icon",
+                    "icon": "close",
+                    "color": {
+                      "default": {
+                        "type": "hex",
+                        "hex": "#000000",
+                        "alpha": 1
+                      },
+                      "selectors": [
+                        {
+                          "dark_mode": true,
+                          "color": {
+                            "type": "hex",
+                            "hex": "#FFFFFF",
+                            "alpha": 1
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "identifier": "dismiss_button",
+                  "button_click": ["dismiss"],
+                  "localized_content_description": {
+                    "ref": "ua_dismiss",
+                    "refs": ["ua_close", "ua_dismiss"],
+                    "fallback": "Close"
+                  },
+                  "reporting_metadata": {
+                    "button_id": "dismiss_button",
+                    "button_action": "dismiss"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

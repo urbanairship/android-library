@@ -4,6 +4,15 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.7.4 - June 8, 2026
+
+Patch release that fixes an edge case where Live Updates created in rapid succession could get stuck on START, and fixes screenview triggers incorrectly re-firing when the app returns to the foreground.
+
+### Changes
+
+- Fixed a timing issue where a pending channel update (including a Live Update registration) added within ~300ms of another could be dropped if it arrived while a channel update upload was already in flight
+- Fixed screenview triggers re-firing when the app is brought to the foreground, which could cause In-App Automation rules with screenview triggers to activate unexpectedly
+
 ## Version 20.7.3 - May 29, 2026
 
 Patch release that fixed two potential crashes. Apps upgrading from older SDK major versions (prior to 20.x) should update to this version or newer.
