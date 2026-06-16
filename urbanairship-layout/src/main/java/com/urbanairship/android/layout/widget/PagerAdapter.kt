@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.core.view.ViewCompat
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.BaseModel
@@ -47,11 +48,26 @@ internal class PagerAdapter (
     }
 
     fun setItems(items: List<BaseModel<*, *, *>>) {
-        if (this.items != items) {
-            this.items.clear()
-            this.items.addAll(items)
-            notifyDataSetChanged()
+        if (this.items == items) {
+            return
         }
+
+        val old = this.items.toList()
+        val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize(): Int = old.size
+
+            override fun getNewListSize(): Int = items.size
+
+            override fun areItemsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+                old[oldItemPosition] === items[newItemPosition]
+
+            override fun areContentsTheSame(oldItemPosition: Int, newItemPosition: Int): Boolean =
+                old[oldItemPosition] === items[newItemPosition]
+        })
+
+        this.items.clear()
+        this.items.addAll(items)
+        diff.dispatchUpdatesTo(this)
     }
 
     class ViewHolder private constructor(
