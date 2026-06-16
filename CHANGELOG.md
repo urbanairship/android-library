@@ -4,6 +4,16 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.8.0 - June 16, 2026
+
+Minor release that adds support for launching Scenes from push notifications using the new Scene action and a fix for getter methods in the native bridge.
+Apps that make use of custom JavaScript integrations with the native bridge should update to this version or newer.
+
+### Changes
+- Added support for the new `SceneAction`, which allows launching Scenes from push notifications
+- Fixed getter methods in the native bridge
+- Improved Scene Pager rendering when branching updates the available next pages
+
 ## Version 20.7.4 - June 8, 2026
 
 Patch release that fixes an edge case where Live Updates created in rapid succession could get stuck on START, and fixes screenview triggers incorrectly re-firing when the app returns to the foreground.
