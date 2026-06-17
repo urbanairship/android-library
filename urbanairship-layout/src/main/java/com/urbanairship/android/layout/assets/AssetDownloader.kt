@@ -6,6 +6,7 @@ import android.content.Context
 import android.net.Uri
 import androidx.annotation.RestrictTo
 import androidx.core.net.toUri
+import com.urbanairship.UALog
 import com.urbanairship.util.FileUtils
 import com.urbanairship.util.toURL
 import java.io.File
@@ -31,8 +32,14 @@ internal class DefaultAssetDownloader(context: Context): AssetDownloader {
         return remoteUri.lastPathSegment?.let { lastPathSegment ->
             val uuid = UUID.randomUUID().toString()
             val tmpFile = File(cacheFolder, "${uuid}-$lastPathSegment")
-            FileUtils.downloadFile(remoteUri.toURL(), tmpFile)
-            tmpFile.toUri()
+            val result = FileUtils.downloadFile(remoteUri.toURL(), tmpFile)
+            if (result.isSuccess) {
+                UALog.d { "AssetDownloader: download succeeded url=$remoteUri statusCode=${result.statusCode} tmpFile=$tmpFile (exists=${tmpFile.exists()}, size=${tmpFile.length()}b)" }
+                tmpFile.toUri()
+            } else {
+                UALog.w { "AssetDownloader: download failed url=$remoteUri statusCode=${result.statusCode} tmpFileExists=${tmpFile.exists()}" }
+                null
+            }
         }
     }
 }

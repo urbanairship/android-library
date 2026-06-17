@@ -25,9 +25,10 @@ public class DefaultAssetDownloaderTest {
     @Test
     public fun testDownloadAssetDataMatches(): TestResult = runTest {
         mockkStatic(FileUtils::class)
-        every { FileUtils.downloadFile(any(), any()) } returns mockk()
+        every { FileUtils.downloadFile(any(), any()) } returns mockk(relaxed = true)
 
         downloader.downloadAsset(testUri)
+
 
         verify { FileUtils.downloadFile(eq(testUri.toURL()), any()) }
     }

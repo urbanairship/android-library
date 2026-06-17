@@ -147,7 +147,7 @@ public object FileUtils {
         /**
          * If file downloaded successfully or not.
          */
-        @JvmField public val isSuccess: Boolean,
+        public val isSuccess: Boolean,
         /**
          * The status code if available.
          */
