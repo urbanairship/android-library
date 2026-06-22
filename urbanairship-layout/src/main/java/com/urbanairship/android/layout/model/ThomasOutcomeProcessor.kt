@@ -40,6 +40,7 @@ internal open class ThomasOutcomeProcessor(
         handlerOutcome: suspend (HandlerOutcome) -> Unit = {}
     ) {
         if (outcomes.isNullOrEmpty()) return
+
         for (outcome in outcomes) {
             resolve(outcome, formValue, handlerOutcome)
         }

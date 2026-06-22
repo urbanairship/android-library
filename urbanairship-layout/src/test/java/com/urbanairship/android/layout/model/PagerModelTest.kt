@@ -18,6 +18,8 @@ import com.urbanairship.android.layout.util.PagerScrollEvent
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
 import app.cash.turbine.test
+import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
@@ -57,7 +59,7 @@ public class PagerModelTest {
 
     private val mockReporter: Reporter = mockk(relaxUnitFun = true)
     private val mockActionsRunner: ThomasActionRunner = mockk(relaxUnitFun = true) {
-        every { run(any(), any()) } answers { nothing }
+        coEvery { run(any(), any()) } answers { nothing }
     }
     private val mockEnv: ModelEnvironment = mockk(relaxed = true, relaxUnitFun = true) {
         every { reporter } returns mockReporter
@@ -134,7 +136,7 @@ public class PagerModelTest {
         // Verify that the correct number of page items is available via the model
         assertEquals(3, pagerModel.pages.size)
         // Verify that actions were run for the initial page display
-        verify(exactly = 1) { mockActionsRunner.run(any(), any()) }
+        coVerify(exactly = 1) { mockActionsRunner.run(any(), any()) }
     }
 
     @Test
@@ -143,7 +145,7 @@ public class PagerModelTest {
             pagerModel.onViewAttached(mockView)
             advanceUntilIdle()
             // Verify we ran actions for the 1st page
-            verify(exactly = 1) { mockActionsRunner.run(any(), any()) }
+            coVerify(exactly = 1) { mockActionsRunner.run(any(), any()) }
 
             val initialState = awaitItem()
             assertEquals(0, initialState.pageIndex)
@@ -184,7 +186,7 @@ public class PagerModelTest {
 
             // Verify that we reported an event and ran actions when scrolling to the 2nd page
             verify { mockReporter.report(any()) }
-            verify(exactly = 2) { mockActionsRunner.run(any(), any()) }
+            coVerify(exactly = 2) { mockActionsRunner.run(any(), any()) }
 
             ensureAllEventsConsumed()
         }
@@ -196,7 +198,7 @@ public class PagerModelTest {
             pagerModel.onViewAttached(mockView)
             advanceUntilIdle()
             // Verify we ran actions for the 1st page
-            verify(exactly = 1) { mockActionsRunner.run(any(), any()) }
+            coVerify(exactly = 1) { mockActionsRunner.run(any(), any()) }
 
             val initialState = awaitItem()
             assertEquals(0, initialState.pageIndex)
@@ -239,7 +241,7 @@ public class PagerModelTest {
             // Verify that we didn't report an event, but did run
             // actions again when scrolling to the 2nd page.
             verify(exactly = 0) { mockReporter.report(any()) }
-            verify(exactly = 2) { mockActionsRunner.run(any(), any()) }
+            coVerify(exactly = 2) { mockActionsRunner.run(any(), any()) }
 
             ensureAllEventsConsumed()
         }
@@ -251,7 +253,7 @@ public class PagerModelTest {
         advanceUntilIdle()
 
         // Verify actions were run for the initial page display
-        verify(exactly = 1) { mockActionsRunner.run(any(), any()) }
+        coVerify(exactly = 1) { mockActionsRunner.run(any(), any()) }
 
         pagerState.update { it.copyWithPageIndex(1) }
         // Run the pending state update task, so the model can process it.
@@ -263,7 +265,7 @@ public class PagerModelTest {
 
         verify { mockViewListener.scrollTo(1, any()) }
         // Verify actions were also run on display of the next page
-        verify(exactly = 2) { mockActionsRunner.run(any(), any()) }
+        coVerify(exactly = 2) { mockActionsRunner.run(any(), any()) }
     }
 
     @Test
