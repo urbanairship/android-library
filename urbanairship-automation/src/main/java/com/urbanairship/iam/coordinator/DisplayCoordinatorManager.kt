@@ -11,8 +11,8 @@ import kotlin.time.Duration.Companion.seconds
 internal class DisplayCoordinatorManager(
     private val dataStore: PreferenceStore,
     activityMonitor: ActivityMonitor,
-    private val immediateCoordinator: ImmediateDisplayCoordinator = ImmediateDisplayCoordinator(activityMonitor),
-    private val defaultCoordinator: DefaultDisplayCoordinator = defaultCoordinator(dataStore, activityMonitor)
+    private val defaultCoordinator: DefaultDisplayCoordinator = defaultCoordinator(dataStore, activityMonitor),
+    private val immediateCoordinator: ImmediateDisplayCoordinator = ImmediateDisplayCoordinator(activityMonitor, defaultCoordinator)
 ) {
     var displayInterval: Long
         get() = dataStore.get(DISPLAY_INTERVAL_KEY) ?: 0

@@ -14,7 +14,8 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class ImmediateDisplayCoordinatorTest {
     private val activityMonitor = TestActivityMonitor()
-    private val coordinator = ImmediateDisplayCoordinator(activityMonitor)
+    private val defaultCoordinator: DefaultDisplayCoordinator = mockk(relaxed = true)
+    private val coordinator = ImmediateDisplayCoordinator(activityMonitor, defaultCoordinator)
 
     @Test
     public fun testIsReady(): TestResult = runTest {

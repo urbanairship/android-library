@@ -7,12 +7,17 @@ import com.urbanairship.iam.InAppMessage
 import kotlinx.coroutines.flow.StateFlow
 
 internal class ImmediateDisplayCoordinator(
-    activityMonitor: ActivityMonitor
+    activityMonitor: ActivityMonitor,
+    private val defaultCoordinator: DefaultDisplayCoordinator
 ) : DisplayCoordinator {
 
     override val isReady: StateFlow<Boolean> = activityMonitor.foregroundState
 
-    override fun messageWillDisplay(message: InAppMessage) { }
+    override fun messageWillDisplay(message: InAppMessage) {
+        defaultCoordinator.messageWillDisplay(message)
+    }
 
-    override fun messageFinishedDisplaying(message: InAppMessage) { }
+    override fun messageFinishedDisplaying(message: InAppMessage) {
+        defaultCoordinator.messageFinishedDisplaying(message)
+    }
 }
