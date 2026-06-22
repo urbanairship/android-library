@@ -63,6 +63,7 @@ class MainActivity : AppCompatActivity() {
             DeeplinkManager.shared.setAppRouter(appRouter)
 
             val backstack = appRouter.activeBackStack.collectAsState().value
+            val selectedTopLevel = appRouter.selectedTopLevel.collectAsState().value
 
             AirshipTheme {
                 Scaffold(
@@ -70,7 +71,7 @@ class MainActivity : AppCompatActivity() {
                         NavigationBar {
                             TopLevelDestination.entries.forEach { item ->
                                 NavigationBarItem(
-                                    selected = appRouter.selectedTopLevel.value == item,
+                                    selected = selectedTopLevel == item,
                                     onClick = { appRouter.navigate(item) },
                                     label = { Text(text = item.title()) },
                                     icon = { Icon(painter = painterResource(item.icon()), contentDescription = null) },

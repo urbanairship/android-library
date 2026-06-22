@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.8.1 - June 22, 2026
+
+Patch release that fixes a couple of Scene issues. Apps should update to this version or newer if using buttons in Scenes that launch a deep link and dismiss the Scene, or if using Scenes launched from push notifications.
+
+### Changes
+- Fixed a regression in Scene buttons that caused deep link actions to not always trigger when combined with dismiss behavior
+- Fixed image caching for Scenes launched from push notifications via `SceneAction`
+
 ## Version 20.8.0 - June 16, 2026
 
 Minor release that adds support for launching Scenes from push notifications using the new Scene action and a fix for getter methods in the native bridge.

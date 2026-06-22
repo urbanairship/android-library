@@ -2,6 +2,8 @@
 package com.urbanairship.android.layout.property
 
 import com.urbanairship.android.layout.info.Identifiable
+import com.urbanairship.android.layout.property.OutcomeResolver.ACTIONS_PAYLOAD
+import com.urbanairship.android.layout.property.OutcomeResolver.stateActionId
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonList
 import com.urbanairship.json.JsonMap
@@ -358,16 +360,9 @@ internal object OutcomeResolver {
         actions: Map<String, JsonValue>? = null):
             List<Outcome> {
 
-        // Precedence: if `outcomes` is present it wins, even when empty.
+        // Precedence: if `outcomes` is present, it wins, even when empty.
         // Legacy stateActions/behaviors/actions are only used when `outcomes` is null.
-        if (outcomes != null) return outcomes
-        return buildList {
-            stateActions?.forEach { add(Outcome.SetStateAction(stateActionId(it), it)) }
-            behaviors?.forEach { add(it.toOutcome()) }
-            if (!actions.isNullOrEmpty()) {
-                add(Outcome.AirshipAction(ACTIONS_PAYLOAD, actions))
-            }
-        }
+        return outcomes ?: legacyOutcomes(stateActions, behaviors, actions)
     }
 
     internal fun stateActionId(action: StateAction): String = when (action) {
@@ -375,6 +370,31 @@ internal object OutcomeResolver {
         is StateAction.SetState -> "$STATE_ACTION_SET_PREFIX${action.key}"
         is StateAction.SetFormValue -> "$STATE_ACTION_SET_FORM_VALUE_PREFIX${action.key}"
     }
+}
+
+/**
+ * Converts legacy stateActions/behaviors/actions to outcomes.
+ *
+ * @return a list of outcomes, with `Dismiss` outcomes last.
+ */
+private fun legacyOutcomes(
+    stateActions: List<StateAction>? = null,
+    behaviors: List<ButtonClickBehaviorType>? = null,
+    actions: Map<String, JsonValue>? = null
+): List<Outcome> {
+    val outcomes = buildList {
+        stateActions?.forEach { add(Outcome.SetStateAction(stateActionId(it), it)) }
+        behaviors?.forEach { add(it.toOutcome()) }
+        if (!actions.isNullOrEmpty()) {
+            add(Outcome.AirshipAction(ACTIONS_PAYLOAD, actions))
+        }
+    }
+
+    // Ensure that we always process `Dismiss` outcomes last,
+    // so we don't tear down before running all other outcomes.
+    val (others, dismisses) = outcomes.partition { it !is Outcome.Dismiss }
+
+    return others + dismisses
 }
 
 internal fun ButtonClickBehaviorType.toOutcome(): Outcome {

@@ -418,14 +418,24 @@ public class OutcomeTest {
     public fun testResolveCombinesAllLegacyInOrder() {
         val resolved = OutcomeResolver.resolve(
             stateActions = listOf(StateAction.ClearState),
-            behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT, ButtonClickBehaviorType.DISMISS),
+            behaviors = listOf(ButtonClickBehaviorType.DISMISS, ButtonClickBehaviorType.PAGER_NEXT),
             actions = mapOf("deep_link" to JsonValue.wrap("app://x"))
         )
         assertEquals(4, resolved.size)
-        assertTrue(resolved[0] is Outcome.SetStateAction)
-        assertTrue(resolved[1] is Outcome.PagerStepNavigation)
-        assertTrue(resolved[2] is Outcome.Dismiss)
-        assertTrue(resolved[3] is Outcome.AirshipAction)
+
+        val expectedTypes = listOf(
+            Outcome.SetStateAction::class,
+            Outcome.PagerStepNavigation::class,
+            Outcome.AirshipAction::class,
+            // For legacy handling, dismiss must always be last,
+            // to ensure other outcomes have time to run before
+            // dismiss tears down the scene and cancels scopes.
+            Outcome.Dismiss::class,
+        )
+        assertEquals(
+            expectedTypes,
+            resolved.map { it::class }
+        )
     }
 
     // =========================================================================

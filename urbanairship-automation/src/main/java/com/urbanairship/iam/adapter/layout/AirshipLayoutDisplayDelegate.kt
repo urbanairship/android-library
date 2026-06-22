@@ -4,6 +4,7 @@ package com.urbanairship.iam.adapter.layout
 import android.app.Activity
 import android.content.Context
 import com.urbanairship.Predicate
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.analytics.DisplayResult
 import com.urbanairship.android.layout.analytics.LayoutListener
@@ -68,17 +69,14 @@ internal class AirshipLayoutDisplayDelegate(
             priority = priority,
             extras = extras,
             imageCache = ExtendableImageCache { url ->
-                assets?.cacheUri(url)?.path?.let {
+                val cachedPath = assets?.cacheUri(url)?.path
+                if (cachedPath != null && assets.isCached(url)) {
                     val size = assets.getMediaSize(url)
-
-                    CachedImage(
-                        path = it,
-                        size =  if (size.width > 0 && size.height > 0) {
-                            size
-                        } else {
-                            null
-                        }
-                    )
+                    CachedImage(path = cachedPath, size = if (size.width > 0 && size.height > 0) size else null)
+                } else {
+                    // Returning null to fetch from remote URL directly
+                    UALog.d { "AirshipLayoutDisplayDelegate: image cache missing, url=$url" }
+                    null
                 }
             },
             embeddedViewManager = EmbeddedViewManager

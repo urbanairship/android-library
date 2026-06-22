@@ -9,5 +9,5 @@ import com.urbanairship.json.JsonValue
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public fun interface ThomasActionRunner {
-    public fun run(actions: Map<String, JsonValue>, state: LayoutData)
+    public suspend fun run(actions: Map<String, JsonValue>, state: LayoutData)
 }

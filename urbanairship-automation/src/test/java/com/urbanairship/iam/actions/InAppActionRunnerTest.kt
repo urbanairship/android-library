@@ -17,14 +17,21 @@ import com.urbanairship.android.layout.analytics.events.LayoutPermissionResultEv
 import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -89,13 +96,13 @@ public class InAppActionRunnerTest {
     }
 
     @Test
-    public fun testTrackPermissionResultWithLayoutData() {
+    public fun testTrackPermissionResultWithLayoutData(): TestResult = runTest {
         val metadataSlot = slot<Bundle>()
         val mockRequest: ActionRunRequest = mockk {
             every { setValue(JsonValue.wrap("bar")) } returns this
             every { setSituation(Action.Situation.AUTOMATION) } returns this
             every { setMetadata(capture(metadataSlot)) } returns this
-            every { this@mockk.run(any()) } just runs
+            coEvery { runSuspending() } returns mockk(relaxed = true)
         }
 
         val layoutData: LayoutData = mockk()
@@ -126,13 +133,13 @@ public class InAppActionRunnerTest {
     }
 
     @Test
-    public fun testInAppContext() {
+    public fun testInAppContext(): TestResult = runTest {
         val metadataSlot = slot<Bundle>()
         val mockRequest: ActionRunRequest = mockk {
             every { setValue(JsonValue.wrap("bar")) } returns this
             every { setSituation(Action.Situation.AUTOMATION) } returns this
             every { setMetadata(capture(metadataSlot)) } returns this
-            every { this@mockk.run(any()) } just runs
+            coEvery { runSuspending() } returns mockk(relaxed = true)
         }
 
         val context = InAppCustomEventContext(
@@ -154,5 +161,40 @@ public class InAppActionRunnerTest {
 
         val result = JsonValue.parseString(metadataSlot.captured.getString(AddCustomEventAction.IN_APP_CONTEXT_METADATA_KEY)!!)
         assertEquals(result, context.toJsonValue())
+    }
+
+    @Test
+    public fun testRunAwaitsActionCompletion(): TestResult = runTest {
+        // Production-path guarantee for MOBILE-5701: run(actions, state) must suspend until the
+        // actions actually finish, so a caller (e.g. button dismiss) can sequence after them.
+        val gate = CompletableDeferred<Unit>()
+        val mockRequest: ActionRunRequest = mockk {
+            every { setValue(JsonValue.wrap("bar")) } returns this
+            every { setSituation(Action.Situation.AUTOMATION) } returns this
+            every { setMetadata(any()) } returns this
+            coEvery { runSuspending() } coAnswers {
+                gate.await()
+                mockk(relaxed = true)
+            }
+        }
+
+        val layoutData: LayoutData = mockk()
+        every { analytics.customEventContext(layoutData) } returns mockk(relaxed = true)
+
+        val runner = InAppActionRunner(
+            analytics = analytics,
+            trackPermissionResults = false,
+            actionRequestFactory = { mockRequest }
+        )
+
+        val job = launch {
+            runner.run(mapOf("foo" to JsonValue.wrap("bar")), layoutData)
+        }
+        runCurrent()
+        assertFalse("run() must not return while the action is still running", job.isCompleted)
+
+        gate.complete(Unit)
+        runCurrent()
+        assertTrue("run() must return once the action completes", job.isCompleted)
     }
 }

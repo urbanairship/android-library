@@ -1,6 +1,7 @@
 package com.urbanairship.devapp
 
 import android.content.Intent
+import com.urbanairship.UALog
 import java.lang.ref.WeakReference
 
 internal class DeeplinkManager {
@@ -37,10 +38,19 @@ internal class DeeplinkManager {
             val segment = path.removeAt(0)
             when(segment) {
                 "inbox" -> {
-                    val restored = AppRouterViewModel.TopLevelDestination.restore(path.joinToString("/"))
+                    val rest = path.joinToString("/")
+                    // A bare ".../inbox" opens the message center; ".../inbox/message/<id>"
+                    // opens a specific message.
+                    val restored = if (rest.isEmpty()) {
+                        AppRouterViewModel.TopLevelDestination.Message()
+                    } else {
+                        AppRouterViewModel.TopLevelDestination.restore(rest)
+                    }
                     if (restored != null) {
                         stack.add(restored)
                         break
+                    } else {
+                        UALog.w { "Unrecognized inbox deep link path: $rest" }
                     }
                 }
                 else -> {}
