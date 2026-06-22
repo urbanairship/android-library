@@ -338,7 +338,7 @@ public class AsyncLayoutModelTest {
                         parentFile?.mkdirs()
                         writeBytes(byteArrayOf(0x42))
                     }
-                    mockk(relaxed = true)
+                    mockk { every { isSuccess } returns true }
                 }
 
                 val imageUrl = "https://cdn.example.com/banner.png"
@@ -380,7 +380,7 @@ public class AsyncLayoutModelTest {
                     parentFile?.mkdirs()
                     writeBytes(byteArrayOf(0x42))
                 }
-                mockk(relaxed = true)
+                mockk { every { isSuccess } returns true }
             }
 
             val imageUrl = "https://cdn.example.com/clear-me.png"
