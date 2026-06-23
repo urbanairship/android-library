@@ -30,6 +30,14 @@ internal class DisplayCoordinatorManager(
         }
     }
 
+    fun reserveImmediateDisplay(scheduleId: String) {
+        defaultCoordinator.reserveImmediateDisplay(scheduleId)
+    }
+
+    fun releaseImmediateDisplayReservation(scheduleId: String) {
+        defaultCoordinator.releaseImmediateDisplayReservation(scheduleId)
+    }
+
     private companion object {
         val DISPLAY_INTERVAL_KEY = SyncPrefKey.long("UAInAppMessageManagerDisplayInterval")
 

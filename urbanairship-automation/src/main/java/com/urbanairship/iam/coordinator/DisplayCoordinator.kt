@@ -11,8 +11,8 @@ internal interface DisplayCoordinator {
     val isReady: StateFlow<Boolean>
 
     @MainThread
-    fun messageWillDisplay(message: InAppMessage)
+    fun messageWillDisplay(message: InAppMessage, scheduleId: String)
 
     @MainThread
-    fun messageFinishedDisplaying(message: InAppMessage)
+    fun messageFinishedDisplaying(message: InAppMessage, scheduleId: String)
 }

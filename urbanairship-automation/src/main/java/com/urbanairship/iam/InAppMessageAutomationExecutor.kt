@@ -95,7 +95,7 @@ internal class InAppMessageAutomationExecutor(
 
         // Display
         displayDelegate?.messageWillDisplay(data.message, preparedScheduleInfo.scheduleId)
-        data.displayCoordinator.messageWillDisplay(data.message)
+        data.displayCoordinator.messageWillDisplay(data.message, preparedScheduleInfo.scheduleId)
 
         var result = ScheduleExecuteResult.FINISHED
 
@@ -122,7 +122,7 @@ internal class InAppMessageAutomationExecutor(
         }
 
         // Finished
-        data.displayCoordinator.messageFinishedDisplaying(data.message)
+        data.displayCoordinator.messageFinishedDisplaying(data.message, preparedScheduleInfo.scheduleId)
         displayDelegate?.messageFinishedDisplaying(data.message, preparedScheduleInfo.scheduleId)
 
         // Clean up assets
