@@ -67,7 +67,20 @@ internal class InAppMessageAutomationPreparer(
 
     override suspend fun cancelled(scheduleID: String) {
         UALog.v { "Execution cancelled $scheduleID" }
+        releaseImmediateDisplayReservation(scheduleID)
         assetsManager.clearCache(scheduleID)
+    }
+
+    fun reserveImmediateDisplay(scheduleID: String) {
+        synchronized(displayCoordinatorManager) {
+            displayCoordinatorManager.reserveImmediateDisplay(scheduleID)
+        }
+    }
+
+    fun releaseImmediateDisplayReservation(scheduleID: String) {
+        synchronized(displayCoordinatorManager) {
+            displayCoordinatorManager.releaseImmediateDisplayReservation(scheduleID)
+        }
     }
 
     fun setAdapterFactoryBlock(

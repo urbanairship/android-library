@@ -3,9 +3,11 @@ package com.urbanairship.iam.coordinator
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
 import app.cash.turbine.test
+import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -14,7 +16,10 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class ImmediateDisplayCoordinatorTest {
     private val activityMonitor = TestActivityMonitor()
-    private val defaultCoordinator: DefaultDisplayCoordinator = mockk(relaxed = true)
+    private val hasActiveDisplays = MutableStateFlow(false)
+    private val defaultCoordinator: DefaultDisplayCoordinator = mockk(relaxed = true) {
+        every { hasActiveDisplays } returns this@ImmediateDisplayCoordinatorTest.hasActiveDisplays
+    }
     private val coordinator = ImmediateDisplayCoordinator(activityMonitor, defaultCoordinator)
 
     @Test
@@ -24,10 +29,11 @@ public class ImmediateDisplayCoordinatorTest {
             activityMonitor.foreground()
             assertTrue(awaitItem())
 
-            coordinator.messageWillDisplay(mockk())
-            coordinator.messageFinishedDisplaying(mockk())
+            hasActiveDisplays.value = true
+            assertFalse(awaitItem())
 
-            ensureAllEventsConsumed()
+            hasActiveDisplays.value = false
+            assertTrue(awaitItem())
 
             activityMonitor.background()
             assertFalse(awaitItem())
@@ -45,7 +51,7 @@ public class ImmediateDisplayCoordinatorTest {
         activityMonitor.foreground()
         assertTrue(coordinator.isReady.value)
 
-        coordinator.messageWillDisplay(mockk())
-        assertTrue(coordinator.isReady.value)
+        hasActiveDisplays.value = true
+        assertFalse(coordinator.isReady.value)
     }
 }

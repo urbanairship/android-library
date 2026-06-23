@@ -41,6 +41,8 @@ internal class SceneAction(
     private val scheduler: suspend (AutomationSchedule) -> Unit = {
         Airship.inAppAutomation.upsertSchedules(listOf(it))
     },
+    private val reserveDisplay: (String) -> Unit = {},
+    private val releaseDisplayReservation: (String) -> Unit = {},
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) : Action() {
 
@@ -78,8 +80,9 @@ internal class SceneAction(
             displayBehavior = InAppMessage.DisplayBehavior.IMMEDIATE
         )
 
+        val scheduleID = messageId ?: UUID.randomUUID().toString()
         val schedule = AutomationSchedule(
-            identifier = messageId ?: UUID.randomUUID().toString(),
+            identifier = scheduleID,
             triggers = listOf(AutomationTrigger.activeSession(1u)),
             data = AutomationSchedule.ScheduleData.InAppMessageData(message),
             priority = Int.MIN_VALUE,
@@ -90,7 +93,13 @@ internal class SceneAction(
             sendMetadata = pushMessage?.metadata
         )
 
-        runBlocking { scheduler(schedule) }
+        try {
+            reserveDisplay(scheduleID)
+            runBlocking { scheduler(schedule) }
+        } catch (e: Exception) {
+            releaseDisplayReservation(scheduleID)
+            return ActionResult.newErrorResult(e)
+        }
 
         return ActionResult.newEmptyResult()
     }

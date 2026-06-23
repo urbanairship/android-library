@@ -158,12 +158,14 @@ public class InAppMessageAutomationExecutorTest {
     @Test
     public fun testExecute(): TestResult = runTest {
 
-        every { displayCoordinator.messageWillDisplay(any()) } answers {
+        every { displayCoordinator.messageWillDisplay(any(), any()) } answers {
             assertEquals(preparedData.message, firstArg())
+            assertEquals(preparedInfo.scheduleId, secondArg())
         }
 
-        every { displayCoordinator.messageFinishedDisplaying(any()) } answers {
+        every { displayCoordinator.messageFinishedDisplaying(any(), any()) } answers {
             assertEquals(preparedData.message, firstArg())
+            assertEquals(preparedInfo.scheduleId, secondArg())
         }
 
         coEvery { displayAdapter.display(any(), any()) } coAnswers {
@@ -179,8 +181,8 @@ public class InAppMessageAutomationExecutorTest {
         val result = execute()
 
         coVerify { displayAdapter.display(any(), any()) }
-        verify { displayCoordinator.messageWillDisplay(any()) }
-        verify { displayCoordinator.messageFinishedDisplaying(any()) }
+        verify { displayCoordinator.messageWillDisplay(any(), any()) }
+        verify { displayCoordinator.messageFinishedDisplaying(any(), any()) }
         assertEquals(result, ScheduleExecuteResult.FINISHED)
     }
 
@@ -203,8 +205,8 @@ public class InAppMessageAutomationExecutorTest {
             triggerSessionId = UUID.randomUUID().toString()
         )
 
-        every { displayCoordinator.messageWillDisplay(any()) } just runs
-        every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
+        every { displayCoordinator.messageWillDisplay(any(), any()) } just runs
+        every { displayCoordinator.messageFinishedDisplaying(any(), any()) } just runs
         coEvery { assetManager.clearCache(any()) } just runs
 
         every { analytics.recordEvent(any(), any()) } answers {
@@ -226,8 +228,8 @@ public class InAppMessageAutomationExecutorTest {
             assertEquals(preparedInfo.scheduleId, secondArg())
         }
 
-        every { displayCoordinator.messageWillDisplay(any()) } just runs
-        every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
+        every { displayCoordinator.messageWillDisplay(any(), any()) } just runs
+        every { displayCoordinator.messageFinishedDisplaying(any(), any()) } just runs
         every { analytics.recordEvent(any(), any()) } just runs
 
         coEvery { actionRunner.run(any(), any(), Action.Situation.AUTOMATION) } just runs
@@ -246,8 +248,8 @@ public class InAppMessageAutomationExecutorTest {
 
     @Test
     public fun testExecuteDisplayException(): TestResult = runTest {
-        every { displayCoordinator.messageWillDisplay(any()) } just runs
-        every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
+        every { displayCoordinator.messageWillDisplay(any(), any()) } just runs
+        every { displayCoordinator.messageFinishedDisplaying(any(), any()) } just runs
         coEvery { displayAdapter.display(any(), any()) } coAnswers {
             throw IllegalArgumentException()
         }
@@ -279,8 +281,8 @@ public class InAppMessageAutomationExecutorTest {
 
     @Test
     public fun testExecuteCancel(): TestResult = runTest {
-        every { displayCoordinator.messageWillDisplay(any()) } just runs
-        every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
+        every { displayCoordinator.messageWillDisplay(any(), any()) } just runs
+        every { displayCoordinator.messageFinishedDisplaying(any(), any()) } just runs
 
         coEvery { displayAdapter.display(any(), any()) } coAnswers {
             assertEquals(context, firstArg())

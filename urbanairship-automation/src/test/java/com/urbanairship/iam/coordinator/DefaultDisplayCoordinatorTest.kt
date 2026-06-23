@@ -51,7 +51,7 @@ public class DefaultDisplayCoordinatorTest {
         activityMonitor.foreground()
         assertTrue(coordinator.isReady.value)
 
-        coordinator.messageWillDisplay(mockk())
+        coordinator.messageWillDisplay(mockk(), "id-1")
         assertFalse(coordinator.isReady.value)
     }
 
@@ -61,13 +61,48 @@ public class DefaultDisplayCoordinatorTest {
 
         coordinator.isReady.test {
             assertTrue(awaitItem())
-            coordinator.messageWillDisplay(mockk())
+            coordinator.messageWillDisplay(mockk(), "id-1")
             assertFalse(awaitItem())
 
-            coordinator.messageFinishedDisplaying(mockk())
+            coordinator.messageFinishedDisplaying(mockk(), "id-1")
             assertTrue(awaitItem())
         }
 
         coVerify { sleeper.sleep(10.seconds) }
+    }
+
+    @Test
+    public fun testRemainsLockedWhileAnotherDisplayActive(): TestResult = runTest {
+        activityMonitor.foreground()
+
+        coordinator.isReady.test {
+            assertTrue(awaitItem())
+            coordinator.messageWillDisplay(mockk(), "id-1")
+            assertFalse(awaitItem())
+
+            coordinator.messageWillDisplay(mockk(), "id-2")
+            ensureAllEventsConsumed()
+
+            coordinator.messageFinishedDisplaying(mockk(), "id-1")
+            ensureAllEventsConsumed()
+            assertFalse(coordinator.isReady.value)
+
+            coordinator.messageFinishedDisplaying(mockk(), "id-2")
+            assertTrue(awaitItem())
+        }
+    }
+
+    @Test
+    public fun testReservationBlocksUntilReleased(): TestResult = runTest {
+        activityMonitor.foreground()
+
+        coordinator.isReady.test {
+            assertTrue(awaitItem())
+            coordinator.reserveImmediateDisplay("scene-id")
+            assertFalse(awaitItem())
+
+            coordinator.releaseImmediateDisplayReservation("scene-id")
+            assertTrue(awaitItem())
+        }
     }
 }

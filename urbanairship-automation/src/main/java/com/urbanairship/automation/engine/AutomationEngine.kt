@@ -559,6 +559,7 @@ internal class AutomationEngine(
 
         return when(result) {
             SchedulePrepareResult.Cancel -> {
+                preparer.cancelled(data.schedule)
                 store.deleteSchedules(listOf(data.schedule.identifier))
                 null
             }
@@ -575,9 +576,11 @@ internal class AutomationEngine(
                 }
             }
             SchedulePrepareResult.Skip -> {
+                preparer.cancelled(data.schedule)
                 null
             }
             SchedulePrepareResult.Penalize -> {
+                preparer.cancelled(data.schedule)
                 null
             }
             SchedulePrepareResult.Invalidate -> {
