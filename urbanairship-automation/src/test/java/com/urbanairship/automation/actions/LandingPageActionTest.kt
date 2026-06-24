@@ -302,6 +302,33 @@ public class LandingPageActionTest {
             allowListChecker = { _ -> true },
             scheduler = { schedule: AutomationSchedule ->
                 assertEquals(schedule.identifier, "some-send-ID")
+                assertEquals(schedule.sendMetadata, null)
+                scheduledJob.complete()
+            }
+        )
+
+        val args = ActionArguments(Action.Situation.MANUAL_INVOCATION, ActionValue.wrap("https://some-url"), metadata)
+        action.perform(args)
+        scheduledJob.join()
+    }
+
+    @Test
+    public fun testSendMetadataFromPush(): TestResult = runTest {
+        val scheduledJob = Job()
+
+        val metadata = Bundle().also {
+            it.putParcelable(ActionArguments.PUSH_MESSAGE_METADATA, PushMessage(mapOf(
+                PushMessage.EXTRA_SEND_ID to "some-send-ID",
+                PushMessage.EXTRA_METADATA to "base64-send-metadata"
+            )))
+        }
+
+        val action = LandingPageAction(
+            borderRadius = 2f,
+            allowListChecker = { _ -> true },
+            scheduler = { schedule: AutomationSchedule ->
+                assertEquals(schedule.identifier, "some-send-ID")
+                assertEquals(schedule.sendMetadata, "base64-send-metadata")
                 scheduledJob.complete()
             }
         )

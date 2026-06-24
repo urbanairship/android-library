@@ -117,7 +117,8 @@ public class LandingPageAction(
             bypassHoldoutGroups = true,
             productId = PRODUCT_ID,
             queue = QUEUE,
-            created = clock.currentTimeMillis().toULong()
+            created = clock.currentTimeMillis().toULong(),
+            sendMetadata = pushMessage?.metadata
         )
 
         scheduleExtender?.let { schedule = it.invoke(arguments, schedule) }

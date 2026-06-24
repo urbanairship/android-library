@@ -104,6 +104,19 @@ public class InAppMessageAnalyticsTest {
     }
 
     @Test
+    public fun testSendMetadata(): TestResult = runTest {
+        val info = preparedInfo.copy(sendMetadata = "base64-send-metadata")
+        val analytics = makeAnalytics(preparedScheduleInfo = info)
+        analytics.recordEvent(TestInAppEvent(), layoutContext = null)
+
+        assertEquals(
+            LayoutEventMessageId.AirshipId(info.scheduleId, info.campaigns, "base64-send-metadata"),
+            event?.messageId
+        )
+        assertEquals(event?.source, LayoutEventSource.AIRSHIP)
+    }
+
+    @Test
     public fun testAppDefined(): TestResult = runTest {
         val analytics = makeAnalytics(source = InAppMessage.Source.APP_DEFINED)
         analytics.recordEvent(TestInAppEvent(), layoutContext = null)
@@ -386,10 +399,11 @@ public class InAppMessageAnalyticsTest {
         source: InAppMessage.Source = InAppMessage.Source.REMOTE_DATA,
         isReportingEnabled: Boolean? = null,
         displayImpressionRule: InAppDisplayImpressionRule = InAppDisplayImpressionRule.Once,
-        displayHistory: MessageDisplayHistory = MessageDisplayHistory()
+        displayHistory: MessageDisplayHistory = MessageDisplayHistory(),
+        preparedScheduleInfo: PreparedScheduleInfo = preparedInfo
     ): InAppMessageAnalytics {
         return InAppMessageAnalytics(
-            preparedScheduleInfo = preparedInfo,
+            preparedScheduleInfo = preparedScheduleInfo,
             message = InAppMessage(
                 name = "name",
                 displayContent = InAppMessageDisplayContent.CustomContent(Custom(JsonValue.wrap("custom"))),

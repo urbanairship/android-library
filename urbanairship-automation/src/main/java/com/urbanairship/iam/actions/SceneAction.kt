@@ -85,7 +85,8 @@ internal class SceneAction(
             bypassHoldoutGroups = true,
             productId = PRODUCT_ID,
             queue = QUEUE,
-            created = clock.currentTimeMillis().toULong()
+            created = clock.currentTimeMillis().toULong(),
+            sendMetadata = pushMessage?.metadata
         )
 
         runBlocking { scheduler(schedule) }

@@ -95,7 +95,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     internal val minSDKVersion: String? = null,
     internal val created: ULong = System.currentTimeMillis().toULong(),
     internal val queue: String? = null,
-    internal val additionalAudienceCheckOverrides: AdditionalAudienceCheckOverrides? = null
+    internal val additionalAudienceCheckOverrides: AdditionalAudienceCheckOverrides? = null,
+    internal val sendMetadata: String? = null
 ) : JsonSerializable {
 
     /**
@@ -131,6 +132,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private val queue: String? = schedule.queue
         private val additionalAudienceCheckOverrides: AdditionalAudienceCheckOverrides? = schedule.additionalAudienceCheckOverrides
         private val bypassHoldoutGroups: Boolean? = schedule.bypassHoldoutGroups
+        private val sendMetadata: String? = schedule.sendMetadata
 
         /**
          * Set the triggers.
@@ -270,7 +272,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 minSDKVersion = minSDKVersion,
                 created = created,
                 queue = queue,
-                additionalAudienceCheckOverrides = additionalAudienceCheckOverrides
+                additionalAudienceCheckOverrides = additionalAudienceCheckOverrides,
+                sendMetadata = sendMetadata
             )
         }
     }
@@ -308,7 +311,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             minSDKVersion = minSDKVersion,
             created = created,
             queue = queue,
-            additionalAudienceCheckOverrides = additionalAudienceCheckOverrides
+            additionalAudienceCheckOverrides = additionalAudienceCheckOverrides,
+            sendMetadata = sendMetadata
         )
     }
 
@@ -407,6 +411,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private const val MIN_SDK_VERSION = "min_sdk_version"
         private const val QUEUE = "queue"
         private const val ADDITIONAL_AUDIENCE_CHECK_OVERRIDES = "additional_audience_check_overrides"
+        private const val SEND_METADATA = "send_metadata"
 
         @Throws(
             JsonException::class,
@@ -451,7 +456,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 data = ScheduleData.fromJson(value),
                 created = created,
                 additionalAudienceCheckOverrides = content[ADDITIONAL_AUDIENCE_CHECK_OVERRIDES]
-                    ?.let(AdditionalAudienceCheckOverrides::fromJson)
+                    ?.let(AdditionalAudienceCheckOverrides::fromJson),
+                sendMetadata = content.optionalField(SEND_METADATA)
             )
         }
     }
@@ -483,6 +489,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(QUEUE, queue)
         .put(CREATED, created.toLong().let(DateUtils::createIso8601TimeStamp))
         .putOpt(ADDITIONAL_AUDIENCE_CHECK_OVERRIDES, additionalAudienceCheckOverrides)
+        .putOpt(SEND_METADATA, sendMetadata)
         .build()
         .toJsonValue()
 
@@ -516,6 +523,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         if (created != other.created) return false
         if (queue != other.queue) return false
         if (metadata != other.metadata) return false
+        if (sendMetadata != other.sendMetadata) return false
         return endDate == other.endDate
     }
 
@@ -523,7 +531,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         return Objects.hash(identifier, triggers, group, priority, limit, startDate, audience,
             compoundAudience, delay, interval, data, bypassHoldoutGroups, editGracePeriodDays,
             frequencyConstraintIds, messageType, campaigns, reportingContext, productId,
-            minSDKVersion, created, queue, metadata, endDate)
+            minSDKVersion, created, queue, metadata, sendMetadata, endDate)
     }
 }
 
