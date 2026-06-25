@@ -333,6 +333,8 @@ public class LandingPageActionTest {
             scheduler = { schedule: AutomationSchedule ->
                 assertEquals(schedule.identifier, "some-send-ID")
                 assertEquals(schedule.sendMetadata, "base64-send-metadata")
+                val message = (schedule.data as AutomationSchedule.ScheduleData.InAppMessageData).message
+                assertEquals(InAppMessage.Source.PUSH_ACTION, message.source)
                 scheduledJob.complete()
             }
         )
