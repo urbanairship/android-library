@@ -355,6 +355,47 @@ public class AutomationScheduleTests {
         verify(json, expected)
     }
 
+    @Test
+    public fun testParseSendMetadata() {
+        val json = """
+            {
+               "id": "test_schedule",
+               "triggers": [
+                   {
+                       "type": "custom_event_count",
+                       "goal": 1,
+                       "id": "json-id"
+                   }
+               ],
+               "type": "actions",
+               "actions": {
+                   "foo": "bar"
+               },
+               "send_metadata": "base64-send-metadata",
+               "created": "2023-12-20T12:00:00Z"
+           }
+        """.trimIndent()
+
+        val expected = AutomationSchedule(
+            identifier = "test_schedule",
+            data = AutomationSchedule.ScheduleData.Actions(jsonMapOf("foo" to "bar").toJsonValue()),
+            triggers = listOf(
+                AutomationTrigger.Event(
+                    EventAutomationTrigger(
+                        id = "json-id",
+                        type = EventAutomationTriggerType.CUSTOM_EVENT_COUNT,
+                        goal = 1.0,
+                        predicate = null
+                    )
+                )
+            ),
+            created = 1703073600000U,
+            sendMetadata = "base64-send-metadata"
+        )
+
+        verify(json, expected)
+    }
+
     private fun verify(json: String, expected: AutomationSchedule) {
         val fromJson = AutomationSchedule.fromJson(JsonValue.parseString(json))
         assertEquals(fromJson, expected)

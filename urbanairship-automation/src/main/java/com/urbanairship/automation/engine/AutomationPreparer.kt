@@ -163,7 +163,8 @@ internal class AutomationPreparer internal constructor(
                 reportingContext = schedule.reportingContext,
                 triggerSessionId = triggerSessionId,
                 additionalAudienceCheckResult = additionalAudienceCheckResult,
-                priority = schedule.priority ?: 0
+                priority = schedule.priority ?: 0,
+                sendMetadata = schedule.sendMetadata
             )
         )
     }

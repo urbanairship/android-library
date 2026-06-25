@@ -400,7 +400,8 @@ public class AutomationPreparerTest {
                 missBehavior = AutomationAudience.MissBehavior.PENALIZE
             ),
             campaigns = JsonValue.wrap("campaigns"),
-            constraints = listOf("constraint")
+            constraints = listOf("constraint"),
+            sendMetadata = "base64-send-metadata"
         )
 
         coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
@@ -416,6 +417,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.data, AutomationSchedule.ScheduleData.InAppMessageData(firstArg()))
             assertEquals(schedule.identifier, info.scheduleId)
             assertEquals(schedule.campaigns, info.campaigns)
+            assertEquals(schedule.sendMetadata, info.sendMetadata)
             assertEquals("contact id", info.contactId)
             return@answers Result.success(preparedMessageData)
         }
@@ -910,7 +912,8 @@ public class AutomationPreparerTest {
         displayContent: InAppMessageDisplayContent? = null,
         data: AutomationSchedule.ScheduleData? = null,
         messageType: String? = null,
-        bypassHoldoutGroup: Boolean? = null
+        bypassHoldoutGroup: Boolean? = null,
+        sendMetadata: String? = null
     ): AutomationSchedule {
         val content = displayContent ?: InAppMessageDisplayContent.CustomContent(Custom(JsonValue.NULL))
         val scheduleData = data ?: AutomationSchedule.ScheduleData.InAppMessageData(
@@ -930,7 +933,8 @@ public class AutomationPreparerTest {
             compoundAudience = compoundAudience,
             campaigns = campaigns,
             messageType = messageType,
-            bypassHoldoutGroups = bypassHoldoutGroup
+            bypassHoldoutGroups = bypassHoldoutGroup,
+            sendMetadata = sendMetadata
         )
     }
 

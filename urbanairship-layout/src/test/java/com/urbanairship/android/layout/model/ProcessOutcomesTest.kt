@@ -367,13 +367,14 @@ public class ProcessOutcomesTest {
 
         val outcomes = OutcomeResolver.resolve(
             stateActions = listOf(StateAction.SetState(key = "k", value = JsonValue.wrap("v"))),
-            behaviors = listOf(ButtonClickBehaviorType.PAGER_NEXT, ButtonClickBehaviorType.DISMISS),
+            behaviors = listOf(ButtonClickBehaviorType.DISMISS, ButtonClickBehaviorType.PAGER_NEXT),
             actions = mapOf("deep_link" to JsonValue.wrap("app://x"))
         )
         processor.process(outcomes, handlerOutcome = handleOutcome)
 
         assertEquals(listOf("pagerNext"), processor.callNames)
-        assertEquals(listOf("dismiss", "runAirshipActions"), handleCalls.map { it.name })
+        // Dismiss must be dispatched last so actions (e.g., a deep link) run before teardown.
+        assertEquals(listOf("runAirshipActions", "dismiss"), handleCalls.map { it.name })
     }
 
     // =========================================================================

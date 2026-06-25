@@ -4,7 +4,7 @@ import android.content.Context
 import com.urbanairship.UALog
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.DefaultActionRunner
-import com.urbanairship.actions.run
+import com.urbanairship.actions.runSuspending
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.environment.ThomasActionRunner
@@ -33,10 +33,10 @@ internal class DefaultThomasLayoutDisplay private constructor() {
         ).display(context)
     }
 
-    private val actionRunner: ThomasActionRunner = object: ThomasActionRunner {
-        override fun run(actions: Map<String, JsonValue>, state: LayoutData) {
-            DefaultActionRunner.run(actions, Action.Situation.AUTOMATION)
-        }
+    private val actionRunner: ThomasActionRunner = ThomasActionRunner { actions, _ ->
+        // Await the actions so the preview mirrors production (InAppActionRunner) behavior:
+        // dismiss waits for actions (e.g., deep links) to complete. See MOBILE-5701.
+        DefaultActionRunner.runSuspending(actions, Action.Situation.AUTOMATION)
     }
 
     private val thomasListener = object : ThomasListenerInterface {

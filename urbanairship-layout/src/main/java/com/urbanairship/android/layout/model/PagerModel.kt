@@ -271,7 +271,6 @@ internal class PagerModel(
                         resumeStory()
                     }
                     is LayoutEvent.Pager.PauseToggle -> handlePagerPauseToggle()
-                    else -> {}
                 }
             }
             .launchIn(modelScope)
@@ -550,7 +549,7 @@ internal class PagerModel(
     private fun handleAutomatedActions(automatedActions: List<AutomatedAction>?) {
         automatedActions?.let { actions ->
             // The delay of the earliest navigation action determines the duration of
-            // the page display, and can be used to determine the progress value for the
+            // the page display and can be used to determine the progress value for the
             // currently displayed page.
             actions.earliestNavigationAction?.let { action ->
                 navigationActionTimer = object : Timer(action.delay.toLong() * 1000L) {
@@ -571,7 +570,7 @@ internal class PagerModel(
                             pagerState.update { state ->
                                 state.copy(progress = getProgress())
                             }
-                            delay(100)
+                            delay(100.milliseconds)
                         }
                     }
                 }
@@ -740,15 +739,6 @@ internal enum class PagerNextFallback {
     DISMISS,
     FIRST
 }
-
-internal val List<ButtonClickBehaviorType>.pagerNextFallback: PagerNextFallback
-    get() = firstPagerNextOrNull()?.let {
-        when (it) {
-            ButtonClickBehaviorType.PAGER_NEXT_OR_DISMISS -> PagerNextFallback.DISMISS
-            ButtonClickBehaviorType.PAGER_NEXT_OR_FIRST -> PagerNextFallback.FIRST
-            else -> PagerNextFallback.NONE
-        }
-    } ?: PagerNextFallback.NONE
 
 internal enum class PageRequest {
     NEXT,

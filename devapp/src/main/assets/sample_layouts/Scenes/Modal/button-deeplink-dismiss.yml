@@ -1,0 +1,106 @@
+version: 1
+presentation:
+  type: modal
+  default_placement:
+    size:
+      width: 90%
+      height: 50%
+    position:
+      horizontal: center
+      vertical: center
+    shade_color:
+      default:
+        hex: '#000000'
+        alpha: 0.5
+  dismiss_on_touch_outside: false
+view:
+  type: container
+  background_color:
+    default:
+      hex: '#FFFFFF'
+      alpha: 1
+  border:
+    radius: 12
+  items:
+    - position:
+        horizontal: center
+        vertical: center
+      size:
+        width: 100%
+        height: 100%
+      view:
+        type: linear_layout
+        direction: vertical
+        items:
+          - margin:
+              top: 24
+              bottom: 16
+              start: 16
+              end: 16
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label
+              text: Deep link + dismiss
+              text_appearance:
+                alignment: center
+                font_size: 18
+                styles:
+                  - bold
+                color:
+                  default:
+                    hex: '#000000'
+                    alpha: 1
+          - margin:
+              top: 8
+              bottom: 8
+              start: 16
+              end: 16
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label
+              text: Tapping the button runs a deep link action and dismisses the
+                scene. The deep link must execute before the scene closes.
+              text_appearance:
+                alignment: center
+                font_size: 14
+                color:
+                  default:
+                    hex: '#333333'
+                    alpha: 1
+          - margin:
+              top: 16
+              bottom: 24
+              start: 16
+              end: 16
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: label_button
+              identifier: deep_link_dismiss_button
+              button_click:
+                - dismiss
+              actions:
+                deep_link_action: vnd.urbanairship.sample://deepLink/inbox
+              background_color:
+                default:
+                  hex: '#1976D2'
+                  alpha: 1
+              border:
+                radius: 8
+              label:
+                type: label
+                text: Open deep link & dismiss
+                text_appearance:
+                  alignment: center
+                  font_size: 16
+                  styles:
+                    - bold
+                  color:
+                    default:
+                      hex: '#FFFFFF'
+                      alpha: 1

@@ -17,6 +17,7 @@ import com.urbanairship.android.layout.view.LabelButtonView
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import io.mockk.clearMocks
+import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.coVerifyOrder
 import io.mockk.every
@@ -27,6 +28,7 @@ import io.mockk.unmockkStatic
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -40,6 +42,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.time.Duration.Companion.seconds
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -97,7 +100,7 @@ public class ButtonModelTest {
             ).toJsonValue()
         ))
 
-        every { mockActionsRunner.run(any(), any()) } answers {
+        coEvery { mockActionsRunner.run(any(), any()) } answers {
             val expected = mapOf(
                 "foo" to JsonValue.wrap("bar2"),
                 "shouldnt_change" to JsonValue.wrap("value"),
@@ -113,7 +116,7 @@ public class ButtonModelTest {
         taps.emit(Unit)
         advanceUntilIdle()
 
-        verify { mockActionsRunner.run(any(), any()) }
+        coVerify { mockActionsRunner.run(any(), any()) }
     }
 
     @Test
@@ -175,6 +178,47 @@ public class ButtonModelTest {
                 match { it is LayoutEvent.AsyncViewReload && (it as LayoutEvent.AsyncViewReload).identifier == buttonId }
             )
         }
+    }
+
+    @Test
+    public fun actionsRunBeforeDismiss(): TestResult = runTest {
+        // A button with both an action (e.g. a deep link) and a dismiss behavior must run the
+        // action before the layout is told to finish. See MOBILE-5701.
+        buttonModel = makeButton(
+            actions = mapOf("deep_link" to JsonValue.wrap("uairship://test")),
+            clickBehaviors = listOf(ButtonClickBehaviorType.DISMISS)
+        )
+
+        buttonModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        taps.emit(Unit)
+        advanceUntilIdle()
+
+        coVerifyOrder {
+            mockActionsRunner.run(any(), any())
+            layoutEventHandler.broadcast(match { it is LayoutEvent.Finish })
+        }
+    }
+
+    @Test
+    public fun dismissNotBlockedByHangingAction(): TestResult = runTest {
+        // An action that never completes within the timeout must not pin the layout open;
+        // dismiss should still fire once the guardrail timeout elapses.
+        coEvery { mockActionsRunner.run(any(), any()) } coAnswers { delay(30.seconds) }
+
+        buttonModel = makeButton(
+            actions = mapOf("slow" to JsonValue.wrap("value")),
+            clickBehaviors = listOf(ButtonClickBehaviorType.DISMISS)
+        )
+
+        buttonModel.onViewAttached(mockView)
+        advanceUntilIdle()
+
+        taps.emit(Unit)
+        advanceUntilIdle()
+
+        coVerify(exactly = 1) { layoutEventHandler.broadcast(match { it is LayoutEvent.Finish }) }
     }
 
     private fun makeButton(

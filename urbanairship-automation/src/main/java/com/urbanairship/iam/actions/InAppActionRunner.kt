@@ -19,6 +19,9 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 internal class InAppActionRunner(
     private val analytics: InAppMessageAnalyticsInterface,
@@ -36,10 +39,20 @@ internal class InAppActionRunner(
         run(name, value, situation, extender, callback, metadata(null))
     }
 
-    override fun run(actions: Map<String, JsonValue>, state: LayoutData) {
+    override suspend fun run(actions: Map<String, JsonValue>, state: LayoutData) {
         val metadata = metadata(state)
-        actions.forEach {
-            run(it.key, it.value, Action.Situation.AUTOMATION, null, null, metadata)
+        coroutineScope {
+            actions.map { (name, value) ->
+                async {
+                    runSuspending(
+                        name = name,
+                        value = value,
+                        situation = Action.Situation.AUTOMATION,
+                        extender = null,
+                        metadata = metadata
+                    )
+                }
+            }.awaitAll()
         }
     }
 
@@ -51,7 +64,27 @@ internal class InAppActionRunner(
         callback: ActionCompletionCallback?,
         metadata: Bundle
     ) {
-        actionRequestFactory(name)
+        buildRequest(name, value, situation, extender, metadata).run(callback)
+    }
+
+    private suspend fun runSuspending(
+        name: String,
+        value: JsonSerializable?,
+        situation: Action.Situation?,
+        extender: ActionRunRequestExtender?,
+        metadata: Bundle
+    ) {
+        buildRequest(name, value, situation, extender, metadata).runSuspending()
+    }
+
+    private fun buildRequest(
+        name: String,
+        value: JsonSerializable?,
+        situation: Action.Situation?,
+        extender: ActionRunRequestExtender?,
+        metadata: Bundle
+    ): ActionRunRequest {
+        return actionRequestFactory(name)
             .setValue(value)
             .setMetadata(metadata)
             .let { request ->
@@ -63,7 +96,6 @@ internal class InAppActionRunner(
                     extender.extend(request)
                 } ?: request
             }
-            .run(callback)
     }
 
     private fun metadata(state: LayoutData?): Bundle {

@@ -7,6 +7,7 @@ import androidx.annotation.VisibleForTesting
 import com.urbanairship.Provider
 import com.urbanairship.Airship
 import com.urbanairship.Platform
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.LayoutEvent
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.State
@@ -49,6 +50,8 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.time.Duration.Companion.seconds
 import android.view.View as AndroidView
 
 internal typealias AnyModel = BaseModel<*, *, *>
@@ -250,23 +253,29 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     protected fun report(event: ReportingEvent) =
         environment.reporter.report(event)
 
-    protected fun runActions(
+    protected suspend fun runActions(
         actions: Map<String, JsonValue>?,
         state: LayoutData = layoutState.reportingContext()
     ) {
         val platform = platformProvider.get().stringValue
         val mergedActions = actions.orEmpty().toMutableMap()
 
-        mergedActions
-            .remove(KEY_PLATFORM_OVERRIDE)
-            ?.map
-            ?.get(platform)
-            ?.map
+        mergedActions.remove(KEY_PLATFORM_OVERRIDE)?.map
+            ?.get(platform)?.map
             ?.let { overrides ->
                 overrides.forEach { mergedActions[it.key] = it.value }
             }
 
-        environment.actionsRunner.run(mergedActions, state)
+        // Wait for the actions to complete before returning, so that callers (e.g. button
+        // dismiss) don't tear down the layout before an action (such as a deep link) has run.
+        // Bounded by a timeout, so a pathological action can't pin the layout open: on timeout we
+        // stop waiting, and the action keeps running on its own scope (pre-fix behavior).
+        val completed = withTimeoutOrNull(ACTION_RUN_TIMEOUT) {
+            environment.actionsRunner.run(mergedActions, state)
+        }
+        if (completed == null) {
+            UALog.w { "Actions did not finish within $ACTION_RUN_TIMEOUT; continuing teardown. Actions: ${mergedActions.keys}" }
+        }
     }
 
     protected fun broadcast(event: LayoutEvent): Job = modelScope.launch {
@@ -446,6 +455,13 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
 
     private companion object {
         private const val KEY_PLATFORM_OVERRIDE = "platform_action_overrides"
+
+        /**
+         * Upper bound on how long a dismiss/teardown will wait for actions to finish running.
+         * Real Airship actions return in well under a frame; this only ever fires for a
+         * pathological (e.g., customer-registered) action with a blocking `perform()`.
+         */
+        private val ACTION_RUN_TIMEOUT = 5.seconds
     }
 
     enum class ValidationAction {

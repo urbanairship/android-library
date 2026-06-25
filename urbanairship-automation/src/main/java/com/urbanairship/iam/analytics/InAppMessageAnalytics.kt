@@ -60,7 +60,7 @@ internal class InAppMessageAnalytics private constructor(
                 dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher()) :
             this(
                 preparedScheduleInfo = preparedScheduleInfo,
-                messageId = makeMessageId(message, preparedScheduleInfo.scheduleId, preparedScheduleInfo.campaigns),
+                messageId = makeMessageId(message, preparedScheduleInfo.scheduleId, preparedScheduleInfo.campaigns, preparedScheduleInfo.sendMetadata),
                 source = makeEventSource(message),
                 renderedLocale = message.renderedLocale,
                 eventRecorder = eventRecorder,
@@ -85,11 +85,13 @@ internal class InAppMessageAnalytics private constructor(
     private val displayContext: StateFlow<LayoutEventContext.Display> = _displayContext.asStateFlow()
 
     private companion object {
-        fun makeMessageId(message: InAppMessage, scheduleID: String, campaigns: JsonValue?): LayoutEventMessageId {
+        fun makeMessageId(message: InAppMessage, scheduleID: String, campaigns: JsonValue?, sendMetadata: String?): LayoutEventMessageId {
             return when(message.source ?:  InAppMessage.Source.REMOTE_DATA) {
-                 InAppMessage.Source.REMOTE_DATA -> LayoutEventMessageId.AirshipId(
+                 InAppMessage.Source.REMOTE_DATA,
+                 InAppMessage.Source.PUSH_ACTION -> LayoutEventMessageId.AirshipId(
                     scheduleID,
-                    campaigns
+                    campaigns,
+                    sendMetadata
                 )
                  InAppMessage.Source.APP_DEFINED -> LayoutEventMessageId.AppDefined(
                     scheduleID
