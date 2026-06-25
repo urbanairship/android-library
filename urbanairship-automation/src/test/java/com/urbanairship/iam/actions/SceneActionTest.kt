@@ -78,12 +78,14 @@ public class SceneActionTest {
                 assertEquals(schedule.triggers[0].type, EventAutomationTriggerType.ACTIVE_SESSION.value)
                 assertEquals(schedule.triggers[0].goal, 1.0)
                 assertEquals(schedule.created, 9_876_543_210UL)
+                assertEquals(schedule.sendMetadata, null)
 
                 val message = (schedule.data as AutomationSchedule.ScheduleData.InAppMessageData).message
                 assertEquals(
                     InAppMessage(
                         name = "Scene Landing Page ()",
                         displayContent = InAppMessageDisplayContent.AirshipLayoutContent(expectedLayout),
+                        source = InAppMessage.Source.PUSH_ACTION,
                         isReportingEnabled = false,
                         displayBehavior = InAppMessage.DisplayBehavior.IMMEDIATE,
                     ),
@@ -120,6 +122,38 @@ public class SceneActionTest {
                     InAppMessageDisplayContent.AirshipLayoutContent(expectedLayout),
                     message.displayContent,
                 )
+                scheduleJob.complete()
+            },
+        )
+
+        val args = ActionArguments(
+            Action.Situation.MANUAL_INVOCATION,
+            ActionValue.wrap(jsonMapOf("dsl" to rawDeflateBase64(MINIMAL_LAYOUT_JSON))),
+            metadata,
+        )
+        action.perform(args)
+        scheduleJob.join()
+    }
+
+    @Test
+    public fun testPerform_sendMetadataFromPush(): TestResult = runTest {
+        val scheduleJob = Job()
+        val metadata = Bundle().apply {
+            putParcelable(
+                ActionArguments.PUSH_MESSAGE_METADATA,
+                PushMessage(mapOf(
+                    PushMessage.EXTRA_SEND_ID to "rich-msg-id",
+                    PushMessage.EXTRA_METADATA to "base64-send-metadata",
+                )),
+            )
+        }
+
+        val action = SceneAction(
+            scheduler = { schedule: AutomationSchedule ->
+                assertEquals("rich-msg-id", schedule.identifier)
+                assertEquals("base64-send-metadata", schedule.sendMetadata)
+                val message = (schedule.data as AutomationSchedule.ScheduleData.InAppMessageData).message
+                assertEquals(InAppMessage.Source.PUSH_ACTION, message.source)
                 scheduleJob.complete()
             },
         )

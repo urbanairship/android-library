@@ -40,7 +40,8 @@ public data class PreparedScheduleInfo(
     internal val reportingContext: JsonValue? = null,
     internal val triggerSessionId: String,
     internal val additionalAudienceCheckResult: Boolean = true,
-    internal val priority: Int = 0
+    internal val priority: Int = 0,
+    internal val sendMetadata: String? = null
 ) : JsonSerializable {
 
     internal companion object {
@@ -53,6 +54,7 @@ public data class PreparedScheduleInfo(
         private const val TRIGGER_SESSION_ID = "trigger_session_id"
         private const val ADDITIONAL_AUDIENCE_CHECK_RESULT = "additional_audience_check_result"
         private const val PRIORITY = "PRIORITY"
+        private const val SEND_METADATA = "send_metadata"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): PreparedScheduleInfo {
@@ -68,6 +70,7 @@ public data class PreparedScheduleInfo(
                 triggerSessionId = content.optionalField(TRIGGER_SESSION_ID) ?: UUID.randomUUID().toString(),
                 additionalAudienceCheckResult = content.optionalField(ADDITIONAL_AUDIENCE_CHECK_RESULT) ?: true,
                 priority = content.optionalField(PRIORITY) ?: 0,
+                sendMetadata = content.optionalField(SEND_METADATA),
             )
         }
     }
@@ -81,6 +84,7 @@ public data class PreparedScheduleInfo(
         REPORTING_CONTEXT to reportingContext,
         TRIGGER_SESSION_ID to triggerSessionId,
         ADDITIONAL_AUDIENCE_CHECK_RESULT to additionalAudienceCheckResult,
-        PRIORITY to priority
+        PRIORITY to priority,
+        SEND_METADATA to sendMetadata
     ).toJsonValue()
 }

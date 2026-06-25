@@ -105,6 +105,7 @@ public class LandingPageAction(
                     allowFullscreenDisplay = false
                 )
             ),
+            source = InAppMessage.Source.PUSH_ACTION,
             isReportingEnabled = messageID != null,
             displayBehavior = InAppMessage.DisplayBehavior.IMMEDIATE
         )
@@ -117,7 +118,8 @@ public class LandingPageAction(
             bypassHoldoutGroups = true,
             productId = PRODUCT_ID,
             queue = QUEUE,
-            created = clock.currentTimeMillis().toULong()
+            created = clock.currentTimeMillis().toULong(),
+            sendMetadata = pushMessage?.metadata
         )
 
         scheduleExtender?.let { schedule = it.invoke(arguments, schedule) }

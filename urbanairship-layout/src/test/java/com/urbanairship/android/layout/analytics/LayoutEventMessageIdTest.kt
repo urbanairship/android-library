@@ -55,4 +55,45 @@ public class LayoutEventMessageIdTest {
 
         assertEquals(JsonValue.parseString(json), messageID.toJsonValue())
     }
+
+    @Test
+    public fun testAirshipWithSendMetadata() {
+        val messageID = LayoutEventMessageId.AirshipId(scheduleID, campaigns, "base64-send-metadata")
+        val json = """
+            {
+              "message_id":"$scheduleID",
+              "campaigns":$campaigns,
+              "com.urbanairship.metadata":"base64-send-metadata"
+            }
+        """.trimIndent()
+
+        assertEquals(JsonValue.parseString(json), messageID.toJsonValue())
+    }
+
+    @Test
+    public fun testAirshipSendMetadataWithoutCampaigns() {
+        val messageID = LayoutEventMessageId.AirshipId(scheduleID, campaigns = null, sendMetadata = "base64-send-metadata")
+        val json = """
+            {
+              "message_id":"$scheduleID",
+              "com.urbanairship.metadata":"base64-send-metadata"
+            }
+        """.trimIndent()
+
+        assertEquals(JsonValue.parseString(json), messageID.toJsonValue())
+    }
+
+    @Test
+    public fun testAirshipNoSendMetadata() {
+        // sendMetadata defaults to null and must be omitted from the serialized id object.
+        val messageID = LayoutEventMessageId.AirshipId(scheduleID, campaigns)
+        val json = """
+            {
+              "message_id":"$scheduleID",
+              "campaigns":$campaigns
+            }
+        """.trimIndent()
+
+        assertEquals(JsonValue.parseString(json), messageID.toJsonValue())
+    }
 }

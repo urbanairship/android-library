@@ -11,6 +11,7 @@ public sealed class LayoutEventMessageId : JsonSerializable {
     private companion object {
         private const val MESSAGE_ID = "message_id"
         private const val CAMPAIGNS = "campaigns"
+        private const val SEND_METADATA = "com.urbanairship.metadata"
     }
 
     public abstract val identifier: String
@@ -25,11 +26,14 @@ public sealed class LayoutEventMessageId : JsonSerializable {
 
     public data class AirshipId(
         override val identifier: String,
-        val campaigns: JsonValue?
+        val campaigns: JsonValue?,
+        val sendMetadata: String? = null
     ) : LayoutEventMessageId() {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
-            MESSAGE_ID to identifier, CAMPAIGNS to campaigns
+            MESSAGE_ID to identifier,
+            CAMPAIGNS to campaigns,
+            SEND_METADATA to sendMetadata
         ).toJsonValue()
     }
 }

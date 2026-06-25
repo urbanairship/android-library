@@ -66,7 +66,13 @@ public class InAppMessage internal constructor(
         /**
          * In-app message was generated from a push in the legacy in-app message manager.
          */
-        LEGACY_PUSH("legacy-push");
+        LEGACY_PUSH("legacy-push"),
+
+        /**
+         * In-app message created by an Airship push action (e.g. scene or landing page action).
+         * Reports as an Airship-sourced message, but is not managed by the remote-data service.
+         */
+        PUSH_ACTION("push-action");
 
         companion object {
 
