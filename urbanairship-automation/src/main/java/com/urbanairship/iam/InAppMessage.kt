@@ -72,7 +72,7 @@ public class InAppMessage internal constructor(
          * In-app message created by an Airship push action (e.g. scene or landing page action).
          * Reports as an Airship-sourced message, but is not managed by the remote-data service.
          */
-        PUSH_ACTION("pushAction");
+        PUSH_ACTION("push-action");
 
         companion object {
 
