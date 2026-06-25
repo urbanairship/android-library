@@ -85,6 +85,7 @@ public class SceneActionTest {
                     InAppMessage(
                         name = "Scene Landing Page ()",
                         displayContent = InAppMessageDisplayContent.AirshipLayoutContent(expectedLayout),
+                        source = InAppMessage.Source.PUSH_ACTION,
                         isReportingEnabled = false,
                         displayBehavior = InAppMessage.DisplayBehavior.IMMEDIATE,
                     ),
@@ -151,6 +152,8 @@ public class SceneActionTest {
             scheduler = { schedule: AutomationSchedule ->
                 assertEquals("rich-msg-id", schedule.identifier)
                 assertEquals("base64-send-metadata", schedule.sendMetadata)
+                val message = (schedule.data as AutomationSchedule.ScheduleData.InAppMessageData).message
+                assertEquals(InAppMessage.Source.PUSH_ACTION, message.source)
                 scheduleJob.complete()
             },
         )

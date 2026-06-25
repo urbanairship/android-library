@@ -69,6 +69,7 @@ public class LandingPageActionTest {
                     allowFullscreenDisplay = false
                 )
             ),
+            source = InAppMessage.Source.PUSH_ACTION,
             isReportingEnabled = false,
             displayBehavior = InAppMessage.DisplayBehavior.IMMEDIATE
         )
@@ -121,6 +122,7 @@ public class LandingPageActionTest {
                     aspectLock = true
                 )
             ),
+            source = InAppMessage.Source.PUSH_ACTION,
             isReportingEnabled = false,
             displayBehavior = InAppMessage.DisplayBehavior.IMMEDIATE
         )
@@ -177,6 +179,7 @@ public class LandingPageActionTest {
                     allowFullscreenDisplay = false
                 )
             ),
+            source = InAppMessage.Source.PUSH_ACTION,
             isReportingEnabled = false,
             displayBehavior = InAppMessage.DisplayBehavior.IMMEDIATE
         )
@@ -226,6 +229,7 @@ public class LandingPageActionTest {
                     allowFullscreenDisplay = false
                 )
             ),
+            source = InAppMessage.Source.PUSH_ACTION,
             isReportingEnabled = false,
             displayBehavior = InAppMessage.DisplayBehavior.IMMEDIATE
         )

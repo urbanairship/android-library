@@ -73,6 +73,7 @@ internal class SceneAction(
         val message = InAppMessage(
             name = "Scene Landing Page (${messageId ?: ""})",
             displayContent = InAppMessageDisplayContent.AirshipLayoutContent(args.scene),
+            source = InAppMessage.Source.PUSH_ACTION,
             isReportingEnabled = messageId != null,
             displayBehavior = InAppMessage.DisplayBehavior.IMMEDIATE
         )

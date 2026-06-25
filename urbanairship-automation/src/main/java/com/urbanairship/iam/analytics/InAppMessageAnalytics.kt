@@ -87,7 +87,8 @@ internal class InAppMessageAnalytics private constructor(
     private companion object {
         fun makeMessageId(message: InAppMessage, scheduleID: String, campaigns: JsonValue?, sendMetadata: String?): LayoutEventMessageId {
             return when(message.source ?:  InAppMessage.Source.REMOTE_DATA) {
-                 InAppMessage.Source.REMOTE_DATA -> LayoutEventMessageId.AirshipId(
+                 InAppMessage.Source.REMOTE_DATA,
+                 InAppMessage.Source.PUSH_ACTION -> LayoutEventMessageId.AirshipId(
                     scheduleID,
                     campaigns,
                     sendMetadata

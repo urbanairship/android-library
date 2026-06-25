@@ -105,6 +105,7 @@ public class LandingPageAction(
                     allowFullscreenDisplay = false
                 )
             ),
+            source = InAppMessage.Source.PUSH_ACTION,
             isReportingEnabled = messageID != null,
             displayBehavior = InAppMessage.DisplayBehavior.IMMEDIATE
         )

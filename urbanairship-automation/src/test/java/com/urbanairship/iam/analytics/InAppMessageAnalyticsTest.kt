@@ -117,6 +117,24 @@ public class InAppMessageAnalyticsTest {
     }
 
     @Test
+    public fun testPushActionSource(): TestResult = runTest {
+        // Messages created by push actions (scene / landing page) report as Airship-sourced
+        // and emit the v2 id object including the send metadata.
+        val info = preparedInfo.copy(sendMetadata = "base64-send-metadata")
+        val analytics = makeAnalytics(
+            source = InAppMessage.Source.PUSH_ACTION,
+            preparedScheduleInfo = info
+        )
+        analytics.recordEvent(TestInAppEvent(), layoutContext = null)
+
+        assertEquals(
+            LayoutEventMessageId.AirshipId(info.scheduleId, info.campaigns, "base64-send-metadata"),
+            event?.messageId
+        )
+        assertEquals(event?.source, LayoutEventSource.AIRSHIP)
+    }
+
+    @Test
     public fun testAppDefined(): TestResult = runTest {
         val analytics = makeAnalytics(source = InAppMessage.Source.APP_DEFINED)
         analytics.recordEvent(TestInAppEvent(), layoutContext = null)
