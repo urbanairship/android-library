@@ -28,6 +28,8 @@ kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.JVM_17
         jvmDefault = JvmDefaultMode.ENABLE
+
+        freeCompilerArgs.add("-Xconsistent-data-class-copy-visibility")
     }
 }
 

@@ -135,7 +135,6 @@ internal interface FeatureFlagViewModel {
 
                 override val evaluatedFlag: StateFlow<FeatureFlag?> = MutableStateFlow(
                     // preview stub — can't use FeatureFlagManager here
-                    @Suppress("DEPRECATION")
                     FeatureFlag(
                         isEligible = true,
                         exists = true,
