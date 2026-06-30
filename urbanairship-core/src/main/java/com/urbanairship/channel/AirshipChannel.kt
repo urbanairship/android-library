@@ -107,6 +107,11 @@ public class AirshipChannel internal constructor(
         this.runtimeConfig.addConfigListener {
             updateRegistration()
         }
+
+        // Dispatch the registration job only after a pending mutation has been committed to
+        // storage. Wiring this once here keeps the happens-after-commit ordering structural so
+        // individual addUpdate call sites don't have to remember it.
+        channelManager.onAfterWrite = { updateRegistration() }
     }
 
     /**
@@ -347,7 +352,6 @@ public class AirshipChannel internal constructor(
 
                 if (collapsedMutations.isNotEmpty()) {
                     channelManager.addUpdate(tags = collapsedMutations)
-                    updateRegistration()
                 }
             }
         }
@@ -378,7 +382,6 @@ public class AirshipChannel internal constructor(
 
                 if (collapsedMutations.isNotEmpty()) {
                     channelManager.addUpdate(attributes = collapsedMutations)
-                    updateRegistration()
                 }
             }
         }
@@ -477,7 +480,6 @@ public class AirshipChannel internal constructor(
 
                 if (collapsedMutations.isNotEmpty()) {
                     channelManager.addUpdate(subscriptions = collapsedMutations)
-                    updateRegistration()
                 }
             }
         }
@@ -514,7 +516,6 @@ public class AirshipChannel internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun trackLiveUpdateMutation(mutation: LiveUpdateMutation) {
         channelManager.addUpdate(liveUpdates = listOf(mutation))
-        updateRegistration()
     }
 
     /**

@@ -24,10 +24,13 @@ import com.urbanairship.util.AutoRefreshingDataProvider
 import com.urbanairship.util.LocaleCompat
 import java.util.Locale
 import java.util.TimeZone
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -75,7 +78,15 @@ public class AirshipChannelTest {
         every { this@mockk.channelId } returns null
     }
 
-    private val mockBatchUpdateManager = mockk<ChannelBatchUpdateManager>(relaxed = true)
+    private val onAfterWriteSlot = slot<() -> Unit>()
+    private val mockBatchUpdateManager = mockk<ChannelBatchUpdateManager>(relaxed = true).also {
+        // AirshipChannel.init wires the post-write dispatch hook; capture it and fire it on each
+        // addUpdate so the registration-dispatch verifications below still hold against the mock.
+        every { it.onAfterWrite = capture(onAfterWriteSlot) } just Runs
+        every { it.addUpdate(any(), any(), any(), any()) } answers {
+            if (onAfterWriteSlot.isCaptured) onAfterWriteSlot.captured.invoke()
+        }
+    }
     private val mockJobDispatcher = mockk<JobDispatcher>(relaxed = true)
     private val mockSubscriptions = mockk<ChannelSubscriptions>(relaxed = false)
     private val subscriptionsProviderFlow = MutableSharedFlow<AutoRefreshingDataProvider.IdentifiableResult<Set<String>>>(replay = 1)
@@ -254,9 +265,9 @@ public class AirshipChannelTest {
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
             mockBatchUpdateManager.addUpdate(
-                tags = listOf(
+                tags = eq(listOf(
                     TagGroupsMutation.newAddTagsMutation("some group", setOf("foo"))
-                )
+                ))
             )
         }
     }
@@ -267,9 +278,9 @@ public class AirshipChannelTest {
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
             mockBatchUpdateManager.addUpdate(
-                tags = listOf(
+                tags = eq(listOf(
                     TagGroupsMutation.newAddTagsMutation("some group", setOf("foo"))
-                )
+                ))
             )
         }
     }
@@ -293,9 +304,9 @@ public class AirshipChannelTest {
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
             mockBatchUpdateManager.addUpdate(
-                subscriptions = listOf(
+                subscriptions = eq(listOf(
                     SubscriptionListMutation.newSubscribeMutation("some list", testClock.currentTimeMillis)
-                )
+                ))
             )
         }
     }
@@ -306,9 +317,9 @@ public class AirshipChannelTest {
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
             mockBatchUpdateManager.addUpdate(
-                subscriptions = listOf(
+                subscriptions = eq(listOf(
                     SubscriptionListMutation.newSubscribeMutation("some list", testClock.currentTimeMillis)
-                )
+                ))
             )
         }
     }
@@ -333,9 +344,9 @@ public class AirshipChannelTest {
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
             mockBatchUpdateManager.addUpdate(
-                liveUpdates = listOf(
+                liveUpdates = eq(listOf(
                     liveUpdateMutation
-                )
+                ))
             )
         }
     }
@@ -346,9 +357,9 @@ public class AirshipChannelTest {
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
             mockBatchUpdateManager.addUpdate(
-                attributes = listOf(
+                attributes = eq(listOf(
                     AttributeMutation.newRemoveAttributeMutation("some attribute", testClock.currentTimeMillis)
-                )
+                ))
             )
         }
     }
@@ -359,9 +370,9 @@ public class AirshipChannelTest {
         verify { mockJobDispatcher.dispatch(keepJob) }
         verify {
             mockBatchUpdateManager.addUpdate(
-                attributes = listOf(
+                attributes = eq(listOf(
                     AttributeMutation.newRemoveAttributeMutation("some attribute", testClock.currentTimeMillis)
-                )
+                ))
             )
         }
     }
