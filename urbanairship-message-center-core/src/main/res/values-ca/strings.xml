@@ -2,7 +2,7 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
     <string name="ua_enter_edit_mode">Editar llista</string>
-    <string name="ua_leave_edit_mode">Deixa d'editar la llista</string>
+    <string name="ua_leave_edit_mode">Deixa d\'editar la llista</string>
     <string name="ua_announce_enter_edit_mode">Editant la llista de missatges</string>
     <string name="ua_announce_leave_edit_mode">Veient la llista de missatges</string>
     <string name="ua_mark_unread">Marca com a no llegit</string>

@@ -3,8 +3,8 @@
     <!-- Accessibility -->
     <string name="ua_enter_edit_mode">Modifica elenco</string>
     <string name="ua_leave_edit_mode">Interrompi modifica elenco</string>
-    <string name="ua_announce_enter_edit_mode">Modifica dell'elenco dei messaggi</string>
-    <string name="ua_announce_leave_edit_mode">Visualizzazione dell'elenco dei messaggi</string>
+    <string name="ua_announce_enter_edit_mode">Modifica dell\'elenco dei messaggi</string>
+    <string name="ua_announce_leave_edit_mode">Visualizzazione dell\'elenco dei messaggi</string>
     <string name="ua_mark_unread">Segna come non letto</string>
     <string name="ua_mark_all_read">Segna tutti come letti</string>
     <string name="ua_delete_all">Elimina tutto</string>
