@@ -27,9 +27,7 @@ public class PreferenceCenterActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // Enable edge to edge on API 35 and up, which is the
         // first version  where edge to edge rendering is forced.
-        // TODO: replace with Build.VERSION_CODES.VANILLA_ICE_CREAM
-        // once we've bumped our compile/target SDK to 35.
-        if (Build.VERSION.SDK_INT >= 35) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             enableEdgeToEdge()
         }
         super.onCreate(savedInstanceState)
