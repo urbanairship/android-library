@@ -136,13 +136,13 @@ public class EmbeddedLayout(
         })
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(time: Long) {
-                super.onForeground(time)
+            override fun onForeground(milliseconds: Long) {
+                super.onForeground(milliseconds)
                 reporter.onVisibilityChanged(isVisible.value, true)
             }
 
-            override fun onBackground(time: Long) {
-                super.onBackground(time)
+            override fun onBackground(milliseconds: Long) {
+                super.onBackground(milliseconds)
                 reporter.onVisibilityChanged(isVisible.value, false)
             }
         })

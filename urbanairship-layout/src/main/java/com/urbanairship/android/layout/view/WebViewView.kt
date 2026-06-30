@@ -123,18 +123,14 @@ internal class WebViewView(
         }
         frameLayout.addView(progressBar, progressBarLayoutParams)
 
-        @Suppress("DEPRECATION")
         wv.settings.run {
             javaScriptEnabled = true
             if (ManifestUtils.shouldEnableLocalStorage(context)) {
                 domStorageEnabled = true
-                databaseEnabled = true
             }
 
             // Disallow all file and content access, which could pose a security risk if enabled.
             allowFileAccess = false
-            allowFileAccessFromFileURLs = false
-            allowUniversalAccessFromFileURLs = false
             allowContentAccess = false
         }
 
@@ -149,7 +145,7 @@ internal class WebViewView(
                     webView.loadUrl(model.viewInfo.url)
                 }
 
-                override fun onClose(webView: WebView): Boolean {
+                override fun onClose(view: WebView): Boolean {
                     model.onClose()
                     return true
                 }

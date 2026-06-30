@@ -63,7 +63,7 @@ internal class MessageDatabaseMultiMigration (
         createUniqueIndexOnMessageId(db)
     }
 
-    override fun tryRecover(db: SupportSQLiteDatabase, e: Exception) {
+    override fun tryRecover(db: SupportSQLiteDatabase, err: Exception) {
         // Clean up from the failed migration.
         db.execSQL("DROP TABLE IF EXISTS $NEW_TABLE_NAME")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")

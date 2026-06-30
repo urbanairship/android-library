@@ -376,7 +376,6 @@ internal class MediaView(
         frameLayout.addView(progressBar, progressBarLayoutParams)
         wv.setBackgroundColor(Color.TRANSPARENT)
 
-        @Suppress("DEPRECATION")
         wv.settings.apply {
             mediaPlaybackRequiresUserGesture = false
 
@@ -384,13 +383,10 @@ internal class MediaView(
 
             if (ManifestUtils.shouldEnableLocalStorage(context)) {
                 domStorageEnabled = true
-                databaseEnabled = true
             }
 
             // Disallow all file and content access, which could pose a security risk if enabled.
             allowFileAccess = false
-            allowFileAccessFromFileURLs = false
-            allowUniversalAccessFromFileURLs = false
             allowContentAccess = false
         }
 

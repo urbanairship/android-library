@@ -12,6 +12,7 @@ import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.actions.MessageCenterAction.Companion.DEFAULT_NAMES
 import com.urbanairship.messagecenter.messageCenter
+import androidx.core.os.BundleCompat
 import com.urbanairship.push.PushMessage
 
 /**
@@ -58,7 +59,7 @@ public open class MessageCenterAction
         var messageId = arguments.value.string
         if (MESSAGE_ID_PLACEHOLDER.equals(messageId, ignoreCase = true)) {
             val pushMessage =
-                arguments.metadata.getParcelable<PushMessage>(ActionArguments.PUSH_MESSAGE_METADATA)
+                BundleCompat.getParcelable(arguments.metadata, ActionArguments.PUSH_MESSAGE_METADATA, PushMessage::class.java)
 
             messageId = if (pushMessage != null && pushMessage.richPushMessageId != null) {
                 pushMessage.richPushMessageId

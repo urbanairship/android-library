@@ -134,7 +134,7 @@ internal open class BannerView(
 
         // Banner View
         val bannerView = view.findViewById<LinearLayout>(R.id.banner)
-        ViewCompat.setBackground(bannerView, createBannerBackground())
+        bannerView.background = createBannerBackground()
         if (displayContent.borderRadius > 0) {
 
             BorderRadius.applyBorderRadiusPadding(
@@ -188,7 +188,7 @@ internal open class BannerView(
         val bannerPull = view.findViewById<View>(R.id.banner_pull)
         val drawable = DrawableCompat.wrap(bannerPull.background).mutate()
         DrawableCompat.setTint(drawable, displayContent.dismissButtonColor.color)
-        ViewCompat.setBackground(bannerPull, drawable)
+        bannerPull.background = drawable
 
         // Handle window insets
         ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
@@ -383,7 +383,7 @@ internal open class BannerView(
                 bottom = resources.getDimensionPixelSize(resourceId)
             }
         }
-        ViewCompat.setPaddingRelative(view, 0, top, 0, bottom)
+        view.setPaddingRelative(0, top, 0, bottom)
     }
 
     companion object {

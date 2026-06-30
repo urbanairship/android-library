@@ -10,7 +10,6 @@ import android.widget.ImageButton
 import android.widget.TextView
 import androidx.annotation.LayoutRes
 import androidx.core.graphics.drawable.DrawableCompat
-import androidx.core.view.ViewCompat
 import com.urbanairship.UALog
 import com.urbanairship.actions.run
 import com.urbanairship.automation.R
@@ -121,7 +120,7 @@ internal class ModalActivity : InAppMessageActivity<ModalContent>(), InAppButton
             .setBackgroundColor(messageContent.backgroundColor.color)
             .setBorderRadius(borderRadius, BorderRadius.ALL)
             .build()
-        ViewCompat.setBackground(modal, background)
+        modal.background = background
 
         if (borderRadius > 0) {
             modal.setClipPathBorderRadius(borderRadius)
@@ -196,7 +195,7 @@ internal class ModalActivity : InAppMessageActivity<ModalContent>(), InAppButton
     }
 
     private fun normalizeHorizontalPadding(view: TextView) {
-        val padding = max(ViewCompat.getPaddingEnd(view), ViewCompat.getPaddingStart(view))
+        val padding = max(view.paddingEnd, view.paddingStart)
         view.setPadding(padding, view.paddingTop, padding, view.paddingBottom)
         view.requestLayout()
     }

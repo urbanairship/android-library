@@ -78,7 +78,7 @@ internal data class ChannelSubscriptionItem(val item: Item.ChannelSubscription) 
             // Add a click listener on the whole item to provide a better experience for toggling subscriptions
             // when using screen readers.
             itemView.setOnClickListener {
-                if (adapterPosition != RecyclerView.NO_POSITION) {
+                if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
                     switch.isChecked = !switch.isChecked
                 }
             }
@@ -94,8 +94,8 @@ internal data class ChannelSubscriptionItem(val item: Item.ChannelSubscription) 
                 setOnCheckedChangeListener(null)
                 isChecked = isChecked(item.subscriptionId)
                 setOnCheckedChangeListener { _, isChecked ->
-                    if (adapterPosition != RecyclerView.NO_POSITION) {
-                        onCheckedChange(adapterPosition, isChecked)
+                    if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
+                        onCheckedChange(bindingAdapterPosition, isChecked)
                         updateAccessibilityDescription(itemView.context, item, isChecked)
                     }
                 }

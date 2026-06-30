@@ -62,7 +62,7 @@ private fun ScreenContent(viewModel: NamedUserViewModel, onNavigateUp: () -> Uni
             onValueChange = { viewModel.userId.value = it.trim()},
             label = { Text("Named User") },
             keyboardOptions = KeyboardOptions(
-                autoCorrect = false,
+                autoCorrectEnabled = false,
                 imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onAny = {
                 viewModel.save()

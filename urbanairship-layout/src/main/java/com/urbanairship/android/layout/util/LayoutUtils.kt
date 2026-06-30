@@ -15,7 +15,7 @@ import android.graphics.drawable.RippleDrawable
 import android.graphics.drawable.ShapeDrawable
 import android.graphics.drawable.shapes.RoundRectShape
 import android.os.Build
-import android.text.Html
+import androidx.core.text.HtmlCompat
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -352,7 +352,7 @@ internal object LayoutUtils {
         val isMarkdownEnabled = markdownOptions.isEnabled
 
         if (isMarkdownEnabled) {
-            val html = Html.fromHtml(text.markdownToHtml())
+            val html = HtmlCompat.fromHtml(text.markdownToHtml(), HtmlCompat.FROM_HTML_MODE_LEGACY)
             textView.setHtml(context, html, markdownOptions)
         } else {
             textView.text = text

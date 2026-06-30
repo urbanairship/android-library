@@ -80,7 +80,7 @@ internal data class ContactSubscriptionItem(val item: Item.ContactSubscription) 
             // Add a click listener on the whole item to provide a better experience for toggling subscriptions
             // when using screen readers.
             itemView.setOnClickListener {
-                if (adapterPosition != RecyclerView.NO_POSITION) {
+                if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
                     switch.isChecked = !switch.isChecked
                 }
             }
@@ -96,8 +96,8 @@ internal data class ContactSubscriptionItem(val item: Item.ContactSubscription) 
                 setOnCheckedChangeListener(null)
                 isChecked = isChecked(item.subscriptionId, item.scopes)
                 setOnCheckedChangeListener { _, isChecked ->
-                    if (adapterPosition != RecyclerView.NO_POSITION) {
-                        onCheckedChange(adapterPosition, item.scopes, isChecked)
+                    if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
+                        onCheckedChange(bindingAdapterPosition, item.scopes, isChecked)
                         updateAccessibilityDescription(itemView.context, item, isChecked)
                     }
                 }

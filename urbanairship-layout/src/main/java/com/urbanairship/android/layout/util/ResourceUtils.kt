@@ -4,7 +4,6 @@ package com.urbanairship.android.layout.util
 import android.content.Context
 import android.content.res.Configuration
 import android.os.Build
-import android.util.DisplayMetrics
 import android.util.TypedValue
 import android.view.WindowInsets
 import android.view.WindowManager
@@ -107,13 +106,9 @@ public object ResourceUtils {
                 .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
             return windowMetrics.bounds.width() - insets.left - insets.right
         } else {
-            val displayMetrics = DisplayMetrics()
-            windowManager.defaultDisplay.getMetrics(displayMetrics)
-            // This won't be the exact window width and we can't handle ignoreSafeArea
-            // but this is the closest value we can get for API<30.
-            // getMetrics() doesn't work well with the insets.
-            // getRealMetrics() would be better but there can be cases it won't work.
-            return displayMetrics.widthPixels
+            // This won't be the exact window width, and we can't handle ignoreSafeArea,
+            // but this is the closest value we can get for API <30.
+            return context.resources.displayMetrics.widthPixels
         }
     }
 
@@ -130,13 +125,9 @@ public object ResourceUtils {
                 .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars())
             return windowMetrics.bounds.height() - insets.top - insets.bottom
         } else {
-            val displayMetrics = DisplayMetrics()
-            windowManager.defaultDisplay.getMetrics(displayMetrics)
-            // This won't be the exact window height and we can't handle ignoreSafeArea
-            // but this is the closest value we can get for API<30.
-            // getMetrics() doesn't work well with the insets.
-            // getRealMetrics() would be better but it won't work for split screens for example.
-            return displayMetrics.heightPixels
+            // This won't be the exact window height, and we can't handle ignoreSafeArea,
+            // but this is the closest value we can get for API <30.
+            return context.resources.displayMetrics.heightPixels
         }
     }
 

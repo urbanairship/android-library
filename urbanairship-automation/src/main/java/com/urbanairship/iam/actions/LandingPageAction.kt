@@ -19,6 +19,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
 import com.urbanairship.push.PushMessage
 import com.urbanairship.util.Clock
+import androidx.core.os.BundleCompat
 import com.urbanairship.util.UriUtils
 import java.util.UUID
 import kotlinx.coroutines.runBlocking
@@ -88,7 +89,7 @@ public class LandingPageAction(
     }
 
     override fun perform(arguments: ActionArguments): ActionResult {
-        val pushMessage: PushMessage? = arguments.metadata.getParcelable(ActionArguments.PUSH_MESSAGE_METADATA)
+        val pushMessage: PushMessage? = BundleCompat.getParcelable(arguments.metadata, ActionArguments.PUSH_MESSAGE_METADATA, PushMessage::class.java)
         val messageID = pushMessage?.sendId
         val args = LandingPageArgs.fromJson(arguments.value.toJsonValue(), allowListChecker)
 

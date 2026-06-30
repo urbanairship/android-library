@@ -19,6 +19,7 @@ import android.content.res.ColorStateList
 import android.content.res.Resources
 import android.graphics.Canvas
 import android.graphics.ColorFilter
+import android.graphics.PixelFormat
 import android.graphics.PorterDuff
 import android.graphics.Rect
 import android.graphics.Region
@@ -72,8 +73,9 @@ public open class DrawableWrapper : Drawable, Drawable.Callback {
         return drawable?.changingConfigurations ?: -1
     }
 
+    @Suppress("OVERRIDE_DEPRECATION")
     override fun setDither(dither: Boolean) {
-        drawable?.setDither(dither)
+        // setDither is deprecated and no longer honored by the platform; no-op.
     }
 
     override fun setFilterBitmap(filter: Boolean) {
@@ -112,8 +114,9 @@ public open class DrawableWrapper : Drawable, Drawable.Callback {
         return super.setVisible(visible, restart) || drawable?.setVisible(visible, restart) == true
     }
 
+    @Suppress("OVERRIDE_DEPRECATION", "DEPRECATION")
     override fun getOpacity(): Int {
-        return drawable?.opacity ?: 0
+        return drawable?.opacity ?: PixelFormat.TRANSLUCENT
     }
 
     override fun getTransparentRegion(): Region? {
@@ -166,11 +169,11 @@ public open class DrawableWrapper : Drawable, Drawable.Callback {
     }
 
     override fun setAutoMirrored(mirrored: Boolean) {
-        drawable?.let { DrawableCompat.setAutoMirrored(it, mirrored) }
+        drawable?.isAutoMirrored = mirrored
     }
 
     override fun isAutoMirrored(): Boolean {
-        return drawable?.let { DrawableCompat.isAutoMirrored(it) } ?: false
+        return drawable?.isAutoMirrored ?: false
     }
 
     override fun setTint(tint: Int) {

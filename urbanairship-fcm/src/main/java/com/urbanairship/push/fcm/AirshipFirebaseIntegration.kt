@@ -29,6 +29,7 @@ public object AirshipFirebaseIntegration {
             .processPush(FcmPushProvider::class.java, PushMessage(message.data))
             .execute(context) { pendingResult.setResult(null) }
 
+        @Suppress("UNCHECKED_CAST") // PendingResult<Void> implements Future<Void>; safe cast
         return pendingResult as Future<Void>
     }
 

@@ -80,8 +80,8 @@ internal data class ContactSubscriptionGroupItem(val item: Item.ContactSubscript
                     isChecked = isChecked(item.subscriptionId, component.scopes)
 
                     setOnCheckedChangeListener { _, isChecked ->
-                        if (adapterPosition != RecyclerView.NO_POSITION) {
-                            onCheckedChange(adapterPosition, component.scopes, isChecked)
+                        if (bindingAdapterPosition != RecyclerView.NO_POSITION) {
+                            onCheckedChange(bindingAdapterPosition, component.scopes, isChecked)
                         }
                     }
 

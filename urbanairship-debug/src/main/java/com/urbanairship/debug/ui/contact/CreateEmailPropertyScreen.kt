@@ -112,7 +112,7 @@ private fun ValueView(viewModel: EmailPropertiesViewModel) {
                 value = viewModel.stringValue,
                 onValueChange = { viewModel.stringValue = it.trim()},
                 label = { Text(text = "String") },
-                keyboardOptions = KeyboardOptions(autoCorrect = false)
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
             )
         }
         EmailPropertiesViewModel.Types.NUMBER -> {
@@ -122,7 +122,7 @@ private fun ValueView(viewModel: EmailPropertiesViewModel) {
                 onValueChange = { viewModel.numberValue = it.trim()},
                 label = { Text(text = "Number") },
                 keyboardOptions = KeyboardOptions(
-                    autoCorrect = false,
+                    autoCorrectEnabled = false,
                     keyboardType = KeyboardType.Number
                 )
             )
