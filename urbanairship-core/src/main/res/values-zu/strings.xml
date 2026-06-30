@@ -56,6 +56,7 @@
     <!-- General -->
     <string name="ua_refresh">Vuselela</string>
     <string name="ua_open">Vula</string>
+    <string name="ua_back">Okwedlule</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Linganisa</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Cha ngiyabonga</string>

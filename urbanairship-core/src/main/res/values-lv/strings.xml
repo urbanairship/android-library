@@ -57,6 +57,7 @@
     <!-- General -->
     <string name="ua_refresh">Atjaunot</string>
     <string name="ua_open">Atvērt</string>
+    <string name="ua_back">Iepriekšējais</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Likme</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Nē, paldies</string>

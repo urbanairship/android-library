@@ -58,6 +58,7 @@
     <!-- General -->
     <string name="ua_refresh">Obnoviť</string>
     <string name="ua_open">Otvorené</string>
+    <string name="ua_back">Späť</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Ohodnotiť</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Nie ďakujem</string>

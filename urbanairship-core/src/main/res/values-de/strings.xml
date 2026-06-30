@@ -56,6 +56,7 @@
     <!-- General -->
     <string name="ua_refresh">Aktualisierung</string>
     <string name="ua_open">Öffnen</string>
+    <string name="ua_back">Zurück</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Bewerten</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Nein Danke</string>

@@ -56,6 +56,7 @@
     <!-- General -->
     <string name="ua_refresh">Onyesha upya</string>
     <string name="ua_open">Fungua</string>
+    <string name="ua_back">Iliyopita</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Kadiria</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Hapana, Asante</string>
