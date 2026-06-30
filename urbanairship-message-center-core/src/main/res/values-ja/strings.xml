@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">リストを編集</string>
+    <string name="ua_leave_edit_mode">リストの編集を終了</string>
+    <string name="ua_announce_enter_edit_mode">メッセージリストを編集中</string>
+    <string name="ua_announce_leave_edit_mode">メッセージリストを表示中</string>
+    <string name="ua_mark_unread">未読としてマーク</string>
+    <string name="ua_mark_all_read">すべて既読にする</string>
+    <string name="ua_delete_all">すべて削除</string>
+    <string name="ua_description_mark_read">メッセージを既読としてマーク</string>
+    <string name="ua_description_mark_unread">メッセージを未読としてマーク</string>
+    <string name="ua_description_mark_all_read">すべてのメッセージを既読としてマーク</string>
+    <string name="ua_description_delete_all">すべてのメッセージを削除</string>
+    <string name="ua_description_delete">メッセージを削除</string>
+    <string name="ua_description_message_list_pane">メッセージリスト</string>
+    <string name="ua_description_message_pane">メッセージ内容</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="other">マークされた 

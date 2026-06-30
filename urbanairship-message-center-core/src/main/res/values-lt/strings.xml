@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">Redaguoti sąrašą</string>
+    <string name="ua_leave_edit_mode">Baigti redaguoti sąrašą</string>
+    <string name="ua_announce_enter_edit_mode">Redaguojamas pranešimų sąrašas</string>
+    <string name="ua_announce_leave_edit_mode">Rodomas pranešimų sąrašas</string>
+    <string name="ua_mark_unread">Pažymėti kaip neskaitytą</string>
+    <string name="ua_mark_all_read">Pažymėti visus kaip skaitytus</string>
+    <string name="ua_delete_all">Ištrinti viską</string>
+    <string name="ua_description_mark_read">Pažymėti pranešimą kaip skaitytą</string>
+    <string name="ua_description_mark_unread">Pažymėti pranešimą kaip neskaitytą</string>
+    <string name="ua_description_mark_all_read">Pažymėti visus pranešimus kaip skaitytus</string>
+    <string name="ua_description_delete_all">Ištrinti visus pranešimus</string>
+    <string name="ua_description_delete">Ištrinti pranešimą</string>
+    <string name="ua_description_message_list_pane">Pranešimų sąrašas</string>
+    <string name="ua_description_message_pane">Pranešimo turinys</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="one">Pažymėta 

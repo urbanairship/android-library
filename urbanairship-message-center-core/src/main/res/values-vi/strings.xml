@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">Chỉnh sửa danh sách</string>
+    <string name="ua_leave_edit_mode">Dừng chỉnh sửa danh sách</string>
+    <string name="ua_announce_enter_edit_mode">Đang chỉnh sửa danh sách tin nhắn</string>
+    <string name="ua_announce_leave_edit_mode">Đang xem danh sách tin nhắn</string>
+    <string name="ua_mark_unread">Đánh dấu chưa đọc</string>
+    <string name="ua_mark_all_read">Đánh dấu tất cả là đã đọc</string>
+    <string name="ua_delete_all">Xóa tất cả</string>
+    <string name="ua_description_mark_read">Đánh dấu tin nhắn là đã đọc</string>
+    <string name="ua_description_mark_unread">Đánh dấu tin nhắn là chưa đọc</string>
+    <string name="ua_description_mark_all_read">Đánh dấu tất cả tin nhắn là đã đọc</string>
+    <string name="ua_description_delete_all">Xóa tất cả tin nhắn</string>
+    <string name="ua_description_delete">Xóa tin nhắn</string>
+    <string name="ua_description_message_list_pane">Danh sách tin nhắn</string>
+    <string name="ua_description_message_pane">Nội dung tin nhắn</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="other">Đã đánh dấu 

@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">Edit daftar</string>
+    <string name="ua_leave_edit_mode">Hentikan pengeditan daftar</string>
+    <string name="ua_announce_enter_edit_mode">Mengedit daftar pesan</string>
+    <string name="ua_announce_leave_edit_mode">Melihat daftar pesan</string>
+    <string name="ua_mark_unread">Tandai belum dibaca</string>
+    <string name="ua_mark_all_read">Tandai semua sudah dibaca</string>
+    <string name="ua_delete_all">Hapus semua</string>
+    <string name="ua_description_mark_read">Tandai pesan sebagai sudah dibaca</string>
+    <string name="ua_description_mark_unread">Tandai pesan sebagai belum dibaca</string>
+    <string name="ua_description_mark_all_read">Tandai semua pesan sebagai sudah dibaca</string>
+    <string name="ua_description_delete_all">Hapus semua pesan</string>
+    <string name="ua_description_delete">Hapus pesan</string>
+    <string name="ua_description_message_list_pane">Daftar pesan</string>
+    <string name="ua_description_message_pane">Konten pesan</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="other">Menandai 

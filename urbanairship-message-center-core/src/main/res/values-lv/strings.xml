@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">Rediģēt sarakstu</string>
+    <string name="ua_leave_edit_mode">Pārtraukt saraksta rediģēšanu</string>
+    <string name="ua_announce_enter_edit_mode">Tiek rediģēts ziņojumu saraksts</string>
+    <string name="ua_announce_leave_edit_mode">Tiek rādīts ziņojumu saraksts</string>
+    <string name="ua_mark_unread">Atzīmēt kā nelasītu</string>
+    <string name="ua_mark_all_read">Atzīmēt visus kā lasītus</string>
+    <string name="ua_delete_all">Dzēst visu</string>
+    <string name="ua_description_mark_read">Atzīmēt ziņojumu kā lasītu</string>
+    <string name="ua_description_mark_unread">Atzīmēt ziņojumu kā nelasītu</string>
+    <string name="ua_description_mark_all_read">Atzīmēt visus ziņojumus kā lasītus</string>
+    <string name="ua_description_delete_all">Dzēst visus ziņojumus</string>
+    <string name="ua_description_delete">Dzēst ziņojumu</string>
+    <string name="ua_description_message_list_pane">Ziņojumu saraksts</string>
+    <string name="ua_description_message_pane">Ziņojuma saturs</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="zero">

@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">Lista szerkesztése</string>
+    <string name="ua_leave_edit_mode">Lista szerkesztésének leállítása</string>
+    <string name="ua_announce_enter_edit_mode">Üzenetlista szerkesztése</string>
+    <string name="ua_announce_leave_edit_mode">Üzenetlista megtekintése</string>
+    <string name="ua_mark_unread">Megjelölés olvasatlanként</string>
+    <string name="ua_mark_all_read">Összes megjelölése olvasottként</string>
+    <string name="ua_delete_all">Összes törlése</string>
+    <string name="ua_description_mark_read">Üzenet megjelölése olvasottként</string>
+    <string name="ua_description_mark_unread">Üzenet megjelölése olvasatlanként</string>
+    <string name="ua_description_mark_all_read">Összes üzenet megjelölése olvasottként</string>
+    <string name="ua_description_delete_all">Összes üzenet törlése</string>
+    <string name="ua_description_delete">Üzenet törlése</string>
+    <string name="ua_description_message_list_pane">Üzenetlista</string>
+    <string name="ua_description_message_pane">Üzenet tartalma</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="one">

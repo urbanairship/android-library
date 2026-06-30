@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">Hariri orodha</string>
+    <string name="ua_leave_edit_mode">Acha kuhariri orodha</string>
+    <string name="ua_announce_enter_edit_mode">Inahariri orodha ya ujumbe</string>
+    <string name="ua_announce_leave_edit_mode">Inaonyesha orodha ya ujumbe</string>
+    <string name="ua_mark_unread">Weka alama kama haijasomwa</string>
+    <string name="ua_mark_all_read">Weka zote alama kama zimesomwa</string>
+    <string name="ua_delete_all">Futa zote</string>
+    <string name="ua_description_mark_read">Weka ujumbe alama kama umesomwa</string>
+    <string name="ua_description_mark_unread">Weka ujumbe alama kama haujasomwa</string>
+    <string name="ua_description_mark_all_read">Weka jumbe zote alama kama zimesomwa</string>
+    <string name="ua_description_delete_all">Futa jumbe zote</string>
+    <string name="ua_description_delete">Futa ujumbe</string>
+    <string name="ua_description_message_list_pane">Orodha ya ujumbe</string>
+    <string name="ua_description_message_pane">Maudhui ya ujumbe</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="one">Imetia alama kuwa ujumbe 

@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">सूची संपादित करें</string>
+    <string name="ua_leave_edit_mode">सूची का संपादन रोकें</string>
+    <string name="ua_announce_enter_edit_mode">संदेश सूची का संपादन जारी है</string>
+    <string name="ua_announce_leave_edit_mode">संदेश सूची देखी जा रही है</string>
+    <string name="ua_mark_unread">अपठित के रूप में चिह्नित करें</string>
+    <string name="ua_mark_all_read">सभी को पढ़ा हुआ चिह्नित करें</string>
+    <string name="ua_delete_all">सभी हटाएं</string>
+    <string name="ua_description_mark_read">संदेश को पढ़ा हुआ चिह्नित करें</string>
+    <string name="ua_description_mark_unread">संदेश को अपठित चिह्नित करें</string>
+    <string name="ua_description_mark_all_read">सभी संदेशों को पढ़ा हुआ चिह्नित करें</string>
+    <string name="ua_description_delete_all">सभी संदेश हटाएं</string>
+    <string name="ua_description_delete">संदेश हटाएं</string>
+    <string name="ua_description_message_list_pane">संदेश सूची</string>
+    <string name="ua_description_message_pane">संदेश सामग्री</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="one">
