@@ -1008,8 +1008,6 @@ internal sealed class State(val type: Type): JsonSerializable {
         companion object {
             private const val IDENTIFIER = "identifier"
             private const val STATUS = "status"
-            private const val DATA = "data"
-
             private const val IDLE = "idle"
             private const val LOADING = "loading"
             private const val ERROR = "error"
@@ -1031,7 +1029,7 @@ internal sealed class State(val type: Type): JsonSerializable {
                 is Error -> jsonMapOf(
                     STATUS to ERROR,
                     IDENTIFIER to identifier,
-                    DATA to data
+                    ERROR to data
                 )
                 is Idle -> jsonMapOf(
                     STATUS to IDLE,
@@ -1039,8 +1037,7 @@ internal sealed class State(val type: Type): JsonSerializable {
                 )
                 is Loaded -> jsonMapOf(
                     STATUS to LOADED,
-                    IDENTIFIER to identifier,
-                    DATA to data
+                    IDENTIFIER to identifier
                 )
                 is Loading -> jsonMapOf(
                     STATUS to LOADING,

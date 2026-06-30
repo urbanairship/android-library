@@ -246,11 +246,10 @@ public class LayoutStateTest{
     }
 
     @Test
-    fun testAsyncViewLoadedJsonSerializationWithNullData() {
+    fun testAsyncViewLoadedJsonSerialization() {
         val expected = jsonMapOf(
             "status" to "loaded",
-            "identifier" to "async-1",
-            "data" to JsonValue.NULL
+            "identifier" to "async-1"
         )
         assertEquals(
             expected,
@@ -259,25 +258,11 @@ public class LayoutStateTest{
     }
 
     @Test
-    fun testAsyncViewLoadedJsonSerializationWithPayload() {
-        val payload = jsonMapOf("view" to jsonMapOf("type" to "label", "text" to "hi"))
-        val expected = jsonMapOf(
-            "status" to "loaded",
-            "identifier" to "async-1",
-            "data" to payload
-        )
-        assertEquals(
-            expected,
-            State.AsyncView.Loaded("async-1", payload.toJsonValue()).toJsonValue().requireMap()
-        )
-    }
-
-    @Test
     fun testAsyncViewErrorJsonSerializationTimeout() {
         val expected = jsonMapOf(
             "status" to "error",
             "identifier" to "async-1",
-            "data" to jsonMapOf("type" to "timeout")
+            "error" to jsonMapOf("type" to "timeout")
         )
         assertEquals(
             expected,
@@ -293,7 +278,7 @@ public class LayoutStateTest{
         val expected = jsonMapOf(
             "status" to "error",
             "identifier" to "async-1",
-            "data" to jsonMapOf("type" to "client_error")
+            "error" to jsonMapOf("type" to "client_error")
         )
         assertEquals(
             expected,
@@ -309,7 +294,7 @@ public class LayoutStateTest{
         val expected = jsonMapOf(
             "status" to "error",
             "identifier" to "async-1",
-            "data" to jsonMapOf(
+            "error" to jsonMapOf(
                 "type" to "server_error",
                 "http_status_code" to 502
             )
