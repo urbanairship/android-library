@@ -1,24 +1,25 @@
-name: Publish Docs
+name: Deploy Docs to GitHub Pages
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+# However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 on:
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
       version:
-        description: 'The tag to publish'
+        description: 'The tag/version to deploy to GitHub Pages'
         required: true
         type: string
 
   workflow_call:
     inputs:
       version:
-        description: 'The tag to publish'
+        description: 'The tag/version to deploy to GitHub Pages'
         required: true
         type: string
-    secrets:
-      GCP_SA_KEY:
-        description: 'The GCP service account key'
-        required: true
 
 jobs:
   prepare-docs:
@@ -26,37 +27,65 @@ jobs:
     with:
       version: ${{ inputs.version }}
 
-  upload-docs:
-    if: github.repository == 'urbanairship/android-library'
-    runs-on: ubuntu-latest
+  deploy-to-pages:
     needs: prepare-docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
     steps:
-      # Docs should already be built and uploaded at this point, but we still need
-      # this step in order for google-github-actions/auth to work in upload step.
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        with:
-          ref: refs/tags/${{ inputs.version }}
-
       - name: Download prepared docs
         uses: actions/download-artifact@v4
         with:
           name: packaged-docs-${{ inputs.version }}
           path: build/docs
 
-      - name: Setup GCP Auth
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      # Install gcloud, `setup-gcloud` automatically picks up authentication from `auth`.
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-
-      - name: Upload docs
+      - name: Extract documentation for GitHub Pages
         env:
           VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          gsutil cp "build/docs/${VERSION}-kdoc.tar.gz" \
-            "gs://ua-web-ci-prod-docs-transfer/libraries/android-kotlin/${VERSION}.tar.gz"
+          
+          DOC_PATH="build/docs/${VERSION}-kdoc.tar.gz"
+          
+          echo "📦 Processing documentation for GitHub Pages deployment"
+          
+          # Verify the documentation file exists
+          if [ ! -f "$DOC_PATH" ]; then
+            echo "❌ Error: Documentation artifact not found!"
+            echo "Expected: $DOC_PATH"
+            echo "Available files in build/docs:"
+            find build/docs -type f 2>/dev/null || echo "No build/docs directory found"
+            exit 1
+          fi
+          
+          echo "✅ Found documentation artifact: $DOC_PATH"
+          echo "📊 File size: $(du -h "$DOC_PATH" | cut -f1)"
+          
+          # Create a directory for extracted docs
+          mkdir -p ./pages-docs
+          
+          # Extract the tar.gz file
+          echo "📤 Extracting documentation..."
+          tar -xzf "$DOC_PATH" -C ./pages-docs
+          
+          # Verify extraction was successful
+          if [ -z "$(ls -A ./pages-docs)" ]; then
+            echo "❌ Error: Documentation extraction failed - directory is empty"
+            exit 1
+          fi
+          
+          # List contents to verify extraction
+          echo "✅ Successfully extracted documentation:"
+          echo "📂 Contents of ./pages-docs:"
+          ls -la ./pages-docs
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./pages-docs
+          keep_files: false
+          enable_jekyll: false
