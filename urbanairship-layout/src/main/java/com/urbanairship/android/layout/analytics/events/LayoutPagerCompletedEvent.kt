@@ -9,5 +9,5 @@ internal class InAppPagerCompletedEvent(
     override val data: ReportingEvent.PagerCompleteData
 ) : LayoutEvent {
 
-    override val eventType: EventType = EventType.IN_APP_PAGER_COMPLETED
+    override val eventType: EventType = EventType.LAYOUT_PAGER_COMPLETED
 }

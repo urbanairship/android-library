@@ -11,7 +11,7 @@ internal class InAppPageSwipeEvent @VisibleForTesting constructor(
     override val data: JsonSerializable
 ) : LayoutEvent {
 
-    override val eventType: EventType = EventType.IN_APP_PAGE_SWIPE
+    override val eventType: EventType = EventType.LAYOUT_PAGE_SWIPE
 
     constructor(eventData: ReportingEvent.PageSwipeData): this(data = eventData)
 }
