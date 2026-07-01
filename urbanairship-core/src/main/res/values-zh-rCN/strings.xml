@@ -55,6 +55,7 @@
     <!-- General -->
     <string name="ua_refresh">刷新</string>
     <string name="ua_open">打开</string>
+    <string name="ua_back">上一个</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">评价</string>
     <string name="ua_rate_app_action_default_rate_negative_button">不用了，谢谢</string>

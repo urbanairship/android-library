@@ -56,6 +56,7 @@
     <!-- General -->
     <string name="ua_refresh">Frissítés</string>
     <string name="ua_open">Megnyit</string>
+    <string name="ua_back">Előző</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Értékel</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Nem köszönöm</string>

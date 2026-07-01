@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">Uredi seznam</string>
+    <string name="ua_leave_edit_mode">Ustavi urejanje seznama</string>
+    <string name="ua_announce_enter_edit_mode">Urejanje seznama sporočil</string>
+    <string name="ua_announce_leave_edit_mode">Prikaz seznama sporočil</string>
+    <string name="ua_mark_unread">Označi kot neprebrano</string>
+    <string name="ua_mark_all_read">Označi vse kot prebrano</string>
+    <string name="ua_delete_all">Izbriši vse</string>
+    <string name="ua_description_mark_read">Označi sporočilo kot prebrano</string>
+    <string name="ua_description_mark_unread">Označi sporočilo kot neprebrano</string>
+    <string name="ua_description_mark_all_read">Označi vsa sporočila kot prebrana</string>
+    <string name="ua_description_delete_all">Izbriši vsa sporočila</string>
+    <string name="ua_description_delete">Izbriši sporočilo</string>
+    <string name="ua_description_message_list_pane">Seznam sporočil</string>
+    <string name="ua_description_message_pane">Vsebina sporočila</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="one">

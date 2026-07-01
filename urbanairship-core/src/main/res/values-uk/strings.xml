@@ -58,6 +58,7 @@
     <!-- General -->
     <string name="ua_refresh">Оновити</string>
     <string name="ua_open">Відктири</string>
+    <string name="ua_back">Назад</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Оцінити</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Ні, дякую</string>

@@ -56,6 +56,7 @@
     <!-- General -->
     <string name="ua_refresh">Uppdatera</string>
     <string name="ua_open">Öppna</string>
+    <string name="ua_back">Föregående</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Betygsätta</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Nej tack</string>

@@ -58,6 +58,7 @@
     <!-- General -->
     <string name="ua_refresh">לְרַעֲנֵן</string>
     <string name="ua_open">לִפְתוֹחַ</string>
+    <string name="ua_back">הקודם</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">ציון</string>
     <string name="ua_rate_app_action_default_rate_negative_button">לא תודה</string>

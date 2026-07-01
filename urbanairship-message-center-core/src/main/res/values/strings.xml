@@ -3,7 +3,6 @@
 
     <!-- Accessibility -->
 
-    <!-- TODO(m3-inbox): translate! -->
     <string name="ua_enter_edit_mode">Edit list</string>
     <string name="ua_leave_edit_mode">Stop editing list</string>
     <string name="ua_announce_enter_edit_mode">Editing message list</string>

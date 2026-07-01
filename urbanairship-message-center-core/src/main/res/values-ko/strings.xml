@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">목록 편집</string>
+    <string name="ua_leave_edit_mode">목록 편집 중지</string>
+    <string name="ua_announce_enter_edit_mode">메시지 목록 편집 중</string>
+    <string name="ua_announce_leave_edit_mode">메시지 목록 보는 중</string>
+    <string name="ua_mark_unread">읽지 않음으로 표시</string>
+    <string name="ua_mark_all_read">모두 읽음으로 표시</string>
+    <string name="ua_delete_all">모두 삭제</string>
+    <string name="ua_description_mark_read">메시지를 읽음으로 표시</string>
+    <string name="ua_description_mark_unread">메시지를 읽지 않음으로 표시</string>
+    <string name="ua_description_mark_all_read">모든 메시지를 읽음으로 표시</string>
+    <string name="ua_description_delete_all">모든 메시지 삭제</string>
+    <string name="ua_description_delete">메시지 삭제</string>
+    <string name="ua_description_message_list_pane">메시지 목록</string>
+    <string name="ua_description_message_pane">메시지 내용</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="other">메시지 

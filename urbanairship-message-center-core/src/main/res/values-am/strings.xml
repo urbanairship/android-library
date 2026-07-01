@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">ዝርዝር አርትዕ</string>
+    <string name="ua_leave_edit_mode">ዝርዝር ማርትዕን አቁም</string>
+    <string name="ua_announce_enter_edit_mode">የመልዕክት ዝርዝር በማርትዕ ላይ</string>
+    <string name="ua_announce_leave_edit_mode">የመልዕክት ዝርዝር በመመልከት ላይ</string>
+    <string name="ua_mark_unread">እንደ ያልተነበበ ምልክት አድርግ</string>
+    <string name="ua_mark_all_read">ሁሉንም እንደ ተነበበ ምልክት አድርግ</string>
+    <string name="ua_delete_all">ሁሉንም ሰርዝ</string>
+    <string name="ua_description_mark_read">መልዕክቱን እንደ ተነበበ ምልክት አድርግ</string>
+    <string name="ua_description_mark_unread">መልዕክቱን እንደ ያልተነበበ ምልክት አድርግ</string>
+    <string name="ua_description_mark_all_read">ሁሉንም መልዕክቶች እንደ ተነበቡ ምልክት አድርግ</string>
+    <string name="ua_description_delete_all">ሁሉንም መልዕክቶች ሰርዝ</string>
+    <string name="ua_description_delete">መልዕክት ሰርዝ</string>
+    <string name="ua_description_message_list_pane">የመልዕክት ዝርዝር</string>
+    <string name="ua_description_message_pane">የመልዕክት ይዘት</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="one">

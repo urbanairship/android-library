@@ -1,6 +1,21 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <!-- Accessibility -->
+    <string name="ua_enter_edit_mode">แก้ไขรายการ</string>
+    <string name="ua_leave_edit_mode">หยุดแก้ไขรายการ</string>
+    <string name="ua_announce_enter_edit_mode">กำลังแก้ไขรายการข้อความ</string>
+    <string name="ua_announce_leave_edit_mode">กำลังดูรายการข้อความ</string>
+    <string name="ua_mark_unread">ทำเครื่องหมายเป็นยังไม่ได้อ่าน</string>
+    <string name="ua_mark_all_read">ทำเครื่องหมายทั้งหมดว่าอ่านแล้ว</string>
+    <string name="ua_delete_all">ลบทั้งหมด</string>
+    <string name="ua_description_mark_read">ทำเครื่องหมายข้อความว่าอ่านแล้ว</string>
+    <string name="ua_description_mark_unread">ทำเครื่องหมายข้อความว่ายังไม่ได้อ่าน</string>
+    <string name="ua_description_mark_all_read">ทำเครื่องหมายข้อความทั้งหมดว่าอ่านแล้ว</string>
+    <string name="ua_description_delete_all">ลบข้อความทั้งหมด</string>
+    <string name="ua_description_delete">ลบข้อความ</string>
+    <string name="ua_description_message_list_pane">รายการข้อความ</string>
+    <string name="ua_description_message_pane">เนื้อหาข้อความ</string>
+
     <!-- Read aloud by screen readers to confirm that selected messages have been marked as read. -->
     <plurals name="ua_mc_description_marked_read">
         <item quantity="other">ทำเครื่องหมาย 

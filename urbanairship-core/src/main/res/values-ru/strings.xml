@@ -58,6 +58,7 @@
     <!-- General -->
     <string name="ua_refresh">Обновить</string>
     <string name="ua_open">Открыть</string>
+    <string name="ua_back">Назад</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">Оценить</string>
     <string name="ua_rate_app_action_default_rate_negative_button">Нет, спасибо</string>

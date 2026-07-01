@@ -56,6 +56,7 @@
     <!-- General -->
     <string name="ua_refresh">አድስ</string>
     <string name="ua_open">ክፈት</string>
+    <string name="ua_back">ወደኋላ</string>
     <!-- Rate App Action -->
     <string name="ua_rate_app_action_default_rate_positive_button">ደረጃ ይስጡ</string>
     <string name="ua_rate_app_action_default_rate_negative_button">አይ አመሰግናለሁ</string>
