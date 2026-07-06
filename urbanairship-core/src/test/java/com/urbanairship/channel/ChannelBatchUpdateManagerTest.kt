@@ -381,6 +381,51 @@ public class ChannelBatchUpdateManagerTest {
     }
 
     @Test
+    public fun testAddUpdateOnCompleteFiresAfterWrite(): TestResult = runTest {
+        // onAfterWrite must fire inside the serial queue after writeInternal, not synchronously
+        // when addUpdate returns. Verified by: after hasPending() drains the queue, the
+        // hook has fired and the data is readable.
+        val set = LiveUpdateMutation.Set("event-a", 100, 100)
+        var callbackFired = false
+        manager.onAfterWrite = { callbackFired = true }
+
+        manager.addUpdate(liveUpdates = listOf(set))
+
+        assertTrue(manager.hasPending())
+        assertTrue(callbackFired)
+    }
+
+    @Test
+    public fun testLiveUpdateBurstNoneOrphaned(): TestResult = runTest {
+        // Regression: with the old fire-and-forget addUpdate, a rapid burst of addUpdate +
+        // updateRegistration calls could orphan SETs if a job ran and finished between the
+        // KEEP dispatch and the async write completing. The onAfterWrite hook restores the
+        // happens-before guarantee: dispatch only fires after the write commits.
+        val sets = (1..5).map { i -> LiveUpdateMutation.Set("event-$i", i.toLong(), i.toLong()) }
+
+        val uploadedLiveUpdates = mutableListOf<LiveUpdateMutation>()
+        coEvery { mockApiClient.update(any(), any(), any(), any(), any()) } coAnswers {
+            @Suppress("UNCHECKED_CAST")
+            uploadedLiveUpdates.addAll(arg<List<LiveUpdateMutation>>(4))
+            RequestResult(status = 200, value = null, body = null, headers = null)
+        }
+        coEvery { mockAudienceOverridesProvider.recordChannelUpdate(any(), any(), any(), any()) } just runs
+
+        var dispatchCount = 0
+        manager.onAfterWrite = { dispatchCount++ }
+        sets.forEach { set ->
+            manager.addUpdate(liveUpdates = listOf(set))
+        }
+
+        while (manager.hasPending()) {
+            manager.uploadPending("channel")
+        }
+
+        assertEquals(sets.size, dispatchCount)
+        assertEquals(sets.toSet(), uploadedLiveUpdates.toSet())
+    }
+
+    @Test
     public fun testAddDuringInFlightUploadIsNotLost(): TestResult = runTest {
         // Regression test for the parameter-shadowing bug in popAudienceUpdates, which
         // overwrote the entire pending store with the (now-uploaded) snapshot after every

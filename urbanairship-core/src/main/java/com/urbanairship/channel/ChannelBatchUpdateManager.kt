@@ -43,6 +43,15 @@ internal class ChannelBatchUpdateManager(
         }
     }
 
+    /**
+     * Runs inside the serial queue immediately after each committed write (and on the empty
+     * no-op path). This is where the registration job is dispatched, so the dispatch always
+     * happens-after the pending mutation is durable — restoring the ordering that synchronous
+     * writes guaranteed before the [AsyncSerialQueue] migration. Wired once by the owner
+     * (see `AirshipChannel`) so individual [addUpdate] call sites can't get the ordering wrong.
+     */
+    var onAfterWrite: () -> Unit = {}
+
     internal suspend fun hasPending(): Boolean = storage.hasPending()
 
     internal fun addUpdate(
@@ -52,6 +61,7 @@ internal class ChannelBatchUpdateManager(
         liveUpdates: List<LiveUpdateMutation>? = null,
     ) {
         if (tags.isNullOrEmpty() && attributes.isNullOrEmpty() && subscriptions.isNullOrEmpty() && liveUpdates.isNullOrEmpty()) {
+            onAfterWrite()
             return
         }
         storage.add(
@@ -60,7 +70,8 @@ internal class ChannelBatchUpdateManager(
                 attributes = attributes,
                 subscriptions = subscriptions,
                 liveUpdates = liveUpdates
-            )
+            ),
+            onAfterWrite
         )
     }
 
@@ -148,12 +159,13 @@ internal class ChannelBatchUpdateManager(
             queue.enqueue { migrateInternal() }
         }
 
-        /** Fire-and-forget append. */
-        fun add(update: AudienceUpdate) {
+        /** Fire-and-forget append; [onComplete] runs inside the queue after the write commits. */
+        fun add(update: AudienceUpdate, onComplete: () -> Unit) {
             queue.enqueue {
                 val list = readInternal().toMutableList()
                 list.add(update)
                 writeInternal(list)
+                onComplete()
             }
         }
 

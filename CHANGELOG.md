@@ -4,6 +4,15 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.8.2 - June 30, 2026
+
+Patch release that improves the reliability of Live Update registrations and enhances reporting when launching Scenes from push notifications using the new Scene Action.
+Apps that make use of Live Updates or the new Scene Action should update to this version or newer.
+
+### Changes
+- Fixed a potential race condition where Live Update mutations could be orphaned if channel registration ran before the mutation was committed to storage
+- Scenes and landing pages triggered via `SceneAction` and `LandingPageAction` now emit v2 analytics event IDs with the correct source, campaigns, and send metadata.
+
 ## Version 20.8.1 - June 22, 2026
 
 Patch release that fixes a couple of Scene issues. Apps should update to this version or newer if using buttons in Scenes that launch a deep link and dismiss the Scene, or if using Scenes launched from push notifications.
