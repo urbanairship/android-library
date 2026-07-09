@@ -4,6 +4,15 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.9.0 - July 9, 2026
+
+Minor release that adds a new `AirshipEmbeddedSelection` for controlling which content is displayed in embedded views and includes a couple of Scene rendering improvements.
+
+### Changes
+- Add `AirshipEmbeddedSelection` for controlling which content is displayed in embedded views
+- Improved Scene rendering for a couple of edge cases involving horizontal/vertical containers
+- Removed orientation locking for Scenes on tablets and other large-screen devices (`sw >= 600dp`), due to inconsistent support across Android versions and manufacturers
+
 ## Version 20.8.2 - June 30, 2026
 
 Patch release that improves the reliability of Live Update registrations and enhances reporting when launching Scenes from push notifications using the new Scene Action.
