@@ -34,6 +34,7 @@ import com.urbanairship.android.layout.util.Factory
 import com.urbanairship.android.layout.util.ImageCache
 import com.urbanairship.android.layout.util.getActivity
 import com.urbanairship.app.ActivityMonitor
+import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.webkit.AirshipWebViewClient
 import java.lang.ref.WeakReference
@@ -52,11 +53,21 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
 
-private object BannerViewModelStore : ViewModelStore()
+/**
+ * View model stores, keyed by banner view instance ID, so that banner state is retained across
+ * activity recreation (e.g. rotation) and only cleared when a banner's display actually finishes.
+ */
+private object BannerViewModelStores {
+    private val stores = mutableMapOf<String, ViewModelStore>()
 
-private object BannerViewModelStoreOwner : ViewModelStoreOwner {
-    override val viewModelStore: ViewModelStore
-        get() = BannerViewModelStore
+    fun owner(viewInstanceId: String): ViewModelStoreOwner = object : ViewModelStoreOwner {
+        override val viewModelStore: ViewModelStore
+            get() = stores.getOrPut(viewInstanceId) { ViewModelStore() }
+    }
+
+    fun clear(viewInstanceId: String) {
+        stores.remove(viewInstanceId)?.clear()
+    }
 }
 
 /** @hide */
@@ -83,6 +94,7 @@ public class BannerLayout(
 
     private var currentView: WeakReference<ThomasBannerView>? = null
     private var displayTimer: DisplayTimer? = null
+    private var applicationListener: ApplicationListener? = null
 
     private val _isVisible = MutableStateFlow(false)
 
@@ -129,13 +141,19 @@ public class BannerLayout(
 
         activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
-                // Clean up the view model store when the activity is destroyed.
-                onDisplayFinished()
                 activity.lifecycle.removeObserver(this)
+                // Tear down this instance's listeners and jobs when the hosting activity is
+                // destroyed. The view model store entry is intentionally left intact, so that
+                // banner state is restored if the banner is displayed again (e.g. after a
+                // configuration change).
+                tearDown()
             }
         })
 
-        activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
+        // Remove any listener added by a previous makeView call (e.g. after a configuration
+        // change), so that repeated calls don't stack duplicate listeners.
+        applicationListener?.let(activityMonitor::removeApplicationListener)
+        applicationListener = object : SimpleApplicationListener() {
             override fun onForeground(time: Long) {
                 super.onForeground(time)
                 reporter.onVisibilityChanged(isVisible.value, true)
@@ -145,7 +163,7 @@ public class BannerLayout(
                 super.onBackground(time)
                 reporter.onVisibilityChanged(isVisible.value, false)
             }
-        })
+        }.also(activityMonitor::addApplicationListener)
 
         val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
             activity,
@@ -155,7 +173,7 @@ public class BannerLayout(
             getPlacement()?.shouldIgnoreSafeArea() ?: false
         )
 
-        val viewModelProvider = ViewModelProvider(BannerViewModelStoreOwner)
+        val viewModelProvider = ViewModelProvider(BannerViewModelStores.owner(viewInstanceId))
         val viewModel = viewModelProvider[viewInstanceId, LayoutViewModel::class.java]
 
         displayTimer = timer
@@ -209,9 +227,21 @@ public class BannerLayout(
         }
     }
 
-    /** Removes the banner from the pending queue, without reporting. */
+    /** Removes the banner from the pending queue, without reporting, and finishes the display. */
     private fun dismiss() {
         bannerViewManager.dismiss(viewInstanceId)
+        onDisplayFinished()
+    }
+
+    /**
+     * Dismisses the banner after its view failed to be created, so that it doesn't block other
+     * pending banners.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun dismissFromViewFailure() {
+        dismiss()
     }
 
     /**
@@ -241,8 +271,15 @@ public class BannerLayout(
     @MainThread
     private fun onDisplayFinished() {
         UALog.v("Banner finished displaying! $viewInstanceId")
+        tearDown()
+        BannerViewModelStores.clear(viewInstanceId)
+    }
+
+    @MainThread
+    private fun tearDown() {
+        applicationListener?.let(activityMonitor::removeApplicationListener)
+        applicationListener = null
         layoutScope.cancel()
-        BannerViewModelStore.clear()
     }
 
     private fun observeLayoutEvents(events: Flow<LayoutEvent>) = layoutScope.launch {

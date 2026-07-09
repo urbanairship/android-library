@@ -93,9 +93,30 @@ public class BannerPlacementTest {
 
         assertEquals(HorizontalPosition.CENTER, placement.position.horizontal)
         assertEquals(VerticalPosition.BOTTOM, placement.position.vertical)
-        assertFalse(placement.swipeToDismiss)
+        assertTrue(placement.swipeToDismiss)
         assertEquals(BannerAnimation.DEFAULT, placement.animation)
         assertNull(placement.shadow)
+    }
+
+    @Test
+    public fun testParsingSwipeToDismissDisabled() {
+        val json = """
+            {
+              "size": {
+                "width": "100%",
+                "height": "auto"
+              },
+              "position": {
+                "horizontal": "center",
+                "vertical": "bottom"
+              },
+              "swipe_to_dismiss": false
+            }
+        """.trimIndent()
+
+        val placement = BannerPlacement.fromJson(JsonValue.parseString(json))
+
+        assertFalse(placement.swipeToDismiss)
     }
 
     @Test

@@ -16,7 +16,7 @@ public class BannerPlacement public constructor(
     public val border: Border?,
     public val backgroundColor: Color?,
     public val animation: BannerAnimation = BannerAnimation.DEFAULT,
-    public val swipeToDismiss: Boolean = false,
+    public val swipeToDismiss: Boolean = true,
     public val shadow: Shadow? = null
 ) : SafeAreaAware {
 
@@ -70,7 +70,7 @@ public class BannerPlacement public constructor(
                 backgroundColor = content[KEY_BACKGROUND]?.let(Color::fromJson),
                 animation = content[KEY_ANIMATION]?.let(BannerAnimation::fromJson)
                     ?: BannerAnimation.DEFAULT,
-                swipeToDismiss = content.opt(KEY_SWIPE_TO_DISMISS).getBoolean(false),
+                swipeToDismiss = content.opt(KEY_SWIPE_TO_DISMISS).getBoolean(true),
                 shadow = shadow
             )
         }

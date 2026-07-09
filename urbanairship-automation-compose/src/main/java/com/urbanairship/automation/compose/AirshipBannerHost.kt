@@ -142,6 +142,10 @@ private fun BannerContent(
     }
     if (view == null) {
         UALog.e { "Failed to create banner view for instance: \"${layout.viewInstanceId}\"" }
+        // Dismiss the failed banner, so that it doesn't block other pending banners.
+        LaunchedEffect(layout.viewInstanceId) {
+            layout.dismissFromViewFailure()
+        }
         return
     }
 
@@ -283,22 +287,21 @@ private fun BannerContent(
                     scope.launch { dragOffset.snapTo(newOffset) }
                 },
                 orientation = swipeAxis,
-                enabled = (placement?.swipeToDismiss ?: false) && !isDismissing,
+                enabled = (placement?.swipeToDismiss ?: true) && !isDismissing,
                 onDragStarted = { isDragging = true },
                 onDragStopped = { velocity ->
                     isDragging = false
 
-                    val range = when (swipeAxis) {
-                        Orientation.Vertical -> hostSizeProvider().height
-                        Orientation.Horizontal -> hostSizeProvider().width
-                    }
+                    val bannerExtent = frameDistance()
                     val offset = dragOffset.value
-                    val dragPercent = if (range > 0) abs(offset) / range else 0f
+                    val dragPercent = if (bannerExtent > 0) abs(offset) / bannerExtent else 0f
                     val movedTowardDismiss = offset * dismissDirection > 0
+                    // Only treat flings toward the dismiss edge as dismiss flings.
+                    val isDismissFling = velocity * dismissDirection >= minFlingVelocity
 
                     val shouldDismiss = movedTowardDismiss && (
                         dragPercent >= IDLE_MIN_DRAG_PERCENT ||
-                        (abs(velocity) > minFlingVelocity && dragPercent > FLING_MIN_DRAG_PERCENT)
+                        (isDismissFling && dragPercent > FLING_MIN_DRAG_PERCENT)
                     )
 
                     if (shouldDismiss) {
@@ -333,14 +336,15 @@ private fun BannerPlacement?.dismissDirection(isRtl: Boolean): Float =
     }
 
 /**
- * The percent of the host's height (or width, for horizontal swipes) that a banner must be
- * dragged before it is dismissed when released with a velocity below the minimum fling velocity.
+ * The percent of the banner frame's height (or width, for horizontal swipes) that a banner must
+ * be dragged before it is dismissed when released with a velocity below the minimum fling
+ * velocity.
  */
 private const val IDLE_MIN_DRAG_PERCENT = .4f
 
 /**
- * The percent of the host's height (or width, for horizontal swipes) that a banner must be
- * dragged before it is dismissed when released with a velocity above the minimum fling velocity.
+ * The percent of the banner frame's height (or width, for horizontal swipes) that a banner must
+ * be dragged before it is dismissed when released with a fling velocity toward the dismiss edge.
  */
 private const val FLING_MIN_DRAG_PERCENT = .1f
 
