@@ -273,6 +273,10 @@ public class ModalActivity : AppCompatActivity() {
     }
 
     private fun setOrientationLock(placement: ModalPlacement) {
+        // Large screens (sw >= 600dp) don't reliably honor requestedOrientation.
+        // Android 16+ (API 36) explicitly ignores it on large screens by design.
+        // https://developer.android.com/about/versions/16/behavior-changes-16#ignore-orientation
+        if (resources.configuration.smallestScreenWidthDp >= 600) return
         try {
             if (placement.orientationLock != null) {
                 requestedOrientation = if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O) {
