@@ -66,6 +66,7 @@ import com.urbanairship.android.layout.property.ViewType.SCORE_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.SCORE_TOGGLE_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.SCROLL_LAYOUT
 import com.urbanairship.android.layout.property.ViewType.STACK_IMAGE_BUTTON
+import com.urbanairship.android.layout.property.ViewType.STACK_IMAGE_VIEW
 import com.urbanairship.android.layout.property.ViewType.STATE_CONTROLLER
 import com.urbanairship.android.layout.property.ViewType.STORY_INDICATOR
 import com.urbanairship.android.layout.property.ViewType.TEXT_INPUT
@@ -137,6 +138,7 @@ public sealed class ViewInfo : View {
                 SCORE_CONTROLLER -> ScoreControllerInfo(json)
                 SCORE_TOGGLE_LAYOUT -> ScoreToggleLayoutInfo(json)
                 STACK_IMAGE_BUTTON -> StackImageButtonInfo(json)
+                STACK_IMAGE_VIEW -> StackImageViewInfo(json)
                 VIDEO_CONTROLLER -> VideoControllerInfo(json)
                 UNKNOWN -> throw JsonException("Unknown view type! '${json.requireField<String>("type")}'")
             }
@@ -819,6 +821,19 @@ internal sealed interface StackItemInfo {
             }
         }
     }
+}
+
+/**
+ * Non-interactive visual counterpart to [StackImageButtonInfo].
+ * Used for decorative elements, like a banner nub.
+ */
+internal class StackImageViewInfo(
+    json: JsonMap
+) : ViewInfo(), View by view(json), Accessible by accessible(json),
+    Identifiable by identifiable(json) {
+    val items = json.requireField<JsonList>("items").map { StackItemInfo.fromJson(it) }
+    val accessibilityActions = json.optionalList("accessibility_actions")
+        ?.let { AccessibilityAction.fromList(it) }
 }
 
 
