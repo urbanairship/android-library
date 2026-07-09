@@ -8,10 +8,12 @@ import com.urbanairship.android.layout.property.PresentationType
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.optionalField
 
 public class BannerPresentation public constructor(
     public val defaultPlacement: BannerPlacement,
-    public val durationMs: Int,
+    /** Auto-dismiss duration, in milliseconds, or `null` if the banner should not auto-dismiss. */
+    public val durationMs: Long?,
     public val placementSelectors: List<BannerPlacementSelector>?
 ) : BasePresentation(PresentationType.BANNER) {
 
@@ -34,20 +36,25 @@ public class BannerPresentation public constructor(
     }
 
     public companion object {
+        private const val KEY_DURATION_SECONDS = "duration_seconds"
         private const val KEY_DURATION_MILLISECONDS = "duration_milliseconds"
         private const val KEY_PLACEMENT_SELECTORS = "placement_selectors"
         private const val KEY_DEFAULT_PLACEMENT = "default_placement"
-
-        private const val DEFAULT_DURATION = 7000
 
         @JvmStatic
         @Throws(JsonException::class)
         public fun fromJson(json: JsonValue): BannerPresentation {
             val content = json.requireMap()
 
+            // Prefer duration_seconds, falling back to the legacy duration_milliseconds.
+            // If neither is present, the banner will not auto-dismiss.
+            val durationMs = content.optionalField<Double>(KEY_DURATION_SECONDS)
+                ?.let { (it * 1000).toLong() }
+                ?: content.optionalField<Long>(KEY_DURATION_MILLISECONDS)
+
             return BannerPresentation(
                 defaultPlacement = BannerPlacement.fromJson(content.require(KEY_DEFAULT_PLACEMENT)),
-                durationMs = content.opt(KEY_DURATION_MILLISECONDS).getInt(DEFAULT_DURATION),
+                durationMs = durationMs,
                 placementSelectors = content[KEY_PLACEMENT_SELECTORS]
                     ?.requireList()
                     ?.let(BannerPlacementSelector::fromJsonList))
