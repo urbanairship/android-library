@@ -29,6 +29,7 @@ import com.urbanairship.messagecenter.ui.widget.MessageWebView
 import com.urbanairship.messagecenter.ui.widget.MessageWebViewClient
 import com.urbanairship.messagecenter.util.getActivity
 import com.urbanairship.webkit.AirshipWebChromeClient
+import kotlinx.coroutines.Job
 
 /** A `WebView` configured to display Airship Message Center message content. */
 public class MessageView @JvmOverloads constructor(
@@ -59,12 +60,28 @@ public class MessageView @JvmOverloads constructor(
     public var showEmptyView: Boolean = false
 
     private var message: Message? = null
-    private var displayedMessageId: String? = null
 
     internal var analyticsFactory: ((onDismissed: () -> Unit) -> ThomasListenerInterface?)? = null
     internal var storageFactory: (() -> LayoutDataStorage?)? = null
-    private var isDismissReported = false
-    private var currentDisplayArgs: DisplayArgs? = null
+
+    /** Tracks the collector job from the most recent `bind()` call, so a rebind can cancel it. */
+    internal var activeBindingJob: Job? = null
+
+    /**
+     * State for the currently displayed native message, if any. Scoped to a single message so
+     * that a stale/late callback belonging to a previous message (e.g. the native layout's own
+     * dismiss action, which is debounced and can fire after a new message has started rendering)
+     * can recognize it's no longer current instead of corrupting the new message's state.
+     */
+    private class NativeDisplay(
+        val messageId: String,
+        val displayArgs: DisplayArgs,
+    ) {
+        /** Whether the native layout itself already reported its own dismissal. */
+        var isDismissReported = false
+    }
+
+    private var nativeDisplay: NativeDisplay? = null
 
     init {
         inflate(context, R.layout.ua_view_message, this)
@@ -74,13 +91,19 @@ public class MessageView @JvmOverloads constructor(
     private var error: Int? = null
 
     private fun createDisplayArgs(layout: LayoutInfo): DisplayArgs? {
-        if (message?.contentType !is Message.ContentType.Native) {
+        val message = message ?: return null
+        if (message.contentType !is Message.ContentType.Native) {
             return null
         }
+        val messageId = message.id
 
         val analytics = analyticsFactory?.invoke {
-            isDismissReported = true
-            listener?.onCloseMessage()
+            // Guard against a stale/late callback: if a different message has since become
+            // current, this dismiss no longer applies to it.
+            if (nativeDisplay?.messageId == messageId) {
+                nativeDisplay?.isDismissReported = true
+                listener?.onCloseMessage()
+            }
         } ?: return null
 
         return DisplayArgs(
@@ -149,6 +172,10 @@ public class MessageView @JvmOverloads constructor(
                 }
 
                 message = state.message
+                // Any previous native display is no longer current. It's only re-populated
+                // below once a new one fully succeeds, so a failed transition can never leave
+                // a stale/mismatched display lingering under the new message's identity.
+                nativeDisplay = null
 
                 when(val content = state.content) {
                     is MessageViewState.MessageContent.Content.Html -> {
@@ -177,47 +204,48 @@ public class MessageView @JvmOverloads constructor(
                         )
                         views.showMessage(true)
                         listener?.onMessageLoaded(state.message)
-                        currentDisplayArgs = displayArgs
+                        nativeDisplay = NativeDisplay(messageId = state.message.id, displayArgs = displayArgs)
                     }
                 }
-
-                displayedMessageId = state.message.id
-
             }
             is MessageViewState.Empty -> {
                 message = null
+                nativeDisplay = null
                 views.showEmpty()
             }
             is MessageViewState.Error -> {
                 message = null
+                nativeDisplay = null
                 views.showError(state.error)
                 listener?.onMessageLoadError(state.error)
             }
             is MessageViewState.Loading -> {
                 message = null
+                nativeDisplay = null
                 views.showProgress()
             }
         }
     }
 
     internal fun onDismissed() {
-        val message = message ?: return
-        if (message.contentType !is Message.ContentType.Native) {
-            return
-        }
-        if (isDismissReported) {
-            ThomasLayoutViewFactory.clear()
-            isDismissReported = false
-            return
-        }
+        // No active native display -- either there isn't one, or this has already run for it.
+        // Consuming it here is what makes repeat calls a no-op.
+        val display = nativeDisplay ?: return
+        nativeDisplay = null
 
-        currentDisplayArgs?.listener?.onReportingEvent(
-            event = ReportingEvent.Dismiss(
-                data = ReportingEvent.DismissData.UserDismissed,
-                displayTime = ThomasLayoutViewFactory.calculateDisplayTime(message.id),
-                context = LayoutData.EMPTY
+        // If the native layout already reported its own dismissal, reporting again here would
+        // double-count the same dismissal. We only need to report dismissal here if the message
+        // is being dismissed from outside the displayed scene, because that would not be reported
+        // otherwise.
+        if (!display.isDismissReported) {
+            display.displayArgs.listener.onReportingEvent(
+                event = ReportingEvent.Dismiss(
+                    data = ReportingEvent.DismissData.UserDismissed,
+                    displayTime = ThomasLayoutViewFactory.calculateDisplayTime(display.messageId),
+                    context = LayoutData.EMPTY
+                )
             )
-        )
+        }
 
         ThomasLayoutViewFactory.clear()
         views.nativeContainer.removeAllViews()
@@ -247,7 +275,7 @@ public class MessageView @JvmOverloads constructor(
         val root: View,
         val shouldShowEmptyView: () -> Boolean,
         val webView: MessageWebView = root.findViewById(R.id.message),
-        val nativeContainer: FrameLayout = root.findViewById<FrameLayout>(R.id.native_container),
+        val nativeContainer: FrameLayout = root.findViewById(R.id.native_container),
         val progressBar: View = root.findViewById(R.id.progress),
         val errorPage: View = root.findViewById(R.id.error),
         val errorMessage: TextView = root.findViewById(R.id.error_text),
