@@ -22,6 +22,7 @@ import com.urbanairship.android.layout.property.Size.DimensionType.AUTO
 import com.urbanairship.android.layout.property.Size.DimensionType.PERCENT
 import com.urbanairship.android.layout.ui.EmbeddedLayout
 import com.urbanairship.embedded.AirshipEmbeddedInfo
+import com.urbanairship.embedded.AirshipEmbeddedSelection
 import com.urbanairship.embedded.EmbeddedViewManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -36,9 +37,25 @@ import kotlin.math.round
 @Composable
 public fun rememberAirshipEmbeddedViewState(
     embeddedId: String,
-    comparator: Comparator<AirshipEmbeddedInfo>? = null
+    selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority
 ): AirshipEmbeddedViewState {
-    return rememberAirshipEmbeddedViewState(embeddedId, comparator, EmbeddedViewManager)
+    return rememberAirshipEmbeddedViewState(embeddedId, selection, EmbeddedViewManager)
+}
+
+/**
+ * Creates a [AirshipEmbeddedViewState] that can be used to manage the state of an embedded view.
+ */
+@Deprecated("Use rememberAirshipEmbeddedViewState with AirshipEmbeddedSelection instead.")
+@Composable
+public fun rememberAirshipEmbeddedViewState(
+    embeddedId: String,
+    comparator: Comparator<AirshipEmbeddedInfo>?
+): AirshipEmbeddedViewState {
+    val selection = comparator
+        ?.let { AirshipEmbeddedSelection.ByComparator(it) }
+        ?: AirshipEmbeddedSelection.Priority
+
+    return rememberAirshipEmbeddedViewState(embeddedId, selection, EmbeddedViewManager)
 }
 
 /** State holder for [AirshipEmbeddedView] content. */
@@ -100,17 +117,17 @@ public class AirshipEmbeddedViewState(
 @Composable
 internal fun rememberAirshipEmbeddedViewState(
     embeddedId: String,
-    comparator: Comparator<AirshipEmbeddedInfo>?,
+    selection: AirshipEmbeddedSelection,
     embeddedViewManager: AirshipEmbeddedViewManager,
 ): AirshipEmbeddedViewState {
     val context = LocalContext.current
     val state = remember { AirshipEmbeddedViewState(embeddedId) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(embeddedId, comparator) {
+    LaunchedEffect(embeddedId, selection) {
         // Collect display requests and update the current layout state.
         withContext(Dispatchers.Default) {
-            embeddedViewManager.displayRequests(embeddedId, comparator, scope)
+            embeddedViewManager.displayRequests(embeddedId, selection, scope)
                 .map { request ->
                     val next = request.next
                     if (next == null) {

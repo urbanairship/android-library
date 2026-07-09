@@ -7,6 +7,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.embedded.AirshipEmbeddedInfo
+import com.urbanairship.embedded.AirshipEmbeddedSelection
 import com.urbanairship.json.JsonMap
 import java.util.UUID
 import kotlinx.coroutines.CoroutineScope
@@ -70,9 +71,24 @@ public interface AirshipEmbeddedViewManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun displayRequests(
         embeddedViewId: String,
-        comparator: Comparator<AirshipEmbeddedInfo>? = null,
+        selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
         scope: CoroutineScope
     ): Flow<EmbeddedDisplayRequestResult>
+
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @Deprecated("Use displayRequests with AirshipEmbeddedSelection instead.")
+    public fun displayRequests(
+        embeddedViewId: String,
+        comparator: Comparator<AirshipEmbeddedInfo>?,
+        scope: CoroutineScope
+    ): Flow<EmbeddedDisplayRequestResult> {
+        return displayRequests(
+            embeddedViewId = embeddedViewId,
+            selection = if (comparator != null) AirshipEmbeddedSelection.ByComparator(comparator) else AirshipEmbeddedSelection.Priority,
+            scope = scope
+        )
+    }
 }
 
 /** @hide */

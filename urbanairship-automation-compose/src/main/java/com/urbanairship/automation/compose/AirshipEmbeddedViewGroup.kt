@@ -9,6 +9,30 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.urbanairship.embedded.AirshipEmbeddedInfo
+import com.urbanairship.embedded.AirshipEmbeddedSelection
+
+/**
+ * A container that allows all embedded content for the given [embeddedId]
+ * to be displayed using the provided [content] composable.
+ *
+ * @param embeddedId The embedded ID.
+ * @param modifier The modifier to be applied to the layout.
+ * @param selection The [AirshipEmbeddedSelection] that controls how instances are ordered.
+ * @param content The `Composable` that will display the list of embedded view content.
+ */
+@Composable
+public fun AirshipEmbeddedViewGroup(
+    embeddedId: String,
+    modifier: Modifier = Modifier,
+    selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
+    content: @Composable BoxScope.(embeddedViews: List<EmbeddedViewItem>) -> Unit
+) {
+    AirshipEmbeddedViewGroup(
+        modifier = modifier,
+        state = rememberAirshipEmbeddedViewGroupState(embeddedId, selection),
+        content = content
+    )
+}
 
 /**
  * A container that allows all embedded content for the given [embeddedId]
@@ -19,16 +43,18 @@ import com.urbanairship.embedded.AirshipEmbeddedInfo
  * @param comparator Optional [Comparator] used to sort available embedded view content.
  * @param content The `Composable` that will display the list of embedded view content.
  */
+@Deprecated("Use AirshipEmbeddedViewGroup with AirshipEmbeddedSelection instead.")
 @Composable
 public fun AirshipEmbeddedViewGroup(
     embeddedId: String,
     modifier: Modifier = Modifier,
-    comparator: Comparator<AirshipEmbeddedInfo>? = null,
+    comparator: Comparator<AirshipEmbeddedInfo>?,
     content: @Composable BoxScope.(embeddedViews: List<EmbeddedViewItem>) -> Unit
 ) {
+    val selection = if (comparator != null) AirshipEmbeddedSelection.ByComparator(comparator) else AirshipEmbeddedSelection.Priority
     AirshipEmbeddedViewGroup(
         modifier = modifier,
-        state = rememberAirshipEmbeddedViewGroupState(embeddedId, comparator),
+        state = rememberAirshipEmbeddedViewGroupState(embeddedId, selection),
         content = content
     )
 }

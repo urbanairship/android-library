@@ -40,7 +40,7 @@ public class AirshipEmbeddedView private constructor(
     defStyle: Int,
     embeddedId: String?,
     @LayoutRes placeholderRes: Int?,
-    comparator: Comparator<AirshipEmbeddedInfo>?,
+    selection: AirshipEmbeddedSelection,
     private val manager: AirshipEmbeddedViewManager
 ) : RelativeLayout(context, attrs, defStyle) {
 
@@ -62,7 +62,32 @@ public class AirshipEmbeddedView private constructor(
         defStyle = defStyle,
         embeddedId = null,
         placeholderRes = null,
-        comparator = null,
+        selection = AirshipEmbeddedSelection.Priority,
+        manager = EmbeddedViewManager
+    )
+
+    /**
+     * Constructs an embedded view that will display content for the given embedded ID.
+     *
+     * @param context a [Context].
+     * @param embeddedId the embedded ID.
+     * @param selection the [AirshipEmbeddedSelection] that controls which instance is displayed.
+     * @param placeholderRes optional placeholder layout resource to display when no content is
+     *      available.
+     */
+    @JvmOverloads
+    public constructor(
+        context: Context,
+        embeddedId: String,
+        selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
+        @LayoutRes placeholderRes: Int? = null,
+    ) : this(
+        context = context,
+        attrs = null,
+        defStyle = 0,
+        embeddedId = embeddedId,
+        placeholderRes = placeholderRes,
+        selection = selection,
         manager = EmbeddedViewManager
     )
 
@@ -75,20 +100,18 @@ public class AirshipEmbeddedView private constructor(
      * @param placeholderRes optional placeholder layout resource to display when no content is
      *      available.
      */
+    @Deprecated("Use the constructor that takes AirshipEmbeddedSelection instead.")
     @JvmOverloads
     public constructor(
         context: Context,
         embeddedId: String,
-        comparator: Comparator<AirshipEmbeddedInfo>? = null,
+        comparator: Comparator<AirshipEmbeddedInfo>?,
         @LayoutRes placeholderRes: Int? = null,
     ) : this(
         context = context,
-        attrs = null,
-        defStyle = 0,
         embeddedId = embeddedId,
+        selection = if (comparator != null) AirshipEmbeddedSelection.ByComparator(comparator) else AirshipEmbeddedSelection.Priority,
         placeholderRes = placeholderRes,
-        comparator = comparator,
-        manager = EmbeddedViewManager
     )
 
     /**
@@ -118,16 +141,29 @@ public class AirshipEmbeddedView private constructor(
         }
 
     /**
-     * The [Comparator] used to sort available embedded contents.
+     * The [AirshipEmbeddedSelection] that controls which pending embedded instance is displayed.
      *
-     * If `null` (default), the order (FIFO) of available content will be used.
+     * Setting this property will restart the display request collection if the view is attached
+     * to a window.
      */
-    public var comparator: Comparator<AirshipEmbeddedInfo>? = comparator
+    public var selection: AirshipEmbeddedSelection = selection
         set(value) {
             field = value
             if (isAttachedToWindow) {
                 collectDisplayRequests()
             }
+        }
+
+    /**
+     * The [Comparator] used to sort available embedded contents.
+     *
+     * If `null` (default), the order (FIFO) of available content will be used.
+     */
+    @Deprecated("Use selection instead.")
+    public var comparator: Comparator<AirshipEmbeddedInfo>?
+        get() = (selection as? AirshipEmbeddedSelection.ByComparator)?.comparator
+        set(value) {
+            selection = if (value != null) AirshipEmbeddedSelection.ByComparator(value) else AirshipEmbeddedSelection.Priority
         }
 
     private val viewJob = SupervisorJob()
@@ -219,7 +255,7 @@ public class AirshipEmbeddedView private constructor(
     private fun collectDisplayRequests() {
         displayRequestsJob = viewScope.launch {
             try {
-                manager.displayRequests(embeddedViewId = id, comparator = comparator, scope = viewScope)
+                manager.displayRequests(embeddedViewId = id, selection = selection, scope = viewScope)
                     .map { it.next }
                     .collect(::onUpdate)
             } catch (e: CancellationException) {
