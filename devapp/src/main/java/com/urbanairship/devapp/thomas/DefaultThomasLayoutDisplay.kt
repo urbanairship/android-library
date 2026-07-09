@@ -12,6 +12,7 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.app.GlobalActivityMonitor
+import com.urbanairship.banner.BannerViewManager
 import com.urbanairship.embedded.EmbeddedViewManager
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
@@ -29,7 +30,8 @@ internal class DefaultThomasLayoutDisplay private constructor() {
             activityMonitor = GlobalActivityMonitor.shared(context),
             listener = thomasListener,
             actionRunner = actionRunner,
-            embeddedViewManager = EmbeddedViewManager
+            embeddedViewManager = EmbeddedViewManager,
+            bannerViewManager = BannerViewManager
         ).display(context)
     }
 

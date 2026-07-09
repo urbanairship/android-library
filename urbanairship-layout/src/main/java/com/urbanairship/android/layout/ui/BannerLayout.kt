@@ -1,20 +1,19 @@
+/* Copyright Airship and Contributors */
+
 package com.urbanairship.android.layout.ui
 
-import android.app.Activity
 import android.content.Context
+import android.view.ContextThemeWrapper
 import android.view.View
-import android.view.ViewGroup
-import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.annotation.MainThread
-import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
-import androidx.core.view.WindowCompat
-import androidx.customview.widget.ViewDragHelper.STATE_DRAGGING
-import androidx.customview.widget.ViewDragHelper.STATE_IDLE
+import androidx.annotation.RestrictTo
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
-import com.urbanairship.Predicate
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.AirshipBannerViewManager
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.R
@@ -28,23 +27,27 @@ import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.LayoutInfo
-import com.urbanairship.android.layout.property.VerticalPosition
+import com.urbanairship.android.layout.property.BannerPlacement
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.Factory
 import com.urbanairship.android.layout.util.ImageCache
-import com.urbanairship.app.ActivityListener
+import com.urbanairship.android.layout.util.getActivity
 import com.urbanairship.app.ActivityMonitor
-import com.urbanairship.app.SimpleActivityListener
-import com.urbanairship.util.ManifestUtils
+import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.webkit.AirshipWebViewClient
 import java.lang.ref.WeakReference
+import java.util.Objects
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
@@ -56,212 +59,198 @@ private object BannerViewModelStoreOwner : ViewModelStoreOwner {
         get() = BannerViewModelStore
 }
 
-internal class BannerLayout(
+/** @hide */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class BannerLayout(
     private val context: Context,
-    args: DisplayArgs
+    public val viewInstanceId: String,
+    args: DisplayArgs,
+    private val bannerViewManager: AirshipBannerViewManager
 ) {
     private val viewJob = SupervisorJob()
-    private val bannerScope = CoroutineScope(Dispatchers.Main.immediate + viewJob)
+    private val layoutScope = CoroutineScope(Dispatchers.Main.immediate + viewJob)
+    private var layoutEventsJob: Job? = null
+    private var stateUpdateReportJob: Job? = null
 
+    private val payload: LayoutInfo = args.payload
     private val activityMonitor: ActivityMonitor = args.inAppActivityMonitor
     private val webViewClientFactory: Factory<AirshipWebViewClient>? = args.webViewClientFactory
-    private val imageCache: ImageCache? = args.imageCache
-    private val payload: LayoutInfo = args.payload
     private val externalListener: ThomasListenerInterface = args.listener
-    private val viewModelKey: String = args.hashCode().toString()
-    private val reporter: Reporter = ExternalReporter(externalListener)
+    private val imageCache: ImageCache? = args.imageCache
     private val actionRunner: ThomasActionRunner = args.actionRunner
 
-    private val activityPredicate = Predicate { activity: Activity ->
-        try {
-            if (getContainerView(activity) == null) {
-                UALog.e("BannerAdapter - Unable to display in-app message. No view group found.")
-                return@Predicate false
-            }
-        } catch (e: Exception) {
-            UALog.e("Failed to find container view.", e)
-            return@Predicate false
-        }
-        true
-    }
+    private val reporter: Reporter = ExternalReporter(externalListener)
 
-    private val displayTimer: DisplayTimer = DisplayTimer(activityMonitor, activityPredicate, 0)
-
-    private val activityListener: ActivityListener = object : SimpleActivityListener() {
-        override fun onActivityStopped(activity: Activity) {
-            if (activityPredicate.apply(activity)) {
-                this@BannerLayout.onActivityStopped(activity)
-            }
-        }
-
-        override fun onActivityResumed(activity: Activity) {
-            if (activityPredicate.apply(activity)) {
-                this@BannerLayout.onActivityResumed(activity)
-            }
-        }
-
-        override fun onActivityPaused(activity: Activity) {
-            if (activityPredicate.apply(activity)) {
-                this@BannerLayout.onActivityPaused(activity)
-            }
-        }
-    }
-
-    private var lastActivity: WeakReference<Activity>? = null
     private var currentView: WeakReference<ThomasBannerView>? = null
+    private var displayTimer: DisplayTimer? = null
 
-    init {
-        activityMonitor.addActivityListener(activityListener)
-    }
+    private val _isVisible = MutableStateFlow(false)
+
+    private val isVisible: StateFlow<Boolean> = _isVisible.asStateFlow()
+
+    /** @hide **/
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun getPresentation(): BannerPresentation? =
+        payload.presentation as? BannerPresentation
+
+    /** @hide **/
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun getPlacement(): BannerPlacement? =
+        getPresentation()?.getResolvedPlacement(context)
 
     /**
-     * Attempts to display the banner.
+     * Creates the banner view, notifying the optional [frameSizeChangedListener] when the
+     * banner frame's size changes. The listener may be used by the host to size animations and
+     * swipe-to-dismiss gestures relative to the banner content.
+     *
+     * @hide
      */
-    fun display() {
-        val activityList = activityMonitor.getResumedActivities(activityPredicate)
-        val activity = activityList.firstOrNull() ?: return
-        val presentation = (payload.presentation as? BannerPresentation) ?: return
-
-        val placement = presentation.getResolvedPlacement(context)
-        if (placement.shouldIgnoreSafeArea()) {
-            WindowCompat.setDecorFitsSystemWindows(activity.window, false)
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun makeView(
+        frameSizeChangedListener: ((width: Int, height: Int) -> Unit)? = null
+    ): View? {
+        val activity = context.getActivity()
+        if (activity == null) {
+            UALog.e { "Airship Banner Views must be hosted by an Activity! Current Activity is null." }
+            return null
         }
+        if (activity !is LifecycleOwner) {
+            UALog.e { "Airship Banner Views must be hosted by an Activity that implements LifecycleOwner!" }
+            return null
+        }
+
+        val presentation = getPresentation()
+        if (presentation == null) {
+            UALog.e { "BannerLayout requires a BannerPresentation!" }
+            return null
+        }
+
+        val timer = DisplayTimer(activity, 0)
+
+        activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onDestroy(owner: LifecycleOwner) {
+                // Clean up the view model store when the activity is destroyed.
+                onDisplayFinished()
+                activity.lifecycle.removeObserver(this)
+            }
+        })
+
+        activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
+            override fun onForeground(time: Long) {
+                super.onForeground(time)
+                reporter.onVisibilityChanged(isVisible.value, true)
+            }
+
+            override fun onBackground(time: Long) {
+                super.onBackground(time)
+                reporter.onVisibilityChanged(isVisible.value, false)
+            }
+        })
+
         val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
             activity,
             activityMonitor,
             webViewClientFactory,
             imageCache,
-            placement.shouldIgnoreSafeArea()
+            getPlacement()?.shouldIgnoreSafeArea() ?: false
         )
-        val container = getContainerView(activity) ?: return
 
         val viewModelProvider = ViewModelProvider(BannerViewModelStoreOwner)
-        val viewModel = viewModelProvider[viewModelKey, LayoutViewModel::class.java]
+        val viewModel = viewModelProvider[viewInstanceId, LayoutViewModel::class.java]
+
+        displayTimer = timer
 
         try {
             val modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
                 actionRunner = actionRunner,
-                displayTimer = displayTimer
+                displayTimer = timer
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = payload.view,
                 modelEnvironment = modelEnvironment
             )
+            // Create the banner view using our theme, to prevent app custom themes from affecting
+            // the banner view.
+            val themedContext = ContextThemeWrapper(context, R.style.UrbanAirship_Layout)
             val bannerView = ThomasBannerView(
-                context = context,
+                context = themedContext,
                 model = model,
                 presentation = presentation,
                 environment = viewEnvironment
-            ).apply {
-                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
-            }
+            )
+            bannerView.frameSizeChangedListener = frameSizeChangedListener
 
-            if (lastActivity?.get() !== activity) {
-                if (VerticalPosition.BOTTOM == placement.position?.vertical) {
-                    bannerView.setAnimations(
-                        R.animator.ua_layout_slide_in_bottom,
-                        R.animator.ua_layout_slide_out_bottom
-                    )
-                } else {
-                    bannerView.setAnimations(
-                        R.animator.ua_layout_slide_in_top,
-                        R.animator.ua_layout_slide_out_top
-                    )
+            bannerView.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
+                override fun onViewAttachedToWindow(v: View) {
+                    val updated = true
+                    reporter.onVisibilityChanged(updated, activityMonitor.isAppForegrounded)
+                    _isVisible.value = updated
                 }
-            }
 
-            observeLayoutEvents(modelEnvironment.layoutEvents)
-            reportStateChange(modelEnvironment.layoutEvents)
-
-            bannerView.setListener(object : ThomasBannerView.Listener {
-                override fun onTimedOut() = onDisplayFinished()
-                override fun onDismissed() {
-                    reportDismissFromOutside()
-                    onDisplayFinished()
-                }
-                override fun onDragStateChanged(state: Int) {
-                    when (state) {
-                        STATE_DRAGGING -> bannerView.displayTimer.stop()
-                        STATE_IDLE -> if (bannerView.isResumed) {
-                            bannerView.displayTimer.start()
-                        }
-                    }
+                override fun onViewDetachedFromWindow(v: View) {
+                    val updated = false
+                    reporter.onVisibilityChanged(updated, activityMonitor.isAppForegrounded)
+                    _isVisible.value = updated
                 }
             })
 
-            if (bannerView.parent == null) {
-                container.addView(bannerView)
-            }
+            layoutEventsJob?.cancel()
+            layoutEventsJob = observeLayoutEvents(modelEnvironment.layoutEvents)
 
-            lastActivity = WeakReference(activity)
+            stateUpdateReportJob?.cancel()
+            stateUpdateReportJob = reportStateChange(modelEnvironment.layoutEvents)
+
             currentView = WeakReference(bannerView)
+            return bannerView
         } catch (e: ModelFactoryException) {
             UALog.e("Failed to load model!", e)
+            return null
         }
     }
 
-    fun dismiss(animate: Boolean = false, isInternal: Boolean = false) {
-        currentView?.get()?.dismiss(animate = animate, isInternal = isInternal)
+    /** Removes the banner from the pending queue, without reporting. */
+    private fun dismiss() {
+        bannerViewManager.dismiss(viewInstanceId)
     }
 
-    /** Called when the banner is finished displaying. */
+    /**
+     * Dismisses the banner from a user action outside of the layout (e.g. a swipe), reporting
+     * a user dismiss.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun dismissFromUser() {
+        reportDismissFromOutside(ReportingEvent.DismissData.UserDismissed)
+        dismiss()
+    }
+
+    /**
+     * Dismisses the banner after the auto-dismiss duration has elapsed, reporting a timed out
+     * dismiss.
+     *
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public fun dismissFromTimeout() {
+        reportDismissFromOutside(ReportingEvent.DismissData.TimedOut)
+        dismiss()
+    }
+
     @MainThread
     private fun onDisplayFinished() {
-        activityMonitor.removeActivityListener(activityListener)
-        viewJob.cancelChildren()
+        UALog.v("Banner finished displaying! $viewInstanceId")
+        layoutScope.cancel()
         BannerViewModelStore.clear()
     }
 
-    /**
-     * Gets the banner's container view.
-     *
-     * @param activity The activity.
-     * @return The banner's container view or null.
-     */
-    private fun getContainerView(activity: Activity): ViewGroup? {
-        val containerId = getContainerId(activity)
-        var view: View? = null
-        if (containerId != 0) {
-            view = activity.findViewById(containerId)
-        }
-        if (view == null) {
-            view = activity.findViewById(android.R.id.content)
-        }
-        return view as? ViewGroup
-    }
-
-    /**
-     * Gets the Banner fragment's container ID.
-     *
-     * The default implementation checks the activities metadata for [.BANNER_CONTAINER_ID].
-     *
-     * @param activity The activity.
-     * @return The container ID or 0 if not defined.
-     */
-    private fun getContainerId(activity: Activity): Int {
-        synchronized(cachedContainerIds) {
-            val cachedId = cachedContainerIds[activity.javaClass]
-            if (cachedId != null) {
-                return cachedId
-            }
-            var containerId = 0
-            val info = ManifestUtils.getActivityInfo(context, activity.javaClass)
-            if (info?.metaData != null) {
-                containerId = info.metaData.getInt(BANNER_CONTAINER_ID, containerId)
-            }
-            cachedContainerIds[activity.javaClass] = containerId
-            return containerId
-        }
-    }
-
-    private fun observeLayoutEvents(events: Flow<LayoutEvent>) = bannerScope.launch {
-        events
-            .filterIsInstance<LayoutEvent.Finish>()
+    private fun observeLayoutEvents(events: Flow<LayoutEvent>) = layoutScope.launch {
+        events.filterIsInstance<LayoutEvent.Finish>()
             .collect { dismiss() }
     }
 
-    private fun reportStateChange(events: Flow<LayoutEvent>) = bannerScope.launch {
+    private fun reportStateChange(events: Flow<LayoutEvent>) = layoutScope.launch {
         events
             .filterIsInstance<LayoutEvent.StateUpdate>()
             .distinctUntilChanged()
@@ -270,54 +259,25 @@ internal class BannerLayout(
             }
     }
 
-    private fun reportDismissFromOutside(state: LayoutData = LayoutData.EMPTY) {
+    private fun reportDismissFromOutside(data: ReportingEvent.DismissData) {
         reporter.report(
             event = ReportingEvent.Dismiss(
-                data = ReportingEvent.DismissData.UserDismissed,
-                displayTime = displayTimer.time.milliseconds,
-                context = state
+                data = data,
+                displayTime = (displayTimer?.time ?: 0).milliseconds,
+                context = LayoutData.EMPTY
             )
         )
     }
 
-    @MainThread
-    private fun onActivityResumed(activity: Activity) {
-        val currentView = currentView?.get()
-        if (currentView == null || !currentView.isAttachedToWindow) {
-            display()
-        } else if (activity === lastActivity?.get()) {
-            currentView.onResume()
-        }
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as BannerLayout
+        if (viewInstanceId != other.viewInstanceId) return false
+
+        return true
     }
 
-    @MainThread
-    private fun onActivityStopped(activity: Activity) {
-        if (activity !== lastActivity?.get()) {
-            return
-        }
-        val view = currentView?.get()
-        if (view != null) {
-            currentView = null
-            lastActivity = null
-            view.dismiss(false, isInternal = true)
-            display()
-        }
-    }
-
-    @MainThread
-    private fun onActivityPaused(activity: Activity) {
-        if (activity !== lastActivity?.get()) {
-            return
-        }
-        currentView?.get()?.onPause()
-    }
-
-    companion object {
-
-        /**
-         * Metadata an app can use to specify the banner's container ID per activity.
-         */
-        const val BANNER_CONTAINER_ID = "com.urbanairship.iam.banner.BANNER_CONTAINER_ID"
-        private val cachedContainerIds: MutableMap<Class<*>, Int> = HashMap()
-    }
+    override fun hashCode(): Int = Objects.hash(viewInstanceId)
 }
