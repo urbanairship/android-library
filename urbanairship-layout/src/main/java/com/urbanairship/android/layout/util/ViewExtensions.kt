@@ -217,23 +217,23 @@ internal val View.isLayoutRtl: Boolean
 internal fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean =
     findTargetDescendant(view) { it.isClickable && it.isEnabled } != null
 
+/** Returns true if this event's raw coordinates fall within [view]'s visible bounds. */
+internal fun MotionEvent.isWithinBounds(view: View): Boolean {
+    val rect = Rect().apply { view.getGlobalVisibleRect(this) }
+    return rect.contains(rawX.toInt(), rawY.toInt())
+}
+
 internal fun MotionEvent.findTargetDescendant(
     view: View,
     filter: ((View) -> Boolean)
-): View? {
-    fun MotionEvent.isTouchWithin(v: View): Boolean {
-        val rect = Rect().apply { v.getGlobalVisibleRect(this) }
-        return rect.contains(rawX.toInt(), rawY.toInt())
-    }
-
-    return if (view is ViewGroup) {
-        view.descendants.filter { filter.invoke(it) }
-            .sortedByDescending { it.z }
-            .firstOrNull(::isTouchWithin)
-    } else {
-        if (filter.invoke(view) && isTouchWithin(view)) view else null
-    }
+): View? = if (view is ViewGroup) {
+    view.descendants.filter { filter.invoke(it) }
+        .sortedByDescending { it.z }
+        .firstOrNull(::isWithinBounds)
+} else {
+    if (filter.invoke(view) && isWithinBounds(view)) view else null
 }
+
 
 @Throws(IllegalStateException::class)
 private fun checkMainThread() {

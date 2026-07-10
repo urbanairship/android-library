@@ -24,6 +24,9 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.LayoutUtils.dpToPx
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.debouncedClicks
+import com.urbanairship.android.layout.util.isActionDown
+import com.urbanairship.android.layout.util.isActionUp
+import com.urbanairship.android.layout.util.isWithinBounds
 import com.urbanairship.android.layout.util.isWithinClickableDescendantOf
 import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.TappableView
@@ -108,26 +111,53 @@ internal class LabelButtonView(
                 ?: model.label.resolveState(context, state).text
     }
 
+    /** True while a press that began within this view (and not on a clickable descendant) is in progress. */
+    private var pressStartedWithinSelf = false
+
     /**
-     * Listen for touch events and perform a click on this view if the touch up event isn't within
-     * a clickable descendant of this view.
+     * Listen for touch events and perform a click on this view only when the press both starts and
+     * ends within this view and not on a clickable descendant of it.
      */
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
         if (context.isTouchExplorationEnabled) {
             return false
         }
 
-        if (event.action == MotionEvent.ACTION_UP && !event.isWithinClickableDescendantOf(view)) {
-            when (model.viewInfo.tapEffect) {
-                TapEffect.Default -> triggerDefaultAnimation()
-                TapEffect.None -> Unit
-            }
+        when {
+            event.isActionDown ->
+                pressStartedWithinSelf = event.isWithinBounds(this) && !event.isWithinClickableDescendantOf(view)
 
-            performClick()
+            event.isActionUp && pressStartedWithinSelf &&
+                    event.isWithinBounds(this) && !event.isWithinClickableDescendantOf(view) -> {
+                when (model.viewInfo.tapEffect) {
+                    TapEffect.Default -> triggerDefaultAnimation()
+                    TapEffect.None -> Unit
+                }
+
+                performClick()
+            }
         }
 
         // We're just snooping, so always let the event pass through.
         return false
+    }
+
+    /**
+     * The default clickable behavior fires a click for any ACTION_UP within our bounds — even when the
+     * press started on us but the finger drifted onto a clickable child. Convert such an up into a
+     * cancel before super so we don't fire our own click when the release lands on a clickable descendant.
+     */
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.isActionUp && event.isWithinClickableDescendantOf(view)) {
+            val cancel = MotionEvent.obtain(event)
+            cancel.action = MotionEvent.ACTION_CANCEL
+            return try {
+                super.onTouchEvent(cancel)
+            } finally {
+                cancel.recycle()
+            }
+        }
+        return super.onTouchEvent(event)
     }
 
     override fun taps(): Flow<Unit> = debouncedClicks()

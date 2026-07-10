@@ -22,6 +22,9 @@ import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
+import com.urbanairship.android.layout.util.isActionDown
+import com.urbanairship.android.layout.util.isActionUp
+import com.urbanairship.android.layout.util.isWithinBounds
 import com.urbanairship.android.layout.util.isWithinClickableDescendantOf
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
@@ -111,12 +114,39 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
         }
     }
 
+    /** True while a press that began within this view (and not on a clickable descendant) is in progress. */
+    private var pressStartedWithinSelf = false
+
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
-        if (event.action == MotionEvent.ACTION_UP && !event.isWithinClickableDescendantOf(view)) {
-            triggerDefaultAnimation(event)
-            performClick()
+        when {
+            event.isActionDown ->
+                pressStartedWithinSelf = event.isWithinBounds(this) && !event.isWithinClickableDescendantOf(view)
+
+            event.isActionUp && pressStartedWithinSelf &&
+                    event.isWithinBounds(this) && !event.isWithinClickableDescendantOf(view) -> {
+                triggerDefaultAnimation(event)
+                performClick()
+            }
         }
         return false
+    }
+
+    /**
+     * The default clickable behavior fires a click for any ACTION_UP within our bounds — even when the
+     * press started on us but the finger drifted onto a clickable child. Convert such an up into a
+     * cancel before super so we don't fire our own click when the release lands on a clickable descendant.
+     */
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (event.isActionUp && event.isWithinClickableDescendantOf(view)) {
+            val cancel = MotionEvent.obtain(event)
+            cancel.action = MotionEvent.ACTION_CANCEL
+            return try {
+                super.onTouchEvent(cancel)
+            } finally {
+                cancel.recycle()
+            }
+        }
+        return super.onTouchEvent(event)
     }
 
     override fun performClick(): Boolean {
