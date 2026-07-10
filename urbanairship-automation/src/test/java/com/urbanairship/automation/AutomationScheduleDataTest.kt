@@ -322,6 +322,37 @@ public class AutomationScheduleDataTest {
     }
 
     @Test
+    public fun testExecutionCancelledTriggered() {
+        val data = makeData(
+            scheduleState = AutomationScheduleState.TRIGGERED,
+            triggeringInfo = triggeringInfo
+        )
+
+        data.executionCancelled(clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
+        assertEquals(data.executionCount, 0)
+        assertNull(data.triggerInfo)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+    }
+
+    @Test
+    public fun testExecutionCancelledIgnoresOtherStates() {
+        val states = listOf(
+            AutomationScheduleState.IDLE,
+            AutomationScheduleState.EXECUTING,
+            AutomationScheduleState.PAUSED,
+            AutomationScheduleState.FINISHED
+        )
+
+        for (state in states) {
+            val data = makeData(scheduleState = state)
+
+            data.executionCancelled(clock.currentTimeMillis + 100)
+            assertEquals(data.scheduleState, state)
+        }
+    }
+
+    @Test
     public fun testExecutionCancelledOverLimit() {
         val data = makeData(limit = 1U, scheduleState = AutomationScheduleState.PREPARED)
         data.setExecutionCount(1)
