@@ -5,7 +5,6 @@ import android.content.Context
 import android.graphics.drawable.RippleDrawable
 import android.os.Bundle
 import android.view.MotionEvent
-import android.view.View
 import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Button
@@ -22,7 +21,7 @@ import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.property.TapEffect
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.debouncedClicks
-import com.urbanairship.android.layout.util.findTargetDescendant
+import com.urbanairship.android.layout.util.isWithinClickableDescendantOf
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.TappableView
@@ -153,10 +152,6 @@ internal class ButtonLayoutView(
             return true
         }
         return super.performAccessibilityAction(action, arguments)
-    }
-
-    private fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean {
-        return findTargetDescendant(view) { it.isClickable && it.isEnabled } != null
     }
 
     private fun triggerDefaultAnimation(event: MotionEvent? = null) {

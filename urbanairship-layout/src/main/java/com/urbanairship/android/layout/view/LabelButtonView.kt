@@ -24,7 +24,7 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.LayoutUtils.dpToPx
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.debouncedClicks
-import com.urbanairship.android.layout.util.findTargetDescendant
+import com.urbanairship.android.layout.util.isWithinClickableDescendantOf
 import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
@@ -137,10 +137,6 @@ internal class LabelButtonView(
 
     /** Button layouts may be shrunk if they contain a media view. */
     override fun isShrinkable(): Boolean = model.isShrinkable
-
-    private fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean {
-        return findTargetDescendant(view) { it.isClickable && it.isEnabled } != null
-    }
 
     private fun triggerDefaultAnimation(event: MotionEvent? = null) {
         model.viewScope.launch {

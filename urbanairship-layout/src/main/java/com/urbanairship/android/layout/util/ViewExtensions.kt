@@ -214,6 +214,9 @@ internal val View.isLayoutRtl: Boolean
     get() = TextUtilsCompat.getLayoutDirectionFromLocale(Airship.localeManager.locale) == View.LAYOUT_DIRECTION_RTL
 
 
+internal fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean =
+    findTargetDescendant(view) { it.isClickable && it.isEnabled } != null
+
 internal fun MotionEvent.findTargetDescendant(
     view: View,
     filter: ((View) -> Boolean)

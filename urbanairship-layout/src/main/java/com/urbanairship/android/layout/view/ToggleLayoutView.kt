@@ -21,8 +21,8 @@ import com.urbanairship.android.layout.model.BaseToggleLayoutModel
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.debouncedClicks
-import com.urbanairship.android.layout.util.findTargetDescendant
 import com.urbanairship.android.layout.util.ifNotEmpty
+import com.urbanairship.android.layout.util.isWithinClickableDescendantOf
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.delay
@@ -133,10 +133,6 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
         }
 
         isActivated = isOn
-    }
-
-    private fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean {
-        return findTargetDescendant(view) { it.isClickable && it.isEnabled } != null
     }
 
     private fun triggerDefaultAnimation(event: MotionEvent? = null) {
