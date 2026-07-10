@@ -118,6 +118,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
             }
 
             override fun onClose(webView: WebView) {
+                displayListener?.onUserDismissed()
                 finish()
             }
 
@@ -171,6 +172,8 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
                 ?: displayListener?.onUserDismissed()
         } catch (ex: JsonException) {
             UALog.e(ex) { "Unable to parse message resolution JSON" }
+            // Still resolve the display as a user dismiss so the resolution is reported.
+            displayListener?.onUserDismissed()
         }
     }
 
