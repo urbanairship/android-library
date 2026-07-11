@@ -213,7 +213,6 @@ internal val View.localBounds: RectF
 internal val View.isLayoutRtl: Boolean
     get() = TextUtilsCompat.getLayoutDirectionFromLocale(Airship.localeManager.locale) == View.LAYOUT_DIRECTION_RTL
 
-
 internal fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean =
     findTargetDescendant(view) { it.isClickable && it.isEnabled } != null
 
@@ -221,6 +220,31 @@ internal fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean =
 internal fun MotionEvent.isWithinBounds(view: View): Boolean {
     val rect = Rect().apply { view.getGlobalVisibleRect(this) }
     return rect.contains(rawX.toInt(), rawY.toInt())
+}
+
+/**
+ * onTouchEvent handling shared by button-like views that wrap arbitrary content. The default
+ * clickable behavior fires a click for any ACTION_UP within the view's bounds — even when the press
+ * started on the view but the finger drifted onto a clickable child. Convert such an up into a
+ * cancel before dispatching to [superOnTouchEvent] so the view doesn't fire its own click when the
+ * release lands on a clickable descendant of [content].
+ */
+internal inline fun cancelClickIfReleasedOnClickableDescendant(
+    event: MotionEvent,
+    content: View,
+    superOnTouchEvent: (MotionEvent) -> Boolean
+): Boolean {
+    if (event.isActionUp && event.isWithinClickableDescendantOf(content)) {
+        val cancel = MotionEvent.obtain(event).apply {
+            action = MotionEvent.ACTION_CANCEL
+        }
+        return try {
+            superOnTouchEvent(cancel)
+        } finally {
+            cancel.recycle()
+        }
+    }
+    return superOnTouchEvent(event)
 }
 
 internal fun MotionEvent.findTargetDescendant(
@@ -233,7 +257,6 @@ internal fun MotionEvent.findTargetDescendant(
 } else {
     if (filter.invoke(view) && isWithinBounds(view)) view else null
 }
-
 
 @Throws(IllegalStateException::class)
 private fun checkMainThread() {
@@ -266,7 +289,8 @@ internal fun TextView.setHtml(
     }
 }
 
-/** * Finds standard background spans (from <span style='background-color'>)
+/**
+ * Finds standard background spans (from <span style='background-color'>)
  * and replaces them with custom RoundedBackgroundSpans.
  */
 private fun Spannable.convertHighlightSpans(color: Int, cornerRadius: Float) {

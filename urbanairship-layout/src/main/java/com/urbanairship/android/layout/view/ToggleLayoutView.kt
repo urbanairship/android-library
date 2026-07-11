@@ -20,6 +20,7 @@ import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.BaseToggleLayoutModel
 import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.util.cancelClickIfReleasedOnClickableDescendant
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionDown
@@ -131,23 +132,8 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
         return false
     }
 
-    /**
-     * The default clickable behavior fires a click for any ACTION_UP within our bounds — even when the
-     * press started on us but the finger drifted onto a clickable child. Convert such an up into a
-     * cancel before super so we don't fire our own click when the release lands on a clickable descendant.
-     */
-    override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (event.isActionUp && event.isWithinClickableDescendantOf(view)) {
-            val cancel = MotionEvent.obtain(event)
-            cancel.action = MotionEvent.ACTION_CANCEL
-            return try {
-                super.onTouchEvent(cancel)
-            } finally {
-                cancel.recycle()
-            }
-        }
-        return super.onTouchEvent(event)
-    }
+    override fun onTouchEvent(event: MotionEvent): Boolean =
+        cancelClickIfReleasedOnClickableDescendant(event, view) { super.onTouchEvent(it) }
 
     override fun performClick(): Boolean {
         super.performClick()
