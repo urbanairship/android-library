@@ -15,6 +15,7 @@ import com.urbanairship.android.layout.model.PagerIndicatorModel
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.widget.ShapeView
+import com.urbanairship.R as CoreR
 
 internal class PagerIndicatorView(
     context: Context,
@@ -27,7 +28,14 @@ internal class PagerIndicatorView(
 
         isFocusable = false
         isFocusableInTouchMode = false
-        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        if (model.announcePage) {
+            // The view must be important for accessibility so that the page
+            // number is announced via live region updates on this view.
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+            accessibilityLiveRegion = ACCESSIBILITY_LIVE_REGION_POLITE
+        } else {
+            importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
 
         model.listener = object : PagerIndicatorModel.Listener {
             private var itemsCount = 0
@@ -95,11 +103,8 @@ internal class PagerIndicatorView(
         for (i in 0 until childCount) {
             (getChildAt(i) as Checkable).isChecked = i == position
         }
-        if (model.announcePage == true) {
-            val announcement =
-                context.getString(com.urbanairship.R.string.ua_pager_progress, position + 1, childCount)
-            this.contentDescription = announcement
-            this.announceForAccessibility(announcement)
+        if (model.announcePage) {
+            contentDescription = context.getString(CoreR.string.ua_pager_progress, position + 1, childCount)
         }
     }
 }

@@ -169,8 +169,7 @@ public open class MessageCenterListFragment @JvmOverloads constructor(
             if (editing) MessageCenterCoreR.string.ua_announce_enter_edit_mode
             else MessageCenterCoreR.string.ua_announce_leave_edit_mode
         )
-        // TODO(SDK21): replace with ViewCompat.announceForAccessibility or dispatching AccessibilityEvent (deprecated in API 37)
-        view?.announceForAccessibility(announcement)
+        view?.let { ViewCompat.setAccessibilityPaneTitle(it, announcement) }
     }
 
     private fun updateEditModeToggle(editing: Boolean) {

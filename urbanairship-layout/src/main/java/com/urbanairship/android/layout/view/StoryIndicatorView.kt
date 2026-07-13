@@ -40,6 +40,7 @@ internal class StoryIndicatorView(
             isFocusable = true
             isFocusableInTouchMode = true
             importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_YES
+            accessibilityLiveRegion = ACCESSIBILITY_LIVE_REGION_POLITE
         }
 
         model.listener = object : StoryIndicatorModel.Listener {
@@ -169,10 +170,7 @@ internal class StoryIndicatorView(
             val defaultAnnouncement = "Page ${pageIndex + 1} of $count"
             val template = "ua_pager_progress".stringResource(context) ?: defaultAnnouncement
 
-            val announcement = template.format(pageIndex + 1, count)
-
-            contentDescription = announcement
-            announceForAccessibility(announcement)
+            contentDescription = template.format(pageIndex + 1, count)
         }
     }
 }
