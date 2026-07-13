@@ -11,8 +11,12 @@ import kotlin.time.Duration.Companion.seconds
 internal class DisplayCoordinatorManager(
     private val dataStore: PreferenceStore,
     activityMonitor: ActivityMonitor,
-    private val defaultCoordinator: DefaultDisplayCoordinator = defaultCoordinator(dataStore, activityMonitor),
-    private val immediateCoordinator: ImmediateDisplayCoordinator = ImmediateDisplayCoordinator(activityMonitor, defaultCoordinator)
+    activityTracker: DisplayActivityTracker = DisplayActivityTracker(),
+    private val defaultCoordinator: DefaultDisplayCoordinator =
+        defaultCoordinator(dataStore, activityMonitor, activityTracker),
+    private val immediateCoordinator: ImmediateDisplayCoordinator =
+        immediateCoordinator(activityMonitor, activityTracker, defaultCoordinator),
+    private val embeddedCoordinator: EmbeddedDisplayCoordinator = EmbeddedDisplayCoordinator(activityMonitor)
 ) {
     var displayInterval: Long
         get() = dataStore.get(DISPLAY_INTERVAL_KEY) ?: 0
@@ -22,7 +26,9 @@ internal class DisplayCoordinatorManager(
         }
 
     fun displayCoordinator(message: InAppMessage): DisplayCoordinator {
-        if (message.isEmbedded()) { return immediateCoordinator }
+        if (message.isEmbedded()) {
+            return embeddedCoordinator
+        }
 
         return when(message.displayBehavior) {
             InAppMessage.DisplayBehavior.IMMEDIATE -> immediateCoordinator
@@ -34,17 +40,36 @@ internal class DisplayCoordinatorManager(
         defaultCoordinator.reserveImmediateDisplay(scheduleId)
     }
 
-    fun releaseImmediateDisplayReservation(scheduleId: String) {
-        defaultCoordinator.releaseImmediateDisplayReservation(scheduleId)
+    fun releaseImmediateDisplay(scheduleId: String) {
+        defaultCoordinator.releaseImmediateDisplay(scheduleId)
     }
 
     private companion object {
         val DISPLAY_INTERVAL_KEY = SyncPrefKey.long("UAInAppMessageManagerDisplayInterval")
 
-        fun defaultCoordinator(dataStore: PreferenceStore, activityMonitor: ActivityMonitor): DefaultDisplayCoordinator {
+        fun defaultCoordinator(
+            dataStore: PreferenceStore,
+            activityMonitor: ActivityMonitor,
+            activityTracker: DisplayActivityTracker
+        ): DefaultDisplayCoordinator {
             return DefaultDisplayCoordinator(
                 displayInterval = (dataStore.get(DISPLAY_INTERVAL_KEY) ?: 0).seconds,
-                activityMonitor = activityMonitor
+                activityMonitor = activityMonitor,
+                activityTracker = activityTracker
+            )
+        }
+
+        fun immediateCoordinator(
+            activityMonitor: ActivityMonitor,
+            activityTracker: DisplayActivityTracker,
+            defaultCoordinator: DefaultDisplayCoordinator
+        ): ImmediateDisplayCoordinator {
+            return ImmediateDisplayCoordinator(
+                activityMonitor = activityMonitor,
+                activityTracker = activityTracker,
+                onMessageWillDisplay = { scheduleId ->
+                    defaultCoordinator.releaseImmediateDisplay(scheduleId)
+                }
             )
         }
     }

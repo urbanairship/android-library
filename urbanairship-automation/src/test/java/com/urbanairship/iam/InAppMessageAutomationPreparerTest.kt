@@ -115,7 +115,7 @@ public class InAppMessageAutomationPreparerTest {
 
     @Test
     public fun testCancelled(): TestResult = runTest {
-        every { coordinatorManager.releaseImmediateDisplayReservation(any()) } returns Unit
+        every { coordinatorManager.releaseImmediateDisplay(any()) } returns Unit
 
         val scheduleID = UUID.randomUUID().toString()
         coEvery { assetsManager.clearCache(any()) } answers { }

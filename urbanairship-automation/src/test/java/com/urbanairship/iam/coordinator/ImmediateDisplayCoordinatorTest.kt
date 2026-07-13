@@ -3,11 +3,9 @@ package com.urbanairship.iam.coordinator
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
 import app.cash.turbine.test
-import io.mockk.every
 import io.mockk.mockk
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -16,11 +14,8 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class ImmediateDisplayCoordinatorTest {
     private val activityMonitor = TestActivityMonitor()
-    private val hasActiveDisplays = MutableStateFlow(false)
-    private val defaultCoordinator: DefaultDisplayCoordinator = mockk(relaxed = true) {
-        every { hasActiveDisplays } returns this@ImmediateDisplayCoordinatorTest.hasActiveDisplays
-    }
-    private val coordinator = ImmediateDisplayCoordinator(activityMonitor, defaultCoordinator)
+    private val activityTracker = DisplayActivityTracker()
+    private val coordinator = ImmediateDisplayCoordinator(activityMonitor, activityTracker)
 
     @Test
     public fun testIsReady(): TestResult = runTest {
@@ -29,11 +24,9 @@ public class ImmediateDisplayCoordinatorTest {
             activityMonitor.foreground()
             assertTrue(awaitItem())
 
-            hasActiveDisplays.value = true
-            assertFalse(awaitItem())
-
-            hasActiveDisplays.value = false
-            assertTrue(awaitItem())
+            coordinator.messageWillDisplay(mockk(), "foo")
+            coordinator.messageFinishedDisplaying(mockk(), "foo")
+            ensureAllEventsConsumed()
 
             activityMonitor.background()
             assertFalse(awaitItem())
@@ -51,7 +44,22 @@ public class ImmediateDisplayCoordinatorTest {
         activityMonitor.foreground()
         assertTrue(coordinator.isReady.value)
 
-        hasActiveDisplays.value = true
-        assertFalse(coordinator.isReady.value)
+        coordinator.messageWillDisplay(mockk(), "foo")
+        assertTrue(coordinator.isReady.value)
+    }
+
+    @Test
+    public fun testDisplaysAreTracked() {
+        assertFalse(activityTracker.isDisplaying.value)
+
+        coordinator.messageWillDisplay(mockk(), "foo")
+        assertTrue(activityTracker.isDisplaying.value)
+
+        coordinator.messageWillDisplay(mockk(), "bar")
+        coordinator.messageFinishedDisplaying(mockk(), "foo")
+        assertTrue(activityTracker.isDisplaying.value)
+
+        coordinator.messageFinishedDisplaying(mockk(), "bar")
+        assertFalse(activityTracker.isDisplaying.value)
     }
 }
