@@ -80,7 +80,7 @@ internal class InAppMessaging(
         preparer.reserveImmediateDisplay(scheduleID)
     }
 
-    internal fun releaseImmediateDisplayReservation(scheduleID: String) {
-        preparer.releaseImmediateDisplayReservation(scheduleID)
+    internal fun releaseImmediateDisplay(scheduleID: String) {
+        preparer.releaseImmediateDisplay(scheduleID)
     }
 }

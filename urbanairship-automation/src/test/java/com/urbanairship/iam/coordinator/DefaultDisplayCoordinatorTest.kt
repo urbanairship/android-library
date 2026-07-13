@@ -19,12 +19,14 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class DefaultDisplayCoordinatorTest {
     private val activityMonitor = TestActivityMonitor()
+    private val activityTracker = DisplayActivityTracker()
     private val sleeper: TaskSleeper = mockk(relaxed = true)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val coordinator = DefaultDisplayCoordinator(
         displayInterval = 10.seconds,
         activityMonitor = activityMonitor,
+        activityTracker = activityTracker,
         sleeper = sleeper,
         dispatcher = UnconfinedTestDispatcher()
     )
@@ -72,22 +74,22 @@ public class DefaultDisplayCoordinatorTest {
     }
 
     @Test
-    public fun testRemainsLockedWhileAnotherDisplayActive(): TestResult = runTest {
+    public fun testIsReadyOtherDisplayActive(): TestResult = runTest {
         activityMonitor.foreground()
 
         coordinator.isReady.test {
             assertTrue(awaitItem())
-            coordinator.messageWillDisplay(mockk(), "id-1")
+            activityTracker.messageWillDisplay()
             assertFalse(awaitItem())
 
-            coordinator.messageWillDisplay(mockk(), "id-2")
+            activityTracker.messageWillDisplay()
             ensureAllEventsConsumed()
 
-            coordinator.messageFinishedDisplaying(mockk(), "id-1")
+            activityTracker.messageFinishedDisplaying()
             ensureAllEventsConsumed()
             assertFalse(coordinator.isReady.value)
 
-            coordinator.messageFinishedDisplaying(mockk(), "id-2")
+            activityTracker.messageFinishedDisplaying()
             assertTrue(awaitItem())
         }
     }
@@ -101,7 +103,7 @@ public class DefaultDisplayCoordinatorTest {
             coordinator.reserveImmediateDisplay("scene-id")
             assertFalse(awaitItem())
 
-            coordinator.releaseImmediateDisplayReservation("scene-id")
+            coordinator.releaseImmediateDisplay("scene-id")
             assertTrue(awaitItem())
         }
     }

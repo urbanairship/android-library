@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 internal class DefaultDisplayCoordinator(
     displayInterval: Duration,
     activityMonitor: ActivityMonitor,
+    private val activityTracker: DisplayActivityTracker,
     private val sleeper: TaskSleeper = TaskSleeper.default,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO,
 ) : DisplayCoordinator {
@@ -28,16 +29,15 @@ internal class DefaultDisplayCoordinator(
     private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
     private var lockState: MutableStateFlow<LockState> = MutableStateFlow(LockState.UNLOCKED)
     private var unlockJob: Job? = null
-    private val activeDisplayIds = mutableSetOf<String>()
+    private var activeDefaultDisplays: Int = 0
     private val reservedImmediateIds = mutableSetOf<String>()
-    private val _hasActiveDisplays = MutableStateFlow(false)
-    val hasActiveDisplays: StateFlow<Boolean> = _hasActiveDisplays
 
     override val isReady: StateFlow<Boolean> = combineStates(
         lockState,
-        activityMonitor.foregroundState
-    ) { lockState, foregroundState ->
-        lockState == LockState.UNLOCKED && foregroundState
+        activityMonitor.foregroundState,
+        activityTracker.isDisplaying
+    ) { lockState, foregroundState, isDisplaying ->
+        lockState == LockState.UNLOCKED && foregroundState && !isDisplaying
     }
 
     private enum class LockState {
@@ -50,19 +50,15 @@ internal class DefaultDisplayCoordinator(
             startUnlocking()
         }
 
-
     override fun messageWillDisplay(message: InAppMessage, scheduleId: String) {
         unlockJob?.cancel()
-        reservedImmediateIds.remove(scheduleId)
-        activeDisplayIds.add(scheduleId)
-        _hasActiveDisplays.value = activeDisplayIds.isNotEmpty()
+        activeDefaultDisplays += 1
         lockState.value = LockState.LOCKED
     }
 
     override fun messageFinishedDisplaying(message: InAppMessage, scheduleId: String) {
-        activeDisplayIds.remove(scheduleId)
-        _hasActiveDisplays.value = activeDisplayIds.isNotEmpty()
-        if (activeDisplayIds.isEmpty()) {
+        activeDefaultDisplays = maxOf(0, activeDefaultDisplays - 1)
+        if (activeDefaultDisplays == 0) {
             startUnlocking()
         }
     }
@@ -73,12 +69,16 @@ internal class DefaultDisplayCoordinator(
         lockState.value = LockState.LOCKED
     }
 
-    fun releaseImmediateDisplayReservation(scheduleId: String) {
+    fun releaseImmediateDisplay(scheduleId: String) {
         if (!reservedImmediateIds.remove(scheduleId)) {
             return
         }
 
-        if (activeDisplayIds.isEmpty() && reservedImmediateIds.isEmpty()) {
+        if (
+            lockState.value != LockState.UNLOCKING &&
+            activeDefaultDisplays == 0 &&
+            reservedImmediateIds.isEmpty()
+        ) {
             unlockJob?.cancel()
             lockState.value = LockState.UNLOCKED
         }
@@ -87,7 +87,7 @@ internal class DefaultDisplayCoordinator(
     private fun startUnlocking() {
         unlockJob?.cancel()
 
-        if (activeDisplayIds.isNotEmpty() || reservedImmediateIds.isNotEmpty()) {
+        if (activeDefaultDisplays > 0 || reservedImmediateIds.isNotEmpty()) {
             lockState.value = LockState.LOCKED
             return
         }
@@ -103,7 +103,7 @@ internal class DefaultDisplayCoordinator(
         if (lockState.value == LockState.UNLOCKING) {
             unlockJob = scope.launch {
                 sleeper.sleep(displayInterval)
-                if (isActive && activeDisplayIds.isEmpty()) {
+                if (isActive && activeDefaultDisplays == 0 && reservedImmediateIds.isEmpty()) {
                     lockState.value = LockState.UNLOCKED
                 }
             }

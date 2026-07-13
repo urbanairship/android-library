@@ -103,8 +103,8 @@ internal constructor(
         inAppMessagingInternal.reserveImmediateDisplay(scheduleID)
     }
 
-    internal fun releaseImmediateDisplayReservation(scheduleID: String) {
-        inAppMessagingInternal.releaseImmediateDisplayReservation(scheduleID)
+    internal fun releaseImmediateDisplay(scheduleID: String) {
+        inAppMessagingInternal.releaseImmediateDisplay(scheduleID)
     }
 
     /**

@@ -231,8 +231,8 @@ private class AutomationActionsManifest: ActionsManifest {
                     reserveDisplay = { scheduleID ->
                         Airship.inAppAutomation.reserveImmediateDisplay(scheduleID)
                     },
-                    releaseDisplayReservation = { scheduleID ->
-                        Airship.inAppAutomation.releaseImmediateDisplayReservation(scheduleID)
+                    releaseDisplay = { scheduleID ->
+                        Airship.inAppAutomation.releaseImmediateDisplay(scheduleID)
                     }
                 )
             )

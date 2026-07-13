@@ -42,7 +42,7 @@ internal class SceneAction(
         Airship.inAppAutomation.upsertSchedules(listOf(it))
     },
     private val reserveDisplay: (String) -> Unit = {},
-    private val releaseDisplayReservation: (String) -> Unit = {},
+    private val releaseDisplay: (String) -> Unit = {},
     private val clock: Clock = Clock.DEFAULT_CLOCK
 ) : Action() {
 
@@ -97,7 +97,7 @@ internal class SceneAction(
             reserveDisplay(scheduleID)
             runBlocking { scheduler(schedule) }
         } catch (e: Exception) {
-            releaseDisplayReservation(scheduleID)
+            releaseDisplay(scheduleID)
             return ActionResult.newErrorResult(e)
         }
 
