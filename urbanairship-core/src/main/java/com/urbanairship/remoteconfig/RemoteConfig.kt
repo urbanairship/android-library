@@ -152,7 +152,6 @@ public data class ContactConfig(
 }
 
 /** @hide */
-@ConsistentCopyVisibility
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class MeteredUsageConfig internal constructor(
     public val isEnabled: Boolean,

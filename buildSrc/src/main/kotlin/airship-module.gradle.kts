@@ -29,7 +29,10 @@ kotlin {
         jvmTarget = JvmTarget.JVM_17
         jvmDefault = JvmDefaultMode.ENABLE
 
-        freeCompilerArgs.add("-Xconsistent-data-class-copy-visibility")
+        freeCompilerArgs.addAll(
+            "-Xconsistent-data-class-copy-visibility",
+            "-Xannotation-default-target=param-property"
+        )
     }
 }
 
