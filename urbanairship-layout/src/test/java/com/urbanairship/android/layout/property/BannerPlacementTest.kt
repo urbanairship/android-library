@@ -218,4 +218,65 @@ public class BannerPlacementTest {
         val presentation = BannerPresentation.fromJson(JsonValue.parseString(json))
         assertNull(presentation.durationMs)
     }
+
+    @Test
+    public fun testPresentationNegativeDurationIsNull() {
+        val presentation = BannerPresentation.fromJson(presentationJson("\"duration_seconds\": -5"))
+        assertNull(presentation.durationMs)
+    }
+
+    @Test
+    public fun testPresentationZeroDurationIsNull() {
+        val presentation = BannerPresentation.fromJson(presentationJson("\"duration_seconds\": 0"))
+        assertNull(presentation.durationMs)
+    }
+
+    @Test
+    public fun testPresentationWrongTypedDurationIsNull() {
+        val presentation = BannerPresentation.fromJson(presentationJson("\"duration_seconds\": \"7\""))
+        assertNull(presentation.durationMs)
+    }
+
+    @Test
+    public fun testPresentationNegativeLegacyDurationIsNull() {
+        val presentation = BannerPresentation.fromJson(presentationJson("\"duration_milliseconds\": -7000"))
+        assertNull(presentation.durationMs)
+    }
+
+    @Test
+    public fun testPresentationZeroLegacyDurationIsNull() {
+        val presentation = BannerPresentation.fromJson(presentationJson("\"duration_milliseconds\": 0"))
+        assertNull(presentation.durationMs)
+    }
+
+    @Test
+    public fun testPresentationWrongTypedLegacyDurationIsNull() {
+        val presentation = BannerPresentation.fromJson(presentationJson("\"duration_milliseconds\": \"7000\""))
+        assertNull(presentation.durationMs)
+    }
+
+    @Test
+    public fun testPresentationUnusableDurationFallsBackToLegacy() {
+        val presentation = BannerPresentation.fromJson(
+            presentationJson("\"duration_seconds\": 0, \"duration_milliseconds\": 7000")
+        )
+        assertEquals(7000L, presentation.durationMs)
+    }
+
+    private fun presentationJson(durationFields: String): JsonValue {
+        val json = """
+            {
+              "type": "banner",
+              "default_placement": {
+                "size": {
+                  "width": "100%",
+                  "height": "auto"
+                },
+                "position": "bottom"
+              },
+              $durationFields
+            }
+        """.trimIndent()
+        return JsonValue.parseString(json)
+    }
 }

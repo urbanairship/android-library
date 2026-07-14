@@ -9,6 +9,7 @@ import android.widget.ImageView.ScaleType.FIT_CENTER
 import androidx.core.view.doOnAttach
 import androidx.core.view.isVisible
 import com.urbanairship.Airship
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.StackItemInfo
@@ -132,6 +133,8 @@ internal class StackImageView(
                     .setImageLoadedCallback { success ->
                         if (success) {
                             isLoaded = true
+                        } else {
+                            UALog.w { "Failed to load image: $url" }
                         }
                     }
                     .build()

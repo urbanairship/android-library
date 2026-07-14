@@ -1,12 +1,12 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.property
 
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.model.SafeAreaAware
 import com.urbanairship.android.layout.model.SafeAreaAware.Companion.ignoreSafeAreaFromJson
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalList
-import com.urbanairship.json.optionalMap
 
 public class BannerPlacement public constructor(
     public val size: ConstrainedSize,
@@ -54,12 +54,26 @@ public class BannerPlacement public constructor(
                 throw JsonException("Banner position must include at least one non-center edge!")
             }
 
-            val shadow = content
-                .optionalMap(KEY_SHADOW)
-                ?.optionalList(KEY_SELECTORS)
-                ?.map(ShadowSelector::fromJson)
-                ?.firstOrNull { it.platform == null || it.platform == Platform.ANDROID }
-                ?.shadow
+            val shadow = content[KEY_SHADOW]?.let { shadowJson ->
+                val resolved = shadowJson.optMap()
+                    .optionalList(KEY_SELECTORS)
+                    ?.map(ShadowSelector::fromJson)
+                    ?.firstOrNull { it.platform == null || it.platform == Platform.ANDROID }
+                    ?.shadow
+                if (resolved == null) {
+                    UALog.w { "Ignoring banner '$KEY_SHADOW'! No usable Android shadow in: $shadowJson" }
+                }
+                resolved
+            }
+
+            val swipeToDismiss = content[KEY_SWIPE_TO_DISMISS]?.let { value ->
+                if (value.isBoolean) {
+                    value.getBoolean(true)
+                } else {
+                    UALog.w { "Ignoring banner '$KEY_SWIPE_TO_DISMISS'! Expected a boolean, got: $value" }
+                    null
+                }
+            } ?: true
 
             return BannerPlacement(
                 size = ConstrainedSize.fromJson(content.require(KEY_SIZE)),
@@ -70,7 +84,7 @@ public class BannerPlacement public constructor(
                 backgroundColor = content[KEY_BACKGROUND]?.let(Color::fromJson),
                 animation = content[KEY_ANIMATION]?.let(BannerAnimation::fromJson)
                     ?: BannerAnimation.DEFAULT,
-                swipeToDismiss = content.opt(KEY_SWIPE_TO_DISMISS).getBoolean(true),
+                swipeToDismiss = swipeToDismiss,
                 shadow = shadow
             )
         }
