@@ -19,7 +19,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -232,22 +231,12 @@ private fun BannerContent(
         val isTimerRunning = lifecycleState.isAtLeast(Lifecycle.State.RESUMED) &&
                 !isDragging && !isDismissing
 
-        var remainingMs by remember { mutableLongStateOf(durationMs) }
+        val timer = remember { BannerAutoDismissTimer(durationMs) }
 
         LaunchedEffect(isTimerRunning) {
             if (!isTimerRunning) return@LaunchedEffect
 
-            if (remainingMs > 0) {
-                val startTime = SystemClock.elapsedRealtime()
-                try {
-                    delay(remainingMs)
-                } finally {
-                    remainingMs = (remainingMs - (SystemClock.elapsedRealtime() - startTime))
-                        .coerceAtLeast(0)
-                }
-            }
-
-            pendingDismissal = BannerDismissal.TimedOut
+            timer.start { pendingDismissal = BannerDismissal.TimedOut }
         }
     }
 
@@ -304,16 +293,12 @@ private fun BannerContent(
                     onDragStopped = { velocity ->
                         isDragging = false
 
-                        val bannerExtent = frameDistance()
-                        val offset = dragOffset.value
-                        val dragPercent = if (bannerExtent > 0) abs(offset) / bannerExtent else 0f
-                        val movedTowardDismiss = offset * dismissDirection > 0
-                        // Only treat flings toward the dismiss edge as dismiss flings.
-                        val isDismissFling = velocity * dismissDirection >= minFlingVelocity
-
-                        val shouldDismiss = movedTowardDismiss && (
-                            dragPercent >= IDLE_MIN_DRAG_PERCENT ||
-                            (isDismissFling && dragPercent > FLING_MIN_DRAG_PERCENT)
+                        val shouldDismiss = shouldDismissBanner(
+                            dragOffset = dragOffset.value,
+                            velocity = velocity,
+                            frameExtent = frameDistance(),
+                            dismissDirection = dismissDirection,
+                            minFlingVelocity = minFlingVelocity
                         )
 
                         if (shouldDismiss) {
@@ -367,7 +352,7 @@ private fun BannerContent(
 }
 
 /** Returns the axis that this placement can be swiped along to dismiss. */
-private fun BannerPlacement.swipeAxis(): Orientation =
+internal fun BannerPlacement.swipeAxis(): Orientation =
     when (position.vertical) {
         VerticalPosition.TOP, VerticalPosition.BOTTOM -> Orientation.Vertical
         VerticalPosition.CENTER -> Orientation.Horizontal
@@ -377,7 +362,7 @@ private fun BannerPlacement.swipeAxis(): Orientation =
  * Returns the direction, along the swipe axis, that this placement animates in from and can be
  * swiped toward to dismiss: `-1` for up/left and `1` for down/right.
  */
-private fun BannerPlacement.dismissDirection(isRtl: Boolean): Float =
+internal fun BannerPlacement.dismissDirection(isRtl: Boolean): Float =
     when (position.vertical) {
         VerticalPosition.BOTTOM -> 1f
         VerticalPosition.TOP -> -1f
@@ -386,6 +371,66 @@ private fun BannerPlacement.dismissDirection(isRtl: Boolean): Float =
             else -> if (isRtl) -1f else 1f
         }
     }
+
+/**
+ * Returns whether a banner should be dismissed when a drag gesture is released.
+ *
+ * @param dragOffset the drag offset, in pixels, along the swipe axis.
+ * @param velocity the release velocity, in pixels per second, along the swipe axis.
+ * @param frameExtent the extent of the banner frame along the swipe axis, in pixels. When the
+ * frame is unmeasured (zero), the drag percent is treated as zero and the release never
+ * dismisses.
+ * @param dismissDirection the dismiss direction along the swipe axis: `-1` or `1`.
+ * @param minFlingVelocity the minimum velocity, in pixels per second, for a release to be
+ * treated as a fling.
+ */
+internal fun shouldDismissBanner(
+    dragOffset: Float,
+    velocity: Float,
+    frameExtent: Float,
+    dismissDirection: Float,
+    minFlingVelocity: Float
+): Boolean {
+    val dragPercent = if (frameExtent > 0) abs(dragOffset) / frameExtent else 0f
+    val movedTowardDismiss = dragOffset * dismissDirection > 0
+    // Only treat flings toward the dismiss edge as dismiss flings.
+    val isDismissFling = velocity * dismissDirection >= minFlingVelocity
+
+    return movedTowardDismiss && (
+        dragPercent >= IDLE_MIN_DRAG_PERCENT ||
+        (isDismissFling && dragPercent > FLING_MIN_DRAG_PERCENT)
+    )
+}
+
+/**
+ * Auto-dismiss countdown state for a banner, tracking the remaining duration across pause
+ * (cancellation) and resume cycles.
+ *
+ * [start] delays for the remaining duration and then invokes its callback. If the running
+ * coroutine is cancelled (pausing the timer), the remaining duration is reduced by the elapsed
+ * time, so a subsequent [start] resumes the countdown from where it left off. If the remaining
+ * duration has already reached zero, the callback is invoked immediately.
+ */
+internal class BannerAutoDismissTimer(
+    durationMs: Long,
+    private val clock: () -> Long = SystemClock::elapsedRealtime
+) {
+    internal var remainingMs: Long = durationMs
+        private set
+
+    internal suspend fun start(onTimedOut: () -> Unit) {
+        if (remainingMs > 0) {
+            val startTime = clock()
+            try {
+                delay(remainingMs)
+            } finally {
+                remainingMs = (remainingMs - (clock() - startTime)).coerceAtLeast(0)
+            }
+        }
+
+        onTimedOut()
+    }
+}
 
 /**
  * The percent of the banner frame's height (or width, for horizontal swipes) that a banner must
