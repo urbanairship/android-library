@@ -56,16 +56,22 @@ import kotlinx.coroutines.launch
 /**
  * View model stores, keyed by banner view instance ID, so that banner state is retained across
  * activity recreation (e.g. rotation) and only cleared when a banner's display actually finishes.
+ *
+ * The backing map is main-thread-confined: all access must happen on the main thread.
+ *
+ * @hide
  */
-private object BannerViewModelStores {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public object BannerViewModelStores {
     private val stores = mutableMapOf<String, ViewModelStore>()
 
-    fun owner(viewInstanceId: String): ViewModelStoreOwner = object : ViewModelStoreOwner {
+    internal fun owner(viewInstanceId: String): ViewModelStoreOwner = object : ViewModelStoreOwner {
         override val viewModelStore: ViewModelStore
             get() = stores.getOrPut(viewInstanceId) { ViewModelStore() }
     }
 
-    fun clear(viewInstanceId: String) {
+    /** Clears and removes the store entry for [viewInstanceId], if one exists. */
+    public fun clear(viewInstanceId: String) {
         stores.remove(viewInstanceId)?.clear()
     }
 }
@@ -95,6 +101,7 @@ public class BannerLayout(
     private var currentView: WeakReference<ThomasBannerView>? = null
     private var displayTimer: DisplayTimer? = null
     private var applicationListener: ApplicationListener? = null
+    private var isDismissed = false
 
     private val _isVisible = MutableStateFlow(false)
 
@@ -228,7 +235,9 @@ public class BannerLayout(
     }
 
     /** Removes the banner from the pending queue, without reporting, and finishes the display. */
+    @MainThread
     private fun dismiss() {
+        isDismissed = true
         bannerViewManager.dismiss(viewInstanceId)
         onDisplayFinished()
     }
@@ -237,10 +246,15 @@ public class BannerLayout(
      * Dismisses the banner after its view failed to be created, so that it doesn't block other
      * pending banners.
      *
+     * Resolves the display request as cancelled, via the display listener, without reporting a
+     * dismiss resolution event, since the banner was never actually displayed.
+     *
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun dismissFromViewFailure() {
+        if (isDismissed) return
+        externalListener.onDismiss(cancel = true)
         dismiss()
     }
 
@@ -252,6 +266,7 @@ public class BannerLayout(
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun dismissFromUser() {
+        if (isDismissed) return
         reportDismissFromOutside(ReportingEvent.DismissData.UserDismissed)
         dismiss()
     }
@@ -264,6 +279,7 @@ public class BannerLayout(
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun dismissFromTimeout() {
+        if (isDismissed) return
         reportDismissFromOutside(ReportingEvent.DismissData.TimedOut)
         dismiss()
     }

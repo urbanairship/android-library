@@ -21,7 +21,10 @@ import kotlinx.coroutines.flow.Flow
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public interface AirshipBannerViewManager {
 
-    /** Dismisses the currently displayed banner and all pending banners. */
+    /**
+     * Drops the currently displayed banner and all pending banners from the queue, resolving
+     * each dropped display request as cancelled via its display listener.
+     */
     public fun dismissAll()
 
     /** Returns a flow of all pending banners. */
