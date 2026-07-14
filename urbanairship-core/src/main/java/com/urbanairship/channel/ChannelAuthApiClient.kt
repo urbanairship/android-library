@@ -11,6 +11,7 @@ import com.urbanairship.http.RequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.UAHttpStatusUtil
+import kotlin.time.Duration.Companion.milliseconds
 
 internal class ChannelAuthApiClient(
     private val runtimeConfig: AirshipRuntimeConfig,
@@ -38,10 +39,12 @@ internal class ChannelAuthApiClient(
             JsonValue.parseString(responseBody)
                 .requireMap()
                 .let { map ->
+                    // "expires_in" is in milliseconds.
+                    val expiresIn = map.require("expires_in").getLong(0).milliseconds
                     AuthToken(
                         identifier = channelId,
                         token = map.require("token").requireString(),
-                        expirationDateMillis = requestTime + map.require("expires_in").getLong(0)
+                        expirationDateMillis = requestTime + expiresIn.inWholeMilliseconds
                     )
                 }
         }

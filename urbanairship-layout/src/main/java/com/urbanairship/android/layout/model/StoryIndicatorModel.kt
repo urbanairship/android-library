@@ -7,6 +7,7 @@ import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.AutomatedAccessibilityActionType
 import com.urbanairship.android.layout.info.StoryIndicatorInfo
 import com.urbanairship.android.layout.view.StoryIndicatorView
+import kotlin.time.Duration
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -27,7 +28,7 @@ internal class StoryIndicatorModel(
             size: Int,
             pageIndex: Int,
             progress: Int,
-            durations: List<Int?>,
+            durations: List<Duration?>,
             announcePage: Boolean
         )
     }
@@ -86,7 +87,7 @@ internal class StoryIndicatorModel(
         val size: Int,
         val pageIndex: Int,
         val progress: Int,
-        val durations: List<Int?>,
+        val durations: List<Duration?>,
         val announcePage: Boolean
     )
 

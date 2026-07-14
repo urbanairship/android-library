@@ -18,6 +18,7 @@ import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.util.stringResource
 import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.progressindicator.LinearProgressIndicator.INDICATOR_DIRECTION_START_TO_END
+import kotlin.time.Duration
 
 internal class StoryIndicatorView(
     context: Context,
@@ -49,7 +50,7 @@ internal class StoryIndicatorView(
                 size: Int,
                 pageIndex: Int,
                 progress: Int,
-                durations: List<Int?>,
+                durations: List<Duration?>,
                 announcePage: Boolean
             ) {
                 if (!isInitialized) {
@@ -76,7 +77,7 @@ internal class StoryIndicatorView(
         }
     }
 
-    fun setCount(count: Int, durations: List<Int?>) {
+    fun setCount(count: Int, durations: List<Duration?>) {
         when (val style = model.viewInfo.style) {
             is StoryIndicatorStyle.LinearProgress -> {
                 val halfSpacing = ResourceUtils.dpToPx(context, style.spacing / 2).toInt()
@@ -112,7 +113,7 @@ internal class StoryIndicatorView(
                                 // If we don't have any automated action and so no delay
                                 // Set a static 10 width to have a small static indicator for the page
                                 durations[i]?.let {
-                                    weight = it.toFloat()
+                                    weight = it.inWholeSeconds.toFloat()
                                 } ?: run {
                                     progressIndicator.visibility = GONE
                                 }

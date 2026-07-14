@@ -36,6 +36,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -104,8 +105,8 @@ public class RemoteData @VisibleForTesting internal constructor(
         }
     }
 
-    internal fun getRefreshInterval(): Long {
-        return config.remoteConfig.remoteDataRefreshInterval ?: DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS
+    internal fun getRefreshInterval(): Duration {
+        return config.remoteConfig.remoteDataRefreshInterval ?: DEFAULT_FOREGROUND_REFRESH_INTERVAL
     }
 
     internal fun getForegroundPollingInterval(): Duration {
@@ -152,7 +153,7 @@ public class RemoteData @VisibleForTesting internal constructor(
     private val applicationListener: ApplicationListener = object : SimpleApplicationListener() {
         override fun onForeground(milliseconds: Long) {
             val now = clock.currentTimeMillis()
-            if (now >= lastForegroundDispatchTime + getRefreshInterval()) {
+            if (now >= lastForegroundDispatchTime + getRefreshInterval().inWholeMilliseconds) {
                 updateChangeToken()
                 dispatchRefreshJobAsync()
                 lastForegroundDispatchTime = now
@@ -454,9 +455,9 @@ public class RemoteData @VisibleForTesting internal constructor(
         private val CHANGE_TOKEN_KEY = SyncPrefKey.string("com.urbanairship.remotedata.CHANGE_TOKEN")
 
         /**
-         * Default foreground refresh interval in milliseconds.
+         * Default foreground refresh interval.
          */
-        public const val DEFAULT_FOREGROUND_REFRESH_INTERVAL_MS: Long = 10000 // 10 seconds
+        public val DEFAULT_FOREGROUND_REFRESH_INTERVAL: Duration = 10.seconds
 
         /**
          * Default foreground polling interval.
