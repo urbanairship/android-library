@@ -19,6 +19,8 @@ import com.urbanairship.android.layout.ui.BannerLayout
 import com.urbanairship.banner.BannerViewManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -86,8 +88,11 @@ internal fun rememberAirshipBannerHostState(
         // Collect display requests and update the current layout state.
         withContext(Dispatchers.Default) {
             bannerViewManager.displayRequests(scope)
-                .map { request ->
-                    val next = request.next
+                .map { it.next }
+                // Reuse the existing layout while the view instance is unchanged, so that queue
+                // changes don't swap in a new BannerLayout mid-display.
+                .distinctUntilChangedBy { it?.viewInstanceId }
+                .map { next ->
                     if (next == null) {
                         // Nothing to display.
                         UALog.v { "No banner display request available" }
@@ -95,9 +100,23 @@ internal fun rememberAirshipBannerHostState(
                     } else {
                         // Inflate the banner layout.
                         UALog.v { "Banner display request available: \"${next.viewInstanceId}\"" }
-                        val displayArgs = next.displayArgsProvider.invoke()
-                        BannerLayout(context, next.viewInstanceId, displayArgs, bannerViewManager)
+                        try {
+                            val displayArgs = next.displayArgsProvider.invoke()
+                            BannerLayout(context, next.viewInstanceId, displayArgs, bannerViewManager)
+                        } catch (e: Exception) {
+                            UALog.e(e) { "Failed to create banner layout for instance: \"${next.viewInstanceId}\"" }
+                            // Resolve and remove the failed request, so that the queue advances.
+                            runCatching {
+                                next.displayArgsProvider.invoke().listener.onDismiss(cancel = true)
+                            }
+                            bannerViewManager.dismiss(next.viewInstanceId)
+                            null
+                        }
                     }
+                }
+                .catch {
+                    UALog.e(it) { "Banner display request collection failed!" }
+                    throw it
                 }
                 .collect { state.currentLayout = it }
         }

@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.ui
 
 import android.content.Context
+import android.graphics.Rect
 import android.os.Build
 import android.view.View
 import androidx.annotation.RestrictTo
@@ -36,10 +37,11 @@ public class ThomasBannerView internal constructor(
     private var bannerFrame: ConstrainedFrameLayout? = null
 
     /**
-     * Listener notified when the banner frame's size changes. Used by the host to size
-     * animations and swipe-to-dismiss gestures relative to the banner content.
+     * Listener notified when the banner frame's bounds (relative to this view) change. Used by
+     * the host to size and position animations and swipe-to-dismiss gestures relative to the
+     * banner content.
      */
-    public var frameSizeChangedListener: ((width: Int, height: Int) -> Unit)? = null
+    public var frameBoundsChangedListener: ((Rect) -> Unit)? = null
 
     init {
         id = model.viewId
@@ -64,10 +66,8 @@ public class ThomasBannerView internal constructor(
             id = generateViewId()
             layoutParams = LayoutParams(MATCH_CONSTRAINT, MATCH_CONSTRAINT)
             addOnLayoutChangeListener { _, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
-                val width = right - left
-                val height = bottom - top
-                if (width != oldRight - oldLeft || height != oldBottom - oldTop) {
-                    frameSizeChangedListener?.invoke(width, height)
+                if (left != oldLeft || top != oldTop || right != oldRight || bottom != oldBottom) {
+                    frameBoundsChangedListener?.invoke(Rect(left, top, right, bottom))
                 }
             }
         }.also {

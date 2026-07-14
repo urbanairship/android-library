@@ -3,6 +3,7 @@
 package com.urbanairship.android.layout.ui
 
 import android.content.Context
+import android.graphics.Rect
 import android.view.ContextThemeWrapper
 import android.view.View
 import androidx.annotation.MainThread
@@ -90,6 +91,10 @@ public class BannerLayout(
     private var stateUpdateReportJob: Job? = null
 
     private val payload: LayoutInfo = args.payload
+    private val presentation: BannerPresentation =
+        requireNotNull(payload.presentation as? BannerPresentation) {
+            "BannerLayout requires a BannerPresentation!"
+        }
     private val activityMonitor: ActivityMonitor = args.inAppActivityMonitor
     private val webViewClientFactory: Factory<AirshipWebViewClient>? = args.webViewClientFactory
     private val externalListener: ThomasListenerInterface = args.listener
@@ -109,24 +114,23 @@ public class BannerLayout(
 
     /** @hide **/
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun getPresentation(): BannerPresentation? =
-        payload.presentation as? BannerPresentation
+    public fun getPresentation(): BannerPresentation = presentation
 
     /** @hide **/
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public fun getPlacement(): BannerPlacement? =
-        getPresentation()?.getResolvedPlacement(context)
+    public fun getPlacement(): BannerPlacement =
+        presentation.getResolvedPlacement(context)
 
     /**
-     * Creates the banner view, notifying the optional [frameSizeChangedListener] when the
-     * banner frame's size changes. The listener may be used by the host to size animations and
-     * swipe-to-dismiss gestures relative to the banner content.
+     * Creates the banner view, notifying the optional [frameBoundsChangedListener] when the
+     * banner frame's bounds change. The listener may be used by the host to size and position
+     * animations and swipe-to-dismiss gestures relative to the banner content.
      *
      * @hide
      */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun makeView(
-        frameSizeChangedListener: ((width: Int, height: Int) -> Unit)? = null
+        frameBoundsChangedListener: ((Rect) -> Unit)? = null
     ): View? {
         val activity = context.getActivity()
         if (activity == null) {
@@ -135,12 +139,6 @@ public class BannerLayout(
         }
         if (activity !is LifecycleOwner) {
             UALog.e { "Airship Banner Views must be hosted by an Activity that implements LifecycleOwner!" }
-            return null
-        }
-
-        val presentation = getPresentation()
-        if (presentation == null) {
-            UALog.e { "BannerLayout requires a BannerPresentation!" }
             return null
         }
 
@@ -177,7 +175,7 @@ public class BannerLayout(
             activityMonitor,
             webViewClientFactory,
             imageCache,
-            getPlacement()?.shouldIgnoreSafeArea() ?: false
+            getPlacement().shouldIgnoreSafeArea()
         )
 
         val viewModelProvider = ViewModelProvider(BannerViewModelStores.owner(viewInstanceId))
@@ -204,7 +202,7 @@ public class BannerLayout(
                 presentation = presentation,
                 environment = viewEnvironment
             )
-            bannerView.frameSizeChangedListener = frameSizeChangedListener
+            bannerView.frameBoundsChangedListener = frameBoundsChangedListener
 
             bannerView.addOnAttachStateChangeListener(object : View.OnAttachStateChangeListener {
                 override fun onViewAttachedToWindow(v: View) {

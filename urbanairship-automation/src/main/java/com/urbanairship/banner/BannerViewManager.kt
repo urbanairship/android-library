@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.ui.BannerViewModelStores
 import com.urbanairship.json.JsonMap
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlinx.coroutines.CoroutineScope
@@ -20,6 +21,8 @@ import kotlinx.coroutines.flow.SharingStarted.Companion.WhileSubscribed
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.getAndUpdate
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.update
 
@@ -31,6 +34,9 @@ public object BannerViewManager : AirshipBannerViewManager {
 
     private var lastViewed: String? = null
     private val lastViewedLock = ReentrantLock()
+
+    /** Number of active [displayRequests] subscriptions. There should be at most one. */
+    private val activeSubscriptions = AtomicInteger(0)
 
     override fun addPending(
         viewInstanceId: String,
@@ -124,5 +130,14 @@ public object BannerViewManager : AirshipBannerViewManager {
             }
             .distinctUntilChanged()
             .shareIn(scope, replay = 1, started = WhileSubscribed())
+            .onStart {
+                if (activeSubscriptions.incrementAndGet() > 1) {
+                    UALog.e {
+                        "Multiple concurrent banner display request subscriptions detected! " +
+                        "Only a single banner host should be active at a time."
+                    }
+                }
+            }
+            .onCompletion { activeSubscriptions.decrementAndGet() }
     }
 }

@@ -3,6 +3,7 @@
 package com.urbanairship.android.layout
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.UALog
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.json.JsonMap
@@ -34,6 +35,12 @@ public interface AirshipBannerViewManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun addPending(args: DisplayArgs, priority: Int = 0, extras: JsonMap = JsonMap.EMPTY_MAP) {
         val payload = args.payload
+        if (payload.presentation !is BannerPresentation) {
+            UALog.e { "Failed to add pending banner. Presentation must be a BannerPresentation!" }
+            // Resolve the display request as cancelled, so the display coroutine doesn't hang.
+            args.listener.onDismiss(cancel = true)
+            return
+        }
         val viewInstanceId = UUID.randomUUID().toString()
 
         addPending(

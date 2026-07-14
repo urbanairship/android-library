@@ -13,6 +13,7 @@ import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.draggable
 import androidx.compose.foundation.gestures.rememberDraggableState
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -23,14 +24,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.AbsoluteAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -45,8 +50,10 @@ import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.ui.BannerLayout
 import kotlin.math.abs
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * A host container that displays Thomas banners.
@@ -124,17 +131,18 @@ private fun BannerContent(
     val scope = rememberCoroutineScope()
 
     val placement = remember(layout, configuration) { layout.getPlacement() }
-    val durationMs = remember(layout) { layout.getPresentation()?.durationMs }
-    val animation = placement?.animation ?: BannerAnimation.DEFAULT
+    val durationMs = remember(layout) { layout.getPresentation().durationMs }
+    val animation = placement.animation
 
-    // The size of the banner frame within the host, reported by the banner view once laid out.
-    var frameSize by remember { mutableStateOf(IntSize.Zero) }
+    // The bounds of the banner frame within the host, reported by the banner view once laid out.
+    var frameBounds by remember { mutableStateOf<IntRect?>(null) }
+    val frameSize = frameBounds?.let { IntSize(it.width, it.height) } ?: IntSize.Zero
 
     // Remember the view, so we only create it once per banner instance.
     val view = remember(layout.viewInstanceId) {
         layout.makeView(
-            frameSizeChangedListener = { width, height ->
-                frameSize = IntSize(width, height)
+            frameBoundsChangedListener = { bounds ->
+                frameBounds = IntRect(bounds.left, bounds.top, bounds.right, bounds.bottom)
             }
         )?.apply {
             layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
@@ -177,26 +185,38 @@ private fun BannerContent(
         }
     }
 
-    // Animate the banner out and dismiss it, when timed out or swiped away.
+    // Animate the banner out and dismiss it, when timed out or swiped away. The terminal
+    // dismiss runs in a NonCancellable finally block, so that disposal mid-animation can't
+    // cancel it and leave the banner un-dismissed.
     LaunchedEffect(pendingDismissal) {
         when (val dismissal = pendingDismissal) {
             null -> {}
             is BannerDismissal.TimedOut -> {
-                transition.animateTo(
-                    targetValue = 1f,
-                    animationSpec = tween(animation.animateOutMs.toInt(), easing = LinearEasing)
-                )
-                layout.dismissFromTimeout()
+                try {
+                    transition.animateTo(
+                        targetValue = 1f,
+                        animationSpec = tween(animation.animateOutMs.toInt(), easing = LinearEasing)
+                    )
+                } finally {
+                    withContext(NonCancellable) {
+                        layout.dismissFromTimeout()
+                    }
+                }
             }
             is BannerDismissal.Swiped -> {
-                val hostSize = hostSizeProvider()
-                val range = when (swipeAxis) {
-                    Orientation.Vertical -> hostSize.height
-                    Orientation.Horizontal -> hostSize.width
+                try {
+                    val hostSize = hostSizeProvider()
+                    val range = when (swipeAxis) {
+                        Orientation.Vertical -> hostSize.height
+                        Orientation.Horizontal -> hostSize.width
+                    }
+                    val target = (range + frameDistance()) * dismissDirection
+                    dragOffset.animateTo(target, initialVelocity = dismissal.velocity)
+                } finally {
+                    withContext(NonCancellable) {
+                        layout.dismissFromUser()
+                    }
                 }
-                val target = (range + frameDistance()) * dismissDirection
-                dragOffset.animateTo(target, initialVelocity = dismissal.velocity)
-                layout.dismissFromUser()
             }
         }
     }
@@ -231,93 +251,120 @@ private fun BannerContent(
     }
     val overDragPx = with(LocalDensity.current) { OVER_DRAG.toPx() }
 
-    AndroidView(
-        factory = { viewContext ->
-            FrameLayout(viewContext).apply {
-                layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-            }.also {
-                UALog.v { "Create banner layout for instance: \"${layout.viewInstanceId}\"" }
-            }
-        },
-        update = { frame ->
-            if (view.parent != frame) {
-                // If the frame has children, remove them before adding the new view.
-                if (frame.childCount > 0) {
-                    frame.removeAllViews()
-                }
-                frame.addView(view)
-            }
-            UALog.v { "Update banner layout for instance: \"${layout.viewInstanceId}\"" }
-        },
-        onReset = { frame ->
-            frame.removeAllViews()
-            UALog.v { "Reset banner layout for instance: \"${layout.viewInstanceId}\"" }
-        },
-        modifier = modifier
-            .graphicsLayer {
-                when (animation) {
-                    is BannerAnimation.Fade -> {
-                        alpha = 1f - transition.value
-                    }
-                    is BannerAnimation.Slide -> {
-                        // Slide in from (and out to) the banner's placement edge.
-                        val slideOffset = transition.value * frameDistance() * dismissDirection
-                        when (swipeAxis) {
-                            Orientation.Vertical -> translationY = slideOffset
-                            Orientation.Horizontal -> translationX = slideOffset
+    // Absolute alignment and offset are used below because the banner view reports its frame
+    // bounds in absolute (physical) coordinates, which should not be mirrored in RTL layouts.
+    Box(modifier = modifier, contentAlignment = AbsoluteAlignment.TopLeft) {
+        Box(
+            modifier = Modifier
+                // Position and size this wrapper to the measured banner frame (or the full host,
+                // before the frame is measured), so that gesture capture and the drag/animation
+                // translation are scoped to the banner content. Drags (like taps) outside the
+                // banner frame pass through to the app content beneath the host.
+                .absoluteOffset { frameBounds?.let { IntOffset(it.left, it.top) } ?: IntOffset.Zero }
+                .graphicsLayer {
+                    when (animation) {
+                        is BannerAnimation.Fade -> {
+                            alpha = 1f - transition.value
                         }
-                        // Hide the banner until the frame has been measured, to avoid
-                        // a flash of un-animated content on the first frame.
-                        alpha = if (isFrameReady) 1f else 0f
+                        is BannerAnimation.Slide -> {
+                            // Slide in from (and out to) the banner's placement edge.
+                            val slideOffset = transition.value * frameDistance() * dismissDirection
+                            when (swipeAxis) {
+                                Orientation.Vertical -> translationY = slideOffset
+                                Orientation.Horizontal -> translationX = slideOffset
+                            }
+                            // Hide the banner until the frame has been measured, to avoid
+                            // a flash of un-animated content on the first frame.
+                            alpha = if (isFrameReady) 1f else 0f
+                        }
                     }
-                }
 
-                when (swipeAxis) {
-                    Orientation.Vertical -> translationY += dragOffset.value
-                    Orientation.Horizontal -> translationX += dragOffset.value
-                }
-            }
-            .draggable(
-                state = rememberDraggableState { delta ->
-                    val newOffset = if (dismissDirection > 0) {
-                        (dragOffset.value + delta).coerceAtLeast(-overDragPx)
-                    } else {
-                        (dragOffset.value + delta).coerceAtMost(overDragPx)
+                    when (swipeAxis) {
+                        Orientation.Vertical -> translationY += dragOffset.value
+                        Orientation.Horizontal -> translationX += dragOffset.value
                     }
-                    scope.launch { dragOffset.snapTo(newOffset) }
+                }
+                .draggable(
+                    state = rememberDraggableState { delta ->
+                        val newOffset = if (dismissDirection > 0) {
+                            (dragOffset.value + delta).coerceAtLeast(-overDragPx)
+                        } else {
+                            (dragOffset.value + delta).coerceAtMost(overDragPx)
+                        }
+                        scope.launch { dragOffset.snapTo(newOffset) }
+                    },
+                    orientation = swipeAxis,
+                    enabled = placement.swipeToDismiss && !isDismissing,
+                    onDragStarted = { isDragging = true },
+                    onDragStopped = { velocity ->
+                        isDragging = false
+
+                        val bannerExtent = frameDistance()
+                        val offset = dragOffset.value
+                        val dragPercent = if (bannerExtent > 0) abs(offset) / bannerExtent else 0f
+                        val movedTowardDismiss = offset * dismissDirection > 0
+                        // Only treat flings toward the dismiss edge as dismiss flings.
+                        val isDismissFling = velocity * dismissDirection >= minFlingVelocity
+
+                        val shouldDismiss = movedTowardDismiss && (
+                            dragPercent >= IDLE_MIN_DRAG_PERCENT ||
+                            (isDismissFling && dragPercent > FLING_MIN_DRAG_PERCENT)
+                        )
+
+                        if (shouldDismiss) {
+                            pendingDismissal = BannerDismissal.Swiped(velocity)
+                        } else {
+                            dragOffset.animateTo(0f, initialVelocity = velocity)
+                        }
+                    }
+                )
+                .layout { measurable, constraints ->
+                    // Measure the banner content at the full host size (the banner view positions
+                    // its frame internally), but report the frame's bounds as this node's size and
+                    // offset the content to compensate, so the wrapper overlays the banner frame.
+                    val placeable = measurable.measure(constraints)
+                    val bounds = frameBounds
+                    if (bounds == null) {
+                        layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+                    } else {
+                        layout(bounds.width, bounds.height) {
+                            placeable.place(-bounds.left, -bounds.top)
+                        }
+                    }
+                }
+        ) {
+            AndroidView(
+                factory = { viewContext ->
+                    FrameLayout(viewContext).apply {
+                        layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
+                    }.also {
+                        UALog.v { "Create banner layout for instance: \"${layout.viewInstanceId}\"" }
+                    }
                 },
-                orientation = swipeAxis,
-                enabled = (placement?.swipeToDismiss ?: true) && !isDismissing,
-                onDragStarted = { isDragging = true },
-                onDragStopped = { velocity ->
-                    isDragging = false
-
-                    val bannerExtent = frameDistance()
-                    val offset = dragOffset.value
-                    val dragPercent = if (bannerExtent > 0) abs(offset) / bannerExtent else 0f
-                    val movedTowardDismiss = offset * dismissDirection > 0
-                    // Only treat flings toward the dismiss edge as dismiss flings.
-                    val isDismissFling = velocity * dismissDirection >= minFlingVelocity
-
-                    val shouldDismiss = movedTowardDismiss && (
-                        dragPercent >= IDLE_MIN_DRAG_PERCENT ||
-                        (isDismissFling && dragPercent > FLING_MIN_DRAG_PERCENT)
-                    )
-
-                    if (shouldDismiss) {
-                        pendingDismissal = BannerDismissal.Swiped(velocity)
-                    } else {
-                        dragOffset.animateTo(0f, initialVelocity = velocity)
+                update = { frame ->
+                    if (view.parent != frame) {
+                        // If the frame has children, remove them before adding the new view.
+                        if (frame.childCount > 0) {
+                            frame.removeAllViews()
+                        }
+                        frame.addView(view)
                     }
-                }
+                    UALog.v { "Update banner layout for instance: \"${layout.viewInstanceId}\"" }
+                },
+                onReset = { frame ->
+                    frame.removeAllViews()
+                    UALog.v { "Reset banner layout for instance: \"${layout.viewInstanceId}\"" }
+                },
+                modifier = Modifier.fillMaxSize()
             )
-    )
+        }
+    }
 }
 
 /** Returns the axis that this placement can be swiped along to dismiss. */
-private fun BannerPlacement?.swipeAxis(): Orientation =
-    when (this?.position?.vertical) {
-        null, VerticalPosition.TOP, VerticalPosition.BOTTOM -> Orientation.Vertical
+private fun BannerPlacement.swipeAxis(): Orientation =
+    when (position.vertical) {
+        VerticalPosition.TOP, VerticalPosition.BOTTOM -> Orientation.Vertical
         VerticalPosition.CENTER -> Orientation.Horizontal
     }
 
@@ -325,11 +372,11 @@ private fun BannerPlacement?.swipeAxis(): Orientation =
  * Returns the direction, along the swipe axis, that this placement animates in from and can be
  * swiped toward to dismiss: `-1` for up/left and `1` for down/right.
  */
-private fun BannerPlacement?.dismissDirection(isRtl: Boolean): Float =
-    when (this?.position?.vertical) {
-        null, VerticalPosition.BOTTOM -> 1f
+private fun BannerPlacement.dismissDirection(isRtl: Boolean): Float =
+    when (position.vertical) {
+        VerticalPosition.BOTTOM -> 1f
         VerticalPosition.TOP -> -1f
-        VerticalPosition.CENTER -> when (this.position.horizontal) {
+        VerticalPosition.CENTER -> when (position.horizontal) {
             HorizontalPosition.START -> if (isRtl) 1f else -1f
             else -> if (isRtl) -1f else 1f
         }
