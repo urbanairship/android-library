@@ -110,7 +110,9 @@ public class ThomasBannerView internal constructor(
 
         val ignoreSafeArea = false
 
-        // Percent base: the full window (matches ConstraintLayout's constrainPercent*).
+        // Percent base for the overflow/fitting math: the full window. Note that
+        // ConstraintLayout's constrainPercent* sizing is parent-relative, so this base only
+        // matches the frame's actual percent sizing when the banner host fills the window.
         val windowWidthPx = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)
         val windowHeightPx = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea)
 

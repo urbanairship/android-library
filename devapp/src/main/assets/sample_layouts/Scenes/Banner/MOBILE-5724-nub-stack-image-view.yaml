@@ -1,4 +1,4 @@
-# #318: nub as authored stack_image_view content (replaces the old placement nub field)
+# #318: nub authored as stack_image_view content (BannerPlacement has no nub field)
 version: 1
 presentation:
   type: banner
@@ -75,8 +75,7 @@ view:
       height: auto
     view:
       type: label
-      text: The grab handle above is authored content (stack_image_view), not a placement nub. No red
-        placeholder should ever appear.
+      text: The grab handle above is authored content (stack_image_view), not a placement nub.
       text_appearance:
         font_size: 13
         alignment: center

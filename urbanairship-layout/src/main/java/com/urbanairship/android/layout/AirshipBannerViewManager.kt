@@ -28,7 +28,10 @@ public interface AirshipBannerViewManager {
      */
     public fun dismissAll()
 
-    /** Returns a flow of all pending banners. */
+    /**
+     * Returns a flow of all pending banner display requests. The list includes the currently
+     * displayed banner.
+     */
     public fun allPending(): Flow<List<BannerDisplayRequest>>
 
     /** @hide */

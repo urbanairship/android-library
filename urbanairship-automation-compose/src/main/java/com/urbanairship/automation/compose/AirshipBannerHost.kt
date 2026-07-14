@@ -63,6 +63,10 @@ import kotlinx.coroutines.withContext
  * banner's placement, so the host should generally be sized to fill the area that banners may
  * be displayed in.
  *
+ * The host must be attached to an Activity that implements
+ * [androidx.lifecycle.LifecycleOwner] (as all `ComponentActivity` subclasses do), or banner
+ * views will fail to be created.
+ *
  * Pending banners are queued until a host is mounted.
  *
  * @param modifier the modifier to apply to this layout.
@@ -221,7 +225,8 @@ private fun BannerContent(
         }
     }
 
-    // Auto-dismiss timer, paused while the app is backgrounded or the banner is being dragged.
+    // Auto-dismiss timer, paused while the host lifecycle is below RESUMED or the banner is
+    // being dragged or dismissed.
     if (durationMs != null) {
         val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
         val isTimerRunning = lifecycleState.isAtLeast(Lifecycle.State.RESUMED) &&
@@ -384,14 +389,17 @@ private fun BannerPlacement.dismissDirection(isRtl: Boolean): Float =
 
 /**
  * The percent of the banner frame's height (or width, for horizontal swipes) that a banner must
- * be dragged before it is dismissed when released with a velocity below the minimum fling
- * velocity.
+ * be dragged toward the dismiss edge before it is dismissed when released with a velocity below
+ * the minimum fling velocity. Before the banner frame has been measured, the host's size is
+ * used as the fallback base.
  */
 private const val IDLE_MIN_DRAG_PERCENT = .4f
 
 /**
  * The percent of the banner frame's height (or width, for horizontal swipes) that a banner must
- * be dragged before it is dismissed when released with a fling velocity toward the dismiss edge.
+ * be dragged toward the dismiss edge before it is dismissed when released with a fling velocity
+ * toward the dismiss edge. Before the banner frame has been measured, the host's size is used
+ * as the fallback base.
  */
 private const val FLING_MIN_DRAG_PERCENT = .1f
 

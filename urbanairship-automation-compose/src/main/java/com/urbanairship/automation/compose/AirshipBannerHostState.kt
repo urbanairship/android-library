@@ -26,6 +26,9 @@ import kotlinx.coroutines.withContext
 
 /**
  * Creates an [AirshipBannerHostState] that can be used to manage the state of a banner host.
+ *
+ * Remembering the state starts consuming the pending banner queue, so the returned state should
+ * be passed to a mounted [AirshipBannerHost].
  */
 @Composable
 public fun rememberAirshipBannerHostState(): AirshipBannerHostState {
@@ -53,7 +56,10 @@ public class AirshipBannerHostState internal constructor(
         currentLayout?.dismissFromUser()
     }
 
-    /** Dismiss the currently displayed banner and all pending banners. */
+    /**
+     * Dismisses the currently displayed banner, reporting a user dismiss for it, and drops all
+     * pending banners, resolving each dropped display request as cancelled.
+     */
     public suspend fun dismissAll(): Unit = coroutineScope {
         currentLayout?.dismissFromUser()
         bannerViewManager.dismissAll()

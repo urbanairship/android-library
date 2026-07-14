@@ -155,8 +155,10 @@ public class BannerLayout(
             }
         })
 
-        // Remove any listener added by a previous makeView call (e.g. after a configuration
-        // change), so that repeated calls don't stack duplicate listeners.
+        // Remove any listener added by a previous makeView call, so that repeated calls don't
+        // stack duplicate listeners. (A configuration change creates a new BannerLayout
+        // instance, so the realistic repeat path is the host leaving and re-entering
+        // composition while this banner is still displayed.)
         applicationListener?.let(activityMonitor::removeApplicationListener)
         applicationListener = object : SimpleApplicationListener() {
             override fun onForeground(time: Long) {
