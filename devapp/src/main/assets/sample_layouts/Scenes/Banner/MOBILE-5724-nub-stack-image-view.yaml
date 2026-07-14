@@ -35,6 +35,7 @@ view:
       height: 5
     view:
       type: stack_image_view
+      identifier: banner_nub
       items:
       - type: shape
         shape:
