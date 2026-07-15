@@ -69,10 +69,6 @@ internal class ToggleLayoutView<T: BaseToggleLayoutModel<*, *>>(
                 info.isCheckable = host.isEnabled
                 model.contentDescription(host.context)?.ifNotEmpty { info.contentDescription = it }
 
-                if (host.isEnabled) {
-                    info.isChecked = model.isOn.value
-                }
-
                 var useSelected = when(type) {
                     ToggleLayoutType.SCORE -> true
                     ToggleLayoutType.RADIO -> true

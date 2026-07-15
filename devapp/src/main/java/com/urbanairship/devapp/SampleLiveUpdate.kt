@@ -1,12 +1,14 @@
 package com.urbanairship.devapp
 
-import android.annotation.SuppressLint
+import android.Manifest.permission.POST_NOTIFICATIONS
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager.PERMISSION_GRANTED
 import android.util.Log
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat.checkSelfPermission
 import com.urbanairship.json.JsonMap
 import com.urbanairship.liveupdate.CallbackLiveUpdateNotificationHandler
 import com.urbanairship.liveupdate.LiveUpdate
@@ -21,7 +23,6 @@ import com.bumptech.glide.request.target.NotificationTarget
  */
 class SampleLiveUpdate : CallbackLiveUpdateNotificationHandler {
 
-    @SuppressLint("MissingPermission")
     override fun onUpdate(
         context: Context,
         event: LiveUpdateEvent,
@@ -65,10 +66,7 @@ class SampleLiveUpdate : CallbackLiveUpdateNotificationHandler {
             .setCustomBigContentView(bigLayout)
             .setContentIntent(contentIntent)
 
-        val result = resultCallback.ok(builder)
-        if (result == null) {
-            return
-        }
+        val result = resultCallback.ok(builder) ?: return
 
         val notification = result.notification
         val id = result.notificationId
@@ -80,12 +78,14 @@ class SampleLiveUpdate : CallbackLiveUpdateNotificationHandler {
         )
             .filter { it.value.isNotEmpty() }
             .forEach { (viewId, imageUrl) ->
+                if (checkSelfPermission(context, POST_NOTIFICATIONS) != PERMISSION_GRANTED) {
+                    return@forEach
+                }
+
                 Glide.with(context).asBitmap()
                     .load(imageUrl)
                     .into<NotificationTarget?>(
-                        NotificationTarget(
-                            context, viewId, notification.contentView, notification, id, tag
-                        )
+                        NotificationTarget(context, viewId, bigLayout, notification, id, tag)
                     )
             }
     }
@@ -95,13 +95,13 @@ class SampleLiveUpdate : CallbackLiveUpdateNotificationHandler {
         val teamTwo: Team,
         val statusUpdate: String
     ) {
-
         data class Team(
-            val name: String, val score: Int, val imageUrl: String
+            val name: String,
+            val score: Int,
+            val imageUrl: String
         )
 
-        enum class LayoutType { BIG, SMALL
-        }
+        enum class LayoutType { BIG, SMALL }
 
         fun fillLayout(layout: RemoteViews, layoutType: LayoutType) {
             layout.setTextViewText(R.id.teamOneScore, teamOne.score.toString())

@@ -113,10 +113,6 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
                 model.contentDescription(context).ifNotEmpty { info.contentDescription = it }
                 info.isCheckable = host.isEnabled
                 info.className = accessibilityNodeClassName
-
-                if (host.isEnabled) {
-                    info.isChecked = checkableView.isChecked()
-                }
             }
         })
     }

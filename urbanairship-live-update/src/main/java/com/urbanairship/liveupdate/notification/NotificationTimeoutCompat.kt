@@ -43,6 +43,6 @@ internal class NotificationTimeoutCompat(
         val intent = LiveUpdateNotificationReceiver.timeoutCompatIntent(context, name)
         val operation = PendingIntentCompat.getBroadcast(context, 0, intent, 0)
 
-        AlarmManagerCompat.setExact(alarmManager, AlarmManager.RTC, timeoutAt, operation)
+        AlarmManagerCompat.setExactAndAllowWhileIdle(alarmManager, AlarmManager.RTC, timeoutAt, operation)
     }
 }

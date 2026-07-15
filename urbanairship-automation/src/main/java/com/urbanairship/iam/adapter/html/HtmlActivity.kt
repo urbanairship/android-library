@@ -137,7 +137,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
                 }
             }
         })
-        wv.setAlpha(0f)
+        wv.alpha = 0f
         wv.settings.setSupportMultipleWindows(true)
         wv.webChromeClient = AirshipWebChromeClient(this)
 

@@ -143,7 +143,7 @@ internal class ScoreView(
                 info.className = RadioButton::class.java.name
                 info.isCheckable = true
                 info.isClickable = true
-                info.isChecked = score == selectedScore
+
                 info.contentDescription = host.context.getString(
                     R.string.ua_score_selected_state_description,
                     score,

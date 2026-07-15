@@ -107,7 +107,7 @@ internal class CreateChannelViewModel: ViewModel() {
 
     init {
         Airship.onReady {
-            subscribedChannels = contact.channelContacts.mapNotNull { it.getOrNull() }
+            subscribedChannels = contact.contactChannelsFlow.mapNotNull { it.getOrNull() }
         }
     }
 }
