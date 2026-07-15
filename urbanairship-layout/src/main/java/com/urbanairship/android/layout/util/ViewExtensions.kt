@@ -25,6 +25,7 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.text.TextUtilsCompat
 import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.core.text.toSpannable
@@ -332,8 +333,9 @@ private class LinkSpan(
     private val color: Int?
 ) : ClickableSpan() {
     override fun onClick(view: View) {
-        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        ContextCompat.startActivity(view.context, intent, null)
+        view.context.startActivity(
+            Intent(Intent.ACTION_VIEW, url.toUri())
+        )
     }
 
     override fun updateDrawState(ds: TextPaint) {

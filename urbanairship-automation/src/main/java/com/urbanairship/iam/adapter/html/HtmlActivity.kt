@@ -122,6 +122,7 @@ internal class HtmlActivity : InAppMessageActivity<HTMLContent>() {
             }
 
             @Deprecated("Deprecated in Java")
+            @Suppress("OVERRIDE_DEPRECATION")
             override fun onReceivedError(
                 view: WebView,
                 errorCode: Int,

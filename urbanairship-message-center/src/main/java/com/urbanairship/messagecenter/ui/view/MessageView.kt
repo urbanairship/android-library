@@ -116,6 +116,7 @@ public class MessageView @JvmOverloads constructor(
                 }
 
                 @Deprecated("Deprecated in Java")
+                @Suppress("OVERRIDE_DEPRECATION")
                 override fun onReceivedError(view: WebView, errorCode: Int, description: String, failingUrl: String?) {
                     UALog.w { "onReceivedError! $errorCode $description $failingUrl" }
                     if (message != null && failingUrl != null && failingUrl == message?.bodyUrl) {
