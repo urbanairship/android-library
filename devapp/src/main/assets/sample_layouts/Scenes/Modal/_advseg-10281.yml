@@ -1,0 +1,819 @@
+# ADVSEG-10281 — PagerView touch-gesture suppression manual test
+#
+# Verifies the fix in PagerView.dispatchTouchEvent that decides gesture
+# suppression ONCE at ACTION_DOWN (via the shared
+# MotionEvent.isWithinClickableDescendantOf, which now matches ANY clickable +
+# enabled descendant, not just clickable MediaView / WebViewView).
+#
+# Full-screen story pager. Gestures:
+#   - tap LEFT half   -> previous page
+#   - tap RIGHT half  -> next page
+#   - press & HOLD    -> pause auto-advance (progress bar freezes); release resumes
+#   - swipe DOWN      -> dismiss the scene
+#
+# Pages auto-advance every 20s, so the story progress bar (top) is visible and
+# pausable. Each page exercises one review scenario; the expected result is printed
+# on the page.
+---
+version: 1
+presentation:
+  type: modal
+  dismiss_on_touch_outside: false
+  disable_back_button: false
+  default_placement:
+    size:
+      width: 100%
+      height: 100%
+    shade_color:
+      default:
+        hex: '#000000'
+        alpha: 0.6
+    ignore_safe_area: true
+view:
+  type: pager_controller
+  identifier: advseg-10281-pager-controller
+  view:
+    type: container
+    background_color:
+      default:
+        hex: '#FFFFFF'
+        alpha: 1
+    items:
+      # ---- Pager (full screen) ----
+      - position: { horizontal: center, vertical: center }
+        size: { width: 100%, height: 100% }
+        view:
+          type: pager
+          gestures:
+            - type: tap
+              identifier: tap-prev
+              location: start
+              behavior:
+                behaviors: [pager_previous]
+            - type: tap
+              identifier: tap-next
+              location: end
+              behavior:
+                behaviors: [pager_next_or_first]
+            - type: hold
+              identifier: hold-pause
+              location: any
+              press_behavior:
+                behaviors: [pager_pause]
+              release_behavior:
+                behaviors: [pager_resume]
+            - type: swipe
+              identifier: swipe-down-dismiss
+              direction: down
+              behavior:
+                behaviors: [dismiss]
+          items:
+            # =========================================================
+            # PAGE 1 — Tap-to-advance on EMPTY SPACE
+            # =========================================================
+            - identifier: page-1-empty-tap
+              automated_actions:
+                - identifier: auto-1
+                  delay: 20
+                  behaviors: [pager_next]
+              view:
+                type: container
+                background_color:
+                  default: { hex: '#FFE0B2', alpha: 1 }
+                items:
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 88%, height: auto }
+                    margin: { top: 96 }
+                    view:
+                      type: label
+                      text: "PAGE 1 / 12\nTap-to-advance on EMPTY SPACE"
+                      text_appearance:
+                        font_size: 18
+                        alignment: center
+                        styles: [bold]
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: center }
+                    size: { width: 84%, height: auto }
+                    view:
+                      type: label
+                      text: "This page has NO clickable content.\n\nTap the RIGHT half of the empty area -> should advance to Page 2.\nTap the LEFT half -> previous page.\n\nEXPECTED: empty-space tap moves the pager."
+                      text_appearance:
+                        font_size: 15
+                        alignment: center
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+
+            # =========================================================
+            # PAGE 2 — "Next" button: single advance, not double
+            # =========================================================
+            - identifier: page-2-next-button
+              automated_actions:
+                - identifier: auto-2
+                  delay: 20
+                  behaviors: [pager_next]
+              view:
+                type: container
+                background_color:
+                  default: { hex: '#C8E6C9', alpha: 1 }
+                items:
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 88%, height: auto }
+                    margin: { top: 96 }
+                    view:
+                      type: label
+                      text: "PAGE 2 / 12\n\"Next\" button — single advance"
+                      text_appearance:
+                        font_size: 18
+                        alignment: center
+                        styles: [bold]
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: center }
+                    size: { width: 84%, height: auto }
+                    margin: { bottom: 120 }
+                    view:
+                      type: label
+                      text: "Tap the NEXT button ONCE.\n\nEXPECTED: lands on PAGE 3 (single advance).\nBUG would skip to PAGE 4 (button tap + tap-to-advance both fire)."
+                      text_appearance:
+                        font_size: 15
+                        alignment: center
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position:
+                      horizontal: end
+                      vertical: center
+                    size: { width: auto, height: auto }
+                    margin: { top: 120, end: 16 }
+                    view:
+                      type: label_button
+                      identifier: page-2-next-btn
+                      button_click: [pager_next]
+                      background_color:
+                        default: { hex: '#2E7D32', alpha: 1 }
+                      border:
+                        radius: 10
+                      label:
+                        type: label
+                        text: "   NEXT  ->   "
+                        text_appearance:
+                          font_size: 18
+                          alignment: center
+                          styles: [bold]
+                          color:
+                            default: { hex: '#FFFFFF', alpha: 1 }
+
+            # =========================================================
+            # PAGE 3 — Swipe starting on a button
+            # =========================================================
+            - identifier: page-3-swipe-on-button
+              automated_actions:
+                - identifier: auto-3
+                  delay: 20
+                  behaviors: [pager_next]
+              view:
+                type: container
+                background_color:
+                  default: { hex: '#BBDEFB', alpha: 1 }
+                items:
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 88%, height: auto }
+                    margin: { top: 96 }
+                    view:
+                      type: label
+                      text: "PAGE 3 / 12\nSwipe starting ON a button"
+                      text_appearance:
+                        font_size: 18
+                        alignment: center
+                        styles: [bold]
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: center }
+                    size: { width: 84%, height: auto }
+                    margin: { bottom: 150 }
+                    view:
+                      type: label
+                      text: "1) Swipe horizontally STARTING on the button -> pager still pages (RecyclerView), story does NOT freeze.\n2) Swipe DOWN starting ON the button -> does NOT dismiss (gesture began on a clickable view -> suppressed).\n3) Swipe DOWN starting on EMPTY space, dragging across the button, release -> DISMISSES (ACTION_UP still delivered)."
+                      text_appearance:
+                        font_size: 14
+                        alignment: center
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: center }
+                    size: { width: 80%, height: 90 }
+                    margin: { top: 150 }
+                    view:
+                      type: label_button
+                      identifier: page-3-swipe-btn
+                      button_click: [pager_next]
+                      background_color:
+                        default: { hex: '#1565C0', alpha: 1 }
+                      border:
+                        radius: 10
+                      label:
+                        type: label
+                        text: "SWIPE FROM HERE"
+                        text_appearance:
+                          font_size: 18
+                          alignment: center
+                          styles: [bold]
+                          color:
+                            default: { hex: '#FFFFFF', alpha: 1 }
+
+            # =========================================================
+            # PAGE 4 — Tap over a toggle / checkbox
+            # =========================================================
+            - identifier: page-4-toggle
+              automated_actions:
+                - identifier: auto-4
+                  delay: 20
+                  behaviors: [pager_next]
+              view:
+                type: form_controller
+                identifier: page-4-form
+                submit: submit_event
+                view:
+                  type: container
+                  background_color:
+                    default: { hex: '#F8BBD0', alpha: 1 }
+                  items:
+                    - position: { horizontal: center, vertical: top }
+                      size: { width: 88%, height: auto }
+                      margin: { top: 96 }
+                      view:
+                        type: label
+                        text: "PAGE 4 / 12\nTap over a toggle / checkbox"
+                        text_appearance:
+                          font_size: 18
+                          alignment: center
+                          styles: [bold]
+                          color:
+                            default: { hex: '#212121', alpha: 1 }
+                    - position: { horizontal: center, vertical: center }
+                      size: { width: 84%, height: auto }
+                      margin: { bottom: 130 }
+                      view:
+                        type: label
+                        text: "Tap the switch below.\n\nEXPECTED: the switch flips ON/OFF and the pager does NOT advance (toggle is clickable+enabled -> tap-to-advance suppressed)."
+                        text_appearance:
+                          font_size: 15
+                          alignment: center
+                          color:
+                            default: { hex: '#212121', alpha: 1 }
+                    - position: { horizontal: end, vertical: center }
+                      size: { width: 80, height: 48 }
+                      margin: { top: 130, end: 16 }
+                      view:
+                        type: toggle
+                        identifier: page-4-switch
+                        required: false
+                        style:
+                          type: switch
+                          toggle_colors:
+                            'on':
+                              default: { hex: '#2E7D32', alpha: 1 }
+                            'off':
+                              default: { hex: '#9E9E9E', alpha: 1 }
+
+            # =========================================================
+            # PAGE 5 — Tap over a link
+            # =========================================================
+            - identifier: page-5-link
+              automated_actions:
+                - identifier: auto-5
+                  delay: 20
+                  behaviors: [pager_next]
+              view:
+                type: container
+                background_color:
+                  default: { hex: '#D1C4E9', alpha: 1 }
+                items:
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 88%, height: auto }
+                    margin: { top: 96 }
+                    view:
+                      type: label
+                      text: "PAGE 5 / 12\nTap over a link"
+                      text_appearance:
+                        font_size: 18
+                        alignment: center
+                        styles: [bold]
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: center }
+                    size: { width: 84%, height: auto }
+                    margin: { bottom: 190 }
+                    view:
+                      type: label
+                      text: "A) label_button link -> opens URL\n\nEXPECTED: pager does NOT advance (clickable view -> suppressed).\n\nB) markdown link -> opens URL.\n\nNOTE: a markdown label is NOT a clickable view, so tap-to-advance may ALSO fire. Observe whether the pager advances."
+                      text_appearance:
+                        font_size: 14
+                        alignment: center
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: end, vertical: center }
+                    size: { width: auto, height: auto }
+                    margin: { end: 16 }
+                    view:
+                      type: label_button
+                      identifier: page-5-link-btn
+                      actions:
+                        open_external_url_action: "https://example.com"
+                      label:
+                        type: label
+                        text: "A) label_button link"
+                        text_appearance:
+                          font_size: 17
+                          alignment: center
+                          styles: [bold, underlined]
+                          color:
+                            default: { hex: '#4527A0', alpha: 1 }
+                  - position: { horizontal: end, vertical: center }
+                    size: { width: auto, height: auto }
+                    margin: { top: 120, end: 16 }
+                    view:
+                      type: label
+                      text: "B) markdown: [tap this link](https://example.com) to open"
+                      markdown:
+                        disabled: false
+                      text_appearance:
+                        font_size: 16
+                        alignment: center
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+
+            # =========================================================
+            # PAGE 6 — Long-press to pause the story
+            # =========================================================
+            - identifier: page-6-hold-pause
+              automated_actions:
+                - identifier: auto-6
+                  delay: 20
+                  behaviors: [pager_next]
+              view:
+                type: container
+                background_color:
+                  default: { hex: '#FFF9C4', alpha: 1 }
+                items:
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 88%, height: auto }
+                    margin: { top: 96 }
+                    view:
+                      type: label
+                      text: "PAGE 6 / 12\nLong-press to pause the story"
+                      text_appearance:
+                        font_size: 18
+                        alignment: center
+                        styles: [bold]
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: center }
+                    size: { width: 84%, height: auto }
+                    view:
+                      type: label
+                      text: "Press and HOLD anywhere on this page.\n\nEXPECTED: the story progress bar at the TOP freezes while held; releasing resumes it. (Each page auto-advances after 20s.)"
+                      text_appearance:
+                        font_size: 15
+                        alignment: center
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+
+            # =========================================================
+            # PAGE 7 — Clickable media (does NOT advance)
+            # =========================================================
+            - identifier: page-7-clickable-media
+              automated_actions:
+                - identifier: auto-7
+                  delay: 20
+                  behaviors: [pager_next]
+              view:
+                type: state_controller
+                identifier: page-7-state
+                view:
+                  type: container
+                  background_color:
+                    default: { hex: '#B2DFDB', alpha: 1 }
+                  items:
+                    - position: { horizontal: center, vertical: top }
+                      size: { width: 88%, height: auto }
+                      margin: { top: 96 }
+                      view:
+                        type: label
+                        text: "PAGE 7 / 12\nClickable media (no advance)"
+                        text_appearance:
+                          font_size: 18
+                          alignment: center
+                          styles: [bold]
+                          color:
+                            default: { hex: '#212121', alpha: 1 }
+                    - position: { horizontal: center, vertical: top }
+                      size: { width: 84%, height: auto }
+                      margin: { top: 150 }
+                      view:
+                        type: label
+                        text: "Tap ON the image (it has a tap handler -> clickable).\nEXPECTED: badge appears, pager does NOT advance.\nTap the empty area beside the image -> advances."
+                        text_appearance:
+                          font_size: 14
+                          alignment: center
+                          color:
+                            default: { hex: '#212121', alpha: 1 }
+                    - position: { horizontal: center, vertical: center }
+                      size: { width: 90%, height: auto }
+                      margin: { top: 40 }
+                      view:
+                        type: media
+                        media_type: image
+                        media_fit: fit_crop
+                        url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Oregon_Mount_Hood_from_Trillium_Lake_2024.jpg/1280px-Oregon_Mount_Hood_from_Trillium_Lake_2024.jpg"
+                        content_description: "Clickable demo image"
+                        border:
+                          radius: 12
+                        event_handlers:
+                          - type: tap
+                            state_actions:
+                              - type: set
+                                key: media_tapped
+                                value: true
+                    - position: { horizontal: center, vertical: bottom }
+                      size: { width: auto, height: auto }
+                      margin: { bottom: 80 }
+                      view:
+                        type: container
+                        background_color:
+                          default:  { hex: '#00695C', alpha: 1 }
+                        border:
+                          radius: 8
+                        visibility:
+                          default: false
+                          invert_when_state_matches:
+                            key: media_tapped
+                            value: { equals: true }
+                        items:
+                          - size:
+                              width: auto
+                              height: auto
+                            margin:
+                              top: 6
+                              bottom: 6
+                              start: 8
+                              end: 8
+                            position: { horizontal: center, vertical: center }
+                            view:
+                              type: label
+                              text: "MEDIA TAPPED"
+                              text_appearance:
+                                font_size: 15
+                                alignment: center
+                                styles: [bold]
+                                color:
+                                  default: { hex: '#FFFFFF', alpha: 1 }
+
+            # =========================================================
+            # PAGE 8 — Non-clickable media (tap-to-advance passes through)
+            # =========================================================
+            - identifier: page-8-plain-media
+              automated_actions:
+                - identifier: auto-8
+                  delay: 20
+                  behaviors: [pager_next_or_first]
+              view:
+                type: container
+                background_color:
+                  default: { hex: '#FFCCBC', alpha: 1 }
+                items:
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 88%, height: auto }
+                    margin: { top: 96 }
+                    view:
+                      type: label
+                      text: "PAGE 8 / 12\nNon-clickable media (advance)"
+                      text_appearance:
+                        font_size: 18
+                        alignment: center
+                        styles: [bold]
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 84%, height: auto }
+                    margin: { top: 150 }
+                    view:
+                      type: label
+                      text: "This image is decorative (no tap handler -> not clickable).\nEXPECTED: tapping the RIGHT half OVER the image still advances (to Page 9). Tap-to-advance passes through non-clickable media."
+                      text_appearance:
+                        font_size: 14
+                        alignment: center
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: center }
+                    size: { width: 90%, height: auto }
+                    margin: { top: 40 }
+                    view:
+                      type: media
+                      media_type: image
+                      media_fit: fit_crop
+                      url: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Oregon_Mount_Hood_from_Trillium_Lake_2024.jpg/1280px-Oregon_Mount_Hood_from_Trillium_Lake_2024.jpg"
+                      content_description: "Decorative demo image"
+                      border:
+                        radius: 12
+
+            # =========================================================
+            # PAGE 9 — button_layout (Button role): single advance + slide-off
+            # =========================================================
+            - identifier: page-9-button-layout
+              automated_actions:
+                - identifier: auto-9
+                  delay: 20
+                  behaviors: [pager_next]
+              view:
+                type: container
+                background_color:
+                  default: { hex: '#D7CCC8', alpha: 1 }
+                items:
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 88%, height: auto }
+                    margin: { top: 96 }
+                    view:
+                      type: label
+                      text: "PAGE 9 / 12\nbutton_layout (Button role)"
+                      text_appearance:
+                        font_size: 18
+                        alignment: center
+                        styles: [bold]
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: center }
+                    size: { width: 84%, height: auto }
+                    margin: { bottom: 170 }
+                    view:
+                      type: label
+                      text: "This is a button_layout (ButtonLayoutView), not a label_button.\n\nTap it ONCE -> single advance to Page 10.\nPress, drag OFF it, release outside -> NO advance (slide-off cancelled)."
+                      text_appearance:
+                        font_size: 14
+                        alignment: center
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: center }
+                    size: { width: 72%, height: 110 }
+                    margin: { top: 150 }
+                    view:
+                      type: button_layout
+                      identifier: page-9-btnlayout
+                      accessibility_role:
+                        type: button
+                      button_click: [pager_next]
+                      view:
+                        type: container
+                        background_color:
+                          default: { hex: '#00695C', alpha: 1 }
+                        border:
+                          radius: 10
+                        items:
+                          - position: { horizontal: center, vertical: center }
+                            size: { width: auto, height: auto }
+                            view:
+                              type: label
+                              text: "BUTTON LAYOUT"
+                              text_appearance:
+                                font_size: 18
+                                alignment: center
+                                styles: [bold]
+                                color:
+                                  default: { hex: '#FFFFFF', alpha: 1 }
+
+            # =========================================================
+            # PAGE 10 — button_layout (Container role) wrapping a clickable child
+            # =========================================================
+            - identifier: page-10-container-button
+              automated_actions:
+                - identifier: auto-10
+                  delay: 20
+                  behaviors: [pager_next]
+              view:
+                type: container
+                background_color:
+                  default: { hex: '#C5CAE9', alpha: 1 }
+                items:
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 88%, height: auto }
+                    margin: { top: 96 }
+                    view:
+                      type: label
+                      text: "PAGE 10 / 12\nContainer button wrapping a button"
+                      text_appearance:
+                        font_size: 18
+                        alignment: center
+                        styles: [bold]
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 84%, height: auto }
+                    margin: { top: 150 }
+                    view:
+                      type: label
+                      text: "Outer = Container-role button_layout (its own action = go BACK). Inner blue = a clickable label_button (action = go NEXT).\n\n1) Tap INNER -> Page 11 (inner fired, outer did NOT).\n2) Tap OUTER area -> Page 9 (outer fired).\n3) Press outer, drag OFF, release outside -> stay (nothing fired).\n4) Press INNER, drag to OUTER area, release -> stay (press began on inner; neither fires)."
+                      text_appearance:
+                        font_size: 13
+                        alignment: center
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: bottom }
+                    size: { width: 82%, height: 300 }
+                    margin: { bottom: 70 }
+                    view:
+                      type: button_layout
+                      identifier: page-10-outer-container
+                      accessibility_role:
+                        type: container
+                      content_description: "Outer container button"
+                      button_click: [pager_previous]
+                      view:
+                        type: container
+                        background_color:
+                          default: { hex: '#7986CB', alpha: 1 }
+                        border:
+                          radius: 12
+                        items:
+                          - position: { horizontal: center, vertical: top }
+                            size: { width: auto, height: auto }
+                            margin: { top: 16 }
+                            view:
+                              type: label
+                              text: "OUTER container area (tap -> back)"
+                              text_appearance:
+                                font_size: 13
+                                alignment: center
+                                color:
+                                  default: { hex: '#FFFFFF', alpha: 1 }
+                          - position: { horizontal: center, vertical: center }
+                            size: { width: auto, height: auto }
+                            view:
+                              type: label_button
+                              identifier: page-10-inner-button
+                              button_click: [pager_next]
+                              background_color:
+                                default: { hex: '#1A237E', alpha: 1 }
+                              border:
+                                radius: 8
+                              label:
+                                type: label
+                                text: "  INNER BUTTON (-> next)  "
+                                text_appearance:
+                                  font_size: 15
+                                  alignment: center
+                                  styles: [bold]
+                                  color:
+                                    default: { hex: '#FFFFFF', alpha: 1 }
+
+            # =========================================================
+            # PAGE 11 — Container button_layout, no content_description (double-action check)
+            # =========================================================
+            - identifier: page-11-container-no-cd
+              automated_actions:
+                - identifier: auto-11
+                  delay: 20
+                  behaviors: [pager_next]
+              view:
+                type: container
+                background_color:
+                  default: { hex: '#F0F4C3', alpha: 1 }
+                items:
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 88%, height: auto }
+                    margin: { top: 96 }
+                    view:
+                      type: label
+                      text: "PAGE 11 / 12\nContainer button, no content desc"
+                      text_appearance:
+                        font_size: 18
+                        alignment: center
+                        styles: [bold]
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 84%, height: auto }
+                    margin: { top: 150 }
+                    view:
+                      type: label
+                      text: "Container-role button_layout with an action but NO content_description; its action = go BACK.\n\nTap the box ONCE -> should go BACK to Page 10 exactly once. It must NOT also fire pager tap-advance (no erratic / double navigation). Confirms container buttons are suppressed too."
+                      text_appearance:
+                        font_size: 13
+                        alignment: center
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: bottom }
+                    size: { width: 82%, height: 220 }
+                    margin: { bottom: 90 }
+                    view:
+                      type: button_layout
+                      identifier: page-11-container
+                      accessibility_role:
+                        type: container
+                      button_click: [pager_previous]
+                      view:
+                        type: container
+                        background_color:
+                          default: { hex: '#AFB42B', alpha: 1 }
+                        border:
+                          radius: 12
+                        items:
+                          - position: { horizontal: center, vertical: center }
+                            size: { width: auto, height: auto }
+                            view:
+                              type: label
+                              text: "CONTAINER (no content desc)\ntap -> back to Page 10"
+                              text_appearance:
+                                font_size: 14
+                                alignment: center
+                                styles: [bold]
+                                color:
+                                  default: { hex: '#FFFFFF', alpha: 1 }
+
+            # =========================================================
+            # PAGE 12 — Long-press starting on a button (should NOT pause)
+            # =========================================================
+            - identifier: page-12-longpress-button
+              automated_actions:
+                - identifier: auto-12
+                  delay: 20
+                  behaviors: [pager_next_or_first]
+              view:
+                type: container
+                background_color:
+                  default: { hex: '#B2EBF2', alpha: 1 }
+                items:
+                  - position: { horizontal: center, vertical: top }
+                    size: { width: 88%, height: auto }
+                    margin: { top: 96 }
+                    view:
+                      type: label
+                      text: "PAGE 12 / 12\nLong-press on a button"
+                      text_appearance:
+                        font_size: 18
+                        alignment: center
+                        styles: [bold]
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: center }
+                    size: { width: 84%, height: auto }
+                    margin: { bottom: 170 }
+                    view:
+                      type: label
+                      text: "Press and HOLD on the button below.\n\nEXPECTED: the top progress bar keeps running (does NOT pause) - the button owns the gesture. (Compare Page 6: holding EMPTY space pauses.)\nReleasing on the button fires its action (loops to Page 1)."
+                      text_appearance:
+                        font_size: 14
+                        alignment: center
+                        color:
+                          default: { hex: '#212121', alpha: 1 }
+                  - position: { horizontal: center, vertical: center }
+                    size: { width: 72%, height: 110 }
+                    margin: { top: 150 }
+                    view:
+                      type: label_button
+                      identifier: page-12-hold-btn
+                      button_click: [pager_next_or_first]
+                      background_color:
+                        default: { hex: '#00838F', alpha: 1 }
+                      border:
+                        radius: 10
+                      label:
+                        type: label
+                        text: "HOLD ME"
+                        text_appearance:
+                          font_size: 18
+                          alignment: center
+                          styles: [bold]
+                          color:
+                            default: { hex: '#FFFFFF', alpha: 1 }
+
+      # ---- Story progress indicator (top overlay) ----
+      - position: { horizontal: center, vertical: top }
+        size: { width: 100%, height: 6 }
+        margin: { top: 54, start: 16, end: 16 }
+        view:
+          type: story_indicator
+          source:
+            type: pager
+          style:
+            type: linear_progress
+            direction: horizontal
+            sizing: equal
+            spacing: 4
+            progress_color:
+              default: { hex: '#212121', alpha: 1 }
+            track_color:
+              default: { hex: '#000000', alpha: 0.2 }
+
+      # ---- Close button (top-right overlay) ----
+      - position: { horizontal: end, vertical: top }
+        size: { width: 48, height: 48 }
+        margin: { top: 4, end: 4 }
+        view:
+          type: image_button
+          identifier: close-button
+          button_click: [dismiss]
+          image:
+            type: icon
+            icon: close
+            scale: 0.4
+            color:
+              default: { hex: '#212121', alpha: 1 }

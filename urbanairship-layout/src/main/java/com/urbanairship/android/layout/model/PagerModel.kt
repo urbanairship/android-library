@@ -648,7 +648,10 @@ internal class PagerModel(
     }
 
     private fun handlePagerPrevious() {
-        resolve(PageRequest.BACK)
+        @OptIn(DelicateLayoutApi::class)
+        if (pagerState.value.hasPrevious) {
+            resolve(PageRequest.BACK)
+        }
     }
 
     @OptIn(DelicateLayoutApi::class)
