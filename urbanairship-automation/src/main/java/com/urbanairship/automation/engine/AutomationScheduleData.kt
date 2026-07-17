@@ -124,7 +124,9 @@ internal class AutomationScheduleData(
     }
 
     internal fun executionCancelled(date: Long): AutomationScheduleData {
-        if (!isInState(listOf(AutomationScheduleState.PREPARED))) {
+        // Delay cancellation triggers are active for both `TRIGGERED` and `PREPARED`,
+        // so a cancellation must unwind either state, including an in-flight prepare.
+        if (!isInState(listOf(AutomationScheduleState.TRIGGERED, AutomationScheduleState.PREPARED))) {
             return this
         }
 
