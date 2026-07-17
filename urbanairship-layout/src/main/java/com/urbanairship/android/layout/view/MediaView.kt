@@ -76,10 +76,20 @@ internal class MediaView(
     }
 
     internal class WebViewListener(private val model: MediaModel) {
-        fun onVideoReady(playing: Boolean, muted: Boolean) = model.sendEvent(MediaModel.PlaybackEvent.VideoReady(playing, muted))
+        var isVideoReady: Boolean = false
+            private set
+        var errorHandler: ((errorCode: Int, description: String?) -> Unit)? = null
+
+        fun onVideoReady(playing: Boolean, muted: Boolean) {
+            isVideoReady = true
+            model.sendEvent(MediaModel.PlaybackEvent.VideoReady(playing, muted))
+        }
         fun onVideoPlay() = model.sendEvent(MediaModel.PlaybackEvent.JsPlay)
         fun onVideoPause() = model.sendEvent(MediaModel.PlaybackEvent.JsPause)
         fun onVideoEnded() = model.sendEvent(MediaModel.PlaybackEvent.VideoEnded)
+        fun onVideoError(errorCode: Int, description: String?) {
+            errorHandler?.invoke(errorCode, description)
+        }
         fun onVisibilityChanged(isVisible: Boolean) = model.sendEvent(MediaModel.PlaybackEvent.VisibilityChanged(isVisible))
     }
 
@@ -486,6 +496,23 @@ internal class MediaView(
             }
         }
 
+        // Retry failed video loads with backoff. Errors after playback became ready are
+        // logged but ignored, so a transient mid-playback error can't tear down a
+        // working player.
+        var videoErrorRetryCount = 0
+        webViewListener.errorHandler = { errorCode, description ->
+            if (webViewListener.isVideoReady) {
+                UALog.v { "MediaView[${model.videoId}] video error after ready, ignoring: code=$errorCode, description=$description" }
+            } else if (videoErrorRetryCount < MAX_VIDEO_ERROR_RETRIES) {
+                val delay = VIDEO_ERROR_RETRY_DELAY_MS shl videoErrorRetryCount
+                videoErrorRetryCount++
+                UALog.v { "MediaView[${model.videoId}] video failed to load (code=$errorCode, description=$description), retrying in ${delay}ms" }
+                wv.postDelayed(load, delay)
+            } else {
+                UALog.w { "MediaView[${model.videoId}] video failed to load after $MAX_VIDEO_ERROR_RETRIES retries: code=$errorCode, description=$description" }
+            }
+        }
+
         addView(frameLayout)
         webContentLoader = load
         load.run()
@@ -522,6 +549,7 @@ internal class MediaView(
         override fun onPageFinished(view: WebView, url: String) {
             super.onPageFinished(view, url)
             if (error) {
+                UALog.v { "MediaWebViewClient onPageFinished with error, retrying in ${retryDelay}ms: url=$url" }
                 view.postDelayed(onRetry, retryDelay)
                 retryDelay *= 2
             } else {
@@ -536,7 +564,13 @@ internal class MediaView(
             error: WebResourceError
         ) {
             super.onReceivedError(view, request, error)
-            this.error = true
+            UALog.v { "MediaWebViewClient onReceivedError: url=${request.url}, isForMainFrame=${request.isForMainFrame}, errorCode=${error.errorCode}, description=${error.description}" }
+            // Chromium reports a spurious ERR_FAILED for the video sub-resource when the
+            // renderer's fetch is handed off to the media pipeline, even though playback
+            // succeeds. Only main frame failures should trigger a page reload.
+            if (request.isForMainFrame) {
+                this.error = true
+            }
         }
 
         protected abstract fun onPageFinished(webView: WebView)
@@ -555,49 +589,71 @@ internal class MediaView(
         override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
             val widthMode = MeasureSpec.getMode(widthMeasureSpec)
             val heightMode = MeasureSpec.getMode(heightMeasureSpec)
-            val receivedWidth = MeasureSpec.getSize(widthMeasureSpec)
-            val receivedHeight = MeasureSpec.getSize(heightMeasureSpec)
-            val measuredWidth: Int
-            val measuredHeight: Int
-            val widthDynamic: Boolean = if (heightMode == MeasureSpec.EXACTLY) {
-                if (widthMode == MeasureSpec.EXACTLY) {
-                    receivedWidth == 0
-                } else {
-                    true
-                }
-            } else if (widthMode == MeasureSpec.EXACTLY) {
-                false
-            } else {
+            val availableWidth = MeasureSpec.getSize(widthMeasureSpec)
+            val availableHeight = MeasureSpec.getSize(heightMeasureSpec)
+            val isWidthFixed = widthMode == MeasureSpec.EXACTLY
+            val isHeightFixed = heightMode == MeasureSpec.EXACTLY
+
+            // Fill the given space when the aspect ratio shouldn't be enforced
+            // (both dimensions were fully specified by the layout).
+            if (!shouldEnforceAspectRatio && isWidthFixed && isHeightFixed &&
+                availableWidth > 0 && availableHeight > 0) {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec)
                 return
             }
 
-            // If we shouldn't enforce aspect ratio (both dimensions are MATCH_PARENT),
-            // just measure to the available size
-            if (!shouldEnforceAspectRatio && widthMode == MeasureSpec.EXACTLY && heightMode == MeasureSpec.EXACTLY && receivedWidth > 0 && receivedHeight > 0) {
+            val ratio = aspectRatio?.takeIf { it > 0 } ?: run {
                 super.onMeasure(widthMeasureSpec, heightMeasureSpec)
                 return
             }
 
-            aspectRatio?.let {
-                if (widthDynamic) {
-                    // Width is dynamic.
-                    val w = (receivedHeight * it).toInt()
-                    measuredWidth = MeasureSpec.makeMeasureSpec(w, MeasureSpec.EXACTLY)
-                    measuredHeight = heightMeasureSpec
-                } else {
-                    // Height is dynamic.
-                    measuredWidth = widthMeasureSpec
-                    val h = (receivedWidth / it).toInt()
-                    measuredHeight = MeasureSpec.makeMeasureSpec(h, MeasureSpec.EXACTLY)
+            val width: Int
+            val height: Int
+            when {
+                // Width is known: derive height from the ratio. This also covers the
+                // both-fixed case, where the enforced ratio wins over the given height.
+                isWidthFixed && availableWidth > 0 -> {
+                    width = availableWidth
+                    height = (availableWidth / ratio).toInt()
                 }
+                // Height is known: derive width from the ratio.
+                isHeightFixed -> {
+                    width = (availableHeight * ratio).toInt()
+                    height = availableHeight
+                }
+                // Neither dimension is known (auto x auto). The WebView has no intrinsic
+                // content size, so fit within the available space instead of collapsing
+                // to zero: full width, unless the derived height would overflow.
+                availableWidth > 0 -> {
+                    val fullWidthHeight = (availableWidth / ratio).toInt()
+                    val heightConstrained = heightMode == MeasureSpec.AT_MOST &&
+                        availableHeight in 1 until fullWidthHeight
+                    if (heightConstrained) {
+                        width = (availableHeight * ratio).toInt()
+                        height = availableHeight
+                    } else {
+                        width = availableWidth
+                        height = fullWidthHeight
+                    }
+                }
+                // No usable constraints; fall back to default measurement.
+                else -> {
+                    super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+                    return
+                }
+            }
 
-                super.onMeasure(measuredWidth, measuredHeight)
-            } ?: super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+            super.onMeasure(
+                MeasureSpec.makeMeasureSpec(width, MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(height, MeasureSpec.EXACTLY)
+            )
         }
     }
 
     companion object {
+        private const val MAX_VIDEO_ERROR_RETRIES = 3
+        private const val VIDEO_ERROR_RETRY_DELAY_MS = 1000L
+
         @Language("HTML")
         private val VIDEO_HTML_FORMAT = """
             <body style="margin:0">
@@ -621,6 +677,12 @@ internal class MediaView(
                     });
                     videoElement.addEventListener("ended", () => {
                         VideoListenerInterface.onVideoEnded();
+                    });
+                    videoElement.addEventListener("error", () => {
+                        const mediaError = videoElement.error;
+                        VideoListenerInterface.onVideoError(
+                            mediaError ? mediaError.code : -1,
+                            mediaError && mediaError.message ? mediaError.message : "");
                     });
                 </script>
             </body>
