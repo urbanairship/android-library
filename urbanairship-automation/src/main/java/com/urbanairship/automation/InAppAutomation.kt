@@ -10,7 +10,6 @@ import com.urbanairship.Airship
 import com.urbanairship.automation.engine.AutomationEngine
 import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
 import com.urbanairship.config.AirshipRuntimeConfig
-import com.urbanairship.iam.InAppMessaging
 import com.urbanairship.iam.InAppMessagingInterface
 import com.urbanairship.iam.legacy.LegacyInAppMessagingInterface
 import kotlinx.coroutines.flow.Flow
@@ -32,10 +31,6 @@ internal constructor(
 ) {
 
     private val subscriptions = mutableListOf<() -> Unit>()
-    private val inAppMessagingInternal: InAppMessaging
-        get() = checkNotNull(inAppMessaging as? InAppMessaging) {
-            "Expected internal InAppMessaging implementation"
-        }
 
     /** Paused state of in-app automation. */
     @Suppress("MemberVisibilityCanBePrivate") // Public API
@@ -97,14 +92,6 @@ internal constructor(
 
     internal suspend fun cancelSchedulesWith(type: AutomationSchedule.ScheduleType) {
         engine.cancelSchedulesWith(type)
-    }
-
-    internal fun reserveImmediateDisplay(scheduleID: String) {
-        inAppMessagingInternal.reserveImmediateDisplay(scheduleID)
-    }
-
-    internal fun releaseImmediateDisplay(scheduleID: String) {
-        inAppMessagingInternal.releaseImmediateDisplay(scheduleID)
     }
 
     /**

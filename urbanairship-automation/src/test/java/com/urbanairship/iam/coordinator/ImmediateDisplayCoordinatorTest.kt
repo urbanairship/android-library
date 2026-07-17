@@ -24,8 +24,8 @@ public class ImmediateDisplayCoordinatorTest {
             activityMonitor.foreground()
             assertTrue(awaitItem())
 
-            coordinator.messageWillDisplay(mockk(), "foo")
-            coordinator.messageFinishedDisplaying(mockk(), "foo")
+            coordinator.messageWillDisplay(mockk())
+            coordinator.messageFinishedDisplaying(mockk())
             ensureAllEventsConsumed()
 
             activityMonitor.background()
@@ -44,7 +44,7 @@ public class ImmediateDisplayCoordinatorTest {
         activityMonitor.foreground()
         assertTrue(coordinator.isReady.value)
 
-        coordinator.messageWillDisplay(mockk(), "foo")
+        coordinator.messageWillDisplay(mockk())
         assertTrue(coordinator.isReady.value)
     }
 
@@ -52,14 +52,14 @@ public class ImmediateDisplayCoordinatorTest {
     public fun testDisplaysAreTracked() {
         assertFalse(activityTracker.isDisplaying.value)
 
-        coordinator.messageWillDisplay(mockk(), "foo")
+        coordinator.messageWillDisplay(mockk())
         assertTrue(activityTracker.isDisplaying.value)
 
-        coordinator.messageWillDisplay(mockk(), "bar")
-        coordinator.messageFinishedDisplaying(mockk(), "foo")
+        coordinator.messageWillDisplay(mockk())
+        coordinator.messageFinishedDisplaying(mockk())
         assertTrue(activityTracker.isDisplaying.value)
 
-        coordinator.messageFinishedDisplaying(mockk(), "bar")
+        coordinator.messageFinishedDisplaying(mockk())
         assertFalse(activityTracker.isDisplaying.value)
     }
 }

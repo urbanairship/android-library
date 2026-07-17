@@ -5,7 +5,6 @@ package com.urbanairship.automation
 import android.content.Context
 import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
-import com.urbanairship.Airship
 import com.urbanairship.automation.engine.ApplicationMetrics
 import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
@@ -227,14 +226,7 @@ private class AutomationActionsManifest: ActionsManifest {
         },
         SceneAction.DEFAULT_NAMES to {
             ActionRegistry.Entry(
-                action = SceneAction(
-                    reserveDisplay = { scheduleID ->
-                        Airship.inAppAutomation.reserveImmediateDisplay(scheduleID)
-                    },
-                    releaseDisplay = { scheduleID ->
-                        Airship.inAppAutomation.releaseImmediateDisplay(scheduleID)
-                    }
-                )
+                action = SceneAction()
             )
         }
     )

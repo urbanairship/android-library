@@ -53,7 +53,7 @@ public class DefaultDisplayCoordinatorTest {
         activityMonitor.foreground()
         assertTrue(coordinator.isReady.value)
 
-        coordinator.messageWillDisplay(mockk(), "id-1")
+        coordinator.messageWillDisplay(mockk())
         assertFalse(coordinator.isReady.value)
     }
 
@@ -63,10 +63,10 @@ public class DefaultDisplayCoordinatorTest {
 
         coordinator.isReady.test {
             assertTrue(awaitItem())
-            coordinator.messageWillDisplay(mockk(), "id-1")
+            coordinator.messageWillDisplay(mockk())
             assertFalse(awaitItem())
 
-            coordinator.messageFinishedDisplaying(mockk(), "id-1")
+            coordinator.messageFinishedDisplaying(mockk())
             assertTrue(awaitItem())
         }
 
@@ -94,17 +94,4 @@ public class DefaultDisplayCoordinatorTest {
         }
     }
 
-    @Test
-    public fun testReservationBlocksUntilReleased(): TestResult = runTest {
-        activityMonitor.foreground()
-
-        coordinator.isReady.test {
-            assertTrue(awaitItem())
-            coordinator.reserveImmediateDisplay("scene-id")
-            assertFalse(awaitItem())
-
-            coordinator.releaseImmediateDisplay("scene-id")
-            assertTrue(awaitItem())
-        }
-    }
 }

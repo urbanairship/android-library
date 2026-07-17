@@ -8,18 +8,16 @@ import kotlinx.coroutines.flow.StateFlow
 
 internal class ImmediateDisplayCoordinator(
     activityMonitor: ActivityMonitor,
-    private val activityTracker: DisplayActivityTracker,
-    private val onMessageWillDisplay: (String) -> Unit = {}
+    private val activityTracker: DisplayActivityTracker
 ) : DisplayCoordinator {
 
     override val isReady: StateFlow<Boolean> = activityMonitor.foregroundState
 
-    override fun messageWillDisplay(message: InAppMessage, scheduleId: String) {
-        onMessageWillDisplay(scheduleId)
+    override fun messageWillDisplay(message: InAppMessage) {
         activityTracker.messageWillDisplay()
     }
 
-    override fun messageFinishedDisplaying(message: InAppMessage, scheduleId: String) {
+    override fun messageFinishedDisplaying(message: InAppMessage) {
         activityTracker.messageFinishedDisplaying()
     }
 }

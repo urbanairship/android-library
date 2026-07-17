@@ -117,11 +117,11 @@ public class DisplayCoordinatorManagerTest {
         assertTrue(selected is ImmediateDisplayCoordinator)
         assertTrue(default.isReady.value)
 
-        selected.messageWillDisplay(message, "id-1")
+        selected.messageWillDisplay(message)
         assertTrue(selected.isReady.value)
         assertFalse(default.isReady.value)
 
-        selected.messageFinishedDisplaying(message, "id-1")
+        selected.messageFinishedDisplaying(message)
         assertTrue(default.isReady.value)
     }
 
@@ -175,7 +175,7 @@ public class DisplayCoordinatorManagerTest {
 
         val selected = manager.displayCoordinator(message)
         assertTrue(selected is EmbeddedDisplayCoordinator)
-        selected.messageWillDisplay(message, "id-1")
+        selected.messageWillDisplay(message)
 
         assertTrue(default.isReady.value)
     }
