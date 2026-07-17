@@ -29,8 +29,6 @@ internal class DefaultDisplayCoordinator(
     private val scope: CoroutineScope = CoroutineScope(dispatcher + SupervisorJob())
     private var lockState: MutableStateFlow<LockState> = MutableStateFlow(LockState.UNLOCKED)
     private var unlockJob: Job? = null
-    private var activeDefaultDisplays: Int = 0
-    private val reservedImmediateIds = mutableSetOf<String>()
 
     override val isReady: StateFlow<Boolean> = combineStates(
         lockState,
@@ -50,47 +48,17 @@ internal class DefaultDisplayCoordinator(
             startUnlocking()
         }
 
-    override fun messageWillDisplay(message: InAppMessage, scheduleId: String) {
+    override fun messageWillDisplay(message: InAppMessage) {
         unlockJob?.cancel()
-        activeDefaultDisplays += 1
         lockState.value = LockState.LOCKED
     }
 
-    override fun messageFinishedDisplaying(message: InAppMessage, scheduleId: String) {
-        activeDefaultDisplays = maxOf(0, activeDefaultDisplays - 1)
-        if (activeDefaultDisplays == 0) {
-            startUnlocking()
-        }
-    }
-
-    fun reserveImmediateDisplay(scheduleId: String) {
-        unlockJob?.cancel()
-        reservedImmediateIds.add(scheduleId)
-        lockState.value = LockState.LOCKED
-    }
-
-    fun releaseImmediateDisplay(scheduleId: String) {
-        if (!reservedImmediateIds.remove(scheduleId)) {
-            return
-        }
-
-        if (
-            lockState.value != LockState.UNLOCKING &&
-            activeDefaultDisplays == 0 &&
-            reservedImmediateIds.isEmpty()
-        ) {
-            unlockJob?.cancel()
-            lockState.value = LockState.UNLOCKED
-        }
+    override fun messageFinishedDisplaying(message: InAppMessage) {
+        startUnlocking()
     }
 
     private fun startUnlocking() {
         unlockJob?.cancel()
-
-        if (activeDefaultDisplays > 0 || reservedImmediateIds.isNotEmpty()) {
-            lockState.value = LockState.LOCKED
-            return
-        }
 
         lockState.update {
             if (it == LockState.UNLOCKED) {
@@ -103,7 +71,7 @@ internal class DefaultDisplayCoordinator(
         if (lockState.value == LockState.UNLOCKING) {
             unlockJob = scope.launch {
                 sleeper.sleep(displayInterval)
-                if (isActive && activeDefaultDisplays == 0 && reservedImmediateIds.isEmpty()) {
+                if (isActive) {
                     lockState.value = LockState.UNLOCKED
                 }
             }

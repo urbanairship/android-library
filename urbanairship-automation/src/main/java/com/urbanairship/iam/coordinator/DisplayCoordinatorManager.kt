@@ -15,7 +15,7 @@ internal class DisplayCoordinatorManager(
     private val defaultCoordinator: DefaultDisplayCoordinator =
         defaultCoordinator(dataStore, activityMonitor, activityTracker),
     private val immediateCoordinator: ImmediateDisplayCoordinator =
-        immediateCoordinator(activityMonitor, activityTracker, defaultCoordinator),
+        ImmediateDisplayCoordinator(activityMonitor, activityTracker),
     private val embeddedCoordinator: EmbeddedDisplayCoordinator = EmbeddedDisplayCoordinator(activityMonitor)
 ) {
     var displayInterval: Long
@@ -36,14 +36,6 @@ internal class DisplayCoordinatorManager(
         }
     }
 
-    fun reserveImmediateDisplay(scheduleId: String) {
-        defaultCoordinator.reserveImmediateDisplay(scheduleId)
-    }
-
-    fun releaseImmediateDisplay(scheduleId: String) {
-        defaultCoordinator.releaseImmediateDisplay(scheduleId)
-    }
-
     private companion object {
         val DISPLAY_INTERVAL_KEY = SyncPrefKey.long("UAInAppMessageManagerDisplayInterval")
 
@@ -59,18 +51,5 @@ internal class DisplayCoordinatorManager(
             )
         }
 
-        fun immediateCoordinator(
-            activityMonitor: ActivityMonitor,
-            activityTracker: DisplayActivityTracker,
-            defaultCoordinator: DefaultDisplayCoordinator
-        ): ImmediateDisplayCoordinator {
-            return ImmediateDisplayCoordinator(
-                activityMonitor = activityMonitor,
-                activityTracker = activityTracker,
-                onMessageWillDisplay = { scheduleId ->
-                    defaultCoordinator.releaseImmediateDisplay(scheduleId)
-                }
-            )
-        }
     }
 }

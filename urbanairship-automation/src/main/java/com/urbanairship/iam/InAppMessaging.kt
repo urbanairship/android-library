@@ -75,12 +75,4 @@ internal class InAppMessaging(
     override fun notifyDisplayConditionsChanged() {
         executor.notifyDisplayConditionsChanged()
     }
-
-    internal fun reserveImmediateDisplay(scheduleID: String) {
-        preparer.reserveImmediateDisplay(scheduleID)
-    }
-
-    internal fun releaseImmediateDisplay(scheduleID: String) {
-        preparer.releaseImmediateDisplay(scheduleID)
-    }
 }

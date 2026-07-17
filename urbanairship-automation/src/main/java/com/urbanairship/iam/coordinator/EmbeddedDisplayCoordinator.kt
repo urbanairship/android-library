@@ -12,7 +12,7 @@ internal class EmbeddedDisplayCoordinator(
 
     override val isReady: StateFlow<Boolean> = activityMonitor.foregroundState
 
-    override fun messageWillDisplay(message: InAppMessage, scheduleId: String) { }
+    override fun messageWillDisplay(message: InAppMessage) { }
 
-    override fun messageFinishedDisplaying(message: InAppMessage, scheduleId: String) { }
+    override fun messageFinishedDisplaying(message: InAppMessage) { }
 }
