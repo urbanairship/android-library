@@ -14,7 +14,8 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class ImmediateDisplayCoordinatorTest {
     private val activityMonitor = TestActivityMonitor()
-    private val coordinator = ImmediateDisplayCoordinator(activityMonitor)
+    private val activityTracker = DisplayActivityTracker()
+    private val coordinator = ImmediateDisplayCoordinator(activityMonitor, activityTracker)
 
     @Test
     public fun testIsReady(): TestResult = runTest {
@@ -25,7 +26,6 @@ public class ImmediateDisplayCoordinatorTest {
 
             coordinator.messageWillDisplay(mockk())
             coordinator.messageFinishedDisplaying(mockk())
-
             ensureAllEventsConsumed()
 
             activityMonitor.background()
@@ -46,5 +46,20 @@ public class ImmediateDisplayCoordinatorTest {
 
         coordinator.messageWillDisplay(mockk())
         assertTrue(coordinator.isReady.value)
+    }
+
+    @Test
+    public fun testDisplaysAreTracked() {
+        assertFalse(activityTracker.isDisplaying.value)
+
+        coordinator.messageWillDisplay(mockk())
+        assertTrue(activityTracker.isDisplaying.value)
+
+        coordinator.messageWillDisplay(mockk())
+        coordinator.messageFinishedDisplaying(mockk())
+        assertTrue(activityTracker.isDisplaying.value)
+
+        coordinator.messageFinishedDisplaying(mockk())
+        assertFalse(activityTracker.isDisplaying.value)
     }
 }
