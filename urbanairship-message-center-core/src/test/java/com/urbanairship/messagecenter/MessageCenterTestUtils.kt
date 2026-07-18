@@ -39,7 +39,8 @@ public object MessageCenterTestUtils {
     public fun createMessage(
         messageId: String?,
         extras: Map<String, String>? = null,
-        expirationDate: Date? = null
+        expirationDate: Date? = null,
+        contentType: String? = null
     ): Message {
         val payload: MutableMap<String, Any?> = mutableMapOf(
             Message.KEY_ID to messageId,
@@ -57,6 +58,10 @@ public object MessageCenterTestUtils {
 
         expirationDate?.let {
             payload[Message.KEY_EXPIRATION_DATE] = DateUtils.createIso8601TimeStamp(it.time)
+        }
+
+        contentType?.let {
+            payload[Message.KEY_CONTENT_TYPE] = it
         }
 
         return requireNotNull(Message.create(JsonValue.wrapOpt(payload), true, false))

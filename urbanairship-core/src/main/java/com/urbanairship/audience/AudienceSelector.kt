@@ -632,7 +632,11 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
 
     private fun checkVersion(infoProvider: DeviceInfoProvider): Boolean {
         val required = versionPredicate ?: return true
-        val version = VersionUtils.createVersionObject(infoProvider.platform, infoProvider.appVersionCode)
+        val version = VersionUtils.createVersionObject(
+            platform = infoProvider.platform,
+            appVersion = infoProvider.appVersionCode,
+            appVersionName = infoProvider.appVersionName
+        )
         return required.apply(version)
     }
 

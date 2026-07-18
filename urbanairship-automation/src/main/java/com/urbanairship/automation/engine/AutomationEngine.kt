@@ -563,7 +563,16 @@ internal class AutomationEngine(
                 null
             }
             is SchedulePrepareResult.Prepared -> {
-                PreparedData(updated, result.schedule)
+                // Make sure the transition actually applied. The schedule might have left
+                // the TRIGGERED state while prepare was in flight (e.g., a delay
+                // cancellation trigger fired), making `prepared` a no-op.
+                if (updated.scheduleState == AutomationScheduleState.PREPARED &&
+                    updated.preparedScheduleInfo == result.schedule.info) {
+                    PreparedData(updated, result.schedule)
+                } else {
+                    preparer.cancelled(data.schedule)
+                    null
+                }
             }
             SchedulePrepareResult.Skip -> {
                 null

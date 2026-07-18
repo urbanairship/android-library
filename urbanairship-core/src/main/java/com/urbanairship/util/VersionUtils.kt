@@ -21,6 +21,7 @@ public object VersionUtils {
     public const val AMAZON_VERSION_KEY: String = "amazon"
     public const val ANDROID_VERSION_KEY: String = "android"
     public const val VERSION_KEY: String = "version"
+    public const val VERSION_NAME_KEY: String = "version_name"
 
     private const val IVY_PATTERN_GREATER_THAN = "]%s,)"
     private const val IVY_PATTERN_GREATER_THAN_OR_EQUAL_TO = "[%s,)"
@@ -36,15 +37,24 @@ public object VersionUtils {
      * Generates the version object.
      *
      * @param platform The platform.
-     * @param appVersion The app version.
+     * @param appVersion The app version code.
+     * @param appVersionName The optional app version name (marketing version). Omitted from the
+     * object when null or blank.
      * @return The version object.
      */
+    @JvmOverloads
     public fun createVersionObject(
         platform: Platform,
-        appVersion: Long
+        appVersion: Long,
+        appVersionName: String? = null
     ): JsonSerializable {
-        // Get the version code
-        return jsonMapOf(getPlatformName(platform) to jsonMapOf(VERSION_KEY to appVersion)).toJsonValue()
+        val fields = buildList {
+            add(VERSION_KEY to appVersion)
+            appVersionName?.takeUnless { it.isBlank() }?.let {
+                add(VERSION_NAME_KEY to it)
+            }
+        }
+        return jsonMapOf(getPlatformName(platform) to jsonMapOf(*fields.toTypedArray())).toJsonValue()
     }
 
     /**

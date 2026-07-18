@@ -24,7 +24,10 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.LayoutUtils.dpToPx
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.debouncedClicks
-import com.urbanairship.android.layout.util.findTargetDescendant
+import com.urbanairship.android.layout.util.isActionDown
+import com.urbanairship.android.layout.util.isActionUp
+import com.urbanairship.android.layout.util.isWithinBounds
+import com.urbanairship.android.layout.util.isWithinClickableDescendantOf
 import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.TappableView
 import kotlin.time.Duration.Companion.milliseconds
@@ -108,22 +111,31 @@ internal class LabelButtonView(
                 ?: model.label.resolveState(context, state).text
     }
 
+    /** True while a press that began within this view (and not on a clickable descendant) is in progress. */
+    private var pressStartedWithinSelf = false
+
     /**
-     * Listen for touch events and perform a click on this view if the touch up event isn't within
-     * a clickable descendant of this view.
+     * Listen for touch events and perform a click on this view only when the press both starts and
+     * ends within this view and not on a clickable descendant of it.
      */
     override fun onInterceptTouchEvent(event: MotionEvent): Boolean {
         if (context.isTouchExplorationEnabled) {
             return false
         }
 
-        if (event.action == MotionEvent.ACTION_UP && !event.isWithinClickableDescendantOf(view)) {
-            when (model.viewInfo.tapEffect) {
-                TapEffect.Default -> triggerDefaultAnimation()
-                TapEffect.None -> Unit
-            }
+        when {
+            event.isActionDown ->
+                pressStartedWithinSelf = event.isWithinBounds(this) && !event.isWithinClickableDescendantOf(view)
 
-            performClick()
+            event.isActionUp && pressStartedWithinSelf &&
+                    event.isWithinBounds(this) && !event.isWithinClickableDescendantOf(view) -> {
+                when (model.viewInfo.tapEffect) {
+                    TapEffect.Default -> triggerDefaultAnimation()
+                    TapEffect.None -> Unit
+                }
+
+                performClick()
+            }
         }
 
         // We're just snooping, so always let the event pass through.
@@ -137,10 +149,6 @@ internal class LabelButtonView(
 
     /** Button layouts may be shrunk if they contain a media view. */
     override fun isShrinkable(): Boolean = model.isShrinkable
-
-    private fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean {
-        return findTargetDescendant(view) { it.isClickable && it.isEnabled } != null
-    }
 
     private fun triggerDefaultAnimation(event: MotionEvent? = null) {
         model.viewScope.launch {

@@ -93,7 +93,7 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun displayRequests(
         embeddedViewId: String,
-        comparator: Comparator<AirshipEmbeddedInfo>?,
+        selection: AirshipEmbeddedSelection,
         scope: CoroutineScope,
     ): Flow<EmbeddedDisplayRequestResult> {
 
@@ -103,39 +103,38 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
         // it is no longer in the listing.
 
         return viewsFlow
-            .map { list ->
-                val sorted = if (comparator != null) {
-                    list[embeddedViewId]
-                        // Map the list to a list of pairs, so we can sort by the embedded info
-                        ?.map { request ->
-                            val info = AirshipEmbeddedInfo(
-                                instanceId = request.viewInstanceId,
-                                embeddedId = request.embeddedViewId,
-                                extras = request.extras
-                            )
-                            Pair(info, request)
-                        }
-                       ?.sortedWith { a, b -> comparator.compare(a.first, b.first) }
-                       // Map the list back to just the request, with the sort order applied
-                       ?.map { it.second }
-                } else {
-                    list[embeddedViewId]
-                }
+            .map { map ->
+                val pendingList = map[embeddedViewId].orEmpty()
 
-                sorted.orEmpty()
-            }
-            .map { list ->
-                if (comparator != null) {
-                    EmbeddedDisplayRequestResult(next = list.firstOrNull(), list = list)
-                } else {
-                    val current = lastViewedLock.withLock {
-                        lastViewed[embeddedViewId]?.let { lastId ->
-                            list.find { it.viewInstanceId == lastId }
-                        } ?: list.minByOrNull { it.priority }?.also {
-                            lastViewed[embeddedViewId] = it.viewInstanceId
-                        }
+                when (selection) {
+                    is AirshipEmbeddedSelection.ByComparator -> {
+                        val sorted = pendingList
+                            .map { request ->
+                                val info = AirshipEmbeddedInfo(
+                                    instanceId = request.viewInstanceId,
+                                    embeddedId = request.embeddedViewId,
+                                    extras = request.extras
+                                )
+                                Pair(info, request)
+                            }
+                            .sortedWith { a, b -> selection.comparator.compare(a.first, b.first) }
+                            .map { it.second }
+                        EmbeddedDisplayRequestResult(next = sorted.firstOrNull(), list = sorted)
                     }
-                    EmbeddedDisplayRequestResult(next = current, list =  list)
+                    is AirshipEmbeddedSelection.ByInstanceId -> {
+                        val match = pendingList.find { it.viewInstanceId == selection.instanceId }
+                        EmbeddedDisplayRequestResult(next = match, list = pendingList)
+                    }
+                    AirshipEmbeddedSelection.Priority -> {
+                        val current = lastViewedLock.withLock {
+                            lastViewed[embeddedViewId]?.let { lastId ->
+                                pendingList.find { it.viewInstanceId == lastId }
+                            } ?: pendingList.minByOrNull { it.priority }?.also {
+                                lastViewed[embeddedViewId] = it.viewInstanceId
+                            }
+                        }
+                        EmbeddedDisplayRequestResult(next = current, list = pendingList)
+                    }
                 }
             }
             .distinctUntilChanged()

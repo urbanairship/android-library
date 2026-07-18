@@ -19,6 +19,7 @@ import com.urbanairship.android.layout.AirshipEmbeddedViewManager
 import com.urbanairship.android.layout.EmbeddedDisplayRequest
 import com.urbanairship.android.layout.ui.EmbeddedLayout
 import com.urbanairship.embedded.AirshipEmbeddedInfo
+import com.urbanairship.embedded.AirshipEmbeddedSelection
 import com.urbanairship.embedded.EmbeddedViewManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -30,16 +31,35 @@ import kotlinx.coroutines.withContext
  * view group.
  *
  * @param embeddedId the embedded ID.
- * @param comparator optional `Comparator` used to sort available embedded contents.
+ * @param selection the [AirshipEmbeddedSelection] that controls how instances are ordered.
  *
  * @return a new [AirshipEmbeddedViewGroupState] instance.
  */
 @Composable
 public fun rememberAirshipEmbeddedViewGroupState(
     embeddedId: String,
-    comparator: Comparator<AirshipEmbeddedInfo>? = null
+    selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority
 ): AirshipEmbeddedViewGroupState {
-    return rememberAirshipEmbeddedViewGroupState(embeddedId, comparator, EmbeddedViewManager)
+    return rememberAirshipEmbeddedViewGroupState(embeddedId, selection, EmbeddedViewManager)
+}
+
+/**
+ * Creates a [AirshipEmbeddedViewGroupState] that can be used to manage the state of an embedded
+ * view group.
+ *
+ * @param embeddedId the embedded ID.
+ * @param comparator optional `Comparator` used to sort available embedded contents.
+ *
+ * @return a new [AirshipEmbeddedViewGroupState] instance.
+ */
+@Deprecated("Use rememberAirshipEmbeddedViewGroupState with AirshipEmbeddedSelection instead.")
+@Composable
+public fun rememberAirshipEmbeddedViewGroupState(
+    embeddedId: String,
+    comparator: Comparator<AirshipEmbeddedInfo>?
+): AirshipEmbeddedViewGroupState {
+    val selection = if (comparator != null) AirshipEmbeddedSelection.ByComparator(comparator) else AirshipEmbeddedSelection.Priority
+    return rememberAirshipEmbeddedViewGroupState(embeddedId, selection, EmbeddedViewManager)
 }
 
 /**
@@ -62,15 +82,15 @@ public class AirshipEmbeddedViewGroupState(
 @Composable
 internal fun rememberAirshipEmbeddedViewGroupState(
     embeddedId: String,
-    comparator: Comparator<AirshipEmbeddedInfo>?,
+    selection: AirshipEmbeddedSelection,
     embeddedViewManager: AirshipEmbeddedViewManager,
 ): AirshipEmbeddedViewGroupState {
     val state = remember { AirshipEmbeddedViewGroupState(embeddedId) }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(embeddedId, comparator) {
+    LaunchedEffect(embeddedId, selection) {
         withContext(Dispatchers.Default) {
-            embeddedViewManager.displayRequests(embeddedId, comparator, scope)
+            embeddedViewManager.displayRequests(embeddedId, selection, scope)
                 .map { it.list }
                 .distinctUntilChanged()
                 .collect { state.displayRequests = it }

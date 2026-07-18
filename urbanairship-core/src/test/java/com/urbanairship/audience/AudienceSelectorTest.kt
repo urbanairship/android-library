@@ -265,6 +265,7 @@ public class AudienceSelectorTest {
             .setVersionMatcher(Platform.ANDROID, ValueMatcher.newNumberRangeMatcher(1.0, 2.0))
             .build()
 
+        every { infoProvider.appVersionName } returns ""
         every { infoProvider.appVersionCode } returns 1
 
         TestCase.assertTrue(checkAudience(audience))
@@ -273,6 +274,38 @@ public class AudienceSelectorTest {
         TestCase.assertTrue(checkAudience(audience))
 
         every { infoProvider.appVersionCode } returns 3
+        TestCase.assertFalse(checkAudience(audience))
+    }
+
+    @Test
+    public fun testAppVersionName(): TestResult = runTest {
+        val predicate = JsonPredicate.newBuilder()
+            .addMatcher(
+                JsonMatcher.newBuilder()
+                    .setScope("android")
+                    .setKey("version_name")
+                    .setValueMatcher(ValueMatcher.newVersionMatcher("[6.0.0,)"))
+                    .build()
+            )
+            .build()
+
+        val audience = AudienceSelector.newBuilder()
+            .setVersionPredicate(predicate)
+            .build()
+
+        every { infoProvider.appVersionCode } returns 1
+
+        every { infoProvider.appVersionName } returns "6.0.0"
+        TestCase.assertTrue(checkAudience(audience))
+
+        every { infoProvider.appVersionName } returns "6.1.5"
+        TestCase.assertTrue(checkAudience(audience))
+
+        every { infoProvider.appVersionName } returns "5.9.9"
+        TestCase.assertFalse(checkAudience(audience))
+
+        // Blank version name omits the key from the version object
+        every { infoProvider.appVersionName } returns ""
         TestCase.assertFalse(checkAudience(audience))
     }
 

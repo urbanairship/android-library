@@ -3,6 +3,7 @@ package com.urbanairship.embedded
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import java.util.UUID
 import app.cash.turbine.test
+import com.urbanairship.embedded.AirshipEmbeddedSelection
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Job
@@ -78,7 +79,7 @@ public class EmbeddedViewManagerTest {
         // Custom one does reverse priority order
         EmbeddedViewManager.displayRequests(
             testEmbeddedId,
-            comparator = compareByDescending { it.priority },
+            selection = AirshipEmbeddedSelection.ByComparator(compareByDescending { it.priority }),
             scope = this + job
         ).test {
             assertEquals("low priority", awaitItem().next?.viewInstanceId);
@@ -96,6 +97,51 @@ public class EmbeddedViewManagerTest {
             cancelAndIgnoreRemainingEvents()
         }
 
+
+        job.cancel()
+    }
+
+    @Test
+    public fun testInstanceSelection(): TestResult = runTest {
+        addPending("instance-a", 0)
+        addPending("instance-b", 0)
+        addPending("instance-c", 0)
+
+        val job = Job()
+
+        // Selecting by instance ID shows only that instance regardless of insertion order.
+        EmbeddedViewManager.displayRequests(
+            testEmbeddedId,
+            selection = AirshipEmbeddedSelection.ByInstanceId("instance-b"),
+            scope = this + job
+        ).test {
+            assertEquals("instance-b", awaitItem().next?.viewInstanceId)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // When the targeted instance is absent, next is null but the full list is still returned.
+        EmbeddedViewManager.displayRequests(
+            testEmbeddedId,
+            selection = AirshipEmbeddedSelection.ByInstanceId("instance-missing"),
+            scope = this + job
+        ).test {
+            val result = awaitItem()
+            assertEquals(null, result.next?.viewInstanceId)
+            assertEquals(3, result.list.size)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // Dismissing the targeted instance causes next to become null.
+        EmbeddedViewManager.displayRequests(
+            testEmbeddedId,
+            selection = AirshipEmbeddedSelection.ByInstanceId("instance-a"),
+            scope = this + job
+        ).test {
+            assertEquals("instance-a", awaitItem().next?.viewInstanceId)
+            EmbeddedViewManager.dismiss(testEmbeddedId, "instance-a")
+            assertEquals(null, awaitItem().next?.viewInstanceId)
+            cancelAndIgnoreRemainingEvents()
+        }
 
         job.cancel()
     }

@@ -24,7 +24,7 @@ import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.util.LayoutUtils
-import com.urbanairship.android.layout.util.findTargetDescendant
+import com.urbanairship.android.layout.util.isWithinClickableDescendantOf
 import com.urbanairship.android.layout.widget.PagerRecyclerView
 import com.urbanairship.util.stringResource
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -94,6 +94,7 @@ internal class PagerView(
         }
 
     private var gestureDetector: PagerGestureDetector? = null
+    private var suppressGesture = false
     private var accessibilityListener: AccessibilityManager.TouchExplorationStateChangeListener? = null
 
     private val view: PagerRecyclerView = PagerRecyclerView(context, model, viewEnvironment)
@@ -169,14 +170,21 @@ internal class PagerView(
     }
 
     override fun dispatchTouchEvent(event: MotionEvent): Boolean {
-        // Forward all touch events to the gesture detector so it sees the full
-        // press / release sequence even when onInterceptTouchEvent returns true
-        // (e.g. during a programmatic scroll).
-        // Without this, ACTION_UP can be lost and freeze the story
+        // Forward touch events to the gesture detector so it sees the full press/release
+        // sequence even when onInterceptTouchEvent returns true (e.g. during a programmatic
+        // scroll). Without this, ACTION_UP can be lost and freeze the story.
+        // Suppression is decided once at ACTION_DOWN so a swipe that starts on empty space
+        // but ends over a button still delivers ACTION_UP to the detector.
         gestureDetector?.let { detector ->
-            if (!event.isWithinClickableDescendantOf(view)) {
+            if (event.actionMasked == MotionEvent.ACTION_DOWN) {
+                suppressGesture = event.isWithinClickableDescendantOf(view)
+            }
+            if (!suppressGesture) {
                 detector.onTouchEvent(event)
             }
+        }
+        if (event.actionMasked == MotionEvent.ACTION_UP || event.actionMasked == MotionEvent.ACTION_CANCEL) {
+            suppressGesture = false
         }
         return super.dispatchTouchEvent(event)
     }
@@ -232,8 +240,4 @@ internal class PagerView(
             0)
     }
 
-    private fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean =
-        findTargetDescendant(view) {
-            it.isClickable && (it is MediaView || it is WebViewView)
-        } != null
 }

@@ -1,0 +1,81 @@
+version: 1
+presentation:
+  dismiss_on_touch_outside: true
+  type: modal
+  default_placement:
+    size:
+      width: 90%
+      height: 30%
+    position:
+      horizontal: center
+      vertical: center
+    shade_color:
+      default:
+        hex: '#000000'
+        alpha: 0.5
+    border:
+      radius: 6
+view:
+  type: container
+  background_color:
+    default:
+      hex: '#ffffff'
+      alpha: 1
+  border:
+    stroke_color:
+      default:
+        hex: '#000000'
+        alpha: 1
+    stroke_width: 1
+  items:
+    - position:
+        horizontal: center
+        vertical: center
+      size:
+        height: 100%
+        width: 100%
+      view:
+        type: linear_layout
+        direction: horizontal
+        background_color:
+          default:
+            hex: '#eeeeee'
+            alpha: 1
+        items:
+          # Three identical 200x200 square images, all size: auto/auto.
+          # Item 1 has a 40dp trailing margin, items 2 and 3 have none.
+          - position:
+              horizontal: center
+              vertical: center
+            size:
+              width: auto
+              height: auto
+            margin:
+              end: 40
+            view:
+              type: media
+              media_type: image
+              media_fit: center_inside
+              url: https://hangar-dl.urbanairship.com/binary/public/VWDwdOFjRTKLRxCeXTVP6g/b4bcbeb3-dc39-4ddc-88c2-fee64c2d7dab
+          - position:
+              horizontal: center
+              vertical: center
+            size:
+              width: auto
+              height: auto
+            view:
+              type: media
+              media_type: image
+              media_fit: center_inside
+              url: https://hangar-dl.urbanairship.com/binary/public/VWDwdOFjRTKLRxCeXTVP6g/508314fb-5607-4883-a879-cd34c90308f3
+          - position:
+              horizontal: center
+              vertical: center
+            size:
+              width: auto
+              height: auto
+            view:
+              type: media
+              media_type: image
+              media_fit: center_inside
+              url: https://hangar-dl.urbanairship.com/binary/public/VWDwdOFjRTKLRxCeXTVP6g/5ccde573-a86f-419c-a212-fd8241af5f12

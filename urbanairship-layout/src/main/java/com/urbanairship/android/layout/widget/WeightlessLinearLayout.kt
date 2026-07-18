@@ -258,7 +258,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                 this.totalLength = max(totalLength, totalLength + lp.topMargin + lp.bottomMargin)
                 skippedMeasure = true
             } else {
-                var oldHeight = Int.Companion.MIN_VALUE
+                var oldHeight = Int.MIN_VALUE
                 if (lp.height == 0 && lp.maxHeightPercent > 0) {
                     // heightMode is either UNSPECIFIED or AT_MOST, and this child wanted to stretch to fill available
                     // space. Translate that to WRAP_CONTENT so that it does not end up with a height of 0.
@@ -266,7 +266,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     lp.height = ViewGroup.LayoutParams.WRAP_CONTENT
                 }
                 val childHorizontalMargins = lp.marginStart + lp.marginEnd
-                var oldWidth = Int.Companion.MIN_VALUE
+                var oldWidth = Int.MIN_VALUE
                 if (lp.width == 0 && lp.maxWidthPercent > 0) {
                     oldWidth = 0
                     lp.width = (widthSize * lp.maxWidthPercent).toInt() - childHorizontalMargins
@@ -281,11 +281,11 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     if (!childrenWithMaxPercent.isEmpty()) totalLength else 0
                 )
 
-                if (oldHeight != Int.Companion.MIN_VALUE) {
+                if (oldHeight != Int.MIN_VALUE) {
                     lp.height = oldHeight
                 }
 
-                if (oldWidth != Int.Companion.MIN_VALUE) {
+                if (oldWidth != Int.MIN_VALUE) {
                     lp.width = oldWidth
                 }
 
@@ -293,7 +293,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     remeasureWithAspectRatio(child, lp, widthMeasureSpec, heightMeasureSpec)
                 }
 
-                val childHeight = child.getMeasuredHeight()
+                val childHeight = child.measuredHeight
                 val totalLength = this.totalLength
                 this.totalLength =
                     max(totalLength, totalLength + childHeight + lp.topMargin + lp.bottomMargin)
@@ -416,6 +416,29 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
                 // Delta should now be close to zero
                 delta = height - totalLength
+            } else {
+                // Fixed children overflow the parent, and WRAP_CONTENT children can't absorb it;
+                // zero out all WRAP_CONTENT children to match iOS failure behavior.
+                for (i in 0..<count) {
+                    val child = getChildAt(i) ?: continue
+                    if (child.visibility == GONE) continue
+                    val lp = child.layoutParams as LayoutParams
+                    if (lp.height == ViewGroup.LayoutParams.WRAP_CONTENT && lp.maxHeightPercent == 0f) {
+                        val widthSpec = getChildMeasureSpec(
+                            widthMeasureSpec, lp.marginStart + lp.marginEnd, lp.width
+                        )
+                        child.measure(widthSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY))
+                    }
+                }
+                totalLength = 0
+                for (i in 0..<count) {
+                    val child = getChildAt(i) ?: continue
+                    if (child.visibility == GONE) continue
+                    val lp = child.layoutParams as LayoutParams
+                    totalLength += child.measuredHeight + lp.topMargin + lp.bottomMargin
+                }
+                totalLength += paddingTop + paddingBottom
+                delta = height - totalLength
             }
         }
 
@@ -429,27 +452,48 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
             val maxPercentCount = childrenWithMaxPercent.size
 
+            // Distribute equal slots across percent children (iOS HStack/VStack-style fair
+            // share), then subtract each child's own margin from its slot to get content
+            // height. A margined child ends up shorter than its unmargined siblings, instead
+            // of every percent child getting equal content while margins pile on top.
+            val percentMargins = childrenWithMaxPercent.sumOf {
+                val marginLp = it.layoutParams as LayoutParams
+                marginLp.topMargin + marginLp.bottomMargin
+            }
+            var slotRemaining = delta + percentMargins
+
             val lastChildIndex = maxPercentCount - 1
             for (i in 0..<maxPercentCount) {
                 val child = childrenWithMaxPercent[i]
                 val lp = child.layoutParams as LayoutParams
 
                 if (heightMode != MeasureSpec.UNSPECIFIED) {
-                    val actualPercent: kotlin.Float
+                    val remaining = maxPercentCount - i
 
-                    if (delta >= (height * lp.maxHeightPercent) * (maxPercentCount - i)) {
-                        actualPercent = lp.maxHeightPercent
+                    val actualPercent: Float = when {
+                        slotRemaining >= (height * lp.maxHeightPercent) * remaining ->
+                            lp.maxHeightPercent
+                        height > 0 ->
+                            slotRemaining.toFloat() / remaining.toFloat() / height.toFloat()
+                        // height == 0: slot collapses to 0 below regardless, avoid NaN.
+                        else -> 0f
+                    }
+
+                    // When delta < 0 siblings already overflow the parent; give each percent
+                    // child 0px to match iOS failure behavior (fixed children win).
+                    var slot = if (delta >= 0) {
+                        (actualPercent * height).toInt()
                     } else {
-                        actualPercent =
-                            (delta.toFloat()) / ((childrenWithMaxPercent.size - i).toFloat()) / (height.toFloat())
+                        0
+                    }
+                    if (i == lastChildIndex && delta >= 0) {
+                        slot = min(slot, slotRemaining)
                     }
 
-                    var childHeight = (actualPercent * height).toInt()
-                    if (i == lastChildIndex) {
-                        childHeight = min(childHeight, delta)
-                    }
+                    slotRemaining -= slot
 
-                    delta -= childHeight
+                    val childMargin = lp.topMargin + lp.bottomMargin
+                    val childHeight = (slot - childMargin).coerceAtLeast(0)
 
                     val widthSpec: Int
                     if (lp.width == 0 && lp.maxWidthPercent > 0) {
@@ -684,7 +728,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     max(totalLength, totalLength + lp.marginStart + lp.marginEnd)
                 skippedMeasure = true
             } else {
-                var oldWidth = Int.Companion.MIN_VALUE
+                var oldWidth = Int.MIN_VALUE
                 if (lp.width == 0 && lp.maxWidthPercent > 0) {
                     // widthMode is either UNSPECIFIED or AT_MOST, and this child wanted to stretch to fill available
                     // space. Translate that to WRAP_CONTENT so that it does not end up with a width of 0.
@@ -692,7 +736,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     lp.width = ViewGroup.LayoutParams.WRAP_CONTENT
                 }
                 val childVerticalMargins = lp.topMargin + lp.bottomMargin
-                var oldHeight = Int.Companion.MIN_VALUE
+                var oldHeight = Int.MIN_VALUE
                 if (lp.height == 0 && lp.maxHeightPercent > 0) {
                     oldHeight = 0
                     lp.height = (heightSize * lp.maxHeightPercent).toInt() - childVerticalMargins
@@ -707,11 +751,11 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     childVerticalMargins
                 )
 
-                if (oldWidth != Int.Companion.MIN_VALUE) {
+                if (oldWidth != Int.MIN_VALUE) {
                     lp.width = oldWidth
                 }
 
-                if (oldHeight != Int.Companion.MIN_VALUE) {
+                if (oldHeight != Int.MIN_VALUE) {
                     lp.height = oldHeight
                 }
 
@@ -843,6 +887,29 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
                 // Delta should now be close to zero
                 delta = width - totalLength
+            } else {
+                // Fixed children overflow the parent, and WRAP_CONTENT children can't absorb it;
+                // zero out all WRAP_CONTENT children to match iOS failure behavior.
+                for (i in 0..<count) {
+                    val child = getChildAt(i) ?: continue
+                    if (child.visibility == GONE) continue
+                    val lp = child.layoutParams as LayoutParams
+                    if (lp.width == ViewGroup.LayoutParams.WRAP_CONTENT && lp.maxWidthPercent == 0f) {
+                        val heightSpec = getChildMeasureSpec(
+                            heightMeasureSpec, lp.topMargin + lp.bottomMargin, lp.height
+                        )
+                        child.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.EXACTLY), heightSpec)
+                    }
+                }
+                totalLength = 0
+                for (i in 0..<count) {
+                    val child = getChildAt(i) ?: continue
+                    if (child.visibility == GONE) continue
+                    val lp = child.layoutParams as LayoutParams
+                    totalLength += child.measuredWidth + lp.marginStart + lp.marginEnd
+                }
+                totalLength += paddingStart + paddingEnd
+                delta = width - totalLength
             }
         }
 
@@ -856,27 +923,48 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
             val maxPercentCount = childrenWithMaxPercent.size
 
+            // Distribute equal slots across percent children (iOS HStack/VStack-style fair
+            // share), then subtract each child's own margin from its slot to get content
+            // width. A margined child ends up narrower than its unmargined siblings, instead
+            // of every percent child getting equal content while margins pile on top.
+            val percentMargins = childrenWithMaxPercent.sumOf {
+                val marginLp = it.layoutParams as LayoutParams
+                marginLp.marginStart + marginLp.marginEnd
+            }
+            var slotRemaining = delta + percentMargins
+
             val lastChildIndex = maxPercentCount - 1
             for (i in 0..<maxPercentCount) {
                 val child = childrenWithMaxPercent[i]
                 val lp = child.layoutParams as LayoutParams
 
                 if (widthMode != MeasureSpec.UNSPECIFIED) {
-                    val actualPercent: kotlin.Float
+                    val remaining = maxPercentCount - i
 
-                    if (delta >= (width * lp.maxWidthPercent) * (maxPercentCount - i)) {
-                        actualPercent = lp.maxWidthPercent
+                    val actualPercent: Float = when {
+                        slotRemaining >= (width * lp.maxWidthPercent) * remaining ->
+                            lp.maxWidthPercent
+                        width > 0 ->
+                            slotRemaining.toFloat() / remaining.toFloat() / width.toFloat()
+                        // width == 0: slot collapses to 0 below regardless, avoid NaN.
+                        else -> 0f
+                    }
+
+                    // When delta < 0 siblings already overflow the parent; give each percent
+                    // child 0px to match iOS failure behavior (fixed children win).
+                    var slot = if (delta >= 0) {
+                        (actualPercent * width).toInt()
                     } else {
-                        actualPercent =
-                            (delta.toFloat()) / ((childrenWithMaxPercent.size - i).toFloat()) / (width.toFloat())
+                        0
+                    }
+                    if (i == lastChildIndex && delta >= 0) {
+                        slot = min(slot, slotRemaining)
                     }
 
-                    var childWidth = (actualPercent * width).toInt()
-                    if (i == lastChildIndex) {
-                        childWidth = min(childWidth, delta)
-                    }
+                    slotRemaining -= slot
 
-                    delta -= childWidth
+                    val childMargin = lp.marginStart + lp.marginEnd
+                    val childWidth = (slot - childMargin).coerceAtLeast(0)
 
                     val heightSpec: Int
                     if (lp.height == 0 && lp.maxHeightPercent > 0) {

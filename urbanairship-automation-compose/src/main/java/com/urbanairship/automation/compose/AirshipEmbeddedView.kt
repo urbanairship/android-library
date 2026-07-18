@@ -26,6 +26,7 @@ import androidx.core.view.updateLayoutParams
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.ui.EmbeddedLayout
 import com.urbanairship.embedded.AirshipEmbeddedInfo
+import com.urbanairship.embedded.AirshipEmbeddedSelection
 
 /** Default values used for [AirshipEmbeddedView] implementations. */
 public object AirshipEmbeddedViewDefaults {
@@ -57,7 +58,7 @@ public object AirshipEmbeddedViewDefaults {
  *
  * @param embeddedId the embedded ID.
  * @param modifier the modifier to apply to this layout.
- * @param comparator optional `Comparator` used to sort available embedded contents.
+ * @param selection the [AirshipEmbeddedSelection] that controls which instance is displayed.
  * @param contentAlignment optional alignment of the embedded content.
  * @param parentWidthProvider optional provider for the parent width.
  * @param parentHeightProvider optional provider for the parent height.
@@ -68,7 +69,7 @@ public object AirshipEmbeddedViewDefaults {
 public fun AirshipEmbeddedView(
     embeddedId: String,
     modifier: Modifier = Modifier,
-    comparator: Comparator<AirshipEmbeddedInfo>? = null,
+    selection: AirshipEmbeddedSelection = AirshipEmbeddedSelection.Priority,
     contentAlignment: Alignment = AirshipEmbeddedViewDefaults.ContentAlignment,
     parentWidthProvider: (() -> Int)? = null,
     parentHeightProvider: (() -> Int)? = null,
@@ -77,7 +78,47 @@ public fun AirshipEmbeddedView(
 ) {
     EmbeddedViewContent(
         modifier = modifier,
-        state = rememberAirshipEmbeddedViewState(embeddedId, comparator),
+        state = rememberAirshipEmbeddedViewState(embeddedId, selection),
+        contentAlignment = contentAlignment,
+        parentWidthProvider = parentWidthProvider,
+        parentHeightProvider = parentHeightProvider,
+        animatedContentTransform = animatedContentTransform,
+        placeholder = placeholder
+    )
+}
+
+/**
+ * A container that displays embedded content for the given `embeddedId`.
+ *
+ * When included inside a lazy composable or scrolling list, prefer using the variant of this
+ * composable that accepts an [AirshipEmbeddedViewState], which may be hoisted to avoid
+ * unnecessary recompositions.
+ *
+ * @param embeddedId the embedded ID.
+ * @param modifier the modifier to apply to this layout.
+ * @param comparator optional `Comparator` used to sort available embedded contents.
+ * @param contentAlignment optional alignment of the embedded content.
+ * @param parentWidthProvider optional provider for the parent width.
+ * @param parentHeightProvider optional provider for the parent height.
+ * @param animatedContentTransform optional [ContentTransform] used to animate content changes.
+ * @param placeholder optional placeholder composable to display when no content is available.
+ */
+@Deprecated("Use AirshipEmbeddedView with AirshipEmbeddedSelection instead.")
+@Composable
+public fun AirshipEmbeddedView(
+    embeddedId: String,
+    modifier: Modifier = Modifier,
+    comparator: Comparator<AirshipEmbeddedInfo>?,
+    contentAlignment: Alignment = AirshipEmbeddedViewDefaults.ContentAlignment,
+    parentWidthProvider: (() -> Int)? = null,
+    parentHeightProvider: (() -> Int)? = null,
+    animatedContentTransform: ContentTransform = AirshipEmbeddedViewDefaults.NoContentTransform,
+    placeholder: (@Composable () -> Unit)? = null
+) {
+    val selection = if (comparator != null) AirshipEmbeddedSelection.ByComparator(comparator) else AirshipEmbeddedSelection.Priority
+    EmbeddedViewContent(
+        modifier = modifier,
+        state = rememberAirshipEmbeddedViewState(embeddedId, selection),
         contentAlignment = contentAlignment,
         parentWidthProvider = parentWidthProvider,
         parentHeightProvider = parentHeightProvider,
@@ -94,7 +135,7 @@ public fun AirshipEmbeddedView(
  * `AirshipEmbeddedView` composable, embedded view state should be hoisted, and for advanced custom
  * logic that depends on the availability of embedded view content.
  *
- * When included inside of a lazy composable or scrolling list, prefer using the default value
+ * When included inside a lazy composable or scrolling list, prefer using the default value
  * for `animatedContentTransform` and use the animation support provided by the lazy composable.
  *
  * @param state the [AirshipEmbeddedViewState] to be used by this embedded view.

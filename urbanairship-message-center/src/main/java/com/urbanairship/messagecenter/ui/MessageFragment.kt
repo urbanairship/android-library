@@ -8,9 +8,6 @@ import androidx.annotation.LayoutRes
 import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.repeatOnLifecycle
 import com.urbanairship.UALog
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.R
@@ -18,7 +15,7 @@ import com.urbanairship.messagecenter.ui.view.MessageView
 import com.urbanairship.messagecenter.ui.view.MessageViewModel
 import com.urbanairship.messagecenter.ui.view.MessageViewState
 import com.urbanairship.messagecenter.ui.view.SubscriptionCancellation
-import kotlinx.coroutines.launch
+import com.urbanairship.messagecenter.ui.view.bind
 
 /** Fragment that displays a Message Center [Message]. */
 public open class MessageFragment @JvmOverloads constructor(
@@ -84,11 +81,7 @@ public open class MessageFragment @JvmOverloads constructor(
             pendingShowEmptyView = null
         }
 
-        lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.states.collect(messageView::render)
-            }
-        }
+        messageView.bind(viewModel, viewLifecycleOwner)
 
         messageView.listener = object : MessageView.Listener {
             override fun onMessageLoaded(message: Message) {
@@ -112,13 +105,6 @@ public open class MessageFragment @JvmOverloads constructor(
                 listener?.onCloseMessage()
             }
         }
-
-        messageView.analyticsFactory = analyticsFactory@{ onDismiss ->
-            val message = viewModel.currentMessage ?: return@analyticsFactory null
-            viewModel.makeAnalytics(message, onDismiss)
-        }
-
-        messageView.storageFactory = { viewModel.viewStateStorage }
 
         if (savedInstanceState == null) {
             messageId?.let { viewModel.loadMessage(it) } ?: UALog.i {
