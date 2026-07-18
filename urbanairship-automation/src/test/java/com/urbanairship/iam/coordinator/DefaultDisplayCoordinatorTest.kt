@@ -19,12 +19,14 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class DefaultDisplayCoordinatorTest {
     private val activityMonitor = TestActivityMonitor()
+    private val activityTracker = DisplayActivityTracker()
     private val sleeper: TaskSleeper = mockk(relaxed = true)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val coordinator = DefaultDisplayCoordinator(
         displayInterval = 10.seconds,
         activityMonitor = activityMonitor,
+        activityTracker = activityTracker,
         sleeper = sleeper,
         dispatcher = UnconfinedTestDispatcher()
     )
@@ -70,4 +72,26 @@ public class DefaultDisplayCoordinatorTest {
 
         coVerify { sleeper.sleep(10.seconds) }
     }
+
+    @Test
+    public fun testIsReadyOtherDisplayActive(): TestResult = runTest {
+        activityMonitor.foreground()
+
+        coordinator.isReady.test {
+            assertTrue(awaitItem())
+            activityTracker.messageWillDisplay()
+            assertFalse(awaitItem())
+
+            activityTracker.messageWillDisplay()
+            ensureAllEventsConsumed()
+
+            activityTracker.messageFinishedDisplaying()
+            ensureAllEventsConsumed()
+            assertFalse(coordinator.isReady.value)
+
+            activityTracker.messageFinishedDisplaying()
+            assertTrue(awaitItem())
+        }
+    }
+
 }

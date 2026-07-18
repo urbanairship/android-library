@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 internal class DefaultDisplayCoordinator(
     displayInterval: Duration,
     activityMonitor: ActivityMonitor,
+    private val activityTracker: DisplayActivityTracker,
     private val sleeper: TaskSleeper = TaskSleeper.default,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO,
 ) : DisplayCoordinator {
@@ -31,9 +32,10 @@ internal class DefaultDisplayCoordinator(
 
     override val isReady: StateFlow<Boolean> = combineStates(
         lockState,
-        activityMonitor.foregroundState
-    ) { lockState, foregroundState ->
-        lockState == LockState.UNLOCKED && foregroundState
+        activityMonitor.foregroundState,
+        activityTracker.isDisplaying
+    ) { lockState, foregroundState, isDisplaying ->
+        lockState == LockState.UNLOCKED && foregroundState && !isDisplaying
     }
 
     private enum class LockState {
@@ -46,8 +48,8 @@ internal class DefaultDisplayCoordinator(
             startUnlocking()
         }
 
-
     override fun messageWillDisplay(message: InAppMessage) {
+        unlockJob?.cancel()
         lockState.value = LockState.LOCKED
     }
 
