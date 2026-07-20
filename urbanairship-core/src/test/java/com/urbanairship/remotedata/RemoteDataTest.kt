@@ -203,7 +203,7 @@ public class RemoteDataTest {
         testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
 
-        testClock.currentTimeMillis += remoteData.getRefreshInterval() - 1
+        testClock.currentTimeMillis += remoteData.getRefreshInterval().inWholeMilliseconds - 1
         testActivityMonitor.background()
         testActivityMonitor.foreground()
         testDispatcher.scheduler.advanceUntilIdle()
