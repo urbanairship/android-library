@@ -22,6 +22,7 @@ public object VersionUtils {
     public const val ANDROID_VERSION_KEY: String = "android"
     public const val VERSION_KEY: String = "version"
     public const val VERSION_NAME_KEY: String = "version_name"
+    public const val FROM_KEY: String = "from"
 
     private const val IVY_PATTERN_GREATER_THAN = "]%s,)"
     private const val IVY_PATTERN_GREATER_THAN_OR_EQUAL_TO = "[%s,)"
@@ -38,23 +39,39 @@ public object VersionUtils {
      *
      * @param platform The platform.
      * @param appVersion The app version code.
-     * @param appVersionName The optional app version name (marketing version). Omitted from the
-     * object when null or blank.
+     * @param appVersionName The optional app version name (marketing version). Omitted when null
+     * or blank.
+     * @param fromVersion The version code the app upgraded from. When provided, a `from` block is
+     * nested inside the platform object so predicates can match on the upgrade path
+     * (e.g. `android.from.version`).
+     * @param fromVersionName The version name the app upgraded from. Omitted from `from` when
+     * null or blank.
      * @return The version object.
      */
     @JvmOverloads
     public fun createVersionObject(
         platform: Platform,
         appVersion: Long,
-        appVersionName: String? = null
+        appVersionName: String? = null,
+        fromVersion: Long? = null,
+        fromVersionName: String? = null
     ): JsonSerializable {
-        val fields = buildList {
+        val platformFields = buildList {
             add(VERSION_KEY to appVersion)
             appVersionName?.takeUnless { it.isBlank() }?.let {
                 add(VERSION_NAME_KEY to it)
             }
+            if (fromVersion != null) {
+                val fromFields = buildList {
+                    add(VERSION_KEY to fromVersion)
+                    fromVersionName?.takeUnless { it.isBlank() }?.let {
+                        add(VERSION_NAME_KEY to it)
+                    }
+                }
+                add(FROM_KEY to jsonMapOf(*fromFields.toTypedArray()))
+            }
         }
-        return jsonMapOf(getPlatformName(platform) to jsonMapOf(*fields.toTypedArray())).toJsonValue()
+        return jsonMapOf(getPlatformName(platform) to jsonMapOf(*platformFields.toTypedArray())).toJsonValue()
     }
 
     /**
