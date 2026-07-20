@@ -50,12 +50,18 @@ internal class ApplicationMetrics(
         return _appVersionUpdated.value
     }
 
-    /** Gets the current app version. */
+    /** Gets the current app version code. */
     val currentAppVersion: Long
         get() = context.packageManager
             .getPackageInfo(context.packageName, 0)
             ?.let { PackageInfoCompat.getLongVersionCode(it) }
             ?: -1
+
+    /** Gets the current app version name. */
+    val currentAppVersionName: String
+        get() = context.packageManager
+            .getPackageInfo(context.packageName, 0)
+            ?.versionName ?: ""
 
     private suspend fun updateData() {
         if (privacyManager.isAnyEnabled(PrivacyManager.Feature.IN_APP_AUTOMATION, PrivacyManager.Feature.ANALYTICS)) {
