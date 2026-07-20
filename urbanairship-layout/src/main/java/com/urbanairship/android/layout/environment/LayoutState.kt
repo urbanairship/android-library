@@ -30,6 +30,7 @@ import com.urbanairship.json.requireMap
 import java.util.UUID
 import kotlin.math.max
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -236,7 +237,7 @@ internal sealed class State(val type: Type): JsonSerializable {
         val lastPageIndex: Int = 0,
         val completed: Boolean = false,
         val pageIds: List<String> = emptyList(),
-        val durations: List<Int?> = emptyList(),
+        val durations: List<Duration?> = emptyList(),
         val progress: Int = 0,
         val mediaPausedVideos: Map<String, String> = emptyMap(),
         val isManuallyPaused: Boolean = false,
@@ -351,7 +352,7 @@ internal sealed class State(val type: Type): JsonSerializable {
             LAST_PAGE_INDEX to lastPageIndex,
             COMPLETED to completed,
             PAGE_IDS to pageIds,
-            DURATIONS to durations,
+            DURATIONS to durations.map { it?.inWholeSeconds },
             PROGRESS to progress,
             IS_MANUALLY_PAUSED to isManuallyPaused,
             IS_TOUCH_EXPLORATION_ENABLED to isTouchExplorationEnabled,
@@ -382,7 +383,7 @@ internal sealed class State(val type: Type): JsonSerializable {
                     lastPageIndex = content.requireField(LAST_PAGE_INDEX),
                     completed = content.requireField(COMPLETED),
                     pageIds = content.requireList(PAGE_IDS).map { it.requireString() },
-                    durations = content.requireList(DURATIONS).map { it.integer },
+                    durations = content.requireList(DURATIONS).map { it.integer?.seconds },
                     progress = content.requireField(PROGRESS),
                     isManuallyPaused = content.requireField(IS_MANUALLY_PAUSED),
                     isTouchExplorationEnabled = content.requireField(IS_TOUCH_EXPLORATION_ENABLED),

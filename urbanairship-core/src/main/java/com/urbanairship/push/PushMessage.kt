@@ -17,6 +17,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * A push message, usually created from handling a message intent from either FCM,
@@ -69,7 +70,8 @@ public class PushMessage : Parcelable, JsonSerializable {
 
             UALog.v("Notification expiration time is \"%s\"", expirationStr)
             try {
-                val expiration = expirationStr.toLong() * 1000
+                // The expiration is in epoch seconds.
+                val expiration = expirationStr.toLong().seconds.inWholeMilliseconds
                 if (expiration < clock.currentTimeMillis()) {
                     return true
                 }

@@ -24,6 +24,7 @@ import com.urbanairship.util.DateUtils
 import com.urbanairship.util.UAHttpStatusUtil
 import java.util.Locale
 import java.util.TimeZone
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * A high level abstraction for performing Contact API requests.
@@ -524,7 +525,9 @@ internal class ContactApiClient (
                     .requireField<String>("channel_association_timestamp")
             ),
             token = jsonMap.requireField("token"),
-            tokenExpiryDateMs = clock.currentTimeMillis() + jsonMap.requireField<Long>("token_expires_in")
+            // "token_expires_in" is in milliseconds.
+            tokenExpiryDateMs = clock.currentTimeMillis() +
+                jsonMap.requireField<Long>("token_expires_in").milliseconds.inWholeMilliseconds
         )
     }
 }

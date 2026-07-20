@@ -62,7 +62,7 @@ public abstract class Event @JvmOverloads public constructor(
     internal val timezone: Long
         get() {
             val tz = Calendar.getInstance().timeZone
-            return (tz.getOffset(clock.currentTimeMillis()) / 1000).toLong()
+            return tz.getOffset(clock.currentTimeMillis()).milliseconds.inWholeSeconds
         }
 
     /**

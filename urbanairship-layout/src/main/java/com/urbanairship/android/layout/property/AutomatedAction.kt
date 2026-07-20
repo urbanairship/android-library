@@ -7,17 +7,20 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalList
 import com.urbanairship.json.requireField
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 internal data class AutomatedAction(
     override val identifier: String,
-    val delay: Int = 0,
+    val delay: Duration = Duration.ZERO,
     val outcomes: List<Outcome>,
     val reportingMetadata: JsonValue? = null
 ) : Identifiable {
     companion object {
         fun from(json: JsonMap): AutomatedAction = AutomatedAction(
             identifier = json.requireField("identifier"),
-            delay = json.optionalField<Int>("delay") ?: 0,
+            // The wire format for "delay" is in seconds.
+            delay = json.optionalField<Int>("delay")?.seconds ?: Duration.ZERO,
             outcomes = OutcomeResolver.resolve(
                 outcomes = json.optionalList("outcomes")?.let(Outcome::fromList),
                 behaviors = json.optionalField<JsonList>("behaviors")

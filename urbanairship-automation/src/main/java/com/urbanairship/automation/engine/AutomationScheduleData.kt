@@ -6,7 +6,8 @@ import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.json.JsonValue
 import java.util.Objects
 import java.util.UUID
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.milliseconds
 import org.jetbrains.annotations.VisibleForTesting
 
 internal class AutomationScheduleData(
@@ -228,9 +229,9 @@ internal class AutomationScheduleData(
             return false
         }
 
-        val gracePeriod = schedule.editGracePeriodDays ?: return true
-        val sinceLastChange = date - scheduleStateChangeDate
-        return sinceLastChange >= TimeUnit.DAYS.toMillis(gracePeriod.toLong())
+        val gracePeriod = (schedule.editGracePeriodDays ?: return true).toLong().days
+        val sinceLastChange = (date - scheduleStateChangeDate).milliseconds
+        return sinceLastChange >= gracePeriod
     }
 
     internal fun isExpired(date: Long): Boolean {

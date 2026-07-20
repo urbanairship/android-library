@@ -13,6 +13,7 @@ import com.urbanairship.json.requireField
 import kotlin.jvm.Throws
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -22,7 +23,7 @@ public data class RemoteConfig(
     public val fetchContactRemoteData: Boolean? = null,
     public val contactConfig: ContactConfig? = null,
     public val disabledFeatures: PrivacyManager.Feature? = null,
-    public val remoteDataRefreshInterval: Long? = null,
+    public val remoteDataRefreshInterval: Duration? = null,
     public val remoteDataForegroundPollingInterval: Duration? = null,
     public val iaaConfig: IAAConfig? = null
 ) : JsonSerializable {
@@ -34,7 +35,7 @@ public data class RemoteConfig(
         FETCH_CONTACT_REMOTE_DATA_KEY to fetchContactRemoteData,
         CONTACT_CONFIG_KEY to contactConfig?.toJsonValue(),
         DISABLED_FEATURES_KEY to disabledFeatures,
-        REMOTE_DATA_REFRESH_INTERVAL_KEY to remoteDataRefreshInterval,
+        REMOTE_DATA_REFRESH_INTERVAL_KEY to remoteDataRefreshInterval?.inWholeMilliseconds,
         REMOTE_DATA_FOREGROUND_POLLING_INTERVAL_KEY to remoteDataForegroundPollingInterval?.inWholeMilliseconds,
         IAA_CONFIG to iaaConfig
     ).toJsonValue()
@@ -65,7 +66,7 @@ public data class RemoteConfig(
                     ContactConfig.fromJson(it)
                 },
                 disabledFeatures = json[DISABLED_FEATURES_KEY]?.let(PrivacyManager.Feature::fromJson),
-                remoteDataRefreshInterval = json.optionalField(REMOTE_DATA_REFRESH_INTERVAL_KEY),
+                remoteDataRefreshInterval = json.optionalField<Long>(REMOTE_DATA_REFRESH_INTERVAL_KEY)?.milliseconds,
                 remoteDataForegroundPollingInterval = json.optionalField<Long>(REMOTE_DATA_FOREGROUND_POLLING_INTERVAL_KEY)?.milliseconds,
                 iaaConfig = json[IAA_CONFIG]?.let(IAAConfig::fromJson)
             )
@@ -228,8 +229,8 @@ public data class IAAConfig (
 public data class RetryingQueueConfig (
     public val maxConcurrentOperations: Int?,
     public val maxPendingResults: Int?,
-    public val initialBackoff: Long?,
-    public val maxBackOff: Long?
+    public val initialBackoff: Duration?,
+    public val maxBackOff: Duration?
 ) : JsonSerializable {
 
     internal companion object {
@@ -245,8 +246,8 @@ public data class RetryingQueueConfig (
             return RetryingQueueConfig(
                 maxConcurrentOperations = content.optionalField(MAX_CONCURRENT_OPERATIONS),
                 maxPendingResults = content.optionalField(MAX_PENDING_RESULTS),
-                initialBackoff = content.optionalField(INITIAL_BACKOFF),
-                maxBackOff = content.optionalField(MAX_BACK_OFF)
+                initialBackoff = content.optionalField<Long>(INITIAL_BACKOFF)?.seconds,
+                maxBackOff = content.optionalField<Long>(MAX_BACK_OFF)?.seconds
             )
         }
     }
@@ -255,8 +256,8 @@ public data class RetryingQueueConfig (
     override fun toJsonValue(): JsonValue = jsonMapOf(
         MAX_CONCURRENT_OPERATIONS to maxConcurrentOperations,
         MAX_PENDING_RESULTS to maxPendingResults,
-        INITIAL_BACKOFF to initialBackoff,
-        MAX_BACK_OFF to maxBackOff
+        INITIAL_BACKOFF to initialBackoff?.inWholeSeconds,
+        MAX_BACK_OFF to maxBackOff?.inWholeSeconds
     ).toJsonValue()
 }
 

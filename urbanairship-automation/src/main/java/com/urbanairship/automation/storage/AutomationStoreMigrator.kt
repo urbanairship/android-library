@@ -63,7 +63,8 @@ internal class AutomationStoreMigrator(
                     limit = fullSchedule.schedule.limit.let {
                         if (it >= 0) { it.toUInt() } else { null }
                     },
-                    interval = fullSchedule.schedule.interval.toULong(),
+                    // Legacy storage kept the interval in milliseconds, the new schedule expects seconds.
+                    interval = TimeUnit.MILLISECONDS.toSeconds(fullSchedule.schedule.interval).toULong(),
                     delay = getDelay(fullSchedule),
                     metadata = fullSchedule.schedule.metadata?.toJsonValue(),
                     campaigns = fullSchedule.schedule.campaigns,

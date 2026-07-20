@@ -115,7 +115,7 @@ public class AutomationStoreMigratorTest {
                 this.scheduleStart = DateUtils.parseIso8601(start)
                 this.scheduleEnd =  DateUtils.parseIso8601(end)
                 this.editGracePeriod = TimeUnit.DAYS.toMillis(10)
-                this.interval = 500
+                this.interval = TimeUnit.SECONDS.toMillis(500)
                 this.scheduleType = "in_app_message"
                 this.data = makeInAppMessageData()
                 this.count = 3
@@ -254,7 +254,7 @@ public class AutomationStoreMigratorTest {
                 this.scheduleStart = DateUtils.parseIso8601(start)
                 this.scheduleEnd =  DateUtils.parseIso8601(end)
                 this.editGracePeriod = TimeUnit.DAYS.toMillis(10)
-                this.interval = 500
+                this.interval = TimeUnit.SECONDS.toMillis(500)
                 this.scheduleType = "deferred"
                 this.data = makeDeferredData()
                 this.count = 3
@@ -393,7 +393,7 @@ public class AutomationStoreMigratorTest {
                 this.scheduleStart = DateUtils.parseIso8601(start)
                 this.scheduleEnd =  DateUtils.parseIso8601(end)
                 this.editGracePeriod = TimeUnit.DAYS.toMillis(10)
-                this.interval = 500
+                this.interval = TimeUnit.SECONDS.toMillis(500)
                 this.scheduleType = "actions"
                 this.data = jsonMapOf("action" to "value").toJsonValue()
                 this.count = 3
