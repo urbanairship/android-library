@@ -38,6 +38,7 @@ public enum class ViewType(
     SCORE_CONTROLLER("score_controller"),
     SCORE_TOGGLE_LAYOUT("score_toggle_layout"),
     STACK_IMAGE_BUTTON("stack_image_button"),
+    STACK_IMAGE_VIEW("stack_image_view"),
     VIDEO_CONTROLLER("video_controller"),
     ASYNC_VIEW_CONTROLLER("async_view_controller"),
     UNKNOWN("");

@@ -45,6 +45,7 @@ import com.urbanairship.android.layout.info.ScoreInfo
 import com.urbanairship.android.layout.info.ScoreToggleLayoutInfo
 import com.urbanairship.android.layout.info.ScrollLayoutInfo
 import com.urbanairship.android.layout.info.StackImageButtonInfo
+import com.urbanairship.android.layout.info.StackImageViewInfo
 import com.urbanairship.android.layout.info.StateControllerInfo
 import com.urbanairship.android.layout.info.StoryIndicatorInfo
 import com.urbanairship.android.layout.info.TextInputInfo
@@ -83,6 +84,7 @@ import com.urbanairship.android.layout.model.ScoreController
 import com.urbanairship.android.layout.model.ScoreInputToggleLayoutModel
 import com.urbanairship.android.layout.model.ScoreModel
 import com.urbanairship.android.layout.model.StackImageButtonModel
+import com.urbanairship.android.layout.model.StackImageViewModel
 import com.urbanairship.android.layout.model.StateController
 import com.urbanairship.android.layout.model.StoryIndicatorModel
 import com.urbanairship.android.layout.model.TextInputModel
@@ -852,6 +854,11 @@ internal class ThomasModelFactory : ModelFactory {
             viewInfo = info,
             formState = environment.layoutState.thomasForm,
             pagerState = environment.layoutState.pager,
+            environment = environment,
+            properties = properties
+        )
+        is StackImageViewInfo -> StackImageViewModel(
+            viewInfo = info,
             environment = environment,
             properties = properties
         )

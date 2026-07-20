@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.util
 import com.urbanairship.android.layout.info.ImageButtonInfo
 import com.urbanairship.android.layout.info.MediaInfo
 import com.urbanairship.android.layout.info.StackImageButtonInfo
+import com.urbanairship.android.layout.info.StackImageViewInfo
 import com.urbanairship.android.layout.info.StackItemInfo
 import com.urbanairship.android.layout.info.ViewGroupInfo
 import com.urbanairship.android.layout.info.ViewInfo
@@ -69,6 +70,14 @@ public class UrlInfo(
                                 result.add(UrlInfo(UrlType.IMAGE, item.imageUrl))
                                 item.urlSelectors.mapTo(result) { UrlInfo(UrlType.IMAGE, it.url) }
                             }
+                        }
+                    }
+                }
+                is StackImageViewInfo -> {
+                    for (item in info.items) {
+                        if (item is StackItemInfo.ImageItem) {
+                            result.add(UrlInfo(UrlType.IMAGE, item.imageUrl))
+                            item.urlSelectors.mapTo(result) { UrlInfo(UrlType.IMAGE, it.url) }
                         }
                     }
                 }

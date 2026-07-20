@@ -49,6 +49,7 @@ public class AirshipLayout private constructor(
 
     internal fun validate(): Boolean = Thomas.isValid(layoutInfo)
     internal fun isEmbedded(): Boolean = layoutInfo.isEmbedded
+    internal fun isBanner(): Boolean = layoutInfo.isBanner
 
     override fun toJsonValue(): JsonValue = jsonValue
     override fun toString(): String = toJsonValue().toString()

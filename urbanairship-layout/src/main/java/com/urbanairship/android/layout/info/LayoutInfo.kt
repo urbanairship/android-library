@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.info
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.BasePresentation
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.info.ViewInfo.Companion.viewInfoFromJson
@@ -26,6 +27,9 @@ public data class LayoutInfo(
 
     public val isEmbedded: Boolean
         get() = presentation is EmbeddedPresentation
+
+    public val isBanner: Boolean
+        get() = presentation is BannerPresentation
 
     public val embeddedViewId: String?
         get() = (presentation as? EmbeddedPresentation)?.embeddedId
