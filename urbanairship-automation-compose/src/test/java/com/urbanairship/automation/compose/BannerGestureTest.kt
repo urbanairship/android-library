@@ -22,14 +22,14 @@ public class BannerGestureTest {
     @Test
     public fun testSwipeAxis() {
         // Top and bottom placements are swiped vertically.
-        assertEquals(Orientation.Vertical, placement("top", "center").swipeAxis())
-        assertEquals(Orientation.Vertical, placement("bottom", "center").swipeAxis())
-        assertEquals(Orientation.Vertical, placement("top", "end").swipeAxis())
-        assertEquals(Orientation.Vertical, placement("bottom", "start").swipeAxis())
+        assertEquals(Orientation.Vertical, placement("center", "top").swipeAxis())
+        assertEquals(Orientation.Vertical, placement("center", "bottom").swipeAxis())
+        assertEquals(Orientation.Vertical, placement("end", "top").swipeAxis())
+        assertEquals(Orientation.Vertical, placement("start", "bottom").swipeAxis())
 
         // Vertically centered placements are swiped horizontally.
-        assertEquals(Orientation.Horizontal, placement("center", "start").swipeAxis())
-        assertEquals(Orientation.Horizontal, placement("center", "end").swipeAxis())
+        assertEquals(Orientation.Horizontal, placement("start", "center").swipeAxis())
+        assertEquals(Orientation.Horizontal, placement("end", "center").swipeAxis())
     }
 
     //
@@ -39,25 +39,27 @@ public class BannerGestureTest {
     @Test
     public fun testDismissDirectionVerticalEdges() {
         // Vertical placements ignore the layout direction.
-        assertEquals(-1f, placement("top", "center").dismissDirection(isRtl = false))
-        assertEquals(-1f, placement("top", "center").dismissDirection(isRtl = true))
-        assertEquals(1f, placement("bottom", "center").dismissDirection(isRtl = false))
-        assertEquals(1f, placement("bottom", "center").dismissDirection(isRtl = true))
+        assertEquals(-1f, placement("center", "top").dismissDirection(isRtl = false))
+        assertEquals(-1f, placement("center", "top").dismissDirection(isRtl = true))
+        assertEquals(1f, placement("center", "bottom").dismissDirection(isRtl = false))
+        assertEquals(1f, placement("center", "bottom").dismissDirection(isRtl = true))
 
-        // Corner placements still dismiss along the vertical axis.
-        assertEquals(-1f, placement("top", "end").dismissDirection(isRtl = false))
-        assertEquals(1f, placement("bottom", "start").dismissDirection(isRtl = false))
+        // Corner placements still dismiss along the vertical axis, regardless of layout direction.
+        assertEquals(-1f, placement("end", "top").dismissDirection(isRtl = false))
+        assertEquals(-1f, placement("end", "top").dismissDirection(isRtl = true))
+        assertEquals(1f, placement("start", "bottom").dismissDirection(isRtl = false))
+        assertEquals(1f, placement("start", "bottom").dismissDirection(isRtl = true))
     }
 
     @Test
     public fun testDismissDirectionHorizontalEdges() {
         // Center-start dismisses toward the start edge: left in LTR, right in RTL.
-        assertEquals(-1f, placement("center", "start").dismissDirection(isRtl = false))
-        assertEquals(1f, placement("center", "start").dismissDirection(isRtl = true))
+        assertEquals(-1f, placement("start", "center").dismissDirection(isRtl = false))
+        assertEquals(1f, placement("start", "center").dismissDirection(isRtl = true))
 
         // Center-end dismisses toward the end edge: right in LTR, left in RTL.
-        assertEquals(1f, placement("center", "end").dismissDirection(isRtl = false))
-        assertEquals(-1f, placement("center", "end").dismissDirection(isRtl = true))
+        assertEquals(1f, placement("end", "center").dismissDirection(isRtl = false))
+        assertEquals(-1f, placement("end", "center").dismissDirection(isRtl = true))
     }
 
     //
@@ -109,7 +111,7 @@ public class BannerGestureTest {
         assertFalse(shouldDismissBanner(500f, 10_000f, 0f, 1f, MIN_FLING))
     }
 
-    private fun placement(vertical: String, horizontal: String): BannerPlacement =
+    private fun placement(horizontal: String, vertical: String): BannerPlacement =
         BannerPlacement.fromJson(JsonValue.parseString(
             """
             {

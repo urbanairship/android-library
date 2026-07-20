@@ -75,6 +75,25 @@ public class BannerPlacementTest {
     }
 
     @Test
+    public fun testParsingFadeAnimation() {
+        val placement = BannerPlacement.fromJson(placementJson(
+            """
+            "position": "bottom",
+            "animation": {
+              "type": "fade",
+              "animate_in_seconds": 0.4,
+              "animate_out_seconds": 0.2
+            }
+            """
+        ))
+
+        val animation = placement.animation
+        assertTrue(animation is BannerAnimation.Fade)
+        assertEquals(400L, animation.animateInMs)
+        assertEquals(200L, animation.animateOutMs)
+    }
+
+    @Test
     public fun testParsingDefaults() {
         val json = """
             {
