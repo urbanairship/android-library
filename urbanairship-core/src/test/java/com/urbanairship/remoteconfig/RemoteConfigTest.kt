@@ -7,6 +7,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -78,14 +79,14 @@ public class RemoteConfigTest {
             ),
             fetchContactRemoteData = true,
             disabledFeatures = PrivacyManager.Feature.PUSH or PrivacyManager.Feature.ANALYTICS,
-            remoteDataRefreshInterval = 21L,
+            remoteDataRefreshInterval = 21.milliseconds,
             remoteDataForegroundPollingInterval = 600_000.milliseconds,
             iaaConfig = IAAConfig(
                 retryingQueue = RetryingQueueConfig(
                     maxConcurrentOperations = 3,
                     maxPendingResults = 4,
-                    initialBackoff = 5,
-                    maxBackOff = 6
+                    initialBackoff = 5.seconds,
+                    maxBackOff = 6.seconds
                 ),
                 additionalAudienceCheck = AdditionalAudienceCheckConfig(
                     isEnabled = true,

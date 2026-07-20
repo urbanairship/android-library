@@ -39,6 +39,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -144,13 +146,13 @@ public class RemoteDataTest {
     public fun testSettingRefreshInterval(): TestResult = runTest {
         every { mockContactRemoteDataProvider.isEnabled } returns false
 
-        assertEquals(10000L, remoteData.getRefreshInterval())
+        assertEquals(10.seconds, remoteData.getRefreshInterval())
         config.updateRemoteConfig(
             RemoteConfig(
-                remoteDataRefreshInterval = 21L
+                remoteDataRefreshInterval = 21.milliseconds
             )
         )
-        assertEquals(21L, remoteData.getRefreshInterval())
+        assertEquals(21.milliseconds, remoteData.getRefreshInterval())
     }
 
     @Test
