@@ -55,7 +55,7 @@ private fun ScreenContent(
                 onValueChange = { viewModel.msisdn.value = it.trim()},
                 label = { Text("MSISDN") },
                 keyboardOptions = KeyboardOptions(
-                    autoCorrect = false,
+                    autoCorrectEnabled = false,
                     keyboardType = KeyboardType.Phone)
             )
 
@@ -67,7 +67,7 @@ private fun ScreenContent(
                 onValueChange = { viewModel.senderId.value = it.trim()},
                 label = { Text("Sender ID") },
                 keyboardOptions = KeyboardOptions(
-                    autoCorrect = false,
+                    autoCorrectEnabled = false,
                     keyboardType = KeyboardType.Ascii)
             )
 

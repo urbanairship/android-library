@@ -87,7 +87,7 @@ private fun ScreenContent(
                         onValueChange = { viewModel.email.value = it.trim() },
                         label = { Text("Email") },
                         keyboardOptions = KeyboardOptions(
-                            autoCorrect = false, keyboardType = KeyboardType.Email
+                            autoCorrectEnabled = false, keyboardType = KeyboardType.Email
                         )
                     )
 

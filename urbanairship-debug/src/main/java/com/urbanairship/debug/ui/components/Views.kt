@@ -24,6 +24,7 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,6 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.urbanairship.debug.R
+import kotlinx.coroutines.launch
 
 @Composable
 internal fun Section(
@@ -99,20 +101,23 @@ internal fun LoadingView(modifier: Modifier = Modifier.width(64.dp)) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun SwipeToDeleteRow(content: @Composable () -> Unit, onDelete: () -> Unit) {
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = {
-            when(it) {
-                SwipeToDismissBoxValue.EndToStart -> { onDelete() }
-                else -> return@rememberSwipeToDismissBoxState false
-            }
-            return@rememberSwipeToDismissBoxState true
-        },
-        positionalThreshold = { it * .25f }
-    )
+    val dismissState = rememberSwipeToDismissBoxState()
+
+    val scope = rememberCoroutineScope()
 
     SwipeToDismissBox(
         state = dismissState,
         enableDismissFromStartToEnd = false,
+        onDismiss = { dismissValue ->
+            when (dismissValue) {
+                SwipeToDismissBoxValue.EndToStart ->
+                    scope.launch {
+                        dismissState.reset()
+                        onDelete()
+                    }
+                else -> Unit
+            }
+        },
         backgroundContent = { DismissBackground(dismissState = dismissState) }
     ) {
         content()

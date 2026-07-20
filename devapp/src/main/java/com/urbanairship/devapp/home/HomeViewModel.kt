@@ -8,13 +8,10 @@ import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.urbanairship.Airship
-import com.urbanairship.Cancelable
 import com.urbanairship.PrivacyManager
 import com.urbanairship.messagecenter.Message
-import com.urbanairship.messagecenter.MessageCenter
 import com.urbanairship.messagecenter.messageCenter
 import com.urbanairship.permission.PermissionPromptFallback
-import com.urbanairship.push.pushNotificationStatusFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

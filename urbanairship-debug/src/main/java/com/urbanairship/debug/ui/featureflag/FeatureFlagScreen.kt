@@ -20,7 +20,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.Airship
@@ -41,6 +40,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -134,7 +134,12 @@ internal interface FeatureFlagViewModel {
                 )
 
                 override val evaluatedFlag: StateFlow<FeatureFlag?> = MutableStateFlow(
-                    FeatureFlag(true, true, null)
+                    // preview stub — can't use FeatureFlagManager here
+                    FeatureFlag(
+                        isEligible = true,
+                        exists = true,
+                        variables = null
+                    )
                 )
 
                 override val error: StateFlow<String?> = MutableStateFlow(null)
@@ -214,11 +219,7 @@ internal class DefaultFeatureFlagModel(
         val intent = Intent(Intent.ACTION_SEND).setType("text/plain")
             .putExtra(Intent.EXTRA_TEXT, content.toFormattedJsonString())
 
-        ContextCompat.startActivity(
-            context,
-            Intent.createChooser(intent, "Share"),
-            null
-        )
+        context.startActivity(Intent.createChooser(intent, "Share"))
     }
 }
 

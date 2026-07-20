@@ -84,7 +84,7 @@ private fun ScreenContent(viewModel: ScopedSubscriptionListsViewModel) {
                         value = viewModel.listId.value,
                         onValueChange = { viewModel.listId.value = it.trim()},
                         label = { Text("List ID") },
-                        keyboardOptions = KeyboardOptions(autoCorrect = false)
+                        keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
                     )
 
                     SingleChoiceSegmentedButtonRow(

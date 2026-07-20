@@ -3,6 +3,7 @@
 package com.urbanairship.iam.actions
 
 import android.os.Bundle
+import androidx.core.os.BundleCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.ActionRunRequest
@@ -25,6 +26,7 @@ import io.mockk.runs
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runCurrent
@@ -35,6 +37,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class InAppActionRunnerTest {
 
@@ -59,7 +62,7 @@ public class InAppActionRunnerTest {
 
         runner.run("foo", JsonValue.wrap("bar"))
 
-        val receiver: PermissionResultReceiver = metadataSlot.captured.getParcelable(PromptPermissionAction.RECEIVER_METADATA)!!
+        val receiver: PermissionResultReceiver = BundleCompat.getParcelable(metadataSlot.captured, PromptPermissionAction.RECEIVER_METADATA, PermissionResultReceiver::class.java)!!
         receiver.onResult(Permission.LOCATION, PermissionStatus.GRANTED, PermissionStatus.DENIED)
 
         verify {
@@ -117,7 +120,7 @@ public class InAppActionRunnerTest {
 
         runner.run(mapOf("foo" to JsonValue.wrap("bar")), layoutData)
 
-        val receiver: PermissionResultReceiver = metadataSlot.captured.getParcelable(PromptPermissionAction.RECEIVER_METADATA)!!
+        val receiver: PermissionResultReceiver = BundleCompat.getParcelable(metadataSlot.captured, PromptPermissionAction.RECEIVER_METADATA, PermissionResultReceiver::class.java)!!
         receiver.onResult(Permission.LOCATION, PermissionStatus.GRANTED, PermissionStatus.DENIED)
 
         verify {

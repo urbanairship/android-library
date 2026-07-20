@@ -100,7 +100,7 @@ private fun EventProperties(viewModel: AddEventViewModel, onNavigateUp: () -> Un
             value = viewModel.name,
             onValueChange = { viewModel.name = viewModel.corrected(it) },
             label = { Text(text = "Event Name") },
-            keyboardOptions = KeyboardOptions(autoCorrect = false)
+            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
         )
 
         TextField(
@@ -111,7 +111,7 @@ private fun EventProperties(viewModel: AddEventViewModel, onNavigateUp: () -> Un
             onValueChange = { viewModel.eventValue = viewModel.corrected(it) },
             label = { Text(text = "Event Value") },
             keyboardOptions = KeyboardOptions(
-                autoCorrect = false,
+                autoCorrectEnabled = false,
                 keyboardType = KeyboardType.Number
             )
         )
@@ -123,7 +123,7 @@ private fun EventProperties(viewModel: AddEventViewModel, onNavigateUp: () -> Un
             value = viewModel.transactionId,
             onValueChange = { viewModel.transactionId = viewModel.corrected(it) },
             label = { Text(text = "Transaction ID") },
-            keyboardOptions = KeyboardOptions(autoCorrect = false)
+            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
         )
 
         TextField(
@@ -133,7 +133,7 @@ private fun EventProperties(viewModel: AddEventViewModel, onNavigateUp: () -> Un
             value = viewModel.interactionId,
             onValueChange = { viewModel.interactionId = viewModel.corrected(it) },
             label = { Text(text = "Interaction ID") },
-            keyboardOptions = KeyboardOptions(autoCorrect = false)
+            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
         )
 
         TextField(
@@ -143,7 +143,7 @@ private fun EventProperties(viewModel: AddEventViewModel, onNavigateUp: () -> Un
             value = viewModel.interactionType,
             onValueChange = { viewModel.interactionType = viewModel.corrected(it) },
             label = { Text(text = "Interaction Type") },
-            keyboardOptions = KeyboardOptions(autoCorrect = false)
+            keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
         )
     }
 }

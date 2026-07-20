@@ -6,7 +6,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.util.AttributeSet
 import android.view.Gravity
-import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
@@ -127,15 +126,10 @@ internal class MediaView @JvmOverloads constructor(
         settings.javaScriptEnabled = true
         if (ManifestUtils.shouldEnableLocalStorage(context)) {
             settings.domStorageEnabled = true
-            settings.databaseEnabled = true
         }
-        settings.apply {
-            // Disallow all file and content access, which could pose a security risk if enabled.
-            allowFileAccess = false
-            allowFileAccessFromFileURLs = false
-            allowUniversalAccessFromFileURLs = false
-            allowContentAccess = false
-        }
+        // Disallow all file and content access, which could pose a security risk if enabled.
+        settings.allowFileAccess = false
+        settings.allowContentAccess = false
 
         val webViewWeakReference = WeakReference(webView)
         val load = Runnable {

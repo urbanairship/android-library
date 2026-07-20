@@ -12,7 +12,7 @@ import java.util.concurrent.TimeoutException
  * A pending result.
  *
  * @param <T> Type of result.
-</T> */
+ */
 public class PendingResult<T> public constructor() : Cancelable, Future<T?> {
 
     private var isCanceled = false

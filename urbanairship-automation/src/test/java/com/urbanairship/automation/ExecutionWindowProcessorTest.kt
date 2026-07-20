@@ -18,6 +18,7 @@ import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -35,6 +36,7 @@ import org.junit.runner.RunWith
 
 private typealias EvaluationClosure = () -> ExecutionWindowResult
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class ExecutionWindowProcessorTest {
 

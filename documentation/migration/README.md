@@ -6,6 +6,7 @@ Comprehensive migration guides with code examples, troubleshooting, and clear mi
 
 ## Migration Guides
 
+- **[SDK 20.x → 21.0](migration-guide-20-21.md)**
 - **[SDK 19.x → 20.0](migration-guide-19-20.md)**
 - **[SDK 18.x → 19.x](migration-guide-18-19.md)**
 - **[SDK 17.x → 18.x](migration-guide-17-18.md)**

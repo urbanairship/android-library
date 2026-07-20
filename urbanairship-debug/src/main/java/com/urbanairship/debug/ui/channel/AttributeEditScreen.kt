@@ -90,7 +90,7 @@ private fun ScreenContent(viewModel: AttributeEditViewModel) {
                 value = viewModel.name.value,
                 onValueChange = { viewModel.name.value = it.trim()},
                 label = { Text("Attribute") },
-                keyboardOptions = KeyboardOptions(autoCorrect = false)
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
             )
 
             SingleChoiceSegmentedButtonRow(
@@ -135,7 +135,7 @@ private fun inputValue(viewModel: AttributeEditViewModel) {
                 value = viewModel.textValue.value,
                 onValueChange = { viewModel.textValue.value = it.trim()},
                 label = { Text("Text") },
-                keyboardOptions = KeyboardOptions(autoCorrect = false)
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
             )
         }
         AttributeEditViewModel.DataType.NUMBER -> {
@@ -146,7 +146,7 @@ private fun inputValue(viewModel: AttributeEditViewModel) {
                 value = viewModel.numberValue.value,
                 onValueChange = { viewModel.numberValue.value = it.trim()},
                 label = { Text("Number") },
-                keyboardOptions = KeyboardOptions(autoCorrect = false, keyboardType = KeyboardType.Number)
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, keyboardType = KeyboardType.Number)
             )
         }
         AttributeEditViewModel.DataType.DATE -> {

@@ -27,7 +27,7 @@ internal abstract class FrequencyLimitDatabase : RoomDatabase() {
                 context,
                 FrequencyLimitDatabase::class.java,
                 path
-            ).fallbackToDestructiveMigrationOnDowngrade().build()
+            ).fallbackToDestructiveMigrationOnDowngrade(true).build()
         }
 
         @VisibleForTesting

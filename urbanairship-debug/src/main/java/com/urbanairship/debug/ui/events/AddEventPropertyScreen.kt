@@ -112,7 +112,7 @@ private fun ValueView(viewModel: EventPropertiesViewModel) {
                 value = viewModel.stringValue,
                 onValueChange = { viewModel.stringValue = it.trim()},
                 label = { Text(text = "String") },
-                keyboardOptions = KeyboardOptions(autoCorrect = false)
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
             )
         }
         EventPropertiesViewModel.Types.NUMBER -> {
@@ -122,7 +122,7 @@ private fun ValueView(viewModel: EventPropertiesViewModel) {
                 onValueChange = { viewModel.numberValue = it.trim()},
                 label = { Text(text = "Number") },
                 keyboardOptions = KeyboardOptions(
-                    autoCorrect = false,
+                    autoCorrectEnabled = false,
                     keyboardType = KeyboardType.Number
                 )
             )
@@ -133,7 +133,7 @@ private fun ValueView(viewModel: EventPropertiesViewModel) {
                 value = viewModel.jsonValue,
                 onValueChange = { viewModel.jsonValue = it},
                 label = { Text(text = "JSON") },
-                keyboardOptions = KeyboardOptions(autoCorrect = false)
+                keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
             )
         }
     }

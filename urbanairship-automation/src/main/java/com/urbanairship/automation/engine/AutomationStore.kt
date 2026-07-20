@@ -172,7 +172,7 @@ internal abstract class AutomationStore : RoomDatabase(), AutomationStoreInterfa
             val path = File(ContextCompat.getNoBackupFilesDir(context), name).absolutePath
             return databaseBuilder(context, AutomationStore::class.java, path)
                 .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
-                .fallbackToDestructiveMigrationOnDowngrade()
+                .fallbackToDestructiveMigrationOnDowngrade(true)
                 .build()
         }
 
@@ -344,7 +344,7 @@ internal interface AutomationDao {
     suspend fun deleteSchedules(group: String)
 
     @Query("SELECT scheduleId FROM automation_trigger_data")
-    suspend fun getTriggersScheduleIds(): List<String>?
+    suspend fun getTriggersScheduleIds(): List<String>
 
     @Transaction
     suspend fun upsertTriggers(triggers: List<TriggerEntity>) {
@@ -387,7 +387,7 @@ internal interface AutomationDao {
      */
     @Transaction
     suspend fun deleteTriggersExcluding(scheduleIds: List<String>) {
-        val allScheduleIds = getTriggersScheduleIds() ?: return
+        val allScheduleIds = getTriggersScheduleIds()
         val idsToDelete = allScheduleIds - scheduleIds.toSet()
         runBatched(idsToDelete) { deleteTriggersInternal(it) }
     }

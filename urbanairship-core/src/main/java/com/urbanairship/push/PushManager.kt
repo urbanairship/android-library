@@ -84,11 +84,9 @@ public open class PushManager @VisibleForTesting internal constructor(
         NotificationChannelRegistry(context, config.configOptions)
 
     /**
-     * Sets the notification provider used to build notifications from a push message
+     * The notification provider used to build notifications from a push message.
      *
      * If `null`, notification will not be displayed.
-     *
-     * @param notificationProvider The notification provider
      *
      * @see com.urbanairship.push.notifications.NotificationProvider
      * @see com.urbanairship.push.notifications.AirshipNotificationProvider
@@ -96,6 +94,7 @@ public open class PushManager @VisibleForTesting internal constructor(
      */
     public var notificationProvider: NotificationProvider =
         AirshipNotificationProvider(context, config.configOptions, notificationChannelRegistry)
+
     private val actionGroupMap = mutableMapOf<String, NotificationActionButtonGroup>()
 
     public var notificationListener: NotificationListener? = null
@@ -114,6 +113,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public var pushProvider: PushProvider? = null
         private set
+
     private var isPushManagerEnabled: Boolean? = null
 
     @Volatile
@@ -136,9 +136,7 @@ public open class PushManager @VisibleForTesting internal constructor(
     private var isAirshipReady = false
 
     /**
-     * Sets a predicate that determines if a notification should be presented in the foreground or not.
-     *
-     * @param foregroundNotificationDisplayPredicate The display predicate.
+     * Optional `Predicate` that determines if a notification should be presented in the foreground.
      */
     @Volatile
     public var foregroundNotificationDisplayPredicate: Predicate<PushMessage>? = null

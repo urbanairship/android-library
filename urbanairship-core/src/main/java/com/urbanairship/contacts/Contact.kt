@@ -540,7 +540,7 @@ public class Contact internal constructor(
     override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         return if (ACTION_UPDATE_CONTACT == jobInfo.action) {
             val result = contactManager.performNextOperation()
-            return if (result) JobResult.SUCCESS else JobResult.FAILURE
+            if (result) JobResult.SUCCESS else JobResult.FAILURE
         } else {
             JobResult.SUCCESS
         }
@@ -567,8 +567,11 @@ public class Contact internal constructor(
     public val contactChannelsFlow: Flow<Result<List<ContactChannel>>> = contactChannelsProvider.updates.map { it.data }
 
     /**
-     * @suppress
+     * @hide
      */
+    // Deprecated in SDK 20
+    // TODO(SDK22): update to level = DeprecationLevel.ERROR to start throwing compile errors (and note in migration-guide)
+    // TODO(SDK23): remove completely
     @Deprecated("Use contactChannelsFlow instead", replaceWith = ReplaceWith("contactChannelsFlow"))
     public val channelContacts: Flow<Result<List<ContactChannel>>> = contactChannelsFlow
 
@@ -578,8 +581,11 @@ public class Contact internal constructor(
     public val subscriptionListsFlow: Flow<Result<Map<String, Set<Scope>>>> = subscriptionsProvider.updates.map { it.data }
 
     /**
-     * @suppress
+     * @hide
      */
+    // Deprecated in SDK 20
+    // TODO(SDK22): update to level = DeprecationLevel.ERROR to start throwing compile errors (and note in migration-guide)
+    // TODO(SDK23): remove completely
     @Deprecated("Use subscriptionListsFlow instead", replaceWith = ReplaceWith("subscriptionListsFlow"))
     public val subscriptions: Flow<Result<Map<String, Set<Scope>>>> = subscriptionListsFlow
 

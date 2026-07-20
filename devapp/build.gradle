@@ -32,7 +32,7 @@ android {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             // Not published, so we can safely use default signing
-            signingConfig signingConfigs.debug
+            signingConfig = signingConfigs.debug
         }
     }
 

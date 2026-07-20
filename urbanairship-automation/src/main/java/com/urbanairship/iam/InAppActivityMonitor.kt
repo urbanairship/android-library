@@ -33,18 +33,18 @@ public class InAppActivityMonitor(
     private val allowedActivities = mutableSetOf<Class<*>>()
     private val ignoredActivities = mutableSetOf<Class<*>>()
     private val activityPredicate = object : Predicate<Activity> {
-        override fun apply(activity: Activity): Boolean {
-            if (allowedActivities.contains(activity.javaClass)) {
+        override fun apply(value: Activity): Boolean {
+            if (allowedActivities.contains(value.javaClass)) {
                 return true
             }
-            if (ignoredActivities.contains(activity.javaClass)) {
+            if (ignoredActivities.contains(value.javaClass)) {
                 return false
             }
-            if (shouldIgnoreActivity(activity)) {
-                ignoredActivities.add(activity.javaClass)
+            if (shouldIgnoreActivity(value)) {
+                ignoredActivities.add(value.javaClass)
                 return false
             }
-            allowedActivities.add(activity.javaClass)
+            allowedActivities.add(value.javaClass)
             return true
         }
     }

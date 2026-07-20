@@ -1,6 +1,7 @@
 package com.urbanairship.liveupdate.notification
 
 import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
 import android.os.Build
 import androidx.core.app.AlarmManagerCompat
@@ -41,8 +42,10 @@ internal class NotificationTimeoutCompat(
 
     private fun setTimeoutAlarm(name: String, timeoutAt: Long) {
         val intent = LiveUpdateNotificationReceiver.timeoutCompatIntent(context, name)
-        val operation = PendingIntentCompat.getBroadcast(context, 0, intent, 0)
+        // PendingIntentCompat sets FLAG_IMMUTABLE, but we're setting it explicitly here because
+        // CodeQL doesn't seem to be able to trace through our helper properly.
+        val operation = PendingIntentCompat.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
-        AlarmManagerCompat.setExact(alarmManager, AlarmManager.RTC, timeoutAt, operation)
+        AlarmManagerCompat.setExactAndAllowWhileIdle(alarmManager, AlarmManager.RTC, timeoutAt, operation)
     }
 }

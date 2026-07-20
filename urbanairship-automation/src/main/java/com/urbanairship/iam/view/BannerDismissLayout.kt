@@ -10,7 +10,6 @@ import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewTreeObserver
 import android.widget.FrameLayout
-import androidx.core.view.ViewCompat
 import androidx.customview.widget.ViewDragHelper
 import com.urbanairship.UALog
 import com.urbanairship.iam.content.Banner
@@ -117,7 +116,7 @@ internal class BannerDismissLayout @JvmOverloads constructor(
     override fun computeScroll() {
         super.computeScroll()
         if (dragHelper.continueSettling(true)) {
-            ViewCompat.postInvalidateOnAnimation(this)
+            postInvalidateOnAnimation()
         }
     }
 

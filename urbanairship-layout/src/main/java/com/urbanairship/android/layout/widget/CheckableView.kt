@@ -115,6 +115,7 @@ internal abstract class CheckableView<M : CheckableModel<*, *>>(
                 info.className = accessibilityNodeClassName
 
                 if (host.isEnabled) {
+                    @Suppress("DEPRECATION")
                     info.isChecked = checkableView.isChecked()
                 }
             }

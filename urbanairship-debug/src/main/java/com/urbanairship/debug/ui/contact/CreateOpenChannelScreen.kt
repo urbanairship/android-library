@@ -86,7 +86,7 @@ private fun ScreenContent(
                         value = viewModel.platform.value,
                         onValueChange = { viewModel.platform.value = it.trim()},
                         label = { Text("Platform") },
-                        keyboardOptions = KeyboardOptions(autoCorrect = false)
+                        keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
                     )
 
                     TextField(
@@ -96,7 +96,7 @@ private fun ScreenContent(
                         value = viewModel.address.value,
                         onValueChange = { viewModel.address.value = it.trim()},
                         label = { Text("Address") },
-                        keyboardOptions = KeyboardOptions(autoCorrect = false)
+                        keyboardOptions = KeyboardOptions(autoCorrectEnabled = false)
                     )
                 }
             }
@@ -173,13 +173,13 @@ private fun AddIdentifierDialog(onDismiss: (Pair<String, String>?) -> Unit) {
                     value = key.value,
                     onValueChange = { key.value = it.trim() },
                     label = { Text("Key") },
-                    keyboardOptions = KeyboardOptions(autoCorrect = false),
+                    keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
                 )
                 TextField(
                     value = value.value,
                     onValueChange = { value.value = it.trim() },
                     label = { Text("Value") },
-                    keyboardOptions = KeyboardOptions(autoCorrect = false),
+                    keyboardOptions = KeyboardOptions(autoCorrectEnabled = false),
                 )
             }
         },

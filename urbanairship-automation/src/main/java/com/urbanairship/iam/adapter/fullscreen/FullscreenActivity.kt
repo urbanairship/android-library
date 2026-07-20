@@ -109,7 +109,7 @@ internal class FullscreenActivity : InAppMessageActivity<FullscreenContent>(), I
         window.decorView.setBackgroundColor(messageContent.backgroundColor.color)
 
         // Apply the insets but do not consume them. Allows for the dismiss button to also receive the insets.
-        if (ViewCompat.getFitsSystemWindows(contentHolder)) {
+        if (contentHolder.fitsSystemWindows) {
             ViewCompat.setOnApplyWindowInsetsListener(contentHolder) { v, insets ->
                 ViewCompat.onApplyWindowInsets(v, insets)
                 insets
@@ -180,7 +180,7 @@ internal class FullscreenActivity : InAppMessageActivity<FullscreenContent>(), I
     }
 
     private fun normalizeHorizontalPadding(view: TextView) {
-        val padding = max(ViewCompat.getPaddingEnd(view), ViewCompat.getPaddingStart(view))
+        val padding = max(view.paddingEnd, view.paddingStart)
         view.setPadding(padding, view.paddingTop, padding, view.paddingBottom)
         view.requestLayout()
     }

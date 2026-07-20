@@ -77,7 +77,7 @@ public open class MessageCenterListFragment @JvmOverloads constructor(
             }
         }
 
-        verticalDivider = view.findViewById<View?>(R.id.list_vertical_divider).apply {
+        verticalDivider = view.findViewById<View>(R.id.list_vertical_divider)?.apply {
             isVisible = isVerticalDividerVisible
         }
 
@@ -169,7 +169,7 @@ public open class MessageCenterListFragment @JvmOverloads constructor(
             if (editing) MessageCenterCoreR.string.ua_announce_enter_edit_mode
             else MessageCenterCoreR.string.ua_announce_leave_edit_mode
         )
-        view?.announceForAccessibility(announcement)
+        view?.let { ViewCompat.setAccessibilityPaneTitle(it, announcement) }
     }
 
     private fun updateEditModeToggle(editing: Boolean) {

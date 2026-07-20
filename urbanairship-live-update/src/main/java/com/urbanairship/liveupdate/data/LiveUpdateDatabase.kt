@@ -33,7 +33,7 @@ internal abstract class LiveUpdateDatabase : RoomDatabase() {
 
             return Room.databaseBuilder(context, LiveUpdateDatabase::class.java, path)
                 .openHelperFactory(retryingOpenHelperFactory)
-                .fallbackToDestructiveMigration()
+                .fallbackToDestructiveMigration(true)
                 .build()
         }
 

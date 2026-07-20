@@ -1184,7 +1184,6 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
             if (gravity < 0) {
                 gravity = minorGravity
             }
-            val layoutDirection = ViewCompat.getLayoutDirection(this)
             val absoluteGravity = GravityCompat.getAbsoluteGravity(gravity, layoutDirection)
             childLeft = when (absoluteGravity and Gravity.HORIZONTAL_GRAVITY_MASK) {
                 Gravity.CENTER_HORIZONTAL -> paddingLeft + ((childSpace - childWidth - lp.leftMargin - lp.rightMargin) / 2) + lp.leftMargin
@@ -1207,7 +1206,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
      * @see .onLayout
      */
     private fun layoutHorizontal(left: Int, top: Int, right: Int, bottom: Int) {
-        val isLayoutRtl = ViewCompat.getLayoutDirection(this) == ViewCompat.LAYOUT_DIRECTION_RTL
+        val isLayoutRtl = layoutDirection == LAYOUT_DIRECTION_RTL
         val paddingTop = getPaddingTop()
 
         var childTop: Int
@@ -1225,7 +1224,6 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         val majorGravity = gravity and GravityCompat.RELATIVE_HORIZONTAL_GRAVITY_MASK
         val minorGravity = gravity and Gravity.VERTICAL_GRAVITY_MASK
 
-        val layoutDirection = ViewCompat.getLayoutDirection(this)
         childLeft = when (GravityCompat.getAbsoluteGravity(majorGravity, layoutDirection)) {
             // mTotalLength contains the padding already
             Gravity.RIGHT -> paddingLeft + right - left - totalLength
