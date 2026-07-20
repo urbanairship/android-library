@@ -37,8 +37,8 @@ internal class RetryingQueue(
     ) : this (
         maxConcurrentOperations = config?.maxConcurrentOperations ?: DEFAULT_MAX_CONCURRENT_OPERATIONS,
         maxPendingResults = config?.maxPendingResults ?: DEFAULT_PENDING_RESULTS,
-        initialBackOff = (config?.initialBackoff ?: DEFAULT_INITIAL_BACK_OFF).toInt().seconds,
-        maxBackOff = (config?.maxBackOff ?: DEFAULT_MAX_BACK_OFF).toInt().seconds,
+        initialBackOff = config?.initialBackoff ?: DEFAULT_INITIAL_BACK_OFF.seconds,
+        maxBackOff = config?.maxBackOff ?: DEFAULT_MAX_BACK_OFF.seconds,
         taskSleeper = sleeper
     )
 

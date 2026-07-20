@@ -34,6 +34,7 @@ import com.urbanairship.android.layout.util.Timer
 import com.urbanairship.android.layout.util.pagerGestures
 import com.urbanairship.android.layout.util.pagerScrolls
 import com.urbanairship.android.layout.view.PagerView
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -552,7 +553,7 @@ internal class PagerModel(
             // the page display and can be used to determine the progress value for the
             // currently displayed page.
             actions.earliestNavigationAction?.let { action ->
-                navigationActionTimer = object : Timer(action.delay.toLong() * 1000L) {
+                navigationActionTimer = object : Timer(action.delay.inWholeMilliseconds) {
                     override fun onFinish() {
                         // Clean up the progress timer and this navigation action timer.
                         scheduledJob?.cancel()
@@ -578,7 +579,7 @@ internal class PagerModel(
 
             // Run the other automated actions
             actions.filter { it != actions.earliestNavigationAction }.forEach { action ->
-                if (action.delay == 0) {
+                if (action.delay == Duration.ZERO) {
                     modelScope.launch {
                         pagerOutcomeProcessor.process(action.outcomes, handlerOutcome = pagerOutcomeHandler)
                         reportAutomatedAction(action, pagerState.changes.value)
@@ -592,7 +593,7 @@ internal class PagerModel(
     }
 
     private fun scheduleAutomatedAction(action: AutomatedAction) {
-        val timer = object : Timer(action.delay.toLong() * 1000L) {
+        val timer = object : Timer(action.delay.inWholeMilliseconds) {
             override fun onFinish() {
                 automatedActionsTimers.remove(this)
 

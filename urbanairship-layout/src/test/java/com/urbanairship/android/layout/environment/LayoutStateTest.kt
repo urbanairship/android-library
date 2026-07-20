@@ -7,6 +7,7 @@ import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import kotlin.time.Duration.Companion.seconds
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,7 +22,7 @@ public class LayoutStateTest{
             lastPageIndex = 0,
             completed = true,
             pageIds = listOf("page1", "page2"),
-            durations = listOf(100, 200),
+            durations = listOf(100.seconds, 200.seconds),
             progress = 50,
             isManuallyPaused = true,
             isTouchExplorationEnabled = false,

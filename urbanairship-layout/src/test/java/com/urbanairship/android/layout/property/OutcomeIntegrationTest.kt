@@ -5,6 +5,8 @@ package com.urbanairship.android.layout.property
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.android.layout.environment.TriggerActions
 import com.urbanairship.json.JsonValue
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
@@ -105,7 +107,7 @@ public class OutcomeIntegrationTest {
 
         val action = AutomatedAction.from(json)
         assertEquals("auto-1", action.identifier)
-        assertEquals(5, action.delay)
+        assertEquals(5.seconds, action.delay)
         assertEquals(1, action.outcomes.size)
 
         val outcome = action.outcomes.single() as Outcome.PagerStepNavigation
@@ -136,7 +138,7 @@ public class OutcomeIntegrationTest {
         val actions = listOf(
             AutomatedAction(
                 identifier = "auto-nav",
-                delay = 5,
+                delay = 5.seconds,
                 outcomes = listOf(
                     Outcome.PagerStepNavigation(
                         identifier = "psn-1",
@@ -154,7 +156,7 @@ public class OutcomeIntegrationTest {
         val actions = listOf(
             AutomatedAction(
                 identifier = "auto-dismiss",
-                delay = 3,
+                delay = 3.seconds,
                 outcomes = listOf(Outcome.Dismiss(identifier = "d-1"))
             )
         )
@@ -166,7 +168,7 @@ public class OutcomeIntegrationTest {
         val actions = listOf(
             AutomatedAction(
                 identifier = "auto-jump",
-                delay = 2,
+                delay = 2.seconds,
                 outcomes = listOf(
                     Outcome.PagerJumpNavigation(identifier = "pjn-1", page = Outcome.PagerJumpNavigation.Page.END)
                 )
@@ -180,7 +182,7 @@ public class OutcomeIntegrationTest {
         val actions = listOf(
             AutomatedAction(
                 identifier = "auto-no-nav",
-                delay = 1,
+                delay = 1.seconds,
                 outcomes = listOf(
                     Outcome.PagerPlayback(identifier = "pp-1", command = Outcome.PagerPlayback.Command.PAUSE)
                 )
@@ -198,7 +200,7 @@ public class OutcomeIntegrationTest {
         val actions = listOf(
             AutomatedAction(
                 identifier = "auto-pause",
-                delay = 0,
+                delay = Duration.ZERO,
                 outcomes = listOf(
                     Outcome.PagerPlayback(identifier = "pp-1", command = Outcome.PagerPlayback.Command.PAUSE)
                 )
@@ -212,7 +214,7 @@ public class OutcomeIntegrationTest {
         val actions = listOf(
             AutomatedAction(
                 identifier = "auto-resume",
-                delay = 0,
+                delay = Duration.ZERO,
                 outcomes = listOf(
                     Outcome.PagerPlayback(identifier = "pp-1", command = Outcome.PagerPlayback.Command.RESUME)
                 )

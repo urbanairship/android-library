@@ -16,7 +16,6 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
-import kotlin.math.max
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -75,9 +74,9 @@ internal class FlagDeferredResolver(
 
         val flag = result.getOrNull()
         if (result.isSuccess && flag != null) {
-            val ttl = flagInfo.evaluationOptions?.ttl?.let { max(MIN_CACHE_TIME_MS, it) }
-                ?: MIN_CACHE_TIME_MS
-            cache.store(flag, requestId, ttl.toLong().milliseconds)
+            val ttl = flagInfo.evaluationOptions?.ttl?.coerceAtLeast(MIN_CACHE_TIME)
+                ?: MIN_CACHE_TIME
+            cache.store(flag, requestId, ttl)
         }
 
         return result
@@ -85,9 +84,9 @@ internal class FlagDeferredResolver(
 
     private suspend fun fetchFlag(request: DeferredRequest, requestId: String, info: FeatureFlagInfo, allowRetry: Boolean): Result<DeferredFlag> {
         backOffIntervals[requestId]?.let {
-            val delayMs = it - clock.currentTimeMillis()
-            if (delayMs > 0) {
-                delay(delayMs)
+            val remaining = (it - clock.currentTimeMillis()).milliseconds
+            if (remaining.isPositive()) {
+                delay(remaining)
             }
             backOffIntervals.remove(requestId)
         }
@@ -137,7 +136,7 @@ internal class FlagDeferredResolver(
     }
 
     private companion object {
-        const val MIN_CACHE_TIME_MS: ULong = 60000u
+        val MIN_CACHE_TIME: Duration = 60.seconds
         val DEFAULT_BACKOFF: Duration = 30.seconds
         val IMMEDIATE_BACKOFF_RETRY: Duration = 5.seconds
     }

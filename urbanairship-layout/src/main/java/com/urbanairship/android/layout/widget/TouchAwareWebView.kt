@@ -57,6 +57,10 @@ internal class TouchAwareWebView(context: Context, val webViewListener: MediaVie
             post { webViewListener?.onVideoEnded() }
         }
         @JavascriptInterface
+        fun onVideoError(errorCode: Int, description: String?) {
+            post { webViewListener?.onVideoError(errorCode, description) }
+        }
+        @JavascriptInterface
         fun onVisibilityChanged(isVisible: Boolean) {
             post { webViewListener?.onVisibilityChanged(isVisible) }
         }

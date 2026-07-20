@@ -2,6 +2,7 @@ package com.urbanairship.featureflag
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.jsonMapOf
+import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -17,6 +18,6 @@ public class EvaluationOptionsTest {
 
         val fromJson = EvaluationOptions.fromJson(json)
         assert(fromJson.disallowStaleValues == true)
-        assert(fromJson.ttl == 1800000.toULong())
+        assert(fromJson.ttl == 1800000.milliseconds)
     }
 }

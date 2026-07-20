@@ -142,7 +142,7 @@ public class FeatureFlagDeferredResolverTest {
         val info = makeFeatureFlagInfo(
             flagName,
             FeatureFlagPayload.DeferredPayload(request.uri),
-            EvaluationOptions(disallowStaleValues = null, ttl = 123U)
+            EvaluationOptions(disallowStaleValues = null, ttl = 123.milliseconds)
         )
 
         val callbackSlot = slot<(JsonValue) -> Any>()
@@ -170,7 +170,7 @@ public class FeatureFlagDeferredResolverTest {
         val otherInfo = makeFeatureFlagInfo(
             "another-flag",
             FeatureFlagPayload.DeferredPayload(request.uri),
-            EvaluationOptions(disallowStaleValues = null, ttl = 70000U)
+            EvaluationOptions(disallowStaleValues = null, ttl = 70000.milliseconds)
         )
 
         subject.resolve(request, otherInfo)

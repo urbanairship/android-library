@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.liveupdate.LiveUpdateEvent
 import com.urbanairship.liveupdate.util.optionalField
 import com.urbanairship.liveupdate.util.requireField
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Live Update push payload.
@@ -57,8 +58,9 @@ internal data class LiveUpdatePayload(
                 name = json.requireField("name"),
                 event = json.requireField<String>("event").let { LiveUpdateEvent.from(it) },
                 type = json.optionalField<String>("type"),
-                dismissalDate = json.optionalField<Long?>("dismissal_date")?.let { it * 1000 },
-                timestamp = json.requireField<Long>("timestamp") * 1000,
+                // The wire format uses epoch seconds, but these fields are epoch milliseconds.
+                dismissalDate = json.optionalField<Long?>("dismissal_date")?.seconds?.inWholeMilliseconds,
+                timestamp = json.requireField<Long>("timestamp").seconds.inWholeMilliseconds,
                 content = content
             )
         }

@@ -11,9 +11,8 @@ import com.urbanairship.automation.AutomationDelay
 import com.urbanairship.automation.ExecutionWindowProcessor
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
-import java.util.concurrent.TimeUnit
-import kotlin.math.max
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -142,8 +141,8 @@ internal class AutomationDelayProcessor(
     }
 
     private fun remainingDelay(delay: AutomationDelay, triggerDate: Long): Duration {
-        val seconds = delay.seconds ?: return 0.seconds
-        val remaining = seconds - TimeUnit.MILLISECONDS.toSeconds(clock.currentTimeMillis() - triggerDate)
-        return max(0, remaining).seconds
+        val delayDuration = delay.seconds?.seconds ?: return 0.seconds
+        val elapsed = (clock.currentTimeMillis() - triggerDate).milliseconds
+        return (delayDuration - elapsed).coerceAtLeast(Duration.ZERO)
     }
 }

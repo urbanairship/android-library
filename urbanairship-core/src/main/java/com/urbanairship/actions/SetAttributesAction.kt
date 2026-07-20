@@ -15,6 +15,8 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonMap
 import java.util.Date
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * An action that sets attributes.
@@ -235,7 +237,7 @@ public class SetAttributesAction public constructor(
                     is StringValue -> JsonValue.wrap(value)
                     is NumberValue -> JsonValue.wrap(value)
                     is DateValue -> JsonValue.wrap(value.time)
-                    is Json -> (expiration?.let { value.extend(KEY_EXPIRATION to it.time / 1000) } ?: value).toJsonValue()
+                    is Json -> (expiration?.let { value.extend(KEY_EXPIRATION to it.time.milliseconds.inWholeSeconds) } ?: value).toJsonValue()
                 }
             }
 
@@ -247,7 +249,7 @@ public class SetAttributesAction public constructor(
                 fun fromJson(value: JsonValue, name: String? = null): Value {
                     return when (val converted = value.value) {
                         is String -> StringValue(converted)
-                        is Long -> DateValue(Date(converted * 1000))
+                        is Long -> DateValue(Date(converted.seconds.inWholeMilliseconds))
                         is Number -> NumberValue(converted)
                         is JsonSerializable -> {
                             val attrName = name
@@ -266,7 +268,7 @@ public class SetAttributesAction public constructor(
                     }
                     val data = converted.toJsonValue().requireMap().map.toMutableMap()
                     val expiration = data.remove(KEY_EXPIRATION)?.number
-                        ?.let { Date(it.toLong() * 1000) }
+                        ?.let { Date(it.toLong().seconds.inWholeMilliseconds) }
                     return Json(
                         attributeName = components[0],
                         instanceId = components[1],

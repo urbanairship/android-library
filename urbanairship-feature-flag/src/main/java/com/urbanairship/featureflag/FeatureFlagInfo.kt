@@ -19,6 +19,8 @@ import com.urbanairship.json.requireField
 import com.urbanairship.json.requireMap
 import com.urbanairship.util.DateUtils
 import java.text.ParseException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 
 internal sealed class FeatureFlagVariables: JsonSerializable {
     data class Fixed(val data: JsonMap?) : FeatureFlagVariables() {
@@ -288,7 +290,7 @@ private enum class FeatureFlagPayloadType(val jsonValue: String) {
 
 internal data class EvaluationOptions(
     val disallowStaleValues: Boolean?,
-    val ttl: ULong?
+    val ttl: Duration?
 ) : JsonSerializable {
 
     companion object {
@@ -300,7 +302,7 @@ internal data class EvaluationOptions(
         fun fromJson(json: JsonMap): EvaluationOptions {
             return EvaluationOptions(
                 disallowStaleValues = json.optionalField(KEY_STALE_DATA_FLAG),
-                ttl = json.optionalField(KEY_TTL)
+                ttl = json.optionalField<Long>(KEY_TTL)?.milliseconds
             )
         }
     }
@@ -308,7 +310,7 @@ internal data class EvaluationOptions(
     @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue {
         return jsonMapOf(
-            KEY_STALE_DATA_FLAG to disallowStaleValues, KEY_TTL to ttl?.toLong()
+            KEY_STALE_DATA_FLAG to disallowStaleValues, KEY_TTL to ttl?.inWholeMilliseconds
         ).toJsonValue()
     }
 }
