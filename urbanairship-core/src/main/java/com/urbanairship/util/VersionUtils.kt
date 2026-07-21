@@ -39,12 +39,12 @@ public object VersionUtils {
      * Generates the version object.
      *
      * @param platform The platform.
-     * @param appVersion The app version code.
+     * @param appVersionCode The app version code.
      * @param appVersionName The optional app version name (marketing version). Omitted when null
      * or blank.
-     * @param fromVersion The version code the app upgraded from. When provided, a `from` block is
+     * @param fromVersionCode The version code the app upgraded from. When provided, a `from` block is
      * nested inside the platform object so predicates can match on the upgrade path
-     * (e.g. `android.from.version`).
+     * (e.g. `android.from.build_version`).
      * @param fromVersionName The version name the app upgraded from. Omitted from `from` when
      * null or blank.
      * @return The version object.
@@ -52,16 +52,16 @@ public object VersionUtils {
     @JvmOverloads
     public fun createVersionObject(
         platform: Platform,
-        appVersion: Long,
+        appVersionCode: Long,
         appVersionName: String? = null,
-        fromVersion: Long? = null,
+        fromVersionCode: Long? = null,
         fromVersionName: String? = null
     ): JsonSerializable = jsonMapOf(
         getPlatformName(platform) to jsonMapOf(
-            VERSION_KEY to appVersion,
-            BUILD_VERSION_KEY to appVersion,
+            VERSION_KEY to appVersionCode,
+            BUILD_VERSION_KEY to appVersionCode,
             VERSION_NAME_KEY to appVersionName?.takeUnless { it.isBlank() },
-            FROM_KEY to fromVersion?.let { fv ->
+            FROM_KEY to fromVersionCode?.let { fv ->
                 jsonMapOf(
                     BUILD_VERSION_KEY to fv,
                     VERSION_NAME_KEY to fromVersionName?.takeUnless { it.isBlank() }
