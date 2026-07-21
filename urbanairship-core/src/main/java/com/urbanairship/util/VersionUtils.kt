@@ -21,8 +21,8 @@ public object VersionUtils {
     public const val AMAZON_VERSION_KEY: String = "amazon"
     public const val ANDROID_VERSION_KEY: String = "android"
     public const val VERSION_KEY: String = "version"
-    public const val BUILD_KEY: String = "build"
-    public const val NAME_KEY: String = "name"
+    public const val BUILD_VERSION_KEY: String = "build_version"
+    public const val VERSION_NAME_KEY: String = "version_name"
     public const val FROM_KEY: String = "from"
 
     private const val IVY_PATTERN_GREATER_THAN = "]%s,)"
@@ -59,12 +59,12 @@ public object VersionUtils {
     ): JsonSerializable = jsonMapOf(
         getPlatformName(platform) to jsonMapOf(
             VERSION_KEY to appVersion,
-            BUILD_KEY to appVersion,
-            NAME_KEY to appVersionName?.takeUnless { it.isBlank() },
+            BUILD_VERSION_KEY to appVersion,
+            VERSION_NAME_KEY to appVersionName?.takeUnless { it.isBlank() },
             FROM_KEY to fromVersion?.let { fv ->
                 jsonMapOf(
-                    BUILD_KEY to fv,
-                    NAME_KEY to fromVersionName?.takeUnless { it.isBlank() }
+                    BUILD_VERSION_KEY to fv,
+                    VERSION_NAME_KEY to fromVersionName?.takeUnless { it.isBlank() }
                 )
             }
         )
