@@ -34,6 +34,9 @@ public class AutomationEventFeedTest {
     private val metrics: ApplicationMetrics = mockk() {
         coEvery { this@mockk.isAppVersionUpdated() } returns true
         every { this@mockk.currentAppVersion } returns 123L
+        every { this@mockk.currentAppVersionName } returns "1.2.3"
+        every { this@mockk.previousAppVersion } returns 100L
+        every { this@mockk.previousAppVersionName } returns "1.1.0"
     }
 
     private val foregroundState = MutableStateFlow(false)
@@ -68,7 +71,7 @@ public class AutomationEventFeedTest {
 
             assertEquals(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT), awaitItem())
 
-            val expectedState = TriggerableState(versionUpdated = "123")
+            val expectedState = TriggerableState(versionUpdated = "123", versionName = "1.2.3", fromVersionCode = 100L, fromVersionName = "1.1.0")
             assertEquals(AutomationEvent.StateChanged(expectedState), awaitItem())
 
             assertEquals(AutomationEvent.Event(EventAutomationTriggerType.BACKGROUND), awaitItem())
@@ -81,7 +84,7 @@ public class AutomationEventFeedTest {
         subject.attach()
         subject.feed.test {
             assertEquals(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT), awaitItem())
-            assertEquals(AutomationEvent.StateChanged(TriggerableState(versionUpdated = "123")), awaitItem())
+            assertEquals(AutomationEvent.StateChanged(TriggerableState(versionUpdated = "123", versionName = "1.2.3", fromVersionCode = 100L, fromVersionName = "1.1.0")), awaitItem())
             assertEquals(AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND), awaitItem())
         }
     }
@@ -99,7 +102,7 @@ public class AutomationEventFeedTest {
 
         // Expect get state and background events again
         subject.feed.test {
-            val expectedState = TriggerableState(versionUpdated = "123")
+            val expectedState = TriggerableState(versionUpdated = "123", versionName = "1.2.3", fromVersionCode = 100L, fromVersionName = "1.1.0")
             assertEquals(AutomationEvent.StateChanged(expectedState), awaitItem())
             assertEquals(AutomationEvent.Event(EventAutomationTriggerType.BACKGROUND), awaitItem())
         }

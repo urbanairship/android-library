@@ -368,7 +368,13 @@ public class EventAutomationTrigger internal constructor(
                     return null
                 }
 
-                if (!isPredicatedMatching(VersionUtils.createVersionObject(platform, updatedVersion.toLong()))) {
+                if (!isPredicatedMatching(VersionUtils.createVersionObject(
+                        platform = platform,
+                        appVersionCode = updatedVersion.toLong(),
+                        appVersionName = state.versionName,
+                        fromVersionCode = state.fromVersionCode,
+                        fromVersionName = state.fromVersionName
+                    ))) {
                     return null
                 }
 
