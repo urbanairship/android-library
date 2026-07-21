@@ -55,24 +55,18 @@ public object VersionUtils {
         appVersionName: String? = null,
         fromVersion: Long? = null,
         fromVersionName: String? = null
-    ): JsonSerializable {
-        val platformFields = buildList {
-            add(VERSION_KEY to appVersion)
-            appVersionName?.takeUnless { it.isBlank() }?.let {
-                add(VERSION_NAME_KEY to it)
+    ): JsonSerializable = jsonMapOf(
+        getPlatformName(platform) to jsonMapOf(
+            VERSION_KEY to appVersion,
+            VERSION_NAME_KEY to appVersionName?.takeUnless { it.isBlank() },
+            FROM_KEY to fromVersion?.let { fv ->
+                jsonMapOf(
+                    VERSION_KEY to fv,
+                    VERSION_NAME_KEY to fromVersionName?.takeUnless { it.isBlank() }
+                )
             }
-            if (fromVersion != null) {
-                val fromFields = buildList {
-                    add(VERSION_KEY to fromVersion)
-                    fromVersionName?.takeUnless { it.isBlank() }?.let {
-                        add(VERSION_NAME_KEY to it)
-                    }
-                }
-                add(FROM_KEY to jsonMapOf(*fromFields.toTypedArray()))
-            }
-        }
-        return jsonMapOf(getPlatformName(platform) to jsonMapOf(*platformFields.toTypedArray())).toJsonValue()
-    }
+        )
+    ).toJsonValue()
 
     /**
      * Creates the version predicate.
