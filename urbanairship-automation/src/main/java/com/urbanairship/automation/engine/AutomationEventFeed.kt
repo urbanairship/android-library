@@ -31,25 +31,37 @@ import kotlinx.coroutines.launch
 
 internal data class TriggerableState(
     val appSessionID: String? = null,
-    val versionUpdated: String? = null
+    val versionUpdated: String? = null,
+    val versionName: String? = null,
+    val fromVersionCode: Long? = null,
+    val fromVersionName: String? = null
 ) : JsonSerializable {
     internal companion object {
         private const val APP_SESSION_ID = "appSessionID"
         private const val VERSION_UPDATED = "versionUpdated"
+        private const val VERSION_NAME = "versionName"
+        private const val FROM_VERSION_CODE = "fromVersionCode"
+        private const val FROM_VERSION_NAME = "fromVersionName"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): TriggerableState {
             val content = value.requireMap()
             return TriggerableState(
                 appSessionID = content.optionalField(APP_SESSION_ID),
-                versionUpdated = content.optionalField(VERSION_UPDATED)
+                versionUpdated = content.optionalField(VERSION_UPDATED),
+                versionName = content.optionalField(VERSION_NAME),
+                fromVersionCode = content.optionalField(FROM_VERSION_CODE),
+                fromVersionName = content.optionalField(FROM_VERSION_NAME)
             )
         }
     }
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
         APP_SESSION_ID to appSessionID,
-        VERSION_UPDATED to versionUpdated
+        VERSION_UPDATED to versionUpdated,
+        VERSION_NAME to versionName,
+        FROM_VERSION_CODE to fromVersionCode,
+        FROM_VERSION_NAME to fromVersionName
     ).toJsonValue()
 
 }
@@ -109,7 +121,14 @@ internal class AutomationEventFeed(
                 stream.emit(AutomationEvent.Event(EventAutomationTriggerType.APP_INIT))
 
                 if (applicationMetrics.isAppVersionUpdated()) {
-                    appSessionState.update { it.copy(versionUpdated = applicationMetrics.currentAppVersion.toString()) }
+                    appSessionState.update {
+                        it.copy(
+                            versionUpdated = applicationMetrics.currentAppVersion.toString(),
+                            versionName = applicationMetrics.currentAppVersionName.ifEmpty { null },
+                            fromVersionCode = applicationMetrics.previousAppVersion,
+                            fromVersionName = applicationMetrics.previousAppVersionName
+                        )
+                    }
                 }
             }
 

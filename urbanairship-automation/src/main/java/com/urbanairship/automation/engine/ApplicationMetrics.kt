@@ -22,6 +22,11 @@ internal class ApplicationMetrics(
 
     private val _appVersionUpdated = MutableStateFlow(false)
 
+    var previousAppVersion: Long? = null
+        private set
+    var previousAppVersionName: String? = null
+        private set
+
     private val privacyManagerListener = {
         scope.launch { updateData() }
         Unit
@@ -50,12 +55,20 @@ internal class ApplicationMetrics(
         return _appVersionUpdated.value
     }
 
-    /** Gets the current app version. */
+    /** Gets the current app version code. */
     val currentAppVersion: Long
         get() = context.packageManager
             .getPackageInfo(context.packageName, 0)
             ?.let { PackageInfoCompat.getLongVersionCode(it) }
             ?: -1
+
+    /** Gets the current app version name. */
+    val currentAppVersionName: String
+        get() = context.packageManager
+            .getPackageInfo(context.packageName, 0)
+            ?.versionName ?: ""
+
+
 
     private suspend fun updateData() {
         if (privacyManager.isAnyEnabled(PrivacyManager.Feature.IN_APP_AUTOMATION, PrivacyManager.Feature.ANALYTICS)) {
@@ -64,15 +77,22 @@ internal class ApplicationMetrics(
 
             if (last > -1 && current > last) {
                 _appVersionUpdated.value = true
+                previousAppVersion = last
+                previousAppVersionName = dataStore.get(LAST_APP_VERSION_NAME_KEY)
             }
 
             dataStore.put(LAST_APP_VERSION_KEY, current)
+            currentAppVersionName.takeUnless { it.isBlank() }?.let {
+                dataStore.put(LAST_APP_VERSION_NAME_KEY, it)
+            }
         } else {
             dataStore.remove(LAST_APP_VERSION_KEY)
+            dataStore.remove(LAST_APP_VERSION_NAME_KEY)
         }
     }
 
     internal companion object {
         private val LAST_APP_VERSION_KEY = AsyncPrefKey.long("com.urbanairship.application.metrics.APP_VERSION")
+        private val LAST_APP_VERSION_NAME_KEY = AsyncPrefKey.string("com.urbanairship.application.metrics.APP_VERSION_NAME")
     }
 }

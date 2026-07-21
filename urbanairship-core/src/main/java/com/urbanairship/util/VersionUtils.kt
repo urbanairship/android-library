@@ -21,7 +21,9 @@ public object VersionUtils {
     public const val AMAZON_VERSION_KEY: String = "amazon"
     public const val ANDROID_VERSION_KEY: String = "android"
     public const val VERSION_KEY: String = "version"
+    public const val BUILD_VERSION_KEY: String = "build_version"
     public const val VERSION_NAME_KEY: String = "version_name"
+    public const val FROM_KEY: String = "from"
 
     private const val IVY_PATTERN_GREATER_THAN = "]%s,)"
     private const val IVY_PATTERN_GREATER_THAN_OR_EQUAL_TO = "[%s,)"
@@ -37,25 +39,36 @@ public object VersionUtils {
      * Generates the version object.
      *
      * @param platform The platform.
-     * @param appVersion The app version code.
-     * @param appVersionName The optional app version name (marketing version). Omitted from the
-     * object when null or blank.
+     * @param appVersionCode The app version code.
+     * @param appVersionName The optional app version name (marketing version). Omitted when null
+     * or blank.
+     * @param fromVersionCode The version code the app upgraded from. When provided, a `from` block is
+     * nested inside the platform object so predicates can match on the upgrade path
+     * (e.g. `android.from.build_version`).
+     * @param fromVersionName The version name the app upgraded from. Omitted from `from` when
+     * null or blank.
      * @return The version object.
      */
     @JvmOverloads
     public fun createVersionObject(
         platform: Platform,
-        appVersion: Long,
-        appVersionName: String? = null
-    ): JsonSerializable {
-        val fields = buildList {
-            add(VERSION_KEY to appVersion)
-            appVersionName?.takeUnless { it.isBlank() }?.let {
-                add(VERSION_NAME_KEY to it)
+        appVersionCode: Long,
+        appVersionName: String? = null,
+        fromVersionCode: Long? = null,
+        fromVersionName: String? = null
+    ): JsonSerializable = jsonMapOf(
+        getPlatformName(platform) to jsonMapOf(
+            VERSION_KEY to appVersionCode,
+            BUILD_VERSION_KEY to appVersionCode,
+            VERSION_NAME_KEY to appVersionName?.takeUnless { it.isBlank() },
+            FROM_KEY to fromVersionCode?.let { fv ->
+                jsonMapOf(
+                    BUILD_VERSION_KEY to fv,
+                    VERSION_NAME_KEY to fromVersionName?.takeUnless { it.isBlank() }
+                )
             }
-        }
-        return jsonMapOf(getPlatformName(platform) to jsonMapOf(*fields.toTypedArray())).toJsonValue()
-    }
+        )
+    ).toJsonValue()
 
     /**
      * Creates the version predicate.
