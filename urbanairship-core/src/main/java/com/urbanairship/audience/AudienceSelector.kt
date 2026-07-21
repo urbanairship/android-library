@@ -634,7 +634,7 @@ public class AudienceSelector private constructor(builder: Builder) : JsonSerial
         val required = versionPredicate ?: return true
         val version = VersionUtils.createVersionObject(
             platform = infoProvider.platform,
-            appVersion = infoProvider.appVersionCode,
+            appVersionCode = infoProvider.appVersionCode,
             appVersionName = infoProvider.appVersionName
         )
         return required.apply(version)
