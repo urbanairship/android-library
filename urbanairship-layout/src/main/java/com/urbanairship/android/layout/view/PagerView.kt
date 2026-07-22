@@ -24,8 +24,9 @@ import com.urbanairship.android.layout.info.AccessibilityAction
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.PagerModel
 import com.urbanairship.android.layout.util.LayoutUtils
-import com.urbanairship.android.layout.util.isWithinClickableDescendantOf
+import com.urbanairship.android.layout.util.findTargetDescendant
 import com.urbanairship.android.layout.widget.PagerRecyclerView
+import com.urbanairship.android.layout.widget.TouchAwareWebView
 import com.urbanairship.util.stringResource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -238,6 +239,21 @@ internal class PagerView(
             xCoordinate,
             1500f,
             0)
+    }
+
+    private fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean =
+        findTargetDescendant(view) {
+            it.isClickable && it.isEnabled && !it.isNonInteractiveVideoSurface()
+        } != null
+
+    private fun View.isNonInteractiveVideoSurface(): Boolean {
+        if (this !is TouchAwareWebView) return false
+        var ancestor: View? = parent as? View
+        while (ancestor != null) {
+            if (ancestor is MediaView) return ancestor.isNonInteractiveVideo
+            ancestor = ancestor.parent as? View
+        }
+        return false
     }
 
 }
