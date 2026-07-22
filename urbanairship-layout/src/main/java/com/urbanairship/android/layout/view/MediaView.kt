@@ -106,7 +106,7 @@ internal class MediaView(
     private var webContentLoader: Runnable? = null
     private var imageContentLoader: ((String) -> Unit)? = null
 
-    val isNonInteractiveVideo: Boolean =
+!(model.viewInfo.video ?: Video.defaultVideo()).showControls
         model.viewInfo.mediaType.isPlayable &&
                 !model.viewInfo.eventHandlers.hasTapHandler() &&
                 model.viewInfo.video?.showControls != true
