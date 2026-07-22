@@ -86,7 +86,7 @@ view:
                     margin: { top: 96 }
                     view:
                       type: label
-                      text: "PAGE 1 / 14\nTap-to-advance on EMPTY SPACE"
+                      text: "PAGE 1 / 15\nTap-to-advance on EMPTY SPACE"
                       text_appearance:
                         font_size: 18
                         alignment: center
@@ -122,7 +122,7 @@ view:
                     margin: { top: 96 }
                     view:
                       type: label
-                      text: "PAGE 2 / 14\n\"Next\" button — single advance"
+                      text: "PAGE 2 / 15\n\"Next\" button — single advance"
                       text_appearance:
                         font_size: 18
                         alignment: center
@@ -181,7 +181,7 @@ view:
                     margin: { top: 96 }
                     view:
                       type: label
-                      text: "PAGE 3 / 14\nSwipe starting ON a button"
+                      text: "PAGE 3 / 15\nSwipe starting ON a button"
                       text_appearance:
                         font_size: 18
                         alignment: center
@@ -242,7 +242,7 @@ view:
                       margin: { top: 96 }
                       view:
                         type: label
-                        text: "PAGE 4 / 14\nTap over a toggle / checkbox"
+                        text: "PAGE 4 / 15\nTap over a toggle / checkbox"
                         text_appearance:
                           font_size: 18
                           alignment: center
@@ -293,7 +293,7 @@ view:
                     margin: { top: 96 }
                     view:
                       type: label
-                      text: "PAGE 5 / 14\nTap over a link"
+                      text: "PAGE 5 / 15\nTap over a link"
                       text_appearance:
                         font_size: 18
                         alignment: center
@@ -360,7 +360,7 @@ view:
                     margin: { top: 96 }
                     view:
                       type: label
-                      text: "PAGE 6 / 14\nLong-press to pause the story"
+                      text: "PAGE 6 / 15\nLong-press to pause the story"
                       text_appearance:
                         font_size: 18
                         alignment: center
@@ -399,7 +399,7 @@ view:
                       margin: { top: 96 }
                       view:
                         type: label
-                        text: "PAGE 7 / 14\nClickable media (no advance)"
+                        text: "PAGE 7 / 15\nClickable media (no advance)"
                         text_appearance:
                           font_size: 18
                           alignment: center
@@ -486,7 +486,7 @@ view:
                     margin: { top: 96 }
                     view:
                       type: label
-                      text: "PAGE 8 / 14\nNon-clickable media (advance)"
+                      text: "PAGE 8 / 15\nNon-clickable media (advance)"
                       text_appearance:
                         font_size: 18
                         alignment: center
@@ -534,7 +534,7 @@ view:
                     margin: { top: 96 }
                     view:
                       type: label
-                      text: "PAGE 9 / 14\nbutton_layout (Button role)"
+                      text: "PAGE 9 / 15\nbutton_layout (Button role)"
                       text_appearance:
                         font_size: 18
                         alignment: center
@@ -598,7 +598,7 @@ view:
                     margin: { top: 96 }
                     view:
                       type: label
-                      text: "PAGE 10 / 14\nContainer button wrapping a button"
+                      text: "PAGE 10 / 15\nContainer button wrapping a button"
                       text_appearance:
                         font_size: 18
                         alignment: center
@@ -682,7 +682,7 @@ view:
                     margin: { top: 96 }
                     view:
                       type: label
-                      text: "PAGE 11 / 14\nContainer button, no content desc"
+                      text: "PAGE 11 / 15\nContainer button, no content desc"
                       text_appearance:
                         font_size: 18
                         alignment: center
@@ -746,7 +746,7 @@ view:
                     margin: { top: 96 }
                     view:
                       type: label
-                      text: "PAGE 12 / 14\nLong-press on a button"
+                      text: "PAGE 12 / 15\nLong-press on a button"
                       text_appearance:
                         font_size: 18
                         alignment: center
@@ -842,7 +842,7 @@ view:
                                   margin: { top: 96 }
                                   view:
                                     type: label
-                                    text: "PAGE 13 / 14\nBackground Video"
+                                    text: "PAGE 13 / 15\nBackground Video"
                                     text_appearance:
                                       font_size: 18
                                       alignment: center
@@ -915,8 +915,9 @@ view:
                                       selectors:
                                         - dark_mode: true
                                           color: { type: hex, hex: '#FFFFFF', alpha: 1 }
+
             # =========================================================
-            # PAGE 14 — Foreground video (video_controller)
+            # PAGE 14 — Foreground video with controls (video_controller)
             # =========================================================
             - identifier: page-14-foreground-video
               automated_actions:
@@ -938,7 +939,7 @@ view:
                         identifier: video-14
                         media_type: video
                         media_fit: center_inside
-                        url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+                        url: "https://dl-staging.urbanairship.com/binary/public/Vl0wyG8kSyCyOUW98Wj4xg/18e56538-eb2b-4d7a-a69f-cd107d8a72d9"
                         video:
                           aspect_ratio: 1.77777777777778
                           autoplay: true
@@ -950,16 +951,70 @@ view:
                       margin: { top: 96 }
                       view:
                         type: label
-                        text: "PAGE 14 / 14\nForeground video"
+                        text: "PAGE 14 / 15\nForeground video with controls"
                         text_appearance:
                           font_size: 18
                           alignment: center
                           styles: [bold]
                           color:
                             default: { hex: '#212121', alpha: 1 }
-                    - position: { horizontal: center, vertical: center }
+                    - position: { horizontal: center, vertical: top }
                       size: { width: 84%, height: auto }
-                      margin: { bottom: 170 }
+                      margin: { top: 150 }
+                      view:
+                        type: label
+                        text: "Tap left or right on the video.\n\nEXPECTED: Move to previous or next page."
+                        text_appearance:
+                          font_size: 14
+                          alignment: center
+                          color:
+                            default: { hex: '#212121', alpha: 1 }
+
+            # =========================================================
+            # PAGE 15 — Foreground video, no controls (video_controller)
+            # =========================================================
+            - identifier: page-15-foreground-video-no-controls
+              automated_actions:
+                - identifier: auto-15
+                  delay: 20
+                  behaviors: [pager_next_or_first]
+              view:
+                type: video_controller
+                identifier: vc-page-15
+                view:
+                  type: container
+                  background_color:
+                    default: { hex: '#DCEDC8', alpha: 1 }
+                  items:
+                    - position: { horizontal: center, vertical: center }
+                      size: { width: 100%, height: auto }
+                      view:
+                        type: media
+                        identifier: video-15
+                        media_type: video
+                        media_fit: center_inside
+                        url: "https://dl-staging.urbanairship.com/binary/public/Vl0wyG8kSyCyOUW98Wj4xg/18e56538-eb2b-4d7a-a69f-cd107d8a72d9"
+                        video:
+                          aspect_ratio: 1.77777777777778
+                          autoplay: true
+                          muted: true
+                          loop: true
+                          show_controls: false
+                    - position: { horizontal: center, vertical: top }
+                      size: { width: 88%, height: auto }
+                      margin: { top: 96 }
+                      view:
+                        type: label
+                        text: "PAGE 15 / 15\nForeground video, no controls"
+                        text_appearance:
+                          font_size: 18
+                          alignment: center
+                          styles: [bold]
+                          color:
+                            default: { hex: '#212121', alpha: 1 }
+                    - position: { horizontal: center, vertical: top }
+                      size: { width: 84%, height: auto }
+                      margin: { top: 150 }
                       view:
                         type: label
                         text: "Tap left or right on the video.\n\nEXPECTED: The page doesn't change."
