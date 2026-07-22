@@ -13,7 +13,7 @@ import com.urbanairship.json.optionalField
  * A time window with optional bounds, expressed in milliseconds since the epoch.
  *
  * A `null` start is treated as -∞ and a `null` end as +∞. The start bound is inclusive and
- * the end bound is exclusive (`start <= now < end`), matching iOS `AirshipTimeCriteria`.
+ * the end bound is exclusive (`start <= now < end`).
  */
 internal data class TimeSpan(
     val startTimestamp: Long?,

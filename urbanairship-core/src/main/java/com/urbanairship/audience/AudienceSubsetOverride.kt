@@ -16,7 +16,7 @@ import kotlin.math.floor
  * on-device from a schedule baked into the payload.
  *
  * The schedule window shares the JSON object with the override fields (the `start_timestamp` /
- * `end_timestamp` keys are flattened alongside `type` and the subset keys), matching iOS.
+ * `end_timestamp` keys are flattened alongside `type` and the subset keys).
  */
 internal sealed class AudienceSubsetOverride : JsonSerializable {
 
