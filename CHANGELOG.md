@@ -4,6 +4,16 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.10.0 - July 22, 2026
+
+Minor release that adds version name support to app version triggers and audience checks, along with fixes for pager button touch handling, media view video playback, and pager gestures conflicting with background video.
+
+### Changes
+- Added version name alongside version code to the app version trigger predicate and device audience version check
+- Fixed pager button taps triggering an unintended double page advance and the story progress bar freezing when tapping previous on the first page
+- Fixed media view videos getting stuck in an endless reload loop and collapsing to zero size when both dimensions were unset
+- Fixed background videos in Scenes suppressing tap-to-advance pager gestures
+
 ## Version 20.9.0 - July 9, 2026
 
 Minor release that adds a new `AirshipEmbeddedSelection` for controlling which content is displayed in embedded views and includes a couple of Scene rendering improvements.
