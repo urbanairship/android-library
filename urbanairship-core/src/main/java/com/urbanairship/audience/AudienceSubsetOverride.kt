@@ -103,7 +103,7 @@ internal sealed class AudienceSubsetOverride : JsonSerializable {
          */
         private fun interpolateBucket(from: ULong, to: ULong, t: Double): ULong {
             val value = floor(from.toDouble() + t * (to.toDouble() - from.toDouble()))
-            return value.toLong().toULong()
+            return value.toULong()
         }
     }
 
