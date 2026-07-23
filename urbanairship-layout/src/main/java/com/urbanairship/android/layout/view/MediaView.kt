@@ -31,6 +31,7 @@ import com.urbanairship.android.layout.property.MediaFit
 import com.urbanairship.android.layout.property.MediaType
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.property.Video
+import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.ThomasImageSizeResolver
@@ -104,6 +105,11 @@ internal class MediaView(
     private var lastMediaUrl: String? = null
     private var webContentLoader: Runnable? = null
     private var imageContentLoader: ((String) -> Unit)? = null
+
+    val isNonInteractiveVideo: Boolean =
+        model.viewInfo.mediaType.isPlayable &&
+                !model.viewInfo.eventHandlers.hasTapHandler() &&
+                !(model.viewInfo.video ?: Video.defaultVideo()).showControls
 
     init {
         id = model.viewId
