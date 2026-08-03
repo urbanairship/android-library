@@ -117,7 +117,7 @@ internal abstract class AnalyticsDatabase : RoomDatabase() {
                 db.execSQL(
                     """
                     INSERT INTO $NEW_TABLE_NAME (`id`, `type`, `eventId`, `time`, `data`, `sessionId`, `eventSize`)
-                    SELECT `id`, `type`, `eventId`, `time`, `data`, `sessionId`, `eventSize` FROM $OLD_TABLE_NAME"
+                    SELECT `id`, `type`, `eventId`, `time`, `data`, `sessionId`, `eventSize` FROM $OLD_TABLE_NAME
                     WHERE `type` IS NOT NULL AND `eventId` IS NOT NULL AND `time` IS NOT NULL AND `data` IS NOT NULL AND `eventSize` IS NOT NULL
                     """.trimIndent()
                 )
@@ -141,7 +141,7 @@ internal abstract class AnalyticsDatabase : RoomDatabase() {
 
             return databaseBuilder(context, AnalyticsDatabase::class.java, path)
                 .openHelperFactory(retryingOpenHelperFactory)
-                .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
+                .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                 .fallbackToDestructiveMigration(true)
                 .build()
         }
