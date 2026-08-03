@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import android.view.View
+import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
@@ -58,6 +59,14 @@ internal class MediaModel(
         get() = muteGroup?.let { videoState?.changes?.value?.muteGroupState?.get(it) }
 
     private val isPlayableMedia: Boolean = viewInfo.mediaType.isPlayable
+
+    /**
+     * Whether the video exposes native playback controls the user could pause with.
+     * When false, a [PlaybackEvent.JsPause] can never be a user-initiated pause, so a
+     * stray pause event (e.g. the WebView pausing its own media pipeline during a
+     * RecyclerView relayout) must not be allowed to latch the video off.
+     */
+    private val hasPlaybackControls: Boolean = viewInfo.video?.showControls ?: true
 
     /**
      * Local play intent used when there is no VideoController (videoState is null).
@@ -233,7 +242,8 @@ internal class MediaModel(
         }
     }
 
-    private fun handlePlaybackEvent(event: PlaybackEvent) {
+    @VisibleForTesting
+    internal fun handlePlaybackEvent(event: PlaybackEvent) {
         UALog.v { "MediaModel[$videoId] playback event: $event" }
         when (event) {
             is PlaybackEvent.VideoReady -> {
@@ -265,6 +275,17 @@ internal class MediaModel(
                 jsPlaying = false
                 if (isSystemPausing || !isVisible) {
                     UALog.v { "MediaModel[$videoId] JsPause ignored (system=$isSystemPausing, visible=$isVisible)" }
+                    return
+                }
+                // A video without native controls can't be paused by the user. If the state
+                // still says it should be playing, this is a stray pause from the WebView
+                // (e.g. its media pipeline pausing during a RecyclerView relayout) — re-assert
+                // play instead of latching it off. A real video_pause behavior sets playing=false
+                // in the shared state first, so by the time its echo arrives shouldBePlaying() is
+                // already false and we fall through to record the pause.
+                if (!hasPlaybackControls && shouldBePlaying()) {
+                    UALog.v { "MediaModel[$videoId] spurious JsPause on non-interactive video; re-asserting play" }
+                    reconcileState()
                     return
                 }
                 if (videoState != null) {

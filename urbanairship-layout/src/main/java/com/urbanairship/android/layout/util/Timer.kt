@@ -17,9 +17,11 @@ public abstract class Timer public constructor(
     private var startTimeMs: Long = 0
     private var remainingTimeMs: Long = duration
     private var elapsedTimeMs: Long = 0
+    private var hasFired: Boolean = false
     private val handler = Handler(Looper.myLooper() ?: Looper.getMainLooper())
     private val trigger = Runnable {
         if (isStarted) {
+            hasFired = true
             stop()
             onFinish()
         }
@@ -27,9 +29,14 @@ public abstract class Timer public constructor(
 
     /**
      * Starts the timer.
+     *
+     * Once the timer has fired (i.e. [onFinish] has run), it is terminal and
+     * subsequent calls to [start] are ignored. This prevents an already-expired
+     * timer (whose remaining time is zero) from re-firing immediately when a
+     * restart is requested by an external caller.
      */
     public fun start() {
-        if (isStarted) {
+        if (isStarted || hasFired) {
             return
         }
 
