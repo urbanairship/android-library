@@ -4,6 +4,16 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.10.1 - August 3, 2026
+
+Patch release that fixes issues with Stories in Scenes and hardens against potential crashes related to JSON serialization and Analytics DB.
+Apps that use Stories should update to this version, or later.
+
+### Changes
+- Fixed an NPE if `JSONStringer.toString()` returns `null` in `JsonMap`/`JsonList`
+- Fixed an issue with an Analytics DB migration
+- Fixed a couple of issues that were causing videos to not maintain the correct playback state when auto-advancing through a story.
+
 ## Version 20.10.0 - July 22, 2026
 
 Minor release that adds version name support to app version triggers and audience checks, along with fixes for pager button touch handling, media view video playback, and pager gestures conflicting with background video.
