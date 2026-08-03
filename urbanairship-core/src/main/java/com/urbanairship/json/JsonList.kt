@@ -117,7 +117,7 @@ public class JsonList public constructor(
         try {
             val stringer = JSONStringer()
             write(stringer, false)
-            return stringer.toString()
+            return stringer.toString() ?: ""
         } catch (e: JSONException) {
             // Should never happen
             UALog.e(e, "JsonList - Failed to create JSON String.")

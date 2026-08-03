@@ -175,7 +175,7 @@ public class JsonMap public constructor(
         try {
             val stringer = JSONStringer()
             write(stringer, sortKeys)
-            return stringer.toString()
+            return stringer.toString() ?: ""
         } catch (e: JSONException) {
             // Should never happen
             UALog.e(e, "JsonMap - Failed to create JSON String.")
