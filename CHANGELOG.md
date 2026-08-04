@@ -4,6 +4,13 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.13.9 - August 4, 2026
+
+Patch release that fixes a crash on cold start on certain OEM ROMs. Apps experiencing crashes during Airship initialization should update.
+
+### Changes
+- Fixed a crash caused by `JSONStringer.toString()` returning null on certain OEM ROMs, resulting in a fatal NPE when serializing analytics events on startup
+
 ## Version 19.13.8 - January 28, 2026
 Patch release that fixes an issue with custom events being double counted for IAX triggers (reporting was not affected). 
 Apps that make use of custom event triggers in IAX should update to this version or later.

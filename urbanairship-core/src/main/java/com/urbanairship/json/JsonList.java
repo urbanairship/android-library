@@ -153,7 +153,8 @@ public class JsonList implements Iterable<JsonValue>, JsonSerializable {
         try {
             JSONStringer stringer = new JSONStringer();
             write(stringer, false);
-            return stringer.toString();
+            String result = stringer.toString();
+            return result != null ? result : "";
         } catch (JSONException | StringIndexOutOfBoundsException e) {
             // Should never happen
             UALog.e(e, "JsonList - Failed to create JSON String.");
