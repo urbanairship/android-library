@@ -232,7 +232,8 @@ public class JsonMap implements Iterable<Map.Entry<String, JsonValue>>, JsonSeri
         try {
             JSONStringer stringer = new JSONStringer();
             write(stringer, sortKeys);
-            return stringer.toString();
+            String result = stringer.toString();
+            return result != null ? result : "";
         } catch (JSONException | StringIndexOutOfBoundsException e) {
             // Should never happen
             UALog.e(e, "JsonMap - Failed to create JSON String.");
