@@ -4,6 +4,13 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.13.9 - August 4, 2026
+
+Patch release that hardens against potential crashes related to JSON serialization.
+
+### Changes
+- Fixed a potential null return from `JSONStringer.toString()` in `JsonMap`/`JsonList`
+
 ## Version 19.13.8 - January 28, 2026
 Patch release that fixes an issue with custom events being double counted for IAX triggers (reporting was not affected). 
 Apps that make use of custom event triggers in IAX should update to this version or later.
