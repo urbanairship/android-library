@@ -20,9 +20,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.Runs
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
@@ -335,67 +333,6 @@ public class AirshipMeteredUsageTest {
         coVerify(exactly = 1) { apiClient.uploadEvents(listOf(event.withAnalyticsDisabled()), null) }
         assertEquals(JobResult.FAILURE, jobResult)
         assertEquals(1, eventsStore.getAllEvents().size)
-    }
-
-    @Test
-    public fun testOnPerformJobFiltersNullTypeEvents(): TestResult = runTest {
-        val corruptEvent = MeteredUsageEventEntity(
-            eventId = "corrupt-id",
-            entityId = null,
-            type = null,
-            product = "test-product",
-            reportingContext = null,
-            timestamp = null,
-            contactId = null
-        )
-        val validEvent = MeteredUsageEventEntity(
-            eventId = "valid-id",
-            entityId = "entity-id",
-            type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
-            product = "test-product",
-            reportingContext = null,
-            timestamp = null,
-            contactId = "contact-id"
-        )
-
-        val mockStore: EventsDao = mockk()
-        every { mockStore.getAllEvents() } returns listOf(corruptEvent, validEvent)
-        coEvery { mockStore.deleteAll(any()) } just Runs
-
-        val testManager = AirshipMeteredUsage(
-            context = context,
-            dataStore = PreferenceStore.inMemoryStore(context),
-            config = testConfig,
-            privacyManager = privacyManager,
-            store = mockStore,
-            client = apiClient,
-            contact = contact,
-            channel = channel,
-            jobDispatcher = mockJobDispatcher
-        )
-
-        testConfig.updateRemoteConfig(RemoteConfig(meteredUsageConfig = MeteredUsageConfig(true, 1.milliseconds, 2.milliseconds)))
-
-        every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns true
-        coEvery { apiClient.uploadEvents(any(), any()) } returns RequestResult(200, null, null, null)
-
-        testManager.onPerformJob(makeJobInfo())
-
-        coVerify { apiClient.uploadEvents(eq(listOf(validEvent)), any()) }
-    }
-
-    @Test
-    public fun testUsageTypeConverterUnknownTypeStoredAsNullViaDb(): TestResult = runTest {
-        val db = EventsDatabase.inMemory(context)
-        db.openHelper.writableDatabase.execSQL(
-            "INSERT INTO events (eventId, entityId, type, product, reportingContext, timestamp, contactId) " +
-            "VALUES ('future-id', NULL, 'unknown_future_type', 'test-product', NULL, NULL, NULL)"
-        )
-
-        val events = db.eventsDao().getAllEvents()
-        assertEquals(1, events.size)
-        assertNull(events.first().type)
-        db.close()
     }
 
     private fun makeJobInfo(

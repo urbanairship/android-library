@@ -11,7 +11,7 @@ import androidx.room.RoomDatabase
 /**
  * @hide
  */
-@Database(entities = [MeteredUsageEventEntity::class], version = 2)
+@Database(entities = [MeteredUsageEventEntity::class], version = 1)
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 internal abstract class EventsDatabase : RoomDatabase() {
     abstract fun eventsDao(): EventsDao
