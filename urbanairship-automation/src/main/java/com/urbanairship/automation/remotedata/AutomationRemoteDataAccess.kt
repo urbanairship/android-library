@@ -5,10 +5,10 @@ package com.urbanairship.automation.remotedata
 import android.content.Context
 import com.urbanairship.UALog
 import com.urbanairship.automation.AutomationSchedule
+import com.urbanairship.json.JsonException
 import com.urbanairship.automation.InAppAutomationRemoteDataStatus
 import com.urbanairship.automation.limits.FrequencyConstraint
 import com.urbanairship.iam.InAppMessage
-import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -56,8 +56,7 @@ internal class AutomationRemoteDataAccess(
             try {
                 InAppRemoteData.fromPayloads(payloads)
             } catch (ex: Exception) {
-                UALog.e(ex) { "Failed to parse in-app remote data payloads, clearing stale IAX and requesting refresh" }
-                RemoteDataSource.entries.forEach { source -> remoteData.waitForRefreshAttempt(source) }
+                UALog.e(ex) { "Failed to parse in-app remote data payloads, clearing stale IAX" }
                 InAppRemoteData(emptyMap())
             }
         }

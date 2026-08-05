@@ -14,9 +14,7 @@ import com.urbanairship.util.Network
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.Runs
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
@@ -293,7 +291,10 @@ public class AutomationRemoteDataAccessTest {
     }
 
     @Test
-    public fun testUpdatesFlowCorruptPayloadEmitsEmptyAndRequestsRefresh(): TestResult = runTest {
+    public fun testUpdatesFlowCorruptPayloadEmitsEmpty(): TestResult = runTest {
+        // Simulate a payload whose data map is missing the required "in_app_messages" key,
+        // as happens when JsonMap.toString() previously stored SQL NULL and the row reads back
+        // as an empty map.
         val corruptPayload = RemoteDataPayload(
             type = "in_app_messages",
             timestamp = 0L,
@@ -301,15 +302,12 @@ public class AutomationRemoteDataAccessTest {
             remoteDataInfo = null
         )
         every { remoteData.payloadFlow(eq(listOf("in_app_messages"))) } returns flowOf(listOf(corruptPayload))
-        coEvery { remoteData.waitForRefreshAttempt(any(), any()) } just Runs
 
         subject = AutomationRemoteDataAccess(context, remoteData, network)
 
         val result = subject.updatesFlow.first()
 
         assertEquals(InAppRemoteData(emptyMap()), result)
-        coVerify { remoteData.waitForRefreshAttempt(eq(RemoteDataSource.APP), any()) }
-        coVerify { remoteData.waitForRefreshAttempt(eq(RemoteDataSource.CONTACT), any()) }
     }
 
     private fun makeRemoteDataInfo(source: RemoteDataSource = RemoteDataSource.APP): RemoteDataInfo {
