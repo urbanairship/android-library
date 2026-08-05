@@ -114,7 +114,7 @@ public class AirshipMeteredUsage internal constructor(
             return JobResult.SUCCESS
         }
 
-        var events = store.getAllEvents()
+        var events = store.getAllEvents().filter { it.type != null }
         if (events.isEmpty()) {
             UALog.v { "No events, skipping upload." }
             return JobResult.SUCCESS

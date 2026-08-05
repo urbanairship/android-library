@@ -52,7 +52,15 @@ internal class AutomationRemoteDataAccess(
 
     override val updatesFlow: Flow<InAppRemoteData> = remoteData
         .payloadFlow(REMOTE_DATA_TYPES)
-        .map(InAppRemoteData.Companion::fromPayloads)
+        .map { payloads ->
+            try {
+                InAppRemoteData.fromPayloads(payloads)
+            } catch (ex: Exception) {
+                UALog.e(ex) { "Failed to parse in-app remote data payloads, clearing stale IAX and requesting refresh" }
+                RemoteDataSource.entries.forEach { source -> remoteData.waitForRefreshAttempt(source) }
+                InAppRemoteData(emptyMap())
+            }
+        }
 
     override val status: InAppAutomationRemoteDataStatus
         get() {

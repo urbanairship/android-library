@@ -3,6 +3,7 @@
 package com.urbanairship.liveupdate.data
 
 import androidx.room.TypeConverter
+import com.urbanairship.UALog
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 
@@ -15,6 +16,11 @@ internal class Converters {
 
     @TypeConverter
     fun toJsonMap(value: String): JsonMap {
-        return JsonValue.parseString(value).requireMap()
+        return try {
+            JsonValue.parseString(value).optMap()
+        } catch (ex: Exception) {
+            UALog.e(ex) { "Failed to parse stored JsonMap, returning empty map" }
+            JsonMap.EMPTY_MAP
+        }
     }
 }
