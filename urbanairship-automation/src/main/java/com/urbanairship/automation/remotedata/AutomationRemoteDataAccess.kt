@@ -56,7 +56,7 @@ internal class AutomationRemoteDataAccess(
             try {
                 InAppRemoteData.fromPayloads(payloads)
             } catch (ex: Exception) {
-                UALog.e(ex) { "Failed to parse in-app remote data payloads, clearing stale IAX" }
+                UALog.d(ex) { "Failed to parse in-app remote data payloads, clearing stale IAX" }
                 InAppRemoteData(emptyMap())
             }
         }
