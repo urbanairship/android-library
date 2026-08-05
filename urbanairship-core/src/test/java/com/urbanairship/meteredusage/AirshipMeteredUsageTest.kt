@@ -20,9 +20,7 @@ import java.util.concurrent.TimeUnit
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
-import io.mockk.Runs
 import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
@@ -342,75 +340,6 @@ public class AirshipMeteredUsageTest {
         coVerify(exactly = 1) { apiClient.uploadEvents(listOf(event.withAnalyticsDisabled()), null) }
         assertEquals(JobResult.FAILURE, jobResult)
         assertEquals(1, eventsStore.getAllEvents().size)
-    }
-
-    @Test
-    public fun testOnPerformJobFiltersNullTypeEvents(): TestResult = runTest {
-        // Simulate corrupt DB rows where the stored type string is unknown (e.g. written by a
-        // future SDK version or corrupted), causing the TypeConverter to return null.
-        val corruptEvent = MeteredUsageEventEntity(
-            eventId = "corrupt-id",
-            entityId = null,
-            type = null,
-            product = "test-product",
-            reportingContext = null,
-            timestamp = null,
-            contactId = null
-        )
-        val validEvent = MeteredUsageEventEntity(
-            eventId = "valid-id",
-            entityId = "entity-id",
-            type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
-            product = "test-product",
-            reportingContext = null,
-            timestamp = null,
-            contactId = "contact-id"
-        )
-
-        val mockStore: EventsDao = mockk()
-        every { mockStore.getAllEvents() } returns listOf(corruptEvent, validEvent)
-        coEvery { mockStore.deleteAll(any()) } just Runs
-
-        val testManager = AirshipMeteredUsage(
-            context = context,
-            dataStore = PreferenceDataStore.inMemoryStore(context),
-            config = testConfig,
-            privacyManager = privacyManager,
-            store = mockStore,
-            client = apiClient,
-            contact = contact,
-            jobDispatcher = mockJobDispatcher
-        )
-
-        testConfig.updateRemoteConfig(RemoteConfig(meteredUsageConfig = MeteredUsageConfig(true, 1, 2)))
-
-        val airship: UAirship = mockk()
-        val channel: AirshipChannel = mockk()
-        every { airship.channel } returns channel
-        every { channel.id } returns "channel-id"
-        every { privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS) } returns true
-        coEvery { apiClient.uploadEvents(any(), any()) } returns RequestResult(200, null, null, null)
-
-        testManager.onPerformJob(airship, makeJobInfo())
-
-        // Only the valid event should be uploaded; corrupt (null-type) event is filtered out.
-        coVerify { apiClient.uploadEvents(eq(listOf(validEvent)), any()) }
-    }
-
-    @Test
-    public fun testUsageTypeConverterUnknownTypeStoredAsNullViaDb(): TestResult = runTest {
-        // Insert a row with an unknown type string directly into SQLite to simulate data
-        // written by a future SDK version or from a corrupt source.
-        val db = EventsDatabase.inMemory(context)
-        db.openHelper.writableDatabase.execSQL(
-            "INSERT INTO events (eventId, entityId, type, product, reportingContext, timestamp, contactId) " +
-            "VALUES ('future-id', NULL, 'unknown_future_type', 'test-product', NULL, NULL, NULL)"
-        )
-
-        val events = db.eventsDao().getAllEvents()
-        assertEquals(1, events.size)
-        assertNull(events.first().type)
-        db.close()
     }
 
     private fun makeJobInfo(

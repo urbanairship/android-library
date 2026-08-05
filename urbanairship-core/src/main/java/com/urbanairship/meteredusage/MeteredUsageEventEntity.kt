@@ -8,7 +8,6 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
-import com.urbanairship.UALog
 import com.urbanairship.json.JsonTypeConverters
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -25,7 +24,7 @@ import com.urbanairship.util.DateUtils
 public data class MeteredUsageEventEntity(
     @PrimaryKey val eventId: String,
     val entityId: String?,
-    val type: MeteredUsageType?,
+    val type: MeteredUsageType,
     val product: String,
     val reportingContext: JsonValue?,
     val timestamp: Long?,
@@ -58,7 +57,7 @@ public data class MeteredUsageEventEntity(
     internal fun toJson(): JsonValue {
         return jsonMapOf(
             "event_id" to eventId,
-            "usage_type" to type?.value,
+            "usage_type" to type.value,
             "product" to product,
             "reporting_context" to reportingContext,
             "occurred" to timestamp?.let { DateUtils.createIso8601TimeStamp(it) },
@@ -87,15 +86,8 @@ public enum class MeteredUsageType(public val value: String) {
 
 private class UsageTypeConverter {
     @TypeConverter
-    fun toUsageType(value: String): MeteredUsageType? {
-        return try {
-            MeteredUsageType.fromString(value)
-        } catch (ex: Exception) {
-            UALog.e(ex) { "Unknown metered usage type: $value" }
-            null
-        }
-    }
+    fun toUsageType(value: String) = MeteredUsageType.fromString(value)
 
     @TypeConverter
-    fun fromUsageType(type: MeteredUsageType?) = type?.value
+    fun fromUsageType(type: MeteredUsageType) = type.value
 }
