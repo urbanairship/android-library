@@ -119,7 +119,8 @@ public sealed class ThomasFormField<T>(
         val smsLocale: SmsLocale? = null,
         override val identifier: String,
         override val originalValue: String?,
-        override val fieldType: FieldType<String>
+        override val fieldType: FieldType<String>,
+        val isRedacted: Boolean = false
     ) : ThomasFormField<String>(when(textInput) {
         FormInputType.EMAIL -> Type.EMAIL
         FormInputType.SMS -> Type.SMS
@@ -128,6 +129,26 @@ public sealed class ThomasFormField<T>(
 
         override fun jsonValue(): JsonValue? {
             return State(originalValue ?: "", smsLocale).toJsonValue()
+        }
+
+        override fun formData(withState: Boolean): JsonMap {
+            val builder = JsonMap.newBuilder()
+            builder.put(KEY_TYPE, type)
+            if (withState) {
+                builder.put(KEY_STATUS, status.toJson(type))
+                builder.put(KEY_VALUE, JsonValue.wrapOpt(originalValue))
+            } else if (isRedacted) {
+                builder.put(KEY_VALUE, JsonValue.wrap(REDACTED_VALUE))
+                builder.put(KEY_IS_REDACTED, JsonValue.wrap(true))
+            } else {
+                val value = if (status is ThomasFormFieldStatus.Valid) {
+                    (status as ThomasFormFieldStatus.Valid<String>).result.value
+                } else {
+                    originalValue
+                }
+                builder.put(KEY_VALUE, JsonValue.wrapOpt(value))
+            }
+            return builder.build()
         }
 
         internal companion object {
@@ -242,6 +263,8 @@ public sealed class ThomasFormField<T>(
         private const val KEY_TYPE: String = "type"
         private const val KEY_VALUE: String = "value"
         private const val KEY_STATUS: String = "status"
+        private const val KEY_IS_REDACTED: String = "is_redacted"
+        private const val REDACTED_VALUE: String = "REDACTED"
         private const val KEY_SCORE_ID: String = "score_id"
         private const val KEY_CHILDREN: String = "children"
         private const val KEY_RESPONSE_TYPE: String = "response_type"
