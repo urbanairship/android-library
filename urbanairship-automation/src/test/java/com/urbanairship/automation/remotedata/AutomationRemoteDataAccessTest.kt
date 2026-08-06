@@ -21,9 +21,12 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import junit.framework.TestCase.fail
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
+import com.urbanairship.json.JsonMap
+import com.urbanairship.remotedata.RemoteDataPayload
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -285,6 +288,26 @@ public class AutomationRemoteDataAccessTest {
         }
 
         assertTrue(subject.bestEffortRefresh(makeSchedule(makeRemoteDataInfo(RemoteDataSource.CONTACT))))
+    }
+
+    @Test
+    public fun testUpdatesFlowCorruptPayloadEmitsEmpty(): TestResult = runTest {
+        // Simulate a payload whose data map is missing the required "in_app_messages" key,
+        // as happens when JsonMap.toString() previously stored SQL NULL and the row reads back
+        // as an empty map.
+        val corruptPayload = RemoteDataPayload(
+            type = "in_app_messages",
+            timestamp = 0L,
+            data = JsonMap.EMPTY_MAP,
+            remoteDataInfo = null
+        )
+        every { remoteData.payloadFlow(eq(listOf("in_app_messages"))) } returns flowOf(listOf(corruptPayload))
+
+        subject = AutomationRemoteDataAccess(context, remoteData, network)
+
+        val result = subject.updatesFlow.first()
+
+        assertEquals(InAppRemoteData(emptyMap()), result)
     }
 
     private fun makeRemoteDataInfo(source: RemoteDataSource = RemoteDataSource.APP): RemoteDataInfo {
