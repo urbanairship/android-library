@@ -59,6 +59,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import com.urbanairship.automation.engine.DelegatePreparerResult
 
 @RunWith(AndroidJUnit4::class)
 public class AutomationPreparerTest {
@@ -326,7 +327,7 @@ public class AutomationPreparerTest {
         coEvery { messagePreparer.prepare(any(), any()) } answers {
             val info: PreparedScheduleInfo = secondArg()
             assertFalse(info.additionalAudienceCheckResult)
-            return@answers Result.success(preparedMessageData)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
         }
 
         val preparedResult = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()) as? SchedulePrepareResult.Prepared
@@ -419,7 +420,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals(schedule.sendMetadata, info.sendMetadata)
             assertEquals("contact id", info.contactId)
-            return@answers Result.success(preparedMessageData)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
         }
 
         val triggerSessionId = UUID.randomUUID().toString()
@@ -499,7 +500,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals("contact id", info.contactId)
 
-            return@answers Result.success(firstArg())
+            return@answers Result.success(DelegatePreparerResult.Prepared(firstArg()))
         }
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
@@ -567,7 +568,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals("contact id", info.contactId)
 
-            return@answers Result.success(firstArg())
+            return@answers Result.success(DelegatePreparerResult.Prepared(firstArg()))
         }
 
 
@@ -651,7 +652,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals("contact id", info.contactId)
 
-            return@answers Result.success(preparedMessageData)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
         }
 
         mockkStatic(Airship::class)
@@ -749,7 +750,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleId)
             assertEquals(info.experimentResult, experimentResult)
 
-            return@answers Result.success(preparedMessageData)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
         }
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
@@ -802,7 +803,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleId)
             assertEquals(info.experimentResult, experimentResult)
 
-            return@answers Result.success(preparedMessageData)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
         }
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
@@ -849,7 +850,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleId)
             assertNull(info.experimentResult)
 
-            return@answers Result.success(preparedMessageData)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
         }
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
@@ -890,7 +891,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleId)
             assertNull(info.experimentResult)
 
-            return@answers Result.success(firstArg())
+            return@answers Result.success(DelegatePreparerResult.Prepared(firstArg()))
         }
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())

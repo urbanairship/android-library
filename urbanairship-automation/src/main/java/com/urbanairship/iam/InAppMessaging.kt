@@ -3,6 +3,7 @@
 package com.urbanairship.iam
 
 import android.content.Context
+import androidx.annotation.MainThread
 import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.adapter.CustomDisplayAdapter
 import com.urbanairship.iam.adapter.CustomDisplayAdapterType
@@ -28,6 +29,15 @@ public interface InAppMessagingInterface {
      * The extender is called before the message is displayed and allows the message to be modified.
      */
     public var messageContentExtender: InAppMessageContentExtender?
+
+    /**
+     * Called during schedule preparation to allow app-side logic to suppress the message before
+     * assets are fetched. Throwing causes the prepare operation to retry with backoff — catch
+     * internally to fail open instead.
+     */
+    @get:MainThread
+    @set:MainThread
+    public var onCheckSuppression: (suspend (InAppMessage, String) -> SuppressionResult)?
 
     /**
      * Sets a factory block for a custom display adapter.
@@ -64,6 +74,10 @@ internal class InAppMessaging(
     override var messageContentExtender: InAppMessageContentExtender?
         get() { return preparer.messageContentExtender }
         set(value) { preparer.messageContentExtender = value }
+
+    override var onCheckSuppression: (suspend (InAppMessage, String) -> SuppressionResult)?
+        get() = preparer.onCheckSuppression
+        set(value) { preparer.onCheckSuppression = value }
 
     override fun setAdapterFactoryBlock(
         type: CustomDisplayAdapterType,

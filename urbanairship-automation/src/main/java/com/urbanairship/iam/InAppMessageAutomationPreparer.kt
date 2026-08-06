@@ -6,8 +6,11 @@ import android.content.Context
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.android.layout.assets.AssetCacheManager
+import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
 import com.urbanairship.android.layout.util.UrlInfo
+import com.urbanairship.automation.AutomationAudience
 import com.urbanairship.automation.engine.AutomationPreparerDelegate
+import com.urbanairship.automation.engine.DelegatePreparerResult
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.iam.actions.InAppActionRunnerFactory
 import com.urbanairship.iam.adapter.CustomDisplayAdapter
@@ -32,10 +35,20 @@ internal class InAppMessageAutomationPreparer(
         get() { synchronized(displayCoordinatorManager) { return displayCoordinatorManager.displayInterval } }
         set(value) { synchronized(displayCoordinatorManager) { displayCoordinatorManager.displayInterval = value} }
 
+    @Volatile
+    var onCheckSuppression: (suspend (InAppMessage, String) -> SuppressionResult)? = null
+
     override suspend fun prepare(
         data: InAppMessage,
         preparedScheduleInfo: PreparedScheduleInfo
-    ): Result<PreparedInAppMessageData> {
+    ): Result<DelegatePreparerResult<PreparedInAppMessageData>> {
+        onCheckSuppression?.let { check ->
+            val result = check(data, preparedScheduleInfo.scheduleId)
+            if (result is SuppressionResult.Suppress) {
+                return Result.success(suppressed(result.behavior, data, preparedScheduleInfo))
+            }
+        }
+
         val assets = prepareAssets(
             message = data,
             scheduleID = preparedScheduleInfo.scheduleId,
@@ -43,7 +56,6 @@ internal class InAppMessageAutomationPreparer(
         ).getOrElse {
             return Result.failure(it)
         }
-
 
         val coordinator = displayCoordinatorManager.displayCoordinator(data)
         val analytics = analyticsFactory.makeAnalytics(data, preparedScheduleInfo)
@@ -55,14 +67,30 @@ internal class InAppMessageAutomationPreparer(
         }
 
         return Result.success(
-            PreparedInAppMessageData(
-                message = data,
-                displayAdapter = adapter,
-                displayCoordinator = coordinator,
-                analytics = analytics,
-                actionRunner = actionRunner
+            DelegatePreparerResult.Prepared(
+                PreparedInAppMessageData(
+                    message = data,
+                    displayAdapter = adapter,
+                    displayCoordinator = coordinator,
+                    analytics = analytics,
+                    actionRunner = actionRunner
+                )
             )
         )
+    }
+
+    private suspend fun suppressed(
+        behavior: AutomationAudience.MissBehavior,
+        message: InAppMessage,
+        preparedScheduleInfo: PreparedScheduleInfo
+    ): DelegatePreparerResult<PreparedInAppMessageData> {
+        val analytics = analyticsFactory.makeAnalytics(message, preparedScheduleInfo)
+        analytics.recordEvent(LayoutResolutionEvent.appSuppressed(), null)
+        return when (behavior) {
+            AutomationAudience.MissBehavior.CANCEL -> DelegatePreparerResult.Cancel
+            AutomationAudience.MissBehavior.SKIP -> DelegatePreparerResult.Skip
+            AutomationAudience.MissBehavior.PENALIZE -> DelegatePreparerResult.Penalize
+        }
     }
 
     override suspend fun cancelled(scheduleID: String) {
