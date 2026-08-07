@@ -42,7 +42,7 @@
             <meta-data
                 android:name="com.urbanairship.push.iam.EXCLUDE_FROM_AUTO_SHOW"
                 android:value="true" />
-            <intent-filter>
+            <intent-filter android:priority="-1">
                 <action android:name="com.urbanairship.actions.SHOW_RATE_APP_INTENT_ACTION" />
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
