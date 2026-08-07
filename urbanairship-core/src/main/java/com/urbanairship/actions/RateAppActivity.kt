@@ -10,6 +10,8 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import com.google.android.play.core.review.ReviewManagerFactory
+import com.google.android.play.core.review.testing.FakeReviewManager
+import com.urbanairship.BuildConfig
 import com.urbanairship.Autopilot
 import com.urbanairship.R
 import com.urbanairship.UALog
@@ -54,7 +56,7 @@ public class RateAppActivity public constructor() : ThemedActivity() {
     }
 
     private fun launchInAppReview() {
-        val manager = ReviewManagerFactory.create(this)
+        val manager = if (BuildConfig.DEBUG) FakeReviewManager(this) else ReviewManagerFactory.create(this)
         manager.requestReviewFlow().addOnCompleteListener { task ->
             if (task.isSuccessful) {
                 manager.launchReviewFlow(this, task.result).addOnCompleteListener {
