@@ -44,3 +44,10 @@ google-services.json
 
 # Airship
 airshipconfig.properties
+
+# Thomas Scene fixtures fetched from urbanairship/thomas-layouts
+# (see scripts/fetch-layouts.sh / `./gradlew :devapp:fetchLayouts`).
+# Messages/ fixtures are tracked in this repo.
+devapp/src/main/assets/sample_layouts/Scenes/*
+!devapp/src/main/assets/sample_layouts/Scenes/.gitkeep
+devapp/src/main/assets/sample_layouts/.layouts.version
