@@ -165,11 +165,16 @@ tasks.register('fetchLayouts', Exec) {
 // fails the build: the devapp must build without access to thomas-layouts
 // (the Scene list just shows empty).
 tasks.named('preBuild').configure {
+    // Only the captured File is used at execution time, keeping the check
+    // compatible with the configuration cache.
     def scenesDir = file('src/main/assets/sample_layouts/Scenes')
     doFirst {
-        def sceneCount = scenesDir.exists()
-                ? fileTree(scenesDir) { exclude '**/.gitkeep' }.files.size()
-                : 0
+        def sceneCount = 0
+        if (scenesDir.exists()) {
+            scenesDir.eachFileRecurse(groovy.io.FileType.FILES) {
+                if (it.name != '.gitkeep') sceneCount++
+            }
+        }
         if (sceneCount == 0) {
             logger.warn("warning: Thomas Scene fixtures not found. Run './gradlew :devapp:fetchLayouts' to populate them. The devapp will still build, but the Thomas Scene list will be empty.")
         }
