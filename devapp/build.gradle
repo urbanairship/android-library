@@ -153,3 +153,25 @@ def googleServicesFile = rootProject.file('devapp/google-services.json')
 if (googleServicesFile.exists()) {
     apply plugin: 'com.google.gms.google-services'  // Google Play services Gradle plugin
 }
+
+// Fetches the pinned Thomas Scene fixtures from urbanairship/thomas-layouts
+// into src/main/assets/sample_layouts/Scenes (see scripts/fetch-layouts.sh).
+tasks.register('fetchLayouts', Exec) {
+    workingDir rootDir
+    commandLine 'bash', './scripts/fetch-layouts.sh'
+}
+
+// Warn-only reminder to fetch the Scene fixtures if they are missing. Never
+// fails the build: the devapp must build without access to thomas-layouts
+// (the Scene list just shows empty).
+tasks.named('preBuild').configure {
+    def scenesDir = file('src/main/assets/sample_layouts/Scenes')
+    doFirst {
+        def sceneCount = scenesDir.exists()
+                ? fileTree(scenesDir) { exclude '**/.gitkeep' }.files.size()
+                : 0
+        if (sceneCount == 0) {
+            logger.warn("warning: Thomas Scene fixtures not found. Run './gradlew :devapp:fetchLayouts' to populate them. The devapp will still build, but the Thomas Scene list will be empty.")
+        }
+    }
+}
