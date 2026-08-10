@@ -108,8 +108,8 @@ view:
           height: auto
         view:
           type: label
-          text: Drag sideways. First block fills the width, then half, then a quarter
-            — 1.75 screens wide.
+          text: Drag sideways. One full width, then half, then a quarter — 1.75 screens
+            wide, so it SCROLLS.
           text_appearance:
             color:
               default:
@@ -127,7 +127,3 @@ view:
     position:
       horizontal: center
       vertical: center
-  background_color:
-    default:
-      hex: "#ffffff"
-      alpha: 1
