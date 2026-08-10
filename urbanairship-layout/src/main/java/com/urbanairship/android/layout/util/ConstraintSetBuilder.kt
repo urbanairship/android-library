@@ -168,10 +168,11 @@ public class ConstraintSetBuilder private constructor(
         size: Size?,
         ignoreSafeArea: Boolean,
         @IdRes viewId: Int,
-        autoValue: Int = ConstraintSet.WRAP_CONTENT
+        autoValue: Int = ConstraintSet.WRAP_CONTENT,
+        margin: Margin? = null
     ): ConstraintSetBuilder {
-        width(size, ignoreSafeArea, viewId, autoValue)
-        height(size, ignoreSafeArea, viewId, autoValue)
+        width(size, ignoreSafeArea, viewId, autoValue, margin)
+        height(size, ignoreSafeArea, viewId, autoValue, margin)
         return aspectRatio(size, viewId, ignoreSafeArea)
     }
 
@@ -317,7 +318,8 @@ public class ConstraintSetBuilder private constructor(
         size: Size?,
         ignoreSafeArea: Boolean,
         @IdRes viewId: Int,
-        autoValue: Int = ConstraintSet.WRAP_CONTENT
+        autoValue: Int = ConstraintSet.WRAP_CONTENT,
+        margin: Margin? = null
     ): ConstraintSetBuilder {
         if (size == null) {
             return this
@@ -361,9 +363,22 @@ public class ConstraintSetBuilder private constructor(
         when (width.type) {
             Size.DimensionType.AUTO -> constraints.constrainWidth(viewId, autoValue)
             Size.DimensionType.PERCENT -> if (width.getFloat() == 1f) {
+                // Spans the parent less its margins, which is the whole share — the same answer
+                // the branch below computes, arrived at by ConstraintLayout and so unaffected by
+                // the frame's parent being anything other than the window.
                 constraints.constrainWidth(viewId, ConstraintSet.MATCH_CONSTRAINT)
             } else {
-                constraints.constrainPercentWidth(viewId, width.getFloat())
+                // A percentage covers the space the frame occupies, margins included, as percent
+                // items are sized. ConstraintLayout's own percent sizes the frame and lays the
+                // margins outside it, so 75% with margins took about 83% of the window.
+                val marginPx = margin?.let {
+                    ResourceUtils.dpToPx(context, it.start + it.end).toInt()
+                } ?: 0
+                val base = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)
+                constraints.constrainWidth(
+                    viewId,
+                    (base * width.getFloat() - marginPx).toInt().coerceAtLeast(0)
+                )
             }
 
             Size.DimensionType.ABSOLUTE -> constraints.constrainWidth(
@@ -383,7 +398,8 @@ public class ConstraintSetBuilder private constructor(
         size: Size?,
         ignoreSafeArea: Boolean,
         @IdRes viewId: Int,
-        autoValue: Int = ConstraintSet.WRAP_CONTENT
+        autoValue: Int = ConstraintSet.WRAP_CONTENT,
+        margin: Margin? = null
     ): ConstraintSetBuilder {
         if (size == null) {
             return this
@@ -427,9 +443,22 @@ public class ConstraintSetBuilder private constructor(
         when (height.type) {
             Size.DimensionType.AUTO -> constraints.constrainHeight(viewId, autoValue)
             Size.DimensionType.PERCENT -> if (height.getFloat() == 1f) {
+                // Spans the parent less its margins, which is the whole share — the same answer
+                // the branch below computes, arrived at by ConstraintLayout and so unaffected by
+                // the frame's parent being anything other than the window.
                 constraints.constrainHeight(viewId, ConstraintSet.MATCH_CONSTRAINT)
             } else {
-                constraints.constrainPercentHeight(viewId, height.getFloat())
+                // A percentage covers the space the frame occupies, margins included, as percent
+                // items are sized. ConstraintLayout's own percent sizes the frame and lays the
+                // margins outside it, so 75% with margins took about 83% of the window.
+                val marginPx = margin?.let {
+                    ResourceUtils.dpToPx(context, it.top + it.bottom).toInt()
+                } ?: 0
+                val base = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea)
+                constraints.constrainHeight(
+                    viewId,
+                    (base * height.getFloat() - marginPx).toInt().coerceAtLeast(0)
+                )
             }
 
             Size.DimensionType.ABSOLUTE -> constraints.constrainHeight(
