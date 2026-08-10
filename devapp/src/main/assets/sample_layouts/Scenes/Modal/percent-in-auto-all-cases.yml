@@ -1,0 +1,1236 @@
+# Percent-sized children under auto-sized parents — every case worth watching, one per page.
+#
+# Swipe through. Each page states what a pass looks like; the two that break in opposite
+# directions are 3 (the stack must SOLVE for its base) and 7 (it must BORROW one and not
+# solve). Check those together — fixing one has repeatedly broken the other.
+#
+# Page 10 has no known-good answer: nothing in the corpus combines aspect_ratio with
+# percent, so it is there to compare iOS against Android, not to pass.
+version: 1
+presentation:
+  type: modal
+  dismiss_on_touch_outside: true
+  default_placement:
+    size:
+      width: 92%
+      height: 92%
+    position:
+      horizontal: center
+      vertical: center
+    shade_color:
+      default:
+        hex: "#000000"
+        alpha: 0.6
+view:
+  type: pager_controller
+  identifier: percent-in-auto-pager
+  view:
+    type: container
+    items:
+    - size:
+        width: 100%
+        height: 100%
+      view:
+        type: pager
+        disable_swipe: false
+        items:
+        - identifier: container-solve
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '1/11  Container: auto + percent'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: container
+                    items:
+                    - size:
+                        width: 100%
+                        height: 200
+                      view:
+                        type: label
+                        text: 200dp fixed
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#000000"
+                              alpha: 1
+                          alignment: center
+                          font_size: 14
+                        background_color:
+                          default:
+                            hex: "#ff5555"
+                            alpha: 1
+                      position:
+                        horizontal: center
+                        vertical: center
+                    - size:
+                        width: 50%
+                        height: 50%
+                      view:
+                        type: label
+                        text: 50% x 50%
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 14
+                        background_color:
+                          default:
+                            hex: "#5588ff"
+                            alpha: 1
+                      position:
+                        horizontal: start
+                        vertical: top
+                    background_color:
+                      default:
+                        hex: "#dddddd"
+                        alpha: 1
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: Blue is half the height and half the width of the red block.
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+        - identifier: container-degenerate
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '2/11  Container: only percent children'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: 100%
+                    height: 200
+                  view:
+                    type: container
+                    items:
+                    - size:
+                        width: 100%
+                        height: auto
+                      view:
+                        type: container
+                        items:
+                        - size:
+                            width: 100%
+                            height: 100%
+                          view:
+                            type: label
+                            text: should not be visible
+                            text_appearance:
+                              color:
+                                default:
+                                  hex: "#ffffff"
+                                  alpha: 1
+                              alignment: center
+                              font_size: 13
+                            background_color:
+                              default:
+                                hex: "#5588ff"
+                                alpha: 1
+                        background_color:
+                          default:
+                            hex: "#eeeeee"
+                            alpha: 1
+                      position:
+                        horizontal: center
+                        vertical: top
+                    background_color:
+                      default:
+                        hex: "#dddddd"
+                        alpha: 1
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: The dashed area stays EMPTY. With no fixed sibling there
+                      is no size to take a percentage of.
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+        - identifier: stack-solve
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '3/11  Stack main axis: S / (1 - P)'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: linear_layout
+                    direction: vertical
+                    items:
+                    - size:
+                        width: 100%
+                        height: 120
+                      view:
+                        type: label
+                        text: 120dp fixed
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#000000"
+                              alpha: 1
+                          alignment: center
+                          font_size: 14
+                        background_color:
+                          default:
+                            hex: "#ff5555"
+                            alpha: 1
+                    - size:
+                        width: 100%
+                        height: 25%
+                      view:
+                        type: label
+                        text: 25% -> 120
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 14
+                        background_color:
+                          default:
+                            hex: "#5588ff"
+                            alpha: 1
+                    - size:
+                        width: 100%
+                        height: 50%
+                      view:
+                        type: label
+                        text: 50% -> 240
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 14
+                        background_color:
+                          default:
+                            hex: "#33aa55"
+                            alpha: 1
+                    background_color:
+                      default:
+                        hex: "#eeeeee"
+                        alpha: 1
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: Blue equals red. Green equals red + blue. Stack is 480 (=
+                      120 / 0.25).
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+        - identifier: stack-overflow
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '4/11  Stack main axis: P >= 1'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: 100%
+                    height: 480
+                  view:
+                    type: container
+                    items:
+                    - size:
+                        width: 100%
+                        height: auto
+                      view:
+                        type: linear_layout
+                        direction: vertical
+                        items:
+                        - size:
+                            width: 100%
+                            height: 200
+                          view:
+                            type: label
+                            text: 200dp fixed
+                            text_appearance:
+                              color:
+                                default:
+                                  hex: "#000000"
+                                  alpha: 1
+                              alignment: center
+                              font_size: 14
+                            background_color:
+                              default:
+                                hex: "#ff5555"
+                                alpha: 1
+                        - size:
+                            width: 100%
+                            height: 100%
+                          view:
+                            type: label
+                            text: 100% -> 140
+                            text_appearance:
+                              color:
+                                default:
+                                  hex: "#ffffff"
+                                  alpha: 1
+                              alignment: center
+                              font_size: 14
+                            background_color:
+                              default:
+                                hex: "#5588ff"
+                                alpha: 1
+                        - size:
+                            width: 100%
+                            height: 100%
+                          view:
+                            type: label
+                            text: 100% -> 140
+                            text_appearance:
+                              color:
+                                default:
+                                  hex: "#ffffff"
+                                  alpha: 1
+                              alignment: center
+                              font_size: 14
+                            background_color:
+                              default:
+                                hex: "#33aa55"
+                                alpha: 1
+                      position:
+                        horizontal: center
+                        vertical: top
+                    background_color:
+                      default:
+                        hex: "#dddddd"
+                        alpha: 1
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: Red keeps its 200. Blue and green split the remaining 280,
+                      so both are 140.
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+        - identifier: vstack-cross
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '5/11  VStack cross axis: auto width'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: auto
+                    height: auto
+                  view:
+                    type: linear_layout
+                    direction: vertical
+                    items:
+                    - size:
+                        width: auto
+                        height: auto
+                      view:
+                        type: label
+                        text: short
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#000000"
+                              alpha: 1
+                          alignment: center
+                          font_size: 13
+                        background_color:
+                          default:
+                            hex: "#dddddd"
+                            alpha: 1
+                    - size:
+                        width: auto
+                        height: auto
+                      view:
+                        type: label
+                        text: the longest label here decides the width
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#000000"
+                              alpha: 1
+                          alignment: center
+                          font_size: 13
+                        background_color:
+                          default:
+                            hex: "#dddddd"
+                            alpha: 1
+                    - size:
+                        width: 100%
+                        height: 8
+                      view:
+                        type: label
+                        text: ''
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#000000"
+                              alpha: 1
+                          alignment: center
+                          font_size: 13
+                        background_color:
+                          default:
+                            hex: "#5588ff"
+                            alpha: 1
+                    background_color:
+                      default:
+                        hex: "#eeeeee"
+                        alpha: 1
+                  position:
+                    horizontal: center
+                    vertical: top
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: The blue bar spans exactly the width of the longest label
+                      above it.
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+        - identifier: hstack-cross
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '6/11  HStack cross axis: auto height'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: auto
+                    height: auto
+                  view:
+                    type: linear_layout
+                    direction: horizontal
+                    items:
+                    - size:
+                        width: auto
+                        height: auto
+                      view:
+                        type: label
+                        text: |-
+                          two
+                          line
+                          label
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#000000"
+                              alpha: 1
+                          alignment: center
+                          font_size: 13
+                        background_color:
+                          default:
+                            hex: "#dddddd"
+                            alpha: 1
+                    - size:
+                        width: 8
+                        height: 100%
+                      view:
+                        type: label
+                        text: ''
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#000000"
+                              alpha: 1
+                          alignment: center
+                          font_size: 13
+                        background_color:
+                          default:
+                            hex: "#5588ff"
+                            alpha: 1
+                    background_color:
+                      default:
+                        hex: "#eeeeee"
+                        alpha: 1
+                  position:
+                    horizontal: center
+                    vertical: top
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: The blue bar is exactly as tall as the label beside it.
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+        - identifier: scroll-main
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '7/11  Scroll axis: percent of the viewport'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: 100%
+                    height: 100%
+                  view:
+                    type: scroll_layout
+                    direction: vertical
+                    view:
+                      type: linear_layout
+                      direction: vertical
+                      items:
+                      - size:
+                          width: 100%
+                          height: 100%
+                        view:
+                          type: label
+                          text: 100% of viewport
+                          text_appearance:
+                            color:
+                              default:
+                                hex: "#000000"
+                                alpha: 1
+                            alignment: center
+                            font_size: 14
+                          background_color:
+                            default:
+                              hex: "#ff5555"
+                              alpha: 1
+                      - size:
+                          width: 100%
+                          height: 50%
+                        view:
+                          type: label
+                          text: 50%
+                          text_appearance:
+                            color:
+                              default:
+                                hex: "#ffffff"
+                                alpha: 1
+                            alignment: center
+                            font_size: 14
+                          background_color:
+                            default:
+                              hex: "#5588ff"
+                              alpha: 1
+                      - size:
+                          width: 100%
+                          height: 25%
+                        view:
+                          type: label
+                          text: 25%
+                          text_appearance:
+                            color:
+                              default:
+                                hex: "#ffffff"
+                                alpha: 1
+                            alignment: center
+                            font_size: 14
+                          background_color:
+                            default:
+                              hex: "#33aa55"
+                              alpha: 1
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: One full screen, then half, then a quarter. Total 1.75 screens,
+                      so it SCROLLS.
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+        - identifier: scroll-cross
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '8/11  Scroll cross axis: staircase'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: 100%
+                    height: 100%
+                  view:
+                    type: scroll_layout
+                    direction: vertical
+                    view:
+                      type: linear_layout
+                      direction: vertical
+                      items:
+                      - size:
+                          width: 25%
+                          height: 28
+                        view:
+                          type: label
+                          text: 25%
+                          text_appearance:
+                            color:
+                              default:
+                                hex: "#000000"
+                                alpha: 1
+                            alignment: center
+                            font_size: 12
+                          background_color:
+                            default:
+                              hex: "#ff5555"
+                              alpha: 1
+                        margin:
+                          bottom: 6
+                      - size:
+                          width: 50%
+                          height: 28
+                        view:
+                          type: label
+                          text: 50%
+                          text_appearance:
+                            color:
+                              default:
+                                hex: "#ffffff"
+                                alpha: 1
+                            alignment: center
+                            font_size: 12
+                          background_color:
+                            default:
+                              hex: "#5588ff"
+                              alpha: 1
+                        margin:
+                          bottom: 6
+                      - size:
+                          width: 75%
+                          height: 28
+                        view:
+                          type: label
+                          text: 75%
+                          text_appearance:
+                            color:
+                              default:
+                                hex: "#ffffff"
+                                alpha: 1
+                            alignment: center
+                            font_size: 12
+                          background_color:
+                            default:
+                              hex: "#33aa55"
+                              alpha: 1
+                        margin:
+                          bottom: 6
+                      - size:
+                          width: 100%
+                          height: 28
+                        view:
+                          type: label
+                          text: 100%
+                          text_appearance:
+                            color:
+                              default:
+                                hex: "#000000"
+                                alpha: 1
+                            alignment: center
+                            font_size: 12
+                          background_color:
+                            default:
+                              hex: "#ff5555"
+                              alpha: 1
+                      background_color:
+                        default:
+                          hex: "#eeeeee"
+                          alpha: 1
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: Four bars, each wider than the last. The 100% bar spans
+                      the full width.
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+        - identifier: stack-margins
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 9/11  Percent + margins
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: linear_layout
+                    direction: vertical
+                    items:
+                    - size:
+                        width: 100%
+                        height: 100
+                      view:
+                        type: label
+                        text: 100dp fixed
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#000000"
+                              alpha: 1
+                          alignment: center
+                          font_size: 14
+                        background_color:
+                          default:
+                            hex: "#ff5555"
+                            alpha: 1
+                    - size:
+                        width: 100%
+                        height: 50%
+                      view:
+                        type: label
+                        text: 50% with 16dp margins
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#5588ff"
+                            alpha: 1
+                      margin:
+                        top: 16
+                        bottom: 16
+                        start: 16
+                        end: 16
+                    background_color:
+                      default:
+                        hex: "#eeeeee"
+                        alpha: 1
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: Blue plus its 16dp margins fills exactly half the stack.
+                      Stack is 200 (= 100 / 0.5).
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+        - identifier: scroll-horizontal
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '10/11  Horizontal scroll: percent of the viewport'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: 100%
+                    height: 160
+                  view:
+                    type: scroll_layout
+                    direction: horizontal
+                    view:
+                      type: linear_layout
+                      direction: horizontal
+                      items:
+                      - size:
+                          width: 100%
+                          height: 100%
+                        view:
+                          type: label
+                          text: 100% of viewport
+                          text_appearance:
+                            color:
+                              default:
+                                hex: "#000000"
+                                alpha: 1
+                            alignment: center
+                            font_size: 14
+                          background_color:
+                            default:
+                              hex: "#ff5555"
+                              alpha: 1
+                      - size:
+                          width: 50%
+                          height: 100%
+                        view:
+                          type: label
+                          text: 50%
+                          text_appearance:
+                            color:
+                              default:
+                                hex: "#ffffff"
+                                alpha: 1
+                            alignment: center
+                            font_size: 14
+                          background_color:
+                            default:
+                              hex: "#5588ff"
+                              alpha: 1
+                      - size:
+                          width: 25%
+                          height: 100%
+                        view:
+                          type: label
+                          text: 25%
+                          text_appearance:
+                            color:
+                              default:
+                                hex: "#ffffff"
+                                alpha: 1
+                            alignment: center
+                            font_size: 14
+                          background_color:
+                            default:
+                              hex: "#33aa55"
+                              alpha: 1
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: One full width, then half, then a quarter. Total 1.75 screens
+                      wide, so it SCROLLS sideways.
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+        - identifier: ratio-percent
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 11/11  aspect_ratio + percent (uncovered)
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: linear_layout
+                    direction: vertical
+                    items:
+                    - size:
+                        width: 50%
+                        height: auto
+                        aspect_ratio: 1.0
+                      view:
+                        type: label
+                        text: 50% wide, 1:1
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#5588ff"
+                            alpha: 1
+                    - size:
+                        width: 100%
+                        height: 40
+                      view:
+                        type: label
+                        text: reference row
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#000000"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#ff5555"
+                            alpha: 1
+                    background_color:
+                      default:
+                        hex: "#eeeeee"
+                        alpha: 1
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 'Blue should be a square: half the width, and just as tall.
+                      No prior coverage — compare platforms.'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+      position:
+        horizontal: center
+        vertical: center
+    background_color:
+      default:
+        hex: "#ffffff"
+        alpha: 1
