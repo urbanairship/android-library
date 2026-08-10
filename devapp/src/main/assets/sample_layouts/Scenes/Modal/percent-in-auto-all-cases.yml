@@ -50,7 +50,7 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '1/11  Container: auto + percent'
+                    text: '1  Container: auto + percent'
                     text_appearance:
                       color:
                         default:
@@ -149,7 +149,94 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '2/11  Container: only percent children'
+                    text: '2  Container: only percent children'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: 100%
+                    height: 200
+                  view:
+                    type: container
+                    items:
+                    - size:
+                        width: 100%
+                        height: auto
+                      view:
+                        type: container
+                        items:
+                        - size:
+                            width: 100%
+                            height: 100%
+                          view:
+                            type: linear_layout
+                            direction: vertical
+                            items: []
+                            background_color:
+                              default:
+                                hex: "#5588ff"
+                                alpha: 1
+                          position:
+                            horizontal: center
+                            vertical: center
+                        background_color:
+                          default:
+                            hex: "#eeeeee"
+                            alpha: 1
+                      position:
+                        horizontal: center
+                        vertical: top
+                    background_color:
+                      default:
+                        hex: "#dddddd"
+                        alpha: 1
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: The grey area stays EMPTY. With no fixed sibling there is
+                      no size to take a percentage of.
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+        - identifier: container-degenerate-content
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '3  Container: only percent, with content'
                     text_appearance:
                       color:
                         default:
@@ -176,7 +263,7 @@ view:
                             height: 100%
                           view:
                             type: label
-                            text: should not be visible
+                            text: has intrinsic content
                             text_appearance:
                               color:
                                 default:
@@ -207,8 +294,9 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: The dashed area stays EMPTY. With no fixed sibling there
-                      is no size to take a percentage of.
+                    text: KNOWN DIVERGENCE. Android collapses to nothing; iOS keeps
+                      the label's own height. Neither is more correct — with no fixed
+                      sibling the size is undetermined, so it lands wherever it started.
                     text_appearance:
                       color:
                         default:
@@ -242,7 +330,7 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '3/11  Stack main axis: S / (1 - P)'
+                    text: '4  Stack main axis: S / (1 - P)'
                     text_appearance:
                       color:
                         default:
@@ -354,7 +442,7 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '4/11  Stack main axis: P >= 1'
+                    text: '5  Stack main axis: P >= 1'
                     text_appearance:
                       color:
                         default:
@@ -475,7 +563,7 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '5/11  VStack cross axis: auto width'
+                    text: '6  VStack cross axis: auto width'
                     text_appearance:
                       color:
                         default:
@@ -590,7 +678,7 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '6/11  HStack cross axis: auto height'
+                    text: '7  HStack cross axis: auto height'
                     text_appearance:
                       color:
                         default:
@@ -690,7 +778,7 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '7/11  Scroll axis: percent of the viewport'
+                    text: '8  Scroll axis: percent of the viewport'
                     text_appearance:
                       color:
                         default:
@@ -702,7 +790,7 @@ view:
                     bottom: 12
                 - size:
                     width: 100%
-                    height: 100%
+                    height: 300
                   view:
                     type: scroll_layout
                     direction: vertical
@@ -766,8 +854,9 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: One full screen, then half, then a quarter. Total 1.75 screens,
-                      so it SCROLLS.
+                    text: Viewport is pinned to 300. Blocks are 300, 150 and 75 —
+                      total 525, so it SCROLLS. The first block exactly fills the
+                      visible area before you scroll.
                     text_appearance:
                       color:
                         default:
@@ -801,7 +890,7 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '8/11  Scroll cross axis: staircase'
+                    text: '9  Scroll cross axis: staircase'
                     text_appearance:
                       color:
                         default:
@@ -813,7 +902,7 @@ view:
                     bottom: 12
                 - size:
                     width: 100%
-                    height: 100%
+                    height: 220
                   view:
                     type: scroll_layout
                     direction: vertical
@@ -905,7 +994,7 @@ view:
                   view:
                     type: label
                     text: Four bars, each wider than the last. The 100% bar spans
-                      the full width.
+                      the full width of the scroll.
                     text_appearance:
                       color:
                         default:
@@ -939,7 +1028,7 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: 9/11  Percent + margins
+                    text: 10  Percent + margins
                     text_appearance:
                       color:
                         default:
@@ -1039,7 +1128,7 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '10/11  Horizontal scroll: percent of the viewport'
+                    text: '11  Horizontal scroll: percent of the viewport'
                     text_appearance:
                       color:
                         default:
@@ -1150,7 +1239,7 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: 11/11  aspect_ratio + percent (uncovered)
+                    text: 12  aspect_ratio + percent (uncovered)
                     text_appearance:
                       color:
                         default:
