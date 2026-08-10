@@ -708,8 +708,8 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
             for (child in crossAxisPercentChildren) {
                 val lp = child.layoutParams as LayoutParams
                 val margins = lp.marginStart + lp.marginEnd
-                val childWidth = (available * lp.maxWidthPercent).toInt()
-                    .coerceIn(0, (available - margins).coerceAtLeast(0))
+                val childWidth = (minOf((available * lp.maxWidthPercent).toInt(), available) - margins)
+                    .coerceAtLeast(0)
 
                 child.measure(
                     MeasureSpec.makeMeasureSpec(childWidth, MeasureSpec.EXACTLY),
@@ -1247,8 +1247,8 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
             for (child in crossAxisPercentChildren) {
                 val lp = child.layoutParams as LayoutParams
                 val margins = lp.topMargin + lp.bottomMargin
-                val childHeight = (available * lp.maxHeightPercent).toInt()
-                    .coerceIn(0, (available - margins).coerceAtLeast(0))
+                val childHeight = (minOf((available * lp.maxHeightPercent).toInt(), available) - margins)
+                    .coerceAtLeast(0)
 
                 child.measure(
                     MeasureSpec.makeMeasureSpec(child.measuredWidth, MeasureSpec.EXACTLY),

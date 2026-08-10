@@ -265,8 +265,10 @@ internal class ContainerLayoutView(
             } else {
                 lp.topMargin + lp.bottomMargin
             }
-            val resolved = (percents.valueAt(i) * base).toInt()
-                .coerceIn(0, (base - margins).coerceAtLeast(0))
+            // A percentage covers the space the item occupies, margins included, so they come out
+            // of its share — the same rule the linear layout's slot distribution uses.
+            val resolved = (minOf((percents.valueAt(i) * base).toInt(), base) - margins)
+                .coerceAtLeast(0)
 
             if (horizontal && lp.width != resolved) {
                 lp.width = resolved
