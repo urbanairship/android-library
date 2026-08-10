@@ -117,8 +117,26 @@ internal class ContainerLayoutView(
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
 
-        // Percent items only need help when our own size isn't fixed by our parent. Given an
-        // EXACTLY spec, ConstraintLayout resolves percentages against it natively.
+        // Fixed by our parent: the base is the spec, known before anything is measured, so resolve
+        // straight away in one pass. ConstraintLayout's own percent would size the item's content
+        // and lay its margins outside it, which is a different rule from every other path here —
+        // percentages cover the space an item occupies, margins included.
+        if (widthMode == MeasureSpec.EXACTLY && framePercentWidths.size() > 0) {
+            resolvePercentFrames(
+                framePercentWidths,
+                (MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight).coerceAtLeast(0),
+                horizontal = true
+            )
+        }
+        if (heightMode == MeasureSpec.EXACTLY && framePercentHeights.size() > 0) {
+            resolvePercentFrames(
+                framePercentHeights,
+                (MeasureSpec.getSize(heightMeasureSpec) - paddingTop - paddingBottom).coerceAtLeast(0),
+                horizontal = false
+            )
+        }
+
+        // Anything not fixed needs a size worked out first, below.
         val autoWidths = widthMode != MeasureSpec.EXACTLY && framePercentWidths.size() > 0
         val autoHeights = heightMode != MeasureSpec.EXACTLY && framePercentHeights.size() > 0
 
@@ -134,17 +152,6 @@ internal class ContainerLayoutView(
         // size to work from falls back to auto rather than collapsing.
         val resolveWidths = autoWidths && (widthMode == MeasureSpec.AT_MOST || borrowedWidth > 0)
         val resolveHeights = autoHeights && (heightMode == MeasureSpec.AT_MOST || borrowedHeight > 0)
-
-        // A percent item may still be carrying an exact pixel size we gave it during a pass measured
-        // under a different spec. Hand those axes back to ConstraintLayout, which resolves the
-        // percentage against our settled size — otherwise the stale value survives into a pass that
-        // returns early below, and the item keeps a size derived from the wrong parent.
-        if (widthMode == MeasureSpec.EXACTLY) {
-            forEachFrame(framePercentWidths) { it.width = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT }
-        }
-        if (heightMode == MeasureSpec.EXACTLY) {
-            forEachFrame(framePercentHeights) { it.height = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT }
-        }
 
         if (frameHeightRatios.size() == 0 && !autoWidths && !autoHeights) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)

@@ -1262,6 +1262,126 @@ view:
               position:
                 horizontal: center
                 vertical: center
+        - identifier: fixed-parent-margins
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: fixed-parent-margins
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#888888"
+                          alpha: 1
+                      alignment: center
+                      font_size: 11
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: Percent + margins in a FIXED parent
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+                - size:
+                    width: 100%
+                    height: 200
+                  view:
+                    type: container
+                    items:
+                    - size:
+                        width: 45%
+                        height: 50%
+                      view:
+                        type: label
+                        text: 50%, no margin
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#000000"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#ff5555"
+                            alpha: 1
+                      position:
+                        horizontal: start
+                        vertical: top
+                    - size:
+                        width: 45%
+                        height: 50%
+                      view:
+                        type: label
+                        text: 50%, 16 margin
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#5588ff"
+                            alpha: 1
+                      margin:
+                        top: 16
+                        bottom: 16
+                      position:
+                        horizontal: end
+                        vertical: top
+                    background_color:
+                      default:
+                        hex: "#dddddd"
+                        alpha: 1
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: Blue must be visibly SHORTER than red, by the height of
+                      its margins — both occupy half the grey box. Same height means
+                      the margins were added on top of the share instead of coming
+                      out.
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#444444"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
         - identifier: ratio-percent
           view:
             type: container
