@@ -1112,117 +1112,6 @@ view:
               position:
                 horizontal: center
                 vertical: center
-        - identifier: scroll-horizontal
-          view:
-            type: container
-            items:
-            - size:
-                width: 100%
-                height: 100%
-              view:
-                type: linear_layout
-                direction: vertical
-                items:
-                - size:
-                    width: 100%
-                    height: auto
-                  view:
-                    type: label
-                    text: '11  Horizontal scroll: percent of the viewport'
-                    text_appearance:
-                      color:
-                        default:
-                          hex: "#000000"
-                          alpha: 1
-                      alignment: center
-                      font_size: 15
-                  margin:
-                    bottom: 12
-                - size:
-                    width: 100%
-                    height: 160
-                  view:
-                    type: scroll_layout
-                    direction: horizontal
-                    view:
-                      type: linear_layout
-                      direction: horizontal
-                      items:
-                      - size:
-                          width: 100%
-                          height: 100%
-                        view:
-                          type: label
-                          text: 100% of viewport
-                          text_appearance:
-                            color:
-                              default:
-                                hex: "#000000"
-                                alpha: 1
-                            alignment: center
-                            font_size: 14
-                          background_color:
-                            default:
-                              hex: "#ff5555"
-                              alpha: 1
-                      - size:
-                          width: 50%
-                          height: 100%
-                        view:
-                          type: label
-                          text: 50%
-                          text_appearance:
-                            color:
-                              default:
-                                hex: "#ffffff"
-                                alpha: 1
-                            alignment: center
-                            font_size: 14
-                          background_color:
-                            default:
-                              hex: "#5588ff"
-                              alpha: 1
-                      - size:
-                          width: 25%
-                          height: 100%
-                        view:
-                          type: label
-                          text: 25%
-                          text_appearance:
-                            color:
-                              default:
-                                hex: "#ffffff"
-                                alpha: 1
-                            alignment: center
-                            font_size: 14
-                          background_color:
-                            default:
-                              hex: "#33aa55"
-                              alpha: 1
-                - size:
-                    width: 100%
-                    height: auto
-                  view:
-                    type: label
-                    text: One full width, then half, then a quarter. Total 1.75 screens
-                      wide, so it SCROLLS sideways.
-                    text_appearance:
-                      color:
-                        default:
-                          hex: "#444444"
-                          alpha: 1
-                      alignment: center
-                      font_size: 12
-                  margin:
-                    top: 12
-              margin:
-                top: 16
-                bottom: 16
-                start: 16
-                end: 16
-              position:
-                horizontal: center
-                vertical: center
         - identifier: ratio-percent
           view:
             type: container
@@ -1239,7 +1128,7 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: 12  aspect_ratio + percent (uncovered)
+                    text: 11  aspect_ratio + percent (uncovered)
                     text_appearance:
                       color:
                         default:
