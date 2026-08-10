@@ -32,6 +32,21 @@ view:
           height: auto
         view:
           type: label
+          text: scroll-horizontal
+          text_appearance:
+            color:
+              default:
+                hex: "#888888"
+                alpha: 1
+            alignment: center
+            font_size: 11
+        margin:
+          bottom: 2
+      - size:
+          width: 100%
+          height: auto
+        view:
+          type: label
           text: 'Horizontal scroll: percent of the viewport'
           text_appearance:
             color:

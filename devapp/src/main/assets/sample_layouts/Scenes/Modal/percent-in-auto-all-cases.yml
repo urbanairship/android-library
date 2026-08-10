@@ -50,7 +50,22 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '1  Container: auto + percent'
+                    text: container-solve
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#888888"
+                          alpha: 1
+                      alignment: center
+                      font_size: 11
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 'Container: auto + percent'
                     text_appearance:
                       color:
                         default:
@@ -149,7 +164,22 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '2  Container: only percent children'
+                    text: container-degenerate
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#888888"
+                          alpha: 1
+                      alignment: center
+                      font_size: 11
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 'Container: only percent children'
                     text_appearance:
                       color:
                         default:
@@ -236,7 +266,22 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '3  Container: only percent, with content'
+                    text: container-degenerate-content
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#888888"
+                          alpha: 1
+                      alignment: center
+                      font_size: 11
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 'Container: only percent, with content'
                     text_appearance:
                       color:
                         default:
@@ -330,7 +375,22 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '4  Stack main axis: S / (1 - P)'
+                    text: stack-solve
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#888888"
+                          alpha: 1
+                      alignment: center
+                      font_size: 11
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 'Stack main axis: S / (1 - P)'
                     text_appearance:
                       color:
                         default:
@@ -442,7 +502,22 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '5  Stack main axis: P >= 1'
+                    text: stack-overflow
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#888888"
+                          alpha: 1
+                      alignment: center
+                      font_size: 11
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 'Stack main axis: P >= 1'
                     text_appearance:
                       color:
                         default:
@@ -563,7 +638,22 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '6  VStack cross axis: auto width'
+                    text: vstack-cross
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#888888"
+                          alpha: 1
+                      alignment: center
+                      font_size: 11
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 'VStack cross axis: auto width'
                     text_appearance:
                       color:
                         default:
@@ -678,7 +768,22 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '7  HStack cross axis: auto height'
+                    text: hstack-cross
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#888888"
+                          alpha: 1
+                      alignment: center
+                      font_size: 11
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 'HStack cross axis: auto height'
                     text_appearance:
                       color:
                         default:
@@ -778,7 +883,22 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '8  Scroll axis: percent of the viewport'
+                    text: scroll-main
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#888888"
+                          alpha: 1
+                      alignment: center
+                      font_size: 11
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 'Scroll axis: percent of the viewport'
                     text_appearance:
                       color:
                         default:
@@ -890,7 +1010,22 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: '9  Scroll cross axis: staircase'
+                    text: scroll-cross
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#888888"
+                          alpha: 1
+                      alignment: center
+                      font_size: 11
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 'Scroll cross axis: staircase'
                     text_appearance:
                       color:
                         default:
@@ -1028,7 +1163,22 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: 10  Percent + margins
+                    text: stack-margins
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#888888"
+                          alpha: 1
+                      alignment: center
+                      font_size: 11
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: Percent + margins
                     text_appearance:
                       color:
                         default:
@@ -1128,7 +1278,22 @@ view:
                     height: auto
                   view:
                     type: label
-                    text: 11  aspect_ratio + percent (uncovered)
+                    text: ratio-percent
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#888888"
+                          alpha: 1
+                      alignment: center
+                      font_size: 11
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: aspect_ratio + percent (uncovered)
                     text_appearance:
                       color:
                         default:
