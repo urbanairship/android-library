@@ -188,6 +188,9 @@ view:
                               default:
                                 hex: "#5588ff"
                                 alpha: 1
+                          position:
+                            horizontal: center
+                            vertical: center
                         background_color:
                           default:
                             hex: "#eeeeee"
