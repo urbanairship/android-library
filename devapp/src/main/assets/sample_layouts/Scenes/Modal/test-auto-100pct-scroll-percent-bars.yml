@@ -1,0 +1,400 @@
+---
+# Tests: Scroll cross-axis percent sizing.
+# The scroll has auto width (from auto modal). The content label drives the natural
+# width. Each colored bar is a different % of that scroll viewport width.
+#
+# PASS: bars form a staircase — each visibly wider than the previous.
+#       100% bar fills edge-to-edge, 25% bar is a quarter of that.
+# FAIL: all bars invisible or the same wrong size.
+version: 1
+presentation:
+  type: modal
+  dismiss_on_touch_outside: true
+  default_placement:
+    size:
+      width: auto
+      height: auto
+      max_height: 85%
+    position:
+      horizontal: center
+      vertical: center
+    shade_color:
+      default:
+        hex: "#000000"
+        alpha: 0.4
+view:
+  type: scroll_layout
+  direction: vertical
+  view:
+    type: linear_layout
+    direction: vertical
+    background_color:
+      default:
+        hex: "#F5F5F5"
+        alpha: 1
+    items:
+
+    - size:
+        width: auto
+        height: auto
+      margin:
+        top: 16
+        bottom: 12
+        start: 16
+        end: 16
+      view:
+        type: label
+        text: "Scroll % width bars (auto scroll width)"
+        text_appearance:
+          font_size: 16
+          color:
+            default:
+              hex: "#000000"
+              alpha: 1
+          alignment: center
+          styles:
+          - bold
+          font_families:
+          - sans-serif
+
+    # 25% bar
+    - size:
+        width: 100%
+        height: auto
+      margin:
+        top: 4
+        bottom: 0
+        start: 0
+        end: 0
+      view:
+        type: container
+        items:
+        - position:
+            horizontal: start
+            vertical: center
+          size:
+            width: 25%
+            height: 40
+          view:
+            type: linear_layout
+            direction: horizontal
+            background_color:
+              default:
+                hex: "#FF4444"
+                alpha: 1
+            items: []
+        - position:
+            horizontal: start
+            vertical: center
+          size:
+            width: auto
+            height: auto
+          margin:
+            start: 4
+          view:
+            type: label
+            text: "25%"
+            text_appearance:
+              font_size: 13
+              color:
+                default:
+                  hex: "#555555"
+                  alpha: 1
+              alignment: start
+              styles: []
+              font_families:
+              - sans-serif
+
+    # 50% bar
+    - size:
+        width: 100%
+        height: auto
+      margin:
+        top: 4
+        bottom: 0
+        start: 0
+        end: 0
+      view:
+        type: container
+        items:
+        - position:
+            horizontal: start
+            vertical: center
+          size:
+            width: 50%
+            height: 40
+          view:
+            type: linear_layout
+            direction: horizontal
+            background_color:
+              default:
+                hex: "#FF9900"
+                alpha: 1
+            items: []
+        - position:
+            horizontal: start
+            vertical: center
+          size:
+            width: auto
+            height: auto
+          margin:
+            start: 4
+          view:
+            type: label
+            text: "50%"
+            text_appearance:
+              font_size: 13
+              color:
+                default:
+                  hex: "#555555"
+                  alpha: 1
+              alignment: start
+              styles: []
+              font_families:
+              - sans-serif
+
+    # 75% bar
+    - size:
+        width: 100%
+        height: auto
+      margin:
+        top: 4
+        bottom: 0
+        start: 0
+        end: 0
+      view:
+        type: container
+        items:
+        - position:
+            horizontal: start
+            vertical: center
+          size:
+            width: 75%
+            height: 40
+          view:
+            type: linear_layout
+            direction: horizontal
+            background_color:
+              default:
+                hex: "#44AA44"
+                alpha: 1
+            items: []
+        - position:
+            horizontal: start
+            vertical: center
+          size:
+            width: auto
+            height: auto
+          margin:
+            start: 4
+          view:
+            type: label
+            text: "75%"
+            text_appearance:
+              font_size: 13
+              color:
+                default:
+                  hex: "#555555"
+                  alpha: 1
+              alignment: start
+              styles: []
+              font_families:
+              - sans-serif
+
+    # 100% bar
+    - size:
+        width: 100%
+        height: auto
+      margin:
+        top: 4
+        bottom: 16
+        start: 0
+        end: 0
+      view:
+        type: container
+        items:
+        - position:
+            horizontal: start
+            vertical: center
+          size:
+            width: 100%
+            height: 40
+          view:
+            type: linear_layout
+            direction: horizontal
+            background_color:
+              default:
+                hex: "#4444FF"
+                alpha: 1
+            items: []
+        - position:
+            horizontal: start
+            vertical: center
+          size:
+            width: auto
+            height: auto
+          margin:
+            start: 4
+          view:
+            type: label
+            text: "100%"
+            text_appearance:
+              font_size: 13
+              color:
+                default:
+                  hex: "#FFFFFF"
+                  alpha: 1
+              alignment: start
+              styles: []
+              font_families:
+              - sans-serif
+
+    # Scroll content to verify scrolling still works
+    - size:
+        width: 100%
+        height: 1
+      margin:
+        top: 0
+        bottom: 8
+        start: 0
+        end: 0
+      view:
+        type: linear_layout
+        direction: horizontal
+        background_color:
+          default:
+            hex: "#CCCCCC"
+            alpha: 1
+        items: []
+
+    - size:
+        width: auto
+        height: auto
+      margin:
+        top: 4
+        bottom: 4
+        start: 16
+        end: 16
+      view:
+        type: label
+        text: "Scroll line 1 — verify scrolling still works below"
+        text_appearance:
+          font_size: 14
+          color:
+            default:
+              hex: "#333333"
+              alpha: 1
+          alignment: start
+          styles: []
+          font_families:
+          - sans-serif
+
+    - size:
+        width: auto
+        height: auto
+      margin:
+        top: 4
+        bottom: 4
+        start: 16
+        end: 16
+      view:
+        type: label
+        text: "Scroll line 2"
+        text_appearance:
+          font_size: 14
+          color:
+            default:
+              hex: "#333333"
+              alpha: 1
+          alignment: start
+          styles: []
+          font_families:
+          - sans-serif
+
+    - size:
+        width: auto
+        height: auto
+      margin:
+        top: 4
+        bottom: 4
+        start: 16
+        end: 16
+      view:
+        type: label
+        text: "Scroll line 3"
+        text_appearance:
+          font_size: 14
+          color:
+            default:
+              hex: "#333333"
+              alpha: 1
+          alignment: start
+          styles: []
+          font_families:
+          - sans-serif
+
+    - size:
+        width: auto
+        height: auto
+      margin:
+        top: 4
+        bottom: 4
+        start: 16
+        end: 16
+      view:
+        type: label
+        text: "Scroll line 4"
+        text_appearance:
+          font_size: 14
+          color:
+            default:
+              hex: "#333333"
+              alpha: 1
+          alignment: start
+          styles: []
+          font_families:
+          - sans-serif
+
+    - size:
+        width: auto
+        height: auto
+      margin:
+        top: 4
+        bottom: 4
+        start: 16
+        end: 16
+      view:
+        type: label
+        text: "Scroll line 5"
+        text_appearance:
+          font_size: 14
+          color:
+            default:
+              hex: "#333333"
+              alpha: 1
+          alignment: start
+          styles: []
+          font_families:
+          - sans-serif
+
+    - size:
+        width: auto
+        height: auto
+      margin:
+        top: 4
+        bottom: 24
+        start: 16
+        end: 16
+      view:
+        type: label
+        text: "Scroll line 6 — end"
+        text_appearance:
+          font_size: 14
+          color:
+            default:
+              hex: "#333333"
+              alpha: 1
+          alignment: start
+          styles: []
+          font_families:
+          - sans-serif

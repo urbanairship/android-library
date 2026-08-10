@@ -1,0 +1,137 @@
+# Percent items that ask for more than the whole stack (P >= 1).
+#
+# An auto-height VStack inside a fixed 480dp frame, holding a 200dp block and two `height: 100%`
+# blocks. There's no base to solve for: `H = S / (1 - P) = 200 / (1 - 2)` is negative, because the
+# two items each want the entire stack while 200dp of fixed content also has to fit.
+#
+# Nothing computes a base here — the stack resolves it directly, and both platforms land on the
+# same answer:
+#
+#     red    200dp fixed, rigid            -> 200
+#     blue   100%, flexible                -> 140   (480 - 200, halved)
+#     green  100%, flexible                -> 140
+#
+# On iOS that falls out of how sizes are applied: `View.constraints(_:)` sets a percent as
+# `maxHeight` with no `minHeight`, so percent items compress while point-sized items don't. The
+# stack pays the fixed item first and splits the remainder. Android's slot distribution does the
+# same thing by a different route.
+#
+# WHAT TO LOOK FOR: three blocks, filling the frame exactly, blue and green equal and each a bit
+# under three-quarters of red. If a block is missing, one platform stopped fair-sharing.
+#
+# The solvable case (P < 1) is in `percent-in-auto-stack.yml`.
+version: 1
+presentation:
+  dismiss_on_touch_outside: true
+  type: modal
+  default_placement:
+    size:
+      width: 90%
+      height: 100%
+    shade_color:
+      default:
+        hex: '#000000'
+        alpha: 0.7
+view:
+  type: container
+  background_color:
+    default:
+      hex: '#ffffff'
+      alpha: 1
+  items:
+    - position:
+        horizontal: center
+        vertical: top
+      size:
+        width: 100%
+        height: 480
+      margin:
+        top: 24
+      view:
+        type: container
+        background_color:
+          default:
+            hex: '#dddddd'
+            alpha: 1
+        items:
+          - position:
+              horizontal: center
+              vertical: top
+            size:
+              width: 100%
+              height: auto
+            view:
+              type: linear_layout
+              direction: vertical
+              items:
+                - size:
+                    width: 100%
+                    height: 200
+                  view:
+                    type: label
+                    text: '200dp fixed'
+                    background_color:
+                      default:
+                        hex: '#ff5555'
+                        alpha: 1
+                    text_appearance:
+                      color:
+                        default:
+                          hex: '#000000'
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                - size:
+                    width: 100%
+                    height: 100%
+                  view:
+                    type: label
+                    text: 'height 100%'
+                    background_color:
+                      default:
+                        hex: '#5588ff'
+                        alpha: 1
+                    text_appearance:
+                      color:
+                        default:
+                          hex: '#ffffff'
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                - size:
+                    width: 100%
+                    height: 100%
+                  view:
+                    type: label
+                    text: 'height 100% — compresses to share'
+                    background_color:
+                      default:
+                        hex: '#33aa55'
+                        alpha: 1
+                    text_appearance:
+                      color:
+                        default:
+                          hex: '#ffffff'
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+    - position:
+        horizontal: center
+        vertical: bottom
+      size:
+        width: 100%
+        height: auto
+      margin:
+        start: 16
+        end: 16
+        bottom: 24
+      view:
+        type: label
+        text: 'Points are guaranteed, percent is a ceiling: red keeps its 200, blue and green split the remaining 280. Expect 200/140/140 on both platforms.'
+        text_appearance:
+          color:
+            default:
+              hex: '#000000'
+              alpha: 1
+          alignment: center
+          font_size: 13

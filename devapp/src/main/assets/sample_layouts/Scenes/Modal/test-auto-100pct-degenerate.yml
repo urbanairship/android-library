@@ -1,0 +1,331 @@
+---
+# Tests: Degenerate case — auto parent where ALL children are percent-sized.
+# With no intrinsic-sized child to drive the natural size, both axes resolve to 0.
+#
+# Each section shows a dashed gray box (fixed outer wrapper) containing the
+# degenerate auto parent. If the auto parent is correctly 0, the dashed box
+# is empty. If something appears inside the dashed box, the sizing is wrong.
+#
+# Container section: auto container with only 100%x100% children → expect 0x0.
+# VStack section:    auto-width VStack with only 100%-width children → expect 0 width.
+# HStack section:    auto-height HStack with only 100%-height children → expect 0 height.
+version: 1
+presentation:
+  type: modal
+  dismiss_on_touch_outside: true
+  default_placement:
+    size:
+      width: 80%
+      height: auto
+    position:
+      horizontal: center
+      vertical: center
+    shade_color:
+      default:
+        hex: "#000000"
+        alpha: 0.4
+view:
+  type: linear_layout
+  direction: vertical
+  background_color:
+    default:
+      hex: "#FFFFFF"
+      alpha: 1
+  items:
+
+  # ── Container: all 100%x100% children ────────────────────────────────────
+  - size:
+      width: 100%
+      height: auto
+    margin:
+      top: 16
+      bottom: 4
+      start: 16
+      end: 16
+    view:
+      type: label
+      text: "Container (auto×auto), all 100%×100% children:"
+      text_appearance:
+        font_size: 14
+        color:
+          default:
+            hex: "#000000"
+            alpha: 1
+        alignment: start
+        styles:
+        - bold
+        font_families:
+        - sans-serif
+
+  - size:
+      width: 100%
+      height: auto
+    margin:
+      top: 0
+      bottom: 4
+      start: 16
+      end: 16
+    view:
+      type: label
+      text: "Dashed box below should be empty (0×0 auto container inside)"
+      text_appearance:
+        font_size: 13
+        color:
+          default:
+            hex: "#666666"
+            alpha: 1
+        alignment: start
+        styles: []
+        font_families:
+        - sans-serif
+
+  # Outer fixed wrapper (shows bounds). Inner auto container should be 0x0.
+  - size:
+      width: 100%
+      height: 80
+    margin:
+      top: 0
+      bottom: 16
+      start: 16
+      end: 16
+    view:
+      type: container
+      border:
+        stroke_color:
+          default:
+            hex: "#999999"
+            alpha: 1
+        stroke_width: 1
+        radius: 4
+      items:
+      - position:
+          horizontal: start
+          vertical: top
+        size:
+          width: auto
+          height: auto
+        view:
+          type: container
+          items:
+          - position:
+              horizontal: center
+              vertical: center
+            size:
+              width: 100%
+              height: 100%
+            view:
+              type: linear_layout
+              direction: vertical
+              background_color:
+                default:
+                  hex: "#FF0000"
+                  alpha: 0.7
+              items: []
+          - position:
+              horizontal: center
+              vertical: center
+            size:
+              width: 50%
+              height: 50%
+            view:
+              type: linear_layout
+              direction: vertical
+              background_color:
+                default:
+                  hex: "#0000FF"
+                  alpha: 0.7
+              items: []
+
+  # ── VStack: all 100%-width children ──────────────────────────────────────
+  - size:
+      width: 100%
+      height: auto
+    margin:
+      top: 0
+      bottom: 4
+      start: 16
+      end: 16
+    view:
+      type: label
+      text: "VStack (auto width), all 100%-width children:"
+      text_appearance:
+        font_size: 14
+        color:
+          default:
+            hex: "#000000"
+            alpha: 1
+        alignment: start
+        styles:
+        - bold
+        font_families:
+        - sans-serif
+
+  - size:
+      width: 100%
+      height: auto
+    margin:
+      top: 0
+      bottom: 4
+      start: 16
+      end: 16
+    view:
+      type: label
+      text: "Dashed box below should be empty (VStack should have 0 width)"
+      text_appearance:
+        font_size: 13
+        color:
+          default:
+            hex: "#666666"
+            alpha: 1
+        alignment: start
+        styles: []
+        font_families:
+        - sans-serif
+
+  - size:
+      width: 100%
+      height: 80
+    margin:
+      top: 0
+      bottom: 16
+      start: 16
+      end: 16
+    view:
+      type: container
+      border:
+        stroke_color:
+          default:
+            hex: "#999999"
+            alpha: 1
+        stroke_width: 1
+        radius: 4
+      items:
+      - position:
+          horizontal: start
+          vertical: top
+        size:
+          width: auto
+          height: auto
+        view:
+          type: linear_layout
+          direction: vertical
+          items:
+          - size:
+              width: 100%
+              height: 16
+            view:
+              type: linear_layout
+              direction: horizontal
+              background_color:
+                default:
+                  hex: "#FF0000"
+                  alpha: 0.7
+              items: []
+          - size:
+              width: 50%
+              height: 16
+            view:
+              type: linear_layout
+              direction: horizontal
+              background_color:
+                default:
+                  hex: "#0000FF"
+                  alpha: 0.7
+              items: []
+
+  # ── HStack: all 100%-height children ─────────────────────────────────────
+  - size:
+      width: 100%
+      height: auto
+    margin:
+      top: 0
+      bottom: 4
+      start: 16
+      end: 16
+    view:
+      type: label
+      text: "HStack (auto height), all 100%-height children:"
+      text_appearance:
+        font_size: 14
+        color:
+          default:
+            hex: "#000000"
+            alpha: 1
+        alignment: start
+        styles:
+        - bold
+        font_families:
+        - sans-serif
+
+  - size:
+      width: 100%
+      height: auto
+    margin:
+      top: 0
+      bottom: 4
+      start: 16
+      end: 16
+    view:
+      type: label
+      text: "Dashed box below should be empty (HStack should have 0 height)"
+      text_appearance:
+        font_size: 13
+        color:
+          default:
+            hex: "#666666"
+            alpha: 1
+        alignment: start
+        styles: []
+        font_families:
+        - sans-serif
+
+  - size:
+      width: 100%
+      height: 80
+    margin:
+      top: 0
+      bottom: 16
+      start: 16
+      end: 16
+    view:
+      type: container
+      border:
+        stroke_color:
+          default:
+            hex: "#999999"
+            alpha: 1
+        stroke_width: 1
+        radius: 4
+      items:
+      - position:
+          horizontal: start
+          vertical: top
+        size:
+          width: auto
+          height: auto
+        view:
+          type: linear_layout
+          direction: horizontal
+          items:
+          - size:
+              width: 16
+              height: 100%
+            view:
+              type: linear_layout
+              direction: vertical
+              background_color:
+                default:
+                  hex: "#FF0000"
+                  alpha: 0.7
+              items: []
+          - size:
+              width: 16
+              height: 50%
+            view:
+              type: linear_layout
+              direction: vertical
+              background_color:
+                default:
+                  hex: "#0000FF"
+                  alpha: 0.7
+              items: []

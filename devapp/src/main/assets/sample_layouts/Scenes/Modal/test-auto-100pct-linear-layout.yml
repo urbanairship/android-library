@@ -1,0 +1,131 @@
+---
+# Tests: LinearLayout with auto parent size + 100% child on the cross-axis.
+#
+# Top section (VStack): auto width. Red bar is width=100%, height=4.
+#   PASS: red bar stretches to match the widest label.
+#   FAIL: red bar is invisible (zero width).
+#
+# Bottom section (HStack): auto height. Blue bar is width=4, height=100%.
+#   PASS: blue bar stretches to match the label's height.
+#   FAIL: blue bar is invisible (zero height).
+version: 1
+presentation:
+  type: modal
+  dismiss_on_touch_outside: true
+  default_placement:
+    size:
+      width: auto
+      height: auto
+    position:
+      horizontal: center
+      vertical: center
+    shade_color:
+      default:
+        hex: "#000000"
+        alpha: 0.4
+view:
+  type: linear_layout
+  direction: vertical
+  background_color:
+    default:
+      hex: "#F5F5F5"
+      alpha: 1
+  items:
+  # ── VStack section ──────────────────────────────────
+  - size:
+      width: auto
+      height: auto
+    margin:
+      top: 16
+      bottom: 4
+      start: 16
+      end: 16
+    view:
+      type: label
+      text: "VStack: auto width"
+      text_appearance:
+        font_size: 16
+        color:
+          default:
+            hex: "#000000"
+            alpha: 1
+        alignment: center
+        styles: []
+        font_families:
+        - sans-serif
+  - size:
+      width: 100%
+      height: 4
+    view:
+      type: linear_layout
+      direction: horizontal
+      background_color:
+        default:
+          hex: "#FF3333"
+          alpha: 1
+      items: []
+  - size:
+      width: auto
+      height: auto
+    margin:
+      top: 4
+      bottom: 20
+      start: 16
+      end: 16
+    view:
+      type: label
+      text: "(red bar above = 100% of auto width)"
+      text_appearance:
+        font_size: 13
+        color:
+          default:
+            hex: "#666666"
+            alpha: 1
+        alignment: center
+        styles: []
+        font_families:
+        - sans-serif
+  # ── HStack section ──────────────────────────────────
+  - size:
+      width: auto
+      height: auto
+    view:
+      type: linear_layout
+      direction: horizontal
+      background_color:
+        default:
+          hex: "#E0E0E0"
+          alpha: 1
+      items:
+      - size:
+          width: 4
+          height: 100%
+        view:
+          type: linear_layout
+          direction: vertical
+          background_color:
+            default:
+              hex: "#3333FF"
+              alpha: 1
+          items: []
+      - size:
+          width: auto
+          height: auto
+        margin:
+          top: 20
+          bottom: 20
+          start: 12
+          end: 16
+        view:
+          type: label
+          text: "HStack: auto height\n(blue bar left = 100% of auto height)"
+          text_appearance:
+            font_size: 16
+            color:
+              default:
+                hex: "#000000"
+                alpha: 1
+            alignment: start
+            styles: []
+            font_families:
+            - sans-serif

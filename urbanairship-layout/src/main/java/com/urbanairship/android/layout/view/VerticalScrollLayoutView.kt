@@ -14,21 +14,26 @@ import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.VerticalScrollLayoutModel
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.widget.PercentBaseProvider
 
 internal class VerticalScrollLayoutView(
     context: Context,
     model: VerticalScrollLayoutModel,
     viewEnvironment: ViewEnvironment
-) : NestedScrollView(context), BaseView {
+) : NestedScrollView(context), BaseView, PercentBaseProvider {
+
+    private val contentView: View
+
+    override val percentBaseWidth: Int = 0
+    override var percentBaseHeight: Int = 0
+        private set
 
     init {
         isFillViewport = false
         clipToOutline = true
 
-        val contentView = model.view.createView(context, viewEnvironment, null).apply {
-            LayoutParams(MATCH_PARENT, WRAP_CONTENT)
-        }
-        addView(contentView)
+        contentView = model.view.createView(context, viewEnvironment, null)
+        addView(contentView, LayoutParams(MATCH_PARENT, WRAP_CONTENT))
 
         model.listener = object : BaseModel.Listener {
             override fun setVisibility(visible: Boolean) {
@@ -47,5 +52,15 @@ internal class VerticalScrollLayoutView(
         ViewCompat.setOnApplyWindowInsetsListener(this) { _: View, insets: WindowInsetsCompat ->
             ViewCompat.dispatchApplyWindowInsets(contentView, insets)
         }
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        // NestedScrollView measures its content with an UNSPECIFIED height so it can scroll, which
+        // leaves percent-height descendants with nothing to resolve against. Record the viewport
+        // for them to find. Taken from the incoming spec rather than measuredHeight, which is still
+        // the previous pass's value while our content is being measured.
+        percentBaseHeight = (MeasureSpec.getSize(heightMeasureSpec) - paddingTop - paddingBottom)
+            .coerceAtLeast(0)
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
     }
 }
