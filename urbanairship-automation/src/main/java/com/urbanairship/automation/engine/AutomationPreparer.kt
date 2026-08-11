@@ -31,7 +31,7 @@ import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
 internal interface AutomationPreparerDelegate<DataIn, DataOut> {
-    suspend fun prepare(data: DataIn, preparedScheduleInfo: PreparedScheduleInfo) : Result<DataOut>
+    suspend fun prepare(data: DataIn, preparedScheduleInfo: PreparedScheduleInfo) : Result<DelegatePreparerResult<DataOut>>
     suspend fun cancelled(scheduleID: String)
 }
 
@@ -218,12 +218,15 @@ internal class AutomationPreparer internal constructor(
                         UALog.e(it) { "Failed to prepare actions" }
                         RetryingQueue.Result.Retry()
                     },
-                    onSuccess = {
-                        RetryingQueue.Result.Success(
-                            SchedulePrepareResult.Prepared(
-                                onPrepareSchedule(info, PreparedScheduleData.Action(it))
+                    onSuccess = { result ->
+                        when (result) {
+                            is DelegatePreparerResult.Prepared -> RetryingQueue.Result.Success(
+                                SchedulePrepareResult.Prepared(onPrepareSchedule(info, PreparedScheduleData.Action(result.data)))
                             )
-                        )
+                            DelegatePreparerResult.Cancel -> RetryingQueue.Result.Success(SchedulePrepareResult.Cancel, ignoreReturnOrder = true)
+                            DelegatePreparerResult.Skip -> RetryingQueue.Result.Success(SchedulePrepareResult.Skip, ignoreReturnOrder = true)
+                            DelegatePreparerResult.Penalize -> RetryingQueue.Result.Success(SchedulePrepareResult.Penalize, ignoreReturnOrder = true)
+                        }
                     }
                 )
             }
@@ -244,12 +247,15 @@ internal class AutomationPreparer internal constructor(
                         UALog.e(it) { "Failed to prepare message" }
                         RetryingQueue.Result.Retry()
                     },
-                    onSuccess = {
-                        RetryingQueue.Result.Success(
-                            SchedulePrepareResult.Prepared(
-                                onPrepareSchedule(info, PreparedScheduleData.InAppMessage(it))
+                    onSuccess = { result ->
+                        when (result) {
+                            is DelegatePreparerResult.Prepared -> RetryingQueue.Result.Success(
+                                SchedulePrepareResult.Prepared(onPrepareSchedule(info, PreparedScheduleData.InAppMessage(result.data)))
                             )
-                        )
+                            DelegatePreparerResult.Cancel -> RetryingQueue.Result.Success(SchedulePrepareResult.Cancel, ignoreReturnOrder = true)
+                            DelegatePreparerResult.Skip -> RetryingQueue.Result.Success(SchedulePrepareResult.Skip, ignoreReturnOrder = true)
+                            DelegatePreparerResult.Penalize -> RetryingQueue.Result.Success(SchedulePrepareResult.Penalize, ignoreReturnOrder = true)
+                        }
                     }
                 )
             }
