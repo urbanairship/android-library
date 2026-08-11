@@ -49,4 +49,3 @@ internal fun View.borrowedPercentBase(horizontal: Boolean): Int {
     }
     return 0
 }
-
