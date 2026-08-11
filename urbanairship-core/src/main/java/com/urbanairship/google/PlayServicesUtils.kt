@@ -153,16 +153,9 @@ public object PlayServicesUtils {
      * @return `true` if available, otherwise `false`.
      */
     public fun isPlayReviewDependencyAvailable(): Boolean {
-        return isPlayReviewDependencyAvailable ?: run {
-            val result = try {
-                Class.forName("com.google.android.play.core.review.ReviewManagerFactory")
-                true
-            } catch (e: ClassNotFoundException) {
-                false
-            }
-            isPlayReviewDependencyAvailable = result
-            result
-        }
+        return isPlayReviewDependencyAvailable ?: runCatching {
+            Class.forName("com.google.android.play.core.review.ReviewManagerFactory")
+        }.isSuccess.also { isPlayReviewDependencyAvailable = it }
     }
 
     /**
