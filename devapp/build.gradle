@@ -12,7 +12,7 @@ android {
     compileSdk rootProject.compileSdkVersion
 
     defaultConfig {
-        applicationId "com.urbanairship.iceberg"
+        applicationId "com.urbanairship.sample"
         minSdk rootProject.minSdkVersion
         targetSdk rootProject.targetSdkVersion
         versionCode 1
