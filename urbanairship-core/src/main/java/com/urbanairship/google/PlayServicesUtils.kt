@@ -164,22 +164,9 @@ public object PlayServicesUtils {
      * @return `true` if available, otherwise `false`.
      */
     public fun isGooglePlayServicesDependencyAvailable(): Boolean {
-        val evaluated = isGooglePlayServicesDependencyAvailable
-        if (evaluated != null) {
-            return evaluated
-        }
-
-        // Play Services
-        val result = try {
+        return isGooglePlayServicesDependencyAvailable ?: runCatching {
             Class.forName("com.google.android.gms.common.GooglePlayServicesUtil")
-            true
-        } catch (e: ClassNotFoundException) {
-            false
-        }
-
-        isGooglePlayServicesDependencyAvailable = result
-
-        return result
+        }.isSuccess.also { isGooglePlayServicesDependencyAvailable = it }
     }
 
     /**
