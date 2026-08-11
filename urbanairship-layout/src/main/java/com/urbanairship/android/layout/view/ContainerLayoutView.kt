@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.view
 
 import android.animation.LayoutTransition
+import kotlin.math.max
 import kotlin.math.roundToInt
 import android.content.Context
 import android.util.SparseArray
@@ -25,6 +26,7 @@ import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout
+import com.urbanairship.android.layout.widget.borrowedPercentBase
 import com.urbanairship.android.layout.widget.ShrinkableView
 import androidx.core.view.OnApplyWindowInsetsListener as OnApplyWindowInsetsListenerCompat
 
@@ -40,6 +42,10 @@ internal class ContainerLayoutView(
     // ConstraintLayout can't derive ratio height from percent width in AT_MOST parents
     // (both MATCH_CONSTRAINT), so onMeasure does a two-pass fix for these frames.
     private val frameHeightRatios = SparseArray<Double>()
+    // frameId -> percent, for items sized as a percent of us on that axis. Only consulted when our
+    // own size isn't fixed by our parent; otherwise ConstraintLayout resolves them natively.
+    private val framePercentWidths = SparseArray<Float>()
+    private val framePercentHeights = SparseArray<Float>()
 
     init {
         clipChildren = true
@@ -100,16 +106,68 @@ internal class ContainerLayoutView(
         val size = info.size
         if (size.aspectRatio != null && size.height.isAuto && size.width.isPercent) {
             frameHeightRatios.put(frameId, size.aspectRatio)
+        } else {
+            // Ratio items derive their percent width through the fix above; don't resolve twice.
+            if (size.width.isPercent) framePercentWidths.put(frameId, size.width.getFloat())
+            if (size.height.isPercent) framePercentHeights.put(frameId, size.height.getFloat())
         }
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        if (frameHeightRatios.size() == 0) {
+        val widthMode = MeasureSpec.getMode(widthMeasureSpec)
+        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+
+        // Fixed by our parent: the base is the spec, known before anything is measured, so resolve
+        // straight away in one pass. ConstraintLayout's own percent would size the item's content
+        // and lay its margins outside it, which is a different rule from every other path here —
+        // percentages cover the space an item occupies, margins included.
+        if (widthMode == MeasureSpec.EXACTLY && framePercentWidths.size() > 0) {
+            resolvePercentFrames(
+                framePercentWidths,
+                (MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight).coerceAtLeast(0),
+                horizontal = true
+            )
+        }
+        if (heightMode == MeasureSpec.EXACTLY && framePercentHeights.size() > 0) {
+            resolvePercentFrames(
+                framePercentHeights,
+                (MeasureSpec.getSize(heightMeasureSpec) - paddingTop - paddingBottom).coerceAtLeast(0),
+                horizontal = false
+            )
+        }
+
+        // Anything not fixed needs a size worked out first, below.
+        val autoWidths = widthMode != MeasureSpec.EXACTLY && framePercentWidths.size() > 0
+        val autoHeights = heightMode != MeasureSpec.EXACTLY && framePercentHeights.size() > 0
+
+        // Measured unbounded on an axis means we have no size of our own to resolve against, so we
+        // look for a scroll layout above us to borrow a viewport from.
+        val borrowedWidth =
+            if (autoWidths && widthMode == MeasureSpec.UNSPECIFIED) borrowedPercentBase(horizontal = true) else 0
+        val borrowedHeight =
+            if (autoHeights && heightMode == MeasureSpec.UNSPECIFIED) borrowedPercentBase(horizontal = false) else 0
+
+        // ...and we can only resolve when one of those two panned out. With neither, percent items
+        // keep the content size they measure below, matching iOS, where a percent with no parent
+        // size to work from falls back to auto rather than collapsing.
+        val resolveWidths = autoWidths && (widthMode == MeasureSpec.AT_MOST || borrowedWidth > 0)
+        val resolveHeights = autoHeights && (heightMode == MeasureSpec.AT_MOST || borrowedHeight > 0)
+
+        if (frameHeightRatios.size() == 0 && !autoWidths && !autoHeights) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
             return
         }
 
-        // First pass: MATCH_CONSTRAINT width (so constrainPercentWidth applies) + WRAP_CONTENT
+        // First pass: measure percent items as auto. They can't resolve against a size we don't
+        // have yet, and this clears any size left on them by an earlier pass.
+        if (autoWidths) {
+            forEachFrame(framePercentWidths) { it.width = ViewGroup.LayoutParams.WRAP_CONTENT }
+        }
+        if (autoHeights) {
+            forEachFrame(framePercentHeights) { it.height = ViewGroup.LayoutParams.WRAP_CONTENT }
+        }
+
+        // Ratio items: MATCH_CONSTRAINT width (so constrainPercentWidth applies) + WRAP_CONTENT
         // height (so ratio + MATCH_CONSTRAINT height doesn't corrupt the width measurement).
         for (i in 0 until frameHeightRatios.size()) {
             val frame = findViewById<View>(frameHeightRatios.keyAt(i)) ?: continue
@@ -119,12 +177,22 @@ internal class ContainerLayoutView(
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
-        // Compute correct dimensions. For EXACTLY parents apply .fit — if naturalHeight exceeds
-        // the container height, reduce width proportionally to maintain ratio within bounds.
-        val heightMode = MeasureSpec.getMode(heightMeasureSpec)
-        val containerH = MeasureSpec.getSize(heightMeasureSpec)
         var needsRemeasure = false
 
+        if (resolveWidths) {
+            val base = percentBase(widthMode, borrowedWidth, framePercentWidths, horizontal = true)
+            needsRemeasure = resolvePercentFrames(framePercentWidths, base, horizontal = true) ||
+                    needsRemeasure
+        }
+        if (resolveHeights) {
+            val base = percentBase(heightMode, borrowedHeight, framePercentHeights, horizontal = false)
+            needsRemeasure = resolvePercentFrames(framePercentHeights, base, horizontal = false) ||
+                    needsRemeasure
+        }
+
+        // Compute correct ratio dimensions. For EXACTLY parents apply .fit — if naturalHeight
+        // exceeds the container height, reduce width proportionally to maintain ratio within bounds.
+        val containerH = MeasureSpec.getSize(heightMeasureSpec)
         for (i in 0 until frameHeightRatios.size()) {
             val frameId = frameHeightRatios.keyAt(i)
             val ratio = frameHeightRatios.valueAt(i)
@@ -148,6 +216,86 @@ internal class ContainerLayoutView(
         }
 
         if (needsRemeasure) super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
+    /**
+     * The size percent items resolve against on one axis: the viewport borrowed from a scroll
+     * layout when we were measured unbounded, or otherwise the box we wrap to.
+     *
+     * That box is the extent of our *non-percent* items only. A container sized to its content
+     * can't take its size from an item that is a fraction of it — `H = max(H * percent)` has no
+     * solution but zero — so an auto container holding nothing but percent items measures 0 on
+     * that axis, and its items with it. This is where iOS's remeasure loop converges.
+     */
+    private fun percentBase(
+        mode: Int,
+        borrowed: Int,
+        percents: SparseArray<Float>,
+        horizontal: Boolean
+    ): Int {
+        if (mode == MeasureSpec.UNSPECIFIED) return borrowed
+
+        var base = 0
+        for (i in 0 until childCount) {
+            val child = getChildAt(i)
+            if (child.visibility == GONE || percents.indexOfKey(child.id) >= 0) continue
+            val lp = child.layoutParams as ConstraintLayout.LayoutParams
+            base = max(
+                base,
+                if (horizontal) {
+                    child.measuredWidth + lp.leftMargin + lp.rightMargin
+                } else {
+                    child.measuredHeight + lp.topMargin + lp.bottomMargin
+                }
+            )
+        }
+        return base
+    }
+
+    /**
+     * Applies [base] to the percent items on one axis, clamping into what's left of the base after
+     * each item's own margins — matching iOS, which bounds percent sizes the same way.
+     *
+     * Returns true if any item's layout params changed.
+     */
+    private fun resolvePercentFrames(
+        percents: SparseArray<Float>,
+        base: Int,
+        horizontal: Boolean
+    ): Boolean {
+        var changed = false
+        for (i in 0 until percents.size()) {
+            val frame = findViewById<View>(percents.keyAt(i)) ?: continue
+            val lp = frame.layoutParams as ConstraintLayout.LayoutParams
+            val margins = if (horizontal) {
+                lp.leftMargin + lp.rightMargin
+            } else {
+                lp.topMargin + lp.bottomMargin
+            }
+            // A percentage covers the space the item occupies, margins included, so they come out
+            // of its share — the same rule the linear layout's slot distribution uses.
+            val resolved = (minOf((percents.valueAt(i) * base).toInt(), base) - margins)
+                .coerceAtLeast(0)
+
+            if (horizontal && lp.width != resolved) {
+                lp.width = resolved
+                changed = true
+            } else if (!horizontal && lp.height != resolved) {
+                lp.height = resolved
+                changed = true
+            }
+        }
+        return changed
+    }
+
+    private inline fun forEachFrame(
+        frames: SparseArray<Float>,
+        block: (ConstraintLayout.LayoutParams) -> Unit
+    ) {
+        for (i in 0 until frames.size()) {
+            val frame = findViewById<View>(frames.keyAt(i)) ?: continue
+            block(frame.layoutParams as ConstraintLayout.LayoutParams)
+        }
     }
 
     private inner class WindowInsetsListener(

@@ -110,8 +110,8 @@ internal class ModalView(
 
         val constraints = ConstraintSetBuilder.newBuilder(context)
             .constrainWithinParent(viewId)
-            .width(size, ignoreSafeArea, viewId)
-            .height(size, ignoreSafeArea, viewId)
+            .width(size, ignoreSafeArea, viewId, margin = margin)
+            .height(size, ignoreSafeArea, viewId, margin = margin)
             .aspectRatioWithinBounds(
                 size = size,
                 viewId = viewId,

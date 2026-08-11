@@ -130,8 +130,8 @@ public class ThomasBannerView internal constructor(
 
         ConstraintSetBuilder.newBuilder(context)
             .position(placement.position, viewId)
-            .width(size, ignoreSafeArea, viewId)
-            .height(size, ignoreSafeArea, viewId)
+            .width(size, ignoreSafeArea, viewId, margin = margin)
+            .height(size, ignoreSafeArea, viewId, margin = margin)
             .aspectRatioWithinBounds(
                 size = size,
                 viewId = viewId,
