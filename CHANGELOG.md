@@ -4,6 +4,14 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 19.13.10 - August 11, 2026
+
+Patch release that hardens against corrupt data in DB and JSON parsing paths.
+
+### Changes
+- Hardened DB and JSON parsing paths against corrupt data
+- Fixed XML/Views Message Center window inset padding (top and right values were swapped)
+
 ## Version 19.13.9 - August 4, 2026
 
 Patch release that fixes a crash on cold start on certain OEM ROMs. Apps experiencing crashes during Airship initialization should update.
