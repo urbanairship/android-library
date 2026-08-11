@@ -145,28 +145,28 @@ public object PlayServicesUtils {
         }
     }
 
+    private var isPlayReviewDependencyAvailable: Boolean? = null
+
+    /**
+     * Checks if the Play In-App Review dependency is available.
+     *
+     * @return `true` if available, otherwise `false`.
+     */
+    public fun isPlayReviewDependencyAvailable(): Boolean {
+        return isPlayReviewDependencyAvailable ?: runCatching {
+            Class.forName("com.google.android.play.core.review.ReviewManagerFactory")
+        }.isSuccess.also { isPlayReviewDependencyAvailable = it }
+    }
+
     /**
      * Checks if Google Play services dependency is available.
      *
      * @return `true` if available, otherwise `false`.
      */
     public fun isGooglePlayServicesDependencyAvailable(): Boolean {
-        val evaluated = isGooglePlayServicesDependencyAvailable
-        if (evaluated != null) {
-            return evaluated
-        }
-
-        // Play Services
-        val result = try {
+        return isGooglePlayServicesDependencyAvailable ?: runCatching {
             Class.forName("com.google.android.gms.common.GooglePlayServicesUtil")
-            true
-        } catch (e: ClassNotFoundException) {
-            false
-        }
-
-        isGooglePlayServicesDependencyAvailable = result
-
-        return result
+        }.isSuccess.also { isGooglePlayServicesDependencyAvailable = it }
     }
 
     /**
