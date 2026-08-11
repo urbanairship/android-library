@@ -11,10 +11,11 @@ import com.urbanairship.json.optionalMap
 public class BannerPlacement public constructor(
     public val size: ConstrainedSize,
     public val margin: Margin?,
-    public val position: Position?,
+    public val position: EdgePosition,
     public val ignoreSafeArea: Boolean,
     public val border: Border?,
-    public val backgroundColor: Color?
+    public val backgroundColor: Color?,
+    public val animation: BannerAnimation?
 ) : SafeAreaAware {
 
     override fun shouldIgnoreSafeArea(): Boolean {
@@ -28,6 +29,7 @@ public class BannerPlacement public constructor(
         private const val KEY_POSITION = "position"
         private const val KEY_BORDER = "border"
         private const val KEY_BACKGROUND = "background_color"
+        private const val KEY_ANIMATION = "animation"
 
         @JvmStatic
         @Throws(JsonException::class)
@@ -37,10 +39,11 @@ public class BannerPlacement public constructor(
             return BannerPlacement(
                 size = ConstrainedSize.fromJson(content.require(KEY_SIZE)),
                 margin = content[KEY_MARGIN]?.let(Margin::fromJson),
-                position = Position(HorizontalPosition.CENTER, VerticalPosition.from(content.require(KEY_POSITION))),
+                position = EdgePosition.fromJson(content.require(KEY_POSITION)),
                 ignoreSafeArea = ignoreSafeAreaFromJson(content),
                 border = content[KEY_BORDER]?.let(Border::fromJson),
-                backgroundColor = content[KEY_BACKGROUND]?.let(Color::fromJson)
+                backgroundColor = content[KEY_BACKGROUND]?.let(Color::fromJson),
+                animation = content[KEY_ANIMATION]?.let(BannerAnimation::fromJson)
             )
         }
     }

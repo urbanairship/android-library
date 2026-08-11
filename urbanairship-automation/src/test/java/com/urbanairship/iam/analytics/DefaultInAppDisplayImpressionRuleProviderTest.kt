@@ -113,7 +113,10 @@ public class DefaultInAppDisplayImpressionRuleProviderTest {
               "presentation":{
                  "type":"banner",
                  "default_placement":{
-                    "position": "top",
+                    "position": {
+                        "horizontal": "center",
+                        "vertical": "top"
+                    },
                     "size":{
                        "width":"50%",
                        "height":"50%"

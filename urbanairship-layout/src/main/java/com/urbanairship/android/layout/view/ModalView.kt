@@ -10,6 +10,7 @@ import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
+import android.widget.LinearLayout
 import androidx.annotation.ColorInt
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
@@ -39,6 +40,15 @@ internal class ModalView(
 
     private val modalFrame: ViewGroup
 
+    /** The modal frame. Exposed so the activity can scope the window transition to it. */
+    internal val frameView: View get() = modalFrame
+
+    /**
+     * Full-bleed scrim drawn behind the modal frame. Exposed so the window transition can
+     * fade it independently of the modal frame's slide/explode.
+     */
+    internal val shadeView: View
+
     /** The modal frame's min height as declared by the layout (e.g. `min_height: 100%`). */
     private val initialModalFrameMinHeight: Int
 
@@ -47,6 +57,8 @@ internal class ModalView(
     private var clickOutsideListener: OnClickListener? = null
 
     init {
+        clipToPadding = false
+
         val placement = presentation.getResolvedPlacement(context)
         val size = placement.size
         val position = placement.position
@@ -92,6 +104,13 @@ internal class ModalView(
         modalFrame.addView(containerView)
         addView(modalFrame)
 
+        shadeView = View(context).apply {
+            layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
+            shadeColor?.let { setBackgroundColor(it) }
+        }
+
+        addView(shadeView, 0)
+
         val viewId = modalFrame.id
         val ignoreSafeArea = placement.shouldIgnoreSafeArea()
 
@@ -127,13 +146,19 @@ internal class ModalView(
         constraints.applyTo(this)
         initialModalFrameMinHeight =
             constraints.getConstraint(modalFrame.id).layout.heightMin.coerceAtLeast(0)
-        shadeColor?.let { setBackgroundColor(it) }
 
         if (viewEnvironment.isIgnoringSafeAreas) {
             setOnApplyWindowInsetsListener(modalFrame) { _: View, insets: WindowInsetsCompat ->
                 ViewCompat.dispatchApplyWindowInsets(containerView, insets)
             }
         }
+    }
+
+    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
+        super.onLayout(changed, left, top, right, bottom)
+        // Lay the shade out over the full view, ignoring the system-bar padding, so it dims
+        // edge-to-edge. ConstraintLayout still insets the modal frame within the padding.
+        shadeView.layout(0, 0, right - left, bottom - top)
     }
 
     override fun isOpaque(): Boolean = false

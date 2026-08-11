@@ -5,9 +5,8 @@ import android.content.Context
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
+import android.widget.FrameLayout
 import androidx.annotation.MainThread
-import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams
-import androidx.core.view.WindowCompat
 import androidx.customview.widget.ViewDragHelper.STATE_DRAGGING
 import androidx.customview.widget.ViewDragHelper.STATE_IDLE
 import androidx.lifecycle.ViewModelProvider
@@ -17,7 +16,6 @@ import com.urbanairship.Predicate
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.ModelFactoryException
-import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment
@@ -28,7 +26,6 @@ import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.LayoutInfo
-import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.util.Factory
@@ -123,9 +120,6 @@ internal class BannerLayout(
         val presentation = (payload.presentation as? BannerPresentation) ?: return
 
         val placement = presentation.getResolvedPlacement(context)
-        if (placement.shouldIgnoreSafeArea()) {
-            WindowCompat.setDecorFitsSystemWindows(activity.window, false)
-        }
         val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
             activity,
             activityMonitor,
@@ -154,21 +148,7 @@ internal class BannerLayout(
                 presentation = presentation,
                 environment = viewEnvironment
             ).apply {
-                layoutParams = LayoutParams(MATCH_PARENT, MATCH_PARENT)
-            }
-
-            if (lastActivity?.get() !== activity) {
-                if (VerticalPosition.BOTTOM == placement.position?.vertical) {
-                    bannerView.setAnimations(
-                        R.animator.ua_layout_slide_in_bottom,
-                        R.animator.ua_layout_slide_out_bottom
-                    )
-                } else {
-                    bannerView.setAnimations(
-                        R.animator.ua_layout_slide_in_top,
-                        R.animator.ua_layout_slide_out_top
-                    )
-                }
+                layoutParams = FrameLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
             }
 
             observeLayoutEvents(modelEnvironment.layoutEvents)
@@ -221,14 +201,15 @@ internal class BannerLayout(
      */
     private fun getContainerView(activity: Activity): ViewGroup? {
         val containerId = getContainerId(activity)
-        var view: View? = null
+        // An explicit per-activity container (BANNER_CONTAINER_ID metadata) still takes priority.
         if (containerId != 0) {
-            view = activity.findViewById(containerId)
+            (activity.findViewById<View>(containerId) as? ViewGroup)?.let { return it }
         }
-        if (view == null) {
-            view = activity.findViewById(android.R.id.content)
-        }
-        return view as? ViewGroup
+        // Otherwise attach to the decor view: it spans the whole window and sits above the
+        // (inset) content view, so an ignore-safe-area banner can draw under the system bars
+        // without mutating the host window's decor-fits state.
+        return (activity.window?.decorView as? ViewGroup)
+            ?: (activity.findViewById(android.R.id.content) as? ViewGroup)
     }
 
     /**

@@ -23,7 +23,8 @@ public class ModalPlacement(
     public val orientationLock: Orientation?,
     public val border: Border?,
     public val backgroundColor: Color?,
-    public val shadow: Shadow?
+    public val shadow: Shadow?,
+    public val animation: ModalAnimation?
 ) : SafeAreaAware {
 
     public override fun shouldIgnoreSafeArea(): Boolean {
@@ -41,6 +42,7 @@ public class ModalPlacement(
         private const val KEY_LOCK_ORIENTATION = "lock_orientation"
         private const val KEY_SHADOW = "shadow"
         private const val KEY_SELECTORS = "selectors"
+        private const val KEY_ANIMATION = "animation"
 
         @Throws(JsonException::class)
         public fun fromJson(json: JsonValue): ModalPlacement {
@@ -62,7 +64,8 @@ public class ModalPlacement(
                 orientationLock = content.optionalMap(KEY_DEVICE)?.get(KEY_LOCK_ORIENTATION)?.let { Orientation.from(it) },
                 border = content[KEY_BORDER]?.let(Border::fromJson),
                 backgroundColor = content[KEY_BACKGROUND_COLOR]?.let(Color::fromJson),
-                shadow = shadow
+                shadow = shadow,
+                animation = content[KEY_ANIMATION]?.let(ModalAnimation::fromJson)
             )
         }
     }

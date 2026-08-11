@@ -1,16 +1,14 @@
 package com.urbanairship.android.layout.ui
 
-import android.animation.Animator
-import android.animation.AnimatorInflater
-import android.animation.AnimatorListenerAdapter
 import android.content.Context
+import android.transition.Transition
+import android.transition.TransitionManager
 import android.util.TypedValue
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewConfiguration
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
-import androidx.annotation.AnimatorRes
 import androidx.annotation.CallSuper
 import androidx.annotation.Keep
 import androidx.annotation.MainThread
@@ -18,11 +16,15 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import androidx.customview.widget.ViewDragHelper
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
+import com.urbanairship.android.layout.property.BannerAnimation
 import com.urbanairship.android.layout.property.ConstrainedSize
+import com.urbanairship.android.layout.property.HorizontalPosition
+import com.urbanairship.android.layout.property.Position
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
@@ -46,18 +48,24 @@ internal class ThomasBannerView(
     var minFlingVelocity = 0f
 
     private var overDragAmount = 0f
-    private var placement = VerticalPosition.BOTTOM
     private var dragHelper: ViewDragHelper? = null
     private var bannerFrame: ConstrainedFrameLayout? = null
 
     /** In-app message display timer. */
     val displayTimer: Timer
 
-    @AnimatorRes
-    private var animationIn = 0
+    /**
+     * The banner's configured animation, defaulting to a slide when the payload omits one
+     */
+    private val bannerAnimation: BannerAnimation
+        get() = presentation.getResolvedPlacement(context).animation ?: BannerAnimation.Slide()
 
-    @AnimatorRes
-    private var animationOut = 0
+    /**
+     * The edge the banner slides from/to.
+     */
+    private val bannerPosition: VerticalPosition
+        get() = presentation.getResolvedPlacement(context).position.vertical
+
     private var isDismissed = false
     var isResumed = false
         private set
@@ -129,22 +137,67 @@ internal class ThomasBannerView(
 
         applySizeConstraints()
 
-        if (environment.isIgnoringSafeAreas) {
-            var lastAppliedInset: WindowInsetsCompat? = null
-            ViewCompat.setOnApplyWindowInsetsListener(frame,
-                androidx.core.view.OnApplyWindowInsetsListener { v, insets ->
-                    //NOTE: for some reason old android versions keeps calling this method with the same inset
-                    if (lastAppliedInset == insets) { return@OnApplyWindowInsetsListener insets }
-                    lastAppliedInset = insets
-
-                    ViewCompat.dispatchApplyWindowInsets(v, insets)
-                })
+        // A single listener drives inset handling for both branches. It recomputes from the root
+        // window insets (see applyWindowInsets) rather than trusting the dispatched value, so the
+        // result is identical across API levels (pre-30 real consumption vs 30+ no-op) and whether
+        // the host app is edge-to-edge or not. The incoming insets are returned unchanged so we
+        // never affect the host's own views.
+        ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
+            applyWindowInsets()
+            insets
         }
 
-        if (animationIn != 0) {
-            val animator = AnimatorInflater.loadAnimator(context, animationIn)
-            animator.setTarget(bannerFrame)
-            animator.start()
+        animateIn(frame)
+    }
+
+    /**
+     * Applies window insets from the canonical, consumption-independent source
+     * ([ViewCompat.getRootWindowInsets]), so behavior is consistent on every supported API and
+     * regardless of the host's edge-to-edge state.
+     *
+     * - Safe-area banners: pad only the pinned edge (plus horizontal system-bar/cutout insets, plus
+     *   the IME for a bottom banner). The subtree is intentionally not re-dispatched, since the
+     *   whole banner is already inside the safe area.
+     * - Ignore-safe-area banners: leave the frame edge-to-edge, but hand the Thomas subtree the same
+     *   canonical insets so nested items that respect the safe area behave the same everywhere.
+     */
+    private fun applyWindowInsets() {
+        val insets = ViewCompat.getRootWindowInsets(this) ?: return
+
+        if (environment.isIgnoringSafeAreas) {
+            bannerFrame?.let { ViewCompat.dispatchApplyWindowInsets(it, insets) }
+            return
+        }
+
+        val bars = insets.getInsets(
+            WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+        )
+        val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+        val isTop = bannerPosition == VerticalPosition.TOP
+        val isBottom = bannerPosition == VerticalPosition.BOTTOM
+        updatePadding(
+            top = if (isBottom) 0 else bars.top,
+            bottom = if (isTop) 0 else maxOf(bars.bottom, ime.bottom),
+            left = bars.left,
+            right = bars.right
+        )
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // Apply immediately from the root insets so the first frame is correct even if no dispatch
+        // is pending, then request a pass for later changes (rotation, IME).
+        applyWindowInsets()
+        ViewCompat.requestApplyInsets(this)
+    }
+
+    /** Runs the enter transition on the [frame] via the [TransitionFactory]. */
+    private fun animateIn(frame: View) {
+        frame.visibility = INVISIBLE
+        post {
+            val transition = TransitionFactory.enterTransition(bannerAnimation, frame, bannerPosition)
+            TransitionManager.beginDelayedTransition(this, transition)
+            frame.visibility = VISIBLE
         }
     }
 
@@ -177,7 +230,7 @@ internal class ThomasBannerView(
         val size = placement.size
         val margin = placement.margin
 
-        val ignoreSafeArea = false
+        val ignoreSafeArea = placement.shouldIgnoreSafeArea()
 
         // Percent base: the full window (matches ConstraintLayout's constrainPercent*).
         val windowWidthPx = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)
@@ -196,7 +249,7 @@ internal class ThomasBannerView(
         lastWindowHeight = windowHeightPx
 
         ConstraintSetBuilder.newBuilder(context)
-            .position(placement.position, viewId)
+            .position(Position(HorizontalPosition.CENTER, placement.position.vertical), viewId)
             .width(size, ignoreSafeArea, viewId)
             .height(size, ignoreSafeArea, viewId)
             .aspectRatioWithinBounds(
@@ -216,8 +269,9 @@ internal class ThomasBannerView(
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration?) {
         super.onConfigurationChanged(newConfig)
         // Re-fit only when the window bounds actually changed, to avoid layout churn.
-        val windowWidth = ResourceUtils.getWindowWidthPixels(context, false)
-        val windowHeight = ResourceUtils.getWindowHeightPixels(context, false)
+        val ignoreSafeArea = presentation.getResolvedPlacement(context).shouldIgnoreSafeArea()
+        val windowWidth = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)
+        val windowHeight = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea)
         if (windowWidth != lastWindowWidth || windowHeight != lastWindowHeight) {
             applySizeConstraints()
         }
@@ -258,25 +312,37 @@ internal class ThomasBannerView(
     fun dismiss(animate: Boolean, isInternal: Boolean) {
         isDismissed = true
         displayTimer.stop()
-        if (animate && bannerFrame != null && animationOut != 0) {
-            clearAnimation()
-            val animator = AnimatorInflater.loadAnimator(context, animationOut)
-            animator.setTarget(bannerFrame)
-            animator.addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    removeSelf()
-                    if (!isInternal) {
-                        listener?.onDismissed()
-                    }
-                }
-            })
-            animator.start()
+        val frame = bannerFrame
+        if (animate && frame != null) {
+            animateOut(frame, isInternal)
         } else {
             removeSelf()
             if (!isInternal) {
                 listener?.onDismissed()
             }
         }
+    }
+
+    /** Runs the exit transition on the [frame] via the [TransitionFactory], then removes self. */
+    private fun animateOut(frame: View, isInternal: Boolean) {
+        val transition = TransitionFactory.exitTransition(bannerAnimation, frame, bannerPosition)
+            .apply {
+                addListener(object : Transition.TransitionListener {
+                    override fun onTransitionEnd(transition: Transition) {
+                        removeSelf()
+                        if (!isInternal) {
+                            listener?.onDismissed()
+                        }
+                    }
+
+                    override fun onTransitionStart(transition: Transition) = Unit
+                    override fun onTransitionCancel(transition: Transition) = Unit
+                    override fun onTransitionPause(transition: Transition) = Unit
+                    override fun onTransitionResume(transition: Transition) = Unit
+                })
+            }
+        TransitionManager.beginDelayedTransition(this, transition)
+        frame.visibility = GONE
     }
 
     /**
@@ -288,17 +354,6 @@ internal class ThomasBannerView(
             parent.removeView(this)
             bannerFrame = null
         }
-    }
-
-    /**
-     * Sets the animation.
-     *
-     * @param in The animation in.
-     * @param out The animation out.
-     */
-    fun setAnimations(@AnimatorRes animationIn: Int, @AnimatorRes animationOut: Int) {
-        this.animationIn = animationIn
-        this.animationOut = animationOut
     }
 
     /**
@@ -418,16 +473,7 @@ internal class ThomasBannerView(
     }
 
     /**
-     * Sets the banner placement.
-     *
-     * @param placement The placement.
-     */
-    fun setPlacement(placement: VerticalPosition) {
-        this.placement = placement
-    }
-
-    /**
-     * Helper class to handle the the callbacks from the ViewDragHelper.
+     * Helper class to handle the callbacks from the ViewDragHelper.
      */
     private inner class ViewDragCallback : ViewDragHelper.Callback() {
 
@@ -446,7 +492,7 @@ internal class ThomasBannerView(
         }
 
         override fun clampViewPositionVertical(child: View, top: Int, dy: Int): Int {
-            return when (placement) {
+            return when (bannerPosition) {
                 VerticalPosition.TOP ->
                     top.toFloat().coerceAtMost(startTop + overDragAmount).roundToInt()
                 VerticalPosition.BOTTOM,
@@ -489,14 +535,15 @@ internal class ThomasBannerView(
         override fun onViewReleased(view: View, xv: Float, yv: Float) {
             val absYv = abs(yv)
             if (
-                (VerticalPosition.TOP == placement && startTop >= view.top) || startTop <= view.top
+                (VerticalPosition.TOP == bannerPosition && startTop >= view.top)
+                || (VerticalPosition.TOP != bannerPosition && startTop <= view.top)
             ) {
                 isDismissed = dragPercent >= IDLE_MIN_DRAG_PERCENT ||
                         absYv > minFlingVelocity ||
                         dragPercent > FLING_MIN_DRAG_PERCENT
             }
             if (isDismissed) {
-                val top = if (VerticalPosition.TOP == placement) {
+                val top = if (VerticalPosition.TOP == bannerPosition) {
                     -view.height
                 } else {
                     height + view.height
