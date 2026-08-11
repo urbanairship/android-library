@@ -844,6 +844,7 @@
                                                                                                                                             },
                                                                                                                                             "identifier": "0003f1bc-466c-4c9c-9b5d-6e9a9aeabf58",
                                                                                                                                             "input_type": "text",
+                                                                                                                                            "redact_input": true,
                                                                                                                                             "required": false,
                                                                                                                                             "content_description": "",
                                                                                                                                             "place_holder": "Email address",

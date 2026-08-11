@@ -78,7 +78,8 @@ internal class TextInputModel(
                         name = viewInfo.attributeName,
                         value = null
                     )
-                )
+                ),
+                isRedacted = viewInfo.redactInput
             ),
             pageId = properties.pagerPageId
         )
@@ -316,7 +317,8 @@ internal class TextInputModel(
             smsLocale = smsLocale,
             identifier = viewInfo.identifier,
             originalValue = input,
-            fieldType = method
+            fieldType = method,
+            isRedacted = viewInfo.redactInput
         )
     }
 }

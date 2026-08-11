@@ -873,6 +873,7 @@ internal class TextInputInfo(
     }
 
     val smsLocales: List<SmsLocale>? = json.optionalList("locales")?.map(SmsLocale::fromJson)
+    val redactInput: Boolean = json.optionalField("redact_input") ?: false
 
     internal class ViewOverrides(json: JsonMap) {
         val iconEnd = json.optionalList("icon_end")?.map { iconEnd ->

@@ -78,6 +78,7 @@ public class LayoutListener (
                 )
             }
             is ReportingEvent.FormResult -> {
+                UALog.v { "Form result: ${event.data.toJsonValue()}" }
                 analytics.recordEvent(
                     event = InAppFormResultEvent(event.data),
                     layoutContext = event.context
