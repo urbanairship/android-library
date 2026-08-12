@@ -36,6 +36,15 @@ public constructor(
 
         @Throws(JsonException::class)
         public fun fromJson(json: JsonValue): EdgePosition {
+            // Legacy banner placements encode the position as a bare vertical edge, e.g.
+            // `"position": "top"`, which is horizontally centered.
+            if (json.isString) {
+                return EdgePosition(
+                    horizontal = HorizontalPosition.CENTER,
+                    vertical = VerticalPosition.from(json)
+                )
+            }
+
             val content = json.requireMap()
 
             return EdgePosition(

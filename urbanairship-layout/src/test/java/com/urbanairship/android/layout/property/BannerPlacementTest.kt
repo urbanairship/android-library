@@ -11,6 +11,7 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -66,8 +67,8 @@ public class BannerPlacementTest {
 
         val animation = placement.animation
         assertTrue(animation is BannerAnimation.Slide)
-        assertEquals(250L, animation.animateInMs)
-        assertEquals(500L, animation.animateOutMs)
+        assertEquals(250.milliseconds, animation?.animateIn)
+        assertEquals(500.milliseconds, animation?.animateOut)
 
         val shadow = placement.shadow?.androidShadow
         assertNotNull(shadow)
@@ -89,8 +90,8 @@ public class BannerPlacementTest {
 
         val animation = placement.animation
         assertTrue(animation is BannerAnimation.Fade)
-        assertEquals(400L, animation.animateInMs)
-        assertEquals(200L, animation.animateOutMs)
+        assertEquals(400.milliseconds, animation?.animateIn)
+        assertEquals(200.milliseconds, animation?.animateOut)
     }
 
     @Test
@@ -113,7 +114,7 @@ public class BannerPlacementTest {
         assertEquals(HorizontalPosition.CENTER, placement.position.horizontal)
         assertEquals(VerticalPosition.BOTTOM, placement.position.vertical)
         assertTrue(placement.swipeToDismiss)
-        assertEquals(BannerAnimation.DEFAULT, placement.animation)
+        assertNull(placement.animation)
         assertNull(placement.shadow)
     }
 
