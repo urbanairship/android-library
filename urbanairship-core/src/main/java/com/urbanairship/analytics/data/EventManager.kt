@@ -19,6 +19,9 @@ import com.urbanairship.http.RequestException
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.job.JobInfo
 import com.urbanairship.util.Clock
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.Duration
@@ -77,10 +80,11 @@ public class EventManager @VisibleForTesting internal constructor(
                 var conflictStrategy = JobInfo.ConflictStrategy.REPLACE
 
                 if (isScheduled) {
-                    val previousScheduledTime = preferenceStore.get(SCHEDULED_SEND_TIME) ?: 0
-                    val currentDelay = max(
-                        (clock.currentTimeMillis() - previousScheduledTime), 0
-                    ).milliseconds
+                    val previousScheduledTime = preferenceStore.get(SCHEDULED_SEND_TIME)
+                        ?.let(Instant::ofEpochMilli) ?: Instant.EPOCH
+                    val currentDelay = maxOf(
+                        clock.now() - previousScheduledTime, Duration.ZERO
+                    )
 
                     if (currentDelay < nextDelay) {
                         UALog.v("Event upload already scheduled for an earlier time.")
@@ -100,7 +104,7 @@ public class EventManager @VisibleForTesting internal constructor(
 
                 jobDispatcher.dispatch(jobInfo)
 
-                preferenceStore.put(SCHEDULED_SEND_TIME, clock.currentTimeMillis() + nextDelay.inWholeMilliseconds)
+                preferenceStore.put(SCHEDULED_SEND_TIME, (clock.now() + nextDelay).toEpochMilli())
                 isScheduled = true
             }
         }
@@ -133,11 +137,13 @@ public class EventManager @VisibleForTesting internal constructor(
                 if (activityMonitor.isAppForegrounded) {
                     scheduleEventUpload(maxOf(nextSendDelay(), LOW_PRIORITY_BATCH_DELAY))
                 } else {
-                    val currentTime = clock.currentTimeMillis()
-                    val lastSendTime = preferenceStore.get(LAST_SEND_KEY) ?: 0L
+                    val currentTime = clock.now()
+                    val lastSendTime = preferenceStore.get(LAST_SEND_KEY)
+                        ?.let(Instant::ofEpochMilli) ?: Instant.EPOCH
                     val sendDelta = currentTime - lastSendTime
-                    val backgroundReportingInterval = runtimeConfig.configOptions.backgroundReportingIntervalMS
-                    val minimumWait = (backgroundReportingInterval - sendDelta).milliseconds
+                    val backgroundReportingInterval =
+                        runtimeConfig.configOptions.backgroundReportingIntervalMS.milliseconds
+                    val minimumWait = (backgroundReportingInterval - sendDelta)
                         .coerceAtLeast(nextSendDelay())
 
                     scheduleEventUpload(maxOf(minimumWait, LOW_PRIORITY_BATCH_DELAY))
@@ -165,10 +171,13 @@ public class EventManager @VisibleForTesting internal constructor(
      * @return A delay.
      */
     private suspend fun nextSendDelay(): Duration {
-        val nextSendTime = (preferenceStore.get(LAST_SEND_KEY) ?: 0L) +
-                (preferenceStore.get(MIN_BATCH_INTERVAL_KEY) ?: EventResponse.MIN_BATCH_INTERVAL_MS)
+        val lastSendTime = preferenceStore.get(LAST_SEND_KEY)
+            ?.let(Instant::ofEpochMilli) ?: Instant.EPOCH
+        val minBatchInterval =
+            (preferenceStore.get(MIN_BATCH_INTERVAL_KEY) ?: EventResponse.MIN_BATCH_INTERVAL_MS).milliseconds
+        val nextSendTime = lastSendTime + minBatchInterval
 
-        return (nextSendTime - clock.currentTimeMillis()).milliseconds.coerceAtLeast(Duration.ZERO)
+        return (nextSendTime - clock.now()).coerceAtLeast(Duration.ZERO)
     }
 
     /**
@@ -180,7 +189,7 @@ public class EventManager @VisibleForTesting internal constructor(
      */
     public suspend fun uploadEvents(channelId: String, headers: Map<String, String>): Boolean {
         scheduleLock.withLock {
-            preferenceStore.put(LAST_SEND_KEY, clock.currentTimeMillis())
+            preferenceStore.put(LAST_SEND_KEY, clock.now().toEpochMilli())
             isScheduled = false
         }
 

@@ -16,6 +16,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
@@ -297,7 +298,7 @@ public class AutomationRemoteDataAccessTest {
         // as an empty map.
         val corruptPayload = RemoteDataPayload(
             type = "in_app_messages",
-            timestamp = 0L,
+            timestamp = Instant.ofEpochMilli(0),
             data = JsonMap.EMPTY_MAP,
             remoteDataInfo = null
         )
@@ -323,7 +324,7 @@ public class AutomationRemoteDataAccessTest {
             identifier = "schedule id",
             data = AutomationSchedule.ScheduleData.Actions(JsonValue.NULL),
             triggers = listOf(),
-            created = clock.currentTimeMillis.toULong(),
+            created = clock.currentTime,
             metadata = jsonMapOf("com.urbanairship.iaa.REMOTE_DATA_INFO" to (remoteDataInfo ?: "")).toJsonValue()
         )
     }

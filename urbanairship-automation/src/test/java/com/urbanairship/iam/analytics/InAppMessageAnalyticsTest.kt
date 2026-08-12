@@ -26,7 +26,11 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.meteredusage.MeteredUsageEventEntity
 import com.urbanairship.meteredusage.MeteredUsageType
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.UUID
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -181,7 +185,7 @@ public class InAppMessageAnalyticsTest {
 
     @Test
     public fun testSingleImpression(): TestResult = runTest {
-        clock.currentTimeMillis = 0
+        clock.currentTime = Instant.ofEpochMilli(0)
 
         val analytics = makeAnalytics(source = InAppMessage.Source.LEGACY_PUSH)
 
@@ -197,18 +201,18 @@ public class InAppMessageAnalyticsTest {
             assertEquals(MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION, it.type)
             assertEquals(preparedInfo.productId, it.product)
             assertEquals(preparedInfo.reportingContext, it.reportingContext)
-            assertEquals(0L, it.timestamp)
+            assertEquals(Instant.ofEpochMilli(0), it.timestamp)
             assertEquals(preparedInfo.contactId, it.contactId)
         }) }
 
         val displayHistory = historyStore.get(preparedInfo.scheduleId)
-        assertEquals(clock.currentTimeMillis, displayHistory.lastImpression?.date)
+        assertEquals(clock.currentTime, displayHistory.lastImpression?.date)
         assertEquals(preparedInfo.triggerSessionId, displayHistory.lastImpression?.triggerSessionId)
     }
 
     @Test
     public fun testImpressionInterval(): TestResult = runTest {
-        clock.currentTimeMillis = 0
+        clock.currentTime = Instant.ofEpochMilli(0)
 
         val analytics = makeAnalytics(
             source = InAppMessage.Source.LEGACY_PUSH,
@@ -223,7 +227,7 @@ public class InAppMessageAnalyticsTest {
             assertEquals(MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION, it.type)
             assertEquals(preparedInfo.productId, it.product)
             assertEquals(preparedInfo.reportingContext, it.reportingContext)
-            assertEquals(0L, it.timestamp)
+            assertEquals(Instant.ofEpochMilli(0), it.timestamp)
             assertEquals(preparedInfo.contactId, it.contactId)
         }) }
 
@@ -232,15 +236,16 @@ public class InAppMessageAnalyticsTest {
         advanceUntilIdle()
 
         var displayHistory = historyStore.get(preparedInfo.scheduleId)
-        assertEquals(0L, displayHistory.lastImpression?.date)
+        assertEquals(Instant.ofEpochMilli(0), displayHistory.lastImpression?.date)
         assertEquals(preparedInfo.triggerSessionId, displayHistory.lastImpression?.triggerSessionId)
 
-        clock.currentTimeMillis += 9999L // 9.999 seconds
+        // 9.999 seconds
+        clock.currentTime += 9999L.milliseconds
         // This third run should still not trigger a recordImpressionEvent
         analytics.recordEvent(InAppDisplayEvent(), null)
         advanceUntilIdle()
 
-        clock.currentTimeMillis += 1L
+        clock.currentTime += (1L).milliseconds
         analytics.recordEvent(InAppDisplayEvent(), null)
         advanceUntilIdle()
 
@@ -249,12 +254,12 @@ public class InAppMessageAnalyticsTest {
             assertEquals(MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION, it.type)
             assertEquals(preparedInfo.productId, it.product)
             assertEquals(preparedInfo.reportingContext, it.reportingContext)
-            assertEquals(10000L, it.timestamp)
+            assertEquals(Instant.ofEpochMilli(10000), it.timestamp)
             assertEquals(preparedInfo.contactId, it.contactId)
         }) }
 
         displayHistory = historyStore.get(preparedInfo.scheduleId)
-        assertEquals(clock.currentTimeMillis, displayHistory.lastImpression?.date)
+        assertEquals(clock.currentTime, displayHistory.lastImpression?.date)
         assertEquals(preparedInfo.triggerSessionId, displayHistory.lastImpression?.triggerSessionId)
     }
 

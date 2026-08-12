@@ -11,8 +11,12 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.UUID
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import io.mockk.coEvery
 import io.mockk.coJustRun
@@ -39,7 +43,7 @@ import org.junit.runner.RunWith
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 public class AutomationRemoteDataSubscriberTest {
-    private val clock = TestClock().apply { currentTimeMillis = 1000 }
+    private val clock = TestClock().apply { currentTime = Instant.ofEpochMilli(1000) }
 
     private val testDispatcher = StandardTestDispatcher()
 
@@ -100,11 +104,11 @@ public class AutomationRemoteDataSubscriberTest {
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     InAppRemoteData.Data(appSchedules, emptyList()),
-                    clock.currentTimeMillis()
+                    clock.now()
                 ),
                 RemoteDataSource.CONTACT to InAppRemoteData.Payload(
                     InAppRemoteData.Data(contactSchedules, emptyList()),
-                    clock.currentTimeMillis()
+                    clock.now()
                 )
             )
         )
@@ -149,14 +153,14 @@ public class AutomationRemoteDataSubscriberTest {
         subscriber.subscribe()
         advanceUntilIdle()
 
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val firstUpdateSchedules = makeSchedules(RemoteDataSource.APP, 4)
         val firstUpdate = InAppRemoteData(
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     InAppRemoteData.Data(firstUpdateSchedules, emptyList()),
-                    clock.currentTimeMillis(),
+                    clock.now(),
                     remoteDataInfo = RemoteDataInfo(
                         url = "https://some.url",
                         lastModified = null,
@@ -177,7 +181,7 @@ public class AutomationRemoteDataSubscriberTest {
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     InAppRemoteData.Data(secondUpdateSchedules, emptyList()),
-                    clock.currentTimeMillis() + 100,
+                    clock.now() + 100.milliseconds,
                     remoteDataInfo = RemoteDataInfo(
                         url = "https://some.url",
                         lastModified = null,
@@ -205,14 +209,14 @@ public class AutomationRemoteDataSubscriberTest {
         subscriber.subscribe()
         advanceUntilIdle()
 
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val firstUpdateSchedules = makeSchedules(RemoteDataSource.APP, 4)
         val firstUpdate = InAppRemoteData(
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     InAppRemoteData.Data(firstUpdateSchedules, emptyList()),
-                    clock.currentTimeMillis(),
+                    clock.now(),
                     remoteDataInfo = RemoteDataInfo(
                         url = "https://some.url",
                         lastModified = null,
@@ -241,7 +245,7 @@ public class AutomationRemoteDataSubscriberTest {
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     InAppRemoteData.Data(secondUpdateSchedules, emptyList()),
-                    clock.currentTimeMillis() + 100
+                    clock.now() + 100.milliseconds
                 )
             )
         )
@@ -263,14 +267,14 @@ public class AutomationRemoteDataSubscriberTest {
         subscriber.subscribe()
         advanceUntilIdle()
 
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val schedules = makeSchedules(RemoteDataSource.APP, 4)
         val update = InAppRemoteData(
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     InAppRemoteData.Data(schedules, emptyList()),
-                    clock.currentTimeMillis(),
+                    clock.now(),
                     remoteDataInfo = RemoteDataInfo(
                         url = "https://some.url",
                         lastModified = null,
@@ -303,7 +307,7 @@ public class AutomationRemoteDataSubscriberTest {
             source = RemoteDataSource.APP
         )
 
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val schedules = makeSchedules(RemoteDataSource.APP, 4).map {
             it.copyWith(metadata =  jsonMapOf(InAppRemoteData.REMOTE_INFO_METADATA_KEY to remoteDataInfo).toJsonValue())
@@ -316,7 +320,7 @@ public class AutomationRemoteDataSubscriberTest {
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     data = InAppRemoteData.Data(schedules, listOf()),
-                    timestamp = clock.currentTimeMillis(),
+                    timestamp = clock.now(),
                     remoteDataInfo = remoteDataInfo
                 )
             )
@@ -350,7 +354,7 @@ public class AutomationRemoteDataSubscriberTest {
                     payload = mapOf(
                         RemoteDataSource.APP to InAppRemoteData.Payload(
                             data = InAppRemoteData.Data(updatedSchedules, emptyList()),
-                            timestamp = clock.currentTimeMillis(),
+                            timestamp = clock.now(),
                             remoteDataInfo = updatedRemoteDataInfo
                         )
                     )
@@ -367,7 +371,7 @@ public class AutomationRemoteDataSubscriberTest {
         subscriber.subscribe()
         advanceUntilIdle()
 
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
         val schedules = makeSchedules(RemoteDataSource.APP, 4)
 
         coJustRun { engine.upsertSchedules(schedules) }
@@ -384,7 +388,7 @@ public class AutomationRemoteDataSubscriberTest {
                     payload = mapOf(
                         RemoteDataSource.APP to InAppRemoteData.Payload(
                             data = InAppRemoteData.Data(schedules, emptyList()),
-                            timestamp = clock.currentTimeMillis(),
+                            timestamp = clock.now(),
                             remoteDataInfo = remoteDataInfo
                         )
                     )
@@ -406,7 +410,7 @@ public class AutomationRemoteDataSubscriberTest {
                     payload = mapOf(
                         RemoteDataSource.APP to InAppRemoteData.Payload(
                             data = InAppRemoteData.Data(schedules, emptyList()),
-                            timestamp = clock.currentTimeMillis() + 1,
+                            timestamp = clock.now() + 1.milliseconds,
                             remoteDataInfo = remoteDataInfo
                         )
                     )
@@ -435,11 +439,11 @@ public class AutomationRemoteDataSubscriberTest {
             payload = mapOf(
                 RemoteDataSource.APP to InAppRemoteData.Payload(
                     data = InAppRemoteData.Data(listOf(), appConstraints),
-                    timestamp = clock.currentTimeMillis()
+                    timestamp = clock.now()
                 ),
                 RemoteDataSource.CONTACT to InAppRemoteData.Payload(
                     data = InAppRemoteData.Data(listOf(), contactConstraints),
-                    timestamp = clock.currentTimeMillis()
+                    timestamp = clock.now()
                 )
             )
         )
@@ -459,7 +463,7 @@ public class AutomationRemoteDataSubscriberTest {
         source: RemoteDataSource,
         count: Int = Random.nextInt(1, 10),
         minSDKVersion: String? = null,
-        created: Long = clock.currentTimeMillis()
+        created: Instant = clock.now()
     ) : List<AutomationSchedule> {
         return (0 until count)
             .map { makeSchedule(source, minSDKVersion, created) }
@@ -468,7 +472,7 @@ public class AutomationRemoteDataSubscriberTest {
     private fun makeSchedule(
         source: RemoteDataSource,
         minSDKVersion: String? = null,
-        created: Long = clock.currentTimeMillis()
+        created: Instant = clock.now()
     ) : AutomationSchedule {
         val remoteDataInfo = RemoteDataInfo(
             url = "https://test.url",
@@ -480,7 +484,7 @@ public class AutomationRemoteDataSubscriberTest {
             identifier = UUID.randomUUID().toString(),
             data = AutomationSchedule.ScheduleData.Actions(JsonValue.wrap("actions")),
             triggers = listOf(AutomationTrigger.activeSession(1u)),
-            created = created.toULong(),
+            created = created,
             metadata = jsonMapOf(InAppRemoteData.REMOTE_INFO_METADATA_KEY to remoteDataInfo).toJsonValue(),
             minSDKVersion = minSDKVersion
         )

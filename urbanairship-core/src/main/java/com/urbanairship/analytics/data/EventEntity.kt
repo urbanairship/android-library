@@ -30,7 +30,7 @@ internal data class EventEntity(
         0,
         event.type.reportingName,
         event.id,
-        event.timeMs.milliseconds.toSecondsString(),
+        event.timestamp.toSecondsString(),
         event.fullEventPayload,
         event.sessionId,
         event.fullEventPayload.toString().toByteArray(StandardCharsets.UTF_8).size

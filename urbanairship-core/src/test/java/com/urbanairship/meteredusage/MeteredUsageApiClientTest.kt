@@ -11,6 +11,7 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -45,7 +46,7 @@ public class MeteredUsageApiClientTest {
                 type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
                 product = "product1",
                 reportingContext = jsonMapOf("test" to "context").toJsonValue(),
-                timestamp = 1L,
+                timestamp = Instant.ofEpochMilli(1),
                 contactId = "test-contact-id"),
             MeteredUsageEventEntity(
                 eventId = "event2",
@@ -53,7 +54,7 @@ public class MeteredUsageApiClientTest {
                 type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
                 product = "product2",
                 reportingContext = jsonMapOf("test2" to "context2").toJsonValue(),
-                timestamp = 11L,
+                timestamp = Instant.ofEpochMilli(11),
                 contactId = "test-contact-id"),
             MeteredUsageEventEntity(
                 eventId = "event3",
@@ -61,7 +62,7 @@ public class MeteredUsageApiClientTest {
                 type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
                 product = "product3",
                 reportingContext = jsonMapOf("test3" to "context3").toJsonValue(),
-                timestamp = 111L,
+                timestamp = Instant.ofEpochMilli(111),
                 contactId = "test-contact-id").withAnalyticsDisabled(),
         )
 
@@ -89,7 +90,7 @@ public class MeteredUsageApiClientTest {
                     "product" to "product1",
                     "event_id" to "event1",
                     "reporting_context" to jsonMapOf("test" to "context"),
-                    "occurred" to DateUtils.createIso8601TimeStamp(1),
+                    "occurred" to DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(1)),
                     "usage_type" to "iax_impression",
                     "entity_id" to "entity1",
                     "contact_id" to "test-contact-id"
@@ -98,7 +99,7 @@ public class MeteredUsageApiClientTest {
                     "product" to "product2",
                     "event_id" to "event2",
                     "reporting_context" to jsonMapOf("test2" to "context2"),
-                    "occurred" to DateUtils.createIso8601TimeStamp(11),
+                    "occurred" to DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(11)),
                     "usage_type" to "iax_impression",
                     "entity_id" to "entity2",
                     "contact_id" to "test-contact-id"

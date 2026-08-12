@@ -23,6 +23,7 @@ import com.urbanairship.push.NotificationProxyActivity
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.util.PendingIntentCompat
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
@@ -74,8 +75,8 @@ internal class LiveUpdateRegistrar(
         name: String,
         type: String,
         content: JsonMap,
-        timestamp: Long,
-        dismissalTimestamp: Long?,
+        timestamp: Instant,
+        dismissalTimestamp: Instant?,
         message: PushMessage? = null
     ) {
         val handler = handlers[type]
@@ -99,8 +100,8 @@ internal class LiveUpdateRegistrar(
     fun update(
         name: String,
         content: JsonMap,
-        timestamp: Long,
-        dismissalTimestamp: Long?,
+        timestamp: Instant,
+        dismissalTimestamp: Instant?,
         message: PushMessage? = null
     ) = processor.enqueue(
         Operation.Update(
@@ -115,8 +116,8 @@ internal class LiveUpdateRegistrar(
     fun stop(
         name: String,
         content: JsonMap?,
-        timestamp: Long,
-        dismissalTimestamp: Long?,
+        timestamp: Instant,
+        dismissalTimestamp: Instant?,
         message: PushMessage? = null
     ) = processor.enqueue(
         Operation.Stop(
@@ -128,12 +129,12 @@ internal class LiveUpdateRegistrar(
         )
     )
 
-    fun cancel(name: String, timestamp: Long = System.currentTimeMillis()) =
+    fun cancel(name: String, timestamp: Instant = Instant.now()) =
         processor.enqueue(
             Operation.Cancel(name = name, timestamp = timestamp)
         )
 
-    fun clearAll(timestamp: Long = System.currentTimeMillis()) =
+    fun clearAll(timestamp: Instant = Instant.now()) =
         processor.enqueue(
             Operation.ClearAll(timestamp = timestamp)
         )
@@ -242,7 +243,7 @@ internal class LiveUpdateRegistrar(
                     return postNotification(context, update, result.value, result.extender, message)
                 }
                 is LiveUpdateResult.Cancel -> {
-                    stop(update.name, update.content, System.currentTimeMillis(), null, message)
+                    stop(update.name, update.content, Instant.now(), null, message)
                     cancelNotification(update.notificationTag)
                 }
             }
@@ -251,7 +252,7 @@ internal class LiveUpdateRegistrar(
                     // No-op. Custom handlers are responsible doing something with the update.
                 }
                 is LiveUpdateResult.Cancel -> {
-                    stop(update.name, update.content, System.currentTimeMillis(), null, null)
+                    stop(update.name, update.content, Instant.now(), null, null)
                 }
             }
         }

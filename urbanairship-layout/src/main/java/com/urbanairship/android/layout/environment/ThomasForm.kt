@@ -13,6 +13,8 @@ import com.urbanairship.android.layout.util.DelicateLayoutApi
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
+import com.urbanairship.util.minus
+import java.time.Instant
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 import kotlin.time.Duration.Companion.milliseconds
@@ -78,7 +80,7 @@ internal class ThomasForm(
         val fields = feed.changes.value.filteredFields
 
         val containsPending = fields.any { it.value.status.isPending }
-        val start = clock.currentTimeMillis().milliseconds
+        val start = clock.now()
         val processResult = fields.mapValues { (_, field) ->
             when(val fieldType = field.fieldType) {
                 is ThomasFormField.FieldType.Async<*> -> {
@@ -96,7 +98,7 @@ internal class ThomasForm(
 
         feed.update { it.copyWithProcessResult(processResult) }
 
-        val end = clock.currentTimeMillis().milliseconds
+        val end = clock.now()
         if (containsPending && validationMode == FormValidationMode.ON_DEMAND) {
             val remaining = 1.seconds - (end - start)
             if (remaining.isPositive()) {

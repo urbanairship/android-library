@@ -9,6 +9,7 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
+import java.time.Instant
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -18,7 +19,7 @@ public data class MessageDisplayHistory(
 ) : JsonSerializable {
 
     public data class LastImpression(
-        val date: Long,
+        val date: Instant,
         val triggerSessionId: String
     ) : JsonSerializable {
         internal companion object {
@@ -36,7 +37,7 @@ public data class MessageDisplayHistory(
         }
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
-            KEY_DATE to date,
+            KEY_DATE to date.toEpochMilli(),
             KEY_TRIGGER_SESSION_ID to triggerSessionId
         ).toJsonValue()
     }

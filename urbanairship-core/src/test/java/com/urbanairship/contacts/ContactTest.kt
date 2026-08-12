@@ -25,8 +25,12 @@ import com.urbanairship.remoteconfig.ContactConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import com.urbanairship.util.AutoRefreshingDataProvider
 import com.urbanairship.util.TaskSleeper
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import app.cash.turbine.test
 import io.mockk.coEvery
@@ -174,15 +178,15 @@ public class ContactTest {
             contactId = "some stable not verified id",
             namedUserId = null,
             isStable = true,
-            resolveDateMs = testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) - 1)
+            resolveDate = testClock.now() - 10.minutes - 1.milliseconds)
 
         coEvery {
-            mockContactManager.stableContactIdUpdate(testClock.currentTimeMillis())
+            mockContactManager.stableContactIdUpdate(testClock.now())
         } returns ContactIdUpdate(
             contactId = "some contact id",
             namedUserId = null,
             isStable = true,
-            resolveDateMs = testClock.currentTimeMillis)
+            resolveDate = testClock.currentTime)
 
         coEvery { mockContactManager.lastContactId } returns "some contact id"
 
@@ -206,7 +210,7 @@ public class ContactTest {
 
         coEvery {
             mockContactManager.stableContactIdUpdate()
-        } returns ContactIdUpdate("some stable verified id", null, true, testClock.currentTimeMillis() - TimeUnit.MINUTES.toMillis(10) + 1)
+        } returns ContactIdUpdate("some stable verified id", null, true, testClock.now() - 10.minutes + 1.milliseconds)
 
         coEvery { mockContactManager.lastContactId } returns "some stable verified id"
 
@@ -236,11 +240,11 @@ public class ContactTest {
 
         coEvery {
             mockContactManager.stableContactIdUpdate()
-        } returns ContactIdUpdate("some stable not verified id", null, true, testClock.currentTimeMillis() - 100)
+        } returns ContactIdUpdate("some stable not verified id", null, true, testClock.now() - 100.milliseconds)
 
         coEvery {
-            mockContactManager.stableContactIdUpdate(testClock.currentTimeMillis())
-        } returns ContactIdUpdate("some stable verified id", null, true, testClock.currentTimeMillis)
+            mockContactManager.stableContactIdUpdate(testClock.now())
+        } returns ContactIdUpdate("some stable verified id", null, true, testClock.currentTime)
 
         coEvery { mockContactManager.lastContactId } returns "some stable verified id"
 
@@ -293,14 +297,14 @@ public class ContactTest {
         assertEquals(1, count)
 
         // Almost 1 hour
-        testClock.currentTimeMillis += 1 * 60 * 60 * 1000 - 1
+        testClock.currentTime += (1 * 60 * 60 * 1000 - 1).milliseconds
 
         testActivityMonitor.background()
         testActivityMonitor.foreground()
 
         assertEquals(1, count)
 
-        testClock.currentTimeMillis += 1
+        testClock.currentTime += (1).milliseconds
         testActivityMonitor.foreground()
 
         assertEquals(2, count)
@@ -352,13 +356,13 @@ public class ContactTest {
             )
         )
 
-        testClock.currentTimeMillis += 99
+        testClock.currentTime += (99).milliseconds
         testActivityMonitor.background()
         testActivityMonitor.foreground()
 
         assertEquals(1, count)
 
-        testClock.currentTimeMillis += 1
+        testClock.currentTime += (1).milliseconds
         testActivityMonitor.foreground()
 
         assertEquals(2, count)
@@ -376,16 +380,16 @@ public class ContactTest {
         assertEquals(0, count)
         testDispatcher.scheduler.advanceUntilIdle()
 
-        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", null, true, 0))
+        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", null, true, Instant.ofEpochMilli(0)))
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(1, count)
 
         // Different update, same contact id
-        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", null, true, 0))
+        contactIdUpdates.tryEmit(ContactIdUpdate("some contact id", null, true, Instant.ofEpochMilli(0)))
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(1, count)
 
-        contactIdUpdates.tryEmit(ContactIdUpdate("some  other contact id", null, false, 0))
+        contactIdUpdates.tryEmit(ContactIdUpdate("some  other contact id", null, false, Instant.ofEpochMilli(0)))
         testDispatcher.scheduler.advanceUntilIdle()
         assertEquals(2, count)
     }
@@ -428,7 +432,7 @@ public class ContactTest {
         contact.notifyRemoteLogin()
         verify(exactly = 1) {
             mockContactManager.addOperation(match<ContactOperation.Verify> {
-                it.required && it.dateMs == testClock.currentTimeMillis
+                it.required && it.date == testClock.currentTime
             })
         }
     }
@@ -488,7 +492,7 @@ public class ContactTest {
 
         val expectedMutations = listOf(
             AttributeMutation.newSetAttributeMutation(
-                "some attribute", JsonValue.wrapOpt("some value"), testClock.currentTimeMillis()
+                "some attribute", JsonValue.wrapOpt("some value"), testClock.now()
             )
         )
 
@@ -502,7 +506,7 @@ public class ContactTest {
 
         val expectedMutations = listOf(
             AttributeMutation.newSetAttributeMutation(
-                "some attribute", JsonValue.wrapOpt("some value"), testClock.currentTimeMillis()
+                "some attribute", JsonValue.wrapOpt("some value"), testClock.now()
             )
         )
 
@@ -517,7 +521,7 @@ public class ContactTest {
 
         val expectedMutations = listOf(
             AttributeMutation.newSetAttributeMutation(
-                "some attribute", JsonValue.wrapOpt("some value"), testClock.currentTimeMillis()
+                "some attribute", JsonValue.wrapOpt("some value"), testClock.now()
             )
         )
 
@@ -531,7 +535,7 @@ public class ContactTest {
 
         val expectedMutations = listOf(
             AttributeMutation.newSetAttributeMutation(
-                "some attribute", JsonValue.wrapOpt("some value"), testClock.currentTimeMillis()
+                "some attribute", JsonValue.wrapOpt("some value"), testClock.now()
             )
         )
 
@@ -546,7 +550,7 @@ public class ContactTest {
 
         val expectedMutations = listOf(
             ScopedSubscriptionListMutation.newSubscribeMutation(
-                "some list", Scope.APP, testClock.currentTimeMillis()
+                "some list", Scope.APP, testClock.now()
             )
         )
 
@@ -561,7 +565,7 @@ public class ContactTest {
 
         val expectedMutations = listOf(
             ScopedSubscriptionListMutation.newSubscribeMutation(
-                "some list", Scope.APP, testClock.currentTimeMillis()
+                "some list", Scope.APP, testClock.now()
             )
         )
 
@@ -576,7 +580,7 @@ public class ContactTest {
 
         val expectedMutations = listOf(
             ScopedSubscriptionListMutation.newSubscribeMutation(
-                "some list", Scope.APP, testClock.currentTimeMillis()
+                "some list", Scope.APP, testClock.now()
             )
         )
 
@@ -592,7 +596,7 @@ public class ContactTest {
 
         val expectedMutations = listOf(
             ScopedSubscriptionListMutation.newSubscribeMutation(
-                "some list", Scope.APP, testClock.currentTimeMillis()
+                "some list", Scope.APP, testClock.now()
             )
         )
 
@@ -769,9 +773,9 @@ public class ContactTest {
         )
 
         val attributes = listOf(
-            AttributeMutation.newRemoveAttributeMutation("some-attribute", 100),
+            AttributeMutation.newRemoveAttributeMutation("some-attribute", Instant.ofEpochMilli(100)),
             AttributeMutation.newSetAttributeMutation(
-                "cool", JsonValue.wrap("story"), 100
+                "cool", JsonValue.wrap("story"), Instant.ofEpochMilli(100)
             )
         )
 
@@ -805,9 +809,9 @@ public class ContactTest {
         )
 
         val attributes = listOf(
-            AttributeMutation.newRemoveAttributeMutation("some-attribute", 100),
+            AttributeMutation.newRemoveAttributeMutation("some-attribute", Instant.ofEpochMilli(100)),
             AttributeMutation.newSetAttributeMutation(
-                "cool", JsonValue.wrap("story"), 100
+                "cool", JsonValue.wrap("story"), Instant.ofEpochMilli(100)
             )
         )
 
@@ -841,9 +845,9 @@ public class ContactTest {
         )
 
         val attributes = listOf(
-            AttributeMutation.newRemoveAttributeMutation("some-attribute", 100),
+            AttributeMutation.newRemoveAttributeMutation("some-attribute", Instant.ofEpochMilli(100)),
             AttributeMutation.newSetAttributeMutation(
-                "cool", JsonValue.wrap("story"), 100
+                "cool", JsonValue.wrap("story"), Instant.ofEpochMilli(100)
             )
         )
 
@@ -868,7 +872,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptions(): TestResult = runTest {
-        contactIdUpdates.value = ContactIdUpdate("stable contact id", null, true, 0)
+        contactIdUpdates.value = ContactIdUpdate("stable contact id", null, true, Instant.ofEpochMilli(0))
 
         val networkResult = RequestResult(
             status = 200,
@@ -887,7 +891,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionsCache(): TestResult = runTest {
-        contactIdUpdates.tryEmit(ContactIdUpdate("stable contact id", null, true, 0))
+        contactIdUpdates.tryEmit(ContactIdUpdate("stable contact id", null, true, Instant.ofEpochMilli(0)))
         val networkResult = RequestResult(
             status = 200,
             value = mapOf(
@@ -907,7 +911,7 @@ public class ContactTest {
 
         coEvery { mockSubscriptionListApiClient.getSubscriptionLists("stable contact id") } throws IllegalStateException()
         // Advance time by half of the max cache age.
-        testClock.currentTimeMillis += 5.minutes.inWholeMilliseconds
+        testClock.currentTime += (5.minutes.inWholeMilliseconds).milliseconds
         advanceTimeBy(5.minutes)
 
         contact.subscriptionListsFlow.test {
@@ -918,7 +922,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionsError(): TestResult = runTest {
-        contactIdUpdates.tryEmit(ContactIdUpdate("stable contact id", null, true, 0))
+        contactIdUpdates.tryEmit(ContactIdUpdate("stable contact id", null, true, Instant.ofEpochMilli(0)))
 
         val networkResult = RequestResult<Map<String, Set<Scope>>>(
             status = 404, value = null, body = null, headers = emptyMap()
@@ -931,8 +935,8 @@ public class ContactTest {
     @Test
     public fun testFetchSubscriptionsIgnoresCacheContactIdChanges(): TestResult = runTest {
         coEvery { mockContactManager.stableContactIdUpdate() } returnsMany listOf(
-            ContactIdUpdate("first", null, true, 0),
-            ContactIdUpdate("second", null, true, 1)
+            ContactIdUpdate("first", null, true, Instant.ofEpochMilli(0)),
+            ContactIdUpdate("second", null, true, Instant.ofEpochMilli(1))
         )
 
         val firstResult = RequestResult(
@@ -950,10 +954,10 @@ public class ContactTest {
         coEvery { mockSubscriptionListApiClient.getSubscriptionLists("second") } returns secondResult
 
         contact.subscriptionListsFlow.test {
-            contactIdUpdates.emit(ContactIdUpdate("first", null, true, 0))
+            contactIdUpdates.emit(ContactIdUpdate("first", null, true, Instant.ofEpochMilli(0)))
             assertEquals(firstResult.value, awaitItem().getOrThrow())
 
-            contactIdUpdates.emit(ContactIdUpdate("second", null, true, 1))
+            contactIdUpdates.emit(ContactIdUpdate("second", null, true, Instant.ofEpochMilli(1)))
             assertEquals(secondResult.value, awaitItem().getOrThrow())
 
             ensureAllEventsConsumed()
@@ -962,7 +966,7 @@ public class ContactTest {
 
     @Test
     public fun testFetchSubscriptionListCacheTime(): TestResult = runTest {
-        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", null, true, 0)
+        coEvery { mockContactManager.stableContactIdUpdate() } returns ContactIdUpdate("some id", null, true, Instant.ofEpochMilli(0))
 
         val firstResult = RequestResult(
             status = 200, value = mapOf(
@@ -982,14 +986,14 @@ public class ContactTest {
         coEvery { mockSubscriptionListApiClient.getSubscriptionLists("second") } returns secondResult
 
         contact.subscriptionListsFlow.test {
-            contactIdUpdates.emit(ContactIdUpdate("some id", null, true, 0))
+            contactIdUpdates.emit(ContactIdUpdate("some id", null, true, Instant.ofEpochMilli(0)))
 
             assertEquals(firstResult.value, awaitItem().getOrThrow())
 
             // expire cache
-            testClock.currentTimeMillis += 10 * 60 * 1000
+            testClock.currentTime += (10 * 60 * 1000).milliseconds
 
-            contactIdUpdates.emit(ContactIdUpdate("second", null, true, 1))
+            contactIdUpdates.emit(ContactIdUpdate("second", null, true, Instant.ofEpochMilli(1)))
             assertEquals(secondResult.value, awaitItem().getOrThrow())
 
             ensureAllEventsConsumed()
@@ -1003,27 +1007,27 @@ public class ContactTest {
                 ScopedSubscriptionListMutation.newSubscribeMutation(
                     "some list",
                     Scope.SMS,
-                    testClock.currentTimeMillis()
+                    testClock.now()
                 ),
                 ScopedSubscriptionListMutation.newSubscribeMutation(
                     "foo",
                     Scope.WEB,
-                    testClock.currentTimeMillis()
+                    testClock.now()
                 ),
                 ScopedSubscriptionListMutation.newUnsubscribeMutation(
                     "bar",
                     Scope.EMAIL,
-                    testClock.currentTimeMillis()
+                    testClock.now()
                 ),
                 ScopedSubscriptionListMutation.newUnsubscribeMutation(
                     "bar",
                     Scope.APP,
-                    testClock.currentTimeMillis()
+                    testClock.now()
                 ),
             )
         )
 
-        val contactUpdate = ContactIdUpdate("some id", null, true, 0)
+        val contactUpdate = ContactIdUpdate("some id", null, true, Instant.ofEpochMilli(0))
         val updateFlow = MutableStateFlow<ContactIdUpdate?>(null)
         coEvery { mockContactManager.stableContactIdUpdate() } returns contactUpdate
         coEvery { mockAudienceOverridesProvider.contactOverrides("some id") } returns overrides

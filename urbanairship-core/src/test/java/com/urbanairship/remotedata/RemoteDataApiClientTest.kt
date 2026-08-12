@@ -8,6 +8,7 @@ import com.urbanairship.TestRequestSession
 import com.urbanairship.http.RequestAuth
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -55,7 +56,7 @@ public class RemoteDataApiClientTest {
 
     @Test
     public fun testFetch(): TestResult = runTest {
-        val responseTimestamp = DateUtils.createIso8601TimeStamp(10000)
+        val responseTimestamp = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(10000))
         requestSession.addResponse(
             200,
             validResponse,
@@ -100,7 +101,7 @@ public class RemoteDataApiClientTest {
 
     @Test
     public fun testFetchNoLastModified(): TestResult = runTest {
-        val responseTimestamp = DateUtils.createIso8601TimeStamp(10000)
+        val responseTimestamp = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(10000))
         requestSession.addResponse(
             200,
             validResponse,

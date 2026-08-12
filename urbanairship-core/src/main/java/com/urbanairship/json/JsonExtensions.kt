@@ -2,6 +2,10 @@ package com.urbanairship.json
 
 import com.urbanairship.UALog
 import com.urbanairship.util.DateUtils
+import java.time.Instant
+import kotlin.time.Duration
+import kotlin.time.DurationUnit
+import kotlin.time.toDuration
 
 @Throws(JsonException::class)
 public fun jsonMapOf(vararg fields: Pair<String, *>): JsonMap =
@@ -53,8 +57,26 @@ public inline fun <reified T> JsonMap.requireField(key: String): T {
         JsonList::class -> field.optList() as T
         JsonMap::class -> field.optMap() as T
         JsonValue::class -> field.toJsonValue() as T
+        Instant::class -> field.requireEpochMillis(key) as T
         else -> throw JsonException("Invalid type '${T::class.java.simpleName}' for field '$key'")
     }
+}
+
+/**
+ * Reads a [JsonValue] holding epoch milliseconds as an [Instant].
+ *
+ * This is the representation used for locally persisted timestamps. For ISO 8601 strings
+ * — the representation used by server payloads — use [JsonMap.isoDateAsInstant] instead.
+ *
+ * @throws JsonException if the value is not a number.
+ */
+@Throws(JsonException::class)
+public fun JsonValue.requireEpochMillis(key: String? = null): Instant {
+    if (!isNumber) {
+        val label = key?.let { "field '$it'" } ?: "value"
+        throw JsonException("Unable to parse $label as epoch milliseconds: $this")
+    }
+    return Instant.ofEpochMilli(getLong(0))
 }
 
 @Throws(JsonException::class)
@@ -89,22 +111,23 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
         JsonList::class -> field.optList() as T
         JsonMap::class -> field.optMap() as T
         JsonValue::class -> field.toJsonValue() as T
+        Instant::class -> field.requireEpochMillis(key) as T
         else -> throw JsonException("Invalid type '${T::class.java.simpleName}' for field '$key'")
     }
 }
 
 
 /**
- * Gets the field with the given [key] and parses it as a ISO date string.
+ * Gets the field with the given [key] and parses it as an ISO date string.
  *
  * @throws JsonException if the value is not a valid date string.
  */
 @Throws(JsonException::class)
-public fun JsonMap.isoDateAsMilliseconds(key: String, defaultValue: Long? = null): Long? {
+public fun JsonMap.isoDateAsInstant(key: String, defaultValue: Instant? = null): Instant? {
     return try {
         optionalField<String>(key)?.let { isoDate ->
             defaultValue?.let {
-                DateUtils.parseIso8601(isoDate, defaultValue)
+                DateUtils.parseIso8601(isoDate, it)
             } ?: run {
                 DateUtils.parseIso8601(isoDate)
             }
@@ -113,6 +136,34 @@ public fun JsonMap.isoDateAsMilliseconds(key: String, defaultValue: Long? = null
         throw JsonException("Unable to parse value as date: ${get(key)}", e)
     }
 }
+
+/**
+ * Gets the field with the given [key] as a [Duration], interpreting the stored number in
+ * [unit], or `null` if not defined.
+ *
+ * @throws JsonException if the value is not a number.
+ */
+@Throws(JsonException::class)
+public fun JsonMap.optionalDuration(key: String, unit: DurationUnit): Duration? {
+    val field = get(key) ?: return null
+    if (field.isNull) {
+        return null
+    }
+    if (!field.isNumber) {
+        throw JsonException("Unable to parse field '$key' as a duration: $field")
+    }
+    return field.getDouble(0.0).toDuration(unit)
+}
+
+/**
+ * Gets the field with the given [key] as a [Duration], interpreting the stored number in
+ * [unit].
+ *
+ * @throws JsonException if the field is missing, `null`, or not a number.
+ */
+@Throws(JsonException::class)
+public fun JsonMap.requireDuration(key: String, unit: DurationUnit): Duration =
+    optionalDuration(key, unit) ?: throw JsonException("Missing required field: '$key'")
 
 /**
  * Gets a map with the given [key] from the [JsonMap].

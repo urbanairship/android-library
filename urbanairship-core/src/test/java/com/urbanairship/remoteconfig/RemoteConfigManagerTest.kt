@@ -12,6 +12,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
+import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.every
 import io.mockk.mockk
@@ -127,6 +128,6 @@ public class RemoteConfigManagerTest : BaseTestCase() {
         timeStamp: Long,
         data: JsonMap
     ): RemoteDataPayload {
-        return RemoteDataPayload(type, timeStamp, data, null)
+        return RemoteDataPayload(type, Instant.ofEpochMilli(timeStamp), data, null)
     }
 }

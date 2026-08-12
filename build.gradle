@@ -9,7 +9,7 @@ buildscript {
         // airshipVersionQualifier = "alpha"
 
         // Android SDK Versions
-        minSdkVersion = 23
+        minSdkVersion = 26
         compileSdkVersion = 36
         targetSdkVersion = 36
 

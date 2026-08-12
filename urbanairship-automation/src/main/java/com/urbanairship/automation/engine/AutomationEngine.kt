@@ -15,6 +15,7 @@ import com.urbanairship.automation.updateOrCreate
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
+import com.urbanairship.util.minus
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -193,10 +194,10 @@ internal class AutomationEngine(
 
         UALog.d { "Stopping schedules $identifiers" }
 
-        val timestamp = clock.currentTimeMillis()
+        val timestamp = clock.now()
         for (item in identifiers) {
             updateState(item) { data ->
-                data.setSchedule(data.schedule.copyWith(endDate = timestamp.toULong()))
+                data.setSchedule(data.schedule.copyWith(endDate = timestamp))
                 data.finished(timestamp)
             }
         }
@@ -214,8 +215,8 @@ internal class AutomationEngine(
 
         val updatedSchedules = store.upsertSchedules(idToSchedule.keys.toList()) { identifier, data ->
             val schedule = requireNotNull(idToSchedule[identifier])
-            val stored = schedule.updateOrCreate(data, clock.currentTimeMillis())
-            stored.updateState(clock.currentTimeMillis())
+            val stored = schedule.updateOrCreate(data, clock.now())
+            stored.updateState(clock.now())
         }
 
         triggerProcessor.updateSchedules(updatedSchedules)
@@ -282,13 +283,13 @@ internal class AutomationEngine(
     override suspend fun getSchedules(): List<AutomationSchedule> = withContext(dispatcher) {
         return@withContext store
             .getSchedules()
-            .filter { !it.shouldDelete(clock.currentTimeMillis()) }
+            .filter { !it.shouldDelete(clock.now()) }
             .map { it.schedule }
     }
 
     override suspend fun getSchedule(identifier: String): AutomationSchedule? = withContext(dispatcher) {
         val result = store.getSchedule(identifier) ?: return@withContext null
-        if (result.isExpired(clock.currentTimeMillis())) {
+        if (result.isExpired(clock.now())) {
             return@withContext null
         }
 
@@ -296,7 +297,7 @@ internal class AutomationEngine(
     }
 
     override suspend fun getSchedules(group: String): List<AutomationSchedule> = withContext(dispatcher) {
-        val date = clock.currentTimeMillis()
+        val date = clock.now()
 
         return@withContext store
             .getSchedules(group)
@@ -315,7 +316,7 @@ internal class AutomationEngine(
     }
 
     private suspend fun processTriggerResult(result: TriggerResult) {
-        val date = clock.currentTimeMillis()
+        val date = clock.now()
 
         try {
             when(result.triggerExecutionType) {
@@ -334,7 +335,7 @@ internal class AutomationEngine(
     }
 
     private suspend fun restoreSchedules() {
-        val now = clock.currentTimeMillis()
+        val now = clock.now()
 
         val schedules = store
             .getSchedules()
@@ -371,7 +372,7 @@ internal class AutomationEngine(
             .filter { it.scheduleState == AutomationScheduleState.PAUSED }
             .forEach { data ->
                 val interval = (data.schedule.interval?.toLong() ?: 0).seconds
-                val remaining = interval - (clock.currentTimeMillis() - data.scheduleStateChangeDate).milliseconds
+                val remaining = interval - (clock.now() - data.scheduleStateChangeDate)
                 handleInterval(remaining, data.schedule.identifier)
             }
 
@@ -424,7 +425,7 @@ internal class AutomationEngine(
             return
         }
 
-        if (!data.isActive(clock.currentTimeMillis())) {
+        if (!data.isActive(clock.now())) {
             UALog.v { "Aborting processing schedule $data, no longer active." }
             preparer.cancelled(data.schedule)
             return
@@ -438,7 +439,7 @@ internal class AutomationEngine(
 
         if (!checkStillValid(preparedData)) {
             val updated = updateState(preparedData.scheduleId) {
-                it.executionInvalidated(clock.currentTimeMillis())
+                it.executionInvalidated(clock.now())
             }
 
             if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
@@ -505,7 +506,7 @@ internal class AutomationEngine(
             return false
         }
 
-        if (!prepared.schedule.isActive(clock.currentTimeMillis())) {
+        if (!prepared.schedule.isActive(clock.now())) {
             UALog.v { "Prepared schedule no longer active, no longer valid ${prepared.schedule}" }
             return false
         }
@@ -545,13 +546,13 @@ internal class AutomationEngine(
 
             return@updateState when(result) {
                 is SchedulePrepareResult.Prepared -> {
-                    it.prepared(result.schedule.info, clock.currentTimeMillis())
+                    it.prepared(result.schedule.info, clock.now())
                 }
                 SchedulePrepareResult.Penalize -> {
-                    it.prepareCancelled(clock.currentTimeMillis(), penalize = true)
+                    it.prepareCancelled(clock.now(), penalize = true)
                 }
                 SchedulePrepareResult.Skip -> {
-                    it.prepareCancelled(clock.currentTimeMillis(), penalize = false)
+                    it.prepareCancelled(clock.now(), penalize = false)
                 }
                 else -> { it }
             }
@@ -598,7 +599,7 @@ internal class AutomationEngine(
             ScheduleReadyResult.READY -> {}
             ScheduleReadyResult.INVALIDATE -> {
                 val updated =
-                    updateState(scheduleID) { it.executionInvalidated(clock.currentTimeMillis()) }
+                    updateState(scheduleID) { it.executionInvalidated(clock.now()) }
                 if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
                     startTaskToProcessTriggeredSchedule(scheduleID)
                 } else {
@@ -613,7 +614,7 @@ internal class AutomationEngine(
             }
 
             ScheduleReadyResult.SKIP -> {
-                updateState(scheduleID) { it.executionSkipped(clock.currentTimeMillis()) }
+                updateState(scheduleID) { it.executionSkipped(clock.now()) }
                 preparer.cancelled(data.schedule)
                 return true
             }
@@ -622,7 +623,7 @@ internal class AutomationEngine(
         UALog.v { "Executing schedule ${preparedSchedule.info.scheduleId}" }
 
         val updateStateJob = scope.launch {
-            updateState(preparedSchedule.info.scheduleId) { it.executing(clock.currentTimeMillis()) }
+            updateState(preparedSchedule.info.scheduleId) { it.executing(clock.now()) }
         }
 
         val result = executor.execute(preparedSchedule)
@@ -640,7 +641,7 @@ internal class AutomationEngine(
 
             ScheduleExecuteResult.FINISHED -> {
                 val update =
-                    updateState(scheduleID) { it.finishedExecuting(clock.currentTimeMillis()) }
+                    updateState(scheduleID) { it.finishedExecuting(clock.now()) }
                 if (update?.scheduleState == AutomationScheduleState.PAUSED) {
                     val interval = update.schedule.interval?.toLong() ?: 0L
                     handleInterval(interval.seconds, scheduleID)
@@ -662,7 +663,7 @@ internal class AutomationEngine(
             return ScheduleReadyResult.NOT_READY
         }
 
-        if (!data.isActive(clock.currentTimeMillis())) {
+        if (!data.isActive(clock.now())) {
             UALog.v { "Schedule no longer active, Invalidating $data" }
             return ScheduleReadyResult.INVALIDATE
         }
@@ -680,7 +681,7 @@ internal class AutomationEngine(
         scope.launch {
             sleeper.sleep(interval)
             updateState(scheduleID) {
-                it.idle(clock.currentTimeMillis())
+                it.idle(clock.now())
             }
         }
     }

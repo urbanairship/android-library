@@ -35,7 +35,13 @@ import com.urbanairship.job.JobResult
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.push.PushManager
 import com.urbanairship.util.Clock
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -142,17 +148,17 @@ public class Contact internal constructor(
             return contactManager.namedUserId
         }
 
-    private var lastResolvedDate: Long
-        get() = preferenceStore.get(LAST_RESOLVED_DATE_KEY) ?: -1
-        set(newValue) = preferenceStore.put(LAST_RESOLVED_DATE_KEY, newValue)
+    private var lastResolvedDate: Instant
+        get() = preferenceStore.get(LAST_RESOLVED_DATE_KEY)?.let(Instant::ofEpochMilli) ?: Instant.EPOCH
+        set(newValue) = preferenceStore.put(LAST_RESOLVED_DATE_KEY, newValue.toEpochMilli())
 
     /** The foreground resolve interval from remote config, or the default [FOREGROUND_INTERVAL] if not available. */
-    private val foregroundResolveInterval: Long
-        get() = config.remoteConfig.contactConfig?.foregroundIntervalMs ?: FOREGROUND_INTERVAL
+    private val foregroundResolveInterval: Duration
+        get() = config.remoteConfig.contactConfig?.foregroundIntervalMs?.milliseconds ?: FOREGROUND_INTERVAL
 
     /** The CRA max age from remote config, or the default [CRA_MAX_AGE] if not available. */
-    private val channelRegistrationMaxResolveAge: Long
-        get() = config.remoteConfig.contactConfig?.channelRegistrationMaxResolveAgeMs ?: CRA_MAX_AGE
+    private val channelRegistrationMaxResolveAge: Duration
+        get() = config.remoteConfig.contactConfig?.channelRegistrationMaxResolveAgeMs?.milliseconds ?: CRA_MAX_AGE
 
     internal val currentContactIdUpdate: ContactIdUpdate?
         get() = contactManager.currentContactIdUpdate
@@ -170,13 +176,13 @@ public class Contact internal constructor(
 
     private suspend fun stableVerifiedContactId(): String {
         val stable = contactManager.stableContactIdUpdate()
-        val age = this.clock.currentTimeMillis() - stable.resolveDateMs
+        val age = this.clock.now() - stable.resolveDate
 
         if (age <= channelRegistrationMaxResolveAge) {
             return stable.contactId
         }
 
-        val now = this.clock.currentTimeMillis()
+        val now = this.clock.now()
         contactManager.addOperation(ContactOperation.Verify(now))
         return contactManager.stableContactIdUpdate(now).contactId
     }
@@ -197,12 +203,12 @@ public class Contact internal constructor(
     init {
         migrateNamedUser()
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(milliseconds: Long) {
-                if (clock.currentTimeMillis() >= lastResolvedDate + foregroundResolveInterval) {
+            override fun onForeground(timestamp: Instant) {
+                if (clock.now() >= lastResolvedDate + foregroundResolveInterval) {
                     if (privacyManager.isContactsEnabled) {
                         contactManager.addOperation(ContactOperation.Resolve)
                     }
-                    lastResolvedDate = clock.currentTimeMillis()
+                    lastResolvedDate = clock.now()
                 }
 
                 contactChannelsProvider.refresh()
@@ -308,7 +314,7 @@ public class Contact internal constructor(
 
         contactManager.addOperation(
                 ContactOperation.Verify(
-                        dateMs = this.clock.currentTimeMillis(),
+                        date = this.clock.now(),
                         required = true
                 )
         )
@@ -624,10 +630,10 @@ public class Contact internal constructor(
         private val LAST_RESOLVED_DATE_KEY = SyncPrefKey.long("com.urbanairship.contacts.LAST_RESOLVED_DATE_KEY")
 
         /** Default foreground refresh interval. */
-        private val FOREGROUND_INTERVAL = TimeUnit.MINUTES.toMillis(60)
+        private val FOREGROUND_INTERVAL = 60.minutes
 
         /** Default CRA max age. */
-        private val CRA_MAX_AGE = TimeUnit.MINUTES.toMillis(10)
+        private val CRA_MAX_AGE = 10.minutes
 
         private const val CONTACT_UPDATE_PUSH_KEY = "com.urbanairship.contact.update"
 

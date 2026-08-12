@@ -23,6 +23,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.ValueMatcher
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.test.TestResult
@@ -84,14 +85,14 @@ public class AutomationStoreMigratorTest {
                     jsonMapOf("action" to "value").toJsonValue()
                 ),
                 bypassHoldoutGroups = false,
-                created = 0U
+                created = Instant.ofEpochMilli(0)
             ),
             scheduleState = AutomationScheduleState.IDLE,
-            scheduleStateChangeDate = 0,
+            scheduleStateChangeDate = Instant.ofEpochMilli(0),
             executionCount = 0,
             triggerInfo = TriggeringInfo(
                 context = null,
-                date = 0
+                date = Instant.ofEpochMilli(0)
             ),
             triggerSessionId = UUID.randomUUID().toString()
         )
@@ -102,8 +103,8 @@ public class AutomationStoreMigratorTest {
 
     @Test
     public fun testConvertInAppSchedule(): TestResult = runTest {
-        val start = DateUtils.createIso8601TimeStamp(3000)
-        val end = DateUtils.createIso8601TimeStamp(5000)
+        val start = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(3000))
+        val end = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(5000))
         val legacy = FullSchedule(
             ScheduleEntity().apply {
                 this.scheduleId = "some-schedule"
@@ -112,8 +113,8 @@ public class AutomationStoreMigratorTest {
                 this.limit = 1
                 this.priority = 2
                 this.triggeredTime = 100
-                this.scheduleStart = DateUtils.parseIso8601(start)
-                this.scheduleEnd =  DateUtils.parseIso8601(end)
+                this.scheduleStart = DateUtils.parseIso8601(start).toEpochMilli()
+                this.scheduleEnd =  DateUtils.parseIso8601(end).toEpochMilli()
                 this.editGracePeriod = TimeUnit.DAYS.toMillis(10)
                 this.interval = TimeUnit.SECONDS.toMillis(500)
                 this.scheduleType = "in_app_message"
@@ -177,8 +178,8 @@ public class AutomationStoreMigratorTest {
                 group = "some-group",
                 priority = 2,
                 limit = 1U,
-                startDate = DateUtils.parseIso8601(start).toULong(),
-                endDate = DateUtils.parseIso8601(end).toULong(),
+                startDate = DateUtils.parseIso8601(start),
+                endDate = DateUtils.parseIso8601(end),
                 audience = AutomationAudience(
                     audienceSelector = AudienceSelector.newBuilder().setNewUser(true).build()
                 ),
@@ -214,10 +215,10 @@ public class AutomationStoreMigratorTest {
                 messageType = "cool inapp",
                 reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
                 productId = "cool-product",
-                created = 10000UL
+                created = Instant.ofEpochMilli(10000)
             ),
             scheduleState = AutomationScheduleState.EXECUTING,
-            scheduleStateChangeDate = 600,
+            scheduleStateChangeDate = Instant.ofEpochMilli(600),
             executionCount = 3,
             preparedScheduleInfo = PreparedScheduleInfo(
                 scheduleId = "some-schedule",
@@ -230,7 +231,7 @@ public class AutomationStoreMigratorTest {
             ),
             triggerInfo = TriggeringInfo(
                 context = null,
-                date = 100
+                date = Instant.ofEpochMilli(100)
             ),
             triggerSessionId = UUID.randomUUID().toString()
         )
@@ -241,8 +242,8 @@ public class AutomationStoreMigratorTest {
 
     @Test
     public fun testConvertDeferredSchedule(): TestResult = runTest {
-        val start = DateUtils.createIso8601TimeStamp(3000)
-        val end = DateUtils.createIso8601TimeStamp(5000)
+        val start = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(3000))
+        val end = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(5000))
         val legacy = FullSchedule(
             ScheduleEntity().apply {
                 this.scheduleId = "some-schedule"
@@ -251,8 +252,8 @@ public class AutomationStoreMigratorTest {
                 this.limit = 1
                 this.priority = 2
                 this.triggeredTime = 100
-                this.scheduleStart = DateUtils.parseIso8601(start)
-                this.scheduleEnd =  DateUtils.parseIso8601(end)
+                this.scheduleStart = DateUtils.parseIso8601(start).toEpochMilli()
+                this.scheduleEnd =  DateUtils.parseIso8601(end).toEpochMilli()
                 this.editGracePeriod = TimeUnit.DAYS.toMillis(10)
                 this.interval = TimeUnit.SECONDS.toMillis(500)
                 this.scheduleType = "deferred"
@@ -316,8 +317,8 @@ public class AutomationStoreMigratorTest {
                 group = "some-group",
                 priority = 2,
                 limit = 1U,
-                startDate = DateUtils.parseIso8601(start).toULong(),
-                endDate = DateUtils.parseIso8601(end).toULong(),
+                startDate = DateUtils.parseIso8601(start),
+                endDate = DateUtils.parseIso8601(end),
                 audience = AutomationAudience(
                     audienceSelector = AudienceSelector.newBuilder().setNewUser(true).build()
                 ),
@@ -353,10 +354,10 @@ public class AutomationStoreMigratorTest {
                 messageType = "cool deferred",
                 reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
                 productId = "cool-product",
-                created = 10000UL
+                created = Instant.ofEpochMilli(10000)
             ),
             scheduleState = AutomationScheduleState.EXECUTING,
-            scheduleStateChangeDate = 600,
+            scheduleStateChangeDate = Instant.ofEpochMilli(600),
             executionCount = 3,
             preparedScheduleInfo = PreparedScheduleInfo(
                 scheduleId = "some-schedule",
@@ -369,7 +370,7 @@ public class AutomationStoreMigratorTest {
             ),
             triggerInfo = TriggeringInfo(
                 context = null,
-                date = 100
+                date = Instant.ofEpochMilli(100)
             ),
             triggerSessionId = UUID.randomUUID().toString()
         )
@@ -380,8 +381,8 @@ public class AutomationStoreMigratorTest {
 
     @Test
     public fun testConvertActionsSchedule(): TestResult = runTest {
-        val start = DateUtils.createIso8601TimeStamp(3000)
-        val end = DateUtils.createIso8601TimeStamp(5000)
+        val start = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(3000))
+        val end = DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(5000))
         val legacy = FullSchedule(
             ScheduleEntity().apply {
                 this.scheduleId = "some-schedule"
@@ -390,8 +391,8 @@ public class AutomationStoreMigratorTest {
                 this.limit = 1
                 this.priority = 2
                 this.triggeredTime = 100
-                this.scheduleStart = DateUtils.parseIso8601(start)
-                this.scheduleEnd =  DateUtils.parseIso8601(end)
+                this.scheduleStart = DateUtils.parseIso8601(start).toEpochMilli()
+                this.scheduleEnd =  DateUtils.parseIso8601(end).toEpochMilli()
                 this.editGracePeriod = TimeUnit.DAYS.toMillis(10)
                 this.interval = TimeUnit.SECONDS.toMillis(500)
                 this.scheduleType = "actions"
@@ -455,8 +456,8 @@ public class AutomationStoreMigratorTest {
                 group = "some-group",
                 priority = 2,
                 limit = 1U,
-                startDate = DateUtils.parseIso8601(start).toULong(),
-                endDate = DateUtils.parseIso8601(end).toULong(),
+                startDate = DateUtils.parseIso8601(start),
+                endDate = DateUtils.parseIso8601(end),
                 audience = AutomationAudience(
                     audienceSelector = AudienceSelector.newBuilder().setNewUser(true).build()
                 ),
@@ -494,10 +495,10 @@ public class AutomationStoreMigratorTest {
                 messageType =  "cool actions",
                 reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
                 productId = "cool-product",
-                created = 10000UL
+                created = Instant.ofEpochMilli(10000)
             ),
             scheduleState = AutomationScheduleState.EXECUTING,
-            scheduleStateChangeDate = 600,
+            scheduleStateChangeDate = Instant.ofEpochMilli(600),
             executionCount = 3,
             preparedScheduleInfo = PreparedScheduleInfo(
                 scheduleId = "some-schedule",
@@ -510,7 +511,7 @@ public class AutomationStoreMigratorTest {
             ),
             triggerInfo = TriggeringInfo(
                 context = null,
-                date = 100
+                date = Instant.ofEpochMilli(100)
             ),
             triggerSessionId = UUID.randomUUID().toString()
         )
@@ -552,14 +553,14 @@ public class AutomationStoreMigratorTest {
                     jsonMapOf("action" to "value").toJsonValue()
                 ),
                 bypassHoldoutGroups = false,
-                created = 0U
+                created = Instant.ofEpochMilli(0)
             ),
             scheduleState = AutomationScheduleState.IDLE,
-            scheduleStateChangeDate = 0,
+            scheduleStateChangeDate = Instant.ofEpochMilli(0),
             executionCount = 0,
             triggerInfo = TriggeringInfo(
                 context = null,
-                date = 0
+                date = Instant.ofEpochMilli(0)
             ),
             triggerSessionId = UUID.randomUUID().toString()
         )

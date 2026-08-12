@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
+import java.time.Instant
 
 /**
  * A time window with optional bounds, expressed in milliseconds since the epoch.
@@ -16,8 +17,8 @@ import com.urbanairship.json.optionalField
  * the end bound is exclusive (`start <= now < end`).
  */
 internal data class TimeSpan(
-    val startTimestamp: Long?,
-    val endTimestamp: Long?
+    val startTimestamp: Instant?,
+    val endTimestamp: Instant?
 ) : JsonSerializable {
 
     companion object {
@@ -31,18 +32,18 @@ internal data class TimeSpan(
         )
     }
 
-    fun isActive(nowMs: Long): Boolean {
-        if (startTimestamp != null && nowMs < startTimestamp) {
+    fun isActive(now: Instant): Boolean {
+        if (startTimestamp != null && now < startTimestamp) {
             return false
         }
-        if (endTimestamp != null && nowMs >= endTimestamp) {
+        if (endTimestamp != null && now >= endTimestamp) {
             return false
         }
         return true
     }
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
-        KEY_START to startTimestamp,
-        KEY_END to endTimestamp
+        KEY_START to startTimestamp?.toEpochMilli(),
+        KEY_END to endTimestamp?.toEpochMilli()
     ).toJsonValue()
 }

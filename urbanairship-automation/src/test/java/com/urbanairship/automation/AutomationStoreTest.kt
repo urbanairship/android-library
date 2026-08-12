@@ -16,6 +16,7 @@ import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
@@ -78,7 +79,7 @@ public class AutomationStoreTest {
         val updated = original.toMutableMap()
         updated["foo"] = makeSchedule("foo") // to not share the same instance
         updated["baz"] = makeSchedule("baz")
-        updated["foo"]?.finished(1)
+        updated["foo"]?.finished(Instant.ofEpochMilli(1))
 
         result = store.upsertSchedules(updated.keys.toList().sorted()) { identifier, existing ->
             assertEquals(existing, original[identifier])
@@ -95,7 +96,7 @@ public class AutomationStoreTest {
 
         val triggerInfo = TriggeringInfo(
             context = DeferredTriggerContext("foo", 10.0, JsonValue.wrap("event")),
-            date = 1
+            date = Instant.ofEpochMilli(1)
         )
 
         val preparedInfo = PreparedScheduleInfo(
@@ -114,7 +115,7 @@ public class AutomationStoreTest {
             priority = 0
         )
 
-        val date = 1L
+        val date = Instant.ofEpochMilli(1)
 
         val result = store.updateSchedule("foo") { data ->
             data.paused(date)
@@ -144,7 +145,7 @@ public class AutomationStoreTest {
         schedule.setTriggeringInfo(
             TriggeringInfo(
                 context = DeferredTriggerContext("foo", 10.0, JsonValue.wrap("event")),
-                date = 1
+                date = Instant.ofEpochMilli(1)
             )
         )
 
@@ -338,14 +339,14 @@ public class AutomationStoreTest {
                 )
             ),
             triggers = listOf(),
-            created = 0U,
+            created = Instant.ofEpochMilli(0),
             group = group
         )
 
         return AutomationScheduleData(
             schedule = schedule,
             scheduleState = AutomationScheduleState.IDLE,
-            scheduleStateChangeDate = 0L,
+            scheduleStateChangeDate = Instant.ofEpochMilli(0),
             executionCount = 0,
             triggerSessionId = UUID.randomUUID().toString()
         )

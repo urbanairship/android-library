@@ -21,6 +21,8 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.push.notifications.NotificationActionButton
 import com.urbanairship.push.notifications.NotificationActionButtonGroup
 import com.urbanairship.util.DateUtils
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -44,7 +46,7 @@ public class LegacyInAppMessagingTest {
     private val engine: AutomationEngineInterface = mockk(relaxed = true)
 
     private val dataStore = PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext())
-    private val clock = TestClock().apply { currentTimeMillis = 0 }
+    private val clock = TestClock().apply { currentTime = Instant.ofEpochMilli(0) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val messaging = LegacyInAppMessaging(
@@ -70,7 +72,7 @@ public class LegacyInAppMessagingTest {
             placement = Banner.Placement.TOP,
             alert = "test iam",
             displayDurationMs = TimeUnit.SECONDS.toMillis(100),
-            expiryMs = DateUtils.parseIso8601("2024-08-13T23:33:04"),
+            expiry = DateUtils.parseIso8601("2024-08-13T23:33:04"),
             clickActionValues = jsonMapOf("onclick" to "action"),
             buttonGroupId = "ua_yes_no_background",
             buttonActionValues = mapOf("yes" to jsonMapOf("action_one" to 123)),
@@ -135,7 +137,7 @@ public class LegacyInAppMessagingTest {
                 match {
                     val schedule = it[0]
                     if (schedule.identifier != message.id) { return@match false }
-                    if (schedule.endDate != message.expiryMs!!.toULong()) { return@match false }
+                    if (schedule.endDate != message.expiry!!) { return@match false }
                     if (schedule.triggers[0].type != EventAutomationTriggerType.ACTIVE_SESSION.value) { return@match false }
                     if (schedule.data != AutomationSchedule.ScheduleData.InAppMessageData(expected)) { return@match false }
                     true
@@ -170,7 +172,7 @@ public class LegacyInAppMessagingTest {
                 match {
                     val schedule = it[0]
                     if (schedule.identifier != "some-id") { return@match false }
-                    if (schedule.endDate != LegacyInAppMessaging.DEFAULT_EXPIRY_MS.toULong()) { return@match false }
+                    if (schedule.endDate != clock.now() + LegacyInAppMessaging.DEFAULT_EXPIRY) { return@match false }
                     if (schedule.triggers[0].type != EventAutomationTriggerType.ACTIVE_SESSION.value) { return@match false }
                     if (schedule.data != AutomationSchedule.ScheduleData.InAppMessageData(expected)) { return@match false }
                     true
@@ -233,7 +235,7 @@ public class LegacyInAppMessagingTest {
                 match {
                     val schedule = it[0]
                     if (schedule.identifier != "some-id") { return@match false }
-                    if (schedule.endDate != LegacyInAppMessaging.DEFAULT_EXPIRY_MS.toULong()) { return@match false }
+                    if (schedule.endDate != clock.now() + LegacyInAppMessaging.DEFAULT_EXPIRY) { return@match false }
                     if (schedule.triggers[0].type != EventAutomationTriggerType.ACTIVE_SESSION.value) { return@match false }
                     if (schedule.data != AutomationSchedule.ScheduleData.InAppMessageData(extended)) { return@match false }
                     true

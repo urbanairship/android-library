@@ -35,7 +35,7 @@ public class ThomasChannelRegistrarTest {
 
         val expectedOptions = EmailRegistrationOptions.commercialOptions(
             transactionalOptedIn = null,
-            commercialOptedIn = Date(testClock.currentTimeMillis),
+            commercialOptedIn = Date.from(testClock.currentTime),
             properties = properties
         )
 

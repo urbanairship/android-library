@@ -7,6 +7,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
+import java.time.Instant
 
 /**
  * Model object for Contact identity.
@@ -19,20 +20,20 @@ internal data class ContactIdentity(
     val contactId: String,
     val isAnonymous: Boolean,
     val namedUserId: String?,
-    val resolveDateMs: Long?
+    val resolveDate: Instant?
 ) : JsonSerializable {
     constructor(jsonValue: JsonValue) : this(
             contactId = jsonValue.requireMap().requireField(CONTACT_ID_KEY),
             isAnonymous = jsonValue.requireMap().optionalField(IS_ANONYMOUS_KEY) ?: false,
             namedUserId = jsonValue.requireMap().optionalField(NAMED_USER_ID_KEY),
-            resolveDateMs = jsonValue.requireMap().optionalField(RESOLVE_DATE_KEY)
+            resolveDate = jsonValue.requireMap().optionalField(RESOLVE_DATE_KEY)
     )
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
             CONTACT_ID_KEY to contactId,
             IS_ANONYMOUS_KEY to isAnonymous,
             NAMED_USER_ID_KEY to namedUserId,
-            RESOLVE_DATE_KEY to resolveDateMs
+            RESOLVE_DATE_KEY to resolveDate?.toEpochMilli()
     ).toJsonValue()
 
     companion object {

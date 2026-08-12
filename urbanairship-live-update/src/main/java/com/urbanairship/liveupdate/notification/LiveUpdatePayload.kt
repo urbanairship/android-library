@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.liveupdate.LiveUpdateEvent
 import com.urbanairship.liveupdate.util.optionalField
 import com.urbanairship.liveupdate.util.requireField
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -24,9 +25,9 @@ internal data class LiveUpdatePayload(
     /** Live Update type. */
     val type: String?,
     /** Scheduled dismiss date, in ms. */
-    val dismissalDate: Long?,
+    val dismissalDate: Instant?,
     /** The timestamp for this update, in ms. */
-    val timestamp: Long,
+    val timestamp: Instant,
     /** Live Update content. */
     val content: JsonMap
 ) {
@@ -58,9 +59,9 @@ internal data class LiveUpdatePayload(
                 name = json.requireField("name"),
                 event = json.requireField<String>("event").let { LiveUpdateEvent.from(it) },
                 type = json.optionalField<String>("type"),
-                // The wire format uses epoch seconds, but these fields are epoch milliseconds.
-                dismissalDate = json.optionalField<Long?>("dismissal_date")?.seconds?.inWholeMilliseconds,
-                timestamp = json.requireField<Long>("timestamp").seconds.inWholeMilliseconds,
+                // The wire format uses epoch seconds.
+                dismissalDate = json.optionalField<Long?>("dismissal_date")?.let(Instant::ofEpochSecond),
+                timestamp = Instant.ofEpochSecond(json.requireField<Long>("timestamp")),
                 content = content
             )
         }

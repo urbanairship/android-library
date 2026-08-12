@@ -39,6 +39,7 @@ import com.urbanairship.messagecenter.compose.ui.MessageCenterStoriesListViewMod
 import com.urbanairship.messagecenter.compose.ui.MessageCenterStoriesListViewModel.State
 import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
+import java.time.Instant
 import java.util.Date
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
@@ -273,7 +274,7 @@ private fun previewMessage(id: String, isUnread: Boolean): Message = Message(
     id = id,
     title = "Preview Message",
     bodyUrl = "https://example.com",
-    sentDate = Date(System.currentTimeMillis()),
+    sentDate = Instant.now(),
     expirationDate = null,
     isUnread = isUnread,
     extras = null,

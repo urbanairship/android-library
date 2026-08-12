@@ -6,6 +6,7 @@ import android.os.Build
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.Airship
+import java.time.Instant
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -14,7 +15,7 @@ import org.junit.runner.RunWith
 public class AppForegroundEventTest {
     private val context: Context = ApplicationProvider.getApplicationContext()
 
-    private val event = AppForegroundEvent(1000)
+    private val event = AppForegroundEvent(Instant.ofEpochMilli(1000))
 
     @Test
     public fun testTimezone() {

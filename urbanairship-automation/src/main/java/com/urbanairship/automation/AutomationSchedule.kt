@@ -18,6 +18,7 @@ import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonList
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.VersionUtils
+import java.time.Instant
 import java.util.Objects
 import java.util.UUID
 import org.jetbrains.annotations.VisibleForTesting
@@ -50,11 +51,11 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     /**
      * The schedule start time in ms.
      */
-    public val startDate: ULong? = null,
+    public val startDate: Instant? = null,
     /**
      * The schedule end time in ms.
      */
-    public val endDate: ULong? = null,
+    public val endDate: Instant? = null,
     /**
      * The audience.
      */
@@ -93,7 +94,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     internal val reportingContext: JsonValue? = null,
     internal val productId: String? = null,
     internal val minSDKVersion: String? = null,
-    internal val created: ULong = System.currentTimeMillis().toULong(),
+    internal val created: Instant = Instant.now(),
     internal val queue: String? = null,
     internal val additionalAudienceCheckOverrides: AdditionalAudienceCheckOverrides? = null,
     internal val sendMetadata: String? = null
@@ -110,8 +111,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private var group: String? = schedule.group
         private var priority: Int? = schedule.priority
         private var limit: UInt? = schedule.limit
-        private var startDate: ULong? = schedule.startDate
-        private var endDate: ULong? = schedule.endDate
+        private var startDate: Instant? = schedule.startDate
+        private var endDate: Instant? = schedule.endDate
         private var audience: AutomationAudience? = schedule.audience
         private var compoundAudience: AutomationCompoundAudience? = schedule.compoundAudience
         private var delay: AutomationDelay? = schedule.delay
@@ -128,7 +129,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private val reportingContext: JsonValue? = schedule.reportingContext
         private val productId: String? = schedule.productId
         private val minSDKVersion: String? = schedule.minSDKVersion
-        private val created: ULong = schedule.created
+        private val created: Instant = schedule.created
         private val queue: String? = schedule.queue
         private val additionalAudienceCheckOverrides: AdditionalAudienceCheckOverrides? = schedule.additionalAudienceCheckOverrides
         private val bypassHoldoutGroups: Boolean? = schedule.bypassHoldoutGroups
@@ -176,8 +177,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @param startDate The start date.
          * @return The builder object.
          */
-        public fun setStartDate(startDate: Long?): Builder = apply {
-            this.startDate = startDate?.toULong()
+        public fun setStartDate(startDate: Instant?): Builder = apply {
+            this.startDate = startDate
         }
 
         /**
@@ -185,8 +186,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @param endDate The end date.
          * @return The builder object.
          */
-        public fun setEndDate(endDate: Long?): Builder = apply {
-            this.endDate = endDate?.toULong()
+        public fun setEndDate(endDate: Instant?): Builder = apply {
+            this.endDate = endDate
         }
 
         /**
@@ -285,7 +286,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
 
     internal fun copyWith(
         group: String? = null,
-        endDate: ULong? = null,
+        endDate: Instant? = null,
         metadata: JsonValue? = null): AutomationSchedule {
         return AutomationSchedule(
             identifier = identifier,
@@ -420,9 +421,9 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         fun fromJson(value: JsonValue): AutomationSchedule {
             val content = value.requireMap()
 
-            fun parseDate(value: JsonValue?): ULong? {
+            fun parseDate(value: JsonValue?): Instant? {
                 val string = value?.optString() ?: return null
-                return DateUtils.parseIso8601(string).toULong()
+                return DateUtils.parseIso8601(string)
             }
 
             val created = parseDate(content[CREATED])
@@ -471,8 +472,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(METADATA, metadata)
         .putOpt(PRIORITY, priority)
         .putOpt(LIMIT, limit?.toInt())
-        .putOpt(START, startDate?.toLong()?.let(DateUtils::createIso8601TimeStamp))
-        .putOpt(END, endDate?.toLong()?.let(DateUtils::createIso8601TimeStamp))
+        .putOpt(START, startDate?.let(DateUtils::createIso8601TimeStamp))
+        .putOpt(END, endDate?.let(DateUtils::createIso8601TimeStamp))
         .putOpt(AUDIENCE, audience)
         .putOpt(COMPOUND_AUDIENCE, compoundAudience)
         .putOpt(DELAY, delay)
@@ -487,7 +488,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(REPORTING_CONTEXT, reportingContext)
         .putOpt(MIN_SDK_VERSION, minSDKVersion)
         .putOpt(QUEUE, queue)
-        .put(CREATED, created.toLong().let(DateUtils::createIso8601TimeStamp))
+        .put(CREATED, created.let(DateUtils::createIso8601TimeStamp))
         .putOpt(ADDITIONAL_AUDIENCE_CHECK_OVERRIDES, additionalAudienceCheckOverrides)
         .putOpt(SEND_METADATA, sendMetadata)
         .build()
@@ -535,7 +536,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     }
 }
 
-internal fun AutomationSchedule.updateOrCreate(data: AutomationScheduleData?, timestamp: Long): AutomationScheduleData {
+internal fun AutomationSchedule.updateOrCreate(data: AutomationScheduleData?, timestamp: Instant): AutomationScheduleData {
     if (data == null) {
         return AutomationScheduleData(
             schedule = this,
@@ -560,8 +561,8 @@ internal fun AutomationSchedule.isInAppMessageType(): Boolean {
     }
 }
 
-internal fun AutomationSchedule.isNewSchedule(sinceDate: Long, lastSDKVersion: String?): Boolean {
-    if (created.toLong() > sinceDate) {
+internal fun AutomationSchedule.isNewSchedule(sinceDate: Instant, lastSDKVersion: String?): Boolean {
+    if (created > sinceDate) {
         return true
     }
 

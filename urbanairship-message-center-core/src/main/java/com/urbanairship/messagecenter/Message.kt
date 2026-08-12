@@ -11,6 +11,7 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import java.util.Date
 import java.util.Objects
 import kotlinx.parcelize.IgnoredOnParcel
@@ -32,8 +33,8 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
     public val id: String,
     public val title: String,
     public val bodyUrl: String,
-    public val sentDate: Date,
-    public val expirationDate: Date?,
+    public val sentDate: Instant,
+    public val expirationDate: Instant?,
     public val isUnread: Boolean,
     public val extras: Map<String, String?>?,
     public val contentType: ContentType,
@@ -93,7 +94,7 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
     /** Indicates whether the message has been expired. */
     @IgnoredOnParcel
     public val isExpired: Boolean
-        get() = expirationDate?.before(Date()) ?: false
+        get() = expirationDate?.isBefore(Instant.now()) ?: false
 
     /** Indicates whether the message has been deleted. */
     @IgnoredOnParcel
@@ -244,9 +245,9 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
                     extras = json.optionalMap(KEY_EXTRAS)?.map?.mapValues { it.value.coerceString() },
                     bodyUrl = json.requireField(KEY_BODY_URL),
                     sentDate = json.optionalField<String>(KEY_SENT_DATE)
-                        ?.let { Date(DateUtils.parseIso8601(it)) } ?: Date(),
+                        ?.let { DateUtils.parseIso8601(it) } ?: Instant.ofEpochMilli(System.currentTimeMillis()),
                     expirationDate = json.optionalField<String>(KEY_EXPIRATION_DATE)
-                        ?.let { Date(DateUtils.parseIso8601(it, Long.MAX_VALUE)) },
+                        ?.let { DateUtils.parseIso8601(it, Instant.MAX) },
                     isUnread = json.optionalField(KEY_IS_UNREAD) ?: false,
                     messageUrl = json.requireField(KEY_MESSAGE_URL),
                     reporting = json[KEY_MESSAGE_REPORTING],

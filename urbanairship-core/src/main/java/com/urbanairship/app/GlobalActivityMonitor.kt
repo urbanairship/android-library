@@ -10,7 +10,10 @@ import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Predicate
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.Collections
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -32,7 +35,7 @@ public class GlobalActivityMonitor @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) c
     }
 
     private var startedActivities = 0
-    private var backgroundTime: Long = 0
+    private var backgroundTime: Instant = Instant.EPOCH
     public override var isAppForegrounded: Boolean = false
         private set
 
@@ -63,7 +66,7 @@ public class GlobalActivityMonitor @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) c
                 if (!isAppForegrounded) {
                     isAppForegrounded = true
                     _foregroundState.value = true
-                    forwardingApplicationListener.onForeground(System.currentTimeMillis())
+                    forwardingApplicationListener.onForeground(Instant.now())
                 }
                 super.onActivityStarted(activity)
             }
@@ -73,8 +76,8 @@ public class GlobalActivityMonitor @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) c
                     startedActivities--
                 }
                 if (startedActivities == 0 && isAppForegrounded) {
-                    backgroundTime = System.currentTimeMillis() + BACKGROUND_DELAY_MS
-                    handler.postDelayed(backgroundRunnable, BACKGROUND_DELAY_MS)
+                    backgroundTime = Instant.now() + BACKGROUND_DELAY
+                    handler.postDelayed(backgroundRunnable, BACKGROUND_DELAY.inWholeMilliseconds)
                 }
                 super.onActivityStopped(activity)
             }
@@ -135,7 +138,7 @@ public class GlobalActivityMonitor @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) c
     public companion object {
 
         // Brief delay, to give the app a chance to perform screen rotation cleanup
-        private const val BACKGROUND_DELAY_MS: Long = 200
+        private val BACKGROUND_DELAY = 200.milliseconds
         private var singleton: GlobalActivityMonitor? = null
 
         /**

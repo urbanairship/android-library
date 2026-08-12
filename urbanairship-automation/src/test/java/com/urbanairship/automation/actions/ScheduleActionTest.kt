@@ -10,6 +10,7 @@ import com.urbanairship.iam.actions.ScheduleAction
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNull
@@ -59,15 +60,15 @@ public class ScheduleActionTest {
             "actions" to jsonMapOf(
                 "action-name" to "action-value"
             ),
-            "start" to DateUtils.createIso8601TimeStamp(0),
-            "end" to DateUtils.createIso8601TimeStamp(1000),
+            "start" to DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(0)),
+            "end" to DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(1000)),
             "triggers" to listOf(
                 jsonMapOf(
                     "type" to "foreground",
                     "goal" to 2.0
                 )
             ),
-            "created" to DateUtils.createIso8601TimeStamp(0),
+            "created" to DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(0)),
         )
 
         assertNull(scheduled)
@@ -78,8 +79,8 @@ public class ScheduleActionTest {
         assertEquals("test-id", scheduled?.identifier)
         assertEquals("test-group", scheduled?.group)
         assertEquals(1U, scheduled?.limit)
-        assertEquals(1000UL, scheduled?.endDate)
-        assertEquals(0UL, scheduled?.startDate)
+        assertEquals(Instant.ofEpochMilli(1000), scheduled?.endDate)
+        assertEquals(Instant.ofEpochMilli(0), scheduled?.startDate)
         assertEquals(1, scheduled?.triggers?.size)
         assertEquals(EventAutomationTriggerType.FOREGROUND.value, scheduled?.triggers?.first()?.type)
         assertEquals(2.0, scheduled?.triggers?.first()?.goal)

@@ -21,10 +21,15 @@ import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.util.Clock
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import java.time.Instant
 import java.util.Date
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -49,7 +54,7 @@ public class ExperimentManagerTest {
     private var channelId: String = "default-channel-id"
     private var contactId: String = "default-contact-id"
     private val messageInfo = MessageInfo("", null)
-    private var currentTime = 1L
+    private var currentTime: Instant = Instant.ofEpochMilli(1)
 
     private val infoProvider: DeviceInfoProvider = mockk {
         coEvery { getChannelId() } answers { channelId }
@@ -62,7 +67,7 @@ public class ExperimentManagerTest {
         every { permissionManager.configuredPermissions } returns emptySet()
 
         val clock: Clock = mockk()
-        every { clock.currentTimeMillis() } answers { currentTime }
+        every { clock.now() } answers { currentTime }
 
         subject = ExperimentManager(
             context = context,
@@ -82,7 +87,7 @@ public class ExperimentManagerTest {
         val experimentJson = generateExperimentsPayload("fake-id").build()
         val data = RemoteDataPayload(
             type = PAYLOAD_TYPE,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson))
         )
 
@@ -95,7 +100,7 @@ public class ExperimentManagerTest {
         assertEquals("fake-id", parsed.id)
         assertEquals("farm_hash", parsed.audience.hashSelector!!.hash.algorithm.jsonValue)
         assertEquals("contact", parsed.audience.hashSelector.hash.property.jsonValue)
-        assertEquals(1684868854000L, parsed.lastUpdated)
+        assertEquals(Instant.ofEpochMilli(1684868854000L), parsed.lastUpdated)
         assertEquals("holdout", parsed.type.jsonValue)
         assertEquals("static", parsed.resolutionType.jsonValue)
         assert(parsed.reportingMetadata == extractReportingMetadata(experimentJson))
@@ -107,7 +112,7 @@ public class ExperimentManagerTest {
         val invalid = generateExperimentsPayload("fake-id-2", hashIdentifier = "invalid").build()
         val data = RemoteDataPayload(
             type = PAYLOAD_TYPE,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson, invalid))
         )
 
@@ -127,7 +132,7 @@ public class ExperimentManagerTest {
         val experiment2 = generateExperimentsPayload("fake-id-2").build()
         val data = RemoteDataPayload(
             type = PAYLOAD_TYPE,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experiment1, experiment2))
         )
 
@@ -141,7 +146,7 @@ public class ExperimentManagerTest {
     public fun testExperimentManagerHandleNoExperimentsPayload(): TestResult = runTest {
         val data = RemoteDataPayload(
             type = PAYLOAD_TYPE,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf()
         )
 
@@ -155,7 +160,7 @@ public class ExperimentManagerTest {
         val experiment = generateExperimentsPayload("fake-id").build()
         val data = RemoteDataPayload(
             type = PAYLOAD_TYPE,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf("invalid" to experiment)
         )
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
@@ -175,7 +180,7 @@ public class ExperimentManagerTest {
 
         val data = RemoteDataPayload(
             type = PAYLOAD_TYPE,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(experimentJson))
         )
 
@@ -203,7 +208,7 @@ public class ExperimentManagerTest {
 
         val data = RemoteDataPayload(
             type = PAYLOAD_TYPE,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson))
         )
 
@@ -226,7 +231,7 @@ public class ExperimentManagerTest {
 
         val data = RemoteDataPayload(
             type = PAYLOAD_TYPE,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(firstJson, secondJson))
         )
 
@@ -249,7 +254,7 @@ public class ExperimentManagerTest {
 
         val data = RemoteDataPayload(
             type = PAYLOAD_TYPE,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson))
         )
 
@@ -278,7 +283,7 @@ public class ExperimentManagerTest {
 
         val data = RemoteDataPayload(
             type = PAYLOAD_TYPE,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson))
         )
 
@@ -293,24 +298,24 @@ public class ExperimentManagerTest {
     public fun testResultExcludesInactiveExperiments(): TestResult = runTest {
         val unmatchedJson = generateExperimentsPayload(
             id = "unmatched",
-            timeCriteria = TimeCriteria(start = 3L, end = Date().time + 4L)
+            timeCriteria = TimeCriteria(start = Instant.ofEpochMilli(3), end = Instant.now() + 4.milliseconds)
         )
             .build()
 
         val matchedJson = generateExperimentsPayload(
             id = "matched",
-            timeCriteria = TimeCriteria(start = 1L, end = 2L)
+            timeCriteria = TimeCriteria(start = Instant.ofEpochMilli(1), end = Instant.ofEpochMilli(2))
         )
             .build()
 
         val data = RemoteDataPayload(
             type = PAYLOAD_TYPE,
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf(PAYLOAD_TYPE to jsonListOf(unmatchedJson, matchedJson))
         )
 
         coEvery { remoteData.payloads(PAYLOAD_TYPE) } returns listOf(data)
-        currentTime = 2
+        currentTime = Instant.ofEpochMilli(2)
 
         val result = subject.evaluateExperiments(messageInfo, infoProvider).getOrThrow()!!
         assert(result.isMatching)

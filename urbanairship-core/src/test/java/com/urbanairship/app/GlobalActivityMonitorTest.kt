@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import java.time.Instant
 import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -30,11 +31,11 @@ public class GlobalActivityMonitorTest {
 
         activityMonitor.registerListener(application)
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(milliseconds: Long) {
+            override fun onForeground(timestamp: Instant) {
                 isForeground = true
             }
 
-            override fun onBackground(milliseconds: Long) {
+            override fun onBackground(timestamp: Instant) {
                 isForeground = false
             }
         })

@@ -16,11 +16,15 @@ import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.LocaleCompat
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -107,9 +111,9 @@ public class ContactApiClientTest {
         val expectedResultValue = ContactApiClient.IdentityResult(
             contactId = "some contact id",
             isAnonymous = true,
-            channelAssociatedDateMs = DateUtils.parseIso8601("2022-12-29T10:15:30.00"),
+            channelAssociatedDate = DateUtils.parseIso8601("2022-12-29T10:15:30.00"),
             token = "some token",
-            tokenExpiryDateMs = clock.currentTimeMillis() + 3600000
+            tokenExpiryDate = clock.now() + 3600000.milliseconds
         )
 
         val result = client.resolve(fakeChannelId, "some contact id", "some orphaned id")
@@ -160,9 +164,9 @@ public class ContactApiClientTest {
         val expectedResultValue = ContactApiClient.IdentityResult(
             contactId = "some contact id",
             isAnonymous = false,
-            channelAssociatedDateMs = DateUtils.parseIso8601("2022-12-29T10:15:30.00"),
+            channelAssociatedDate = DateUtils.parseIso8601("2022-12-29T10:15:30.00"),
             token = "some token",
-            tokenExpiryDateMs = clock.currentTimeMillis() + 3600000
+            tokenExpiryDate = clock.now() + 3600000.milliseconds
         )
 
         val result = client.identify(fakeChannelId, "some contact id", "some named user id", "some orphaned id")
@@ -211,9 +215,9 @@ public class ContactApiClientTest {
         val expectedResultValue = ContactApiClient.IdentityResult(
             contactId = "some contact id",
             isAnonymous = true,
-            channelAssociatedDateMs = DateUtils.parseIso8601("2022-12-29T10:15:30.00"),
+            channelAssociatedDate = DateUtils.parseIso8601("2022-12-29T10:15:30.00"),
             token = "some token",
-            tokenExpiryDateMs = clock.currentTimeMillis() + 3600000
+            tokenExpiryDate = clock.now() + 3600000.milliseconds
         )
 
         val result = client.reset(fakeChannelId, "some orphaned id")
@@ -309,7 +313,7 @@ public class ContactApiClientTest {
         requestSession.addResponse(200)
 
         val options = EmailRegistrationOptions.options(
-            Date(clock.currentTimeMillis()), jsonMapOf(
+            Date.from(clock.now()), jsonMapOf(
                 "properties_key" to "properties_value"
             ), false
         )
@@ -329,7 +333,7 @@ public class ContactApiClientTest {
                     {
                        "channel":{
                           "type":"email",
-                          "transactional_opted_in":"${DateUtils.createIso8601TimeStamp(clock.currentTimeMillis())}",
+                          "transactional_opted_in":"${DateUtils.createIso8601TimeStamp(clock.now())}",
                           "address":fake@email.com,
                           "timezone":"US\/Pacific",
                           "locale_language":"en",
@@ -460,17 +464,17 @@ public class ContactApiClientTest {
 
         val attributes = listOf(
             AttributeMutation.newSetAttributeMutation(
-                "name", JsonValue.wrapOpt("Bob"), 100
+                "name", JsonValue.wrapOpt("Bob"), Instant.ofEpochMilli(100)
             ), AttributeMutation.newSetAttributeMutation(
-                "last_name", JsonValue.wrapOpt("Loblaw"), 200
+                "last_name", JsonValue.wrapOpt("Loblaw"), Instant.ofEpochMilli(200)
             )
         )
 
         val subscriptions = listOf(
             ScopedSubscriptionListMutation.newSubscribeMutation(
-                "burgers", Scope.APP, 100
+                "burgers", Scope.APP, Instant.ofEpochMilli(100)
             ), ScopedSubscriptionListMutation.newUnsubscribeMutation(
-                "burritos", Scope.SMS, 100
+                "burritos", Scope.SMS, Instant.ofEpochMilli(100)
             )
         )
 

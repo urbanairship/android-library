@@ -10,6 +10,7 @@ import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -64,12 +65,12 @@ public class AutomationScheduleTests {
                     )
                 )
             ),
-            created = 1703073600000U,
+            created = Instant.ofEpochMilli(1703073600000),
             group = "test_group",
             priority = 2,
             limit = 5U,
-            startDate = 1703030400000U,
-            endDate = 1703116800000U,
+            startDate = Instant.ofEpochMilli(1703030400000),
+            endDate = Instant.ofEpochMilli(1703116800000),
             audience = AutomationAudience(AudienceSelector.newBuilder().build()),
             delay = AutomationDelay(),
             interval = 3600U,
@@ -140,12 +141,12 @@ public class AutomationScheduleTests {
                     )
                 )
             ),
-            created = 1703073600000U,
+            created = Instant.ofEpochMilli(1703073600000),
             group = "test_group",
             priority = 2,
             limit = 5U,
-            startDate = 1703030400000U,
-            endDate = 1703116800000U,
+            startDate = Instant.ofEpochMilli(1703030400000),
+            endDate = Instant.ofEpochMilli(1703116800000),
             audience = AutomationAudience(
                 audienceSelector = AudienceSelector
                     .newBuilder()
@@ -230,12 +231,12 @@ public class AutomationScheduleTests {
                     )
                 )
             ),
-            created = 1703073600000U,
+            created = Instant.ofEpochMilli(1703073600000),
             group = "test_group",
             priority = 2,
             limit = 5U,
-            startDate = 1703030400000U,
-            endDate = 1703116800000U,
+            startDate = Instant.ofEpochMilli(1703030400000),
+            endDate = Instant.ofEpochMilli(1703116800000),
             audience = AutomationAudience(AudienceSelector.newBuilder().build()),
             delay = AutomationDelay(),
             interval = 3600U,
@@ -325,12 +326,12 @@ public class AutomationScheduleTests {
                     )
                 )
             ),
-            created = 1703073600000U,
+            created = Instant.ofEpochMilli(1703073600000),
             group = "test_group",
             priority = 2,
             limit = 5U,
-            startDate = 1703030400000U,
-            endDate = 1703116800000U,
+            startDate = Instant.ofEpochMilli(1703030400000),
+            endDate = Instant.ofEpochMilli(1703116800000),
             audience = null,
             compoundAudience = AutomationCompoundAudience(
                 selector = CompoundAudienceSelector.Atomic(
@@ -389,7 +390,7 @@ public class AutomationScheduleTests {
                     )
                 )
             ),
-            created = 1703073600000U,
+            created = Instant.ofEpochMilli(1703073600000),
             sendMetadata = "base64-send-metadata"
         )
 

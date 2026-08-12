@@ -5,12 +5,16 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.http.AuthToken
 import com.urbanairship.http.RequestResult
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.confirmVerified
 import io.mockk.mockk
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -49,14 +53,14 @@ public class ChannelAuthTokenProviderTest {
 
     @Before
     public fun setup() {
-        clock.currentTimeMillis = 1000
+        clock.currentTime = Instant.ofEpochMilli(1000)
     }
 
     @Test
     public fun testGetToken(): TestResult = runTest {
         coEvery { client.getToken(channelId) } returns RequestResult(
             status = 200, value = AuthToken(
-                channelId, "some token", clock.currentTimeMillis() + 1000
+                channelId, "some token", clock.now() + 1000.milliseconds
             ), body = null, headers = null
         )
 
@@ -72,12 +76,12 @@ public class ChannelAuthTokenProviderTest {
         // Populate cache
         coEvery { client.getToken(channelId) } returns RequestResult(
             status = 200, value = AuthToken(
-                channelId, "some token", clock.currentTimeMillis() + 100000
+                channelId, "some token", clock.now() + 100000.milliseconds
             ), body = null, headers = null
         )
 
         // Advance clock to before we expire it (expiration - 30 seconds) cache
-        clock.currentTimeMillis += 70000
+        clock.currentTime += (70000).milliseconds
 
         var token = authProvider.fetchToken(channelId)
         assertEquals(token.getOrNull(), "some token")
@@ -90,7 +94,7 @@ public class ChannelAuthTokenProviderTest {
         confirmVerified(client)
 
         // Expire it
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
         token = authProvider.fetchToken(channelId)
         assertEquals(token.getOrNull(), "some token")
 
@@ -109,7 +113,7 @@ public class ChannelAuthTokenProviderTest {
     public fun testGetTokenStaleChannelId(): TestResult = runTest {
         coEvery { client.getToken(channelId) } returns RequestResult(
             status = 200, value = AuthToken(
-                channelId, "some token", clock.currentTimeMillis() + 100000
+                channelId, "some token", clock.now() + 100000.milliseconds
             ), body = null, headers = null
         )
 
@@ -120,7 +124,7 @@ public class ChannelAuthTokenProviderTest {
     public fun testGetTokenChannelIdChanges(): TestResult = runTest {
         coEvery { client.getToken(channelId) } returns RequestResult(
             status = 200, value = AuthToken(
-                channelId, "some token for $channelId", clock.currentTimeMillis() + 100000
+                channelId, "some token for $channelId", clock.now() + 100000.milliseconds
             ), body = null, headers = null
         )
 
@@ -130,7 +134,7 @@ public class ChannelAuthTokenProviderTest {
         channelId = "some other channel"
         coEvery { client.getToken(channelId) } returns RequestResult(
             status = 200, value = AuthToken(
-                channelId, "some token for $channelId", clock.currentTimeMillis() + 100000
+                channelId, "some token for $channelId", clock.now() + 100000.milliseconds
             ), body = null, headers = null
         )
 
@@ -147,7 +151,7 @@ public class ChannelAuthTokenProviderTest {
         // Populate cache
         coEvery { client.getToken(channelId) } returns RequestResult(
             status = 200, value = AuthToken(
-                channelId, "some token", clock.currentTimeMillis() + 100000
+                channelId, "some token", clock.now() + 100000.milliseconds
             ), body = null, headers = null
         )
         assertEquals(authProvider.fetchToken(channelId).getOrNull(), "some token")
@@ -164,7 +168,7 @@ public class ChannelAuthTokenProviderTest {
         // Populate cache
         coEvery { client.getToken(channelId) } returns RequestResult(
             status = 200, value = AuthToken(
-                channelId, "some token", clock.currentTimeMillis() + 100000
+                channelId, "some token", clock.now() + 100000.milliseconds
             ), body = null, headers = null
         )
         assertEquals(authProvider.fetchToken(channelId).getOrNull(), "some token")

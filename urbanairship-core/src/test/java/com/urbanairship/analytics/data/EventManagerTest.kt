@@ -19,6 +19,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import java.net.HttpURLConnection
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -71,7 +72,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
         "session-testEvent",
         JsonMap.EMPTY_MAP.toJsonValue(),
         EventType.APP_FOREGROUND,
-        System.currentTimeMillis()
+        Instant.now()
     )
 
     /**
@@ -106,7 +107,7 @@ public class EventManagerTest public constructor() : BaseTestCase() {
     @Test
     public fun testAddEventBeforeNextSendTime(): TestResult = runTest(testDispatcher.scheduler) {
         // Set the last send time to the current time so the next send time is minBatchInterval
-        dataStore.put(EventManager.LAST_SEND_KEY, clock.currentTimeMillis)
+        dataStore.put(EventManager.LAST_SEND_KEY, clock.currentTime.toEpochMilli())
 
         // Set the minBatchInterval to 20 seconds
         dataStore.put(EventManager.MIN_BATCH_INTERVAL_KEY, 20000)

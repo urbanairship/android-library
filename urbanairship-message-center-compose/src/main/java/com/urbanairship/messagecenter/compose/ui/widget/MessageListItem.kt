@@ -35,6 +35,7 @@ import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
 import com.urbanairship.messagecenter.compose.ui.MessageCenterListViewModel.Action
 import java.text.DateFormat
+import java.time.Instant
 import java.util.Date
 import com.skydoves.landscapist.glide.GlideImage
 import com.urbanairship.R as CoreR
@@ -238,7 +239,7 @@ private fun PreviewMessageListItem() {
         id = "id",
         title = "Great Deals Just for You!",
         bodyUrl = "https://www.urbanairship.com",
-        sentDate = Date(System.currentTimeMillis()),
+        sentDate = Instant.now(),
         expirationDate = null,
         isUnread = true,
         extras = mapOf(

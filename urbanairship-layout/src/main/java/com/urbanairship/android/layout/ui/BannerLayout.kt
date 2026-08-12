@@ -39,6 +39,7 @@ import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.webkit.AirshipWebViewClient
 import java.lang.ref.WeakReference
+import java.time.Instant
 import java.util.Objects
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
@@ -161,13 +162,13 @@ public class BannerLayout(
         // composition while this banner is still displayed.)
         applicationListener?.let(activityMonitor::removeApplicationListener)
         applicationListener = object : SimpleApplicationListener() {
-            override fun onForeground(time: Long) {
-                super.onForeground(time)
+            override fun onForeground(timestamp: Instant) {
+                super.onForeground(timestamp)
                 reporter.onVisibilityChanged(isVisible.value, true)
             }
 
-            override fun onBackground(time: Long) {
-                super.onBackground(time)
+            override fun onBackground(timestamp: Instant) {
+                super.onBackground(timestamp)
                 reporter.onVisibilityChanged(isVisible.value, false)
             }
         }.also(activityMonitor::addApplicationListener)

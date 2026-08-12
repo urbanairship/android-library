@@ -10,9 +10,13 @@ import com.urbanairship.http.RequestResult
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.Clock
 import com.urbanairship.util.LocaleCompat
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -66,13 +70,13 @@ public class RemoteDataProviderTest {
             payloads = setOf(
                 RemoteDataPayload(
                     type = "some type",
-                    timestamp = 1000,
+                    timestamp = Instant.ofEpochMilli(1000),
                     data = jsonMapOf("something" to "something"),
                     remoteDataInfo = remoteDataInfo
                 ),
                 RemoteDataPayload(
                     type = "some other type",
-                    timestamp = 4000,
+                    timestamp = Instant.ofEpochMilli(4000),
                     data = jsonMapOf("something else" to "something something"),
                     remoteDataInfo = remoteDataInfo
                 )
@@ -113,7 +117,7 @@ public class RemoteDataProviderTest {
                 payloads = setOf(
                     RemoteDataPayload(
                         type = "some type",
-                        timestamp = 1000,
+                        timestamp = Instant.ofEpochMilli(1000),
                         data = jsonMapOf("something" to "something"),
                         remoteDataInfo = remoteDataInfo
                     )
@@ -160,7 +164,7 @@ public class RemoteDataProviderTest {
                 payloads = setOf(
                     RemoteDataPayload(
                         type = "some type",
-                        timestamp = 1000,
+                        timestamp = Instant.ofEpochMilli(1000),
                         data = jsonMapOf("something" to "something"),
                         remoteDataInfo = remoteDataInfo
                     )
@@ -203,7 +207,7 @@ public class RemoteDataProviderTest {
                 payloads = setOf(
                     RemoteDataPayload(
                         type = "some type",
-                        timestamp = 1000,
+                        timestamp = Instant.ofEpochMilli(1000),
                         data = jsonMapOf("something" to "something"),
                         remoteDataInfo = remoteDataInfo
                     )
@@ -302,7 +306,7 @@ public class RemoteDataProviderTest {
                 payloads = setOf(
                     RemoteDataPayload(
                         type = "some type",
-                        timestamp = 1000,
+                        timestamp = Instant.ofEpochMilli(1000),
                         data = jsonMapOf("something" to "something"),
                         remoteDataInfo = remoteDataInfo
                     )
@@ -355,7 +359,7 @@ public class RemoteDataProviderTest {
                 payloads = setOf(
                     RemoteDataPayload(
                         type = "some type",
-                        timestamp = 1000,
+                        timestamp = Instant.ofEpochMilli(1000),
                         data = jsonMapOf("something" to "something"),
                         remoteDataInfo = remoteDataInfo
                     )
@@ -410,10 +414,10 @@ public class RemoteDataProviderTest {
             true
         }
 
-        clock.currentTimeMillis += TimeUnit.DAYS.toMillis(3) - 1
+        clock.currentTime += (TimeUnit.DAYS.toMillis(3) - 1).milliseconds
         assertEquals(RemoteData.Status.UP_TO_DATE, provider.status(token, locale, randomValue + 1))
 
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
         assertEquals(RemoteData.Status.OUT_OF_DATE, provider.status(token, locale, randomValue + 1))
     }
 
@@ -453,7 +457,7 @@ public class RemoteDataProviderTest {
                 payloads = setOf(
                     RemoteDataPayload(
                         type = "some type",
-                        timestamp = 1000,
+                        timestamp = Instant.ofEpochMilli(1000),
                         data = jsonMapOf("something" to "something"),
                         remoteDataInfo = remoteDataInfo
                     )

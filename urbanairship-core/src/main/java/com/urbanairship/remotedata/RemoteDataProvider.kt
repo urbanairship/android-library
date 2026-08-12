@@ -15,10 +15,14 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.json.tryParse
 import com.urbanairship.util.Clock
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.days
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -140,7 +144,7 @@ internal abstract class RemoteDataProvider(
             this.lastRefreshState = LastRefreshState(
                 changeToken,
                 result.value.remoteDataInfo,
-                clock.currentTimeMillis()
+                clock.now()
             )
 
             return RefreshResult.NewData()
@@ -155,7 +159,7 @@ internal abstract class RemoteDataProvider(
             this.lastRefreshState = LastRefreshState(
                 changeToken,
                 refreshState.remoteDataInfo,
-                clock.currentTimeMillis()
+                clock.now()
             )
             return RefreshResult.Skipped()
         }
@@ -201,7 +205,7 @@ internal abstract class RemoteDataProvider(
             return RemoteData.Status.OUT_OF_DATE
         }
 
-        if (clock.currentTimeMillis() >= refreshState.timeMillis + MAX_STALE_TIME_MS) {
+        if (clock.now() >= refreshState.timestamp + MAX_STALE_TIME) {
             return RemoteData.Status.OUT_OF_DATE
         }
 
@@ -219,17 +223,18 @@ internal abstract class RemoteDataProvider(
     private data class LastRefreshState(
         val changeToken: String,
         val remoteDataInfo: RemoteDataInfo,
-        val timeMillis: Long
+        val timestamp: Instant
     ) : JsonSerializable {
         constructor(json: JsonValue) : this(
             changeToken = json.requireMap().requireField("changeToken"),
             remoteDataInfo = RemoteDataInfo(json.requireMap().require("remoteDataInfo")),
-            timeMillis = json.requireMap().optionalField("timeMilliseconds") ?: 0
+            timestamp = json.requireMap().optionalField<Long>("timestamp")
+                ?.let(Instant::ofEpochMilli) ?: Instant.EPOCH
         )
         override fun toJsonValue(): JsonValue = jsonMapOf(
             "changeToken" to changeToken,
             "remoteDataInfo" to remoteDataInfo,
-            "timeMilliseconds" to timeMillis
+            "timestamp" to timestamp.toEpochMilli()
         ).toJsonValue()
     }
 
@@ -245,6 +250,6 @@ internal abstract class RemoteDataProvider(
     }
 
     companion object {
-        val MAX_STALE_TIME_MS: Long = TimeUnit.DAYS.toMillis(3)
+        val MAX_STALE_TIME: Duration = 3.days
     }
 }

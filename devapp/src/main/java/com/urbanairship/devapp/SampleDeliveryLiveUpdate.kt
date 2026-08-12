@@ -20,6 +20,7 @@ import com.urbanairship.liveupdate.CallbackLiveUpdateNotificationHandler
 import com.urbanairship.liveupdate.LiveUpdate
 import com.urbanairship.liveupdate.LiveUpdateEvent
 import com.urbanairship.util.PendingIntentCompat
+import java.time.Instant
 import java.util.Date
 import com.bumptech.glide.Glide
 
@@ -180,8 +181,8 @@ class SampleDeliveryLiveUpdate : CallbackLiveUpdateNotificationHandler {
                     .put("current_stop", 7)
                     .put("order_number", "Z1Z78")
                     .build(),
-                lastStateChangeTime = Date().time,
-                lastContentUpdateTime = Date().time
+                lastStateChangeTime = Instant.now(),
+                lastContentUpdateTime = Instant.now()
             )
         }
     }

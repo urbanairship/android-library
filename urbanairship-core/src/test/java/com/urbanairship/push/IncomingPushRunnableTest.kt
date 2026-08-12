@@ -490,39 +490,6 @@ public class IncomingPushRunnableTest {
      * Test that when a push is delivered pre-Oreo the notification settings are drawn
      * from our notification channel compat layer.
      */
-    @Test
-    @Config(sdk = [25])
-    @Suppress("DEPRECATION") // We're testing old Notification APIs
-    public fun testDeliverPushPreOreo(): TestResult = runTest {
-        every { pushManager.isPushEnabled } returns true
-        every { pushManager.isOptIn } returns true
-        every { pushManager.isUniqueCanonicalId("testPushID") } returns true
-
-        // Create a channel and set some non-default values
-        val channelCompat = NotificationChannelCompat(
-            TEST_NOTIFICATION_CHANNEL_ID,
-            "Test Notification Channel",
-            NotificationManager.IMPORTANCE_HIGH
-        )
-        channelCompat.sound = Uri.parse("cool://sound")
-        channelCompat.enableVibration(true)
-        channelCompat.enableLights(true)
-        channelCompat.lightColor = 123
-
-        every { mockChannelRegistry.getNotificationChannelSync(TEST_NOTIFICATION_CHANNEL_ID) } returns channelCompat
-        notificationProvider.notification = createNotification()
-
-        pushRunnable.run()
-
-        val notification = requireNotNull(notificationProvider.notification)
-
-        Assert.assertEquals(notification.sound, channelCompat.sound)
-        Assert.assertEquals(NotificationManager.IMPORTANCE_HIGH, channelCompat.importance)
-        Assert.assertEquals(
-            notification.defaults and Notification.DEFAULT_VIBRATE, Notification.DEFAULT_VIBRATE
-        )
-        Assert.assertEquals(notification.ledARGB, channelCompat.lightColor)
-    }
 
     /**
      * Test remote data notifications

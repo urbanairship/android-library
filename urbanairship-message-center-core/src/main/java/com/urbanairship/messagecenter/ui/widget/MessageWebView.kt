@@ -18,6 +18,7 @@ import com.urbanairship.messagecenter.messageCenter
 import com.urbanairship.webkit.AirshipWebViewClient
 import com.urbanairship.webkit.NestedScrollAirshipWebView
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import kotlinx.coroutines.runBlocking
@@ -92,10 +93,10 @@ public open class MessageWebViewClient : AirshipWebViewClient() {
     ): JavaScriptEnvironment.Builder {
         val message = getMessage(webView)
         val extras = message?.extras?.let { JsonValue.wrapOpt(it).optMap() } ?: JsonMap.EMPTY_MAP
-        val formattedSentDate = message?.sentDate?.let { DATE_FORMATTER.format(it) }
+        val formattedSentDate = message?.sentDate?.let { DATE_FORMATTER.format(Date.from(it)) }
 
         return super.extendJavascriptEnvironment(builder, webView)
-            .addGetter("getMessageSentDateMS", message?.sentDate?.time ?: -1)
+            .addGetter("getMessageSentDateMS", message?.sentDate?.toEpochMilli() ?: -1)
             .addGetter("getMessageId", message?.id)
             .addGetter("getMessageTitle", message?.title)
             .addGetter("getMessageSentDate", formattedSentDate)

@@ -11,7 +11,8 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.channel.AirshipChannel
-import java.util.Calendar
+import com.urbanairship.util.plus
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +36,7 @@ public class ChannelCapture @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public c
     private val listener: ApplicationListener
 
     private var indexOfKnocks = 0
-    private var knockTimes = LongArray(KNOCKS_TO_TRIGGER_CHANNEL_CAPTURE)
+    private var knockTimes = Array(KNOCKS_TO_TRIGGER_CHANNEL_CAPTURE) { Instant.EPOCH }
     private val scope = CoroutineScope(dispatcher + SupervisorJob())
 
     /**
@@ -47,8 +48,8 @@ public class ChannelCapture @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public c
 
     init {
         this.listener = object : SimpleApplicationListener() {
-            override fun onForeground(milliseconds: Long) {
-                countForeground(milliseconds)
+            override fun onForeground(timestamp: Instant) {
+                countForeground(timestamp)
             }
         }
     }
@@ -66,7 +67,7 @@ public class ChannelCapture @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public c
      * Count the number of foregrounds to perform the knock.
      * @param time the timestamp to when the app has been foregrounded.
      */
-    private fun countForeground(time: Long) {
+    private fun countForeground(time: Instant) {
         if (!isEnabled) {
             return
         }
@@ -86,9 +87,9 @@ public class ChannelCapture @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public c
      * @return `true` if there is a knock, otherwise return `false`.
      */
     private fun checkKnock(): Boolean {
-        val currentTime = Calendar.getInstance().timeInMillis
+        val currentTime = Instant.now()
 
-        return !knockTimes.any { it + KNOCKS_MAX_TIME.inWholeMilliseconds < currentTime }
+        return !knockTimes.any { it + KNOCKS_MAX_TIME < currentTime }
     }
 
     /**
@@ -111,7 +112,7 @@ public class ChannelCapture @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public c
         }
 
         // reset the knock counters so it takes 6 new knocks to capture channel
-        knockTimes = LongArray(KNOCKS_TO_TRIGGER_CHANNEL_CAPTURE)
+        knockTimes = Array(KNOCKS_TO_TRIGGER_CHANNEL_CAPTURE) { Instant.EPOCH }
         indexOfKnocks = 0
 
         val channel = airshipChannel.id

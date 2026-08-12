@@ -9,6 +9,8 @@ import androidx.core.app.NotificationCompat
 import com.urbanairship.Airship
 import com.urbanairship.util.Clock
 import com.urbanairship.util.PendingIntentCompat
+import com.urbanairship.util.minus
+import java.time.Instant
 
 /**
  * Compat helper that sets the timeout for a notification.
@@ -26,13 +28,13 @@ internal class NotificationTimeoutCompat(
 
     internal fun setTimeoutAt(
         builder: NotificationCompat.Builder,
-        timeoutAt: Long,
+        timeoutAt: Instant,
         name: String
     ): NotificationCompat.Builder {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Use the NotificationCompat.Builder APIs to set the timeout, if we're on O+.
-            val timeoutAfter = timeoutAt - clock.currentTimeMillis()
-            builder.setTimeoutAfter(timeoutAfter)
+            val timeoutAfter = timeoutAt - clock.now()
+            builder.setTimeoutAfter(timeoutAfter.inWholeMilliseconds)
         } else {
             // Otherwise, fall back to setting an alarm to dismiss the notification.
             setTimeoutAlarm(name, timeoutAt)
@@ -40,12 +42,12 @@ internal class NotificationTimeoutCompat(
         return builder
     }
 
-    private fun setTimeoutAlarm(name: String, timeoutAt: Long) {
+    private fun setTimeoutAlarm(name: String, timeoutAt: Instant) {
         val intent = LiveUpdateNotificationReceiver.timeoutCompatIntent(context, name)
         // PendingIntentCompat sets FLAG_IMMUTABLE, but we're setting it explicitly here because
         // CodeQL doesn't seem to be able to trace through our helper properly.
         val operation = PendingIntentCompat.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
-        AlarmManagerCompat.setExactAndAllowWhileIdle(alarmManager, AlarmManager.RTC, timeoutAt, operation)
+        AlarmManagerCompat.setExactAndAllowWhileIdle(alarmManager, AlarmManager.RTC, timeoutAt.toEpochMilli(), operation)
     }
 }

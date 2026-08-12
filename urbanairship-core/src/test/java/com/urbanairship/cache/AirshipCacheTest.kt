@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
+import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.every
 import io.mockk.mockk
@@ -31,7 +32,7 @@ public class AirshipCacheTest {
 
     @Before
     public fun setup() {
-        every { clock.currentTimeMillis() } returns 0L
+        every { clock.now() } returns Instant.ofEpochMilli(0)
 
         cache = AirshipCache(
             context = ApplicationProvider.getApplicationContext(),
@@ -87,7 +88,7 @@ public class AirshipCacheTest {
 
         assertEquals(4, savedItems())
 
-        cache.deleteExpired(timestamp = 2)
+        cache.deleteExpired(timestamp = Instant.ofEpochMilli(2))
         assertEquals(3, savedItems())
 
         cache.deleteExpired(appVersion = "1.1.1")
@@ -109,7 +110,7 @@ public class AirshipCacheTest {
         cache.store(JsonValue.wrap(2), key, 1.milliseconds)
 
         assertNotNull(cache.getCached(key) { it })
-        every { clock.currentTimeMillis() } returns 2
+        every { clock.now() } returns Instant.ofEpochMilli(2)
 
         assertNull(cache.getCached(key) { it })
     }

@@ -79,12 +79,12 @@ public class SubscriptionListActionTest {
         action.perform(args)
 
         val expectedContactMutation = ScopedSubscriptionListMutation.newSubscribeMutation(
-            "mylist", Scope.APP, clock.currentTimeMillis
+            "mylist", Scope.APP, clock.currentTime
         )
         assertEquals(listOf(expectedContactMutation), contactMutations)
 
         val expectedChannelMutation =
-            SubscriptionListMutation.newUnsubscribeMutation("thelist", clock.currentTimeMillis)
+            SubscriptionListMutation.newUnsubscribeMutation("thelist", clock.currentTime)
         assertEquals(listOf(expectedChannelMutation), channelMutations)
     }
 

@@ -15,6 +15,7 @@ import com.urbanairship.json.ValueMatcher
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.util.LocaleCompat
+import java.time.Instant
 import java.util.Locale
 import java.util.UUID
 import kotlin.time.Duration.Companion.minutes
@@ -83,24 +84,24 @@ public class AudienceEvaluatorTest {
 
     @Test
     public fun testNewUserCondition(): TestResult = runTest {
-        every { deviceInfo.installDateMilliseconds } returns 100L
+        every { deviceInfo.installDate } returns Instant.ofEpochMilli(100)
         val audienceSelector = AudienceSelector.newBuilder().setNewUser(true).build()
 
         assert(
             audienceSelector = audienceSelector,
-            newUserEvaluationDate = 100,
+            newUserEvaluationDate = Instant.ofEpochMilli(100),
             isMatch = true
         )
 
         assert(
             audienceSelector = audienceSelector,
-            newUserEvaluationDate = 99,
+            newUserEvaluationDate = Instant.ofEpochMilli(99),
             isMatch = true
         )
 
         assert(
             audienceSelector = audienceSelector,
-            newUserEvaluationDate = 101,
+            newUserEvaluationDate = Instant.ofEpochMilli(101),
             isMatch = false
         )
     }
@@ -583,7 +584,7 @@ public class AudienceEvaluatorTest {
 
     private suspend fun assert(
         audienceSelector: AudienceSelector,
-        newUserEvaluationDate: Long = 0,
+        newUserEvaluationDate: Instant = Instant.EPOCH,
         isMatch: Boolean,
         reportingMetadata: List<JsonValue>? = null
     ) {
@@ -597,7 +598,7 @@ public class AudienceEvaluatorTest {
 
     private suspend fun assert(
         compoundAudienceSelector: CompoundAudienceSelector,
-        newUserEvaluationDate: Long = 0,
+        newUserEvaluationDate: Instant = Instant.EPOCH,
         isMatch: Boolean,
         reportingMetadata: List<JsonValue>? = null
     ) {

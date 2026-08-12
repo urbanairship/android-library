@@ -16,6 +16,7 @@ import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.view.TextInputView
 import com.urbanairship.inputvalidation.AirshipInputValidation
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine

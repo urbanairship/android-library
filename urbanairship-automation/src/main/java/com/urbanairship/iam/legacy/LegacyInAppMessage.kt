@@ -13,6 +13,7 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.push.PushMessage
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 
 /**
@@ -43,7 +44,7 @@ public class LegacyInAppMessage @JvmOverloads public constructor(
     /**
      * The expiry date in milliseconds.
      */
-    public val expiryMs: Long? = null,
+    public val expiry: Instant? = null,
 
     /**
      * Click actions.
@@ -147,7 +148,7 @@ public class LegacyInAppMessage @JvmOverloads public constructor(
                 displayDurationMs = displayJson.optionalField<Long>(DURATION_KEY)?.let {
                     TimeUnit.SECONDS.toMillis(it)
                 },
-                expiryMs = json.optionalField<String>(EXPIRY_KEY)?.let { DateUtils.parseIso8601(it) },
+                expiry = json.optionalField<String>(EXPIRY_KEY)?.let { DateUtils.parseIso8601(it) },
                 clickActionValues = clickActions.let { if (it.isNotEmpty()) JsonMap(it) else null },
                 buttonGroupId = actionsJson?.optionalField(BUTTON_GROUP_KEY),
                 buttonActionValues = buttonActions,
@@ -174,7 +175,7 @@ public class LegacyInAppMessage @JvmOverloads public constructor(
         if (placement != other.placement) return false
         if (alert != other.alert) return false
         if (displayDurationMs != other.displayDurationMs) return false
-        if (expiryMs != other.expiryMs) return false
+        if (expiry != other.expiry) return false
         if (clickActionValues != other.clickActionValues) return false
         if (buttonGroupId != other.buttonGroupId) return false
         if (buttonActionValues != other.buttonActionValues) return false
@@ -189,15 +190,15 @@ public class LegacyInAppMessage @JvmOverloads public constructor(
 
     override fun hashCode(): Int {
         return ObjectsCompat.hash(
-            id, placement, alert, displayDurationMs, expiryMs, clickActionValues,
+            id, placement, alert, displayDurationMs, expiry, clickActionValues,
             buttonActionValues, buttonGroupId, primaryColor, secondaryColor,
-            messageType, campaigns, expiryMs
+            messageType, campaigns, expiry
         )
     }
 
     override fun toString(): String {
         return "LegacyInAppMessage(id='$id', placement=$placement, alert=$alert, " +
-                "displayDurationMs=$displayDurationMs, expiryMs=$expiryMs, " +
+                "displayDurationMs=$displayDurationMs, expiry=$expiry, " +
                 "clickActionValues=$clickActionValues, buttonGroupId=$buttonGroupId, " +
                 "buttonActionValues=$buttonActionValues, primaryColor=$primaryColor, " +
                 "secondaryColor=$secondaryColor, messageType=$messageType, campaigns=$campaigns, " +

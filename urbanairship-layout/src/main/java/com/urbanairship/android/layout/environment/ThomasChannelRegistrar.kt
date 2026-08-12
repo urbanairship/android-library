@@ -44,7 +44,7 @@ internal class ThomasChannelRegistrar(
     }
 
     private fun registerEmail(channelRegistration: ThomasChannelRegistration.Email) {
-        val now = Date(clock.currentTimeMillis())
+        val now = Date.from(clock.now())
 
         val options = when(channelRegistration.options) {
             is ThomasEmailRegistrationOptions.Commercial -> {

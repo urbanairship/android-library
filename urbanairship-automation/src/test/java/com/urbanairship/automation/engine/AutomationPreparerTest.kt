@@ -37,6 +37,7 @@ import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.info.InAppMessageButtonLayoutType
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import java.time.Instant
 import java.util.Locale
 import java.util.UUID
 import io.mockk.coEvery
@@ -189,7 +190,7 @@ public class AutomationPreparerTest {
 
         coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
-            assertEquals(0L, args[0])
+            assertEquals(Instant.EPOCH, args[0])
             AirshipDeviceAudienceResult.miss
         }
 
@@ -200,7 +201,7 @@ public class AutomationPreparerTest {
             .evaluate(CompoundAudienceSelector.combine(
                 compoundAudienceSelector = schedule.compoundAudience?.selector,
                 deviceAudience = schedule.audience?.audienceSelector
-            ), schedule.created.toLong(), deviceInfoProvider) }
+            ), schedule.created, deviceInfoProvider) }
 
     }
 
@@ -227,7 +228,7 @@ public class AutomationPreparerTest {
 
         coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
-            assertEquals(0L, args[0])
+            assertEquals(Instant.EPOCH, args[0])
             AirshipDeviceAudienceResult.miss
         }
 
@@ -255,7 +256,7 @@ public class AutomationPreparerTest {
 
         coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
-            assertEquals(0L, args[0])
+            assertEquals(Instant.EPOCH, args[0])
             AirshipDeviceAudienceResult.miss
         }
 
@@ -283,7 +284,7 @@ public class AutomationPreparerTest {
 
         coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
-            assertEquals(0L, args[0])
+            assertEquals(Instant.EPOCH, args[0])
             AirshipDeviceAudienceResult.miss
         }
 
@@ -356,7 +357,7 @@ public class AutomationPreparerTest {
 
         coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
-            assertEquals(0L, args[0])
+            assertEquals(Instant.EPOCH, args[0])
             AirshipDeviceAudienceResult.miss
         }
 
@@ -928,7 +929,7 @@ public class AutomationPreparerTest {
             identifier = "test-schedule",
             triggers = listOf(),
             data = scheduleData,
-            created = 0U,
+            created = Instant.ofEpochMilli(0),
             frequencyConstraintIds = constraints,
             audience = audience,
             compoundAudience = compoundAudience,

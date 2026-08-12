@@ -27,6 +27,7 @@ import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 import com.urbanairship.json.requireList
 import com.urbanairship.json.requireMap
+import java.time.Instant
 import java.util.UUID
 import kotlin.math.max
 import kotlin.time.Duration

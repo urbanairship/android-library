@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Transaction
+import java.time.Instant
 
 @Dao
 internal interface CacheDao {
@@ -23,5 +24,5 @@ internal interface CacheDao {
     }
 
     @Query("delete from cacheItems where appVersion != :appVersion or sdkVersion != :sdkVersion or expireOn < :timestamp")
-    suspend fun deleteExpired(appVersion: String, sdkVersion: String, timestamp: Long)
+    suspend fun deleteExpired(appVersion: String, sdkVersion: String, timestamp: Instant)
 }

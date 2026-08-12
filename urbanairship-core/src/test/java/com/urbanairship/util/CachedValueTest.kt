@@ -3,6 +3,7 @@ package com.urbanairship.util
 
 import com.urbanairship.BaseTestCase
 import com.urbanairship.TestClock
+import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Assert
 import org.junit.Test
 
@@ -13,30 +14,30 @@ public class CachedValueTest : BaseTestCase() {
 
     @Test
     public fun testSetDate() {
-        cachedValue.set("some value", clock.currentTimeMillis() + 100)
+        cachedValue.set("some value", clock.now() + 100.milliseconds)
         Assert.assertEquals("some value", cachedValue.get())
 
-        clock.currentTimeMillis += 99
+        clock.currentTime += (99).milliseconds
         Assert.assertEquals("some value", cachedValue.get())
 
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
         Assert.assertNull(cachedValue.get())
     }
 
     @Test
     public fun testExpiry() {
-        cachedValue.set("some value", clock.currentTimeMillis() + 100)
+        cachedValue.set("some value", clock.now() + 100.milliseconds)
         Assert.assertEquals("some value", cachedValue.get())
 
-        clock.currentTimeMillis += 99
+        clock.currentTime += (99).milliseconds
         Assert.assertEquals("some value", cachedValue.get())
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
         Assert.assertNull(cachedValue.get())
     }
 
     @Test
     public fun testExpireIf() {
-        cachedValue.set("some value", clock.currentTimeMillis() + 100)
+        cachedValue.set("some value", clock.now() + 100.milliseconds)
         Assert.assertEquals("some value", cachedValue.get())
 
         cachedValue.expireIf { s: String -> s == "some other value" }
@@ -48,7 +49,7 @@ public class CachedValueTest : BaseTestCase() {
 
     @Test
     public fun testExpire() {
-        cachedValue.set("some value", clock.currentTimeMillis() + 100)
+        cachedValue.set("some value", clock.now() + 100.milliseconds)
         cachedValue.expire()
         Assert.assertNull(cachedValue.get())
     }

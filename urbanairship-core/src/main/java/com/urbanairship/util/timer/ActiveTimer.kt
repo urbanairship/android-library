@@ -7,9 +7,11 @@ import androidx.annotation.VisibleForTesting
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.util.Clock
+import java.time.Duration as JavaDuration
+import java.time.Instant
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toKotlinDuration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -23,7 +25,7 @@ public class ActiveTimer(
 ) : Timer {
     private val _isStarted = MutableStateFlow(false)
     private val isActive = MutableStateFlow(appStateTracker.isAppForegrounded)
-    private val startDate = MutableStateFlow<Long?>(null)
+    private val startDate = MutableStateFlow<Instant?>(null)
     private var elapsedTime: Duration = 0.seconds
 
     private var cancelListener: (() -> Unit)? = null
@@ -36,14 +38,14 @@ public class ActiveTimer(
 
     init {
         val listener = object : ApplicationListener {
-            override fun onForeground(milliseconds: Long) {
+            override fun onForeground(timestamp: Instant) {
                 isActive.update { true }
                 if (_isStarted.value && startDate.value == null) {
-                    startDate.update { clock.currentTimeMillis() }
+                    startDate.update { clock.now() }
                 }
             }
 
-            override fun onBackground(milliseconds: Long) {
+            override fun onBackground(timestamp: Instant) {
                 isActive.update { false }
                 stop()
             }
@@ -57,7 +59,7 @@ public class ActiveTimer(
         if (_isStarted.value) { return }
 
         if (isActive.value) {
-            startDate.update { clock.currentTimeMillis() }
+            startDate.update { clock.now() }
         }
 
         _isStarted.update { true }
@@ -78,6 +80,6 @@ public class ActiveTimer(
 
     private fun currentSessionTime(): Duration {
         val date = startDate.value ?: return 0.seconds
-        return (clock.currentTimeMillis() - date).milliseconds
+        return JavaDuration.between(date, clock.now()).toKotlinDuration()
     }
 }

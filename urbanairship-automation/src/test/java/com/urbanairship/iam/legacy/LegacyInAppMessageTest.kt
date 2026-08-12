@@ -62,7 +62,7 @@ public class LegacyInAppMessageTest {
             placement = Banner.Placement.TOP,
             alert = "test iam",
             displayDurationMs = TimeUnit.SECONDS.toMillis(100),
-            expiryMs = DateUtils.parseIso8601("2024-08-13T23:33:04"),
+            expiry = DateUtils.parseIso8601("2024-08-13T23:33:04"),
             clickActionValues = jsonMapOf("onclick" to "action"),
             buttonGroupId = "ua_yes_no_background",
             buttonActionValues = mapOf("yes" to jsonMapOf("action_one" to 123)),

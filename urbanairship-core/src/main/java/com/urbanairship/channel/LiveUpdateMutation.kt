@@ -10,6 +10,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
+import java.time.Instant
 
 /**
  * @hide
@@ -19,27 +20,27 @@ public sealed class LiveUpdateMutation(
     private val action: String,
 ) : JsonSerializable {
     protected abstract val name: String
-    protected abstract val startTime: Long
-    protected abstract val actionTime: Long
+    protected abstract val startTime: Instant
+    protected abstract val actionTime: Instant
 
     public class Set(
         override val name: String,
-        override val startTime: Long,
-        override val actionTime: Long = Clock.DEFAULT_CLOCK.currentTimeMillis()
+        override val startTime: Instant,
+        override val actionTime: Instant = Clock.DEFAULT_CLOCK.now()
     ) : LiveUpdateMutation(ACTION_SET)
 
     public class Remove(
         override val name: String,
-        override val startTime: Long,
-        override val actionTime: Long = Clock.DEFAULT_CLOCK.currentTimeMillis()
+        override val startTime: Instant,
+        override val actionTime: Instant = Clock.DEFAULT_CLOCK.now()
     ) : LiveUpdateMutation(ACTION_REMOVE)
 
     override fun toJsonValue(): JsonValue =
         jsonMapOf(
             KEY_ACTION to action,
             KEY_NAME to name,
-            KEY_START_TS to startTime,
-            KEY_ACTION_TS to actionTime
+            KEY_START_TS to startTime.toEpochMilli(),
+            KEY_ACTION_TS to actionTime.toEpochMilli()
         ).toJsonValue()
 
     override fun equals(other: Any?): Boolean {
@@ -76,8 +77,8 @@ public sealed class LiveUpdateMutation(
         fun fromJson(json: JsonMap): LiveUpdateMutation {
             val action: String = json.requireField(KEY_ACTION)
             val name: String = json.requireField(KEY_NAME)
-            val startTime: Long = json.requireField(KEY_START_TS)
-            val actionTime: Long = json.requireField(KEY_ACTION_TS)
+            val startTime: Instant = json.requireField(KEY_START_TS)
+            val actionTime: Instant = json.requireField(KEY_ACTION_TS)
 
             return when (action) {
                 ACTION_SET -> Set(name, startTime, actionTime)

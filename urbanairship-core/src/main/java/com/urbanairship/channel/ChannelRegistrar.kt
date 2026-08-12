@@ -21,7 +21,12 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.json.tryParse
 import com.urbanairship.util.Clock
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.UUID
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -109,12 +114,12 @@ public class ChannelRegistrar(
 
         if (privacyManager.isAnyFeatureEnabled) {
             val timeSinceLastRegistration =
-                clock.currentTimeMillis() - lastRegistrationInfo.dateMillis
-            if (timeSinceLastRegistration < 0) {
+                clock.now() - lastRegistrationInfo.date
+            if (timeSinceLastRegistration < Duration.ZERO) {
                 return true
             }
 
-            if (activityMonitor.isAppForegrounded && timeSinceLastRegistration > CHANNEL_REREGISTRATION_INTERVAL_MS) {
+            if (activityMonitor.isAppForegrounded && timeSinceLastRegistration > CHANNEL_REREGISTRATION_INTERVAL) {
                 return true
             }
         }
@@ -133,8 +138,8 @@ public class ChannelRegistrar(
             return payload
         }
 
-        val lastFullUpload = lastRegistrationInfo.lastFullUploadMillis
-        if (lastFullUpload == null || (clock.currentTimeMillis() - lastFullUpload) > CHANNEL_REREGISTRATION_INTERVAL_MS) {
+        val lastFullUpload = lastRegistrationInfo.lastFullUpload
+        if (lastFullUpload == null || (clock.now() - lastFullUpload) > CHANNEL_REREGISTRATION_INTERVAL) {
             return payload
         }
 
@@ -228,8 +233,8 @@ public class ChannelRegistrar(
             this.channelId = response.value.identifier
             if (rememberPayload) {
                 setLastChannelRegistrationInfo(RegistrationInfo(
-                    dateMillis = clock.currentTimeMillis(),
-                    lastFullUploadMillis = clock.currentTimeMillis(),
+                    date = clock.now(),
+                    lastFullUpload = clock.now(),
                     payload = payload,
                     location = response.value.location
                 ))
@@ -259,18 +264,18 @@ public class ChannelRegistrar(
         val result = channelApiClient.updateChannel(channelId, updatePayload)
 
         UALog.i { "Channel registration finished with result $result" }
-        val fullUploadMillis = if (payload == updatePayload) {
-            clock.currentTimeMillis()
+        val fullUpload = if (payload == updatePayload) {
+            clock.now()
         } else {
-            getLastChannelRegistrationInfo()?.lastFullUploadMillis
+            getLastChannelRegistrationInfo()?.lastFullUpload
         }
 
         return if (result.isSuccessful && result.value != null) {
             UALog.i { "Airship channel updated" }
             // Set non-minimized payload as the last sent version, for future comparison
             setLastChannelRegistrationInfo(RegistrationInfo(
-                dateMillis = clock.currentTimeMillis(),
-                lastFullUploadMillis = fullUploadMillis,
+                date = clock.now(),
+                lastFullUpload = fullUpload,
                 payload = payload,
                 location = result.value.location
             ))
@@ -298,7 +303,7 @@ public class ChannelRegistrar(
             name = "com.urbanairship.channel.LAST_CHANNEL_REGISTRATION_INFO",
             fromJson = { RegistrationInfo(it.requireMap()) }
         )
-        private const val CHANNEL_REREGISTRATION_INTERVAL_MS: Long = 24 * 60 * 60 * 1000 // 24H
+        private val CHANNEL_REREGISTRATION_INTERVAL = 24.hours
     }
 }
 
@@ -307,8 +312,8 @@ internal enum class RegistrationResult {
 }
 
 private data class RegistrationInfo(
-    val dateMillis: Long,
-    val lastFullUploadMillis: Long?,
+    val date: Instant,
+    val lastFullUpload: Instant?,
     val payload: ChannelRegistrationPayload,
     /**
      * The location of the channel. We track this so we can detect URL changes if the site is
@@ -318,15 +323,15 @@ private data class RegistrationInfo(
 ) : JsonSerializable {
 
     constructor(json: JsonMap) : this(
-        dateMillis = json.requireField<Long>(DATE),
-        lastFullUploadMillis = json.optionalField<Long>(LAST_FULL_UPLOAD_DATE),
+        date = json.requireField<Instant>(DATE),
+        lastFullUpload = json.optionalField<Instant>(LAST_FULL_UPLOAD_DATE),
         payload = ChannelRegistrationPayload.fromJson(json.require(PAYLOAD)),
         location = json.requireField<String>(LOCATION),
     )
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
-        DATE to dateMillis,
-        LAST_FULL_UPLOAD_DATE to lastFullUploadMillis,
+        DATE to date.toEpochMilli(),
+        LAST_FULL_UPLOAD_DATE to lastFullUpload?.toEpochMilli(),
         PAYLOAD to payload,
         LOCATION to location,
     ).toJsonValue()

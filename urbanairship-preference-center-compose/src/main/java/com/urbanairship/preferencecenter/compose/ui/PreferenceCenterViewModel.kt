@@ -41,6 +41,7 @@ import com.urbanairship.preferencecenter.data.PreferenceCenterConfigParceler
 import com.urbanairship.preferencecenter.data.Section
 import com.urbanairship.preferencecenter.data.evaluate
 import com.urbanairship.preferencecenter.util.airshipScanConcat
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -720,7 +721,7 @@ internal val ContactChannel.isOptedIn: Boolean
                         info.commercialOptedOut == null -> info.commercialOptedIn != null
                         // If opted in and out are both non-null, check to see if opted in is more recent
                         info.commercialOptedIn != null && info.commercialOptedOut != null ->
-                            (info.commercialOptedIn ?: 0) > (info.commercialOptedOut ?: 0)
+                            (info.commercialOptedIn ?: Instant.EPOCH) > (info.commercialOptedOut ?: Instant.EPOCH)
                         // Not opted in
                         else -> false
                     }

@@ -17,6 +17,7 @@ import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import java.time.Instant
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -53,7 +54,7 @@ public class PushMessageTest {
      */
     @Test
     public fun testNotExpired() {
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_EXPIRATION to 1.toString()), // Set expiration in the future
