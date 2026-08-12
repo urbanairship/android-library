@@ -28,7 +28,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : ViewGroup(context, attrs, defStyleAttr) {
+) : ViewGroup(context, attrs, defStyleAttr), AutoSizeProvider {
 
     enum class OrientationMode(private val rawValue: Int) {
         HORIZONTAL(0),
@@ -187,7 +187,18 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         info.className = ACCESSIBILITY_CLASS_NAME
     }
 
+    private var isAutoWidth = false
+    private var isAutoHeight = false
+
+    override fun isAutoSized(horizontal: Boolean): Boolean =
+        if (horizontal) isAutoWidth else isAutoHeight
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        // Recorded before any child is measured, since that's when they ask. Anything short of
+        // EXACTLY leaves us sizing to our content, so whatever ceiling we pass down is slack.
+        isAutoWidth = MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.EXACTLY
+        isAutoHeight = MeasureSpec.getMode(heightMeasureSpec) != MeasureSpec.EXACTLY
+
         when(orientation) {
             OrientationMode.HORIZONTAL -> measureHorizontal(widthMeasureSpec, heightMeasureSpec)
             OrientationMode.VERTICAL -> measureVertical(widthMeasureSpec, heightMeasureSpec)
@@ -357,9 +368,15 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
             specSize = MeasureSpec.getSize(heightMeasureSpec),
             fixedLength = totalLength - percentMargins,
             percentTotal = percentTotal,
-            borrowed = if (percentTotal > 0f) borrowedPercentBase(horizontal = false) else 0
+            borrowed = if (percentTotal > 0f) borrowedPercentBase(horizontal = false) else 0,
+            autoAncestor = percentTotal >= 1f && hasAutoSizedAncestor(horizontal = false)
         )
         var height = solvedHeight ?: totalLength
+
+        // Whether there's a length for percent children to be a fraction of. An EXACTLY spec is one
+        // without needing a solve; otherwise it's whatever we solved for, and nothing means the
+        // percent children measure at their content instead.
+        val hasResolvedHeight = heightMode == MeasureSpec.EXACTLY || solvedHeight != null
         height = max(height, suggestedMinimumHeight)
 
         // Reconcile our calculated size with the heightMeasureSpec
@@ -528,7 +545,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                 // it — a borrowed viewport, or `S / (1 - P)`. Without one there's nothing to take a
                 // percentage of, so fall back to the child's own content rather than leaving it
                 // unmeasured, matching iOS, where a percent with no parent size behaves as auto.
-                if (heightMode != MeasureSpec.UNSPECIFIED || solvedHeight != null) {
+                if (hasResolvedHeight) {
                     val remaining = maxPercentCount - i
 
                     val actualPercent: Float = when {
@@ -903,9 +920,15 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
             specSize = MeasureSpec.getSize(widthMeasureSpec),
             fixedLength = totalLength - percentMargins,
             percentTotal = percentTotal,
-            borrowed = if (percentTotal > 0f) borrowedPercentBase(horizontal = true) else 0
+            borrowed = if (percentTotal > 0f) borrowedPercentBase(horizontal = true) else 0,
+            autoAncestor = percentTotal >= 1f && hasAutoSizedAncestor(horizontal = true)
         )
         var width = solvedWidth ?: totalLength
+
+        // Whether there's a length for percent children to be a fraction of. An EXACTLY spec is one
+        // without needing a solve; otherwise it's whatever we solved for, and nothing means the
+        // percent children measure at their content instead.
+        val hasResolvedWidth = widthMode == MeasureSpec.EXACTLY || solvedWidth != null
         width = max(width, suggestedMinimumWidth)
 
         // Reconcile our calculated size with the widthMeasureSpec
@@ -1075,7 +1098,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                 // it — a borrowed viewport, or `S / (1 - P)`. Without one there's nothing to take a
                 // percentage of, so fall back to the child's own content rather than leaving it
                 // unmeasured, matching iOS, where a percent with no parent size behaves as auto.
-                if (widthMode != MeasureSpec.UNSPECIFIED || solvedWidth != null) {
+                if (hasResolvedWidth) {
                     val remaining = maxPercentCount - i
 
                     val actualPercent: Float = when {
@@ -1534,13 +1557,21 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
      * stack whatever it turns out to be — so the measured sum stands and the distribution pass
      * fair-shares what's actually there. That matches iOS, where a percent is a `maxHeight` with no
      * `minHeight`: fixed children are paid first and the flexible ones split the remainder.
+     *
+     * That last case only works against a length that is honestly ours to divide. [autoAncestor]
+     * says it isn't: an auto-sized ancestor is passing its own content budget through as a ceiling,
+     * and a stack that has no length of its own can't claim the budget it's supposed to be
+     * contributing to. Taking it starves every sibling — the fixed ones overflow the parent, which
+     * collapses the auto ones to nothing. Nil is the honest answer; percent children with no length
+     * to resolve against fall back to their content, which is stable and matches iOS.
      */
     private fun solveMainAxisLength(
         mode: Int,
         specSize: Int,
         fixedLength: Int,
         percentTotal: Float,
-        borrowed: Int
+        borrowed: Int,
+        autoAncestor: Boolean
     ): Int? {
         if (mode == MeasureSpec.EXACTLY || percentTotal <= 0f) return null
 
@@ -1551,8 +1582,9 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
             // No solution: the children want the whole stack or more, whatever it turns out to be.
             // Take everything on offer and let the distribution fair-share it, which is what iOS
             // does — a percent is a max with no min, so the fixed children are paid first and the
-            // flexible ones split the rest. With nothing on offer there's nothing to divide.
-            return if (mode == MeasureSpec.AT_MOST) specSize else null
+            // flexible ones split the rest. With nothing on offer there's nothing to divide, and
+            // inherited slack only looks like an offer.
+            return if (mode == MeasureSpec.AT_MOST && !autoAncestor) specSize else null
         }
 
         return (fixedLength / (1f - percentTotal)).roundToInt().coerceAtLeast(0)

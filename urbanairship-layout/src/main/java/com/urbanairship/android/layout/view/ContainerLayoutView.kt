@@ -25,6 +25,7 @@ import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.widget.AutoSizeProvider
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout
 import com.urbanairship.android.layout.widget.borrowedPercentBase
 import com.urbanairship.android.layout.widget.ShrinkableView
@@ -34,7 +35,7 @@ internal class ContainerLayoutView(
     context: Context,
     private val model: ContainerLayoutModel,
     private val viewEnvironment: ViewEnvironment
-) : ClippableConstraintLayout(context), BaseView, ShrinkableView {
+) : ClippableConstraintLayout(context), BaseView, ShrinkableView, AutoSizeProvider {
 
     private val frameShouldIgnoreSafeArea = SparseBooleanArray()
     private val frameMargins = SparseArray<Margin>()
@@ -113,9 +114,20 @@ internal class ContainerLayoutView(
         }
     }
 
+    private var isAutoWidth = false
+    private var isAutoHeight = false
+
+    override fun isAutoSized(horizontal: Boolean): Boolean =
+        if (horizontal) isAutoWidth else isAutoHeight
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+
+        // Recorded before any child is measured, since that's when they ask. A fixed container is
+        // a real ceiling and stops the search here; an auto one is only passing slack through.
+        isAutoWidth = widthMode != MeasureSpec.EXACTLY
+        isAutoHeight = heightMode != MeasureSpec.EXACTLY
 
         // Fixed by our parent: the base is the spec, known before anything is measured, so resolve
         // straight away in one pass. ConstraintLayout's own percent would size the item's content
