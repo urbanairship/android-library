@@ -17,7 +17,6 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.AirshipBannerViewManager
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.ModelFactoryException
-import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment

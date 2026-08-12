@@ -39,6 +39,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.urbanairship.actions.ActionRunRequest
+import com.urbanairship.actions.ActionValue
+import com.urbanairship.actions.RateAppAction
 import com.urbanairship.devapp.AppRouterViewModel
 import com.urbanairship.devapp.Destination
 import com.urbanairship.messagecenter.Message
@@ -146,6 +149,17 @@ internal fun HomeScreen(
                         title = stringResource(R.string.thomas_layouts),
                         subtitle = "Tap to preview layouts",
                         onClick = { onNavigate(QuickAccess.ThomasLayoutsHome) }
+                    )
+                    HorizontalDivider()
+
+                    QuickSettingItem(
+                        title = "Rate App",
+                        subtitle = "Trigger in-app review prompt",
+                        onClick = {
+                            ActionRunRequest.createRequest(RateAppAction.DEFAULT_NAMES.first())
+                                .setValue(ActionValue.wrap(jsonMapOf(RateAppAction.SHOW_LINK_PROMPT_KEY to true)))
+                                .run()
+                        }
                     )
                     HorizontalDivider()
 

@@ -40,7 +40,8 @@ dependencies {
 
     implementation(libs.glide)
 
-    compileOnly(libs.playservices.base)
+    implementation(libs.playservices.base)
+    implementation(libs.play.review)
 
     // Unit Tests
     testImplementation project(':urbanairship-test')

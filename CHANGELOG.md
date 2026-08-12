@@ -4,6 +4,15 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.11.0 - August 11, 2026
+
+Minor release that updates the rate app action to use Google's Play In-App Review API and fixes a couple of issues.
+
+### Changes
+- Updated `rate_app_action` to use Google's Play In-App Review API on Play builds, with fallback to the existing dialog on Amazon or when the dependency is excluded
+- Fixed XML/Views Message Center window inset padding (top and right values were swapped)
+- Hardened DB and JSON parsing paths against corrupt data
+
 ## Version 20.10.1 - August 3, 2026
 
 Patch release that fixes issues with Stories in Scenes and hardens against potential crashes related to JSON serialization and Analytics DB.

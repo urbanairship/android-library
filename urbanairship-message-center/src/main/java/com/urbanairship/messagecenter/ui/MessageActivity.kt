@@ -57,7 +57,7 @@ public open class MessageActivity : FragmentActivity() {
 
         ViewCompat.setOnApplyWindowInsetsListener(contentView) { _, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            contentView.setPadding(systemBars.left, systemBars.right, systemBars.left, systemBars.bottom)
+            contentView.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
 

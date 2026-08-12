@@ -59,7 +59,7 @@ androidx-work = '2.11.0'
 google-material = '1.13.0'
 
 # Google Play Services
-playservices-adsidentifier = '18.2.0'
+play-review = '2.0.2'
 playservices-base = '18.9.0'
 playservices-location = '21.3.0'
 
@@ -197,9 +197,9 @@ androidx-work-runtimektx = { module = "androidx.work:work-runtime-ktx", version.
 google-material = { module = "com.google.android.material:material", version.ref = "google-material" }
 
 # Google Play Services
+play-review = { module = "com.google.android.play:review-ktx", version.ref = "play-review" }
 playservices-base = { module = "com.google.android.gms:play-services-base", version.ref = "playservices-base" }
 playservices-location = { module = "com.google.android.gms:play-services-location", version.ref = "playservices-location" }
-playservices-adsidentifier = { module = "com.google.android.gms:play-services-ads-identifier", version.ref = "playservices-adsidentifier" }
 
 # Firebase
 firebase-messaging = { module = "com.google.firebase:firebase-messaging", version.ref = "firebase-messaging"}

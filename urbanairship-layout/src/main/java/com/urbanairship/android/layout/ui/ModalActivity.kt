@@ -139,6 +139,11 @@ public class ModalActivity : AppCompatActivity() {
 
             setContentView(view)
 
+            placement.animation?.let {
+                window.enterTransition  = TransitionFactory.enterTransition(it, view.frameView, view.shadeView)
+                window.returnTransition = TransitionFactory.exitTransition(it, view.frameView, view.shadeView)
+            }
+
             ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->
                 val systemBarInsets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars())
                 val imeInsets = windowInsets.getInsets(WindowInsetsCompat.Type.ime())
