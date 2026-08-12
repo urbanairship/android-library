@@ -19,6 +19,7 @@ import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.ModalAnimation
 import com.urbanairship.android.layout.property.VerticalPosition
 import kotlin.apply
+import kotlin.time.Duration
 
 internal object TransitionFactory {
 
@@ -28,14 +29,14 @@ internal object TransitionFactory {
      */
     fun enterTransition(animation: ModalAnimation, frame: View, shade: View): Transition = when (animation) {
         is ModalAnimation.Fade ->
-            fade(animation.animateInSeconds).apply {
+            fade(animation.animateIn).apply {
                 addTarget(frame)
                 addTarget(shade)
             }
         is ModalAnimation.Slide ->
-            compose(slide(animation.origin, animation.animateInSeconds), frame, shade)
+            compose(slide(animation.origin, animation.animateIn), frame, shade)
         is ModalAnimation.Explode ->
-            compose(corner(animation.enter, animation.animateInSeconds), frame, shade)
+            compose(corner(animation.enter, animation.animateIn), frame, shade)
     }
 
     /**
@@ -44,14 +45,14 @@ internal object TransitionFactory {
      */
     fun exitTransition(animation: ModalAnimation, frame: View, shade: View): Transition = when (animation) {
         is ModalAnimation.Fade ->
-            fade(animation.animateOutSeconds).apply {
+            fade(animation.animateOut).apply {
                 addTarget(frame)
                 addTarget(shade)
             }
         is ModalAnimation.Slide ->
-            compose(slide(animation.origin, animation.animateOutSeconds), frame, shade)
+            compose(slide(animation.origin, animation.animateOut), frame, shade)
         is ModalAnimation.Explode ->
-            compose(corner(animation.exit, animation.animateOutSeconds), frame, shade)
+            compose(corner(animation.exit, animation.animateOut), frame, shade)
     }
 
     /**
@@ -64,9 +65,9 @@ internal object TransitionFactory {
         position: VerticalPosition
     ): Transition = when (animation) {
         is BannerAnimation.Fade ->
-            fade(animation.animateInSeconds).apply { addTarget(frame) }
+            fade(animation.animateIn).apply { addTarget(frame) }
         is BannerAnimation.Slide ->
-            bannerSlide(position, animation.animateInSeconds).apply { addTarget(frame) }
+            bannerSlide(position, animation.animateIn).apply { addTarget(frame) }
     }
 
     /**
@@ -79,9 +80,9 @@ internal object TransitionFactory {
         position: VerticalPosition
     ): Transition = when (animation) {
         is BannerAnimation.Fade ->
-            fade(animation.animateOutSeconds).apply { addTarget(frame) }
+            fade(animation.animateOut).apply { addTarget(frame) }
         is BannerAnimation.Slide ->
-            bannerSlide(position, animation.animateOutSeconds).apply { addTarget(frame) }
+            bannerSlide(position, animation.animateOut).apply { addTarget(frame) }
     }
 
     /** Targets [transition] with the frame transition and fades the [shade] alongside it. */
@@ -95,21 +96,21 @@ internal object TransitionFactory {
         addTransition(Fade().apply { addTarget(shade) })
     }
 
-    private fun fade(seconds: Double?) = Fade().applyDuration(seconds)
+    private fun fade(duration: Duration?) = Fade().applyDuration(duration)
 
-    private fun slide(origin: EdgePosition, seconds: Double?) =
-        directional(origin.horizontal, origin.vertical, seconds)
+    private fun slide(origin: EdgePosition, duration: Duration?) =
+        directional(origin.horizontal, origin.vertical, duration)
 
-    private fun bannerSlide(position: VerticalPosition, seconds: Double?) =
-        directional(null, position, seconds)
+    private fun bannerSlide(position: VerticalPosition, duration: Duration?) =
+        directional(null, position, duration)
 
-    private fun corner(corner: CornerPosition, seconds: Double?) =
-        directional(corner.horizontal.baseType, corner.vertical.baseType, seconds)
+    private fun corner(corner: CornerPosition, duration: Duration?) =
+        directional(corner.horizontal.baseType, corner.vertical.baseType, duration)
 
     private fun directional(
         h: HorizontalPosition?,
         v: VerticalPosition?,
-        seconds: Double?
+        duration: Duration?
     ): Transition {
         val horizontalGravity = when (h) {
             HorizontalPosition.START -> Gravity.START
@@ -121,11 +122,11 @@ internal object TransitionFactory {
             VerticalPosition.BOTTOM -> Gravity.BOTTOM
             else -> Gravity.NO_GRAVITY
         }
-        return Slide(horizontalGravity, verticalGravity).applyDuration(seconds)
+        return Slide(horizontalGravity, verticalGravity).applyDuration(duration)
     }
 
-    private fun <T : Transition> T.applyDuration(seconds: Double?): T = apply {
-        seconds?.let { duration = (it * 1000).toLong() }
+    private fun <T : Transition> T.applyDuration(duration: Duration?): T = apply {
+        duration?.let { this.duration = it.inWholeMilliseconds }
     }
 }
 

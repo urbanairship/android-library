@@ -184,7 +184,7 @@ private fun BannerContent(
     // Animate the banner in once the frame has been measured.
     LaunchedEffect(isFrameReady) {
         if (isFrameReady) {
-            transition.animateTo(0f, tween(animation.animateInMs.toInt(), easing = LinearEasing))
+            transition.animateTo(0f, tween((animation?.animateIn?.inWholeMilliseconds ?: 0L).toInt(), easing = LinearEasing))
         }
     }
 
@@ -198,7 +198,7 @@ private fun BannerContent(
                 try {
                     transition.animateTo(
                         targetValue = 1f,
-                        animationSpec = tween(animation.animateOutMs.toInt(), easing = LinearEasing)
+                        animationSpec = tween((animation?.animateOut?.inWholeMilliseconds ?: 0L).toInt(), easing = LinearEasing)
                     )
                 } finally {
                     withContext(NonCancellable) {
@@ -271,6 +271,7 @@ private fun BannerContent(
                             // a flash of un-animated content on the first frame.
                             alpha = if (isFrameReady) 1f else 0f
                         }
+                        null -> {}
                     }
 
                     when (swipeAxis) {

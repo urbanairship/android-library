@@ -5,33 +5,38 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 public sealed class ModalAnimation(
     public val type: ModalAnimationType
 ) : JsonSerializable {
 
+    public abstract val animateIn: Duration?
+    public abstract val animateOut: Duration?
+
     public data class Fade(
-        val animateInSeconds: Double? = null,
-        val animateOutSeconds: Double? = null
+        override val animateIn: Duration? = null,
+        override val animateOut: Duration? = null
     ) : ModalAnimation(ModalAnimationType.FADE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            ANIMATE_IN to animateInSeconds,
-            ANIMATE_OUT to animateOutSeconds
+            ANIMATE_IN to animateIn?.inWholeMilliseconds?.div(1000.0),
+            ANIMATE_OUT to animateOut?.inWholeMilliseconds?.div(1000.0)
         ).toJsonValue()
     }
 
     public data class Slide(
         val origin: EdgePosition,
-        val animateInSeconds: Double? = null,
-        val animateOutSeconds: Double? = null
+        override val animateIn: Duration? = null,
+        override val animateOut: Duration? = null
     ) : ModalAnimation(ModalAnimationType.SLIDE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            ANIMATE_IN to animateInSeconds,
-            ANIMATE_OUT to animateOutSeconds,
+            ANIMATE_IN to animateIn?.inWholeMilliseconds?.div(1000.0),
+            ANIMATE_OUT to animateOut?.inWholeMilliseconds?.div(1000.0),
             ORIGIN to origin
         ).toJsonValue()
     }
@@ -39,14 +44,14 @@ public sealed class ModalAnimation(
     public data class Explode(
         val enter: CornerPosition,
         val exit: CornerPosition,
-        val animateInSeconds: Double? = null,
-        val animateOutSeconds: Double? = null
+        override val animateIn: Duration? = null,
+        override val animateOut: Duration? = null
     ) : ModalAnimation(ModalAnimationType.EXPLODE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            ANIMATE_IN to animateInSeconds,
-            ANIMATE_OUT to animateOutSeconds,
+            ANIMATE_IN to animateIn?.inWholeMilliseconds?.div(1000.0),
+            ANIMATE_OUT to animateOut?.inWholeMilliseconds?.div(1000.0),
             ENTER to enter,
             EXIT to exit
         ).toJsonValue()
@@ -85,19 +90,19 @@ public sealed class ModalAnimation(
 
             return when (ModalAnimationType.fromJson(content.require(TYPE))) {
                 ModalAnimationType.FADE -> Fade(
-                    animateInSeconds = content[ANIMATE_IN]?.getDouble(0.0),
-                    animateOutSeconds = content[ANIMATE_OUT]?.getDouble(0.0)
+                    animateIn = content[ANIMATE_IN]?.getDouble(0.0)?.seconds,
+                    animateOut = content[ANIMATE_OUT]?.getDouble(0.0)?.seconds
                 )
                 ModalAnimationType.SLIDE -> Slide(
                     origin = EdgePosition.fromJson(content.require(ORIGIN)),
-                    animateInSeconds = content[ANIMATE_IN]?.getDouble(0.0),
-                    animateOutSeconds = content[ANIMATE_OUT]?.getDouble(0.0)
+                    animateIn = content[ANIMATE_IN]?.getDouble(0.0)?.seconds,
+                    animateOut = content[ANIMATE_OUT]?.getDouble(0.0)?.seconds
                 )
                 ModalAnimationType.EXPLODE -> Explode(
                     enter = CornerPosition.fromJson(content.require(ENTER)),
                     exit = CornerPosition.fromJson(content.require(EXIT)),
-                    animateInSeconds = content[ANIMATE_IN]?.getDouble(0.0),
-                    animateOutSeconds = content[ANIMATE_OUT]?.getDouble(0.0)
+                    animateIn = content[ANIMATE_IN]?.getDouble(0.0)?.seconds,
+                    animateOut = content[ANIMATE_OUT]?.getDouble(0.0)?.seconds
                 )
             }
         }

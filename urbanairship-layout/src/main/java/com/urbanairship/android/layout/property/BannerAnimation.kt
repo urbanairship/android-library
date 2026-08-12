@@ -5,32 +5,37 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 public sealed class BannerAnimation(
     public val type: BannerAnimationType
 ) : JsonSerializable {
 
+    public abstract val animateIn: Duration?
+    public abstract val animateOut: Duration?
+
     public data class Fade(
-        val animateInSeconds: Double? = null,
-        val animateOutSeconds: Double? = null
+        override val animateIn: Duration? = null,
+        override val animateOut: Duration? = null
     ) : BannerAnimation(BannerAnimationType.FADE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            ANIMATE_IN to animateInSeconds,
-            ANIMATE_OUT to animateOutSeconds
+            ANIMATE_IN to animateIn?.inWholeMilliseconds?.div(1000.0),
+            ANIMATE_OUT to animateOut?.inWholeMilliseconds?.div(1000.0)
         ).toJsonValue()
     }
 
     public data class Slide(
-        val animateInSeconds: Double? = null,
-        val animateOutSeconds: Double? = null
+        override val animateIn: Duration? = null,
+        override val animateOut: Duration? = null
     ) : BannerAnimation(BannerAnimationType.SLIDE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            ANIMATE_IN to animateInSeconds,
-            ANIMATE_OUT to animateOutSeconds,
+            ANIMATE_IN to animateIn?.inWholeMilliseconds?.div(1000.0),
+            ANIMATE_OUT to animateOut?.inWholeMilliseconds?.div(1000.0),
         ).toJsonValue()
     }
 
@@ -63,12 +68,12 @@ public sealed class BannerAnimation(
 
             return when (BannerAnimationType.fromJson(content.require(TYPE))) {
                 BannerAnimationType.FADE -> Fade(
-                    animateInSeconds = content[ANIMATE_IN]?.getDouble(0.0),
-                    animateOutSeconds = content[ANIMATE_OUT]?.getDouble(0.0)
+                    animateIn = content[ANIMATE_IN]?.getDouble(0.0)?.seconds,
+                    animateOut = content[ANIMATE_OUT]?.getDouble(0.0)?.seconds
                 )
                 BannerAnimationType.SLIDE -> Slide(
-                    animateInSeconds = content[ANIMATE_IN]?.getDouble(0.0),
-                    animateOutSeconds = content[ANIMATE_OUT]?.getDouble(0.0)
+                    animateIn = content[ANIMATE_IN]?.getDouble(0.0)?.seconds,
+                    animateOut = content[ANIMATE_OUT]?.getDouble(0.0)?.seconds
                 )
             }
         }
