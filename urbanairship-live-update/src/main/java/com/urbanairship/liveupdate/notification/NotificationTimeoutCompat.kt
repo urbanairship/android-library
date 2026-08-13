@@ -44,8 +44,7 @@ internal class NotificationTimeoutCompat(
 
     private fun setTimeoutAlarm(name: String, timeoutAt: Instant) {
         val intent = LiveUpdateNotificationReceiver.timeoutCompatIntent(context, name)
-        // PendingIntentCompat sets FLAG_IMMUTABLE, but we're setting it explicitly here because
-        // CodeQL doesn't seem to be able to trace through our helper properly.
+        // Immutable: the alarm manager only needs to send this back, never to fill it in.
         val operation = PendingIntentCompat.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
         AlarmManagerCompat.setExactAndAllowWhileIdle(alarmManager, AlarmManager.RTC, timeoutAt.toEpochMilli(), operation)

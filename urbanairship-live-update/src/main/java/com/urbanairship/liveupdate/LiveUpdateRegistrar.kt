@@ -1,6 +1,7 @@
 package com.urbanairship.liveupdate
 
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
@@ -289,8 +290,11 @@ internal class LiveUpdateRegistrar(
             notification.contentIntent?.let { original ->
                 contentIntent.putExtra(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT, original)
             }
-            // Set our content intent.
-            notification.contentIntent = PendingIntentCompat.getActivity(context, 0, contentIntent, 0)
+            // Set our content intent. Immutable: the recipient only needs to send it back,
+            // never to fill it in.
+            notification.contentIntent = PendingIntentCompat.getActivity(
+                context, 0, contentIntent, PendingIntent.FLAG_IMMUTABLE
+            )
         }
 
         val deleteIntent = LiveUpdateNotificationReceiver.deleteIntent(context, update.name)
@@ -298,8 +302,11 @@ internal class LiveUpdateRegistrar(
         notification.deleteIntent?.let { original ->
             deleteIntent.putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, original)
         }
-        // Set our delete intent.
-        notification.deleteIntent = PendingIntentCompat.getBroadcast(context, 0, deleteIntent, 0)
+        // Set our delete intent. Immutable: the recipient only needs to send it back,
+        // never to fill it in.
+        notification.deleteIntent = PendingIntentCompat.getBroadcast(
+            context, 0, deleteIntent, PendingIntent.FLAG_IMMUTABLE
+        )
 
         UALog.d("Posting live update notification for: ${update.name}")
 
