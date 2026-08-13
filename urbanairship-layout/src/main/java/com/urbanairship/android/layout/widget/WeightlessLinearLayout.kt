@@ -237,6 +237,9 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
 
+        // `P` — read from the layout params, so it's known before anything is measured.
+        val percentTotal = mainAxisPercentTotal(vertical = true)
+
         var matchWidth = false
         var skippedMeasure = false
 
@@ -297,13 +300,17 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     }
                 }
 
-                // Determine how big this child would like to be.
+                // Determine how big this child would like to be, in the space its siblings left.
+                // Withheld only when percent children are in play: their slots come out of the
+                // distribution pass below, so the length is still moving and subtracting it here
+                // would measure everyone after them against a budget that hasn't settled. This is
+                // `LinearLayout`'s own rule, where weights stand in for percentages.
                 measureChildWithMargins(
                     child,
                     widthMeasureSpec,
                     childHorizontalMargins,
                     heightMeasureSpec,
-                    if (!childrenWithMaxPercent.isEmpty()) totalLength else 0
+                    if (percentTotal == 0f) totalLength else 0
                 )
 
                 if (oldWidth != Int.MIN_VALUE) {
@@ -356,7 +363,6 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
         // `S` — the fixed content: everything measured above, less the percent children's margins,
         // which the distribution pass takes out of their own slots rather than up front.
-        val percentTotal = mainAxisPercentTotal(vertical = true)
         val percentMargins = childrenWithMaxPercent.sumOf {
             val lp = it.layoutParams as LayoutParams
             lp.topMargin + lp.bottomMargin
@@ -787,6 +793,9 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
         val heightSize = MeasureSpec.getSize(heightMeasureSpec)
 
+        // `P` — read from the layout params, so it's known before anything is measured.
+        val percentTotal = mainAxisPercentTotal(vertical = false)
+
         var matchHeight = false
         var skippedMeasure = false
 
@@ -848,11 +857,15 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                     }
                 }
 
-                // Determine how big this child would like to be.
+                // Determine how big this child would like to be, in the space its siblings left.
+                // Withheld only when percent children are in play: their slots come out of the
+                // distribution pass below, so the length is still moving and subtracting it here
+                // would measure everyone after them against a budget that hasn't settled. This is
+                // `LinearLayout`'s own rule, where weights stand in for percentages.
                 measureChildWithMargins(
                     child,
                     widthMeasureSpec,
-                    if (!childrenWithMaxPercent.isEmpty()) totalLength else 0,
+                    if (percentTotal == 0f) totalLength else 0,
                     heightMeasureSpec,
                     childVerticalMargins
                 )
@@ -908,7 +921,6 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
 
         // `S` — the fixed content: everything measured above, less the percent children's margins,
         // which the distribution pass takes out of their own slots rather than up front.
-        val percentTotal = mainAxisPercentTotal(vertical = false)
         val percentMargins = childrenWithMaxPercent.sumOf {
             val lp = it.layoutParams as LayoutParams
             lp.marginStart + lp.marginEnd
