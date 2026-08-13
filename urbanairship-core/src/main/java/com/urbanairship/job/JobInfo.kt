@@ -49,9 +49,9 @@ public class JobInfo private constructor(builder: Builder) {
     public val isNetworkAccessRequired: Boolean
 
     /**
-     * Gets the initial delay in milliseconds.
+     * Gets the initial delay.
      *
-     * @return The initial delay in milliseconds.
+     * @return The initial delay.
      */
     public val minDelay: Duration
 
