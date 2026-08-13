@@ -2,7 +2,9 @@ version: 1
 presentation:
   type: banner
   default_placement:
-    position: bottom
+    position:
+      horizontal: center
+      vertical: bottom
     ignore_safe_area: true
     size:
       width: 100%

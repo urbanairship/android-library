@@ -154,7 +154,7 @@ public class BannerLayoutTest {
                 "type": "banner",
                 "default_placement": {
                   "size": { "width": "100%", "height": "auto" },
-                  "position": "bottom"
+                  "position": { "horizontal": "center", "vertical": "bottom" }
                 }
               },
               "view": {
