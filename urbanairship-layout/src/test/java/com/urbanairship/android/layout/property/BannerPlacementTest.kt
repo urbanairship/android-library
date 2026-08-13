@@ -11,6 +11,7 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Assert.assertThrows
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -66,8 +67,8 @@ public class BannerPlacementTest {
 
         val animation = placement.animation
         assertTrue(animation is BannerAnimation.Slide)
-        assertEquals(250L, animation.animateInMs)
-        assertEquals(500L, animation.animateOutMs)
+        assertEquals(250.milliseconds, animation?.animateIn)
+        assertEquals(500.milliseconds, animation?.animateOut)
 
         val shadow = placement.shadow?.androidShadow
         assertNotNull(shadow)
@@ -78,7 +79,7 @@ public class BannerPlacementTest {
     public fun testParsingFadeAnimation() {
         val placement = BannerPlacement.fromJson(placementJson(
             """
-            "position": "bottom",
+            "position": { "horizontal": "center", "vertical": "bottom" },
             "animation": {
               "type": "fade",
               "animate_in_seconds": 0.4,
@@ -89,8 +90,8 @@ public class BannerPlacementTest {
 
         val animation = placement.animation
         assertTrue(animation is BannerAnimation.Fade)
-        assertEquals(400L, animation.animateInMs)
-        assertEquals(200L, animation.animateOutMs)
+        assertEquals(400.milliseconds, animation?.animateIn)
+        assertEquals(200.milliseconds, animation?.animateOut)
     }
 
     @Test
@@ -113,7 +114,7 @@ public class BannerPlacementTest {
         assertEquals(HorizontalPosition.CENTER, placement.position.horizontal)
         assertEquals(VerticalPosition.BOTTOM, placement.position.vertical)
         assertTrue(placement.swipeToDismiss)
-        assertEquals(BannerAnimation.DEFAULT, placement.animation)
+        assertNull(placement.animation)
         assertNull(placement.shadow)
     }
 
@@ -139,24 +140,6 @@ public class BannerPlacementTest {
     }
 
     @Test
-    public fun testParsingLegacyStringPosition() {
-        val json = """
-            {
-              "size": {
-                "width": "100%",
-                "height": "auto"
-              },
-              "position": "top"
-            }
-        """.trimIndent()
-
-        val placement = BannerPlacement.fromJson(JsonValue.parseString(json))
-
-        assertEquals(HorizontalPosition.CENTER, placement.position.horizontal)
-        assertEquals(VerticalPosition.TOP, placement.position.vertical)
-    }
-
-    @Test
     public fun testParsingSwipeToDismissDefaultsTrue() {
         val json = """
             {
@@ -164,7 +147,7 @@ public class BannerPlacementTest {
                 "width": "100%",
                 "height": "auto"
               },
-              "position": "top"
+              "position": { "horizontal": "center", "vertical": "top" }
             }
         """.trimIndent()
 
@@ -193,7 +176,7 @@ public class BannerPlacementTest {
     @Test
     public fun testUnknownAnimationTypeThrows() {
         val json = placementJson(
-            """"position": "top", "animation": { "type": "zoom" }"""
+            """"position": { "horizontal": "center", "vertical": "top" }, "animation": { "type": "zoom" }"""
         )
 
         assertThrows(JsonException::class.java) {
@@ -205,7 +188,7 @@ public class BannerPlacementTest {
     public fun testShadowIosOnlySelectorIsIgnored() {
         val json = placementJson(
             """
-            "position": "top",
+            "position": { "horizontal": "center", "vertical": "top" },
             "shadow": {
               "selectors": [
                 {
@@ -231,7 +214,7 @@ public class BannerPlacementTest {
     public fun testShadowSelectorWithoutPlatformMatches() {
         val json = placementJson(
             """
-            "position": "top",
+            "position": { "horizontal": "center", "vertical": "top" },
             "shadow": {
               "selectors": [
                 {
@@ -256,7 +239,7 @@ public class BannerPlacementTest {
     public fun testShadowFirstMatchingSelectorWins() {
         val json = placementJson(
             """
-            "position": "top",
+            "position": { "horizontal": "center", "vertical": "top" },
             "shadow": {
               "selectors": [
                 {
@@ -349,7 +332,7 @@ public class BannerPlacementTest {
                   "width": "100%",
                   "height": "auto"
                 },
-                "position": "bottom"
+                "position": { "horizontal": "center", "vertical": "bottom" }
               },
               "duration_milliseconds": 7000
             }
@@ -369,7 +352,7 @@ public class BannerPlacementTest {
                   "width": "100%",
                   "height": "auto"
                 },
-                "position": "bottom"
+                "position": { "horizontal": "center", "vertical": "bottom" }
               }
             }
         """.trimIndent()
@@ -452,7 +435,7 @@ public class BannerPlacementTest {
                   "width": "100%",
                   "height": "auto"
                 },
-                "position": "bottom"
+                "position": { "horizontal": "center", "vertical": "bottom" }
               },
               $durationFields
             }

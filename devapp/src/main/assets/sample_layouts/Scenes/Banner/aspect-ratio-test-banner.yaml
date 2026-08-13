@@ -3,7 +3,9 @@ version: 1
 presentation:
   type: banner
   default_placement:
-    position: top
+    position:
+      horizontal: center
+      vertical: top
     size:
       width: 100%
       height: auto

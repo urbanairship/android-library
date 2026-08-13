@@ -9,7 +9,9 @@ presentation:
   placement_selectors:
     - orientation: portrait
       placement:
-        position: top
+        position:
+          horizontal: center
+          vertical: top
         size:
           width: 80%
           height: auto
@@ -22,7 +24,9 @@ presentation:
           radius: 12
     - orientation: landscape
       placement:
-        position: top
+        position:
+          horizontal: center
+          vertical: top
         size:
           width: 90%
           height: auto
@@ -34,7 +38,9 @@ presentation:
         border:
           radius: 12
   default_placement:
-    position: top
+    position:
+      horizontal: center
+      vertical: top
     size:
       width: 80%
       height: auto
