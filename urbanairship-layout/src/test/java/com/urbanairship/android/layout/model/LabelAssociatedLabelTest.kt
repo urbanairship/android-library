@@ -25,6 +25,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -144,7 +145,7 @@ public class LabelAssociatedLabelTest {
             val viewModel = LayoutViewModel()
             val modelEnv = viewModel.getOrCreateEnvironment(
                 reporter = mockk(relaxUnitFun = true),
-                displayTimer = mockk { every { time } returns System.currentTimeMillis() },
+                displayTimer = mockk { every { time } returns System.currentTimeMillis().milliseconds },
                 actionRunner = mockk(relaxUnitFun = true),
                 layoutState = LayoutState.EMPTY
             )
@@ -213,7 +214,7 @@ public class LabelAssociatedLabelTest {
             val viewModel = LayoutViewModel()
             val modelEnv = viewModel.getOrCreateEnvironment(
                 reporter = mockk(relaxUnitFun = true),
-                displayTimer = mockk { every { time } returns System.currentTimeMillis() },
+                displayTimer = mockk { every { time } returns System.currentTimeMillis().milliseconds },
                 actionRunner = mockk(relaxUnitFun = true),
                 layoutState = LayoutState.EMPTY
             )
@@ -286,7 +287,7 @@ public class LabelAssociatedLabelTest {
             val viewModel = LayoutViewModel()
             val modelEnv = viewModel.getOrCreateEnvironment(
                 reporter = mockk(relaxUnitFun = true),
-                displayTimer = mockk { every { time } returns System.currentTimeMillis() },
+                displayTimer = mockk { every { time } returns System.currentTimeMillis().milliseconds },
                 actionRunner = mockk(relaxUnitFun = true),
                 layoutState = LayoutState.EMPTY
             )

@@ -46,7 +46,7 @@ internal class WebViewModel(
         report(
             event = ReportingEvent.Dismiss(
                 data = ReportingEvent.DismissData.UserDismissed,
-                displayTime = environment.displayTimer.time.milliseconds,
+                displayTime = environment.displayTimer.time,
                 context = layoutState.reportingContext()
             )
         )

@@ -78,7 +78,8 @@ public class ModalActivity : AppCompatActivity() {
             return@onCreate
         }
 
-        val restoredTime = savedInstanceState?.getLong(KEY_DISPLAY_TIME) ?: 0
+        // Bundle stores whole milliseconds; the timer itself works in Duration.
+        val restoredTime = (savedInstanceState?.getLong(KEY_DISPLAY_TIME) ?: 0).milliseconds
         displayTimer = DisplayTimer(this, restoredTime)
 
         try {
@@ -225,7 +226,7 @@ public class ModalActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        outState.putLong(KEY_DISPLAY_TIME, displayTimer.time)
+        outState.putLong(KEY_DISPLAY_TIME, displayTimer.time.inWholeMilliseconds)
     }
 
     private fun observeLayoutEvents(events: Flow<LayoutEvent>) = lifecycleScope.launch {
@@ -252,7 +253,7 @@ public class ModalActivity : AppCompatActivity() {
         reporter.report(
             event = ReportingEvent.Dismiss(
                 data = ReportingEvent.DismissData.UserDismissed,
-                displayTime = displayTimer.time.milliseconds,
+                displayTime = displayTimer.time,
                 context = state
             )
         )

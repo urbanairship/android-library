@@ -142,7 +142,7 @@ public class EventManager @VisibleForTesting internal constructor(
                         ?.let(Instant::ofEpochMilli) ?: Instant.EPOCH
                     val sendDelta = currentTime - lastSendTime
                     val backgroundReportingInterval =
-                        runtimeConfig.configOptions.backgroundReportingIntervalMS.milliseconds
+                        runtimeConfig.configOptions.backgroundReportingInterval
                     val minimumWait = (backgroundReportingInterval - sendDelta)
                         .coerceAtLeast(nextSendDelay())
 

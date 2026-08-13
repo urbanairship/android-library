@@ -20,6 +20,7 @@ import com.urbanairship.json.extend
 import java.io.IOException
 import io.mockk.every
 import io.mockk.mockk
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.emptyFlow
@@ -50,7 +51,7 @@ public class ThomasTest {
     private val mockActionsRunner: ThomasActionRunner = mockk()
     private val mockAttributeHandler: AttributeHandler = mockk()
     private val mockDisplayTimer: DisplayTimer = mockk {
-        every { time } returns System.currentTimeMillis()
+        every { time } returns System.currentTimeMillis().milliseconds
     }
     private val mockEnv: ModelEnvironment = mockk(relaxed = true) {
         every { reporter } returns mockReporter

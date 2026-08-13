@@ -10,7 +10,11 @@ import com.urbanairship.UALog
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.FilteredActivityListener
 import com.urbanairship.app.SimpleActivityListener
+import com.urbanairship.util.Clock
+import com.urbanairship.util.minus
 import java.lang.ref.WeakReference
+import java.time.Instant
+import kotlin.time.Duration
 
 /**
  * Tracks the amount of time displayed for the given `LifecycleOwner` or
@@ -22,30 +26,31 @@ import java.lang.ref.WeakReference
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class DisplayTimer {
+public class DisplayTimer private constructor(
+    private val clock: Clock,
+    restoredDisplayTime: Duration
+) {
 
-    private var resumeTime: Long = 0
-    private var displayTime: Long = 0
+    /** The instant of the last [onResume], or `null` while paused. */
+    private var resumeTime: Instant? = null
+
+    /** Time accrued across completed resume/pause spans. */
+    private var displayTime: Duration = restoredDisplayTime.coerceAtLeast(Duration.ZERO)
 
     public constructor(
         lifecycleOwner: LifecycleOwner,
-        restoredDisplayTime: Long = 0
-    ) {
-        if (restoredDisplayTime > 0) {
-            displayTime = restoredDisplayTime
-        }
-
+        restoredDisplayTime: Duration = Duration.ZERO,
+        clock: Clock = Clock.DEFAULT_CLOCK
+    ) : this(clock, restoredDisplayTime) {
         lifecycleOwner.lifecycle.addObserver(LifecycleListener(this))
     }
 
     public constructor(
         activityMonitor: ActivityMonitor,
         activityPredicate: Predicate<Activity>? = null,
-        restoredDisplayTime: Long = 0
-    ) {
-        if (restoredDisplayTime > 0) {
-            displayTime = restoredDisplayTime
-        }
+        restoredDisplayTime: Duration = Duration.ZERO,
+        clock: Clock = Clock.DEFAULT_CLOCK
+    ) : this(clock, restoredDisplayTime) {
         val predicate = activityPredicate ?: Predicate { activity: Activity -> true }
         val activityListener = FilteredActivityListener(
             listener = DisplayActivityListener(this),
@@ -55,23 +60,19 @@ public class DisplayTimer {
         activityMonitor.addActivityListener(activityListener)
     }
 
-    public val time: Long
+    public val time: Duration
         /** Returns the current displayed time.  */
-        get() {
-            var time = displayTime
-            if (resumeTime > 0) {
-                time += System.currentTimeMillis() - resumeTime
-            }
-            return time
-        }
+        get() = resumeTime?.let { displayTime + (clock.now() - it) } ?: displayTime
 
     public fun onResume() {
-        resumeTime = System.currentTimeMillis()
+        resumeTime = clock.now()
     }
 
     public fun onPause() {
-        displayTime += System.currentTimeMillis() - resumeTime
-        resumeTime = 0
+        // Only accrue time if we were actually resumed. Previously `resumeTime` defaulted to 0,
+        // so an unpaired onPause added the entire epoch-to-now span to the display time.
+        resumeTime?.let { displayTime += clock.now() - it }
+        resumeTime = null
     }
 
     private class DisplayActivityListener(timer: DisplayTimer): SimpleActivityListener() {

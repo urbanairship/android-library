@@ -41,6 +41,7 @@ import com.urbanairship.webkit.AirshipWebViewClient
 import java.lang.ref.WeakReference
 import java.time.Instant
 import java.util.Objects
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -143,7 +144,7 @@ public class BannerLayout(
             return null
         }
 
-        val timer = DisplayTimer(activity, 0)
+        val timer = DisplayTimer(activity)
 
         activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
@@ -317,7 +318,7 @@ public class BannerLayout(
         reporter.report(
             event = ReportingEvent.Dismiss(
                 data = data,
-                displayTime = (displayTimer?.time ?: 0).milliseconds,
+                displayTime = displayTimer?.time ?: Duration.ZERO,
                 context = LayoutData.EMPTY
             )
         )

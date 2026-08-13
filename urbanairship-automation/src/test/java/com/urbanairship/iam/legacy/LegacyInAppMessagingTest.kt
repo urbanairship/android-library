@@ -28,6 +28,7 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.TestResult
@@ -71,7 +72,7 @@ public class LegacyInAppMessagingTest {
             id = "test-send-id",
             placement = Banner.Placement.TOP,
             alert = "test iam",
-            displayDurationMs = TimeUnit.SECONDS.toMillis(100),
+            displayDuration = 100.seconds,
             expiry = DateUtils.parseIso8601("2024-08-13T23:33:04"),
             clickActionValues = jsonMapOf("onclick" to "action"),
             buttonGroupId = "ua_yes_no_background",
@@ -96,7 +97,7 @@ public class LegacyInAppMessagingTest {
                     dismissButtonColor = secondaryColor,
                     borderRadius = LegacyInAppMessaging.DEFAULT_BORDER_RADIUS_DP,
                     actions = message.clickActionValues,
-                    durationMs = message.displayDurationMs!!,
+                    duration = message.displayDuration!!,
                     placement = message.placement,
                     template = Banner.Template.MEDIA_LEFT,
                     body = InAppMessageTextInfo(message.alert!!, color = secondaryColor),
@@ -157,7 +158,7 @@ public class LegacyInAppMessagingTest {
                     backgroundColor = InAppMessageColor(LegacyInAppMessaging.DEFAULT_PRIMARY_COLOR),
                     dismissButtonColor = InAppMessageColor(LegacyInAppMessaging.DEFAULT_SECONDARY_COLOR),
                     borderRadius = LegacyInAppMessaging.DEFAULT_BORDER_RADIUS_DP,
-                    durationMs = Banner.DEFAULT_DURATION_MS,
+                    duration = Banner.DEFAULT_DURATION,
                     placement = Banner.Placement.TOP,
                     template = Banner.Template.MEDIA_LEFT,
                     body = InAppMessageTextInfo("", color = InAppMessageColor(LegacyInAppMessaging.DEFAULT_SECONDARY_COLOR)),
@@ -205,7 +206,7 @@ public class LegacyInAppMessagingTest {
                     backgroundColor = InAppMessageColor(LegacyInAppMessaging.DEFAULT_PRIMARY_COLOR),
                     dismissButtonColor = InAppMessageColor(LegacyInAppMessaging.DEFAULT_SECONDARY_COLOR),
                     borderRadius = LegacyInAppMessaging.DEFAULT_BORDER_RADIUS_DP,
-                    durationMs = Banner.DEFAULT_DURATION_MS,
+                    duration = Banner.DEFAULT_DURATION,
                     placement = Banner.Placement.TOP,
                     template = Banner.Template.MEDIA_LEFT,
                     body = InAppMessageTextInfo("", color = InAppMessageColor(LegacyInAppMessaging.DEFAULT_SECONDARY_COLOR)),

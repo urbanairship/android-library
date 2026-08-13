@@ -14,7 +14,8 @@ import com.urbanairship.json.requireField
 import com.urbanairship.push.PushMessage
 import com.urbanairship.util.DateUtils
 import java.time.Instant
-import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Legacy in-app message model object.
@@ -37,12 +38,12 @@ public class LegacyInAppMessage @JvmOverloads public constructor(
     public val alert: String? = null,
 
     /**
-     * Display duration in milliseconds.
+     * Display duration.
      */
-    public val displayDurationMs: Long? = null,
+    public val displayDuration: Duration? = null,
 
     /**
-     * The expiry date in milliseconds.
+     * The expiry date.
      */
     public val expiry: Instant? = null,
 
@@ -88,6 +89,16 @@ public class LegacyInAppMessage @JvmOverloads public constructor(
      */
     public val extras: JsonMap? = null
 ) {
+
+    /**
+     * Display duration in milliseconds, or `null` if unset.
+     *
+     * Provided for Java callers, which cannot express a [Duration]. [displayDuration] is the
+     * source of truth; this is derived from it.
+     */
+    public val displayDurationMs: Long?
+        get() = displayDuration?.inWholeMilliseconds
+
 
     internal companion object {
 
@@ -145,9 +156,8 @@ public class LegacyInAppMessage @JvmOverloads public constructor(
                 id = sendId,
                 placement = displayJson[POSITION_KEY]?.let { Banner.Placement.fromJson(it) } ?: Banner.Placement.TOP,
                 alert = displayJson.optionalField(ALERT_KEY),
-                displayDurationMs = displayJson.optionalField<Long>(DURATION_KEY)?.let {
-                    TimeUnit.SECONDS.toMillis(it)
-                },
+                // The legacy `duration` field is encoded in seconds.
+                displayDuration = displayJson.optionalField<Long>(DURATION_KEY)?.seconds,
                 expiry = json.optionalField<String>(EXPIRY_KEY)?.let { DateUtils.parseIso8601(it) },
                 clickActionValues = clickActions.let { if (it.isNotEmpty()) JsonMap(it) else null },
                 buttonGroupId = actionsJson?.optionalField(BUTTON_GROUP_KEY),
@@ -174,7 +184,7 @@ public class LegacyInAppMessage @JvmOverloads public constructor(
         if (id != other.id) return false
         if (placement != other.placement) return false
         if (alert != other.alert) return false
-        if (displayDurationMs != other.displayDurationMs) return false
+        if (displayDuration != other.displayDuration) return false
         if (expiry != other.expiry) return false
         if (clickActionValues != other.clickActionValues) return false
         if (buttonGroupId != other.buttonGroupId) return false
@@ -190,7 +200,7 @@ public class LegacyInAppMessage @JvmOverloads public constructor(
 
     override fun hashCode(): Int {
         return ObjectsCompat.hash(
-            id, placement, alert, displayDurationMs, expiry, clickActionValues,
+            id, placement, alert, displayDuration, expiry, clickActionValues,
             buttonActionValues, buttonGroupId, primaryColor, secondaryColor,
             messageType, campaigns, expiry
         )
@@ -198,7 +208,7 @@ public class LegacyInAppMessage @JvmOverloads public constructor(
 
     override fun toString(): String {
         return "LegacyInAppMessage(id='$id', placement=$placement, alert=$alert, " +
-                "displayDurationMs=$displayDurationMs, expiry=$expiry, " +
+                "displayDuration=$displayDuration, expiry=$expiry, " +
                 "clickActionValues=$clickActionValues, buttonGroupId=$buttonGroupId, " +
                 "buttonActionValues=$buttonActionValues, primaryColor=$primaryColor, " +
                 "secondaryColor=$secondaryColor, messageType=$messageType, campaigns=$campaigns, " +

@@ -3,20 +3,21 @@ package com.urbanairship.android.layout.util
 
 import android.os.Handler
 import android.os.Looper
-import android.os.SystemClock
-import kotlin.math.max
+import com.urbanairship.util.Clock
+import kotlin.time.Duration
 
 /**
  * Timer that can be stopped and started.
  */
 public abstract class Timer public constructor(
-    private val duration: Long
+    private val duration: Duration,
+    private val clock: Clock = Clock.DEFAULT_CLOCK
 ) {
     public var isStarted: Boolean = false
         private set
-    private var startTimeMs: Long = 0
-    private var remainingTimeMs: Long = duration
-    private var elapsedTimeMs: Long = 0
+    private var startTime: Duration = Duration.ZERO
+    private var remainingTime: Duration = duration
+    private var elapsedTime: Duration = Duration.ZERO
     private var hasFired: Boolean = false
     private val handler = Handler(Looper.myLooper() ?: Looper.getMainLooper())
     private val trigger = Runnable {
@@ -41,10 +42,10 @@ public abstract class Timer public constructor(
         }
 
         isStarted = true
-        startTimeMs = SystemClock.elapsedRealtime()
+        startTime = clock.elapsedRealtime()
 
-        if (remainingTimeMs > 0) {
-            handler.postDelayed(trigger, remainingTimeMs)
+        if (remainingTime > Duration.ZERO) {
+            handler.postDelayed(trigger, remainingTime.inWholeMilliseconds)
         } else {
             handler.post(trigger)
         }
@@ -58,24 +59,25 @@ public abstract class Timer public constructor(
             return
         }
 
-        elapsedTimeMs += SystemClock.elapsedRealtime() - startTimeMs
+        val sinceStart = clock.elapsedRealtime() - startTime
+        elapsedTime += sinceStart
 
         isStarted = false
         handler.removeCallbacks(trigger)
-        remainingTimeMs = max(0, remainingTimeMs - (SystemClock.elapsedRealtime() - startTimeMs))
+        remainingTime = (remainingTime - sinceStart).coerceAtLeast(Duration.ZERO)
     }
 
     /**
-     * Gets the total run time in milliseconds.
+     * Gets the total run time.
      *
-     * @return The total run time in milliseconds.
+     * @return The total run time.
      */
-    public fun getRunTime(): Long {
+    public fun getRunTime(): Duration {
         if (isStarted) {
-            return elapsedTimeMs + SystemClock.elapsedRealtime() - startTimeMs
+            return elapsedTime + (clock.elapsedRealtime() - startTime)
         }
 
-        return elapsedTimeMs
+        return elapsedTime
     }
 
     /**
@@ -84,10 +86,10 @@ public abstract class Timer public constructor(
      * @return The progress in percentage.
      */
     public fun getProgress(): Int {
-        if (duration == 0L) {
+        if (duration == Duration.ZERO) {
             return 0 // Return 0 progress if the duration is zero to prevent divide by zero
         }
-        return (getRunTime() * 100 / duration).toInt()
+        return (getRunTime().inWholeMilliseconds * 100 / duration.inWholeMilliseconds).toInt()
     }
 
     /**

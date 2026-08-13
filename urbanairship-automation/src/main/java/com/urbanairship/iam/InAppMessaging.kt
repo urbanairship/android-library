@@ -7,6 +7,8 @@ import androidx.annotation.MainThread
 import com.urbanairship.android.layout.assets.AirshipCachedAssets
 import com.urbanairship.iam.adapter.CustomDisplayAdapter
 import com.urbanairship.iam.adapter.CustomDisplayAdapterType
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * In-app messaging
@@ -14,9 +16,19 @@ import com.urbanairship.iam.adapter.CustomDisplayAdapterType
 public interface InAppMessagingInterface {
 
     /**
-     * Display interval
+     * The interval to wait between displaying in-app messages.
      */
-    public var displayInterval: Long
+    public var displayInterval: Duration
+
+    /**
+     * The interval to wait between displaying in-app messages, in whole seconds.
+     *
+     * Provided for Java callers, which cannot express a [Duration]. [displayInterval] is the
+     * source of truth; this reads and writes through to it.
+     */
+    public var displayIntervalSeconds: Long
+        get() = displayInterval.inWholeSeconds
+        set(value) { displayInterval = value.seconds }
 
     /**
      * Display interval
@@ -63,7 +75,7 @@ internal class InAppMessaging(
     private val preparer: InAppMessageAutomationPreparer
 ) : InAppMessagingInterface {
 
-    override var displayInterval: Long
+    override var displayInterval: Duration
         get() { return preparer.displayInterval }
         set(value) { preparer.displayInterval = value }
 

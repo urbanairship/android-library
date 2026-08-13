@@ -11,6 +11,7 @@ import com.urbanairship.iam.info.InAppMessageButtonLayoutType
 import com.urbanairship.iam.info.InAppMessageColor
 import com.urbanairship.iam.info.InAppMessageMediaInfo
 import com.urbanairship.iam.info.InAppMessageTextInfo
+import kotlin.time.Duration.Companion.milliseconds
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import org.junit.Before
@@ -75,7 +76,7 @@ public class InAppMessageContentValidationTest {
             backgroundColor =  validColor,
             dismissButtonColor =  validColor,
             borderRadius =  5F,
-            durationMs =  100,
+            duration = 100.milliseconds,
             placement = Banner.Placement.TOP
         ).validate()
         assertTrue(result)
@@ -94,7 +95,7 @@ public class InAppMessageContentValidationTest {
             backgroundColor = validColor,
             dismissButtonColor = validColor,
             borderRadius = 5F,
-            durationMs = 100,
+            duration = 100.milliseconds,
             placement = Banner.Placement.TOP
         )
 
@@ -108,7 +109,7 @@ public class InAppMessageContentValidationTest {
             backgroundColor = validColor,
             dismissButtonColor = validColor,
             borderRadius = 5F,
-            durationMs = 100,
+            duration = 100.milliseconds,
             placement = Banner.Placement.TOP
         )
 

@@ -154,11 +154,11 @@ public class Contact internal constructor(
 
     /** The foreground resolve interval from remote config, or the default [FOREGROUND_INTERVAL] if not available. */
     private val foregroundResolveInterval: Duration
-        get() = config.remoteConfig.contactConfig?.foregroundIntervalMs?.milliseconds ?: FOREGROUND_INTERVAL
+        get() = config.remoteConfig.contactConfig?.foregroundInterval ?: FOREGROUND_INTERVAL
 
     /** The CRA max age from remote config, or the default [CRA_MAX_AGE] if not available. */
     private val channelRegistrationMaxResolveAge: Duration
-        get() = config.remoteConfig.contactConfig?.channelRegistrationMaxResolveAgeMs?.milliseconds ?: CRA_MAX_AGE
+        get() = config.remoteConfig.contactConfig?.channelRegistrationMaxResolveAge ?: CRA_MAX_AGE
 
     internal val currentContactIdUpdate: ContactIdUpdate?
         get() = contactManager.currentContactIdUpdate

@@ -79,7 +79,7 @@ internal class PagerController(
         // call this before page view to generate the correct history in the context
         environment.pagerTracker.onPageView(
             pageEvent = eventData,
-            currentDisplayTime = environment.displayTimer.time.milliseconds
+            currentDisplayTime = environment.displayTimer.time
         )
 
         val event = ReportingEvent.PageView(
@@ -116,7 +116,7 @@ internal class PagerController(
         val pagerIdentifier = pagerState.changes.value.identifier
         environment.pagerTracker.stop(
             pagerId = pagerIdentifier,
-            currentDisplayTime = environment.displayTimer.time.milliseconds
+            currentDisplayTime = environment.displayTimer.time
         )
 
         val summary = environment.pagerTracker

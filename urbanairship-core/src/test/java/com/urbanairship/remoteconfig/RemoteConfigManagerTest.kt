@@ -94,7 +94,7 @@ public class RemoteConfigManagerTest : BaseTestCase() {
                 true, 10.milliseconds, 100.milliseconds
             ),
             contactConfig = ContactConfig(
-                10, 100
+                10.milliseconds, 100.milliseconds
             )
         )
 
@@ -103,7 +103,7 @@ public class RemoteConfigManagerTest : BaseTestCase() {
                 "some-url"
             ),
             contactConfig = ContactConfig(
-                null, 200
+                null, 200.milliseconds
             )
         )
 

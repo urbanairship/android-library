@@ -9,6 +9,7 @@ import com.urbanairship.util.DateUtils
 import java.util.concurrent.TimeUnit
 import io.mockk.every
 import io.mockk.mockk
+import kotlin.time.Duration.Companion.seconds
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -61,7 +62,7 @@ public class LegacyInAppMessageTest {
             id = "test-send-id",
             placement = Banner.Placement.TOP,
             alert = "test iam",
-            displayDurationMs = TimeUnit.SECONDS.toMillis(100),
+            displayDuration = 100.seconds,
             expiry = DateUtils.parseIso8601("2024-08-13T23:33:04"),
             clickActionValues = jsonMapOf("onclick" to "action"),
             buttonGroupId = "ua_yes_no_background",

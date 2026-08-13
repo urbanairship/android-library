@@ -226,7 +226,7 @@ public class ContactTest {
     public fun testExtendChannelRegistrationConfigurableResolve(): TestResult = runTest {
         config.updateRemoteConfig(
             RemoteConfig(
-                contactConfig = ContactConfig(channelRegistrationMaxResolveAgeMs = 99)
+                contactConfig = ContactConfig(channelRegistrationMaxResolveAge = 99.milliseconds)
             )
         )
 
@@ -352,7 +352,7 @@ public class ContactTest {
 
         config.updateRemoteConfig(
             RemoteConfig(
-                contactConfig = ContactConfig(foregroundIntervalMs = 100)
+                contactConfig = ContactConfig(foregroundInterval = 100.milliseconds)
             )
         )
 

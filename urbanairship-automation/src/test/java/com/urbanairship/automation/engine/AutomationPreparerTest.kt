@@ -48,6 +48,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.unmockkStatic
+import kotlin.time.Duration.Companion.milliseconds
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
@@ -448,7 +449,7 @@ public class AutomationPreparerTest {
                 buttonLayoutType = InAppMessageButtonLayoutType.STACKED,
                 template = Banner.Template.MEDIA_LEFT,
                 borderRadius = 5F,
-                durationMs = 100L,
+                duration = 100.milliseconds,
                 placement = Banner.Placement.TOP
             )
         )

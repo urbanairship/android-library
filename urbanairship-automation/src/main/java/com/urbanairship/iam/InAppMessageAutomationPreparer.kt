@@ -18,6 +18,7 @@ import com.urbanairship.iam.adapter.CustomDisplayAdapterType
 import com.urbanairship.iam.adapter.DisplayAdapterFactory
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import com.urbanairship.iam.coordinator.DisplayCoordinatorManager
+import kotlin.time.Duration
 
 internal class InAppMessageAutomationPreparer(
     private val assetsManager: AssetCacheManager,
@@ -31,7 +32,7 @@ internal class InAppMessageAutomationPreparer(
         get() { synchronized(displayAdapterFactory) { return displayAdapterFactory.messageContentExtender } }
         set(value) { synchronized(displayAdapterFactory) { displayAdapterFactory.messageContentExtender = value } }
 
-    var displayInterval: Long
+    var displayInterval: Duration
         get() { synchronized(displayCoordinatorManager) { return displayCoordinatorManager.displayInterval } }
         set(value) { synchronized(displayCoordinatorManager) { displayCoordinatorManager.displayInterval = value} }
 

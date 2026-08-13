@@ -49,6 +49,8 @@ import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.ui.BannerLayout
 import kotlin.math.abs
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -134,7 +136,7 @@ private fun BannerContent(
     val scope = rememberCoroutineScope()
 
     val placement = remember(layout, configuration) { layout.getPlacement() }
-    val durationMs = remember(layout) { layout.getPresentation().durationMs }
+    val duration = remember(layout) { layout.getPresentation().duration }
     val animation = placement.animation
 
     // The bounds of the banner frame within the host, reported by the banner view once laid out.
@@ -226,12 +228,12 @@ private fun BannerContent(
 
     // Auto-dismiss timer, paused while the host lifecycle is below RESUMED or the banner is
     // being dragged or dismissed.
-    if (durationMs != null) {
+    if (duration != null) {
         val lifecycleState by LocalLifecycleOwner.current.lifecycle.currentStateAsState()
         val isTimerRunning = lifecycleState.isAtLeast(Lifecycle.State.RESUMED) &&
                 !isDragging && !isDismissing
 
-        val timer = remember { BannerAutoDismissTimer(durationMs) }
+        val timer = remember { BannerAutoDismissTimer(duration) }
 
         LaunchedEffect(isTimerRunning) {
             if (!isTimerRunning) return@LaunchedEffect
@@ -413,19 +415,20 @@ internal fun shouldDismissBanner(
  * duration has already reached zero, the callback is invoked immediately.
  */
 internal class BannerAutoDismissTimer(
-    durationMs: Long,
-    private val clock: () -> Long = SystemClock::elapsedRealtime
+    duration: Duration,
+    private val elapsedTime: () -> Duration = { SystemClock.elapsedRealtime().milliseconds }
 ) {
-    internal var remainingMs: Long = durationMs
+    internal var remaining: Duration = duration
         private set
 
     internal suspend fun start(onTimedOut: () -> Unit) {
-        if (remainingMs > 0) {
-            val startTime = clock()
+        if (remaining > Duration.ZERO) {
+            val startTime = elapsedTime()
             try {
-                delay(remainingMs)
+                delay(remaining)
             } finally {
-                remainingMs = (remainingMs - (clock() - startTime)).coerceAtLeast(0)
+                remaining = (remaining - (elapsedTime() - startTime))
+                    .coerceAtLeast(Duration.ZERO)
             }
         }
 

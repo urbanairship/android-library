@@ -161,7 +161,7 @@ internal abstract class ButtonModel<T, I: Button>(
                             description = reportingDescription(context),
                             cancel = outcome.cancel
                         ),
-                        displayTime = environment.displayTimer.time.milliseconds,
+                        displayTime = environment.displayTimer.time,
                         context = layoutState.reportingContext(buttonId = viewInfo.identifier)
                     )
                 )
