@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
@@ -29,6 +30,10 @@ internal class ButtonLayoutModel(
     environment = environment,
     properties = properties,
 ) {
+
+    /** Wraps a view without resizing it, so what it wraps answers for it. */
+    override fun establishesLength(direction: Direction): Boolean =
+        view.establishesLength(direction)
 
     override var isShrinkable: Boolean = view.isShrinkable
 

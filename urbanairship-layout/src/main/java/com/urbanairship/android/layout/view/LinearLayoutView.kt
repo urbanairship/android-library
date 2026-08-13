@@ -18,6 +18,7 @@ import androidx.core.view.isVisible
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.LinearLayoutInfo
 import com.urbanairship.android.layout.info.LinearLayoutItemInfo
+import com.urbanairship.android.layout.model.AnyModel
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
 import com.urbanairship.android.layout.model.ItemProperties
@@ -115,7 +116,7 @@ internal class LinearLayoutView(
 
         for (i in items.indices) {
             val (itemInfo, itemModel) = items[i]
-            val lp = generateItemLayoutParams(itemInfo)
+            val lp = generateItemLayoutParams(itemInfo, itemModel)
             val itemView = itemModel.createView(context, viewEnvironment, ItemProperties(itemInfo.size))
 
             if (isListView && itemInfo.isListItem) {
@@ -151,29 +152,43 @@ internal class LinearLayoutView(
         }
     }
 
-    private fun generateItemLayoutParams(itemInfo: LinearLayoutItemInfo): LayoutParams {
+    private fun generateItemLayoutParams(itemInfo: LinearLayoutItemInfo, itemModel: AnyModel): LayoutParams {
         val size = itemInfo.size
         val w = size.width
         val h = size.height
 
-        val (width, maxWidthPercent) = when (w.type) {
-            AUTO -> MarginLayoutParams.WRAP_CONTENT to 0f
-            ABSOLUTE -> dpToPx(context, w.getInt()).toInt() to 0f
-            PERCENT -> 0 to w.getFloat()
+        // An item sized by its content, whose content is only ever a share of this item, has nothing
+        // to be sized by. Wrapping it would measure the shares against a length they are supposed to
+        // be taken from, so give it the length it works out to instead: none.
+        val collapsesWidth = w.type == AUTO && !itemModel.establishesLength(Direction.HORIZONTAL)
+        val collapsesHeight = h.type == AUTO && !itemModel.establishesLength(Direction.VERTICAL)
+
+        val (width, maxWidthPercent) = when {
+            collapsesWidth -> 0 to 0f
+            else -> when (w.type) {
+                AUTO -> MarginLayoutParams.WRAP_CONTENT to 0f
+                ABSOLUTE -> dpToPx(context, w.getInt()).toInt() to 0f
+                PERCENT -> 0 to w.getFloat()
+            }
         }
 
-        val (height, maxHeightPercent) = when (h.type) {
-            AUTO -> MarginLayoutParams.WRAP_CONTENT to 0f
-            ABSOLUTE -> dpToPx(context, h.getInt()).toInt() to 0f
-            PERCENT -> 0 to h.getFloat()
+        val (height, maxHeightPercent) = when {
+            collapsesHeight -> 0 to 0f
+            else -> when (h.type) {
+                AUTO -> MarginLayoutParams.WRAP_CONTENT to 0f
+                ABSOLUTE -> dpToPx(context, h.getInt()).toInt() to 0f
+                PERCENT -> 0 to h.getFloat()
+            }
         }
 
         val lp = LayoutParams(width, height, maxWidthPercent, maxHeightPercent, size.aspectRatio?.toFloat() ?: 0f).apply {
+            // Margins are inside a percentage's share, so an item collapsed to nothing carries none
+            // of them — leaving them would put a gap where the collapse said there is nothing at all.
             itemInfo.margin?.let { margin ->
-                topMargin = dpToPx(context, margin.top).toInt()
-                bottomMargin = dpToPx(context, margin.bottom).toInt()
-                marginStart = dpToPx(context, margin.start).toInt()
-                marginEnd = dpToPx(context, margin.end).toInt()
+                topMargin = if (collapsesHeight) 0 else dpToPx(context, margin.top).toInt()
+                bottomMargin = if (collapsesHeight) 0 else dpToPx(context, margin.bottom).toInt()
+                marginStart = if (collapsesWidth) 0 else dpToPx(context, margin.start).toInt()
+                marginEnd = if (collapsesWidth) 0 else dpToPx(context, margin.end).toInt()
             }
 
             itemInfo.position?.let {

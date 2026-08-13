@@ -24,6 +24,7 @@ import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.info.Validatable
 import com.urbanairship.android.layout.info.View
 import com.urbanairship.android.layout.property.AttributeValue
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.StateAction
@@ -88,6 +89,22 @@ internal abstract class BaseModel<T : AndroidView, I : View, L : BaseModel.Liste
     private var background: Background? = null
 
     internal open var isShrinkable: Boolean = false
+
+    /**
+     * Whether anything in this subtree gives [direction] a length that isn't a share of something
+     * above it.
+     *
+     * A percentage is a share of its parent, so it can only be resolved once the parent has a length
+     * to take a share of — it never supplies one. An auto-sized parent takes its length from its
+     * children, so children that all decline to supply one leave it nothing to work from, and the
+     * only self-consistent size it has is zero.
+     *
+     * Defaults to `true`: a view that draws its own content establishes a length, and so does
+     * anything we don't recognise. Collapsing a view that did have content of its own hides it
+     * outright, where declining to collapse one that didn't leaves the size to be resolved as it was
+     * before, so uncertainty belongs on the side of drawing something.
+     */
+    internal open fun establishesLength(direction: Direction): Boolean = true
 
     fun createView(
         context: Context,

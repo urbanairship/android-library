@@ -10,6 +10,7 @@ import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.PagerControllerInfo
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.PagerControllerBranching
 import com.urbanairship.android.layout.reporting.PagerData
 import kotlin.time.Duration.Companion.milliseconds
@@ -36,6 +37,10 @@ internal class PagerController(
     environment = environment,
     properties = properties
 ) {
+
+    /** Wraps a view without resizing it, so what it wraps answers for it. */
+    override fun establishesLength(direction: Direction): Boolean =
+        view.establishesLength(direction)
 
     private val pagerViewCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
     private val completionReported = MutableStateFlow(false)
