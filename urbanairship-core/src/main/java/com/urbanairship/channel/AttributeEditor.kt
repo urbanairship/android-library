@@ -176,25 +176,10 @@ public abstract class AttributeEditor protected constructor(private val clock: C
     /**
      * Sets a custom attribute with a JSON payload and optional expiration.
      *
-     * @param attribute The attribute.
-     * @param instanceId The instance identifier.
-     * @param json A JsonMap representing the custom payload.
-     * @return The [AttributeEditor].
-     * @throws IllegalArgumentException if:
-     *  - The key is empty or contains `#`.
-     *  - The expiration is invalid (in the past or > 731 days from now.
-     *  - The payload is empty or contains a reserved key `exp`.
-     */
-    @Throws(IllegalArgumentException::class)
-    public fun setAttribute(
-        @Size(min = 1) attribute: String,
-        @Size(min = 1) instanceId: String,
-        expiration: Date?,
-        json: JsonMap
-    ): AttributeEditor = setAttribute(attribute, instanceId, expiration?.toInstant(), json)
-
-    /**
-     * Sets a custom attribute with a JSON payload and optional expiration.
+     * Unlike the other `setAttribute` overloads, this one has no `Date` counterpart. Both
+     * would erase to `setAttribute(String, String, <reference>, JsonMap)`, making a `null`
+     * expiration — the only way to say "no expiration" here — ambiguous to resolve. Callers
+     * with a `Date` should pass `date.toInstant()`.
      *
      * @param attribute The attribute.
      * @param instanceId The instance identifier.
@@ -207,7 +192,6 @@ public abstract class AttributeEditor protected constructor(private val clock: C
      *  - The payload is empty or contains a reserved key `exp`.
      */
     @Throws(IllegalArgumentException::class)
-    @JvmOverloads
     public fun setAttribute(
         @Size(min = 1) attribute: String,
         @Size(min = 1) instanceId: String,

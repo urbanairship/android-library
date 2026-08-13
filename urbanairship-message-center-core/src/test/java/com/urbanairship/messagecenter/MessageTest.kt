@@ -69,6 +69,38 @@ public class MessageTest {
     }
 
 
+    /**
+     * An unparseable expiry reads as no expiry. A null `expirationDate` already means
+     * "never expires" at every consumer, so no far-future sentinel is used — one would make
+     * the message a candidate for the inbox's next-expiry refresh and schedule an absurd
+     * delay, and `Instant.MAX` cannot even be converted back to epoch millis or to a `Date`.
+     */
+    @Test
+    @Throws(JsonException::class)
+    public fun testMessageUnparseableExpiryIsTreatedAsNoExpiry() {
+        val map = JsonValue.parseString(MCRAP_MESSAGE).requireMap().map.toMutableMap()
+        map["message_expiry"] = JsonValue.wrap("not a date")
+        val message = requireNotNull(
+            Message.create(JsonValue.wrap(map), true, false)
+        )
+
+        assertNull(message.expirationDate)
+        assertFalse(message.isExpired)
+    }
+
+    @Test
+    @Throws(JsonException::class)
+    public fun testMessageMissingExpiryIsTreatedAsNoExpiry() {
+        val map = JsonValue.parseString(MCRAP_MESSAGE).requireMap().map.toMutableMap()
+        map.remove("message_expiry")
+        val message = requireNotNull(
+            Message.create(JsonValue.wrap(map), true, false)
+        )
+
+        assertNull(message.expirationDate)
+        assertFalse(message.isExpired)
+    }
+
     /** Test message parses its data correctly. */
     @Test
     @Throws(JsonException::class)

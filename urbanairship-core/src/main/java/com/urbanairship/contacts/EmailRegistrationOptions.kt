@@ -108,10 +108,14 @@ public class EmailRegistrationOptions private constructor(
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun fromJson(value: JsonValue): EmailRegistrationOptions {
             val map = value.optMap()
+            // Options persisted by older SDK versions encoded "unset" as -1 rather than
+            // omitting the field, and the upload path filtered on `> 0`. Keep treating any
+            // non-positive value as unset, so a restored queue doesn't register an opt-in
+            // dated just before the epoch.
             val commercialOptedIn = map.opt(COMMERCIAL_OPTED_IN_KEY)
-                .takeIf { it.isNumber }?.getLong(0)?.let(Instant::ofEpochMilli)
+                .takeIf { it.isNumber }?.getLong(0)?.takeIf { it > 0 }?.let(Instant::ofEpochMilli)
             val transactionalOptedIn = map.opt(TRANSACTIONAL_OPTED_IN_KEY)
-                .takeIf { it.isNumber }?.getLong(0)?.let(Instant::ofEpochMilli)
+                .takeIf { it.isNumber }?.getLong(0)?.takeIf { it > 0 }?.let(Instant::ofEpochMilli)
             val properties = map.opt(PROPERTIES_KEY).map
             val doubleOptIn = map.opt(DOUBLE_OPT_IN_KEY).getBoolean(false)
             return EmailRegistrationOptions(

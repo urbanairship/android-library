@@ -5,6 +5,7 @@ package com.urbanairship.remotedata
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.TestClock
 import com.urbanairship.http.RequestResult
 import com.urbanairship.json.jsonMapOf
@@ -445,6 +446,52 @@ public class RemoteDataProviderTest {
         assertEquals(RemoteData.Status.OUT_OF_DATE, provider.status(token, locale, randomValue))
     }
 
+    /**
+     * The refresh state is persisted under the key `timeMilliseconds`, named for its
+     * epoch-millis encoding rather than for the property. Renaming it would make state
+     * written by previous releases unreadable, defaulting the timestamp to the epoch and so
+     * reporting remote data as out of date on every upgrade.
+     */
+    @Test
+    public fun testRefreshStatePersistsTimestampUnderLegacyKey(): TestResult = runTest {
+        val token = UUID.randomUUID().toString()
+        val locale = Locale.CANADA_FRENCH
+        val randomValue = 100
+        provider.isRemoteDataInfoUpToDateCallback = { _, _, _ -> true }
+
+        refreshRemoteData(token, locale, randomValue)
+
+        val stored = requireNotNull(provider.prefs.get(REFRESH_STATE_KEY)).requireMap()
+        assertEquals(clock.currentTime.toEpochMilli(), stored.require("timeMilliseconds").getLong(0))
+        assertNull(stored["timestamp"])
+    }
+
+    /** State written by a previous release must still be understood after an upgrade. */
+    @Test
+    public fun testRefreshStateWrittenByPreviousReleaseIsStillRead(): TestResult = runTest {
+        val token = UUID.randomUUID().toString()
+        val locale = Locale.CANADA_FRENCH
+        val randomValue = 100
+        provider.isRemoteDataInfoUpToDateCallback = { _, _, _ -> true }
+
+        val remoteDataInfo = RemoteDataInfo(
+            url = "example://",
+            lastModified = "some last modified",
+            source = RemoteDataSource.APP
+        )
+        provider.prefs.put(
+            REFRESH_STATE_KEY,
+            jsonMapOf(
+                "changeToken" to token,
+                "remoteDataInfo" to remoteDataInfo,
+                "timeMilliseconds" to clock.currentTime.toEpochMilli()
+            ).toJsonValue()
+        )
+
+        // A recognized timestamp means the state is current, not stale.
+        assertEquals(RemoteData.Status.UP_TO_DATE, provider.status(token, locale, randomValue))
+    }
+
     private suspend fun refreshRemoteData(token: String, locale: Locale, randomValue: Int) {
         val remoteDataInfo = RemoteDataInfo(
             url = "example://",
@@ -473,12 +520,21 @@ public class RemoteDataProviderTest {
 
         provider.refresh(token, locale, randomValue)
     }
+
+    private companion object {
+        private val REFRESH_STATE_KEY =
+            SyncPrefKey.json("RemoteDataProvider.${RemoteDataSource.APP.name}_refresh_state")
+    }
 }
 
-internal class TestRemoteDataProvider(context: Context, clock: Clock) : RemoteDataProvider(
+internal class TestRemoteDataProvider(
+    context: Context,
+    clock: Clock,
+    val prefs: PreferenceStore = PreferenceStore.inMemoryStore(context)
+) : RemoteDataProvider(
     source = RemoteDataSource.APP,
     remoteDataStore = RemoteDataStore(context, "appKey", UUID.randomUUID().toString()),
-    preferenceStore = PreferenceStore.inMemoryStore(context),
+    preferenceStore = prefs,
     clock = clock
 ) {
     var isRemoteDataInfoUpToDateCallback: ((RemoteDataInfo, Locale, Int) -> Boolean)? = null

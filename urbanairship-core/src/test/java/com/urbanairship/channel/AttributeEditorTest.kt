@@ -136,7 +136,7 @@ public class AttributeEditorTest {
         editor.removeAttribute(attribute = "foo", instanceId = "baz")
 
         editor.setAttribute(
-            attribute = "foo", instanceId = "qux", json = jsonMapOf("key" to "value"), expiration = Date(20000)
+            attribute = "foo", instanceId = "qux", json = jsonMapOf("key" to "value"), expiration = Instant.ofEpochMilli(20000)
         )
         editor.apply()
 

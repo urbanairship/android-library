@@ -228,14 +228,24 @@ internal abstract class RemoteDataProvider(
         constructor(json: JsonValue) : this(
             changeToken = json.requireMap().requireField("changeToken"),
             remoteDataInfo = RemoteDataInfo(json.requireMap().require("remoteDataInfo")),
-            timestamp = json.requireMap().optionalField<Long>("timestamp")
+            timestamp = json.requireMap().optionalField<Long>(TIMESTAMP_KEY)
                 ?.let(Instant::ofEpochMilli) ?: Instant.EPOCH
         )
         override fun toJsonValue(): JsonValue = jsonMapOf(
             "changeToken" to changeToken,
             "remoteDataInfo" to remoteDataInfo,
-            "timestamp" to timestamp.toEpochMilli()
+            TIMESTAMP_KEY to timestamp.toEpochMilli()
         ).toJsonValue()
+
+        private companion object {
+            /**
+             * The persisted key. Named for the epoch-millis encoding rather than the
+             * property, and must stay as-is: renaming it would make state written by
+             * previous releases unreadable, defaulting every upgrade to [Instant.EPOCH]
+             * and so reporting remote data as out of date.
+             */
+            private const val TIMESTAMP_KEY = "timeMilliseconds"
+        }
     }
 
     internal sealed interface RefreshResult {

@@ -246,8 +246,16 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
                     bodyUrl = json.requireField(KEY_BODY_URL),
                     sentDate = json.optionalField<String>(KEY_SENT_DATE)
                         ?.let { DateUtils.parseIso8601(it) } ?: Instant.ofEpochMilli(System.currentTimeMillis()),
-                    expirationDate = json.optionalField<String>(KEY_EXPIRATION_DATE)
-                        ?.let { DateUtils.parseIso8601(it, Instant.MAX) },
+                    // An unparseable expiry reads as no expiry. A null expirationDate already
+                    // means "never expires" everywhere it is consumed, so this needs no
+                    // far-future sentinel — and a sentinel would be worse: it makes the
+                    // message a candidate for the inbox's next-expiry refresh, scheduling an
+                    // absurd delay.
+                    expirationDate = json.optionalField<String>(KEY_EXPIRATION_DATE)?.let { raw ->
+                        runCatching { DateUtils.parseIso8601(raw) }
+                            .onFailure { UALog.w { "Ignoring unparseable message expiry: $raw" } }
+                            .getOrNull()
+                    },
                     isUnread = json.optionalField(KEY_IS_UNREAD) ?: false,
                     messageUrl = json.requireField(KEY_MESSAGE_URL),
                     reporting = json[KEY_MESSAGE_REPORTING],

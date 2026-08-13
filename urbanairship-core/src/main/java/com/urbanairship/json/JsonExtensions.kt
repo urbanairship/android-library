@@ -3,9 +3,6 @@ package com.urbanairship.json
 import com.urbanairship.UALog
 import com.urbanairship.util.DateUtils
 import java.time.Instant
-import kotlin.time.Duration
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 @Throws(JsonException::class)
 public fun jsonMapOf(vararg fields: Pair<String, *>): JsonMap =
@@ -111,7 +108,9 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
         JsonList::class -> field.optList() as T
         JsonMap::class -> field.optMap() as T
         JsonValue::class -> field.toJsonValue() as T
-        Instant::class -> field.requireEpochMillis(key) as T
+        // Lenient, like every other branch here: a null or non-numeric value reads as absent
+        // rather than throwing. Use requireField<Instant> to reject a malformed timestamp.
+        Instant::class -> field.takeIf { it.isNumber }?.requireEpochMillis(key) as T?
         else -> throw JsonException("Invalid type '${T::class.java.simpleName}' for field '$key'")
     }
 }
@@ -136,34 +135,6 @@ public fun JsonMap.isoDateAsInstant(key: String, defaultValue: Instant? = null):
         throw JsonException("Unable to parse value as date: ${get(key)}", e)
     }
 }
-
-/**
- * Gets the field with the given [key] as a [Duration], interpreting the stored number in
- * [unit], or `null` if not defined.
- *
- * @throws JsonException if the value is not a number.
- */
-@Throws(JsonException::class)
-public fun JsonMap.optionalDuration(key: String, unit: DurationUnit): Duration? {
-    val field = get(key) ?: return null
-    if (field.isNull) {
-        return null
-    }
-    if (!field.isNumber) {
-        throw JsonException("Unable to parse field '$key' as a duration: $field")
-    }
-    return field.getDouble(0.0).toDuration(unit)
-}
-
-/**
- * Gets the field with the given [key] as a [Duration], interpreting the stored number in
- * [unit].
- *
- * @throws JsonException if the field is missing, `null`, or not a number.
- */
-@Throws(JsonException::class)
-public fun JsonMap.requireDuration(key: String, unit: DurationUnit): Duration =
-    optionalDuration(key, unit) ?: throw JsonException("Missing required field: '$key'")
 
 /**
  * Gets a map with the given [key] from the [JsonMap].
