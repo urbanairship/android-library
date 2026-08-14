@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.model
 
 import android.content.Context
+import com.urbanairship.android.layout.property.Direction
 import android.view.View
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -16,6 +17,10 @@ internal class StateController(
     environment = environment,
     properties = properties
 ) {
+
+    /** Wraps a view without resizing it, so what it wraps answers for it. */
+    override fun establishesLength(direction: Direction): Boolean =
+        view.establishesLength(direction)
 
     override fun onCreateView(
         context: Context,

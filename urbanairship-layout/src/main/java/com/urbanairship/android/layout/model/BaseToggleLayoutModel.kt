@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.model
 
 import android.view.View
+import com.urbanairship.android.layout.property.Direction
 import androidx.annotation.CallSuper
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasForm
@@ -21,6 +22,10 @@ internal abstract class BaseToggleLayoutModel<T : View, I : BaseToggleLayoutInfo
     environment: ModelEnvironment,
     properties: ModelProperties
 ) : BaseModel<T, I, BaseModel.Listener>(viewInfo, environment, properties) {
+
+    /** Wraps a view without resizing it, so what it wraps answers for it. */
+    override fun establishesLength(direction: Direction): Boolean =
+        view.establishesLength(direction)
 
     private var _isOn: MutableStateFlow<Boolean> = MutableStateFlow(false)
     var isOn: StateFlow<Boolean> = _isOn.asStateFlow()

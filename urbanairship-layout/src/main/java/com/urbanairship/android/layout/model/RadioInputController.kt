@@ -14,6 +14,7 @@ import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.RadioInputControllerInfo
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField
@@ -34,6 +35,10 @@ internal class RadioInputController(
     environment = environment,
     properties = properties
 ) {
+
+    /** Wraps a view without resizing it, so what it wraps answers for it. */
+    override fun establishesLength(direction: Direction): Boolean =
+        view.establishesLength(direction)
 
     // Keep reference to container view for accessibility updates
     private var containerView: View? = null
