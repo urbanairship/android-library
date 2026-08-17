@@ -12,8 +12,10 @@ import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolv
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.DeferredScheduleResult
 import com.urbanairship.automation.isInAppMessageType
+import com.urbanairship.automation.limits.AutomationLedgerInterface
 import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.automation.limits.FrequencyLimitManager
+import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.automation.utils.RetryingQueue
 import com.urbanairship.deferred.DeferredRequest
@@ -45,6 +47,7 @@ internal class AutomationPreparer internal constructor(
     private val remoteDataAccess: AutomationRemoteDataAccess,
     private val additionalAudienceResolver: AdditionalAudienceCheckerResolver,
     private val audienceEvaluator: AudienceEvaluator,
+    private val ledger: AutomationLedgerInterface,
     queueConfigSupplier: (() -> RetryingQueueConfig?)? = null,
     private val queues: Queues = Queues(queueConfigSupplier),
 ) {
@@ -64,7 +67,8 @@ internal class AutomationPreparer internal constructor(
     suspend fun prepare(
         schedule: AutomationSchedule,
         deferredContext: DeferredTriggerContext?,
-        triggerSessionId: String
+        triggerSessionId: String,
+        triggerId: String? = null
     ): SchedulePrepareResult {
         UALog.v { "Preparing ${schedule.identifier}" }
 
@@ -108,6 +112,7 @@ internal class AutomationPreparer internal constructor(
 
                 if (!result.isMatch) {
                     UALog.v { "Local audience miss for schedule ${schedule.identifier}" }
+                    recordAudienceMiss(schedule, triggerId)
                     return@run RetryingQueue.Result.Success(
                         result = schedule.audienceMissBehaviorResult(),
                         ignoreReturnOrder = true
@@ -126,11 +131,12 @@ internal class AutomationPreparer internal constructor(
                 prepareCache = prepareCache,
                 data = schedule.data,
                 schedule = schedule,
+                triggerId = triggerId,
                 onDeferredRequest = {
                     deferredRequest(it, triggerContext = deferredContext, deviceInfoProvider)
                 },
                 onPrepareInfo = {
-                    prepareInfo(schedule, experimentResult, deviceInfoProvider, triggerSessionId)
+                    prepareInfo(schedule, experimentResult, deviceInfoProvider, triggerSessionId, triggerId)
                 },
                 onPrepareSchedule = { info, data ->
                     prepareSchedule(info, data, frequencyChecker)
@@ -143,7 +149,8 @@ internal class AutomationPreparer internal constructor(
         schedule: AutomationSchedule,
         experimentResult: ExperimentResult?,
         deviceInfoProvider: DeviceInfoProvider,
-        triggerSessionId: String
+        triggerSessionId: String,
+        triggerId: String?
     ): Result<PreparedScheduleInfo> {
         val additionalAudienceCheckResult = additionalAudienceResolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
@@ -164,7 +171,9 @@ internal class AutomationPreparer internal constructor(
                 triggerSessionId = triggerSessionId,
                 additionalAudienceCheckResult = additionalAudienceCheckResult,
                 priority = schedule.priority ?: 0,
-                sendMetadata = schedule.sendMetadata
+                sendMetadata = schedule.sendMetadata,
+                ledgerSharedId = schedule.ledgerConfig?.sharedId,
+                triggerId = triggerId
             )
         )
     }
@@ -201,6 +210,7 @@ internal class AutomationPreparer internal constructor(
         prepareCache: PrepareCache,
         data: AutomationSchedule.ScheduleData,
         schedule: AutomationSchedule,
+        triggerId: String?,
         onDeferredRequest: suspend (DeferredAutomationData) -> DeferredRequest,
         onPrepareInfo: suspend () -> Result<PreparedScheduleInfo>,
         onPrepareSchedule: (PreparedScheduleInfo, PreparedScheduleData) -> PreparedSchedule,
@@ -266,11 +276,13 @@ internal class AutomationPreparer internal constructor(
                     deferred = data.deferred,
                     deferredRequest = onDeferredRequest(data.deferred),
                     schedule = schedule,
+                    triggerId = triggerId,
                     onResult = {
                         prepareData(
                             prepareCache = prepareCache,
                             data = it,
                             schedule = schedule,
+                            triggerId = triggerId,
                             onDeferredRequest = onDeferredRequest,
                             onPrepareInfo = onPrepareInfo,
                             onPrepareSchedule = onPrepareSchedule,
@@ -279,6 +291,26 @@ internal class AutomationPreparer internal constructor(
                 )
             }
         }
+    }
+
+    /**
+     * Records the audience-miss outcome when the schedule's miss behavior
+     * consumes budget. `penalize` records `audience_miss`; `cancel` records
+     * `audience_miss` with `cancel: true`; `skip` records nothing.
+     */
+    private suspend fun recordAudienceMiss(schedule: AutomationSchedule, triggerId: String?) {
+        val behavior = schedule.effectiveAudienceMissBehavior
+        if (behavior == AutomationAudience.MissBehavior.SKIP) {
+            return
+        }
+
+        ledger.recordExecution(
+            scheduleId = schedule.identifier,
+            sharedId = schedule.ledgerConfig?.sharedId,
+            triggerId = triggerId,
+            result = LedgerExecutionResult.AUDIENCE_MISS,
+            cancel = behavior == AutomationAudience.MissBehavior.CANCEL
+        )
     }
 
     private suspend fun evaluateExperiments(
@@ -303,6 +335,7 @@ internal class AutomationPreparer internal constructor(
         deferred: DeferredAutomationData,
         deferredRequest: DeferredRequest,
         schedule: AutomationSchedule,
+        triggerId: String?,
         onResult: suspend (AutomationSchedule.ScheduleData) -> RetryingQueue.Result<SchedulePrepareResult>
     ): RetryingQueue.Result<SchedulePrepareResult> {
         UALog.v { "Resolving deferred ${schedule.identifier}" }
@@ -361,6 +394,7 @@ internal class AutomationPreparer internal constructor(
                         }
                     }
                 } else {
+                    recordAudienceMiss(schedule, triggerId)
                     RetryingQueue.Result.Success(
                         result = schedule.audienceMissBehaviorResult(),
                         ignoreReturnOrder = true
@@ -371,12 +405,17 @@ internal class AutomationPreparer internal constructor(
     }
 }
 
-private fun AutomationSchedule.audienceMissBehaviorResult(): SchedulePrepareResult {
-    val result = compoundAudience?.missBehavior
+/**
+ * The effective miss behavior after combining compound and device audiences,
+ * defaulting to `penalize` when no behavior is configured.
+ */
+private val AutomationSchedule.effectiveAudienceMissBehavior: AutomationAudience.MissBehavior
+    get() = compoundAudience?.missBehavior
         ?: audience?.missBehavior
         ?: AutomationAudience.MissBehavior.PENALIZE
 
-    return result.toPrepareResult()
+private fun AutomationSchedule.audienceMissBehaviorResult(): SchedulePrepareResult {
+    return effectiveAudienceMissBehavior.toPrepareResult()
 }
 
 private fun AutomationSchedule.evaluateExperiments(): Boolean {

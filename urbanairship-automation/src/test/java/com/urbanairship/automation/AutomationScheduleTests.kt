@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.automation.deferred.DeferredAutomationData
+import com.urbanairship.automation.limits.LedgerConfig
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
@@ -393,6 +394,49 @@ public class AutomationScheduleTests {
             ),
             created = Instant.ofEpochMilli(1703073600000),
             sendMetadata = "base64-send-metadata"
+        )
+
+        verify(json, expected)
+    }
+
+    @Test
+    public fun testParseLedgerConfig() {
+        val json = """
+            {
+               "id": "test_schedule",
+               "triggers": [
+                   {
+                       "type": "custom_event_count",
+                       "goal": 1,
+                       "id": "json-id"
+                   }
+               ],
+               "type": "actions",
+               "actions": {
+                   "foo": "bar"
+               },
+               "ledger_config": {
+                   "shared_id": "group-42"
+               },
+               "created": "2023-12-20T12:00:00Z"
+           }
+        """.trimIndent()
+
+        val expected = AutomationSchedule(
+            identifier = "test_schedule",
+            data = AutomationSchedule.ScheduleData.Actions(jsonMapOf("foo" to "bar").toJsonValue()),
+            triggers = listOf(
+                AutomationTrigger.Event(
+                    EventAutomationTrigger(
+                        id = "json-id",
+                        type = EventAutomationTriggerType.CUSTOM_EVENT_COUNT,
+                        goal = 1.0,
+                        predicate = null
+                    )
+                )
+            ),
+            created = Instant.ofEpochMilli(1703073600000),
+            ledgerConfig = LedgerConfig(sharedId = "group-42")
         )
 
         verify(json, expected)

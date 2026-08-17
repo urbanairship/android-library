@@ -10,6 +10,7 @@ import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
+import com.urbanairship.automation.limits.AutomationLedgerInterface
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.updateOrCreate
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
@@ -61,6 +62,7 @@ internal class AutomationEngine(
     private val triggerProcessor: AutomationTriggerProcessor,
     private val delayProcessor: AutomationDelayProcessorInterface,
     private val eventsHistory: EventsHistory,
+    private val ledger: AutomationLedgerInterface,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val sleeper: TaskSleeper = TaskSleeper.default,
     private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
@@ -323,7 +325,20 @@ internal class AutomationEngine(
                     data?.let { preparer.cancelled(it.schedule) }
                 }
                 TriggerExecutionType.EXECUTION -> {
-                    updateState(result.scheduleId) { it.triggered(result.triggerInfo, date)}
+                    val updated = updateState(result.scheduleId) { it.triggered(result.triggerInfo, date) }
+                    // Record only when this call actually moved the schedule into
+                    // TRIGGERED for this result. `triggered` is a no-op unless the
+                    // schedule was idle, and it stamps this result's triggerInfo, so
+                    // matching both confirms the transition and avoids double-counting
+                    // a redundant trigger result.
+                    if (updated?.scheduleState == AutomationScheduleState.TRIGGERED &&
+                        updated.triggerInfo == result.triggerInfo) {
+                        ledger.recordTriggered(
+                            scheduleId = updated.schedule.identifier,
+                            sharedId = updated.schedule.ledgerConfig?.sharedId,
+                            triggerId = result.triggerInfo.triggerId
+                        )
+                    }
                     startTaskToProcessTriggeredSchedule(result.scheduleId)
                 }
             }
@@ -533,7 +548,12 @@ internal class AutomationEngine(
     private suspend fun prepareSchedule(data: AutomationScheduleData): PreparedData? {
         UALog.v { "Preparing schedule $data" }
 
-        val result = preparer.prepare(data.schedule, data.triggerInfo?.context, data.triggerSessionId)
+        val result = preparer.prepare(
+            data.schedule,
+            data.triggerInfo?.context,
+            data.triggerSessionId,
+            data.triggerInfo?.triggerId
+        )
         UALog.v { "Preparing schedule $data result: $result" }
 
         val updated = updateState(data.schedule.identifier) {

@@ -41,7 +41,18 @@ public data class PreparedScheduleInfo(
     internal val triggerSessionId: String,
     internal val additionalAudienceCheckResult: Boolean = true,
     internal val priority: Int = 0,
-    internal val sendMetadata: String? = null
+    internal val sendMetadata: String? = null,
+    /**
+     * Shared ledger group ID the schedule had when prepared. Stamped here so
+     * execution-outcome ledger events record under it without re-reading the
+     * (possibly changed) schedule config.
+     */
+    internal val ledgerSharedId: String? = null,
+    /**
+     * ID of the execution-causing trigger, carried through for ledger event
+     * attribution.
+     */
+    internal val triggerId: String? = null
 ) : JsonSerializable {
 
     internal companion object {
@@ -55,6 +66,8 @@ public data class PreparedScheduleInfo(
         private const val ADDITIONAL_AUDIENCE_CHECK_RESULT = "additional_audience_check_result"
         private const val PRIORITY = "PRIORITY"
         private const val SEND_METADATA = "send_metadata"
+        private const val LEDGER_SHARED_ID = "ledger_shared_id"
+        private const val TRIGGER_ID = "trigger_id"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): PreparedScheduleInfo {
@@ -71,6 +84,8 @@ public data class PreparedScheduleInfo(
                 additionalAudienceCheckResult = content.optionalField(ADDITIONAL_AUDIENCE_CHECK_RESULT) ?: true,
                 priority = content.optionalField(PRIORITY) ?: 0,
                 sendMetadata = content.optionalField(SEND_METADATA),
+                ledgerSharedId = content.optionalField(LEDGER_SHARED_ID),
+                triggerId = content.optionalField(TRIGGER_ID),
             )
         }
     }
@@ -85,6 +100,8 @@ public data class PreparedScheduleInfo(
         TRIGGER_SESSION_ID to triggerSessionId,
         ADDITIONAL_AUDIENCE_CHECK_RESULT to additionalAudienceCheckResult,
         PRIORITY to priority,
-        SEND_METADATA to sendMetadata
+        SEND_METADATA to sendMetadata,
+        LEDGER_SHARED_ID to ledgerSharedId,
+        TRIGGER_ID to triggerId
     ).toJsonValue()
 }

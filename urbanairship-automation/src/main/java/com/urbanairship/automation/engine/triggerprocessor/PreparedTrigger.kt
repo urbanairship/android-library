@@ -105,7 +105,8 @@ internal class PreparedTrigger(
             triggerExecutionType = executionType,
             triggerInfo = TriggeringInfo(
                 context = DeferredTriggerContext(trigger.type, trigger.goal, event),
-                date = clock.now())
+                date = clock.now(),
+                triggerId = trigger.id)
             )
     }
 
