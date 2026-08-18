@@ -2,6 +2,7 @@ package com.urbanairship.automation.storage
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.TestClock
 import com.urbanairship.audience.AudienceSelector
 import com.urbanairship.automation.AutomationAppState
 import com.urbanairship.automation.AutomationAudience
@@ -16,6 +17,11 @@ import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
+import com.urbanairship.automation.limits.LedgerEvent
+import com.urbanairship.automation.limits.LedgerExecutionResult
+import com.urbanairship.automation.limits.LedgerScope
+import com.urbanairship.automation.limits.LedgerStoreInterface
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonMatcher
 import com.urbanairship.json.JsonPredicate
@@ -30,6 +36,7 @@ import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import kotlin.time.Duration
@@ -40,7 +47,10 @@ public class AutomationStoreMigratorTest {
 
     private val legacyDb = AutomationDatabase.createInMemoryDatabase(ApplicationProvider.getApplicationContext())
     private val automationStore = AutomationStore.createInMemoryDatabase(ApplicationProvider.getApplicationContext())
-    private val migrator = AutomationStoreMigrator(legacyDb, automationStore)
+    private val ledger = TestLedgerStore()
+    private val clock = TestClock()
+    private val preferenceStore = PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext())
+    private val migrator = AutomationStoreMigrator(legacyDb, automationStore, ledger, preferenceStore, clock)
 
     private val predicate = JsonPredicate.newBuilder().addMatcher(
         JsonMatcher.newBuilder()
@@ -53,6 +63,7 @@ public class AutomationStoreMigratorTest {
     public fun after() {
         legacyDb.close()
         automationStore.close()
+        preferenceStore.tearDown()
     }
 
     @Test
@@ -570,6 +581,261 @@ public class AutomationStoreMigratorTest {
         val migrated = requireNotNull(automationStore.getSchedule("some-schedule"))
         assert(automationStore.getSchedule("bad-schedule") == null)
         assertEquals(expected, migrated)
+    }
+
+    @Test
+    public fun testBackfillLedgerEvents() {
+        val timestamp = Instant.ofEpochMilli(1000)
+        val schedules = listOf(
+            scheduleData("a", 3),
+            scheduleData("b", 0),
+            scheduleData("c", 1)
+        )
+
+        val events = AutomationStoreMigrator.backfillLedgerEvents(schedules, timestamp)
+
+        // Only schedules with a non-zero legacy count are backfilled, each as a
+        // single execution/backfill event with no trigger or shared scope.
+        val expected = listOf(
+            LedgerEvent.Execution(
+                scheduleId = "a",
+                sharedId = null,
+                triggerId = null,
+                timestamp = timestamp,
+                count = 3,
+                result = LedgerExecutionResult.BACKFILL,
+                cancel = null
+            ),
+            LedgerEvent.Execution(
+                scheduleId = "c",
+                sharedId = null,
+                triggerId = null,
+                timestamp = timestamp,
+                count = 1,
+                result = LedgerExecutionResult.BACKFILL,
+                cancel = null
+            )
+        )
+
+        assertEquals(expected, events)
+    }
+
+    @Test
+    public fun testBackfillLedgerEventsSkipsZeroCounts() {
+        val events = AutomationStoreMigrator.backfillLedgerEvents(
+            listOf(scheduleData("a", 0)),
+            timestamp = Instant.ofEpochMilli(1)
+        )
+        assertTrue(events.isEmpty())
+    }
+
+    @Test
+    public fun testBackfillLedgerEventsEmptyInput() {
+        val events = AutomationStoreMigrator.backfillLedgerEvents(emptyList(), timestamp = Instant.ofEpochMilli(1))
+        assertTrue(events.isEmpty())
+    }
+
+    @Test
+    public fun testMigrationBackfillsLegacyExecutionCounts(): TestResult = runTest {
+        clock.currentTime = Instant.ofEpochMilli(5000)
+        legacyDb.scheduleDao.insert(makeLegacySchedule("legacy-1", count = 5))
+
+        migrator.migrateData()
+
+        val migrated = requireNotNull(automationStore.getSchedule("legacy-1"))
+        assertEquals(5, migrated.executionCount)
+
+        assertEquals(
+            listOf(
+                LedgerEvent.Execution(
+                    scheduleId = "legacy-1",
+                    sharedId = null,
+                    triggerId = null,
+                    timestamp = Instant.ofEpochMilli(5000),
+                    count = 5,
+                    result = LedgerExecutionResult.BACKFILL,
+                    cancel = null
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    @Test
+    public fun testMigrationDoesNotBackfillZeroCounts(): TestResult = runTest {
+        legacyDb.scheduleDao.insert(makeLegacySchedule("legacy-1", count = 0))
+
+        migrator.migrateData()
+
+        // The schedule still migrates, but a zero count produces no backfill.
+        assertEquals(0, requireNotNull(automationStore.getSchedule("legacy-1")).executionCount)
+        assertTrue(ledger.recorded.isEmpty())
+    }
+
+    @Test
+    public fun testMigrationBackfillNotDuplicatedOnRerun(): TestResult = runTest {
+        legacyDb.scheduleDao.insert(makeLegacySchedule("legacy-1", count = 5))
+        migrator.migrateData()
+        assertEquals(1, ledger.recorded.size)
+
+        // Simulate a relaunch where the post-migration legacy delete had failed:
+        // the legacy row is present again, but the new store already holds the
+        // migrated schedule. Migration must move it without re-recording backfill.
+        legacyDb.scheduleDao.insert(makeLegacySchedule("legacy-1", count = 5))
+        migrator.migrateData()
+
+        assertEquals(1, ledger.recorded.size)
+    }
+
+    @Test
+    public fun testCurrentStoreBackfillRecordsExistingCounts(): TestResult = runTest {
+        clock.currentTime = Instant.ofEpochMilli(7000)
+
+        // Schedules already in the current store from a pre-ledger SDK version,
+        // with no legacy store to migrate.
+        automationStore.upsertSchedules(listOf("current-1", "current-2", "current-3")) { id, _ ->
+            when (id) {
+                "current-1" -> scheduleData(id, 2)
+                "current-2" -> scheduleData(id, 0)
+                else -> scheduleData(id, 4)
+            }
+        }
+
+        migrator.migrateData()
+
+        // Only non-zero counts are backfilled. Store ordering isn't guaranteed,
+        // so compare sorted by schedule id.
+        assertEquals(
+            listOf(
+                LedgerEvent.Execution(
+                    scheduleId = "current-1",
+                    sharedId = null,
+                    triggerId = null,
+                    timestamp = Instant.ofEpochMilli(7000),
+                    count = 2,
+                    result = LedgerExecutionResult.BACKFILL,
+                    cancel = null
+                ),
+                LedgerEvent.Execution(
+                    scheduleId = "current-3",
+                    sharedId = null,
+                    triggerId = null,
+                    timestamp = Instant.ofEpochMilli(7000),
+                    count = 4,
+                    result = LedgerExecutionResult.BACKFILL,
+                    cancel = null
+                )
+            ),
+            ledger.recorded.sortedBy { it.scheduleId }
+        )
+    }
+
+    @Test
+    public fun testBackfillRetriedWhenRecordFails(): TestResult = runTest {
+        legacyDb.scheduleDao.insert(makeLegacySchedule("legacy-1", count = 5))
+        ledger.failNextRecord = true
+
+        migrator.migrateData()
+
+        // The record failed, so nothing was backfilled and the run must not be
+        // marked complete — otherwise the counts are lost for good.
+        assertTrue(ledger.recorded.isEmpty())
+
+        // The schedule still migrated, so the next launch retries off the
+        // current store and recovers the count exactly once.
+        migrator.migrateData()
+
+        assertEquals(
+            listOf(
+                LedgerEvent.Execution(
+                    scheduleId = "legacy-1",
+                    sharedId = null,
+                    triggerId = null,
+                    timestamp = clock.currentTime,
+                    count = 5,
+                    result = LedgerExecutionResult.BACKFILL,
+                    cancel = null
+                )
+            ),
+            ledger.recorded
+        )
+
+        // And a third launch does not double-count.
+        migrator.migrateData()
+        assertEquals(1, ledger.recorded.size)
+    }
+
+    @Test
+    public fun testCurrentStoreBackfillRunsOnce(): TestResult = runTest {
+        automationStore.upsertSchedules(listOf("current-1")) { id, _ -> scheduleData(id, 2) }
+
+        migrator.migrateData()
+        assertEquals(1, ledger.recorded.size)
+
+        // A later launch — where the current store's counts now also include
+        // ledger-recorded executions — must not backfill a second time.
+        ledger.recorded.clear()
+        migrator.migrateData()
+        assertTrue(ledger.recorded.isEmpty())
+    }
+
+    private fun scheduleData(id: String, count: Int): AutomationScheduleData {
+        return AutomationScheduleData(
+            schedule = AutomationSchedule(
+                identifier = id,
+                triggers = emptyList(),
+                data = AutomationSchedule.ScheduleData.Actions(
+                    jsonMapOf("action" to "value").toJsonValue()
+                )
+            ),
+            scheduleState = AutomationScheduleState.IDLE,
+            scheduleStateChangeDate = Instant.ofEpochMilli(0),
+            executionCount = count,
+            triggerInfo = null,
+            triggerSessionId = UUID.randomUUID().toString()
+        )
+    }
+
+    private fun makeLegacySchedule(id: String, count: Int): FullSchedule {
+        return FullSchedule(
+            ScheduleEntity().apply {
+                this.scheduleId = id
+                this.scheduleType = "actions"
+                this.data = jsonMapOf("action" to "value").toJsonValue()
+                this.scheduleStart = -1
+                this.scheduleEnd = -1
+                this.count = count
+            },
+            listOf(
+                TriggerEntity().apply {
+                    this.goal = 100.0
+                    this.parentScheduleId = id
+                    this.isCancellation = false
+                    this.progress = 40.0
+                    this.triggerType = 8 // app init
+                }
+            )
+        )
+    }
+
+    private class TestLedgerStore : LedgerStoreInterface {
+        val recorded: MutableList<LedgerEvent> = mutableListOf()
+
+        /** Makes the next [recordEvents] throw, then clears itself. */
+        var failNextRecord: Boolean = false
+
+        override suspend fun recordEvents(events: List<LedgerEvent>) {
+            if (failNextRecord) {
+                failNextRecord = false
+                throw IllegalStateException("ledger unavailable")
+            }
+            recorded.addAll(events)
+        }
+
+        override suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent> =
+            emptyList()
+
+        override suspend fun deleteEvents(scopes: List<LedgerScope>) {}
     }
 
     private fun makeSimpleLegacySchedule(): FullSchedule {
