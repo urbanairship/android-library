@@ -95,7 +95,7 @@ internal abstract class AnalyticsDatabase : RoomDatabase() {
             }
         }
 
-        private val MIGRATION_3_4: Migration = object : Migration(3, 4) {
+        internal val MIGRATION_3_4: Migration = object : Migration(3, 4) {
             private val NEW_TABLE_NAME = "events_new"
             private val OLD_TABLE_NAME = "events"
 
@@ -127,6 +127,9 @@ internal abstract class AnalyticsDatabase : RoomDatabase() {
 
                 // Rename the new table to match the old
                 db.execSQL("ALTER TABLE $NEW_TABLE_NAME RENAME TO $OLD_TABLE_NAME")
+
+                // Recreate the unique index that was present on the v3 table.
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_events_eventId` ON `$OLD_TABLE_NAME` (`eventId`)")
             }
         }
 
