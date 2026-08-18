@@ -4,9 +4,18 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.11.1 - August 18, 2026
+
+Patch release that fixes a DB migration issue introduced in 20.10.1.
+
+### Changes
+- Fixed analytics DB `MIGRATION_3_4` to recreate the unique index on `events.eventId`
+
 ## Version 20.11.0 - August 11, 2026
 
 Minor release that updates the rate app action to use Google's Play In-App Review API and fixes a couple of issues.
+
+**Note:** This version has a known analytics DB migration issue and should be avoided. Update to 20.11.1 or later instead.
 
 ### Changes
 - Updated `rate_app_action` to use Google's Play In-App Review API on Play builds, with fallback to the existing dialog on Amazon or when the dependency is excluded
@@ -17,6 +26,8 @@ Minor release that updates the rate app action to use Google's Play In-App Revie
 
 Patch release that fixes issues with Stories in Scenes and hardens against potential crashes related to JSON serialization and Analytics DB.
 Apps that use Stories should update to this version, or later.
+
+**Note:** This version has a known analytics DB migration issue and should be avoided. Update to 20.11.1 or later instead.
 
 ### Changes
 - Fixed an NPE if `JSONStringer.toString()` returns `null` in `JsonMap`/`JsonList`
