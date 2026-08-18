@@ -22,7 +22,13 @@ import com.urbanairship.util.SerialQueue
  */
 internal interface LedgerStoreInterface {
 
-    /** Appends events to the ledger. */
+    /**
+     * Appends events to the ledger.
+     *
+     * The batch is written atomically: if the append fails, no events are
+     * persisted. Callers that retry a failed append depend on this, since a
+     * partial write would be re-appended and double-count.
+     */
     suspend fun recordEvents(events: List<LedgerEvent>)
 
     /**
@@ -58,7 +64,7 @@ internal class LedgerStore(
         UALog.v { "Recording ledger events: $events" }
 
         queue.run {
-            events.forEach { dao.insert(it.toEntity()) }
+            dao.insertAll(events.map { it.toEntity() })
         }
     }
 

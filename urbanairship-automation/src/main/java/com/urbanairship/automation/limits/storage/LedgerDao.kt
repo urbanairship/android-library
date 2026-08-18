@@ -12,8 +12,13 @@ import com.urbanairship.db.SuspendingBatchedQueryHelper.runBatched
 @Dao
 internal interface LedgerDao {
 
+    /**
+     * Inserts [events] as a single unit so a failure part way through leaves no
+     * rows behind. Callers that retry a failed append rely on this: a partial
+     * write would be re-appended on the next attempt and double-count.
+     */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(event: LedgerEventEntity)
+    suspend fun insertAll(events: List<LedgerEventEntity>)
 
     @Query("SELECT * FROM ledger_events WHERE scheduleId = :scheduleId")
     suspend fun getEvents(scheduleId: String): List<LedgerEventEntity>
