@@ -89,3 +89,34 @@ internal fun View.hasAutoSizedAncestor(horizontal: Boolean): Boolean {
     }
     return false
 }
+
+/**
+ * Interface for Views that can say whether anything in their subtree gives an axis a length that
+ * isn't a share of something above it.
+ *
+ * A percentage is a share of its parent, so it can only be resolved once the parent has a length to
+ * take a share of — it never supplies one. A parent sized to its content takes its length from its
+ * children, so children that all decline to supply one leave it nothing to work from: in
+ * `H(1 - P) = S`, the extent of everything that isn't a percentage is `S = 0`.
+ *
+ * Worth answering before measuring rather than solving for. `S / (1 - P)` is 0 for any `P` below 1
+ * and has no solution at all at or above it, so the solve either collapses the items or reaches for
+ * a bound that isn't ours. Knowing up front that there's no basis lets the percentages fall back to
+ * their content, which is stable and leaves them visible.
+ */
+internal interface LengthBasisProvider {
+
+    /** Whether anything in this subtree gives the axis a length of its own. */
+    fun establishesLength(horizontal: Boolean): Boolean
+}
+
+/**
+ * Whether this view supplies a length on an axis, for a parent deciding if it has a basis to
+ * resolve percentages against.
+ *
+ * Answers true for anything that can't say otherwise. Treating a view that did have content of its
+ * own as basis-less hides it outright, where declining to means the size is solved as it was
+ * before — so uncertainty belongs on the side of drawing something.
+ */
+internal fun View.establishesLength(horizontal: Boolean): Boolean =
+    (this as? LengthBasisProvider)?.establishesLength(horizontal) ?: true
