@@ -14,6 +14,7 @@ import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.time.Duration.Companion.seconds
 
 @RunWith(AndroidJUnit4::class)
 public class AutomationScheduleTests {
@@ -73,7 +74,7 @@ public class AutomationScheduleTests {
             endDate = Instant.ofEpochMilli(1703116800000),
             audience = AutomationAudience(AudienceSelector.newBuilder().build()),
             delay = AutomationDelay(),
-            interval = 3600U,
+            interval = 3600.seconds,
             bypassHoldoutGroups = true,
             editGracePeriodDays = 7U,
             metadata = jsonMapOf().toJsonValue(),
@@ -155,7 +156,7 @@ public class AutomationScheduleTests {
                     .build(),
                 missBehavior = AutomationAudience.MissBehavior.CANCEL),
             delay = AutomationDelay(),
-            interval = 3600U,
+            interval = 3600.seconds,
             bypassHoldoutGroups = true,
             editGracePeriodDays = 7U,
             metadata = jsonMapOf().toJsonValue(),
@@ -239,7 +240,7 @@ public class AutomationScheduleTests {
             endDate = Instant.ofEpochMilli(1703116800000),
             audience = AutomationAudience(AudienceSelector.newBuilder().build()),
             delay = AutomationDelay(),
-            interval = 3600U,
+            interval = 3600.seconds,
             bypassHoldoutGroups = true,
             editGracePeriodDays = 7U,
             metadata = jsonMapOf().toJsonValue(),
@@ -340,7 +341,7 @@ public class AutomationScheduleTests {
                 missBehavior = AutomationAudience.MissBehavior.SKIP
             ),
             delay = AutomationDelay(),
-            interval = 3600U,
+            interval = 3600.seconds,
             bypassHoldoutGroups = true,
             editGracePeriodDays = 7U,
             metadata = jsonMapOf().toJsonValue(),

@@ -20,6 +20,7 @@ import com.urbanairship.json.JsonValue
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 
 internal class AutomationStoreMigrator(
     private val legacyDatabase: AutomationDatabase,
@@ -64,8 +65,7 @@ internal class AutomationStoreMigrator(
                     limit = fullSchedule.schedule.limit.let {
                         if (it >= 0) { it.toUInt() } else { null }
                     },
-                    // Legacy storage kept the interval in milliseconds, the new schedule expects seconds.
-                    interval = TimeUnit.MILLISECONDS.toSeconds(fullSchedule.schedule.interval).toULong(),
+                    interval = fullSchedule.schedule.interval.milliseconds,
                     delay = getDelay(fullSchedule),
                     metadata = fullSchedule.schedule.metadata?.toJsonValue(),
                     campaigns = fullSchedule.schedule.campaigns,

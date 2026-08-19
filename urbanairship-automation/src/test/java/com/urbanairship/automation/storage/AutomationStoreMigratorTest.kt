@@ -32,6 +32,8 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @RunWith(AndroidJUnit4::class)
 public class AutomationStoreMigratorTest {
@@ -61,7 +63,7 @@ public class AutomationStoreMigratorTest {
         val expected = AutomationScheduleData(
             schedule = AutomationSchedule(
                 identifier = "some-schedule",
-                interval = 0u,
+                interval = Duration.ZERO,
                 priority = 0,
                 limit = 0u,
                 editGracePeriodDays = 0u,
@@ -205,7 +207,7 @@ public class AutomationStoreMigratorTest {
                     )
 
                 ),
-                interval =  500U,
+                interval =  500.seconds,
                 data = makeScheduleData(),
                 campaigns = jsonMapOf("campaigns" to "campaigns").toJsonValue(),
                 bypassHoldoutGroups = true,
@@ -344,7 +346,7 @@ public class AutomationStoreMigratorTest {
                     )
 
                 ),
-                interval =  500U,
+                interval =  500.seconds,
                 data = makeDeferredScheduleData(),
                 campaigns = jsonMapOf("campaigns" to "campaigns").toJsonValue(),
                 bypassHoldoutGroups = true,
@@ -483,7 +485,7 @@ public class AutomationStoreMigratorTest {
                     )
 
                 ),
-                interval =  500U,
+                interval =  500.seconds,
                 data =  AutomationSchedule.ScheduleData.Actions(
                     jsonMapOf("action" to "value").toJsonValue()
                 ),
@@ -529,7 +531,7 @@ public class AutomationStoreMigratorTest {
         val expected = AutomationScheduleData(
             schedule = AutomationSchedule(
                 identifier = "some-schedule",
-                interval = 0u,
+                interval = Duration.ZERO,
                 priority = 0,
                 limit = 0u,
                 editGracePeriodDays = 0u,

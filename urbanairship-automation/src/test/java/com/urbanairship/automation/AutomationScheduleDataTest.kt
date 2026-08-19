@@ -20,6 +20,8 @@ import junit.framework.TestCase.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @RunWith(AndroidJUnit4::class)
 public class AutomationScheduleDataTest {
@@ -491,7 +493,7 @@ public class AutomationScheduleDataTest {
     @Test
     public fun testExecutionInterruptedRetry() {
         val data = makeData(limit = 3U,
-            interval = 10U,
+            interval = 10.seconds,
             scheduleState = AutomationScheduleState.EXECUTING,
             preparedScheduleInfo = preparedScheduleInfo,
             endDate = clock.currentTime)
@@ -508,7 +510,7 @@ public class AutomationScheduleDataTest {
     public fun testExecutionInterruptedOverLimit() {
         val data = makeData(
             limit = 2U,
-            interval = 10U,
+            interval = 10.seconds,
             scheduleState = AutomationScheduleState.EXECUTING,
             preparedScheduleInfo = preparedScheduleInfo)
         data.setExecutionCount(1)
@@ -524,7 +526,7 @@ public class AutomationScheduleDataTest {
     public fun testExecutionInterruptedExpired() {
         val data = makeData(
             limit = 3U,
-            interval = 10U,
+            interval = 10.seconds,
             scheduleState = AutomationScheduleState.EXECUTING,
             preparedScheduleInfo = preparedScheduleInfo,
             endDate = clock.currentTime
@@ -543,7 +545,7 @@ public class AutomationScheduleDataTest {
         val data = makeData(
             limit = 3U,
             scheduleState = AutomationScheduleState.EXECUTING,
-            interval = 10U,
+            interval = 10.seconds,
             preparedScheduleInfo = preparedScheduleInfo
         )
         data.setExecutionCount(1)
@@ -575,7 +577,7 @@ public class AutomationScheduleDataTest {
     public fun testFinishedExecutingOverLimit() {
         val data = makeData(
             limit = 2U,
-            interval = 10U,
+            interval = 10.seconds,
             scheduleState = AutomationScheduleState.EXECUTING,
             preparedScheduleInfo = preparedScheduleInfo
         )
@@ -592,7 +594,7 @@ public class AutomationScheduleDataTest {
     public fun testFinishedExecutingExpired() {
         val data = makeData(
             limit = 3U,
-            interval = 10U,
+            interval = 10.seconds,
             scheduleState = AutomationScheduleState.EXECUTING,
             preparedScheduleInfo = preparedScheduleInfo,
             endDate = clock.currentTime
@@ -611,7 +613,7 @@ public class AutomationScheduleDataTest {
         val data = makeData(
             limit = 3U,
             scheduleState = AutomationScheduleState.EXECUTING,
-            interval = 10U,
+            interval = 10.seconds,
             preparedScheduleInfo = preparedScheduleInfo
         )
         data.setExecutionCount(1)
@@ -700,7 +702,7 @@ public class AutomationScheduleDataTest {
         audience: AutomationAudience? = null,
         compoundAudience: AutomationCompoundAudience? = null,
         delay: AutomationDelay? = null,
-        interval: ULong? = null,
+        interval: Duration? = null,
         data: AutomationSchedule.ScheduleData = AutomationSchedule.ScheduleData.Actions(JsonValue.wrap("actions")),
         bypassHoldoutGroups: Boolean? = null,
         editGracePeriodDays: ULong? = null,

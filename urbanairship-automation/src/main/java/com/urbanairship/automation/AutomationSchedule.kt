@@ -21,6 +21,8 @@ import com.urbanairship.util.VersionUtils
 import java.time.Instant
 import java.util.Objects
 import java.util.UUID
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import org.jetbrains.annotations.VisibleForTesting
 
 /**
@@ -49,11 +51,11 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
      */
     public val limit: UInt? = null,
     /**
-     * The schedule start time in ms.
+     * The schedule start time.
      */
     public val startDate: Instant? = null,
     /**
-     * The schedule end time in ms.
+     * The schedule end time.
      */
     public val endDate: Instant? = null,
     /**
@@ -70,9 +72,11 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
      */
     public val delay: AutomationDelay? = null,
     /**
-     * The interval in seconds.
+     * The interval to wait after an execution before the schedule can execute again.
+     *
+     * Java callers, which cannot express a [Duration], should read [intervalSeconds].
      */
-    public val interval: ULong? = null,
+    public val interval: Duration? = null,
     /**
      * Schedule data
      */
@@ -101,6 +105,15 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
 ) : JsonSerializable {
 
     /**
+     * The interval in whole seconds.
+     *
+     * Provided for Java callers, which cannot express a [Duration]. [interval] is the source of
+     * truth; this is derived from it.
+     */
+    public val intervalSeconds: Long?
+        get() = interval?.inWholeSeconds
+
+    /**
      * Schedule builder.
      */
     public class Builder internal constructor(
@@ -116,7 +129,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private var audience: AutomationAudience? = schedule.audience
         private var compoundAudience: AutomationCompoundAudience? = schedule.compoundAudience
         private var delay: AutomationDelay? = schedule.delay
-        private var interval: ULong? = schedule.interval
+        private var interval: Duration? = schedule.interval
         private var data: ScheduleData = schedule.data
         private var editGracePeriodDays: ULong? = schedule.editGracePeriodDays
 
@@ -222,8 +235,21 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @param interval The interval.
          * @return The builder object.
          */
-        public fun setInterval(interval: Long?): Builder = apply {
-            this.interval = interval?.toULong()
+        public fun setInterval(interval: Duration?): Builder = apply {
+            this.interval = interval
+        }
+
+        /**
+         * Set the interval, in whole seconds.
+         *
+         * Provided for Java callers, which cannot express a [Duration]. In seconds because the
+         * `Long` this replaces was, so an existing Java call keeps its meaning.
+         *
+         * @param intervalSeconds The interval in seconds.
+         * @return The builder object.
+         */
+        public fun setIntervalSeconds(intervalSeconds: Long?): Builder = apply {
+            this.interval = intervalSeconds?.seconds
         }
 
         /**
@@ -443,7 +469,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 audience = content[AUDIENCE]?.let(AutomationAudience::fromJson),
                 compoundAudience = content[COMPOUND_AUDIENCE]?.let(AutomationCompoundAudience::fromJson),
                 delay = content[DELAY]?.let(AutomationDelay.Companion::fromJson),
-                interval = content.optionalField(INTERVAL),
+                // The interval field is encoded in seconds.
+                interval = content.optionalField<Long>(INTERVAL)?.seconds,
                 campaigns = content[CAMPAIGNS],
                 reportingContext = content[REPORTING_CONTEXT],
                 productId = content[PRODUCT_ID]?.requireString(),
@@ -477,7 +504,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(AUDIENCE, audience)
         .putOpt(COMPOUND_AUDIENCE, compoundAudience)
         .putOpt(DELAY, delay)
-        .putOpt(INTERVAL, interval?.toLong())
+        .putOpt(INTERVAL, interval?.inWholeSeconds)
         .putOpt(CAMPAIGNS, campaigns)
         .putOpt(METADATA, metadata)
         .putOpt(PRODUCT_ID, productId)

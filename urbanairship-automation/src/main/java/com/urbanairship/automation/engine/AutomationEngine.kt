@@ -356,7 +356,7 @@ internal class AutomationEngine(
                     it.executionInterrupted(now, retry = behavior == InterruptedBehavior.RETRY)
                 }
                 if (updated?.scheduleState == AutomationScheduleState.PAUSED) {
-                    handleInterval((updated.schedule.interval?.toLong() ?: 0L).seconds, data.schedule.identifier)
+                    handleInterval(updated.schedule.interval ?: Duration.ZERO, data.schedule.identifier)
                 }
             } else {
                 updated = updateState(data.schedule.identifier) { it.prepareInterrupted(now) }
@@ -371,7 +371,7 @@ internal class AutomationEngine(
         schedules
             .filter { it.scheduleState == AutomationScheduleState.PAUSED }
             .forEach { data ->
-                val interval = (data.schedule.interval?.toLong() ?: 0).seconds
+                val interval = data.schedule.interval ?: Duration.ZERO
                 val remaining = interval - (clock.now() - data.scheduleStateChangeDate)
                 handleInterval(remaining, data.schedule.identifier)
             }
@@ -643,8 +643,7 @@ internal class AutomationEngine(
                 val update =
                     updateState(scheduleID) { it.finishedExecuting(clock.now()) }
                 if (update?.scheduleState == AutomationScheduleState.PAUSED) {
-                    val interval = update.schedule.interval?.toLong() ?: 0L
-                    handleInterval(interval.seconds, scheduleID)
+                    handleInterval(update.schedule.interval ?: Duration.ZERO, scheduleID)
                 }
                 return true
             }
