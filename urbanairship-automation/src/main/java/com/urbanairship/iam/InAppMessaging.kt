@@ -25,13 +25,17 @@ public interface InAppMessagingInterface {
      *
      * Provided for Java callers, which cannot express a [Duration]. [displayInterval] is the
      * source of truth; this reads and writes through to it.
+     *
+     * Counterparts elsewhere in the SDK are named `…Ms`; this one is in seconds because the
+     * `Long` property it replaces was, so an existing Java call keeps its meaning. Reading it
+     * truncates a [displayInterval] with sub-second precision.
      */
     public var displayIntervalSeconds: Long
         get() = displayInterval.inWholeSeconds
         set(value) { displayInterval = value.seconds }
 
     /**
-     * Display interval
+     * Delegate consulted before a message is displayed, to allow the app to block or defer it.
      */
     public var displayDelegate: InAppMessageDisplayDelegate?
 
