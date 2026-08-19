@@ -73,12 +73,13 @@ public class PushMessage : Parcelable, JsonSerializable {
 
             UALog.v("Notification expiration time is \"%s\"", expirationStr)
             try {
-                // The expiration is in epoch seconds.
+                // The expiration is in epoch seconds. Catch broadly: besides a non-numeric
+                // value, a numeric one outside Instant's range throws from ofEpochSecond.
                 val expiration = Instant.ofEpochSecond(expirationStr.toLong())
                 if (expiration < clock.now()) {
                     return true
                 }
-            } catch (e: NumberFormatException) {
+            } catch (e: Exception) {
                 UALog.d(e, "Ignoring malformed expiration time.")
             }
 

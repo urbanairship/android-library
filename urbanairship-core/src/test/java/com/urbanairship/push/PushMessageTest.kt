@@ -64,6 +64,30 @@ public class PushMessageTest {
     }
 
     /**
+     * Test a non-numeric expiration is ignored instead of throwing.
+     */
+    @Test
+    public fun testNonNumericExpiration() {
+        val pushMessage = PushMessage(
+            pushBundle = bundleOf(PushMessage.EXTRA_EXPIRATION to "not a number"),
+            clock = clock
+        )
+        Assert.assertFalse("Malformed expiration should be ignored.", pushMessage.isExpired)
+    }
+
+    /**
+     * Test an expiration outside the range of an Instant is ignored instead of throwing.
+     */
+    @Test
+    public fun testOutOfRangeExpiration() {
+        val pushMessage = PushMessage(
+            pushBundle = bundleOf(PushMessage.EXTRA_EXPIRATION to "999999999999999999"),
+            clock = clock
+        )
+        Assert.assertFalse("Out of range expiration should be ignored.", pushMessage.isExpired)
+    }
+
+    /**
      * Test the message is ping.
      */
     @Test
