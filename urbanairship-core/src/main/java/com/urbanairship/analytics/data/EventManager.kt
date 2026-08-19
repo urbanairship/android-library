@@ -82,8 +82,12 @@ public class EventManager @VisibleForTesting internal constructor(
                 if (isScheduled) {
                     val previousScheduledTime = preferenceStore.get(SCHEDULED_SEND_TIME)
                         ?.let(Instant::ofEpochMilli) ?: Instant.EPOCH
+                    // Time left on the upload already scheduled. Subtracting the other way
+                    // around made this always zero, so any request made while an upload was
+                    // pending was dropped in favor of the pending one — including a high
+                    // priority event asking to upload immediately.
                     val currentDelay = maxOf(
-                        clock.now() - previousScheduledTime, Duration.ZERO
+                        previousScheduledTime - clock.now(), Duration.ZERO
                     )
 
                     if (currentDelay < nextDelay) {
