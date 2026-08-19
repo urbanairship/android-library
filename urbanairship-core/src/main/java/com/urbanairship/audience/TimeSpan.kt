@@ -7,11 +7,11 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.json.optionalField
+import com.urbanairship.json.optionalEpochMillis
 import java.time.Instant
 
 /**
- * A time window with optional bounds, expressed in milliseconds since the epoch.
+ * A time window with optional bounds.
  *
  * A `null` start is treated as -∞ and a `null` end as +∞. The start bound is inclusive and
  * the end bound is exclusive (`start <= now < end`).
@@ -27,8 +27,8 @@ internal data class TimeSpan(
 
         @Throws(JsonException::class)
         fun fromJson(json: JsonMap): TimeSpan = TimeSpan(
-            startTimestamp = json.optionalField(KEY_START),
-            endTimestamp = json.optionalField(KEY_END)
+            startTimestamp = json.optionalEpochMillis(KEY_START),
+            endTimestamp = json.optionalEpochMillis(KEY_END)
         )
     }
 

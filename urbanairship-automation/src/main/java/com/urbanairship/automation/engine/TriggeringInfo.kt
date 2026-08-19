@@ -8,7 +8,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.json.requireField
+import com.urbanairship.json.requireEpochMillis
 import java.time.Instant
 
 /** @hide */
@@ -26,7 +26,7 @@ internal data class TriggeringInfo(
             val content = value.requireMap()
             return TriggeringInfo(
                 context = content[CONTEXT]?.let(DeferredTriggerContext::fromJson),
-                date = content.requireField(DATE)
+                date = content.requireEpochMillis(DATE)
             )
         }
     }

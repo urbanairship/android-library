@@ -17,7 +17,9 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalEpochMillis
 import com.urbanairship.json.optionalField
+import com.urbanairship.json.requireEpochMillis
 import com.urbanairship.json.requireField
 import com.urbanairship.json.tryParse
 import com.urbanairship.util.Clock
@@ -323,8 +325,8 @@ private data class RegistrationInfo(
 ) : JsonSerializable {
 
     constructor(json: JsonMap) : this(
-        date = json.requireField<Instant>(DATE),
-        lastFullUpload = json.optionalField<Instant>(LAST_FULL_UPLOAD_DATE),
+        date = json.requireEpochMillis(DATE),
+        lastFullUpload = json.optionalEpochMillis(LAST_FULL_UPLOAD_DATE),
         payload = ChannelRegistrationPayload.fromJson(json.require(PAYLOAD)),
         location = json.requireField<String>(LOCATION),
     )

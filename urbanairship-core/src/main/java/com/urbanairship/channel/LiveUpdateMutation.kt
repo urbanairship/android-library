@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireEpochMillis
 import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
 import java.time.Instant
@@ -77,8 +78,8 @@ public sealed class LiveUpdateMutation(
         fun fromJson(json: JsonMap): LiveUpdateMutation {
             val action: String = json.requireField(KEY_ACTION)
             val name: String = json.requireField(KEY_NAME)
-            val startTime: Instant = json.requireField(KEY_START_TS)
-            val actionTime: Instant = json.requireField(KEY_ACTION_TS)
+            val startTime: Instant = json.requireEpochMillis(KEY_START_TS)
+            val actionTime: Instant = json.requireEpochMillis(KEY_ACTION_TS)
 
             return when (action) {
                 ACTION_SET -> Set(name, startTime, actionTime)

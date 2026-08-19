@@ -54,7 +54,9 @@ public inline fun <reified T> JsonMap.requireField(key: String): T {
         JsonList::class -> field.optList() as T
         JsonMap::class -> field.optMap() as T
         JsonValue::class -> field.toJsonValue() as T
-        Instant::class -> field.requireEpochMillis(key) as T
+        // No Instant branch: the encoded unit varies by field (epoch millis, epoch seconds,
+        // ISO 8601), so reads name it explicitly via requireEpochMillis / isoDateAsInstant,
+        // the way JsonValue.wrap makes writes name it.
         else -> throw JsonException("Invalid type '${T::class.java.simpleName}' for field '$key'")
     }
 }
@@ -75,6 +77,25 @@ public fun JsonValue.requireEpochMillis(key: String? = null): Instant {
     }
     return Instant.ofEpochMilli(getLong(0))
 }
+
+/**
+ * Reads the field with the given [key], holding epoch milliseconds, as an [Instant].
+ *
+ * @throws JsonException if the field is undefined or is not a number.
+ */
+@Throws(JsonException::class)
+public fun JsonMap.requireEpochMillis(key: String): Instant =
+    require(key).requireEpochMillis(key)
+
+/**
+ * Reads the field with the given [key], holding epoch milliseconds, as an [Instant], or `null`
+ * if the field is absent or not a number.
+ *
+ * Lenient like [optionalField]: a malformed value reads as absent rather than throwing. Use
+ * [requireEpochMillis] to reject one.
+ */
+public fun JsonMap.optionalEpochMillis(key: String): Instant? =
+    get(key)?.takeIf { it.isNumber }?.requireEpochMillis(key)
 
 @Throws(JsonException::class)
 public fun JsonMap.extend(vararg fields: Pair<String, *>): JsonMap {
@@ -108,9 +129,7 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
         JsonList::class -> field.optList() as T
         JsonMap::class -> field.optMap() as T
         JsonValue::class -> field.toJsonValue() as T
-        // Lenient, like every other branch here: a null or non-numeric value reads as absent
-        // rather than throwing. Use requireField<Instant> to reject a malformed timestamp.
-        Instant::class -> field.takeIf { it.isNumber }?.requireEpochMillis(key) as T?
+        // No Instant branch: see requireField.
         else -> throw JsonException("Invalid type '${T::class.java.simpleName}' for field '$key'")
     }
 }

@@ -7,7 +7,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.json.optionalField
+import com.urbanairship.json.optionalEpochMillis
 import java.time.Instant
 
 /**
@@ -29,8 +29,8 @@ public data class TimeCriteria(
             val content = json ?: return null
 
             return TimeCriteria(
-                start = content.optionalField(KEY_START),
-                end = content.optionalField(KEY_END))
+                start = content.optionalEpochMillis(KEY_START),
+                end = content.optionalEpochMillis(KEY_END))
         }
     }
 

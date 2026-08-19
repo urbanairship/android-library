@@ -20,6 +20,7 @@ import com.urbanairship.job.JobInfo.ConflictStrategy
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireEpochMillis
 import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonList
 import com.urbanairship.json.tryParse
@@ -996,7 +997,7 @@ internal class ContactManager(
         val identifier: String = UUID.randomUUID().toString()
     ) : JsonSerializable {
         constructor(jsonValue: JsonValue) : this(
-            jsonValue.requireMap().requireField("timestamp"),
+            jsonValue.requireMap().requireEpochMillis("timestamp"),
             ContactOperation.fromJson(jsonValue.requireMap().require("operation")),
             jsonValue.requireMap().requireField("identifier")
         )

@@ -5,6 +5,7 @@ import com.urbanairship.annotation.OpenForTesting
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.optionalEpochMillis
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import java.time.Instant
@@ -26,7 +27,7 @@ internal data class ContactIdentity(
             contactId = jsonValue.requireMap().requireField(CONTACT_ID_KEY),
             isAnonymous = jsonValue.requireMap().optionalField(IS_ANONYMOUS_KEY) ?: false,
             namedUserId = jsonValue.requireMap().optionalField(NAMED_USER_ID_KEY),
-            resolveDate = jsonValue.requireMap().optionalField(RESOLVE_DATE_KEY)
+            resolveDate = jsonValue.requireMap().optionalEpochMillis(RESOLVE_DATE_KEY)
     )
 
     override fun toJsonValue(): JsonValue = jsonMapOf(

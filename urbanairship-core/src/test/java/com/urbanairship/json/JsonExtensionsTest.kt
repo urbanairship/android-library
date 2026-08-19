@@ -14,62 +14,75 @@ import org.robolectric.RobolectricTestRunner
 public class JsonExtensionsTest {
 
     @Test
-    public fun testRequireFieldInstantReadsEpochMillis() {
+    public fun testRequireEpochMillis() {
         val json = jsonMapOf("timestamp" to 1000L)
 
-        assertEquals(Instant.ofEpochMilli(1000), json.requireField<Instant>("timestamp"))
+        assertEquals(Instant.ofEpochMilli(1000), json.requireEpochMillis("timestamp"))
     }
 
     @Test
-    public fun testRequireFieldInstantThrowsOnMissing() {
+    public fun testRequireEpochMillisThrowsOnMissingField() {
         assertThrows(JsonException::class.java) {
-            jsonMapOf().requireField<Instant>("timestamp")
+            jsonMapOf().requireEpochMillis("timestamp")
         }
     }
 
     /** A required timestamp must reject a malformed value rather than silently defaulting. */
     @Test
-    public fun testRequireFieldInstantThrowsOnNonNumber() {
+    public fun testRequireEpochMillisThrowsOnNonNumberField() {
         val json = jsonMapOf("timestamp" to "not a number")
 
         assertThrows(JsonException::class.java) {
-            json.requireField<Instant>("timestamp")
+            json.requireEpochMillis("timestamp")
         }
     }
 
     @Test
-    public fun testOptionalFieldInstantReadsEpochMillis() {
+    public fun testOptionalEpochMillis() {
         val json = jsonMapOf("timestamp" to 1000L)
 
-        assertEquals(Instant.ofEpochMilli(1000), json.optionalField<Instant>("timestamp"))
+        assertEquals(Instant.ofEpochMilli(1000), json.optionalEpochMillis("timestamp"))
     }
 
     @Test
-    public fun testOptionalFieldInstantIsNullWhenAbsent() {
-        assertNull(jsonMapOf().optionalField<Instant>("timestamp"))
+    public fun testOptionalEpochMillisIsNullWhenAbsent() {
+        assertNull(jsonMapOf().optionalEpochMillis("timestamp"))
     }
 
     /**
-     * The optional reader is lenient, matching every other type it handles: a value that is
-     * present but not a usable timestamp reads as absent rather than throwing.
+     * The optional reader is lenient, matching [optionalField]: a value that is present but not
+     * a usable timestamp reads as absent rather than throwing.
      *
      * A present-and-null field has to be built via the [JsonMap] constructor — both
      * `JsonMap.Builder` and the JSON parser drop nulls — so this case is not reachable from a
-     * parsed payload. It is covered to keep the branch uniform with its peers.
+     * parsed payload. It is covered to keep the behavior uniform with [optionalField].
      */
     @Test
-    public fun testOptionalFieldInstantIsNullWhenExplicitlyNull() {
+    public fun testOptionalEpochMillisIsNullWhenExplicitlyNull() {
         val json = JsonMap(mapOf("timestamp" to JsonValue.NULL))
         assertTrue("expected a present, null field", json.containsKey("timestamp"))
 
-        assertNull(json.optionalField<Instant>("timestamp"))
+        assertNull(json.optionalEpochMillis("timestamp"))
     }
 
     @Test
-    public fun testOptionalFieldInstantIsNullWhenNotANumber() {
+    public fun testOptionalEpochMillisIsNullWhenNotANumber() {
         val json = jsonMapOf("timestamp" to "not a number")
 
-        assertNull(json.optionalField<Instant>("timestamp"))
+        assertNull(json.optionalEpochMillis("timestamp"))
+    }
+
+    /**
+     * `requireField`/`optionalField` deliberately have no `Instant` branch: the encoded unit
+     * varies by field, so a read has to name it. Reading one as an `Instant` is an error rather
+     * than an assumption that the field holds milliseconds.
+     */
+    @Test
+    public fun testReifiedFieldReadersRejectInstant() {
+        val json = jsonMapOf("timestamp" to 1000L)
+
+        assertThrows(JsonException::class.java) { json.requireField<Instant>("timestamp") }
+        assertThrows(JsonException::class.java) { json.optionalField<Instant>("timestamp") }
     }
 
     @Test

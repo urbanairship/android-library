@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireEpochMillis
 import com.urbanairship.json.requireField
 import java.time.Instant
 
@@ -34,7 +35,7 @@ internal sealed class ContactOperation(
             ).toJsonValue()
     ) {
         constructor(json: JsonMap) : this(
-                json.requireField(DATE_KEY),
+                json.requireEpochMillis(DATE_KEY),
                 json.requireField(REQUIRED_KEY)
         )
     }
