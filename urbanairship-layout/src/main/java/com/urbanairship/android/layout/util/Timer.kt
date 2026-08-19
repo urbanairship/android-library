@@ -3,12 +3,16 @@ package com.urbanairship.android.layout.util
 
 import android.os.Handler
 import android.os.Looper
+import androidx.annotation.RestrictTo
 import com.urbanairship.util.Clock
 import kotlin.time.Duration
 
 /**
  * Timer that can be stopped and started.
+ *
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public abstract class Timer public constructor(
     private val duration: Duration,
     private val clock: Clock = Clock.DEFAULT_CLOCK

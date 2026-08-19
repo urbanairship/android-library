@@ -85,13 +85,15 @@ public object PushProviderBridge {
         /**
          * Sets the max callback wait time in milliseconds.
          *
-         * Provided for Java callers, which cannot express a [Duration].
+         * Provided for Java callers, which cannot express a [Duration]. Named separately
+         * rather than overloading [setMaxCallbackWaitTime] so that a Kotlin caller cannot
+         * pass a bare number and have it mean milliseconds by convention.
          *
          * @param milliseconds The max callback wait time. If <= 0, the callback will
          * wait until the push request is completed.
          * @return The process push request.
          */
-        public fun setMaxCallbackWaitTime(milliseconds: Long): ProcessPushRequest =
+        public fun setMaxCallbackWaitTimeMs(milliseconds: Long): ProcessPushRequest =
             setMaxCallbackWaitTime(milliseconds.milliseconds)
 
         /**

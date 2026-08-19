@@ -9,7 +9,6 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.time.Instant
-import java.util.Date
 
 /**
  * Email channel registration options.
@@ -61,7 +60,8 @@ public class EmailRegistrationOptions private constructor(
         /**
          * Commercial registration options.
          *
-         * @param commercialOptedIn The commercial opted in date.
+         * @param commercialOptedIn The commercial opted in date. Callers holding a
+         * `java.util.Date` should pass `date.toInstant()`.
          * @param transactionalOptedIn The transactional opted in date.
          * @param properties The optional properties.
          * @return The registration options.
@@ -69,13 +69,13 @@ public class EmailRegistrationOptions private constructor(
         @JvmStatic
         @JvmOverloads
         public fun commercialOptions(
-            commercialOptedIn: Date? = null,
-            transactionalOptedIn: Date? = null,
+            commercialOptedIn: Instant? = null,
+            transactionalOptedIn: Instant? = null,
             properties: JsonMap? = null
         ): EmailRegistrationOptions {
             return EmailRegistrationOptions(
-                transactionalOptedIn = transactionalOptedIn?.toInstant(),
-                commercialOptedIn = commercialOptedIn?.toInstant(),
+                transactionalOptedIn = transactionalOptedIn,
+                commercialOptedIn = commercialOptedIn,
                 properties = properties,
                 isDoubleOptIn = false
             )
@@ -92,12 +92,12 @@ public class EmailRegistrationOptions private constructor(
         @JvmStatic
         @JvmOverloads
         public fun options(
-            transactionalOptedIn: Date? = null,
+            transactionalOptedIn: Instant? = null,
             properties: JsonMap? = null,
             doubleOptIn: Boolean
         ): EmailRegistrationOptions {
             return EmailRegistrationOptions(
-                transactionalOptedIn = transactionalOptedIn?.toInstant(),
+                transactionalOptedIn = transactionalOptedIn,
                 commercialOptedIn = null,
                 properties = properties,
                 isDoubleOptIn = doubleOptIn

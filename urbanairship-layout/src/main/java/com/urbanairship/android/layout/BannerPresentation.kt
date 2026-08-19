@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout
 
 import android.content.Context
+import androidx.annotation.RestrictTo
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.property.BannerPlacement
 import com.urbanairship.android.layout.property.BannerPlacementSelector
@@ -14,6 +15,12 @@ import kotlin.time.Duration
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
+/**
+ * Banner presentation info.
+ *
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class BannerPresentation public constructor(
     public val defaultPlacement: BannerPlacement,
     /** Auto-dismiss duration, or `null` if the banner should not auto-dismiss. */
@@ -72,8 +79,10 @@ public class BannerPresentation public constructor(
          */
         private fun JsonMap.optionalDuration(key: String, unit: DurationUnit): Duration? {
             val value = this[key] ?: return null
-            val duration = value.getDouble(0.0).toDuration(unit)
-            if (duration <= Duration.ZERO) {
+            // takeIf { isFinite() }: toDuration throws on NaN, and an infinite duration is
+            // not a meaningful auto-dismiss.
+            val duration = value.getDouble(0.0).takeIf { it.isFinite() }?.toDuration(unit)
+            if (duration == null || duration <= Duration.ZERO) {
                 UALog.w { "Ignoring banner '$key'! Expected a positive number, got: $value" }
                 return null
             }

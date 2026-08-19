@@ -6,7 +6,6 @@ import com.urbanairship.android.layout.info.ThomasEmailRegistrationOptions
 import com.urbanairship.contacts.EmailRegistrationOptions
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
-import java.util.Date
 import java.util.UUID
 import io.mockk.mockk
 import io.mockk.verify
@@ -35,7 +34,7 @@ public class ThomasChannelRegistrarTest {
 
         val expectedOptions = EmailRegistrationOptions.commercialOptions(
             transactionalOptedIn = null,
-            commercialOptedIn = Date.from(testClock.currentTime),
+            commercialOptedIn = testClock.currentTime,
             properties = properties
         )
 

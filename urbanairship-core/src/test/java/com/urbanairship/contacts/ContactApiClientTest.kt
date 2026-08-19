@@ -19,7 +19,6 @@ import com.urbanairship.util.LocaleCompat
 import com.urbanairship.util.minus
 import com.urbanairship.util.plus
 import java.time.Instant
-import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import junit.framework.TestCase.assertEquals
@@ -313,7 +312,7 @@ public class ContactApiClientTest {
         requestSession.addResponse(200)
 
         val options = EmailRegistrationOptions.options(
-            Date.from(clock.now()), jsonMapOf(
+            clock.now(), jsonMapOf(
                 "properties_key" to "properties_value"
             ), false
         )

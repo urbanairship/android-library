@@ -86,7 +86,11 @@ public class Banner @VisibleForTesting internal constructor(
      * Returns a copy of the Banner display content with the provided changes.
      *
      * Java callers, which cannot express a [Duration], get this as `copy(...)` with a
-     * `long durationMs` in place of [duration] — see [copyWithDurationMs].
+     * `long durationMs` in place of [duration] — see `copyWithDurationMs`. Java sees the
+     * partial overloads that stop before the duration (`copy()` through
+     * `copy(heading … borderRadius)`), plus the all-argument `long durationMs` form; the
+     * overloads in between contain a [Duration] and are name-mangled on the JVM. To change
+     * `placement` or `actions` from Java, pass every argument.
      */
     @JvmOverloads
     public fun copy(
@@ -125,9 +129,11 @@ public class Banner @VisibleForTesting internal constructor(
      * equivalent using `long` milliseconds. [duration] remains the source of truth.
      *
      * Java must pass every argument, as Kotlin default values are not available across the
-     * `@JvmName` boundary. Kotlin callers should prefer [copy].
+     * `@JvmName` boundary. Hidden from Kotlin, which should use [copy]: a second `copy` taking
+     * a bare `Long` in the duration position is the ambiguity this typing exists to remove.
      */
     @JvmName("copy")
+    @Deprecated("Java-only. Kotlin callers should use copy().", level = DeprecationLevel.HIDDEN)
     public fun copyWithDurationMs(
         heading: InAppMessageTextInfo? = this.heading,
         body: InAppMessageTextInfo? = this.body,

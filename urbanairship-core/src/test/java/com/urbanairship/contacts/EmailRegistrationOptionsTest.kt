@@ -4,7 +4,6 @@ package com.urbanairship.contacts
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.time.Instant
-import java.util.Date
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -17,8 +16,8 @@ public class EmailRegistrationOptionsTest {
     @Test
     public fun testRoundTrip() {
         val options = EmailRegistrationOptions.commercialOptions(
-            transactionalOptedIn = Date(1000),
-            commercialOptedIn = Date(2000),
+            transactionalOptedIn = Instant.ofEpochMilli(1000),
+            commercialOptedIn = Instant.ofEpochMilli(2000),
             properties = jsonMapOf("key" to "value")
         )
 
