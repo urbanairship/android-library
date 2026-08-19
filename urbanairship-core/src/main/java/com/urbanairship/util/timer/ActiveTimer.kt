@@ -7,11 +7,10 @@ import androidx.annotation.VisibleForTesting
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.util.Clock
-import java.time.Duration as JavaDuration
+import com.urbanairship.util.minus
 import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toKotlinDuration
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -80,6 +79,6 @@ public class ActiveTimer(
 
     private fun currentSessionTime(): Duration {
         val date = startDate.value ?: return 0.seconds
-        return JavaDuration.between(date, clock.now()).toKotlinDuration()
+        return clock.now() - date
     }
 }

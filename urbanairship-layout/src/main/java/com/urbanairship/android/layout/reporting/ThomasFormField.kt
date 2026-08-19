@@ -16,7 +16,6 @@ import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
 import com.urbanairship.util.minus
 import java.time.Instant as JavaInstant
-import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds

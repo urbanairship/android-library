@@ -2,7 +2,6 @@
 
 package com.urbanairship.automation.compose
 
-import android.os.SystemClock
 import android.view.ViewConfiguration
 import android.widget.FrameLayout
 import android.widget.FrameLayout.LayoutParams.MATCH_PARENT
@@ -48,9 +47,9 @@ import com.urbanairship.android.layout.property.BannerPlacement
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.ui.BannerLayout
+import com.urbanairship.util.Clock
 import kotlin.math.abs
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -416,7 +415,7 @@ internal fun shouldDismissBanner(
  */
 internal class BannerAutoDismissTimer(
     duration: Duration,
-    private val elapsedTime: () -> Duration = { SystemClock.elapsedRealtime().milliseconds }
+    private val elapsedTime: () -> Duration = { Clock.DEFAULT_CLOCK.elapsedRealtime() }
 ) {
     internal var remaining: Duration = duration
         private set

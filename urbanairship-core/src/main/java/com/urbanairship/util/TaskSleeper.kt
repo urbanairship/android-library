@@ -4,11 +4,9 @@ package com.urbanairship.util
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.annotation.OpenForTesting
-import java.time.Duration as JavaDuration
 import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import kotlin.time.toKotlinDuration
 import kotlinx.coroutines.delay
 
 /**
@@ -38,7 +36,7 @@ public class TaskSleeper(
     }
 
     private fun remaining(start: Instant, duration: Duration): Duration {
-        return duration - JavaDuration.between(start, clock.now()).toKotlinDuration()
+        return duration - (clock.now() - start)
     }
 
     /** @hide */

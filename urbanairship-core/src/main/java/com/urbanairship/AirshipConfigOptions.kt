@@ -187,7 +187,8 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
      * Minimum delta between analytics uploads when adding location events while in the
      * background.
      *
-     * Defaults to 15 minutes.
+     * Defaults to 24 hours. Values below 1 minute or above 24 hours are accepted but logged
+     * as a warning.
      */
     public val backgroundReportingInterval: Duration
 

@@ -7,9 +7,8 @@ import com.urbanairship.UALog
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.FormatterUtils.toSecondsString
-import java.time.Duration as JavaDuration
+import com.urbanairship.util.minus
 import java.time.Instant
-import kotlin.time.toKotlinDuration
 
 /**
  * A screen tracking event allows users to track an activity by associating a
@@ -47,7 +46,7 @@ internal class ScreenTrackingEvent(
         PREVIOUS_SCREEN_KEY to previousScreen,
         START_TIME_KEY to startTime.toSecondsString(),
         STOP_TIME_KEY to stopTime.toSecondsString(),
-        DURATION_KEY to JavaDuration.between(startTime, stopTime).toKotlinDuration().toSecondsString()
+        DURATION_KEY to (stopTime - startTime).toSecondsString()
     )
 
     companion object {

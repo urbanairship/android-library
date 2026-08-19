@@ -2,10 +2,8 @@
 package com.urbanairship.util
 
 import androidx.core.util.Predicate
-import java.time.Duration as JavaDuration
 import java.time.Instant
 import kotlin.time.Duration
-import kotlin.time.toKotlinDuration
 
 /**
  * Caches a value in memory with an expiration.
@@ -47,8 +45,7 @@ internal class CachedValue<T> (
     }
 
     fun remainingCacheTime(): Duration {
-        val remaining = JavaDuration.between(clock.now(), expiration)
-        return if (remaining.isNegative) Duration.ZERO else remaining.toKotlinDuration()
+        return (expiration - clock.now()).coerceAtLeast(Duration.ZERO)
     }
 
     fun get(): T? {
