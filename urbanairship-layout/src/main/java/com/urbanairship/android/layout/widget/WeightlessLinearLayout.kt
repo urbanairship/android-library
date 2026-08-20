@@ -269,6 +269,14 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         // `P` — read from the layout params, so it's known before anything is measured.
         val percentTotal = mainAxisPercentTotal(vertical = true)
 
+        // Whether anything gives our CROSS axis a length that isn't a share of it. Keeping percent
+        // children out of `maxWidth` is right while something else sets the width; when nothing
+        // does it leaves us zero wide, and a share of zero is zero — the children disappear, and
+        // the stack with them. No basis is the same situation the main axis already handles by
+        // letting the percentages fall back to their content, so answer it the same way here.
+        val crossAxisHasBasis =
+            widthMode == MeasureSpec.EXACTLY || establishesLength(horizontal = true)
+
         var matchWidth = false
         var skippedMeasure = false
         // What the deferred ratio children will take on our axis, accumulated as we skip past them.
@@ -378,8 +386,10 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
             childState = combineMeasuredStates(childState, child.measuredState)
 
             // A child that's a fraction of our width doesn't get a say in what our width is —
-            // otherwise the percentage would end up describing a length it set itself.
-            if (child !in crossAxisPercentChildren) {
+            // otherwise the percentage would end up describing a length it set itself. Unless it
+            // is all we have: with no basis the percentage is never taken, so what it measured is
+            // its content and counts like anyone else's.
+            if (child !in crossAxisPercentChildren || !crossAxisHasBasis) {
                 maxWidth = max(maxWidth, measuredWidth)
 
                 if (lp.maxHeightPercent > 0) {
@@ -777,7 +787,10 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         // lines once it's narrowed, and pinning the old height clipped exactly that text. A child
         // holding a distributed slot keeps it — that height is its share, not a measurement — and so
         // does everyone if the overflow branch already rationed the space.
-        if (crossAxisPercentChildren.isNotEmpty()) {
+        //
+        // Skipped when there is no basis: our width came from these children, so handing them a
+        // share of it is handing them a share of themselves. They keep what they measured.
+        if (crossAxisPercentChildren.isNotEmpty() && crossAxisHasBasis) {
             val available = ((widthSizeAndState and MEASURED_SIZE_MASK) - paddingStart - paddingEnd)
                 .coerceAtLeast(0)
             for (child in crossAxisPercentChildren) {
