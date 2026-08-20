@@ -25,9 +25,12 @@ import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.property.Margin
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
+import com.urbanairship.android.layout.property.Size
 import com.urbanairship.android.layout.widget.AutoSizeProvider
 import com.urbanairship.android.layout.widget.ClippableConstraintLayout
 import com.urbanairship.android.layout.widget.borrowedPercentBase
+import com.urbanairship.android.layout.widget.establishesLength
+import com.urbanairship.android.layout.widget.LengthBasisProvider
 import com.urbanairship.android.layout.widget.ShrinkableView
 import androidx.core.view.OnApplyWindowInsetsListener as OnApplyWindowInsetsListenerCompat
 
@@ -35,18 +38,27 @@ internal class ContainerLayoutView(
     context: Context,
     private val model: ContainerLayoutModel,
     private val viewEnvironment: ViewEnvironment
-) : ClippableConstraintLayout(context), BaseView, ShrinkableView, AutoSizeProvider {
+) : ClippableConstraintLayout(context), BaseView, ShrinkableView, AutoSizeProvider,
+    LengthBasisProvider {
 
     private val frameShouldIgnoreSafeArea = SparseBooleanArray()
     private val frameMargins = SparseArray<Margin>()
-    // frameId -> aspectRatio for height-auto + percent-width items.
-    // ConstraintLayout can't derive ratio height from percent width in AT_MOST parents
-    // (both MATCH_CONSTRAINT), so onMeasure does a two-pass fix for these frames.
+    // frameId -> aspectRatio for height-auto + percent-width items. Their width is solved with the
+    // other percent items; onMeasure derives the height from it here rather than leaving it to the
+    // constraint set's dimension ratio, which resolves against the container height instead.
     private val frameHeightRatios = SparseArray<Double>()
     // frameId -> percent, for items sized as a percent of us on that axis. Only consulted when our
     // own size isn't fixed by our parent; otherwise ConstraintLayout resolves them natively.
     private val framePercentWidths = SparseArray<Float>()
     private val framePercentHeights = SparseArray<Float>()
+    // frameId -> the width the percent solve gave it this pass. The ratio pass derives height from
+    // this rather than from `measuredWidth`, which is a pass behind it when we resolve after
+    // measuring. Not inferable from `lp.width`: MATCH_CONSTRAINT is 0, as is a resolved zero.
+    private val resolvedFrameWidths = SparseArray<Int>()
+    // Declared size paired with the view it was declared on, for the length-basis walk. Keyed off
+    // the item rather than the frame: the frame's params are ours to rewrite during measurement,
+    // while the declaration never changes.
+    private val itemDeclarations = mutableListOf<Pair<Size, View>>()
 
     init {
         clipChildren = true
@@ -102,16 +114,17 @@ internal class ContainerLayoutView(
 
         frameShouldIgnoreSafeArea.put(frameId, info.ignoreSafeArea)
         frameMargins.put(frameId, info.margin ?: Margin.NONE)
+        itemDeclarations.add(info.size to itemView)
 
-        // Track items that need the 2-pass height fix (percent width + auto height + ratio).
+        // Track items that need the 2-pass height fix (percent width + auto height + ratio). Their
+        // width is still a percentage of us like any other, so they also go through the percent
+        // solve below — only the height is ours to derive.
         val size = info.size
         if (size.aspectRatio != null && size.height.isAuto && size.width.isPercent) {
             frameHeightRatios.put(frameId, size.aspectRatio)
-        } else {
-            // Ratio items derive their percent width through the fix above; don't resolve twice.
-            if (size.width.isPercent) framePercentWidths.put(frameId, size.width.getFloat())
-            if (size.height.isPercent) framePercentHeights.put(frameId, size.height.getFloat())
         }
+        if (size.width.isPercent) framePercentWidths.put(frameId, size.width.getFloat())
+        if (size.height.isPercent) framePercentHeights.put(frameId, size.height.getFloat())
     }
 
     private var isAutoWidth = false
@@ -120,9 +133,29 @@ internal class ContainerLayoutView(
     override fun isAutoSized(horizontal: Boolean): Boolean =
         if (horizontal) isAutoWidth else isAutoHeight
 
+    /**
+     * Whether any item gives [horizontal] a length of its own, rather than a share of ours.
+     *
+     * Answered from the declarations, so a stack above us can tell whether we could ever supply the
+     * length its percentages need. Auto defers to the content, so the question passes down.
+     */
+    override fun establishesLength(horizontal: Boolean): Boolean =
+        itemDeclarations.any { (size, view) ->
+            if (view.visibility == GONE) return@any false
+
+            val dimension = if (horizontal) size.width else size.height
+            when {
+                dimension.isPercent -> false
+                dimension.isAuto -> view.establishesLength(horizontal)
+                else -> true
+            }
+        }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
+
+        resolvedFrameWidths.clear()
 
         // Recorded before any child is measured, since that's when they ask. A fixed container is
         // a real ceiling and stops the search here; an auto one is only passing slack through.
@@ -162,8 +195,17 @@ internal class ContainerLayoutView(
         // ...and we can only resolve when one of those two panned out. With neither, percent items
         // keep the content size they measure below, matching iOS, where a percent with no parent
         // size to work from falls back to auto rather than collapsing.
-        val resolveWidths = autoWidths && (widthMode == MeasureSpec.AT_MOST || borrowedWidth > 0)
-        val resolveHeights = autoHeights && (heightMode == MeasureSpec.AT_MOST || borrowedHeight > 0)
+        //
+        // A borrowed viewport is a real length and settles the axis on its own. An `AT_MOST` only
+        // tells us how much room we have, so it takes a non-percent item to give the axis a size
+        // worth taking a percentage of. Without one the base would be 0 and every item would
+        // collapse — the same shape the stacks now fall back to content on.
+        val resolveWidths = autoWidths &&
+                (borrowedWidth > 0 ||
+                        (widthMode == MeasureSpec.AT_MOST && establishesLength(horizontal = true)))
+        val resolveHeights = autoHeights &&
+                (borrowedHeight > 0 ||
+                        (heightMode == MeasureSpec.AT_MOST && establishesLength(horizontal = false)))
 
         if (frameHeightRatios.size() == 0 && !autoWidths && !autoHeights) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
@@ -179,12 +221,14 @@ internal class ContainerLayoutView(
             forEachFrame(framePercentHeights) { it.height = ViewGroup.LayoutParams.WRAP_CONTENT }
         }
 
-        // Ratio items: MATCH_CONSTRAINT width (so constrainPercentWidth applies) + WRAP_CONTENT
-        // height (so ratio + MATCH_CONSTRAINT height doesn't corrupt the width measurement).
+        // Ratio items measure at WRAP_CONTENT height so the `"H,ratio:1"` the constraint set left on
+        // them can't resolve: with a MATCH_CONSTRAINT dimension ConstraintLayout derives the *width*
+        // from the container height, which ignores both the declared percent and our width. The
+        // width comes from the percent solve like any other item, and the height from the ratio
+        // pass below.
         for (i in 0 until frameHeightRatios.size()) {
             val frame = findViewById<View>(frameHeightRatios.keyAt(i)) ?: continue
             val lp = frame.layoutParams as ConstraintLayout.LayoutParams
-            lp.width = ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
             lp.height = ViewGroup.LayoutParams.WRAP_CONTENT
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
@@ -211,7 +255,10 @@ internal class ContainerLayoutView(
             val frame = findViewById<View>(frameId) ?: continue
             val lp = frame.layoutParams as ConstraintLayout.LayoutParams
 
-            val naturalW = frame.measuredWidth
+            // The solved width when there was one, otherwise whatever the item measured to without
+            // one — the same fallback a percent item with no ratio gets here, so the two agree.
+            val naturalW = resolvedFrameWidths.get(frameId, NO_RESOLVED_WIDTH)
+                .takeIf { it != NO_RESOLVED_WIDTH } ?: frame.measuredWidth
             val naturalH = (naturalW / ratio).roundToInt()
 
             val (correctW, correctH) = if (heightMode == MeasureSpec.EXACTLY && naturalH > containerH) {
@@ -289,6 +336,8 @@ internal class ContainerLayoutView(
             val resolved = (minOf((percents.valueAt(i) * base).toInt(), base) - margins)
                 .coerceAtLeast(0)
 
+            if (horizontal) resolvedFrameWidths.put(percents.keyAt(i), resolved)
+
             if (horizontal && lp.width != resolved) {
                 lp.width = resolved
                 changed = true
@@ -342,5 +391,10 @@ internal class ContainerLayoutView(
             }
             return applied.inset(insets)
         }
+    }
+
+    private companion object {
+        /** `SparseArray` default for "the percent solve didn't run for this frame". */
+        const val NO_RESOLVED_WIDTH = -1
     }
 }
