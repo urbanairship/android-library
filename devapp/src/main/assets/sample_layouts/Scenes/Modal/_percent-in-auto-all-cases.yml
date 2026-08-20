@@ -2210,6 +2210,70 @@ view:
       position:
         horizontal: center
         vertical: center
+
+    # Page navigation. A second container item rather than a row above or below the pager, so the
+    # pager keeps the whole container to size against — these pages are sizing test cases and a
+    # stack around them would change the length they measure against. Overlaid bottom centre.
+    - size:
+        width: auto
+        height: auto
+      position:
+        horizontal: center
+        vertical: bottom
+      margin:
+        bottom: 8
+      view:
+        type: linear_layout
+        direction: horizontal
+        items:
+        - size:
+            width: auto
+            height: auto
+          margin:
+            end: 8
+          view:
+            type: label_button
+            identifier: nav-back
+            actions: {}
+            button_click:
+            - pager_previous
+            label:
+              type: label
+              text: "  ‹ Back  "
+              text_appearance:
+                font_size: 14
+                alignment: center
+                color:
+                  default:
+                    hex: "#ffffff"
+                    alpha: 1
+            background_color:
+              default:
+                hex: "#222222"
+                alpha: 0.85
+        - size:
+            width: auto
+            height: auto
+          view:
+            type: label_button
+            identifier: nav-next
+            actions: {}
+            button_click:
+            - pager_next
+            label:
+              type: label
+              text: "  Next ›  "
+              text_appearance:
+                font_size: 14
+                alignment: center
+                color:
+                  default:
+                    hex: "#ffffff"
+                    alpha: 1
+            background_color:
+              default:
+                hex: "#222222"
+                alpha: 0.85
     background_color:
       default:
         hex: "#ffffff"
