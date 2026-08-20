@@ -100,13 +100,10 @@ internal class ContactApiClient (
                 LOCALE_LANGUAGE to locale.language,
                 LOCALE_COUNTRY to locale.country,
 
-                COMMERCIAL_OPTED_IN_KEY to options.commercialOptedIn?.let {
-                    DateUtils.createIso8601TimeStamp(it)
-                },
+                COMMERCIAL_OPTED_IN_KEY to options.commercialOptedIn.optInTimestamp(),
 
-                TRANSACTIONAL_OPTED_IN_KEY to options.transactionalOptedIn?.let {
-                    DateUtils.createIso8601TimeStamp(it)
-                }), OPT_IN_MODE_KEY to options.isDoubleOptIn.let {
+                TRANSACTIONAL_OPTED_IN_KEY to options.transactionalOptedIn.optInTimestamp()
+                ), OPT_IN_MODE_KEY to options.isDoubleOptIn.let {
                 if (options.isDoubleOptIn) {
                     OPT_IN_DOUBLE
                 } else {
@@ -526,6 +523,17 @@ internal class ContactApiClient (
         )
     }
 }
+
+/**
+ * The opt-in date as an ISO 8601 timestamp, or `null` if it is unset or at/before the epoch.
+ *
+ * Before these dates were nullable, "unset" was encoded as a non-positive number and this path
+ * filtered on `> 0`. Keep dropping non-positive dates, so an opt-in dated at or before the epoch
+ * cannot register a channel as opted in.
+ */
+private fun Instant?.optInTimestamp(): String? = this
+    ?.takeIf { it.isAfter(Instant.EPOCH) }
+    ?.let(DateUtils::createIso8601TimeStamp)
 
 private fun List<TagGroupsMutation>.tagsPayload(): JsonMap? {
     val add = mutableMapOf<String, MutableSet<String>>()

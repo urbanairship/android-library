@@ -30,6 +30,7 @@ import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.junit.Assert.assertFalse
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -301,6 +302,28 @@ public class ContactApiClientTest {
             )
         )
         assertEquals(expectedUpdateRequest, requestSession.requests[1])
+    }
+
+    /**
+     * A non-positive opt-in date was the legacy "unset" sentinel and was never uploaded. It must
+     * still be dropped, so a channel cannot register as opted in dated at or before the epoch.
+     */
+    @Test
+    public fun testRegisterEmailDropsEpochOptIn(): TestResult = runTest {
+        requestSession.addResponse(200, "{ \"ok\": true, \"channel_id\": \"fake_channel_id\"}")
+        requestSession.addResponse(200)
+
+        val options = EmailRegistrationOptions.commercialOptions(
+            commercialOptedIn = Instant.EPOCH,
+            transactionalOptedIn = Instant.EPOCH
+        )
+
+        client.registerEmail(fakeContactId, fakeEmail, options, LocaleCompat.of("en", "US"))
+
+        val channel = (requestSession.requests[0].body as RequestBody.Json)
+            .json.optMap().opt("channel").optMap()
+        assertFalse(channel.containsKey("commercial_opted_in"))
+        assertFalse(channel.containsKey("transactional_opted_in"))
     }
 
     @Test
