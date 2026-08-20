@@ -27,12 +27,6 @@ internal class LinearLayoutModel(
     override fun establishesLength(direction: Direction): Boolean =
         items.any { it.establishesLength(direction) }
 
-    /**
-     * Whether this layout would have nothing to size itself by, were it asked to size itself by its
-     * children. Read by the parent, which knows whether it declared this item `auto`.
-     */
-    internal fun collapses(direction: Direction): Boolean =
-        items.isNotEmpty() && items.none { it.establishesLength(direction) }
 
     data class Item(
         val info: LinearLayoutItemInfo, val model: AnyModel
