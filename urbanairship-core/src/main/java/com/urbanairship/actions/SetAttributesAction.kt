@@ -16,7 +16,6 @@ import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonMap
 import java.time.Instant
 import java.util.Date
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**

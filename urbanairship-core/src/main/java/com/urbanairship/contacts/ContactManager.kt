@@ -32,7 +32,6 @@ import com.urbanairship.util.minus
 import com.urbanairship.util.plus
 import java.time.Instant
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.time.Duration

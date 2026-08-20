@@ -9,7 +9,6 @@ import com.urbanairship.analytics.Event
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.FormatterUtils.toSecondsString
 import java.nio.charset.StandardCharsets
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Representation of an [Event] for persistent storage via Room.

@@ -17,8 +17,6 @@ import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
 import com.urbanairship.util.minus
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

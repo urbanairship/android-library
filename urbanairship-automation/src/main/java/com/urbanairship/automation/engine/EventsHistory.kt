@@ -3,7 +3,6 @@ package com.urbanairship.automation.engine
 import com.urbanairship.util.Clock
 import com.urbanairship.util.minus
 import java.time.Instant
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update

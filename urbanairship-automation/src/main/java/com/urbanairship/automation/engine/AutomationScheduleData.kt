@@ -9,7 +9,6 @@ import java.time.Instant
 import java.util.Objects
 import java.util.UUID
 import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.milliseconds
 import org.jetbrains.annotations.VisibleForTesting
 
 internal class AutomationScheduleData(

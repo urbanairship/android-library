@@ -18,7 +18,6 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.widget.TappableView
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch

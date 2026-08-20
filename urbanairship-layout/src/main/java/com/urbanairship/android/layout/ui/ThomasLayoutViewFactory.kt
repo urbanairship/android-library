@@ -23,7 +23,6 @@ import com.urbanairship.android.layout.property.EmbeddedPlacement
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.util.getActivity
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 

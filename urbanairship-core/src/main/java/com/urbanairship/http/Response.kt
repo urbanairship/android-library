@@ -11,7 +11,6 @@ import com.urbanairship.util.UAHttpStatusUtil
 import com.urbanairship.util.minus
 import com.urbanairship.util.plus
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**

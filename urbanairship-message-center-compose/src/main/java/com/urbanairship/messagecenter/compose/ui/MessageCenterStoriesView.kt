@@ -40,7 +40,6 @@ import com.urbanairship.messagecenter.compose.ui.MessageCenterStoriesListViewMod
 import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
 import java.time.Instant
-import java.util.Date
 import com.skydoves.landscapist.ImageOptions
 import com.skydoves.landscapist.glide.GlideImage
 import com.urbanairship.messagecenter.core.R as McCoreR

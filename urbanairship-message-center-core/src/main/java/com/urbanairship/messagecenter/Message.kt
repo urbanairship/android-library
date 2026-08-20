@@ -12,7 +12,6 @@ import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 import com.urbanairship.util.DateUtils
 import java.time.Instant
-import java.util.Date
 import java.util.Objects
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize

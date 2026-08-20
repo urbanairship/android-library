@@ -5,7 +5,6 @@ package com.urbanairship.util
 import com.urbanairship.AirshipDispatchers
 import java.util.UUID
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher

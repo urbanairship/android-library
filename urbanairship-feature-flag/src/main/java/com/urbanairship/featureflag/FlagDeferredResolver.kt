@@ -20,7 +20,6 @@ import com.urbanairship.util.minus
 import com.urbanairship.util.plus
 import java.time.Instant
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred

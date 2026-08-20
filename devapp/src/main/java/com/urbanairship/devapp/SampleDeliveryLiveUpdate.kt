@@ -21,7 +21,6 @@ import com.urbanairship.liveupdate.LiveUpdate
 import com.urbanairship.liveupdate.LiveUpdateEvent
 import com.urbanairship.util.PendingIntentCompat
 import java.time.Instant
-import java.util.Date
 import com.bumptech.glide.Glide
 
 class SampleDeliveryLiveUpdate : CallbackLiveUpdateNotificationHandler {

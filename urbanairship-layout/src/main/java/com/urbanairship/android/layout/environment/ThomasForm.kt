@@ -16,7 +16,6 @@ import com.urbanairship.util.TaskSleeper
 import com.urbanairship.util.minus
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope

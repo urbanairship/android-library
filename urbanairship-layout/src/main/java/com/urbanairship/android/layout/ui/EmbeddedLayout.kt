@@ -40,7 +40,6 @@ import java.lang.ref.WeakReference
 import java.time.Instant
 import java.util.Objects
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job

@@ -17,7 +17,6 @@ import com.urbanairship.util.minus
 import com.urbanairship.util.plus
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob

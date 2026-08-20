@@ -11,7 +11,6 @@ import com.urbanairship.android.layout.info.WebViewInfo
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.view.WebViewView
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.launch
 
 internal class WebViewModel(

@@ -18,7 +18,6 @@ import com.urbanairship.util.Clock
 import com.urbanairship.util.plus
 import java.time.Instant
 import java.util.Locale
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 import kotlin.time.Duration

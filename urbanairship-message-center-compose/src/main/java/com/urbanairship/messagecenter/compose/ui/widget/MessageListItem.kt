@@ -36,7 +36,6 @@ import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
 import com.urbanairship.messagecenter.compose.ui.MessageCenterListViewModel.Action
 import java.text.DateFormat
 import java.time.Instant
-import java.util.Date
 import com.skydoves.landscapist.glide.GlideImage
 import com.urbanairship.R as CoreR
 import com.urbanairship.messagecenter.core.R as McCoreR

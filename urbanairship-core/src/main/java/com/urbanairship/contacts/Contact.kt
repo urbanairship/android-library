@@ -38,9 +38,7 @@ import com.urbanairship.util.Clock
 import com.urbanairship.util.minus
 import com.urbanairship.util.plus
 import java.time.Instant
-import java.util.concurrent.TimeUnit
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
