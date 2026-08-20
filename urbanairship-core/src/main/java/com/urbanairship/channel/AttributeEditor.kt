@@ -13,7 +13,6 @@ import com.urbanairship.util.plus
 import java.time.Instant
 import java.util.Date
 import kotlin.time.Duration.Companion.days
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Interface used for modifying attributes.
@@ -181,6 +180,9 @@ public abstract class AttributeEditor protected constructor(private val clock: C
      * expiration — the only way to say "no expiration" here — ambiguous to resolve. Callers
      * with a `Date` should pass `date.toInstant()`.
      *
+     * `@JvmOverloads` keeps `setAttribute(String, String, JsonMap)` available to Java. With
+     * the `Date?` overload gone, the generated three-argument form no longer clashes.
+     *
      * @param attribute The attribute.
      * @param instanceId The instance identifier.
      * @param expiration The optional expiration.
@@ -192,6 +194,7 @@ public abstract class AttributeEditor protected constructor(private val clock: C
      *  - The payload is empty or contains a reserved key `exp`.
      */
     @Throws(IllegalArgumentException::class)
+    @JvmOverloads
     public fun setAttribute(
         @Size(min = 1) attribute: String,
         @Size(min = 1) instanceId: String,

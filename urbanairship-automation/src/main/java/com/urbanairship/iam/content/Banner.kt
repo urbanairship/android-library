@@ -129,11 +129,11 @@ public class Banner @VisibleForTesting internal constructor(
      * equivalent using `long` milliseconds. [duration] remains the source of truth.
      *
      * Java must pass every argument, as Kotlin default values are not available across the
-     * `@JvmName` boundary. Hidden from Kotlin, which should use [copy]: a second `copy` taking
-     * a bare `Long` in the duration position is the ambiguity this typing exists to remove.
+     * `@JvmName` boundary. Kotlin callers should use [copy]; this cannot be hidden from Kotlin,
+     * as `@Deprecated(HIDDEN)` marks the method `ACC_SYNTHETIC` and Java cannot reference a
+     * synthetic member, which would leave Java with no way to set the duration at all.
      */
     @JvmName("copy")
-    @Deprecated("Java-only. Kotlin callers should use copy().", level = DeprecationLevel.HIDDEN)
     public fun copyWithDurationMs(
         heading: InAppMessageTextInfo? = this.heading,
         body: InAppMessageTextInfo? = this.body,
