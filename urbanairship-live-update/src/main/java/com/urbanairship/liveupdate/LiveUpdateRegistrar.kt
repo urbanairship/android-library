@@ -44,7 +44,7 @@ internal class LiveUpdateRegistrar(
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO,
     private val processor: LiveUpdateProcessor = LiveUpdateProcessor(dao),
     private val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(context),
-    private val notificationTimeoutCompat: NotificationTimeoutCompat = NotificationTimeoutCompat(context),
+    private val notificationTimeoutCompat: NotificationTimeoutCompat = NotificationTimeoutCompat(),
 ) {
     private val job = SupervisorJob()
     private val scope: CoroutineScope = CoroutineScope(dispatcher + job)
@@ -264,7 +264,7 @@ internal class LiveUpdateRegistrar(
     ): NotificationResult? {
         // Set dismissal time on the notification, if the live update specifies one.
         update.dismissalTime?.let { dismissalTime ->
-            notificationTimeoutCompat.setTimeoutAt(builder, dismissalTime, update.name)
+            notificationTimeoutCompat.setTimeoutAt(builder, dismissalTime)
         }
 
         val notification = builder.build()
