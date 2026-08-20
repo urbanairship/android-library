@@ -27,12 +27,6 @@ internal class ContainerLayoutModel(
     override fun establishesLength(direction: Direction): Boolean =
         items.any { it.establishesLength(direction) }
 
-    /**
-     * Per direction, unlike a stack: a container overlays its items rather than summing them, so
-     * width and height are settled independently and one can collapse while the other doesn't.
-     */
-    internal fun collapses(direction: Direction): Boolean =
-        items.isNotEmpty() && items.none { it.establishesLength(direction) }
 
     data class Item(
         val info: ContainerLayoutItemInfo,
