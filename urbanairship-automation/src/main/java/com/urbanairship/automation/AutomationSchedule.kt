@@ -16,6 +16,7 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonList
+import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.VersionUtils
 import java.time.Instant
@@ -98,7 +99,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     internal val reportingContext: JsonValue? = null,
     internal val productId: String? = null,
     internal val minSDKVersion: String? = null,
-    internal val created: Instant = Instant.now(),
+    internal val created: Instant = Clock.DEFAULT_CLOCK.now(),
     internal val queue: String? = null,
     internal val additionalAudienceCheckOverrides: AdditionalAudienceCheckOverrides? = null,
     internal val sendMetadata: String? = null

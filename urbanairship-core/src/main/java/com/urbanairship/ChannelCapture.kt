@@ -11,6 +11,7 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.channel.AirshipChannel
+import com.urbanairship.util.Clock
 import com.urbanairship.util.plus
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
@@ -87,7 +88,7 @@ public class ChannelCapture @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public c
      * @return `true` if there is a knock, otherwise return `false`.
      */
     private fun checkKnock(): Boolean {
-        val currentTime = Instant.now()
+        val currentTime = Clock.DEFAULT_CLOCK.now()
 
         return !knockTimes.any { it + KNOCKS_MAX_TIME < currentTime }
     }

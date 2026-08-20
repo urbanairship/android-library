@@ -10,6 +10,7 @@ import androidx.annotation.MainThread
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import com.urbanairship.Predicate
+import com.urbanairship.util.Clock
 import com.urbanairship.util.plus
 import java.time.Instant
 import java.util.Collections
@@ -66,7 +67,7 @@ public class GlobalActivityMonitor @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) c
                 if (!isAppForegrounded) {
                     isAppForegrounded = true
                     _foregroundState.value = true
-                    forwardingApplicationListener.onForeground(Instant.now())
+                    forwardingApplicationListener.onForeground(Clock.DEFAULT_CLOCK.now())
                 }
                 super.onActivityStarted(activity)
             }
@@ -76,7 +77,7 @@ public class GlobalActivityMonitor @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) c
                     startedActivities--
                 }
                 if (startedActivities == 0 && isAppForegrounded) {
-                    backgroundTime = Instant.now() + BACKGROUND_DELAY
+                    backgroundTime = Clock.DEFAULT_CLOCK.now() + BACKGROUND_DELAY
                     handler.postDelayed(backgroundRunnable, BACKGROUND_DELAY.inWholeMilliseconds)
                 }
                 super.onActivityStopped(activity)

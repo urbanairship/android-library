@@ -23,6 +23,7 @@ import com.urbanairship.liveupdate.notification.NotificationTimeoutCompat
 import com.urbanairship.push.NotificationProxyActivity
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
+import com.urbanairship.util.Clock
 import com.urbanairship.util.PendingIntentCompat
 import java.time.Instant
 import java.util.UUID
@@ -130,12 +131,12 @@ internal class LiveUpdateRegistrar(
         )
     )
 
-    fun cancel(name: String, timestamp: Instant = Instant.now()) =
+    fun cancel(name: String, timestamp: Instant = Clock.DEFAULT_CLOCK.now()) =
         processor.enqueue(
             Operation.Cancel(name = name, timestamp = timestamp)
         )
 
-    fun clearAll(timestamp: Instant = Instant.now()) =
+    fun clearAll(timestamp: Instant = Clock.DEFAULT_CLOCK.now()) =
         processor.enqueue(
             Operation.ClearAll(timestamp = timestamp)
         )
@@ -244,7 +245,7 @@ internal class LiveUpdateRegistrar(
                     return postNotification(context, update, result.value, result.extender, message)
                 }
                 is LiveUpdateResult.Cancel -> {
-                    stop(update.name, update.content, Instant.now(), null, message)
+                    stop(update.name, update.content, Clock.DEFAULT_CLOCK.now(), null, message)
                     cancelNotification(update.notificationTag)
                 }
             }
@@ -253,7 +254,7 @@ internal class LiveUpdateRegistrar(
                     // No-op. Custom handlers are responsible doing something with the update.
                 }
                 is LiveUpdateResult.Cancel -> {
-                    stop(update.name, update.content, Instant.now(), null, null)
+                    stop(update.name, update.content, Clock.DEFAULT_CLOCK.now(), null, null)
                 }
             }
         }
