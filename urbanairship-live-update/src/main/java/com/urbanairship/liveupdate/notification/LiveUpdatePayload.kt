@@ -24,9 +24,9 @@ internal data class LiveUpdatePayload(
     val event: LiveUpdateEvent,
     /** Live Update type. */
     val type: String?,
-    /** Scheduled dismiss date, in ms. */
+    /** Scheduled dismiss date. Encoded in the payload as epoch seconds. */
     val dismissalDate: Instant?,
-    /** The timestamp for this update, in ms. */
+    /** The timestamp for this update. Encoded in the payload as epoch seconds. */
     val timestamp: Instant,
     /** Live Update content. */
     val content: JsonMap

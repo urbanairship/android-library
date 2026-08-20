@@ -12,6 +12,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
 import kotlin.time.toDuration
 
@@ -72,17 +73,19 @@ public class BannerPresentation public constructor(
 
         /**
          * Returns the duration for [key], interpreting the stored number in [unit], or `null`
-         * if the field is absent or unusable (non-numeric or not positive).
+         * if the field is absent or unusable (non-numeric, or under a millisecond).
          *
          * Deliberately lenient: a bad duration means "do not auto-dismiss" rather than a failure
          * to parse the whole layout.
          */
         private fun JsonMap.optionalDuration(key: String, unit: DurationUnit): Duration? {
             val value = this[key] ?: return null
-            // takeIf { isFinite() }: toDuration throws on NaN, and an infinite duration is
-            // not a meaningful auto-dismiss.
+            // takeIf { isFinite() }: toDuration throws on NaN, and an infinite duration is not a
+            // meaningful auto-dismiss. The floor is a millisecond rather than zero because the
+            // value used to be truncated to whole milliseconds before being checked, so a
+            // sub-millisecond duration read as unusable and fell through to the other key.
             val duration = value.getDouble(0.0).takeIf { it.isFinite() }?.toDuration(unit)
-            if (duration == null || duration <= Duration.ZERO) {
+            if (duration == null || duration < 1.milliseconds) {
                 UALog.w { "Ignoring banner '$key'! Expected a positive number, got: $value" }
                 return null
             }
