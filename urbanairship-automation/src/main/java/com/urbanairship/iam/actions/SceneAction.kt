@@ -86,7 +86,7 @@ internal class SceneAction(
             bypassHoldoutGroups = true,
             productId = PRODUCT_ID,
             queue = QUEUE,
-            created = clock.currentTimeMillis().toULong(),
+            created = clock.now(),
             sendMetadata = pushMessage?.metadata
         )
 

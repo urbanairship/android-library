@@ -134,7 +134,7 @@ public class ExperimentManager internal constructor(
                 .flatten()
                 .map { it.optMap() }
                 .mapNotNull(Experiment::fromJson)
-                .filter { it.isActive(clock.currentTimeMillis()) }
+                .filter { it.isActive(clock.now()) }
                 .filter { experiment ->
                     !(experiment.exclusions.any { it.evaluate(messageInfo) })
                 }

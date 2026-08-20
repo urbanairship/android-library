@@ -2,9 +2,18 @@
 
 package com.urbanairship.util
 
+import androidx.annotation.RestrictTo
+import java.time.Instant
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.Duration
 
+/**
+ * A list of values that each expire after a given duration.
+ *
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class CachedList<T>(private val clock: Clock = Clock.DEFAULT_CLOCK) {
     private val lock = ReentrantLock()
     private val entries = mutableListOf<Entry<T>>()
@@ -17,16 +26,16 @@ public class CachedList<T>(private val clock: Clock = Clock.DEFAULT_CLOCK) {
     }
 
     private fun trim() {
-        val cutOff = clock.currentTimeMillis()
+        val cutOff = clock.now()
         entries.removeAll { entry ->
-            cutOff >= entry.expiration
+            !cutOff.isBefore(entry.expiration)
         }
     }
 
-    public fun append(value: T, expiresInMilliseconds: Long) {
+    public fun append(value: T, expiresIn: Duration) {
         val entry = Entry(
             value = value,
-            expiration = clock.currentTimeMillis() + expiresInMilliseconds
+            expiration = clock.now() + expiresIn
         )
 
         lock.withLock {
@@ -35,5 +44,5 @@ public class CachedList<T>(private val clock: Clock = Clock.DEFAULT_CLOCK) {
         }
     }
 
-    private data class Entry<T>(val value: T, val expiration: Long)
+    private data class Entry<T>(val value: T, val expiration: Instant)
 }

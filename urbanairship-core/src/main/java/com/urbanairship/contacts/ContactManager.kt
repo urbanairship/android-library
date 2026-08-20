@@ -20,6 +20,7 @@ import com.urbanairship.job.JobInfo.ConflictStrategy
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireEpochMillis
 import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonList
 import com.urbanairship.json.tryParse
@@ -27,10 +28,13 @@ import com.urbanairship.locale.LocaleManager
 import com.urbanairship.util.CachedValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.SerialQueue
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
@@ -65,7 +69,7 @@ internal class ContactManager(
     private val identifyOperationQueue = SerialQueue()
     private val operationLock: ReentrantLock = ReentrantLock()
     private val identityLock: ReentrantLock = ReentrantLock()
-    private var lastIdentifyTimeMs: Long = 0
+    private var lastIdentifyTime: Instant = Instant.EPOCH
 
     private val _contactIdUpdates: MutableStateFlow<ContactIdUpdate?> = MutableStateFlow(null)
     val contactIdUpdates: StateFlow<ContactIdUpdate?> = _contactIdUpdates.asStateFlow()
@@ -160,7 +164,7 @@ internal class ContactManager(
                 contactId = lastIdentity.contactId,
                 namedUserId = lastIdentity.namedUserId,
                 isStable = isStable,
-                resolveDateMs = lastIdentity.resolveDateMs ?: 0
+                resolveDate = lastIdentity.resolveDate ?: Instant.EPOCH
             )
         }
 
@@ -190,7 +194,7 @@ internal class ContactManager(
             if (!preferenceStore.isSet(OPERATION_ENTRIES_KEY)) {
                 val operations = json.optList()
                     .tryParse(logError = true) { list -> list.map { ContactOperation.fromJson(it) } }
-                operations?.map { OperationEntry(clock.currentTimeMillis(), it) }?.let {
+                operations?.map { OperationEntry(clock.now(), it) }?.let {
                     this.operations = it
                 }
             }
@@ -219,10 +223,10 @@ internal class ContactManager(
         }
     }
 
-    internal suspend fun stableContactIdUpdate(minResolveDate: Long = 0): ContactIdUpdate {
+    internal suspend fun stableContactIdUpdate(minResolveDate: Instant = Instant.EPOCH): ContactIdUpdate {
         return contactIdUpdates.mapNotNull { it }
                 .first {
-                    it.isStable && it.resolveDateMs >= minResolveDate
+                    it.isStable && it.resolveDate >= minResolveDate
                 }
     }
 
@@ -235,7 +239,7 @@ internal class ContactManager(
     internal fun addOperation(operation: ContactOperation) {
         operationLock.withLock {
             val operations = this.operations.toMutableList()
-            operations.add(OperationEntry(clock.currentTimeMillis(), operation))
+            operations.add(OperationEntry(clock.now(), operation))
             this.operations = operations
         }
 
@@ -273,7 +277,7 @@ internal class ContactManager(
                         contactId = UUID.randomUUID().toString(),
                         isAnonymous = true,
                         namedUserId = null,
-                        resolveDateMs = this.clock.currentTimeMillis()
+                        resolveDate = this.clock.now()
                 )
                 addOperation(ContactOperation.Resolve)
             }
@@ -523,7 +527,7 @@ internal class ContactManager(
         if (auth == null || auth.identifier != lastContactId) {
             return null
         }
-        if (clock.currentTimeMillis() > auth.expirationDateMillis - 30000) {
+        if (clock.now() > auth.expiration - 30.seconds) {
             return null
         }
         return auth.token
@@ -555,8 +559,8 @@ internal class ContactManager(
             }
 
             is ContactOperation.Verify -> {
-                val lastResolveDateMs = lastContactIdentity?.resolveDateMs
-                return lastResolveDateMs != null && operation.dateMs <= lastResolveDateMs
+                val lastResolveDate = lastContactIdentity?.resolveDate
+                return lastResolveDate != null && operation.date <= lastResolveDate
             }
 
             else -> false
@@ -644,15 +648,15 @@ internal class ContactManager(
 
     private suspend fun doIdentify(operation: suspend () -> Boolean): Boolean {
         return identifyOperationQueue.run {
-            val rateLimit = lastIdentifyTimeMs + TimeUnit.SECONDS.toMillis(5) - Clock.DEFAULT_CLOCK.currentTimeMillis()
-            if (rateLimit > 0) {
+            val rateLimit = lastIdentifyTime + 5.seconds - Clock.DEFAULT_CLOCK.now()
+            if (rateLimit > Duration.ZERO) {
                 delay(rateLimit)
             }
 
             delay(200)
 
             val result = operation()
-            lastIdentifyTimeMs = Clock.DEFAULT_CLOCK.currentTimeMillis()
+            lastIdentifyTime = Clock.DEFAULT_CLOCK.now()
             result
         }
     }
@@ -857,9 +861,9 @@ internal class ContactManager(
     ) {
         identityLock.withLock {
             val auth = AuthToken(
-                result.contactId, result.token, result.tokenExpiryDateMs
+                result.contactId, result.token, result.tokenExpiryDate
             )
-            cachedAuthToken.set(auth, result.tokenExpiryDateMs)
+            cachedAuthToken.set(auth, result.tokenExpiryDate)
 
             val resolvedNamedUser = if (result.contactId == lastContactIdentity?.contactId) {
                 namedUserId ?: lastContactIdentity?.namedUserId
@@ -871,7 +875,7 @@ internal class ContactManager(
                     contactId = result.contactId,
                     isAnonymous = result.isAnonymous,
                     namedUserId = resolvedNamedUser,
-                    resolveDateMs = this.clock.currentTimeMillis()
+                    resolveDate = this.clock.now()
             )
 
             // Conflict
@@ -901,7 +905,7 @@ internal class ContactManager(
             if (this.lastContactIdentity != null && contactIdentity.contactId != this.lastContactIdentity?.contactId && isResolve) {
                 this.operationLock.withLock {
                     this.operations = this.operations.filter { operation ->
-                        result.channelAssociatedDateMs < operation.dateMillis
+                        result.channelAssociatedDate < operation.date
                     }
                 }
             }
@@ -987,18 +991,18 @@ internal class ContactManager(
     private data class OperationGroup(val operations: List<OperationEntry>, val merged: ContactOperation)
 
     private data class OperationEntry(
-        val dateMillis: Long,
+        val date: Instant,
         val operation: ContactOperation,
         val identifier: String = UUID.randomUUID().toString()
     ) : JsonSerializable {
         constructor(jsonValue: JsonValue) : this(
-            jsonValue.requireMap().requireField("timestamp"),
+            jsonValue.requireMap().requireEpochMillis("timestamp"),
             ContactOperation.fromJson(jsonValue.requireMap().require("operation")),
             jsonValue.requireMap().requireField("identifier")
         )
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
-            "timestamp" to dateMillis,
+            "timestamp" to date.toEpochMilli(),
             "operation" to operation,
             "identifier" to identifier
         ).toJsonValue()

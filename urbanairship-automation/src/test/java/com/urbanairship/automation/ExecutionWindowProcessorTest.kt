@@ -8,7 +8,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.util.TaskSleeper
-import java.util.Date
+import java.time.Instant
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.seconds
 import io.mockk.coEvery
@@ -41,7 +41,7 @@ private typealias EvaluationClosure = () -> ExecutionWindowResult
 public class ExecutionWindowProcessorTest {
 
     private val context: Context = ApplicationProvider.getApplicationContext()
-    private val clock = TestClock().apply { currentTimeMillis = 0 }
+    private val clock = TestClock().apply { currentTime = Instant.ofEpochMilli(0) }
 
     private val sleeper: TaskSleeper = mockk()
 
@@ -50,7 +50,7 @@ public class ExecutionWindowProcessorTest {
     )
     private lateinit var processor: ExecutionWindowProcessor
 
-    private val evaluatedWindows = MutableStateFlow<List<Pair<Date, ExecutionWindow>>>(emptyList())
+    private val evaluatedWindows = MutableStateFlow<List<Pair<Instant, ExecutionWindow>>>(emptyList())
     private val onResult = MutableStateFlow<EvaluationClosure?>(null)
 
     private val testDispatcher = StandardTestDispatcher()
@@ -87,7 +87,7 @@ public class ExecutionWindowProcessorTest {
         onResult.update { { ExecutionWindowResult.Now } }
         assertTrue(processor.isActive(window))
 
-        val evaluated = Pair(Date(clock.currentTimeMillis), window)
+        val evaluated = Pair(clock.currentTime, window)
         assertEquals(evaluatedWindows.value, listOf(evaluated, evaluated, evaluated))
     }
 
@@ -107,7 +107,7 @@ public class ExecutionWindowProcessorTest {
 
         coVerify { sleeper.sleep(1.days) }
 
-        val evaluated = Pair(Date(clock.currentTimeMillis), window)
+        val evaluated = Pair(clock.currentTime, window)
         assertEquals(evaluatedWindows.value, listOf(evaluated))
     }
 
@@ -127,7 +127,7 @@ public class ExecutionWindowProcessorTest {
 
         coVerify { sleeper.sleep(100.seconds) }
 
-        val evaluated = Pair(Date(clock.currentTimeMillis), window)
+        val evaluated = Pair(clock.currentTime, window)
         assertEquals(evaluatedWindows.value, listOf(evaluated))
     }
 
@@ -139,7 +139,7 @@ public class ExecutionWindowProcessorTest {
             processor.process(window)
         }
 
-        val evaluated = Pair(Date(clock.currentTimeMillis), window)
+        val evaluated = Pair(clock.currentTime, window)
         assertEquals(evaluatedWindows.value, listOf(evaluated))
     }
 
@@ -168,7 +168,7 @@ public class ExecutionWindowProcessorTest {
 
         coVerify(exactly = 2) { sleeper.sleep(100.seconds) }
 
-        val evaluated = Pair(Date(clock.currentTimeMillis), window)
+        val evaluated = Pair(clock.currentTime, window)
         assertEquals(evaluatedWindows.value, listOf(evaluated, evaluated))
     }
 }

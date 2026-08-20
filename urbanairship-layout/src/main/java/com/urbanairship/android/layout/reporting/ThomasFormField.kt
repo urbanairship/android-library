@@ -14,8 +14,9 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
+import com.urbanairship.util.minus
+import java.time.Instant as JavaInstant
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -324,7 +325,7 @@ public sealed class ThomasFormField<T>(
         private val taskSleeper: TaskSleeper = TaskSleeper.default
     ) {
 
-        private var lastAttemptTimestamp: Long? = null
+        private var lastAttemptTimestamp: JavaInstant? = null
         private var fetchJob: Deferred<PendingResult<T>>? = null
         private var nextBackOff: Duration? = null
 
@@ -390,7 +391,7 @@ public sealed class ThomasFormField<T>(
             val nextBackOff = nextBackOff ?: return
             val lastAttemptTimestamp = lastAttemptTimestamp ?: return
 
-            val remaining = nextBackOff - (clock.currentTimeMillis() - lastAttemptTimestamp).milliseconds
+            val remaining = nextBackOff - (clock.now() - lastAttemptTimestamp)
             if (remaining.isPositive()) {
                 taskSleeper.sleep(remaining)
             }
@@ -398,7 +399,7 @@ public sealed class ThomasFormField<T>(
 
         private fun processResult(result: PendingResult<T>): PendingResult<T> {
             _resultsFlow.update { result }
-            lastAttemptTimestamp = clock.currentTimeMillis()
+            lastAttemptTimestamp = clock.now()
 
             nextBackOff = if (result.isError) {
                 nextBackOff?.let { minOf(it * 2, MAX_BACK_OFF) } ?: INITIAL_BACK_OFF

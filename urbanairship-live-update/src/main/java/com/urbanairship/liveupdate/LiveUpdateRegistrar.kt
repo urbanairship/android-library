@@ -1,6 +1,7 @@
 package com.urbanairship.liveupdate
 
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
@@ -22,7 +23,9 @@ import com.urbanairship.liveupdate.notification.NotificationTimeoutCompat
 import com.urbanairship.push.NotificationProxyActivity
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
+import com.urbanairship.util.Clock
 import com.urbanairship.util.PendingIntentCompat
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import kotlinx.coroutines.CoroutineDispatcher
@@ -74,8 +77,8 @@ internal class LiveUpdateRegistrar(
         name: String,
         type: String,
         content: JsonMap,
-        timestamp: Long,
-        dismissalTimestamp: Long?,
+        timestamp: Instant,
+        dismissalTimestamp: Instant?,
         message: PushMessage? = null
     ) {
         val handler = handlers[type]
@@ -99,8 +102,8 @@ internal class LiveUpdateRegistrar(
     fun update(
         name: String,
         content: JsonMap,
-        timestamp: Long,
-        dismissalTimestamp: Long?,
+        timestamp: Instant,
+        dismissalTimestamp: Instant?,
         message: PushMessage? = null
     ) = processor.enqueue(
         Operation.Update(
@@ -115,8 +118,8 @@ internal class LiveUpdateRegistrar(
     fun stop(
         name: String,
         content: JsonMap?,
-        timestamp: Long,
-        dismissalTimestamp: Long?,
+        timestamp: Instant,
+        dismissalTimestamp: Instant?,
         message: PushMessage? = null
     ) = processor.enqueue(
         Operation.Stop(
@@ -128,12 +131,12 @@ internal class LiveUpdateRegistrar(
         )
     )
 
-    fun cancel(name: String, timestamp: Long = System.currentTimeMillis()) =
+    fun cancel(name: String, timestamp: Instant = Clock.DEFAULT_CLOCK.now()) =
         processor.enqueue(
             Operation.Cancel(name = name, timestamp = timestamp)
         )
 
-    fun clearAll(timestamp: Long = System.currentTimeMillis()) =
+    fun clearAll(timestamp: Instant = Clock.DEFAULT_CLOCK.now()) =
         processor.enqueue(
             Operation.ClearAll(timestamp = timestamp)
         )
@@ -242,7 +245,7 @@ internal class LiveUpdateRegistrar(
                     return postNotification(context, update, result.value, result.extender, message)
                 }
                 is LiveUpdateResult.Cancel -> {
-                    stop(update.name, update.content, System.currentTimeMillis(), null, message)
+                    stop(update.name, update.content, Clock.DEFAULT_CLOCK.now(), null, message)
                     cancelNotification(update.notificationTag)
                 }
             }
@@ -251,7 +254,7 @@ internal class LiveUpdateRegistrar(
                     // No-op. Custom handlers are responsible doing something with the update.
                 }
                 is LiveUpdateResult.Cancel -> {
-                    stop(update.name, update.content, System.currentTimeMillis(), null, null)
+                    stop(update.name, update.content, Clock.DEFAULT_CLOCK.now(), null, null)
                 }
             }
         }
@@ -288,8 +291,11 @@ internal class LiveUpdateRegistrar(
             notification.contentIntent?.let { original ->
                 contentIntent.putExtra(PushManager.EXTRA_NOTIFICATION_CONTENT_INTENT, original)
             }
-            // Set our content intent.
-            notification.contentIntent = PendingIntentCompat.getActivity(context, 0, contentIntent, 0)
+            // Set our content intent. Immutable: the recipient only needs to send it back,
+            // never to fill it in.
+            notification.contentIntent = PendingIntentCompat.getActivity(
+                context, 0, contentIntent, PendingIntent.FLAG_IMMUTABLE
+            )
         }
 
         val deleteIntent = LiveUpdateNotificationReceiver.deleteIntent(context, update.name)
@@ -297,8 +303,11 @@ internal class LiveUpdateRegistrar(
         notification.deleteIntent?.let { original ->
             deleteIntent.putExtra(PushManager.EXTRA_NOTIFICATION_DELETE_INTENT, original)
         }
-        // Set our delete intent.
-        notification.deleteIntent = PendingIntentCompat.getBroadcast(context, 0, deleteIntent, 0)
+        // Set our delete intent. Immutable: the recipient only needs to send it back,
+        // never to fill it in.
+        notification.deleteIntent = PendingIntentCompat.getBroadcast(
+            context, 0, deleteIntent, PendingIntent.FLAG_IMMUTABLE
+        )
 
         UALog.d("Posting live update notification for: ${update.name}")
 

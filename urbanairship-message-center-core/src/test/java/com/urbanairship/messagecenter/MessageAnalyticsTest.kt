@@ -14,6 +14,7 @@ import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.json.JsonValue
 import com.urbanairship.meteredusage.MeteredUsageEventEntity
 import com.urbanairship.meteredusage.MeteredUsageType
+import java.time.Instant
 import java.util.Date
 import kotlin.time.Duration.Companion.minutes
 import io.mockk.CapturingSlot
@@ -77,7 +78,7 @@ public class MessageAnalyticsTest {
             id = "message-id",
             title = "title",
             bodyUrl = "test://url",
-            sentDate = Date(),
+            sentDate = Instant.now(),
             expirationDate = null,
             isUnread = true,
             extras = null,
@@ -138,7 +139,7 @@ public class MessageAnalyticsTest {
     @Test
     fun `test init with history different session`() = testScope.runTest {
         val lastDisplay = MessageDisplayHistory.LastDisplay("last-session")
-        val lastImpression = MessageDisplayHistory.LastImpression(100L, "impression-session")
+        val lastImpression = MessageDisplayHistory.LastImpression(Instant.ofEpochMilli(100), "impression-session")
 
         coEvery { historyStore.get("message-id") } returns MessageDisplayHistory(
             lastDisplay = lastDisplay,
@@ -159,7 +160,7 @@ public class MessageAnalyticsTest {
     @Test
     fun `test init with history same session`() = testScope.runTest {
         val lastDisplay = MessageDisplayHistory.LastDisplay("last-session")
-        val lastImpression = MessageDisplayHistory.LastImpression(100L, "last-session") // same as last display
+        val lastImpression = MessageDisplayHistory.LastImpression(Instant.ofEpochMilli(100), "last-session") // same as last display
         coEvery { historyStore.get("message-id") } returns MessageDisplayHistory(
             lastDisplay = lastDisplay,
             lastImpression = lastImpression
@@ -196,7 +197,7 @@ public class MessageAnalyticsTest {
     @Test
     fun `test record first impression`() = testScope.runTest {
         coEvery { historyStore.get("message-id") } returns MessageDisplayHistory()
-        clock.currentTimeMillis = 100L
+        clock.currentTime = Instant.ofEpochMilli(100L)
 
         val analytics = createAnalytics()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -210,25 +211,25 @@ public class MessageAnalyticsTest {
         assertEquals(MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION, impressionSlot.captured.type)
         assertEquals(productId, impressionSlot.captured.product)
         assertEquals(reportingContext, impressionSlot.captured.reportingContext)
-        assertEquals(100L, impressionSlot.captured.timestamp)
+        assertEquals(Instant.ofEpochMilli(100), impressionSlot.captured.timestamp)
 
         val historySlot = slot<MessageDisplayHistory>()
         coVerify { historyStore.set(capture(historySlot), "message-id") }
-        assertEquals(100L, historySlot.captured.lastImpression?.date)
+        assertEquals(Instant.ofEpochMilli(100), historySlot.captured.lastImpression?.date)
         assertEquals(sessionId, historySlot.captured.lastImpression?.triggerSessionId)
         assertEquals(sessionId, historySlot.captured.lastDisplay?.triggerSessionId)
     }
 
     @Test
     fun `test record impression within session length`() = testScope.runTest {
-        val lastImpression = MessageDisplayHistory.LastImpression(date = 100L, triggerSessionId = "some-other-session")
+        val lastImpression = MessageDisplayHistory.LastImpression(date = Instant.ofEpochMilli(100), triggerSessionId = "some-other-session")
         coEvery { historyStore.get("message-id") } returns MessageDisplayHistory(lastImpression = lastImpression)
 
         val analytics = createAnalytics()
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Not enough time has passed
-        clock.currentTimeMillis = 100L + 30.minutes.inWholeMilliseconds - 1
+        clock.currentTime = Instant.ofEpochMilli(100L + 30.minutes.inWholeMilliseconds - 1)
 
         analytics.recordEvent(InAppDisplayEvent(), null)
         testDispatcher.scheduler.advanceUntilIdle()
@@ -246,14 +247,14 @@ public class MessageAnalyticsTest {
 
     @Test
     fun `test record impression after session length`() = testScope.runTest {
-        val lastImpression = MessageDisplayHistory.LastImpression(date = 100L, triggerSessionId = "some-other-session")
+        val lastImpression = MessageDisplayHistory.LastImpression(date = Instant.ofEpochMilli(100), triggerSessionId = "some-other-session")
         coEvery { historyStore.get("message-id") } returns MessageDisplayHistory(lastImpression = lastImpression)
 
         val analytics = createAnalytics()
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Enough time has passed
-        clock.currentTimeMillis = 100L + 30.minutes.inWholeMilliseconds
+        clock.currentTime = Instant.ofEpochMilli(100L + 30.minutes.inWholeMilliseconds)
 
         analytics.recordEvent(InAppDisplayEvent(), null)
         testDispatcher.scheduler.advanceUntilIdle()
@@ -264,7 +265,7 @@ public class MessageAnalyticsTest {
         coVerify { historyStore.set(capture(historySlot), "message-id") }
 
         // Last impression should be updated
-        assertEquals(clock.currentTimeMillis, historySlot.captured.lastImpression?.date)
+        assertEquals(clock.currentTime, historySlot.captured.lastImpression?.date)
         assertEquals(sessionId, historySlot.captured.lastImpression?.triggerSessionId)
         // Last display should be updated
         assertEquals(sessionId, historySlot.captured.lastDisplay?.triggerSessionId)
@@ -274,7 +275,7 @@ public class MessageAnalyticsTest {
     fun `test impression updates display context`() = testScope.runTest {
         // Init with no history
         coEvery { historyStore.get("message-id") } returns MessageDisplayHistory()
-        clock.currentTimeMillis = 100
+        clock.currentTime = Instant.ofEpochMilli(100)
 
         val analytics = createAnalytics()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -297,7 +298,7 @@ public class MessageAnalyticsTest {
         // --- Second Event ---
         // Setup mocks to return the history from the first event
         coEvery { historyStore.get("message-id") } returns firstHistory
-        clock.currentTimeMillis = 200
+        clock.currentTime = Instant.ofEpochMilli(200)
 
         analytics.recordEvent(InAppDisplayEvent(), null)
         testDispatcher.scheduler.advanceUntilIdle()
@@ -321,7 +322,7 @@ public class MessageAnalyticsTest {
             id = "message-id",
             title = "title",
             bodyUrl = "test://url",
-            sentDate = Date(),
+            sentDate = Instant.now(),
             expirationDate = null,
             isUnread = true,
             extras = null,
@@ -343,7 +344,7 @@ public class MessageAnalyticsTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Trigger impression
-        clock.currentTimeMillis = 100L
+        clock.currentTime = Instant.ofEpochMilli(100L)
         analytics.recordEvent(InAppDisplayEvent(), null)
         testDispatcher.scheduler.advanceUntilIdle()
 
@@ -360,7 +361,7 @@ public class MessageAnalyticsTest {
             id = "message-id",
             title = "title",
             bodyUrl = "test://url",
-            sentDate = Date(),
+            sentDate = Instant.now(),
             expirationDate = null,
             isUnread = true,
             extras = null,
@@ -382,7 +383,7 @@ public class MessageAnalyticsTest {
         testDispatcher.scheduler.advanceUntilIdle()
 
         // Trigger impression
-        clock.currentTimeMillis = 100L
+        clock.currentTime = Instant.ofEpochMilli(100L)
         analytics.recordEvent(InAppDisplayEvent(), null)
         testDispatcher.scheduler.advanceUntilIdle()
 

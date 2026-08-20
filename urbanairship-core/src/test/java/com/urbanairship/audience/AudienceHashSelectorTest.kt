@@ -3,6 +3,7 @@ package com.urbanairship.audience
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
@@ -144,7 +145,7 @@ public class AudienceHashSelectorTest {
     private fun selector(json: String): AudienceHashSelector =
         requireNotNull(AudienceHashSelector.fromJson(JsonValue.parseString(json).requireMap()))
 
-    private fun schedule(start: Long?, end: Long?): TimeSpan =
+    private fun schedule(start: Instant?, end: Instant?): TimeSpan =
         TimeSpan(startTimestamp = start, endTimestamp = end)
 
     @Test
@@ -167,45 +168,45 @@ public class AudienceHashSelectorTest {
             """
         )
 
-        assertTrue(selector.evaluate("", "contactId", now = 1500))
+        assertTrue(selector.evaluate("", "contactId", now = Instant.ofEpochMilli(1500)))
         // After the window (end is exclusive) -> falls back to base (0..0), no match.
-        assertFalse(selector.evaluate("", "contactId", now = 3000))
+        assertFalse(selector.evaluate("", "contactId", now = Instant.ofEpochMilli(3000)))
         // Before the window as well.
-        assertFalse(selector.evaluate("", "contactId", now = 500))
+        assertFalse(selector.evaluate("", "contactId", now = Instant.ofEpochMilli(500)))
     }
 
     @Test
     public fun testLinearRampInterpolation() {
         val override = AudienceSubsetOverride.LinearRamp(
-            schedule = schedule(start = 1000, end = 2000),
+            schedule = schedule(start = Instant.ofEpochMilli(1000), end = Instant.ofEpochMilli(2000)),
             subsetStart = BucketSubset(min = 100U, max = 10000U),
             subsetEnd = BucketSubset(min = 200U, max = 20000U)
         )
 
         // Start
-        assertEquals(BucketSubset(100U, 10000U), override.resolveBucket(1000))
+        assertEquals(BucketSubset(100U, 10000U), override.resolveBucket(Instant.ofEpochMilli(1000)))
         // Midpoint
-        assertEquals(BucketSubset(150U, 15000U), override.resolveBucket(1500))
+        assertEquals(BucketSubset(150U, 15000U), override.resolveBucket(Instant.ofEpochMilli(1500)))
         // End (interpolation clamps to end subset)
-        assertEquals(BucketSubset(200U, 20000U), override.resolveBucket(2000))
+        assertEquals(BucketSubset(200U, 20000U), override.resolveBucket(Instant.ofEpochMilli(2000)))
         // Clamped before start
-        assertEquals(BucketSubset(100U, 10000U), override.resolveBucket(0))
+        assertEquals(BucketSubset(100U, 10000U), override.resolveBucket(Instant.ofEpochMilli(0)))
         // Clamped after end
-        assertEquals(BucketSubset(200U, 20000U), override.resolveBucket(9999))
+        assertEquals(BucketSubset(200U, 20000U), override.resolveBucket(Instant.ofEpochMilli(9999)))
     }
 
     @Test
     public fun testLinearRampInvertedSubsetDoesNotUnderflow() {
         // subsetStart > subsetEnd. Casting to Double before subtraction avoids unsigned underflow.
         val override = AudienceSubsetOverride.LinearRamp(
-            schedule = schedule(start = 1000, end = 2000),
+            schedule = schedule(start = Instant.ofEpochMilli(1000), end = Instant.ofEpochMilli(2000)),
             subsetStart = BucketSubset(min = 0U, max = 20000U),
             subsetEnd = BucketSubset(min = 0U, max = 10000U)
         )
 
-        assertEquals(BucketSubset(0U, 20000U), override.resolveBucket(1000))
-        assertEquals(BucketSubset(0U, 15000U), override.resolveBucket(1500))
-        assertEquals(BucketSubset(0U, 10000U), override.resolveBucket(2000))
+        assertEquals(BucketSubset(0U, 20000U), override.resolveBucket(Instant.ofEpochMilli(1000)))
+        assertEquals(BucketSubset(0U, 15000U), override.resolveBucket(Instant.ofEpochMilli(1500)))
+        assertEquals(BucketSubset(0U, 10000U), override.resolveBucket(Instant.ofEpochMilli(2000)))
     }
 
     @Test
@@ -230,11 +231,11 @@ public class AudienceHashSelectorTest {
         )
 
         // t = 0 -> max 9900 -> 9908 excluded.
-        assertFalse(selector.evaluate("", "contactId", now = 1000))
+        assertFalse(selector.evaluate("", "contactId", now = Instant.ofEpochMilli(1000)))
         // t = 0.5 -> max 9905 -> 9908 excluded.
-        assertFalse(selector.evaluate("", "contactId", now = 1500))
+        assertFalse(selector.evaluate("", "contactId", now = Instant.ofEpochMilli(1500)))
         // t = 0.9 -> max 9909 -> 9908 included.
-        assertTrue(selector.evaluate("", "contactId", now = 1900))
+        assertTrue(selector.evaluate("", "contactId", now = Instant.ofEpochMilli(1900)))
     }
 
     @Test
@@ -264,7 +265,7 @@ public class AudienceHashSelectorTest {
         )
 
         // First override subset (0..0) is used -> 9908 excluded -> no match.
-        assertFalse(selector.evaluate("", "contactId", now = 1500))
+        assertFalse(selector.evaluate("", "contactId", now = Instant.ofEpochMilli(1500)))
     }
 
     @Test
@@ -294,7 +295,7 @@ public class AudienceHashSelectorTest {
         )
 
         // Second override subset (9908..9908) contains 9908 -> match.
-        assertTrue(selector.evaluate("", "contactId", now = 1500))
+        assertTrue(selector.evaluate("", "contactId", now = Instant.ofEpochMilli(1500)))
     }
 
     @Test
@@ -317,7 +318,7 @@ public class AudienceHashSelectorTest {
         )
 
         // Evaluated outside any override window -> base bucket (9908..9908) contains 9908.
-        assertTrue(selector.evaluate("", "contactId", now = 5000))
+        assertTrue(selector.evaluate("", "contactId", now = Instant.ofEpochMilli(5000)))
     }
 
     @Test
@@ -332,7 +333,7 @@ public class AudienceHashSelectorTest {
         )
 
         assertEquals(null, selector.overrides)
-        assertTrue(selector.evaluate("", "contactId", now = 1500))
+        assertTrue(selector.evaluate("", "contactId", now = Instant.ofEpochMilli(1500)))
         assertTrue(selector.evaluate("", "contactId"))
     }
 
@@ -364,12 +365,12 @@ public class AudienceHashSelectorTest {
         assertEquals(
             listOf(
                 AudienceSubsetOverride.LinearRamp(
-                    schedule = schedule(start = 1000000, end = 2000000),
+                    schedule = schedule(start = Instant.ofEpochMilli(1000000), end = Instant.ofEpochMilli(2000000)),
                     subsetStart = BucketSubset(0U, 100U),
                     subsetEnd = BucketSubset(0U, 1000U)
                 ),
                 AudienceSubsetOverride.Static(
-                    schedule = schedule(start = 2000000, end = null),
+                    schedule = schedule(start = Instant.ofEpochMilli(2000000), end = null),
                     subset = BucketSubset(0U, 1000U)
                 )
             ),

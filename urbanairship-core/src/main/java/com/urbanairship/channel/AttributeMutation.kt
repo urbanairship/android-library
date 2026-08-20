@@ -11,6 +11,7 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import java.util.Objects
 
 /**
@@ -69,10 +70,10 @@ public class AttributeMutation internal constructor(
          *
          * @param key The string attribute key.
          * @param jsonValue The json value.
-         * @param timestamp The timestamp in milliseconds.
+         * @param timestamp The time of the mutation.
          * @return The attribute mutation.
          */
-        fun newSetAttributeMutation(key: String, jsonValue: JsonValue, timestamp: Long): AttributeMutation {
+        fun newSetAttributeMutation(key: String, jsonValue: JsonValue, timestamp: Instant): AttributeMutation {
             require(!jsonValue.isNull) { "Invalid attribute value: $jsonValue" }
 
             return AttributeMutation(
@@ -84,10 +85,10 @@ public class AttributeMutation internal constructor(
          * Creates a mutation to remove a string attribute.
          *
          * @param key The string attribute key.
-         * @param timestamp The timestamp in milliseconds.
+         * @param timestamp The time of the mutation.
          * @return The attribute mutation.
          */
-        fun newRemoveAttributeMutation(key: String, timestamp: Long): AttributeMutation {
+        fun newRemoveAttributeMutation(key: String, timestamp: Instant): AttributeMutation {
             return AttributeMutation(
                 ATTRIBUTE_ACTION_REMOVE, key, null, DateUtils.createIso8601TimeStamp(timestamp, includeMillis = true)
             )

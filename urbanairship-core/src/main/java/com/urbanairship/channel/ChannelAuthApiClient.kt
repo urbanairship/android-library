@@ -11,6 +11,8 @@ import com.urbanairship.http.RequestSession
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.UAHttpStatusUtil
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
 import kotlin.time.Duration.Companion.milliseconds
 
 internal class ChannelAuthApiClient(
@@ -23,7 +25,7 @@ internal class ChannelAuthApiClient(
             .appendEncodedPath("api/auth/device")
             .build()
 
-        val requestTime = clock.currentTimeMillis()
+        val requestTime = clock.now()
 
         val request = Request(
             url = url,
@@ -44,7 +46,7 @@ internal class ChannelAuthApiClient(
                     AuthToken(
                         identifier = channelId,
                         token = map.require("token").requireString(),
-                        expirationDateMillis = requestTime + expiresIn.inWholeMilliseconds
+                        expiration = requestTime + expiresIn
                     )
                 }
         }

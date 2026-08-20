@@ -8,8 +8,9 @@ import com.urbanairship.UALog
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.UAHttpStatusUtil
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -116,5 +117,5 @@ internal fun parseRetryAfter(value: String, clock: Clock): Duration? {
     val date = runCatching { DateUtils.parseIso8601(value) }.getOrNull()
         ?: runCatching { DateUtils.parseHttpDate(value) }.getOrNull()
         ?: return null
-    return (date - clock.currentTimeMillis()).milliseconds
+    return date - clock.now()
 }

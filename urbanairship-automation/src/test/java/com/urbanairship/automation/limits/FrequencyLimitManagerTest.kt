@@ -4,6 +4,10 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.automation.limits.storage.FrequencyLimitDatabase
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
@@ -23,7 +27,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class FrequencyLimitManagerTest {
     private val unconfinedTestDispatcher = UnconfinedTestDispatcher()
-    private val clock = TestClock().apply { currentTimeMillis = 0 }
+    private val clock = TestClock().apply { currentTime = Instant.ofEpochMilli(0) }
     private val db = FrequencyLimitDatabase.createInMemoryDatabase(ApplicationProvider.getApplicationContext())
     private val store = db.dao
 
@@ -62,7 +66,7 @@ public class FrequencyLimitManagerTest {
         assertFalse(checker.isOverLimit())
         assertTrue(checker.checkAndIncrement())
 
-        clock.currentTimeMillis += 1000
+        clock.currentTime += (1000).milliseconds
         assertFalse(checker.isOverLimit())
         assertTrue(checker.checkAndIncrement())
 
@@ -71,7 +75,7 @@ public class FrequencyLimitManagerTest {
         assertFalse(checker.checkAndIncrement())
 
         // After the range has passed we should no longer be over the limit
-        clock.currentTimeMillis = 11000
+        clock.currentTime = Instant.ofEpochMilli(11000)
         assertFalse(checker.isOverLimit())
 
         // One more increment should push us back over the limit
@@ -81,7 +85,7 @@ public class FrequencyLimitManagerTest {
         manager.writePendingInQueue()
         val occurrences = store.getOccurrences("foo").map { it.timeStamp } ?: listOf()
         assertEquals(3, occurrences.size)
-        assertTrue(setOf(0L, 1000, 11000).all { occurrences.contains(it) })
+        assertTrue(setOf(0L, 1000L, 11000L).map(Instant::ofEpochMilli).all { occurrences.contains(it) })
     }
 
     @Test
@@ -104,7 +108,7 @@ public class FrequencyLimitManagerTest {
         assertFalse(checker2.isOverLimit())
         assertTrue(checker1.checkAndIncrement())
 
-        clock.currentTimeMillis += 1000
+        clock.currentTime += (1000).milliseconds
         assertTrue(checker2.checkAndIncrement())
 
         // We should now be over the limit
@@ -112,20 +116,20 @@ public class FrequencyLimitManagerTest {
         assertTrue(checker2.isOverLimit())
 
         // After the range has passed we should no longer be over the limit
-        clock.currentTimeMillis = 11000
+        clock.currentTime = Instant.ofEpochMilli(11000)
         assertFalse(checker1.isOverLimit())
         assertFalse(checker2.isOverLimit())
 
         // The first check and increment should succeed, and the next should put us back over the limit again
         assertTrue(checker1.checkAndIncrement())
 
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
         assertFalse(checker2.checkAndIncrement())
 
         manager.writePendingInQueue()
         val occurrences = store.getOccurrences("foo").map { it.timeStamp }?.toSet() ?: emptySet()
         assertEquals(3, occurrences.size)
-        assertTrue(setOf(0L, 1000, 11000).all { occurrences.contains(it) })
+        assertTrue(setOf(0L, 1000L, 11000L).map(Instant::ofEpochMilli).all { occurrences.contains(it) })
     }
 
     @Test
@@ -140,24 +144,24 @@ public class FrequencyLimitManagerTest {
         assertFalse(checker.isOverLimit())
         assertTrue(checker.checkAndIncrement())
 
-        clock.currentTimeMillis = 1000
+        clock.currentTime = Instant.ofEpochMilli(1000)
 
         // We should now be violating constraint 2
         assertTrue(checker.isOverLimit())
         assertFalse(checker.checkAndIncrement())
 
-        clock.currentTimeMillis = 3000
+        clock.currentTime = Instant.ofEpochMilli(3000)
         // We should no longer be violating constraint 2
         assertFalse(checker.isOverLimit())
         assertTrue(checker.checkAndIncrement())
 
         // We should now be violating constraint 1
-        clock.currentTimeMillis = 9000
+        clock.currentTime = Instant.ofEpochMilli(9000)
         assertTrue(checker.isOverLimit())
         assertFalse(checker.checkAndIncrement())
 
         // We should now be violating neither constraint
-        clock.currentTimeMillis = 11000
+        clock.currentTime = Instant.ofEpochMilli(11000)
         assertFalse(checker.isOverLimit())
 
         // One more increment should hit the limit
@@ -177,10 +181,10 @@ public class FrequencyLimitManagerTest {
 
         assertTrue(checker.checkAndIncrement())
 
-        clock.currentTimeMillis = 1000
+        clock.currentTime = Instant.ofEpochMilli(1000)
         assertTrue(checker.checkAndIncrement())
 
-        clock.currentTimeMillis = 1000
+        clock.currentTime = Instant.ofEpochMilli(1000)
         assertTrue(checker.checkAndIncrement())
 
         manager.writePendingInQueue()

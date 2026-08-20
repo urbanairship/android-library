@@ -9,6 +9,9 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestClock
 import com.urbanairship.http.RequestResult
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.UUID
 import app.cash.turbine.test
 import io.mockk.coEvery
@@ -16,6 +19,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -250,7 +254,7 @@ public class ChannelRegistrarTest {
         assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
 
         testActivityMonitor.foreground()
-        testClock.currentTimeMillis += 24 * 60 * 60 * 1000
+        testClock.currentTime += (24 * 60 * 60 * 1000).milliseconds
 
         // Update
         coEvery {
@@ -272,7 +276,7 @@ public class ChannelRegistrarTest {
 
         registrar.payloadBuilder = { payload }
 
-        testClock.currentTimeMillis = 1
+        testClock.currentTime = Instant.ofEpochMilli(1)
 
         coEvery {
             mockClient.createChannel(any())
@@ -289,7 +293,7 @@ public class ChannelRegistrarTest {
         assertFalse(capturedPayload.isCaptured)
 
         testActivityMonitor.foreground()
-        testClock.currentTimeMillis += 24 * 60 * 60 * 1000 + 1
+        testClock.currentTime += (24 * 60 * 60 * 1000 + 1).milliseconds
 
         assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
         assertEquals(payload, capturedPayload.captured)
@@ -307,7 +311,7 @@ public class ChannelRegistrarTest {
         assertEquals(RegistrationResult.SUCCESS, registrar.updateRegistration())
 
         testActivityMonitor.foreground()
-        testClock.currentTimeMillis += 24 * 60 * 60 * 1000
+        testClock.currentTime += (24 * 60 * 60 * 1000).milliseconds
 
         val minimizedPayload = expectedPayload.minimizedPayload(expectedPayload)
         assertNotEquals(minimizedPayload, expectedPayload)

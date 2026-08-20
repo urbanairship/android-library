@@ -21,7 +21,7 @@ public class AutomationSourceInfoStoreTest {
 
     @Test
     public fun testAppStoreIgnoreContactID(): TestResult = runTest {
-        val sourceInfo = AutomationSourceInfo(null, clock.currentTimeMillis(), "17.9.9")
+        val sourceInfo = AutomationSourceInfo(null, clock.now(), "17.9.9")
         infoStore.setSourceInfo(sourceInfo, RemoteDataSource.APP, "foo")
 
         assertEquals(sourceInfo, infoStore.getSourceInfo(RemoteDataSource.APP, null))
@@ -31,7 +31,7 @@ public class AutomationSourceInfoStoreTest {
 
     @Test
     public fun testContactStoreRespectsContactID(): TestResult = runTest {
-        val sourceInfo = AutomationSourceInfo(null, clock.currentTimeMillis(), "17.9.9")
+        val sourceInfo = AutomationSourceInfo(null, clock.now(), "17.9.9")
         infoStore.setSourceInfo(sourceInfo, RemoteDataSource.CONTACT, "foo")
 
         assertNull(infoStore.getSourceInfo(RemoteDataSource.CONTACT, null))

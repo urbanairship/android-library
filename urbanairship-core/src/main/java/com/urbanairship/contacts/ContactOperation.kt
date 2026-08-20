@@ -8,7 +8,9 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireEpochMillis
 import com.urbanairship.json.requireField
+import java.time.Instant
 
 internal sealed class ContactOperation(
     private val type: Type,
@@ -23,17 +25,17 @@ internal sealed class ContactOperation(
     object Reset : ContactOperation(Type.RESET, null)
 
     data class Verify(
-        val dateMs: Long,
+        val date: Instant,
         val required: Boolean = false
     ) : ContactOperation(
             Type.VERIFY,
             jsonMapOf(
-                    DATE_KEY to dateMs,
+                    DATE_KEY to date.toEpochMilli(),
                     REQUIRED_KEY to required
             ).toJsonValue()
     ) {
         constructor(json: JsonMap) : this(
-                json.requireField(DATE_KEY),
+                json.requireEpochMillis(DATE_KEY),
                 json.requireField(REQUIRED_KEY)
         )
     }

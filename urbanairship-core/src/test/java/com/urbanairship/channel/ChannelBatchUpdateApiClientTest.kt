@@ -10,6 +10,7 @@ import com.urbanairship.http.RequestBody
 import com.urbanairship.json.JsonValue
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -64,20 +65,20 @@ public class ChannelBatchUpdateApiClientTest {
 
         val attributes = listOf(
             AttributeMutation.newSetAttributeMutation(
-                "name", JsonValue.wrapOpt("Bob"), 100
+                "name", JsonValue.wrapOpt("Bob"), Instant.ofEpochMilli(100)
             ), AttributeMutation.newSetAttributeMutation(
-                "last_name", JsonValue.wrapOpt("Loblaw"), 200
+                "last_name", JsonValue.wrapOpt("Loblaw"), Instant.ofEpochMilli(200)
             )
         )
 
         val subscriptions = listOf(
-            SubscriptionListMutation.newSubscribeMutation("burgers", 100),
-            SubscriptionListMutation.newUnsubscribeMutation("burritos", 100)
+            SubscriptionListMutation.newSubscribeMutation("burgers", Instant.ofEpochMilli(100)),
+            SubscriptionListMutation.newUnsubscribeMutation("burritos", Instant.ofEpochMilli(100))
         )
 
         val liveUpdates = listOf(
-            LiveUpdateMutation.Set("apples", 100, 100),
-            LiveUpdateMutation.Remove("fish", 100, 100),
+            LiveUpdateMutation.Set("apples", Instant.ofEpochMilli(100), Instant.ofEpochMilli(100)),
+            LiveUpdateMutation.Remove("fish", Instant.ofEpochMilli(100), Instant.ofEpochMilli(100)),
         )
 
         val expectedBody = """

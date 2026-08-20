@@ -181,14 +181,14 @@ public class DefaultRequestSessionTest {
 
         val token = appConfig.appSecret.toSignedToken(
             values = listOf(
-                appConfig.appKey, nonce, DateUtils.createIso8601TimeStamp(testClock.currentTimeMillis)
+                appConfig.appKey, nonce, DateUtils.createIso8601TimeStamp(testClock.currentTime)
             )
         )
 
         val authHeaders = mapOf(
             "X-UA-Appkey" to appConfig.appKey,
             "X-UA-Nonce" to nonce,
-            "X-UA-Timestamp" to DateUtils.createIso8601TimeStamp(testClock.currentTimeMillis),
+            "X-UA-Timestamp" to DateUtils.createIso8601TimeStamp(testClock.currentTime),
             "Authorization" to "Bearer $token"
         )
 
@@ -218,7 +218,7 @@ public class DefaultRequestSessionTest {
 
         val token = appConfig.appSecret.toSignedToken(
             values = listOf(
-                appConfig.appKey, "some channel", nonce, DateUtils.createIso8601TimeStamp(testClock.currentTimeMillis)
+                appConfig.appKey, "some channel", nonce, DateUtils.createIso8601TimeStamp(testClock.currentTime)
             )
         )
 
@@ -226,7 +226,7 @@ public class DefaultRequestSessionTest {
             "X-UA-Channel-ID" to "some channel",
             "X-UA-Appkey" to appConfig.appKey,
             "X-UA-Nonce" to nonce,
-            "X-UA-Timestamp" to DateUtils.createIso8601TimeStamp(testClock.currentTimeMillis),
+            "X-UA-Timestamp" to DateUtils.createIso8601TimeStamp(testClock.currentTime),
             "Authorization" to "Bearer $token"
         )
 

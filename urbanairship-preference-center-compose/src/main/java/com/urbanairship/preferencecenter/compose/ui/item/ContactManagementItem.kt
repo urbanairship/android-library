@@ -40,6 +40,7 @@ import com.urbanairship.preferencecenter.data.Conditions
 import com.urbanairship.preferencecenter.data.Item
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.Platform
 import com.urbanairship.preferencecenter.data.Item.ContactManagement.PromptDisplay
+import java.time.Instant
 
 internal data class ContactManagementItem(
     val item: Item.ContactManagement,
@@ -331,7 +332,7 @@ private fun preview() {
                         registrationInfo = ContactChannel.Email.RegistrationInfo.Registered(
                             channelId = "preview channel id",
                             maskedAddress = "e******@example.com",
-                            transactionalOptedIn = 123,
+                            transactionalOptedIn = Instant.ofEpochMilli(123),
                         )
                     ) to ViewState.Content.ContactChannelState(
                         showResendButton = false, showPendingButton = false

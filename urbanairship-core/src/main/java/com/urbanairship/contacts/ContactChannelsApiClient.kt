@@ -11,7 +11,7 @@ import com.urbanairship.http.RequestSession
 import com.urbanairship.http.log
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.isoDateAsMilliseconds
+import com.urbanairship.json.isoDateAsInstant
 import com.urbanairship.json.requireField
 import com.urbanairship.util.UAHttpStatusUtil
 
@@ -58,10 +58,10 @@ internal class ContactChannelsApiClient(
                             ContactChannel.Email.RegistrationInfo.Registered(
                                 channelId = map.requireField(CHANNEL_ID_KEY),
                                 maskedAddress = map.requireField(EMAIL_ADDRESS_KEY),
-                                commercialOptedIn = map.isoDateAsMilliseconds(COMMERCIAL_OPTED_IN_KEY),
-                                commercialOptedOut = map.isoDateAsMilliseconds(COMMERCIAL_OPTED_OUT_KEY),
-                                transactionalOptedIn = map.isoDateAsMilliseconds(TRANSACTIONAL_OPTED_IN_KEY),
-                                transactionalOptedOut = map.isoDateAsMilliseconds(TRANSACTIONAL_OPTED_OUT_KEY)
+                                commercialOptedIn = map.isoDateAsInstant(COMMERCIAL_OPTED_IN_KEY),
+                                commercialOptedOut = map.isoDateAsInstant(COMMERCIAL_OPTED_OUT_KEY),
+                                transactionalOptedIn = map.isoDateAsInstant(TRANSACTIONAL_OPTED_IN_KEY),
+                                transactionalOptedOut = map.isoDateAsInstant(TRANSACTIONAL_OPTED_OUT_KEY)
                             )
                         )
                     }

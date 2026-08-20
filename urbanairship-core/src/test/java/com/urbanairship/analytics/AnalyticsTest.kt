@@ -24,6 +24,7 @@ import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionStatus
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.LocaleCompat
+import java.time.Instant
 import java.util.TimeZone
 import kotlin.time.Duration.Companion.milliseconds
 import app.cash.turbine.test
@@ -180,7 +181,7 @@ public class AnalyticsTest {
                     analytics.sessionId,
                     event.getEventData(context, ConversionData()).toJsonValue(),
                     event.type,
-                    event.timeMilliseconds
+                    event.timestamp
                 ),
                 event.priority
             )
@@ -199,7 +200,7 @@ public class AnalyticsTest {
             .build()
 
         runtimeConfig.setConfigOptions(options)
-        analytics.addEvent(AppForegroundEvent(100))
+        analytics.addEvent(AppForegroundEvent(Instant.ofEpochMilli(100)))
         coVerify(exactly = 0) { mockEventManager.addEvent(any(), any())  }
     }
 
@@ -209,7 +210,7 @@ public class AnalyticsTest {
     @Test
     public fun testAddEventDisabledAnalytics(): TestResult = runTest(testDispatcher) {
         privacyManager.disable(PrivacyManager.Feature.ANALYTICS)
-        analytics.addEvent(AppForegroundEvent(100))
+        analytics.addEvent(AppForegroundEvent(Instant.ofEpochMilli(100)))
         coVerify(exactly = 0) { mockEventManager.addEvent(any(), any())  }
     }
 

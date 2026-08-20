@@ -46,6 +46,7 @@ import com.urbanairship.push.notifications.AirshipNotificationProvider
 import com.urbanairship.push.notifications.NotificationActionButtonGroup
 import com.urbanairship.push.notifications.NotificationChannelRegistry
 import com.urbanairship.push.notifications.NotificationProvider
+import java.time.Instant
 import java.util.concurrent.ExecutorService
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
@@ -273,7 +274,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         privacyManager.addListener { checkPermission() }
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(milliseconds: Long) {
+            override fun onForeground(timestamp: Instant) {
                 checkPermission()
             }
         })

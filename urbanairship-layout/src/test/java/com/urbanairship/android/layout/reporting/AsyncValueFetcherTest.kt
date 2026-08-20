@@ -5,7 +5,11 @@ package com.urbanairship.android.layout.reporting
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.TestTaskSleeper
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.every
@@ -22,12 +26,12 @@ import org.junit.runner.RunWith
 public class AsyncValueFetcherTest {
     private val clock: TestClock = mockk()
     private lateinit var taskSleeper: TestTaskSleeper
-    private var currentTime = 1L
+    private var currentTime: Instant = Instant.ofEpochMilli(1)
 
     @Before
     public fun setUp() {
-        taskSleeper = TestTaskSleeper(clock) { delay -> currentTime += delay.inWholeMilliseconds}
-        every { clock.currentTimeMillis() } answers { currentTime }
+        taskSleeper = TestTaskSleeper(clock) { delay -> currentTime += delay }
+        every { clock.now() } answers { currentTime }
     }
 
     @Test
@@ -122,7 +126,7 @@ public class AsyncValueFetcherTest {
         fetcher.fetch(this, retryErrors = true)
         assertEquals(taskSleeper.sleeps, listOf(1, 3, 6, 12, 15, 15).map { it.seconds })
 
-        currentTime += 10.seconds.inWholeMilliseconds
+        currentTime += 10.seconds
         fetcher.fetch(this, retryErrors = true)
         assertEquals(taskSleeper.sleeps, listOf(1, 3, 6, 12, 15, 15, 5).map { it.seconds })
 

@@ -8,6 +8,9 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.requireField
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import kotlin.math.floor
 
 /**
@@ -33,8 +36,8 @@ internal sealed class AudienceSubsetOverride : JsonSerializable {
         val subsetEnd: BucketSubset
     ) : AudienceSubsetOverride()
 
-    /** Resolves the effective bucket for this override at the given time (ms since epoch). */
-    fun resolveBucket(now: Long): BucketSubset = when (this) {
+    /** Resolves the effective bucket for this override at the given time. */
+    fun resolveBucket(now: Instant): BucketSubset = when (this) {
         is Static -> subset
         is LinearRamp -> interpolate(this, now)
     }
@@ -82,14 +85,14 @@ internal sealed class AudienceSubsetOverride : JsonSerializable {
             }
         }
 
-        private fun interpolate(ramp: LinearRamp, now: Long): BucketSubset {
-            val startMs = ramp.schedule.startTimestamp
-            val endMs = ramp.schedule.endTimestamp
-            if (startMs == null || endMs == null || endMs <= startMs) {
+        private fun interpolate(ramp: LinearRamp, now: Instant): BucketSubset {
+            val start = ramp.schedule.startTimestamp
+            val end = ramp.schedule.endTimestamp
+            if (start == null || end == null || end <= start) {
                 return ramp.subsetEnd
             }
 
-            val t = ((now - startMs).toDouble() / (endMs - startMs).toDouble()).coerceIn(0.0, 1.0)
+            val t = ((now - start).inWholeMilliseconds.toDouble() / (end - start).inWholeMilliseconds.toDouble()).coerceIn(0.0, 1.0)
 
             return BucketSubset(
                 min = interpolateBucket(ramp.subsetStart.min, ramp.subsetEnd.min, t),

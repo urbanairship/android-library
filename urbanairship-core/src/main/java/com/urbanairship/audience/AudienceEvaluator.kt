@@ -4,6 +4,7 @@ package com.urbanairship.audience
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.cache.AirshipCache
+import java.time.Instant
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -13,7 +14,7 @@ public class AudienceEvaluator(cache: AirshipCache) {
 
     public suspend fun evaluate(
         compoundAudience: CompoundAudienceSelector?,
-        newEvaluationDate: Long,
+        newEvaluationDate: Instant,
         infoProvider: DeviceInfoProvider
     ): AirshipDeviceAudienceResult {
 

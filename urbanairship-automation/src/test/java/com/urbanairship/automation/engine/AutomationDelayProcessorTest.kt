@@ -11,6 +11,10 @@ import com.urbanairship.automation.ExecutionWindow
 import com.urbanairship.automation.ExecutionWindowProcessor
 import com.urbanairship.automation.Rule
 import com.urbanairship.util.TaskSleeper
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.coEvery
@@ -58,12 +62,12 @@ public class AutomationDelayProcessorTest {
 
     private val testDispatcher = StandardTestDispatcher()
     private val clock = TestClock().apply {
-        currentTimeMillis = 0
+        currentTime = Instant.ofEpochMilli(0)
     }
 
     private val sleeper: TaskSleeper = spyk(
         TestTaskSleeper(clock) { sleep ->
-            clock.currentTimeMillis += sleep.inWholeMilliseconds
+            clock.currentTime += (sleep.inWholeMilliseconds).milliseconds
         }
     )
 
@@ -162,9 +166,9 @@ public class AutomationDelayProcessorTest {
     public fun testRemainingSleep(): TestResult = runTest {
         val delay = AutomationDelay(seconds = 100L)
 
-        clock.currentTimeMillis = 100 * 1000
+        clock.currentTime = Instant.ofEpochMilli(100 * 1000)
 
-        startProcessing(delay, this, triggerTime = 50 * 1000).test {
+        startProcessing(delay, this, triggerTime = Instant.ofEpochMilli(50 * 1000)).test {
             assertFalse(awaitItem())
             assertTrue(awaitItem())
         }
@@ -178,9 +182,9 @@ public class AutomationDelayProcessorTest {
     public fun testSkipSleep(): TestResult = runTest {
         val delay = AutomationDelay(seconds = 100L)
 
-        clock.currentTimeMillis = 100 * 1000
+        clock.currentTime = Instant.ofEpochMilli(100 * 1000)
 
-        startProcessing(delay, this, triggerTime = 0).test {
+        startProcessing(delay, this, triggerTime = Instant.EPOCH).test {
             assertFalse(awaitItem())
             assertTrue(awaitItem())
         }
@@ -276,7 +280,7 @@ public class AutomationDelayProcessorTest {
         )
 
         val job = async {
-            processor.process(delay, 0)
+            processor.process(delay, Instant.ofEpochMilli(0))
         }
 
         job.cancel()
@@ -298,7 +302,7 @@ public class AutomationDelayProcessorTest {
         )
 
         val job = async {
-            processor.process(delay, 0)
+            processor.process(delay, Instant.ofEpochMilli(0))
         }
 
         job.join()
@@ -310,7 +314,7 @@ public class AutomationDelayProcessorTest {
     private fun startProcessing(
         delay: AutomationDelay?,
         scope: TestScope,
-        triggerTime: Long = 0
+        triggerTime: Instant = Instant.EPOCH
     ): StateFlow<Boolean> {
         val flow = MutableStateFlow(false)
         scope.launch(Dispatchers.IO) {

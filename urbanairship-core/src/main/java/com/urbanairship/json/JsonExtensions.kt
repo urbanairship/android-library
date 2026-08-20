@@ -2,6 +2,7 @@ package com.urbanairship.json
 
 import com.urbanairship.UALog
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 
 @Throws(JsonException::class)
 public fun jsonMapOf(vararg fields: Pair<String, *>): JsonMap =
@@ -53,9 +54,48 @@ public inline fun <reified T> JsonMap.requireField(key: String): T {
         JsonList::class -> field.optList() as T
         JsonMap::class -> field.optMap() as T
         JsonValue::class -> field.toJsonValue() as T
+        // No Instant branch: the encoded unit varies by field (epoch millis, epoch seconds,
+        // ISO 8601), so reads name it explicitly via requireEpochMillis / isoDateAsInstant,
+        // the way JsonValue.wrap makes writes name it.
         else -> throw JsonException("Invalid type '${T::class.java.simpleName}' for field '$key'")
     }
 }
+
+/**
+ * Reads a [JsonValue] holding epoch milliseconds as an [Instant].
+ *
+ * This is the representation used for locally persisted timestamps. For ISO 8601 strings
+ * — the representation used by server payloads — use [JsonMap.isoDateAsInstant] instead.
+ *
+ * @throws JsonException if the value is not a number.
+ */
+@Throws(JsonException::class)
+public fun JsonValue.requireEpochMillis(key: String? = null): Instant {
+    if (!isNumber) {
+        val label = key?.let { "field '$it'" } ?: "value"
+        throw JsonException("Unable to parse $label as epoch milliseconds: $this")
+    }
+    return Instant.ofEpochMilli(getLong(0))
+}
+
+/**
+ * Reads the field with the given [key], holding epoch milliseconds, as an [Instant].
+ *
+ * @throws JsonException if the field is undefined or is not a number.
+ */
+@Throws(JsonException::class)
+public fun JsonMap.requireEpochMillis(key: String): Instant =
+    require(key).requireEpochMillis(key)
+
+/**
+ * Reads the field with the given [key], holding epoch milliseconds, as an [Instant], or `null`
+ * if the field is absent or not a number.
+ *
+ * Lenient like [optionalField]: a malformed value reads as absent rather than throwing. Use
+ * [requireEpochMillis] to reject one.
+ */
+public fun JsonMap.optionalEpochMillis(key: String): Instant? =
+    get(key)?.takeIf { it.isNumber }?.requireEpochMillis(key)
 
 @Throws(JsonException::class)
 public fun JsonMap.extend(vararg fields: Pair<String, *>): JsonMap {
@@ -89,22 +129,23 @@ public inline fun <reified T> JsonMap.optionalField(key: String): T? {
         JsonList::class -> field.optList() as T
         JsonMap::class -> field.optMap() as T
         JsonValue::class -> field.toJsonValue() as T
+        // No Instant branch: see requireField.
         else -> throw JsonException("Invalid type '${T::class.java.simpleName}' for field '$key'")
     }
 }
 
 
 /**
- * Gets the field with the given [key] and parses it as a ISO date string.
+ * Gets the field with the given [key] and parses it as an ISO date string.
  *
  * @throws JsonException if the value is not a valid date string.
  */
 @Throws(JsonException::class)
-public fun JsonMap.isoDateAsMilliseconds(key: String, defaultValue: Long? = null): Long? {
+public fun JsonMap.isoDateAsInstant(key: String, defaultValue: Instant? = null): Instant? {
     return try {
         optionalField<String>(key)?.let { isoDate ->
             defaultValue?.let {
-                DateUtils.parseIso8601(isoDate, defaultValue)
+                DateUtils.parseIso8601(isoDate, it)
             } ?: run {
                 DateUtils.parseIso8601(isoDate)
             }

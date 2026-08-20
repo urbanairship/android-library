@@ -9,6 +9,7 @@ import com.urbanairship.liveupdate.data.LiveUpdateContent
 import com.urbanairship.liveupdate.data.LiveUpdateDao
 import com.urbanairship.liveupdate.data.LiveUpdateState
 import com.urbanairship.push.PushMessage
+import java.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -94,7 +95,7 @@ internal class LiveUpdateProcessor(
         val state = dao.getState(name)
 
         // Check timestamp, as we may have received a stale start.
-        val lastTimestamp = state?.timestamp ?: 0
+        val lastTimestamp = state?.timestamp ?: Instant.EPOCH
         if (lastTimestamp > timestamp) {
             UALog.w("Ignored start for Live Update '$name'. Start event was stale.")
             return
@@ -141,7 +142,7 @@ internal class LiveUpdateProcessor(
 
     private suspend fun processUpdate(operation: Operation.Update): Unit = with(operation) {
         val liveUpdate = dao.get(name)
-        val lastTimestamp = liveUpdate?.content?.timestamp ?: -1
+        val lastTimestamp = liveUpdate?.content?.timestamp ?: Instant.EPOCH
 
         if (lastTimestamp > timestamp) {
             UALog.v("Ignoring stale Live Update content for '$name': $content")
@@ -239,15 +240,15 @@ internal class LiveUpdateProcessor(
 
     @VisibleForTesting
     internal sealed class Operation {
-        abstract val timestamp: Long
+        abstract val timestamp: Instant
 
         /** Start Live Updates for the given [name], and [type], with initial [content]. */
         data class Start(
             val name: String,
             val type: String,
             val content: JsonMap,
-            override val timestamp: Long,
-            val dismissalTimestamp: Long? = null,
+            override val timestamp: Instant,
+            val dismissalTimestamp: Instant? = null,
             val message: PushMessage? = null
         ) : Operation()
 
@@ -255,8 +256,8 @@ internal class LiveUpdateProcessor(
         data class Update(
             val name: String,
             val content: JsonMap,
-            override val timestamp: Long,
-            val dismissalTimestamp: Long? = null,
+            override val timestamp: Instant,
+            val dismissalTimestamp: Instant? = null,
             val message: PushMessage? = null
         ) : Operation()
 
@@ -264,20 +265,20 @@ internal class LiveUpdateProcessor(
         data class Stop(
             val name: String,
             val content: JsonMap? = null,
-            override val timestamp: Long,
-            val dismissalTimestamp: Long? = null,
+            override val timestamp: Instant,
+            val dismissalTimestamp: Instant? = null,
             val message: PushMessage? = null
         ) : Operation()
 
         /** Cancels an existing Live Update notification for the given [name]. */
         data class Cancel(
             val name: String,
-            override val timestamp: Long = 0L
+            override val timestamp: Instant = Instant.EPOCH
         ) : Operation()
 
         /** Clear all Live Updates and any locally stored data. */
         data class ClearAll(
-            override val timestamp: Long = 0L
+            override val timestamp: Instant = Instant.EPOCH
         ) : Operation()
     }
 

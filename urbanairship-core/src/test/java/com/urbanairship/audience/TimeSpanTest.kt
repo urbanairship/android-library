@@ -4,6 +4,7 @@ package com.urbanairship.audience
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonValue
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
@@ -15,47 +16,47 @@ public class TimeSpanTest {
 
     @Test
     public fun testBoundedIsActiveStartInclusiveEndExclusive() {
-        val span = TimeSpan(startTimestamp = 100, endTimestamp = 200)
+        val span = TimeSpan(startTimestamp = Instant.ofEpochMilli(100), endTimestamp = Instant.ofEpochMilli(200))
 
-        assertFalse(span.isActive(99))
-        assertTrue(span.isActive(100))
-        assertTrue(span.isActive(150))
-        assertTrue(span.isActive(199))
+        assertFalse(span.isActive(Instant.ofEpochMilli(99)))
+        assertTrue(span.isActive(Instant.ofEpochMilli(100)))
+        assertTrue(span.isActive(Instant.ofEpochMilli(150)))
+        assertTrue(span.isActive(Instant.ofEpochMilli(199)))
         // End is exclusive.
-        assertFalse(span.isActive(200))
-        assertFalse(span.isActive(201))
+        assertFalse(span.isActive(Instant.ofEpochMilli(200)))
+        assertFalse(span.isActive(Instant.ofEpochMilli(201)))
     }
 
     @Test
     public fun testNullStartIsNegativeInfinity() {
-        val span = TimeSpan(startTimestamp = null, endTimestamp = 200)
+        val span = TimeSpan(startTimestamp = null, endTimestamp = Instant.ofEpochMilli(200))
 
-        assertTrue(span.isActive(Long.MIN_VALUE))
-        assertTrue(span.isActive(199))
-        assertFalse(span.isActive(200))
+        assertTrue(span.isActive(Instant.MIN))
+        assertTrue(span.isActive(Instant.ofEpochMilli(199)))
+        assertFalse(span.isActive(Instant.ofEpochMilli(200)))
     }
 
     @Test
     public fun testNullEndIsPositiveInfinity() {
-        val span = TimeSpan(startTimestamp = 100, endTimestamp = null)
+        val span = TimeSpan(startTimestamp = Instant.ofEpochMilli(100), endTimestamp = null)
 
-        assertFalse(span.isActive(99))
-        assertTrue(span.isActive(100))
-        assertTrue(span.isActive(Long.MAX_VALUE))
+        assertFalse(span.isActive(Instant.ofEpochMilli(99)))
+        assertTrue(span.isActive(Instant.ofEpochMilli(100)))
+        assertTrue(span.isActive(Instant.MAX))
     }
 
     @Test
     public fun testNullBoundsAlwaysActive() {
         val span = TimeSpan(startTimestamp = null, endTimestamp = null)
 
-        assertTrue(span.isActive(Long.MIN_VALUE))
-        assertTrue(span.isActive(0))
-        assertTrue(span.isActive(Long.MAX_VALUE))
+        assertTrue(span.isActive(Instant.MIN))
+        assertTrue(span.isActive(Instant.ofEpochMilli(0)))
+        assertTrue(span.isActive(Instant.MAX))
     }
 
     @Test
     public fun testJsonRoundTrip() {
-        val span = TimeSpan(startTimestamp = 100, endTimestamp = 200)
+        val span = TimeSpan(startTimestamp = Instant.ofEpochMilli(100), endTimestamp = Instant.ofEpochMilli(200))
         val parsed = TimeSpan.fromJson(span.toJsonValue().requireMap())
         assertEquals(span, parsed)
     }

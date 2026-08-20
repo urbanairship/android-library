@@ -2,7 +2,9 @@ package com.urbanairship.util
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
+import java.time.Instant
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +25,7 @@ public class TaskSleeperTest {
     private val testDispatcher = StandardTestDispatcher()
 
     private val clock: TestClock = TestClock().apply {
-        currentTimeMillis = 0
+        currentTime = Instant.ofEpochMilli(0)
     }
 
     private val recordedIntervals = mutableListOf<Duration>()
@@ -34,7 +36,7 @@ public class TaskSleeperTest {
         override suspend fun onSleep(duration: Duration) {
             recordedIntervals.add(duration)
             // Manually advance our test clock so the 'remainingMillis' calculation works
-            clock.currentTimeMillis += duration.inWholeMilliseconds
+            clock.currentTime += (duration.inWholeMilliseconds).milliseconds
         }
     }
 

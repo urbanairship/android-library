@@ -5,6 +5,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import junit.framework.TestCase
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -57,12 +60,12 @@ public class ResponseTest {
     public fun testRetryAfterDate() {
         val clock: Clock = TestClock()
 
-        val futureTimeStamp = DateUtils.createIso8601TimeStamp(clock.currentTimeMillis() + 100000)
+        val futureTimeStamp = DateUtils.createIso8601TimeStamp(clock.now() + 100000.milliseconds)
         val headers = mapOf("Retry-After" to futureTimeStamp)
 
         val response = Response<Void?>(200, null, null, headers)
         TestCase.assertEquals(
-            (DateUtils.parseIso8601(futureTimeStamp, -1) - clock.currentTimeMillis()).milliseconds,
+            DateUtils.parseIso8601(futureTimeStamp) - clock.now(),
             response.getRetryAfterHeader(clock)
         )
     }
@@ -95,7 +98,8 @@ public class ResponseTest {
     public fun testRetryAfterHttpDate() {
         // RFC 7231 §7.1.1.1 IMF-fixdate format.
         val clock = TestClock()
-        clock.currentTimeMillis = 1689012646000L // 2023-07-10T18:10:46Z
+        // 2023-07-10T18:10:46Z
+        clock.currentTime = Instant.ofEpochMilli(1689012646000L)
         val response = Response<Void?>(200, null, null,
             mapOf("Retry-After" to "Mon, 10 Jul 2023 18:11:46 GMT"))
         TestCase.assertEquals(60.seconds, response.getRetryAfterHeader(clock))
@@ -119,7 +123,7 @@ public class ResponseTest {
     public fun testRetryAfterCoercesPastDateToZero() {
         // A Retry-After date in the past would yield a negative Duration; clamp to zero.
         val clock = TestClock()
-        val pastTimeStamp = DateUtils.createIso8601TimeStamp(clock.currentTimeMillis() - 100000)
+        val pastTimeStamp = DateUtils.createIso8601TimeStamp(clock.now() - 100000.milliseconds)
         val response = Response<Void?>(200, null, null, mapOf("Retry-After" to pastTimeStamp))
         TestCase.assertEquals(Duration.ZERO, response.getRetryAfterHeader(clock))
     }

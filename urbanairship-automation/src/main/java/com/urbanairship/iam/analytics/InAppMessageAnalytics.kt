@@ -21,6 +21,9 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.meteredusage.MeteredUsageEventEntity
 import com.urbanairship.meteredusage.MeteredUsageType
 import com.urbanairship.util.Clock
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.UUID
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -109,7 +112,7 @@ internal class InAppMessageAnalytics private constructor(
     }
 
     override fun recordEvent(event: LayoutEvent, layoutContext: LayoutData?) {
-        val now = clock.currentTimeMillis()
+        val now = clock.now()
 
         if (event is InAppDisplayEvent) {
             val lastDisplay = displayHistory.value.lastDisplay
@@ -193,13 +196,13 @@ internal class InAppMessageAnalytics private constructor(
 
         return when (displayImpressionRule) {
             is InAppDisplayImpressionRule.Interval -> {
-                (clock.currentTimeMillis() - lastImpression.date) >= displayImpressionRule.value.inWholeMilliseconds
+                (clock.now() - lastImpression.date) >= displayImpressionRule.value
             }
             is InAppDisplayImpressionRule.Once -> false
         }
     }
 
-    override fun recordImpression(date: Long): Boolean {
+    override fun recordImpression(date: Instant): Boolean {
         if (!shouldRecordImpression()) {
             return false
         }

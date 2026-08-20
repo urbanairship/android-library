@@ -1,7 +1,8 @@
 package com.urbanairship.automation.engine
 
 import com.urbanairship.util.Clock
-import kotlin.time.Duration.Companion.milliseconds
+import com.urbanairship.util.minus
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
@@ -16,7 +17,7 @@ internal class EventsHistory(
     }
 
     private class Entry(
-        val timestamp: Long,
+        val timestamp: Instant,
         val event: AutomationEvent
     )
 
@@ -24,7 +25,7 @@ internal class EventsHistory(
 
     fun add(event: AutomationEvent) {
         history.update {
-            pruneExpired(it) + Entry(clock.currentTimeMillis(), event)
+            pruneExpired(it) + Entry(clock.now(), event)
         }
     }
 
@@ -36,7 +37,7 @@ internal class EventsHistory(
         return input
             .takeLast(MAX_EVENTS_COUNT)
             .filter {
-            val diff = (clock.currentTimeMillis() - it.timestamp).milliseconds
+            val diff = clock.now() - it.timestamp
             diff < HISTORY_DURATION
         }
     }

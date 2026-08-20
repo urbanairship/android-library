@@ -10,6 +10,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.channel.AirshipChannel
+import java.time.Instant
 import java.util.Calendar
 import io.mockk.every
 import io.mockk.mockk
@@ -247,7 +248,7 @@ public class ChannelCaptureTest {
      */
     private fun knockAndRunLooperTasks(repeat: Int) {
         for (i in 0..<repeat) {
-            activityMonitor.foreground(Calendar.getInstance().timeInMillis)
+            activityMonitor.foreground(Instant.now())
         }
 
         dispatcher.scheduler.advanceUntilIdle()

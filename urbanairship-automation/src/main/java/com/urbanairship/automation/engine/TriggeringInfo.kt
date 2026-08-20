@@ -8,13 +8,14 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.json.requireField
+import com.urbanairship.json.requireEpochMillis
+import java.time.Instant
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 internal data class TriggeringInfo(
     val context: DeferredTriggerContext?,
-    val date: Long
+    val date: Instant
 ) : JsonSerializable {
     internal companion object {
         private const val CONTEXT = "context"
@@ -25,13 +26,13 @@ internal data class TriggeringInfo(
             val content = value.requireMap()
             return TriggeringInfo(
                 context = content[CONTEXT]?.let(DeferredTriggerContext::fromJson),
-                date = content.requireField(DATE)
+                date = content.requireEpochMillis(DATE)
             )
         }
     }
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
         CONTEXT to context,
-        DATE to date
+        DATE to date.toEpochMilli()
     ).toJsonValue()
 }

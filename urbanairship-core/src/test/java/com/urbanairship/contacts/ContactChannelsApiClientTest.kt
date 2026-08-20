@@ -10,6 +10,7 @@ import com.urbanairship.http.RequestAuth
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import java.util.UUID
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNotNull
@@ -57,10 +58,10 @@ public class ContactChannelsApiClientTest {
                     "type": "email",
                     "channel_id": "some-email-channel",
                     "email_address": "some-email-masked-address",
-                    "commercial_opted_in": "${DateUtils.createIso8601TimeStamp(1000)}",
-                    "commercial_opted_out": "${DateUtils.createIso8601TimeStamp(2000)}",
-                    "transactional_opted_in": "${DateUtils.createIso8601TimeStamp(3000)}",
-                    "transactional_opted_out": "${DateUtils.createIso8601TimeStamp(4000)}"
+                    "commercial_opted_in": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(1000))}",
+                    "commercial_opted_out": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(2000))}",
+                    "transactional_opted_in": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(3000))}",
+                    "transactional_opted_out": "${DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(4000))}"
                    }
                 ]
             }
@@ -89,10 +90,10 @@ public class ContactChannelsApiClientTest {
                ContactChannel.Email.RegistrationInfo.Registered(
                     channelId = "some-email-channel",
                     maskedAddress = "some-email-masked-address",
-                    commercialOptedIn = 1000,
-                    commercialOptedOut = 2000,
-                    transactionalOptedIn = 3000,
-                    transactionalOptedOut = 4000,
+                    commercialOptedIn = Instant.ofEpochMilli(1000),
+                    commercialOptedOut = Instant.ofEpochMilli(2000),
+                    transactionalOptedIn = Instant.ofEpochMilli(3000),
+                    transactionalOptedOut = Instant.ofEpochMilli(4000),
                 )
             )
         )

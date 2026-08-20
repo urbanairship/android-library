@@ -17,6 +17,7 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
 import io.mockk.every
 import io.mockk.mockk
+import java.time.Instant
 import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.test.TestResult
@@ -65,7 +66,7 @@ public class DeferredApiClientTest {
             TagGroupsMutation.newSetTagsMutation("group-set", setOf("tag-5", "tag-6"))
         )
 
-        val currentDate = Date().time
+        val currentDate = Instant.now()
         val attributesOverrides = listOf(
             AttributeMutation.newSetAttributeMutation(
                 "test-key", JsonValue.wrap("attr-value"), currentDate

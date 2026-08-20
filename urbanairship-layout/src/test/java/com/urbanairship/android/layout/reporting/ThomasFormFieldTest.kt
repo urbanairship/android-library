@@ -8,6 +8,7 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
+import java.time.Instant
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.intellij.lang.annotations.Language
 import org.junit.Assert.assertEquals

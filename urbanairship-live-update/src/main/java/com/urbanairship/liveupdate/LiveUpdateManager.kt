@@ -18,6 +18,8 @@ import com.urbanairship.liveupdate.notification.LiveUpdatePayload
 import com.urbanairship.push.PushManager
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.PendingResult
+import com.urbanairship.util.Clock
+import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -75,8 +77,8 @@ internal constructor(
         name: String,
         type: String,
         content: JsonMap,
-        timestamp: Long = System.currentTimeMillis(),
-        dismissTimestamp: Long? = null,
+        timestamp: Instant = Clock.DEFAULT_CLOCK.now(),
+        dismissTimestamp: Instant? = null,
     ) {
         if (isFeatureEnabled) {
             registrar.start(name, type, content, timestamp, dismissTimestamp)
@@ -95,8 +97,8 @@ internal constructor(
     public fun update(
         name: String,
         content: JsonMap,
-        timestamp: Long = System.currentTimeMillis(),
-        dismissTimestamp: Long? = null,
+        timestamp: Instant = Clock.DEFAULT_CLOCK.now(),
+        dismissTimestamp: Instant? = null,
     ) {
         if (isFeatureEnabled) {
             registrar.update(name, content, timestamp, dismissTimestamp)
@@ -115,8 +117,8 @@ internal constructor(
     public fun end(
         name: String,
         content: JsonMap? = null,
-        timestamp: Long = System.currentTimeMillis(),
-        dismissTimestamp: Long? = null,
+        timestamp: Instant = Clock.DEFAULT_CLOCK.now(),
+        dismissTimestamp: Instant? = null,
     ) {
         if (isFeatureEnabled) {
             registrar.stop(name, content, timestamp, dismissTimestamp)

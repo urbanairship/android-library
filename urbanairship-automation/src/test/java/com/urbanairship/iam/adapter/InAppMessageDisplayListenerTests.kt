@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
 import com.urbanairship.iam.info.InAppMessageButtonInfo
 import com.urbanairship.iam.info.InAppMessageTextInfo
 import com.urbanairship.util.timer.ManualTimer
+import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.every
 import io.mockk.mockk
@@ -53,9 +54,9 @@ public class InAppMessageDisplayListenerTests {
 
     @Test
     public fun testOnButtonDismissed() {
-        clock.currentTimeMillis = 0
+        clock.currentTime = Instant.ofEpochMilli(0)
         timer.start()
-        clock.currentTimeMillis = 10
+        clock.currentTime = Instant.ofEpochMilli(10)
 
         assertTrue(timer.isStarted)
 
@@ -81,9 +82,9 @@ public class InAppMessageDisplayListenerTests {
 
     @Test
     public fun testOnButtonCancel() {
-        clock.currentTimeMillis = 0
+        clock.currentTime = Instant.ofEpochMilli(0)
         timer.start()
-        clock.currentTimeMillis = 10
+        clock.currentTime = Instant.ofEpochMilli(10)
 
         assertTrue(timer.isStarted)
 
@@ -109,10 +110,10 @@ public class InAppMessageDisplayListenerTests {
 
     @Test
     public fun testOnTimedOut() {
-        clock.currentTimeMillis = 0
+        clock.currentTime = Instant.ofEpochMilli(0)
         timer.start()
         assertTrue(timer.isStarted)
-        clock.currentTimeMillis = 3
+        clock.currentTime = Instant.ofEpochMilli(3)
         listener.onTimedOut()
         verifyEvents(listOf(LayoutResolutionEvent.timedOut(3.milliseconds)))
         assertFalse(timer.isStarted)
@@ -121,10 +122,10 @@ public class InAppMessageDisplayListenerTests {
 
     @Test
     public fun testOnUserDismissed() {
-        clock.currentTimeMillis = 0
+        clock.currentTime = Instant.ofEpochMilli(0)
         timer.start()
         assertTrue(timer.isStarted)
-        clock.currentTimeMillis = 3
+        clock.currentTime = Instant.ofEpochMilli(3)
 
         listener.onUserDismissed()
         verifyEvents(listOf(LayoutResolutionEvent.userDismissed(3.milliseconds)))
@@ -134,9 +135,9 @@ public class InAppMessageDisplayListenerTests {
 
     @Test
     public fun testOnMessageTapDismissed() {
-        clock.currentTimeMillis = 0
+        clock.currentTime = Instant.ofEpochMilli(0)
         timer.start()
-        clock.currentTimeMillis = 2
+        clock.currentTime = Instant.ofEpochMilli(2)
 
         listener.onMessageTapDismissed()
 

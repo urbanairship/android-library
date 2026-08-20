@@ -10,7 +10,11 @@ import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListMutation
 import app.cash.turbine.test
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -32,11 +36,11 @@ public class AudienceOverridesProviderTest {
                     setOf("neat")
                 )
             ), attributes = listOf(
-                AttributeMutation.newRemoveAttributeMutation("some pending attribute", 0),
-                AttributeMutation.newRemoveAttributeMutation("some other pending attribute", 0)
+                AttributeMutation.newRemoveAttributeMutation("some pending attribute", Instant.ofEpochMilli(0)),
+                AttributeMutation.newRemoveAttributeMutation("some other pending attribute", Instant.ofEpochMilli(0))
             ), subscriptions = listOf(
-                ScopedSubscriptionListMutation.newSubscribeMutation("some list", Scope.APP, 0),
-                ScopedSubscriptionListMutation.newSubscribeMutation("some other list", Scope.SMS, 0)
+                ScopedSubscriptionListMutation.newSubscribeMutation("some list", Scope.APP, Instant.ofEpochMilli(0)),
+                ScopedSubscriptionListMutation.newSubscribeMutation("some other list", Scope.SMS, Instant.ofEpochMilli(0))
             )
         )
 
@@ -99,11 +103,11 @@ public class AudienceOverridesProviderTest {
                     setOf("neat")
                 )
             ), attributes = listOf(
-                AttributeMutation.newRemoveAttributeMutation("some pending attribute", 0),
-                AttributeMutation.newRemoveAttributeMutation("some other pending attribute", 0)
+                AttributeMutation.newRemoveAttributeMutation("some pending attribute", Instant.ofEpochMilli(0)),
+                AttributeMutation.newRemoveAttributeMutation("some other pending attribute", Instant.ofEpochMilli(0))
             ), subscriptions = listOf(
-                SubscriptionListMutation.newSubscribeMutation("some list", 0),
-                SubscriptionListMutation.newSubscribeMutation("some other list", 0)
+                SubscriptionListMutation.newSubscribeMutation("some list", Instant.ofEpochMilli(0)),
+                SubscriptionListMutation.newSubscribeMutation("some other list", Instant.ofEpochMilli(0))
             )
         )
 
@@ -141,7 +145,7 @@ public class AudienceOverridesProviderTest {
             tags = listOf(TagGroupsMutation.newAddTagsMutation("some other group", setOf("foo"))),
         )
 
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
 
         provider.recordChannelUpdate(
             "some channel",
@@ -160,7 +164,7 @@ public class AudienceOverridesProviderTest {
         )
 
         // Right before the contact update expires
-        clock.currentTimeMillis += 599998
+        clock.currentTime += (599998).milliseconds
 
         // Almost expired, should have both
         assertEquals(
@@ -174,7 +178,7 @@ public class AudienceOverridesProviderTest {
         )
 
         // Expire contact
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
 
         // Contact update expired, should just have channel
         assertEquals(
@@ -186,7 +190,7 @@ public class AudienceOverridesProviderTest {
             provider.channelOverrides("some channel", "some contact")
         )
 
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
 
         // Both expired, should be empty
         assertEquals(

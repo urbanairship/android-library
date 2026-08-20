@@ -28,7 +28,10 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
 import java.security.SecureRandom
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.Lock
@@ -84,7 +87,7 @@ public class RemoteData @VisibleForTesting internal constructor(
 
     private val scope = CoroutineScope(coroutineDispatcher + SupervisorJob())
 
-    private var lastForegroundDispatchTime: Long = 0
+    private var lastForegroundDispatchTime: Instant = Instant.EPOCH
     private val changeTokenLock: Lock = ReentrantLock()
 
     private var startUpRefreshJob: Job? = null
@@ -151,9 +154,9 @@ public class RemoteData @VisibleForTesting internal constructor(
     )
 
     private val applicationListener: ApplicationListener = object : SimpleApplicationListener() {
-        override fun onForeground(milliseconds: Long) {
-            val now = clock.currentTimeMillis()
-            if (now >= lastForegroundDispatchTime + getRefreshInterval().inWholeMilliseconds) {
+        override fun onForeground(timestamp: Instant) {
+            val now = clock.now()
+            if (now >= lastForegroundDispatchTime + getRefreshInterval()) {
                 updateChangeToken()
                 dispatchRefreshJobAsync()
                 lastForegroundDispatchTime = now
@@ -161,7 +164,7 @@ public class RemoteData @VisibleForTesting internal constructor(
             startForegroundPollingIfNeeded()
         }
 
-        override fun onBackground(milliseconds: Long) {
+        override fun onBackground(timestamp: Instant) {
             stopForegroundPolling()
         }
     }
@@ -233,7 +236,7 @@ public class RemoteData @VisibleForTesting internal constructor(
         activityMonitor.addApplicationListener(applicationListener)
 
         if (activityMonitor.isAppForegrounded) {
-            applicationListener.onForeground(clock.currentTimeMillis())
+            applicationListener.onForeground(clock.now())
         }
     }
 
