@@ -17,8 +17,10 @@ import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration.Companion.milliseconds
 
 internal class AutomationStoreMigrator(
     private val legacyDatabase: AutomationDatabase,
@@ -52,19 +54,18 @@ internal class AutomationStoreMigrator(
                     data = scheduleData,
                     triggers = getTriggers(fullSchedule, TriggerExecutionType.EXECUTION),
                     startDate = fullSchedule.schedule.scheduleStart.let {
-                        if (it >= 0) { it.toULong() } else { null }
+                        if (it >= 0) { Instant.ofEpochMilli(it) } else { null }
                     },
                     endDate = fullSchedule.schedule.scheduleEnd.let {
-                        if (it >= 0) { it.toULong() } else { null }
+                        if (it >= 0) { Instant.ofEpochMilli(it) } else { null }
                     },
-                    created = fullSchedule.schedule.newUserEvaluationDate.toULong(),
+                    created = Instant.ofEpochMilli(fullSchedule.schedule.newUserEvaluationDate),
                     group = fullSchedule.schedule.group,
                     priority = fullSchedule.schedule.priority,
                     limit = fullSchedule.schedule.limit.let {
                         if (it >= 0) { it.toUInt() } else { null }
                     },
-                    // Legacy storage kept the interval in milliseconds, the new schedule expects seconds.
-                    interval = TimeUnit.MILLISECONDS.toSeconds(fullSchedule.schedule.interval).toULong(),
+                    interval = fullSchedule.schedule.interval.milliseconds,
                     delay = getDelay(fullSchedule),
                     metadata = fullSchedule.schedule.metadata?.toJsonValue(),
                     campaigns = fullSchedule.schedule.campaigns,
@@ -83,7 +84,7 @@ internal class AutomationStoreMigrator(
                     AutomationScheduleData(
                         automationSchedule,
                         convertScheduleState(fullSchedule.schedule.executionState),
-                        fullSchedule.schedule.executionStateChangeDate,
+                        Instant.ofEpochMilli(fullSchedule.schedule.executionStateChangeDate),
                         fullSchedule.schedule.count,
                         getTriggeringInfo(fullSchedule.schedule),
                         getPreparedScheduleInfo(fullSchedule.schedule),
@@ -179,7 +180,7 @@ internal class AutomationStoreMigrator(
     private fun getTriggeringInfo(schedule: ScheduleEntity): TriggeringInfo {
         return TriggeringInfo(
             context = null,
-            date = schedule.triggeredTime
+            date = Instant.ofEpochMilli(schedule.triggeredTime)
         )
     }
 

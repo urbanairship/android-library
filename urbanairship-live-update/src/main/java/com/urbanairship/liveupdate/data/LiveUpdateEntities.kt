@@ -8,6 +8,7 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.urbanairship.json.JsonMap
+import java.time.Instant
 
 @Entity(tableName = "live_update_state")
 internal data class LiveUpdateState(
@@ -17,10 +18,10 @@ internal data class LiveUpdateState(
     val isActive: Boolean,
     /** Timestamp of the last START or STOP event for this Live Update. */
     @ColumnInfo(name = "last_start_stop_time")
-    val timestamp: Long,
+    val timestamp: Instant,
     /** Optional timestamp, to auto-dismiss the Live Update. */
     @ColumnInfo(name = "dismissal_date")
-    val dismissalDate: Long? = null
+    val dismissalDate: Instant? = null
 )
 
 @Entity(tableName = "live_update_content")
@@ -30,7 +31,7 @@ internal data class LiveUpdateContent(
     val content: JsonMap,
     /** Timestamp of the last UPDATE event for this Live Update. */
     @ColumnInfo(name = "last_update_time")
-    val timestamp: Long
+    val timestamp: Instant
 )
 
 /** Wrapper data class representing a Live Update's state, joined with the latest content. */

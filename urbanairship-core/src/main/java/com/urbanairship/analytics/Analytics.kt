@@ -30,6 +30,7 @@ import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.Permission
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.Clock
+import java.time.Instant
 import java.util.TimeZone
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
@@ -89,12 +90,12 @@ public constructor(
     public val events: SharedFlow<AirshipEventData> = _events.asSharedFlow()
 
     private val listener: ApplicationListener =  object : ApplicationListener {
-        override fun onForeground(milliseconds: Long) {
-            this@Analytics.onForeground(milliseconds)
+        override fun onForeground(timestamp: Instant) {
+            this@Analytics.onForeground(timestamp)
         }
 
-        override fun onBackground(milliseconds: Long) {
-            this@Analytics.onBackground(milliseconds)
+        override fun onBackground(timestamp: Instant) {
+            this@Analytics.onBackground(timestamp)
         }
     }
 
@@ -155,7 +156,7 @@ public constructor(
     // Screen state
     private var _currentScreen: MutableStateFlow<String?> = MutableStateFlow(null)
     private var previousScreen: String? = null
-    private var screenStartTime: Long = 0
+    private var screenStartTime: Instant = Instant.EPOCH
 
     /**
      * The name of the screen that is currently being tracked by [trackScreen]
@@ -207,7 +208,7 @@ public constructor(
     init {
         activityMonitor.addApplicationListener(listener)
         if (activityMonitor.isAppForegrounded) {
-            onForeground(clock.currentTimeMillis())
+            onForeground(clock.now())
         }
 
         airshipChannel.addChannelListener { uploadEvents() }
@@ -310,7 +311,7 @@ public constructor(
             sessionId = sessionId,
             body = event.getEventData(context, conversionData).toJsonValue(),
             type = event.type,
-            timeMs = event.timeMilliseconds
+            timestamp = event.timestamp
         )
 
         val feedEvent = when(event) {
@@ -342,9 +343,9 @@ public constructor(
     /**
      * Called when the app is foregrounded.
      *
-     * @param timeMS Time of foregrounding.
+     * @param timestamp Time of foregrounding.
      */
-    private fun onForeground(timeMS: Long) {
+    private fun onForeground(timestamp: Instant) {
         // Start a new environment when the app enters the foreground
         sessionId = UUID.randomUUID().toString()
         UALog.d { "New session: $sessionId" }
@@ -354,20 +355,20 @@ public constructor(
         // screenview triggers don't fire on foreground.
         if (screenState.value == null && previousScreen != null) {
             _currentScreen.value = previousScreen
-            screenStartTime = clock.currentTimeMillis()
+            screenStartTime = clock.now()
         }
-        addEvent(AppForegroundEvent(timeMS))
+        addEvent(AppForegroundEvent(timestamp))
     }
 
     /**
      * Called when the app is backgrounded.
      *
-     * @param timeMS Time when backgrounded.
+     * @param timestamp Time when backgrounded.
      */
-    private fun onBackground(timeMS: Long) {
+    private fun onBackground(timestamp: Instant) {
         // Stop tracking screen
         trackScreen(null)
-        addEvent(AppBackgroundEvent(timeMS))
+        addEvent(AppBackgroundEvent(timestamp))
         conversionSendId = null
         conversionMetadata = null
         if (privacyManager.isEnabled(PrivacyManager.Feature.ANALYTICS)) {
@@ -482,7 +483,7 @@ public constructor(
                 currentScreenValue,
                 previousScreen,
                 screenStartTime,
-                clock.currentTimeMillis()
+                clock.now()
             )
 
             // Set previous screen to last tracked screen
@@ -493,7 +494,7 @@ public constructor(
         }
 
         _currentScreen.value = screen
-        screenStartTime = clock.currentTimeMillis()
+        screenStartTime = clock.now()
         if (screen != null) {
             eventFeed.emit(AirshipEventFeed.Event.Screen(screen))
         }

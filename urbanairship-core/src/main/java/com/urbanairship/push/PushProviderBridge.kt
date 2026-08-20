@@ -10,6 +10,8 @@ import com.urbanairship.AirshipDispatchers
 import com.urbanairship.Autopilot
 import com.urbanairship.UALog
 import java.util.concurrent.TimeoutException
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
@@ -67,18 +69,32 @@ public object PushProviderBridge {
         private val pushMessage: PushMessage
     ) {
 
-        private var maxCallbackWaitTime: Long = 0
+        private var maxCallbackWaitTime: Duration = Duration.ZERO
+
+        /**
+         * Sets the max callback wait time.
+         *
+         * @param duration The max callback wait time. If not positive, the callback will
+         * wait until the push request is completed.
+         * @return The process push request.
+         */
+        public fun setMaxCallbackWaitTime(duration: Duration): ProcessPushRequest {
+            return this.also { it.maxCallbackWaitTime = duration }
+        }
 
         /**
          * Sets the max callback wait time in milliseconds.
+         *
+         * Provided for Java callers, which cannot express a [Duration]. Named separately
+         * rather than overloading [setMaxCallbackWaitTime] so that a Kotlin caller cannot
+         * pass a bare number and have it mean milliseconds by convention.
          *
          * @param milliseconds The max callback wait time. If <= 0, the callback will
          * wait until the push request is completed.
          * @return The process push request.
          */
-        public fun setMaxCallbackWaitTime(milliseconds: Long): ProcessPushRequest {
-            return this.also { it.maxCallbackWaitTime = milliseconds }
-        }
+        public fun setMaxCallbackWaitTimeMs(milliseconds: Long): ProcessPushRequest =
+            setMaxCallbackWaitTime(milliseconds.milliseconds)
 
         /**
          * Executes the request.
@@ -108,7 +124,7 @@ public object PushProviderBridge {
                 .build()
 
             try {
-                if (maxCallbackWaitTime > 0) {
+                if (maxCallbackWaitTime > Duration.ZERO) {
                     withTimeout(maxCallbackWaitTime) {
                         pushJob.run()
                     }

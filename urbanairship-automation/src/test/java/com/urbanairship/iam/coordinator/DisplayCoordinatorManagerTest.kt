@@ -5,6 +5,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.AirshipLayout
@@ -12,8 +13,11 @@ import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.json.JsonValue
 import io.mockk.mockk
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -24,6 +28,33 @@ public class DisplayCoordinatorManagerTest {
     private val dataStore = PreferenceStore.inMemoryStore(context)
     private val activityMonitor: ActivityMonitor = mockk(relaxed = true)
     private val manager = DisplayCoordinatorManager(dataStore, activityMonitor)
+
+    @Test
+    public fun testDisplayIntervalRoundTripsSubSecondValues() {
+        manager.displayInterval = 1500.milliseconds
+
+        assertEquals(1500.milliseconds, manager.displayInterval)
+        // A fresh manager over the same store reads back what the last one wrote.
+        assertEquals(
+            1500.milliseconds,
+            DisplayCoordinatorManager(dataStore, activityMonitor).displayInterval
+        )
+    }
+
+    @Test
+    public fun testDisplayIntervalReadsLegacySecondsKey() {
+        dataStore.put(SyncPrefKey.long("UAInAppMessageManagerDisplayInterval"), 30L)
+
+        assertEquals(
+            30.seconds,
+            DisplayCoordinatorManager(dataStore, activityMonitor).displayInterval
+        )
+    }
+
+    @Test
+    public fun testDisplayIntervalDefaultsToZero() {
+        assertEquals(Duration.ZERO, manager.displayInterval)
+    }
 
     @Test
     public fun testDefaultAdapter() {

@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonValue
+import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -20,7 +21,7 @@ public class ScreenTrackingEventTest {
      */
     @Test
     public fun testScreenTrackingEventData() {
-        val event = ScreenTrackingEvent("test_screen", "previous_screen", 0, 10)
+        val event = ScreenTrackingEvent("test_screen", "previous_screen", Instant.ofEpochMilli(0), Instant.ofEpochMilli(10))
 
         val expected = JsonValue.parseString("""
             {
@@ -43,19 +44,19 @@ public class ScreenTrackingEventTest {
     @Test
     public fun testSetScreen() {
         var screen = createFixedSizeString('a', 256)
-        var event = ScreenTrackingEvent(screen, null, 0, 1)
+        var event = ScreenTrackingEvent(screen, null, Instant.ofEpochMilli(0), Instant.ofEpochMilli(1))
 
         // Check that 256 character screen is invalid
         assertFalse(event.isValid())
 
         screen = createFixedSizeString('a', 255)
-        event = ScreenTrackingEvent(screen, null, 0, 1)
+        event = ScreenTrackingEvent(screen, null, Instant.ofEpochMilli(0), Instant.ofEpochMilli(1))
 
         // Check that 255 character screen is valid
         assertTrue(event.isValid())
 
         screen = ""
-        event = ScreenTrackingEvent(screen, null, 0, 1)
+        event = ScreenTrackingEvent(screen, null, Instant.ofEpochMilli(0), Instant.ofEpochMilli(1))
 
         // Check that 0 character screen is invalid
         assertFalse(event.isValid())
@@ -66,17 +67,17 @@ public class ScreenTrackingEventTest {
      */
     @Test
     public fun testSetDuration() {
-        var event = ScreenTrackingEvent("test_screen", null, 0, 1)
+        var event = ScreenTrackingEvent("test_screen", null, Instant.ofEpochMilli(0), Instant.ofEpochMilli(1))
 
         // Check that duration of 1 is valid
         assertTrue(event.isValid())
 
-        event = ScreenTrackingEvent("test_screen", null, 0, 0)
+        event = ScreenTrackingEvent("test_screen", null, Instant.ofEpochMilli(0), Instant.ofEpochMilli(0))
 
         // Check that duration of 0 is valid
         assertTrue(event.isValid())
 
-        event = ScreenTrackingEvent("test_screen", null, 0, -1)
+        event = ScreenTrackingEvent("test_screen", null, Instant.ofEpochMilli(0), Instant.ofEpochMilli(-1))
 
         // Check that duration of -1 is invalid
         assertFalse(event.isValid())

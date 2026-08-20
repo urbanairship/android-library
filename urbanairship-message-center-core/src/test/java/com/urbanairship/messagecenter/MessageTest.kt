@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import java.util.Date
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
@@ -35,7 +36,7 @@ public class MessageTest {
             "https://device-api.urbanairship.com/api/user/test/messages/message/MESSAGE_ID/",
             message.messageUrl
         )
-        assertEquals(Date(1443026786000L), message.sentDate)
+        assertEquals(Instant.ofEpochMilli(1443026786000L), message.sentDate)
         assertFalse(message.isRead)
         assertFalse(message.isDeleted)
 
@@ -57,16 +58,48 @@ public class MessageTest {
     public fun testMessageExpiry() {
         // Add expiry
         val map = JsonValue.parseString(MCRAP_MESSAGE).requireMap().map.toMutableMap()
-        map["message_expiry"] = JsonValue.wrap(DateUtils.createIso8601TimeStamp(10000L))
+        map["message_expiry"] = JsonValue.wrap(DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(10000)))
         val message = requireNotNull(
             Message.create(JsonValue.wrap(map), true, false)
         )
 
         // Expiry
-        assertEquals(Date(10000L), message.expirationDate)
+        assertEquals(Instant.ofEpochMilli(10000L), message.expirationDate)
         assertTrue(message.isExpired)
     }
 
+
+    /**
+     * An unparseable expiry reads as no expiry. A null `expirationDate` already means
+     * "never expires" at every consumer, so no far-future sentinel is used — one would make
+     * the message a candidate for the inbox's next-expiry refresh and schedule an absurd
+     * delay, and `Instant.MAX` cannot even be converted back to epoch millis or to a `Date`.
+     */
+    @Test
+    @Throws(JsonException::class)
+    public fun testMessageUnparseableExpiryIsTreatedAsNoExpiry() {
+        val map = JsonValue.parseString(MCRAP_MESSAGE).requireMap().map.toMutableMap()
+        map["message_expiry"] = JsonValue.wrap("not a date")
+        val message = requireNotNull(
+            Message.create(JsonValue.wrap(map), true, false)
+        )
+
+        assertNull(message.expirationDate)
+        assertFalse(message.isExpired)
+    }
+
+    @Test
+    @Throws(JsonException::class)
+    public fun testMessageMissingExpiryIsTreatedAsNoExpiry() {
+        val map = JsonValue.parseString(MCRAP_MESSAGE).requireMap().map.toMutableMap()
+        map.remove("message_expiry")
+        val message = requireNotNull(
+            Message.create(JsonValue.wrap(map), true, false)
+        )
+
+        assertNull(message.expirationDate)
+        assertFalse(message.isExpired)
+    }
 
     /** Test message parses its data correctly. */
     @Test
@@ -77,13 +110,13 @@ public class MessageTest {
         // remove sent date
         map.remove("message_sent")
 
-        val now = Date()
+        val now = Instant.now()
         val message = requireNotNull(
             Message.create(JsonValue.wrap(map), true, false)
         )
 
         // Verify that we set the sent date to now when the message was created
-        assertEquals(now.toString(), message.sentDate.toString())
+        assertEquals(now.toEpochMilli().toDouble(), message.sentDate.toEpochMilli().toDouble(), 1000.0)
     }
 
     @Test
@@ -144,7 +177,7 @@ public class MessageTest {
             id = "message-id",
             title = "title",
             bodyUrl = "test://url",
-            sentDate = Date(),
+            sentDate = Instant.now(),
             expirationDate = null,
             isUnread = true,
             extras = null,

@@ -319,7 +319,7 @@ public class BannerPlacementTest {
         """.trimIndent()
 
         val presentation = BannerPresentation.fromJson(JsonValue.parseString(json))
-        assertEquals(7500L, presentation.durationMs)
+        assertEquals(7500.milliseconds, presentation.duration)
     }
 
     @Test
@@ -339,7 +339,7 @@ public class BannerPlacementTest {
         """.trimIndent()
 
         val presentation = BannerPresentation.fromJson(JsonValue.parseString(json))
-        assertEquals(7000L, presentation.durationMs)
+        assertEquals(7000.milliseconds, presentation.duration)
     }
 
     @Test
@@ -358,43 +358,43 @@ public class BannerPlacementTest {
         """.trimIndent()
 
         val presentation = BannerPresentation.fromJson(JsonValue.parseString(json))
-        assertNull(presentation.durationMs)
+        assertNull(presentation.duration)
     }
 
     @Test
     public fun testPresentationNegativeDurationIsNull() {
         val presentation = BannerPresentation.fromJson(presentationJson("\"duration_seconds\": -5"))
-        assertNull(presentation.durationMs)
+        assertNull(presentation.duration)
     }
 
     @Test
     public fun testPresentationZeroDurationIsNull() {
         val presentation = BannerPresentation.fromJson(presentationJson("\"duration_seconds\": 0"))
-        assertNull(presentation.durationMs)
+        assertNull(presentation.duration)
     }
 
     @Test
     public fun testPresentationWrongTypedDurationIsNull() {
         val presentation = BannerPresentation.fromJson(presentationJson("\"duration_seconds\": \"7\""))
-        assertNull(presentation.durationMs)
+        assertNull(presentation.duration)
     }
 
     @Test
     public fun testPresentationNegativeLegacyDurationIsNull() {
         val presentation = BannerPresentation.fromJson(presentationJson("\"duration_milliseconds\": -7000"))
-        assertNull(presentation.durationMs)
+        assertNull(presentation.duration)
     }
 
     @Test
     public fun testPresentationZeroLegacyDurationIsNull() {
         val presentation = BannerPresentation.fromJson(presentationJson("\"duration_milliseconds\": 0"))
-        assertNull(presentation.durationMs)
+        assertNull(presentation.duration)
     }
 
     @Test
     public fun testPresentationWrongTypedLegacyDurationIsNull() {
         val presentation = BannerPresentation.fromJson(presentationJson("\"duration_milliseconds\": \"7000\""))
-        assertNull(presentation.durationMs)
+        assertNull(presentation.duration)
     }
 
     @Test
@@ -402,7 +402,7 @@ public class BannerPlacementTest {
         val presentation = BannerPresentation.fromJson(
             presentationJson("\"duration_seconds\": 0, \"duration_milliseconds\": 7000")
         )
-        assertEquals(7000L, presentation.durationMs)
+        assertEquals(7000.milliseconds, presentation.duration)
     }
 
     @Test
@@ -410,7 +410,7 @@ public class BannerPlacementTest {
         val presentation = BannerPresentation.fromJson(
             presentationJson("\"duration_seconds\": 5, \"duration_milliseconds\": 9000")
         )
-        assertEquals(5000L, presentation.durationMs)
+        assertEquals(5000.milliseconds, presentation.duration)
     }
 
     private fun placementJson(fields: String): JsonValue {

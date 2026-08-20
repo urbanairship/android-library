@@ -44,6 +44,7 @@ import com.urbanairship.preferencecenter.ui.item.SectionBreakItem
 import com.urbanairship.preferencecenter.ui.item.SectionItem
 import com.urbanairship.preferencecenter.util.airshipScanConcat
 import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -771,7 +772,7 @@ internal val ContactChannel.isOptedIn: Boolean
                         info.commercialOptedOut == null -> info.commercialOptedIn != null
                         // If opted in and out are both non-null, check to see if opted in is more recent
                         info.commercialOptedIn != null && info.commercialOptedOut != null ->
-                            (info.commercialOptedIn ?: 0) > (info.commercialOptedOut ?: 0)
+                            (info.commercialOptedIn ?: Instant.EPOCH) > (info.commercialOptedOut ?: Instant.EPOCH)
                         // Not opted in
                         else -> false
                     }

@@ -13,6 +13,7 @@ import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.android.layout.analytics.events.LayoutEvent
 import com.urbanairship.iam.assets.EmptyAirshipCachedAssets
 import com.urbanairship.json.JsonValue
+import java.time.Instant
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -41,7 +42,7 @@ public class InAppMessagePreview(
                 override fun recordEvent(event: LayoutEvent, layoutContext: LayoutData?) {
                     UALog.d { "Layout event type: ${event.eventType}, data: ${event.data?.toJsonValue()}" }
                 }
-                override fun recordImpression(date: Long): Boolean {
+                override fun recordImpression(date: Instant): Boolean {
                     UALog.d { "Layout impression recorded at: $date" }
                     return false
                 }

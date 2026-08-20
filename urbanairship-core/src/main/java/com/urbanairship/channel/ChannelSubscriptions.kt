@@ -6,6 +6,9 @@ import com.urbanairship.http.RequestException
 import com.urbanairship.util.CachedValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.SerialQueue
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import kotlin.time.Duration.Companion.minutes
 
 internal class ChannelSubscriptions(
     private val subscriptionListApiClient: SubscriptionListApiClient,
@@ -49,7 +52,7 @@ internal class ChannelSubscriptions(
             if (response.isSuccessful && response.value != null) {
                 subscriptionListCache.set(
                     SubscriptionsResult(channelId, response.value),
-                    clock.currentTimeMillis() + SUBSCRIPTION_CACHE_LIFETIME_MS
+                    clock.now() + SUBSCRIPTION_CACHE_LIFETIME
                 )
                 return@run Result.success(response.value)
             }
@@ -62,7 +65,7 @@ internal class ChannelSubscriptions(
         /**
          * Max age for the channel subscription listing cache.
          */
-        private const val SUBSCRIPTION_CACHE_LIFETIME_MS: Long = 10 * 60 * 1000 // 10M
+        private val SUBSCRIPTION_CACHE_LIFETIME = 10.minutes
     }
 }
 

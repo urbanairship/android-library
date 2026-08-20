@@ -9,6 +9,8 @@ import com.urbanairship.http.RequestException
 import com.urbanairship.util.CachedValue
 import com.urbanairship.util.Clock
 import com.urbanairship.util.SerialQueue
+import com.urbanairship.util.minus
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Channel Auth provider.
@@ -37,7 +39,7 @@ public class ChannelAuthTokenProvider internal constructor(
             return null
         }
 
-        if (clock.currentTimeMillis() > token.expirationDateMillis - 30000) {
+        if (clock.now() > token.expiration - 30.seconds) {
             return null
         }
 
@@ -57,7 +59,7 @@ public class ChannelAuthTokenProvider internal constructor(
 
         val authResponse = apiClient.getToken(channelId)
         return@run if (authResponse.isSuccessful && authResponse.value != null) {
-            this.cachedAuth.set(authResponse.value, authResponse.value.expirationDateMillis)
+            this.cachedAuth.set(authResponse.value, authResponse.value.expiration)
             Result.success(authResponse.value.token)
         } else {
             Result.failure(RequestException("Failed to fetch token: ${authResponse.status}"))

@@ -11,6 +11,7 @@ import com.urbanairship.http.RequestAuth
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertNull
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +39,7 @@ public class ChannelAuthApiClientTest {
     @Before
     public fun setup() {
         Dispatchers.setMain(testDispatcher)
-        clock.currentTimeMillis = 100
+        clock.currentTime = Instant.ofEpochMilli(100)
         config.updateRemoteConfig(
             RemoteConfig(
                 airshipConfig = RemoteAirshipConfig(
@@ -67,7 +68,7 @@ public class ChannelAuthApiClientTest {
         val result = requireNotNull(response.value)
         assertEquals(result.identifier, "some channel")
         assertEquals(result.token, "some token")
-        assertEquals(result.expirationDateMillis, 400)
+        assertEquals(result.expiration, Instant.ofEpochMilli(400))
     }
 
     @Test

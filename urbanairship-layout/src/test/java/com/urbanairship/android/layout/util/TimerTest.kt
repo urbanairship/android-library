@@ -2,6 +2,8 @@
 package com.urbanairship.android.layout.util
 
 import java.util.concurrent.TimeUnit
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -15,14 +17,14 @@ public class TimerTest {
 
     private var fireCount = 0
 
-    private fun timer(durationMs: Long): Timer = object : Timer(durationMs) {
+    private fun timer(duration: Duration): Timer = object : Timer(duration) {
         override fun onFinish() {
             fireCount++
         }
     }
 
-    private fun idleFor(durationMs: Long) {
-        ShadowLooper.shadowMainLooper().idleFor(durationMs, TimeUnit.MILLISECONDS)
+    private fun idleFor(duration: Duration) {
+        ShadowLooper.shadowMainLooper().idleFor(duration.inWholeMilliseconds, TimeUnit.MILLISECONDS)
     }
 
     private fun flush() {
@@ -31,11 +33,11 @@ public class TimerTest {
 
     @Test
     public fun testFiresOnceAfterDuration() {
-        val timer = timer(1000)
+        val timer = timer(1000.milliseconds)
         timer.start()
         assertTrue(timer.isStarted)
 
-        idleFor(1000)
+        idleFor(1000.milliseconds)
 
         assertEquals(1, fireCount)
         assertFalse(timer.isStarted)
@@ -52,14 +54,14 @@ public class TimerTest {
      */
     @Test
     public fun testRestartAfterFireIsIgnored() {
-        val timer = timer(1000)
+        val timer = timer(1000.milliseconds)
         timer.start()
-        idleFor(1000)
+        idleFor(1000.milliseconds)
         assertEquals(1, fireCount)
 
         // Simulate an external restart after the timer has already fired.
         timer.start()
-        idleFor(1000)
+        idleFor(1000.milliseconds)
 
         assertEquals("A fired timer must not re-fire on restart", 1, fireCount)
         assertFalse(timer.isStarted)
@@ -72,16 +74,16 @@ public class TimerTest {
      */
     @Test
     public fun testStopBeforeFireStillResumesAndFires() {
-        val timer = timer(1000)
+        val timer = timer(1000.milliseconds)
         timer.start()
 
-        idleFor(400)
+        idleFor(400.milliseconds)
         timer.stop()
         assertEquals(0, fireCount)
 
         // Resume: only the remaining time should be left, then it fires once.
         timer.start()
-        idleFor(600)
+        idleFor(600.milliseconds)
 
         assertEquals(1, fireCount)
         assertFalse(timer.isStarted)
@@ -89,12 +91,12 @@ public class TimerTest {
 
     /**
      * A zero-duration timer fires immediately on start (via the
-     * `remainingTimeMs <= 0` post path — the same path that caused the bug) and
+     * `remainingTime <= ZERO` post path — the same path that caused the bug) and
      * is then terminal: restarting it must not fire again.
      */
     @Test
     public fun testZeroDurationFiresOnceThenIsTerminal() {
-        val timer = timer(0)
+        val timer = timer(0.milliseconds)
         timer.start()
         flush()
         assertEquals(1, fireCount)

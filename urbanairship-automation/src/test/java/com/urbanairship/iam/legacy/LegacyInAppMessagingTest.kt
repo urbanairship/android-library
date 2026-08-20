@@ -21,11 +21,14 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.push.notifications.NotificationActionButton
 import com.urbanairship.push.notifications.NotificationActionButtonGroup
 import com.urbanairship.util.DateUtils
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.concurrent.TimeUnit
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.TestResult
@@ -44,7 +47,7 @@ public class LegacyInAppMessagingTest {
     private val engine: AutomationEngineInterface = mockk(relaxed = true)
 
     private val dataStore = PreferenceStore.inMemoryStore(ApplicationProvider.getApplicationContext())
-    private val clock = TestClock().apply { currentTimeMillis = 0 }
+    private val clock = TestClock().apply { currentTime = Instant.ofEpochMilli(0) }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val messaging = LegacyInAppMessaging(
@@ -69,8 +72,8 @@ public class LegacyInAppMessagingTest {
             id = "test-send-id",
             placement = Banner.Placement.TOP,
             alert = "test iam",
-            displayDurationMs = TimeUnit.SECONDS.toMillis(100),
-            expiryMs = DateUtils.parseIso8601("2024-08-13T23:33:04"),
+            displayDuration = 100.seconds,
+            expiry = DateUtils.parseIso8601("2024-08-13T23:33:04"),
             clickActionValues = jsonMapOf("onclick" to "action"),
             buttonGroupId = "ua_yes_no_background",
             buttonActionValues = mapOf("yes" to jsonMapOf("action_one" to 123)),
@@ -94,7 +97,7 @@ public class LegacyInAppMessagingTest {
                     dismissButtonColor = secondaryColor,
                     borderRadius = LegacyInAppMessaging.DEFAULT_BORDER_RADIUS_DP,
                     actions = message.clickActionValues,
-                    durationMs = message.displayDurationMs!!,
+                    duration = message.displayDuration!!,
                     placement = message.placement,
                     template = Banner.Template.MEDIA_LEFT,
                     body = InAppMessageTextInfo(message.alert!!, color = secondaryColor),
@@ -135,7 +138,7 @@ public class LegacyInAppMessagingTest {
                 match {
                     val schedule = it[0]
                     if (schedule.identifier != message.id) { return@match false }
-                    if (schedule.endDate != message.expiryMs!!.toULong()) { return@match false }
+                    if (schedule.endDate != message.expiry!!) { return@match false }
                     if (schedule.triggers[0].type != EventAutomationTriggerType.ACTIVE_SESSION.value) { return@match false }
                     if (schedule.data != AutomationSchedule.ScheduleData.InAppMessageData(expected)) { return@match false }
                     true
@@ -155,7 +158,7 @@ public class LegacyInAppMessagingTest {
                     backgroundColor = InAppMessageColor(LegacyInAppMessaging.DEFAULT_PRIMARY_COLOR),
                     dismissButtonColor = InAppMessageColor(LegacyInAppMessaging.DEFAULT_SECONDARY_COLOR),
                     borderRadius = LegacyInAppMessaging.DEFAULT_BORDER_RADIUS_DP,
-                    durationMs = Banner.DEFAULT_DURATION_MS,
+                    duration = Banner.DEFAULT_DURATION,
                     placement = Banner.Placement.TOP,
                     template = Banner.Template.MEDIA_LEFT,
                     body = InAppMessageTextInfo("", color = InAppMessageColor(LegacyInAppMessaging.DEFAULT_SECONDARY_COLOR)),
@@ -170,7 +173,7 @@ public class LegacyInAppMessagingTest {
                 match {
                     val schedule = it[0]
                     if (schedule.identifier != "some-id") { return@match false }
-                    if (schedule.endDate != LegacyInAppMessaging.DEFAULT_EXPIRY_MS.toULong()) { return@match false }
+                    if (schedule.endDate != clock.now() + LegacyInAppMessaging.DEFAULT_EXPIRY) { return@match false }
                     if (schedule.triggers[0].type != EventAutomationTriggerType.ACTIVE_SESSION.value) { return@match false }
                     if (schedule.data != AutomationSchedule.ScheduleData.InAppMessageData(expected)) { return@match false }
                     true
@@ -203,7 +206,7 @@ public class LegacyInAppMessagingTest {
                     backgroundColor = InAppMessageColor(LegacyInAppMessaging.DEFAULT_PRIMARY_COLOR),
                     dismissButtonColor = InAppMessageColor(LegacyInAppMessaging.DEFAULT_SECONDARY_COLOR),
                     borderRadius = LegacyInAppMessaging.DEFAULT_BORDER_RADIUS_DP,
-                    durationMs = Banner.DEFAULT_DURATION_MS,
+                    duration = Banner.DEFAULT_DURATION,
                     placement = Banner.Placement.TOP,
                     template = Banner.Template.MEDIA_LEFT,
                     body = InAppMessageTextInfo("", color = InAppMessageColor(LegacyInAppMessaging.DEFAULT_SECONDARY_COLOR)),
@@ -233,7 +236,7 @@ public class LegacyInAppMessagingTest {
                 match {
                     val schedule = it[0]
                     if (schedule.identifier != "some-id") { return@match false }
-                    if (schedule.endDate != LegacyInAppMessaging.DEFAULT_EXPIRY_MS.toULong()) { return@match false }
+                    if (schedule.endDate != clock.now() + LegacyInAppMessaging.DEFAULT_EXPIRY) { return@match false }
                     if (schedule.triggers[0].type != EventAutomationTriggerType.ACTIVE_SESSION.value) { return@match false }
                     if (schedule.data != AutomationSchedule.ScheduleData.InAppMessageData(extended)) { return@match false }
                     true

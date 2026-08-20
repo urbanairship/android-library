@@ -102,7 +102,7 @@ internal class AutomationPreparer internal constructor(
             if (audience != null) {
                 val result = audienceEvaluator.evaluate(
                     compoundAudience = audience,
-                    newEvaluationDate = schedule.created.toLong(),
+                    newEvaluationDate = schedule.created,
                     infoProvider = deviceInfoProvider
                 )
 

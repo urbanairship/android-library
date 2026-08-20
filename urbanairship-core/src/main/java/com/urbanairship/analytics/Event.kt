@@ -6,6 +6,7 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonMap
 import com.urbanairship.util.Clock
 import com.urbanairship.util.FormatterUtils.toSecondsString
+import java.time.Instant
 import java.util.Calendar
 import java.util.Date
 import java.util.UUID
@@ -16,7 +17,7 @@ import kotlin.time.Duration.Companion.milliseconds
  */
 public abstract class Event @JvmOverloads public constructor(
     private val clock: Clock = Clock.DEFAULT_CLOCK,
-    internal val timeMilliseconds: Long = clock.currentTimeMillis()
+    internal val timestamp: Instant = clock.now()
 ) {
 
     /**
@@ -38,7 +39,7 @@ public abstract class Event @JvmOverloads public constructor(
      * @return Seconds from the epoch, as a String.
      */
     public val time: String
-        get() = timeMilliseconds.milliseconds.toSecondsString()
+        get() = timestamp.toSecondsString()
 
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public abstract val type: EventType
@@ -62,7 +63,7 @@ public abstract class Event @JvmOverloads public constructor(
     internal val timezone: Long
         get() {
             val tz = Calendar.getInstance().timeZone
-            return tz.getOffset(clock.currentTimeMillis()).milliseconds.inWholeSeconds
+            return tz.getOffset(clock.now().toEpochMilli()).milliseconds.inWholeSeconds
         }
 
     /**

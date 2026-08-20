@@ -23,7 +23,6 @@ import com.urbanairship.android.layout.property.EmbeddedPlacement
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.util.getActivity
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -55,7 +54,7 @@ public object ThomasLayoutViewFactory {
             return null
         }
 
-        val timer = DisplayTimer(activity, 0)
+        val timer = DisplayTimer(activity)
         viewToTimer.update { it + (viewId to timer) }
 
         val reportDismiss = {
@@ -137,7 +136,7 @@ public object ThomasLayoutViewFactory {
     }
 
     public fun calculateDisplayTime(viewId: String): Duration {
-        return viewToTimer.value[viewId]?.time?.milliseconds ?: Duration.ZERO
+        return viewToTimer.value[viewId]?.time ?: Duration.ZERO
     }
 
     private val presentation = EmbeddedPresentation(

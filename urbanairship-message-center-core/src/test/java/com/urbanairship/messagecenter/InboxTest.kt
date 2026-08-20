@@ -18,7 +18,11 @@ import com.urbanairship.messagecenter.MessageCenterTestUtils.createMessage
 import com.urbanairship.mockk.clearInvocations
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.Date
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.Called
@@ -74,7 +78,7 @@ public class InboxTest {
 
     private val clock = TestClock()
     private val taskSleeper = TestTaskSleeper(clock) { sleep ->
-        clock.currentTimeMillis += sleep.inWholeMilliseconds
+        clock.currentTime += (sleep.inWholeMilliseconds).milliseconds
     }
 
     private val dataStore = PreferenceStore.inMemoryStore(context)
@@ -345,7 +349,7 @@ public class InboxTest {
     public fun testRefreshOnMessageExpires(): TestResult = runTest {
         val now = 1000L
 
-        clock.currentTimeMillis = now
+        clock.currentTime = Instant.ofEpochMilli(now)
 
         val messages = listOf(
             createMessage("no_expiry", expirationDate = null),

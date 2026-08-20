@@ -5,6 +5,9 @@ package com.urbanairship.automation
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonValue
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.Calendar
 import java.util.Date
 import java.util.GregorianCalendar
@@ -27,7 +30,7 @@ public class ExecutionWindowTest {
     }
 
     // Jan 1, 2024 leap year!
-    private val referenceDate: Date
+    private val referenceDate: Instant
         get() {
             return calendar().apply {
                 set(Calendar.YEAR, 2024)
@@ -37,7 +40,7 @@ public class ExecutionWindowTest {
                 set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0)
                 set(Calendar.MILLISECOND, 0)
-            }.time
+            }.toInstant()
         }
 
     @Test
@@ -539,7 +542,7 @@ public class ExecutionWindowTest {
 
     @Test
     public fun testIncludeTimeRangeSameStartAndEnd() {
-        val date = referenceDate
+        var date = referenceDate
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -549,18 +552,18 @@ public class ExecutionWindowTest {
 
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.seconds)
+        date = date.adding(1.seconds)
         assertEquals(
             ExecutionWindowResult.Retry(1.days - 1.seconds),
             window.test(date))
 
-        date.subtracting(2.seconds)
+        date = date.subtracting(2.seconds)
         assertEquals(ExecutionWindowResult.Retry(1.seconds), window.test(date))
     }
 
     @Test
     public fun testIncludeTimeRange() {
-        val date = referenceDate
+        var date = referenceDate
         val window = ExecutionWindow(
             includes = listOf(
                 Rule.Daily(Rule.TimeRange(startHour = 3, endHour = 4))
@@ -569,16 +572,16 @@ public class ExecutionWindowTest {
 
         assertEquals(ExecutionWindowResult.Retry(3.hours), window.test(date))
 
-        date.adding(3.hours)
+        date = date.adding(3.hours)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.hours)
+        date = date.adding(1.hours)
         assertEquals(ExecutionWindowResult.Retry(23.hours), window.test(date))
     }
 
     @Test
     public fun testExcludeTimeRangeSameStartAndEnd() {
-        val date = referenceDate
+        var date = referenceDate
         val window = ExecutionWindow(
             excludes = listOf(
                 Rule.Daily(Rule.TimeRange(startHour = 0, endHour = 0))
@@ -587,17 +590,17 @@ public class ExecutionWindowTest {
 
         assertEquals(ExecutionWindowResult.Retry(1.seconds), window.test(date))
 
-        date.adding(1.seconds)
+        date = date.adding(1.seconds)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.subtracting(2.seconds)
+        date = date.subtracting(2.seconds)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
     }
 
     @Test
     public fun testExcludeEndOfTimeRange() {
-        val date = referenceDate
-        date.adding(3.hours)
+        var date = referenceDate
+        date = date.adding(3.hours)
 
         val window = ExecutionWindow(
             excludes = listOf(
@@ -607,13 +610,13 @@ public class ExecutionWindowTest {
 
         assertEquals(ExecutionWindowResult.Retry(21.hours), window.test(date))
 
-        date.adding(21.hours)
+        date = date.adding(21.hours)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
     }
 
     @Test
     public fun testExcludeTimeRangeWrap() {
-        val date = calendar().apply {
+        var date = calendar().apply {
             set(Calendar.YEAR, 2024)
             set(Calendar.MONTH, Calendar.JANUARY)
             set(Calendar.DAY_OF_MONTH, 1)
@@ -621,7 +624,7 @@ public class ExecutionWindowTest {
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             excludes = listOf(
@@ -631,17 +634,17 @@ public class ExecutionWindowTest {
 
         assertEquals(ExecutionWindowResult.Retry(2.hours), window.test(date))
 
-        date.adding(1.hours)
+        date = date.adding(1.hours)
         assertEquals(ExecutionWindowResult.Retry(1.hours), window.test(date))
 
-        date.adding(1.hours)
+        date = date.adding(1.hours)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
     }
 
     @Test
     public fun testIncludeAndExcludeSameRule() {
-        val date = referenceDate
-        date.adding(3.hours)
+        var date = referenceDate
+        date = date.adding(3.hours)
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -660,10 +663,10 @@ public class ExecutionWindowTest {
 
     @Test
     public fun testIncludeWeekly() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.DAY_OF_WEEK, 4)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -673,25 +676,25 @@ public class ExecutionWindowTest {
 
         assertEquals(ExecutionWindowResult.Retry(1.days), window.test(date))
 
-        date.adding(1.days)
+        date = date.adding(1.days)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.days)
+        date = date.adding(1.days)
         assertEquals(ExecutionWindowResult.Retry(4.days), window.test(date))
 
-        date.adding(3.days)
+        date = date.adding(3.days)
         assertEquals(ExecutionWindowResult.Retry(1.days), window.test(date))
 
-        date.adding(1.days)
+        date = date.adding(1.days)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
     }
 
     @Test
     public fun testIncludeWeeklyTimeRange() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.DAY_OF_WEEK, 4)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -707,16 +710,16 @@ public class ExecutionWindowTest {
             window.test(date)
         )
 
-        date.adding(1.days + 3.hours - 1.seconds)
+        date = date.adding(1.days + 3.hours - 1.seconds)
         assertEquals(ExecutionWindowResult.Retry(1.seconds), window.test(date))
 
-        date.adding(1.seconds)
+        date = date.adding(1.seconds)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(21.hours - 1.seconds)
+        date = date.adding(21.hours - 1.seconds)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.seconds)
+        date = date.adding(1.seconds)
         assertEquals(
             ExecutionWindowResult.Retry(4.days + 3.hours),
             window.test(date)
@@ -725,10 +728,10 @@ public class ExecutionWindowTest {
 
     @Test
     public fun testIncludeWeeklyTimeRangeWithTimeZone() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.DAY_OF_WEEK, 4)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -745,16 +748,16 @@ public class ExecutionWindowTest {
             window.test(date)
         )
 
-        date.adding(1.days + 2.hours - 1.seconds)
+        date = date.adding(1.days + 2.hours - 1.seconds)
         assertEquals(ExecutionWindowResult.Retry(1.seconds), window.test(date))
 
-        date.adding(1.seconds)
+        date = date.adding(1.seconds)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(21.hours - 1.seconds)
+        date = date.adding(21.hours - 1.seconds)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.seconds)
+        date = date.adding(1.seconds)
         assertEquals(
             ExecutionWindowResult.Retry(4.days + 3.hours),
             window.test(date)
@@ -763,10 +766,10 @@ public class ExecutionWindowTest {
 
     @Test
     public fun testExcludeWeeklyTimeRange() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.DAY_OF_WEEK, 4)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             excludes = listOf(
@@ -779,26 +782,26 @@ public class ExecutionWindowTest {
 
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.days + 3.hours - 1.seconds)
+        date = date.adding(1.days + 3.hours - 1.seconds)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.seconds)
+        date = date.adding(1.seconds)
         assertEquals(ExecutionWindowResult.Retry(21.hours), window.test(date))
 
-        date.adding(21.hours - 1.seconds)
+        date = date.adding(21.hours - 1.seconds)
         assertEquals(ExecutionWindowResult.Retry(1.seconds), window.test(date))
 
-        date.adding(1.seconds)
+        date = date.adding(1.seconds)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
     }
 
     @Test
     public fun testIncludeMonthly() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.MONTH, Calendar.JANUARY)
             set(Calendar.DAY_OF_MONTH, 1)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -811,31 +814,31 @@ public class ExecutionWindowTest {
 
         assertEquals(ExecutionWindowResult.Retry(40.days), window.test(date))
 
-        date.adding(40.days)
+        date = date.adding(40.days)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.days)
+        date = date.adding(1.days)
         assertEquals(ExecutionWindowResult.Retry(4.days), window.test(date))
 
-        date.adding(4.days)
+        date = date.adding(4.days)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.days)
+        date = date.adding(1.days)
         assertEquals(ExecutionWindowResult.Retry(54.days), window.test(date))
 
-        date.adding(55.days)
+        date = date.adding(55.days)
         assertEquals(ExecutionWindowResult.Retry(4.days), window.test(date))
 
-        date.adding(5.days)
+        date = date.adding(5.days)
         assertEquals(ExecutionWindowResult.Retry(300.days), window.test(date))
     }
 
     @Test
     public fun testMonthlyNoMonthsAfterDay() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.DAY_OF_MONTH, 16)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -850,11 +853,11 @@ public class ExecutionWindowTest {
 
     @Test
     public fun testMonthlyNextMonth() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.MONTH, Calendar.FEBRUARY)
             set(Calendar.DAY_OF_MONTH, 16)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -874,11 +877,11 @@ public class ExecutionWindowTest {
 
     @Test
     public fun testMonthlyNextMonthNoDays() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.MONTH, Calendar.FEBRUARY)
             set(Calendar.DAY_OF_MONTH, 16)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -891,11 +894,11 @@ public class ExecutionWindowTest {
 
     @Test
     public fun testMonthlyNextYear() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.MONTH, Calendar.FEBRUARY)
             set(Calendar.DAY_OF_MONTH, 15)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -911,11 +914,11 @@ public class ExecutionWindowTest {
 
     @Test
     public fun testIncludeMonthlyWithTimeZone() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.MONTH, Calendar.JANUARY)
             set(Calendar.DAY_OF_MONTH, 1)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -932,32 +935,32 @@ public class ExecutionWindowTest {
             window.test(date)
         )
 
-        date.adding(40.days - 7.hours)
+        date = date.adding(40.days - 7.hours)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.days)
+        date = date.adding(1.days)
         assertEquals(ExecutionWindowResult.Retry(4.days), window.test(date))
 
-        date.adding(4.days)
+        date = date.adding(4.days)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.days)
+        date = date.adding(1.days)
         assertEquals(ExecutionWindowResult.Retry(54.days), window.test(date))
 
-        date.adding(55.days)
+        date = date.adding(55.days)
         assertEquals(ExecutionWindowResult.Retry(4.days), window.test(date))
 
-        date.adding(5.days)
+        date = date.adding(5.days)
         assertEquals(ExecutionWindowResult.Retry(300.days), window.test(date))
     }
 
     @Test
     public fun testImpossibleMonthlyInclude() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.MONTH, Calendar.JANUARY)
             set(Calendar.DAY_OF_MONTH, 1)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -978,11 +981,11 @@ public class ExecutionWindowTest {
 
     @Test
     public fun testMonthlySkipsInvalidMonths() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.MONTH, Calendar.JANUARY)
             set(Calendar.DAY_OF_MONTH, 1)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -998,11 +1001,11 @@ public class ExecutionWindowTest {
 
     @Test
     public fun testImpossibleMonthlyExclude() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.MONTH, Calendar.JANUARY)
             set(Calendar.DAY_OF_MONTH, 1)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             excludes = listOf(
@@ -1018,11 +1021,11 @@ public class ExecutionWindowTest {
 
     @Test
     public fun testMonthlyWithoutMonths() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.MONTH, Calendar.JANUARY)
             set(Calendar.DAY_OF_MONTH, 1)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -1034,17 +1037,17 @@ public class ExecutionWindowTest {
 
         assertEquals(ExecutionWindowResult.Retry(30.days), window.test(date))
 
-        date.adding(31.days)
+        date = date.adding(31.days)
         assertEquals(ExecutionWindowResult.Retry(30.days), window.test(date))
     }
 
     @Test
     public fun testMonthlyWithOnlyMonths() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.MONTH, Calendar.JANUARY)
             set(Calendar.DAY_OF_MONTH, 1)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -1054,15 +1057,15 @@ public class ExecutionWindowTest {
 
         assertEquals(ExecutionWindowResult.Retry(274.days), window.test(date))
 
-        date.adding(274.days)
+        date = date.adding(274.days)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
         for (index in 0..<30) {
-            date.adding(1.days)
+            date = date.adding(1.days)
             assertEquals(ExecutionWindowResult.Now, window.test(date))
         }
 
-        date.adding(1.days)
+        date = date.adding(1.days)
         assertEquals(ExecutionWindowResult.Retry(30.days), window.test(date))
     }
 
@@ -1086,11 +1089,11 @@ public class ExecutionWindowTest {
 
     @Test
     public fun testComplexRule() {
-        val date = calendar().apply {
-            time = referenceDate
+        var date = calendar().apply {
+            time = Date.from(referenceDate)
             set(Calendar.MONTH, Calendar.JANUARY)
             set(Calendar.DAY_OF_MONTH, 1)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -1118,40 +1121,40 @@ public class ExecutionWindowTest {
         assertEquals(ExecutionWindowResult.Retry(1.days), window.test(date))
 
         for (index in 0..<30) {
-            date.adding(1.days)
+            date = date.adding(1.days)
             assertEquals(ExecutionWindowResult.Retry(1.days), window.test(date))
         }
 
         // Feb 1
-        date.adding(1.days)
+        date = date.adding(1.days)
         // Timezone offset for the daily rule is 1, so its makes it [0-1]
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.hours)
+        date = date.adding(1.hours)
         // 2 hour until weekly rule for DOW 5
         assertEquals(ExecutionWindowResult.Retry(2.hours), window.test(date))
 
-        date.adding(2.hours)
+        date = date.adding(2.hours)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(2.hours)
+        date = date.adding(2.hours)
         // 19 hours until the daily rule again
         assertEquals(ExecutionWindowResult.Retry(19.hours), window.test(date))
 
-        date.adding(19.hours)
+        date = date.adding(19.hours)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.hours)
+        date = date.adding(1.hours)
         // 9 hours until the monthly rule
         assertEquals(ExecutionWindowResult.Retry(9.hours), window.test(date))
 
-        date.adding(9.hours)
+        date = date.adding(9.hours)
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding((12.hours - 1.seconds))
+        date = date.adding((12.hours - 1.seconds))
         assertEquals(ExecutionWindowResult.Now, window.test(date))
 
-        date.adding(1.seconds)
+        date = date.adding(1.seconds)
         // 2 hour until the daily rule again
         assertEquals(ExecutionWindowResult.Retry(2.hours), window.test(date))
     }
@@ -1169,10 +1172,10 @@ public class ExecutionWindowTest {
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-        }.time
+        }.toInstant()
 
         // Sun March 10 2024
-        val transition = calendar().apply {
+        var transition = calendar().apply {
             set(Calendar.YEAR, 2024)
             set(Calendar.MONTH, Calendar.MARCH)
             set(Calendar.DAY_OF_MONTH, 10)
@@ -1180,7 +1183,7 @@ public class ExecutionWindowTest {
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -1195,7 +1198,7 @@ public class ExecutionWindowTest {
         assertEquals(ExecutionWindowResult.Now, window.test(transition))
 
         // 4:00 PDT
-        transition.adding(1.hours)
+        transition = transition.adding(1.hours)
         assertEquals(ExecutionWindowResult.Retry(22.hours), window.test(transition))
     }
 
@@ -1212,10 +1215,10 @@ public class ExecutionWindowTest {
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-        }.time
+        }.toInstant()
 
         // Sun March 10 2024
-        val transition = calendar().apply {
+        var transition = calendar().apply {
             set(Calendar.YEAR, 2024)
             set(Calendar.MONTH, Calendar.MARCH)
             set(Calendar.DAY_OF_MONTH, 10)
@@ -1223,7 +1226,7 @@ public class ExecutionWindowTest {
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-        }.time
+        }.toInstant()
 
         val window = ExecutionWindow(
             includes = listOf(
@@ -1238,7 +1241,7 @@ public class ExecutionWindowTest {
         assertEquals(ExecutionWindowResult.Retry(1.hours), window.test(transition))
 
         // 2:00 PDT
-        transition.adding(1.hours)
+        transition = transition.adding(1.hours)
         assertEquals(ExecutionWindowResult.Now, window.test(transition))
     }
 
@@ -1286,17 +1289,13 @@ public class ExecutionWindowTest {
     }
 
     private fun ExecutionWindow.test(
-        date: Date = referenceDate,
+        date: Instant = referenceDate,
         timeZone: TimeZone = defaultTimeZone
     ): ExecutionWindowResult = this.nextAvailability(date, timeZone)
 
-    private fun Date.adding(duration: Duration) {
-        time += duration.inWholeMilliseconds
-    }
+    private fun Instant.adding(duration: Duration): Instant = this + duration
 
-    private fun Date.subtracting(duration: Duration) {
-        time -= duration.inWholeMilliseconds
-    }
+    private fun Instant.subtracting(duration: Duration): Instant = this - duration
 
     private fun secondsFromGmtTimeZone(seconds: Int): Rule.TimeZone {
         return Rule.TimeZone.Identifiers(

@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.app
 
+import java.time.Instant
+
 /**
  * Activity listener that forwards application events to a list of listeners.
  */
@@ -30,11 +32,11 @@ public class ForwardingApplicationListener public constructor() : ApplicationLis
         }
     }
 
-    override fun onForeground(milliseconds: Long) {
-        listeners.toList().forEach { it.onForeground(milliseconds) }
+    override fun onForeground(timestamp: Instant) {
+        listeners.toList().forEach { it.onForeground(timestamp) }
     }
 
-    override fun onBackground(milliseconds: Long) {
-        listeners.toList().forEach { it.onBackground(milliseconds) }
+    override fun onBackground(timestamp: Instant) {
+        listeners.toList().forEach { it.onBackground(timestamp) }
     }
 }

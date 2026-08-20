@@ -15,6 +15,7 @@ import com.urbanairship.http.RequestResult
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import java.time.Instant
 import java.util.Locale
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
@@ -57,7 +58,7 @@ public class ContactRemoteDataProviderTest {
         every {
             mockUrlFactory.createContactUrl("some contact id", Locale.CANADA_FRENCH, 100)
         } returns Uri.parse("some url")
-        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some contact id", null,true, 0)
+        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some contact id", null,true, Instant.ofEpochMilli(0))
         assertTrue(provider.isRemoteDataInfoUpToDate(remoteDataInfo, Locale.CANADA_FRENCH, 100))
     }
 
@@ -73,7 +74,7 @@ public class ContactRemoteDataProviderTest {
         every {
             mockUrlFactory.createContactUrl("some contact id", Locale.CANADA_FRENCH, 100)
         } returns Uri.parse("some url")
-        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some contact id", null, false, 0)
+        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some contact id", null, false, Instant.ofEpochMilli(0))
         assertFalse(provider.isRemoteDataInfoUpToDate(remoteDataInfo, Locale.CANADA_FRENCH, 100))
     }
 
@@ -89,7 +90,7 @@ public class ContactRemoteDataProviderTest {
         every {
             mockUrlFactory.createContactUrl("some contact id", Locale.CANADA_FRENCH, 100)
         } returns Uri.parse("some url")
-        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some other contact id", null, true, 0)
+        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some other contact id", null, true, Instant.ofEpochMilli(0))
         assertFalse(provider.isRemoteDataInfoUpToDate(remoteDataInfo, Locale.CANADA_FRENCH, 100))
     }
 
@@ -105,7 +106,7 @@ public class ContactRemoteDataProviderTest {
         every {
             mockUrlFactory.createContactUrl("some contact id", Locale.CANADA_FRENCH, 100)
         } returns Uri.parse("some other url")
-        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some contact id", null, true, 0)
+        every { mockContact.currentContactIdUpdate } returns ContactIdUpdate("some contact id", null, true, Instant.ofEpochMilli(0))
         assertFalse(provider.isRemoteDataInfoUpToDate(remoteDataInfo, Locale.CANADA_FRENCH, 100))
     }
 

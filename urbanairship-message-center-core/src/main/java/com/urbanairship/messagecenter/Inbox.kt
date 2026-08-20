@@ -27,10 +27,11 @@ import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.meteredusage.AirshipMeteredUsage
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
+import com.urbanairship.util.minus
+import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -135,8 +136,8 @@ public class Inbox @VisibleForTesting internal constructor(
     public val inboxUpdated: Flow<Unit> = updatesFlow.asSharedFlow()
 
     private val applicationListener = object : ApplicationListener {
-        override fun onForeground(milliseconds: Long) = scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
-        override fun onBackground(milliseconds: Long) = scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
+        override fun onForeground(timestamp: Instant) = scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
+        override fun onBackground(timestamp: Instant) = scheduleUpdateIfEnabled(UpdateType.BEST_ATTEMPT)
     }
 
     private val configListener = AirshipRuntimeConfig.ConfigChangeListener {
@@ -291,14 +292,14 @@ public class Inbox @VisibleForTesting internal constructor(
         refreshOnMessageExpiresJob?.cancel()
 
         refreshOnMessageExpiresJob = scope.launch {
-            val now = clock.currentTimeMillis()
+            val now = clock.now()
 
             val refreshDate = getMessages()
                 .mapNotNull { it.expirationDate }
-                .filter { it.time > now }
+                .filter { it > now }
                 .minOrNull() ?: return@launch
 
-            val delay = (refreshDate.time - clock.currentTimeMillis()).milliseconds
+            val delay = refreshDate - clock.now()
             taskSleeper.sleep(delay)
 
             if (isActive) {

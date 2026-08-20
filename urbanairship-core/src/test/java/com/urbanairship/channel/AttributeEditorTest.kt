@@ -7,6 +7,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import java.util.Date
 import org.junit.Assert
 import org.junit.Test
@@ -71,7 +72,7 @@ public class AttributeEditorTest {
 
     @Test
     public fun testAttributes() {
-        clock.currentTimeMillis = 10000
+        clock.currentTime = Instant.ofEpochMilli(10000)
         editor.setAttribute("string", "expected_value").setAttribute("long", 100L)
             .setAttribute("double", 30.13).setAttribute("float", 131.2003f)
             .setAttribute("date", Date(1561803000000L)).removeAttribute("remove").apply()
@@ -79,30 +80,30 @@ public class AttributeEditorTest {
         val expected: MutableList<AttributeMutation> = ArrayList()
         expected.add(
             AttributeMutation.newSetAttributeMutation(
-                "string", JsonValue.wrapOpt("expected_value"), 10000
+                "string", JsonValue.wrapOpt("expected_value"), Instant.ofEpochMilli(10000)
             )
         )
         expected.add(
             AttributeMutation.newSetAttributeMutation(
-                "long", JsonValue.wrapOpt(100L), 10000
+                "long", JsonValue.wrapOpt(100L), Instant.ofEpochMilli(10000)
             )
         )
         expected.add(
             AttributeMutation.newSetAttributeMutation(
-                "double", JsonValue.wrapOpt(30.13), 10000
+                "double", JsonValue.wrapOpt(30.13), Instant.ofEpochMilli(10000)
             )
         )
         expected.add(
             AttributeMutation.newSetAttributeMutation(
-                "float", JsonValue.wrapOpt(131.2003f), 10000
+                "float", JsonValue.wrapOpt(131.2003f), Instant.ofEpochMilli(10000)
             )
         )
         expected.add(
             AttributeMutation.newSetAttributeMutation(
-                "date", JsonValue.wrapOpt(DateUtils.createIso8601TimeStamp(1561803000000L)), 10000
+                "date", JsonValue.wrapOpt(DateUtils.createIso8601TimeStamp(Instant.ofEpochMilli(1561803000000))), Instant.ofEpochMilli(10000)
             )
         )
-        expected.add(AttributeMutation.newRemoveAttributeMutation("remove", 10000))
+        expected.add(AttributeMutation.newRemoveAttributeMutation("remove", Instant.ofEpochMilli(10000)))
 
         Assert.assertEquals(expected, editor.appliedMutations)
     }
@@ -127,7 +128,7 @@ public class AttributeEditorTest {
 
     @Test
     public fun testJsonAttribute() {
-        clock.currentTimeMillis = 10000
+        clock.currentTime = Instant.ofEpochMilli(10000)
 
         editor.setAttribute(
             attribute = "foo", instanceId = "bar", json = jsonMapOf("key" to "value")
@@ -135,19 +136,19 @@ public class AttributeEditorTest {
         editor.removeAttribute(attribute = "foo", instanceId = "baz")
 
         editor.setAttribute(
-            attribute = "foo", instanceId = "qux", json = jsonMapOf("key" to "value"), expiration = Date(20000)
+            attribute = "foo", instanceId = "qux", json = jsonMapOf("key" to "value"), expiration = Instant.ofEpochMilli(20000)
         )
         editor.apply()
 
         val expected = listOf(
             AttributeMutation.newSetAttributeMutation("foo#bar", jsonMapOf(
                 "key" to "value"
-            ).toJsonValue(), 10000),
-            AttributeMutation.newRemoveAttributeMutation("foo#baz", 10000),
+            ).toJsonValue(), Instant.ofEpochMilli(10000)),
+            AttributeMutation.newRemoveAttributeMutation("foo#baz", Instant.ofEpochMilli(10000)),
             AttributeMutation.newSetAttributeMutation("foo#qux", jsonMapOf(
                 "key" to "value",
                 "exp" to 20
-            ).toJsonValue(), 10000),
+            ).toJsonValue(), Instant.ofEpochMilli(10000)),
         )
 
         Assert.assertEquals(expected, editor.appliedMutations)

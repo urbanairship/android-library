@@ -7,7 +7,8 @@ import com.urbanairship.UALog
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.FormatterUtils.toSecondsString
-import kotlin.time.Duration.Companion.milliseconds
+import com.urbanairship.util.minus
+import java.time.Instant
 
 /**
  * A screen tracking event allows users to track an activity by associating a
@@ -16,8 +17,8 @@ import kotlin.time.Duration.Companion.milliseconds
 internal class ScreenTrackingEvent(
     private val screen: String,
     private val previousScreen: String?,
-    private val startTime: Long,
-    private val stopTime: Long
+    private val startTime: Instant,
+    private val stopTime: Instant
 ) : Event() {
 
     override fun isValid(): Boolean {
@@ -26,7 +27,7 @@ internal class ScreenTrackingEvent(
             return false
         }
 
-        if (startTime > stopTime) {
+        if (startTime.isAfter(stopTime)) {
             UALog.e("Screen tracking duration must be positive or zero.")
             return false
         }
@@ -43,9 +44,9 @@ internal class ScreenTrackingEvent(
     override fun getEventData(context: Context, conversionData: ConversionData): JsonMap = jsonMapOf(
         SCREEN_KEY to screen,
         PREVIOUS_SCREEN_KEY to previousScreen,
-        START_TIME_KEY to startTime.milliseconds.toSecondsString(),
-        STOP_TIME_KEY to stopTime.milliseconds.toSecondsString(),
-        DURATION_KEY to (stopTime - startTime).milliseconds.toSecondsString()
+        START_TIME_KEY to startTime.toSecondsString(),
+        STOP_TIME_KEY to stopTime.toSecondsString(),
+        DURATION_KEY to (stopTime - startTime).toSecondsString()
     )
 
     companion object {

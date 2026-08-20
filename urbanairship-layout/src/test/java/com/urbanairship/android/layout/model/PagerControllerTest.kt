@@ -18,6 +18,7 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -44,7 +45,7 @@ public class PagerControllerTest {
     private val mockReporter: Reporter = mockk(relaxUnitFun = true)
     private val mockActionsRunner: ThomasActionRunner = mockk()
     private val mockDisplayTimer: DisplayTimer = mockk() {
-        every { time } returns System.currentTimeMillis()
+        every { time } returns System.currentTimeMillis().milliseconds
     }
     private val mockPagerTracker: PagersViewTracker = mockk() {
         every { onPageView(any(), any()) } returns Unit

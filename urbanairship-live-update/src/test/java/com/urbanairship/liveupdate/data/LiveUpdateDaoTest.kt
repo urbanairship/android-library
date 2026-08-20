@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.BaseTestCase
 import com.urbanairship.liveupdate.util.jsonMapOf
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -91,7 +92,7 @@ public class LiveUpdateDaoTest : BaseTestCase() {
         private const val NAME = "live-update-name"
         private const val TYPE = "live-update-type"
 
-        private const val TIME_V1 = 10L
+        private val TIME_V1: Instant = Instant.ofEpochMilli(10)
         private val STATE_V1 = LiveUpdateState(
             name = NAME,
             type = TYPE,
@@ -106,7 +107,7 @@ public class LiveUpdateDaoTest : BaseTestCase() {
 
         private val ENTITY_V1 = LiveUpdateStateWithContent(state = STATE_V1, content = CONTENT_V1)
 
-        private const val TIME_V2 = 20L
+        private val TIME_V2: Instant = Instant.ofEpochMilli(20)
         private val CONTENT_V2 = CONTENT_V1.copy(
             content = jsonMapOf("fizz" to "buzz"),
             timestamp = TIME_V2
@@ -114,7 +115,7 @@ public class LiveUpdateDaoTest : BaseTestCase() {
 
         private val ENTITY_V2 = ENTITY_V1.copy(content = CONTENT_V2)
 
-        private const val TIME_V3 = 30L
+        private val TIME_V3: Instant = Instant.ofEpochMilli(30)
         private val CONTENT_V3 = CONTENT_V2.copy(
             content = jsonMapOf("slim" to "none"),
             timestamp = TIME_V3

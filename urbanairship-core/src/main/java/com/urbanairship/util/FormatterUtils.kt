@@ -5,8 +5,10 @@ package com.urbanairship.util
 import androidx.annotation.RestrictTo
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
+import java.time.Instant
 import java.util.Locale
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
 
 /**
@@ -55,4 +57,13 @@ public object FormatterUtils {
 
         return formatter.format(this.toDouble(DurationUnit.SECONDS))
     }
+
+    /**
+     * Converts an `Instant` into a string representing the number of seconds since the
+     * Unix epoch, formatted to two decimal places (hundredths of a second).
+     *
+     * @receiver The `Instant` to format.
+     * @return A `String` representation of the epoch seconds, formatted to "0.00".
+     */
+    public fun Instant.toSecondsString(): String = toEpochMilli().milliseconds.toSecondsString()
 }

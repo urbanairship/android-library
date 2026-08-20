@@ -29,7 +29,7 @@ internal data class EventEntity(
         eventId = event.id,
         session = event.sessionId,
         payload = event.body.toString(),
-        time = event.timeMs,
+        time = event.timestamp.toEpochMilli(),
         type = event.type.name
     )
 }

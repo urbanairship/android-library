@@ -1,6 +1,7 @@
 package com.urbanairship.http
 
 import androidx.annotation.RestrictTo
+import java.time.Instant
 
 /**
  * @hide
@@ -9,5 +10,5 @@ import androidx.annotation.RestrictTo
 public data class AuthToken(
     val identifier: String,
     val token: String,
-    val expirationDateMillis: Long
+    val expiration: Instant
 )

@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.BaseTestCase
 import com.urbanairship.TestClock
 import com.urbanairship.util.Clock
+import java.time.Instant
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -12,7 +13,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class SubscriptionListEditorTest {
 
-    private val clock = TestClock().also { it.currentTimeMillis = 0 }
+    private val clock = TestClock().also { it.currentTime = Instant.EPOCH }
     private var editor = TestSubscriptionListEditor(clock)
 
     @Test
@@ -38,9 +39,9 @@ public class SubscriptionListEditorTest {
             .apply()
 
         val expected = listOf(
-            SubscriptionListMutation.newUnsubscribeMutation("foo", 0L),
-            SubscriptionListMutation.newUnsubscribeMutation("bar", 0L),
-            SubscriptionListMutation.newSubscribeMutation("baz", 0L)
+            SubscriptionListMutation.newUnsubscribeMutation("foo", Instant.ofEpochMilli(0)),
+            SubscriptionListMutation.newUnsubscribeMutation("bar", Instant.ofEpochMilli(0)),
+            SubscriptionListMutation.newSubscribeMutation("baz", Instant.ofEpochMilli(0))
         )
 
         assertEquals(expected, editor.collapsedMutations)
@@ -57,12 +58,12 @@ public class SubscriptionListEditorTest {
             .apply()
 
         val expected = listOf(
-            SubscriptionListMutation.newSubscribeMutation("one", 0L),
-            SubscriptionListMutation.newSubscribeMutation("two", 0L),
-            SubscriptionListMutation.newSubscribeMutation("three", 0L),
-            SubscriptionListMutation.newUnsubscribeMutation("a", 0L),
-            SubscriptionListMutation.newUnsubscribeMutation("b", 0L),
-            SubscriptionListMutation.newUnsubscribeMutation("c", 0L)
+            SubscriptionListMutation.newSubscribeMutation("one", Instant.ofEpochMilli(0)),
+            SubscriptionListMutation.newSubscribeMutation("two", Instant.ofEpochMilli(0)),
+            SubscriptionListMutation.newSubscribeMutation("three", Instant.ofEpochMilli(0)),
+            SubscriptionListMutation.newUnsubscribeMutation("a", Instant.ofEpochMilli(0)),
+            SubscriptionListMutation.newUnsubscribeMutation("b", Instant.ofEpochMilli(0)),
+            SubscriptionListMutation.newUnsubscribeMutation("c", Instant.ofEpochMilli(0))
         )
 
         assertEquals(expected, editor.collapsedMutations)
@@ -79,9 +80,9 @@ public class SubscriptionListEditorTest {
             .apply()
 
         val expected = listOf(
-            SubscriptionListMutation.newUnsubscribeMutation("foo", 0L),
-            SubscriptionListMutation.newUnsubscribeMutation("bar", 0L),
-            SubscriptionListMutation.newSubscribeMutation("baz", 0L)
+            SubscriptionListMutation.newUnsubscribeMutation("foo", Instant.ofEpochMilli(0)),
+            SubscriptionListMutation.newUnsubscribeMutation("bar", Instant.ofEpochMilli(0)),
+            SubscriptionListMutation.newSubscribeMutation("baz", Instant.ofEpochMilli(0))
         )
 
         assertEquals(expected, editor.collapsedMutations)

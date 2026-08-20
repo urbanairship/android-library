@@ -262,7 +262,7 @@ internal class AttributeEditViewModel: ViewModel() {
                             editor.setAttribute(
                                 attribute = name.value,
                                 instanceId = instanceId.value,
-                                expiration = if (expiryEnabled.value) { expiryDate.value } else { null },
+                                expiration = if (expiryEnabled.value) { expiryDate.value.toInstant() } else { null },
                                 json = JsonValue.parseString(jsonText.value).requireMap()
                             )
                         } catch (e: Exception) {

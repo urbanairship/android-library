@@ -32,6 +32,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.locale.LocaleManager
 import com.urbanairship.permission.PermissionsManager
 import com.urbanairship.util.Clock
+import java.time.Instant
 import java.util.TimeZone
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.locks.ReentrantLock
@@ -170,7 +171,7 @@ public class AirshipChannel internal constructor(
         }
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(milliseconds: Long) {
+            override fun onForeground(timestamp: Instant) {
                 updateRegistration()
             }
         })

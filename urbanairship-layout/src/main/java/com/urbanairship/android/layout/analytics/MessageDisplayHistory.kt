@@ -8,7 +8,9 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.json.requireEpochMillis
 import com.urbanairship.json.requireField
+import java.time.Instant
 
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -18,7 +20,7 @@ public data class MessageDisplayHistory(
 ) : JsonSerializable {
 
     public data class LastImpression(
-        val date: Long,
+        val date: Instant,
         val triggerSessionId: String
     ) : JsonSerializable {
         internal companion object {
@@ -29,14 +31,14 @@ public data class MessageDisplayHistory(
             fun fromJson(value: JsonValue): LastImpression {
                 val json = value.requireMap()
                 return LastImpression(
-                    date = json.requireField(KEY_DATE),
+                    date = json.requireEpochMillis(KEY_DATE),
                     triggerSessionId = json.requireField(KEY_TRIGGER_SESSION_ID)
                 )
             }
         }
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
-            KEY_DATE to date,
+            KEY_DATE to date.toEpochMilli(),
             KEY_TRIGGER_SESSION_ID to triggerSessionId
         ).toJsonValue()
     }

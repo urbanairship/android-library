@@ -19,6 +19,7 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
+import java.time.Instant
 import java.util.Locale
 import java.util.UUID
 import io.mockk.coEvery
@@ -55,7 +56,7 @@ public class FeatureFlagManagerTest {
         coEvery { this@mockk.getChannelId() } answers { this@FeatureFlagManagerTest.channelId }
         coEvery { this@mockk.getStableContactInfo() } answers { StableContactInfo(contactId, null) }
         every { this@mockk.appVersionName } returns "1.0.0"
-        every { this@mockk.installDateMilliseconds } returns 1
+        every { this@mockk.installDate } returns Instant.ofEpochMilli(1)
         every { this@mockk.locale } returns Locale.US
         every { this@mockk.isNotificationsOptedIn } returns true
     }
@@ -125,8 +126,8 @@ public class FeatureFlagManagerTest {
         every { privacyManager.isEnabled(PrivacyManager.Feature.FEATURE_FLAGS) } returns false
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.StaticPayload()
@@ -146,8 +147,8 @@ public class FeatureFlagManagerTest {
     public fun testStaticNoVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.StaticPayload()
@@ -173,8 +174,8 @@ public class FeatureFlagManagerTest {
     public fun testStaticAudienceMatch(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.StaticPayload(),
@@ -204,8 +205,8 @@ public class FeatureFlagManagerTest {
     public fun testStaticVariantVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.StaticPayload(
@@ -258,8 +259,8 @@ public class FeatureFlagManagerTest {
     public fun testStaticVariantVariablesMissedLocalAudienceCheck(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             audience = audienceMissedSelector,
@@ -313,8 +314,8 @@ public class FeatureFlagManagerTest {
     public fun testStaticFixedVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.StaticPayload(
@@ -345,8 +346,8 @@ public class FeatureFlagManagerTest {
     public fun testStaticFixedVariablesMissedLocalAudienceCheck(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             audience = audienceMissedSelector,
@@ -378,8 +379,8 @@ public class FeatureFlagManagerTest {
     public fun testDeferredNoVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
@@ -415,8 +416,8 @@ public class FeatureFlagManagerTest {
     public fun testDeferredVariantVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
@@ -477,8 +478,8 @@ public class FeatureFlagManagerTest {
     public fun testDeferredFixedVariables(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
@@ -517,8 +518,8 @@ public class FeatureFlagManagerTest {
     public fun testDeferredNotEligible(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
@@ -557,8 +558,8 @@ public class FeatureFlagManagerTest {
     public fun testDeferredLocalAudienceCheckMiss(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             audience = audienceMissedSelector,
@@ -586,8 +587,8 @@ public class FeatureFlagManagerTest {
     public fun testDeferredNoFlag(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
@@ -613,8 +614,8 @@ public class FeatureFlagManagerTest {
     public fun testDeferredError(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.DeferredPayload(url = Uri.parse("example.com/flag"))
@@ -639,8 +640,8 @@ public class FeatureFlagManagerTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag1"),
                 audience = audienceMissedSelector,
@@ -648,16 +649,16 @@ public class FeatureFlagManagerTest {
             ),
             FeatureFlagInfo(
                 id = "some-id_2",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag2"),
                 payload = FeatureFlagPayload.StaticPayload()
             ),
             FeatureFlagInfo(
                 id = "some-id_3",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag3"),
                 audience = audienceMissedSelector,
@@ -687,8 +688,8 @@ public class FeatureFlagManagerTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag1"),
                 audience = null,
@@ -699,8 +700,8 @@ public class FeatureFlagManagerTest {
             ),
             FeatureFlagInfo(
                 id = "some-id_2",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag2"),
                 audience = audienceMatchSelector,
@@ -730,8 +731,8 @@ public class FeatureFlagManagerTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag1"),
                 audience = audienceMissedSelector,
@@ -739,8 +740,8 @@ public class FeatureFlagManagerTest {
             ),
             FeatureFlagInfo(
                 id = "some-id_2",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 audience = audienceMissedSelector,
                 reportingContext = jsonMapOf("reporting" to "flag2"),
@@ -748,8 +749,8 @@ public class FeatureFlagManagerTest {
             ),
             FeatureFlagInfo(
                 id = "some-id_3",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag3"),
                 audience = audienceMissedSelector,
@@ -778,8 +779,8 @@ public class FeatureFlagManagerTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag1"),
                 audience = audienceMissedSelector,
@@ -787,16 +788,16 @@ public class FeatureFlagManagerTest {
             ),
             FeatureFlagInfo(
                 id = "some-id_2",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag2"),
                 payload = FeatureFlagPayload.DeferredPayload(url = Uri.EMPTY)
             ),
             FeatureFlagInfo(
                 id = "some-id_3",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag3"),
                 payload = FeatureFlagPayload.DeferredPayload(url = Uri.EMPTY)
@@ -848,8 +849,8 @@ public class FeatureFlagManagerTest {
     public fun testStaleNotDefined(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.StaticPayload()
@@ -878,8 +879,8 @@ public class FeatureFlagManagerTest {
     public fun testStaleNotAllowed(): TestResult = runTest {
         val flagInfo = FeatureFlagInfo(
             id = "some-id",
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = "test-ff",
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.StaticPayload(),
@@ -910,16 +911,16 @@ public class FeatureFlagManagerTest {
         val flags = listOf(
             FeatureFlagInfo(
                 id = "some-id_1",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag1"),
                 payload = FeatureFlagPayload.StaticPayload()
             ),
             FeatureFlagInfo(
                 id = "some-id_3",
-                created = 0,
-                lastUpdated = 0,
+                created = Instant.ofEpochMilli(0),
+                lastUpdated = Instant.ofEpochMilli(0),
                 name = "test-ff",
                 reportingContext = jsonMapOf("reporting" to "flag3"),
                 audience = audienceMissedSelector,
@@ -1257,8 +1258,8 @@ public class FeatureFlagManagerTest {
     ): FeatureFlagInfo {
         return FeatureFlagInfo(
             id = UUID.randomUUID().toString(),
-            created = 0,
-            lastUpdated = 0,
+            created = Instant.ofEpochMilli(0),
+            lastUpdated = Instant.ofEpochMilli(0),
             name = name,
             reportingContext = jsonMapOf("reporting" to "flag"),
             payload = FeatureFlagPayload.StaticPayload(),

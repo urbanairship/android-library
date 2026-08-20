@@ -12,6 +12,7 @@ import androidx.room.TypeConverters
 import androidx.sqlite.db.framework.FrameworkSQLiteOpenHelperFactory
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.db.RetryingSQLiteOpenHelper
+import com.urbanairship.util.TimeTypeConverters
 import java.io.File
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asExecutor
@@ -20,7 +21,7 @@ import kotlinx.coroutines.asExecutor
     version = 1,
     entities = [LiveUpdateState::class, LiveUpdateContent::class]
 )
-@TypeConverters(Converters::class)
+@TypeConverters(Converters::class, TimeTypeConverters::class)
 internal abstract class LiveUpdateDatabase : RoomDatabase() {
 
     abstract fun liveUpdateDao(): LiveUpdateDao

@@ -8,22 +8,22 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import java.util.Date
+import java.time.Instant
 
 /**
  * Email channel registration options.
  */
 public class EmailRegistrationOptions private constructor(
-    public val transactionalOptedIn: Long,
-    public val commercialOptedIn: Long,
+    public val transactionalOptedIn: Instant?,
+    public val commercialOptedIn: Instant?,
     public val properties: JsonMap?,
     public val isDoubleOptIn: Boolean
 ) : JsonSerializable {
 
     @Throws(JsonException::class)
     override fun toJsonValue(): JsonValue = jsonMapOf(
-        TRANSACTIONAL_OPTED_IN_KEY to transactionalOptedIn,
-        COMMERCIAL_OPTED_IN_KEY to commercialOptedIn,
+        TRANSACTIONAL_OPTED_IN_KEY to transactionalOptedIn?.toEpochMilli(),
+        COMMERCIAL_OPTED_IN_KEY to commercialOptedIn?.toEpochMilli(),
         PROPERTIES_KEY to properties,
         DOUBLE_OPT_IN_KEY to isDoubleOptIn,
     ).toJsonValue()
@@ -60,7 +60,8 @@ public class EmailRegistrationOptions private constructor(
         /**
          * Commercial registration options.
          *
-         * @param commercialOptedIn The commercial opted in date.
+         * @param commercialOptedIn The commercial opted in date. Callers holding a
+         * `java.util.Date` should pass `date.toInstant()`.
          * @param transactionalOptedIn The transactional opted in date.
          * @param properties The optional properties.
          * @return The registration options.
@@ -68,13 +69,13 @@ public class EmailRegistrationOptions private constructor(
         @JvmStatic
         @JvmOverloads
         public fun commercialOptions(
-            commercialOptedIn: Date? = null,
-            transactionalOptedIn: Date? = null,
+            commercialOptedIn: Instant? = null,
+            transactionalOptedIn: Instant? = null,
             properties: JsonMap? = null
         ): EmailRegistrationOptions {
             return EmailRegistrationOptions(
-                transactionalOptedIn = transactionalOptedIn?.time ?: -1,
-                commercialOptedIn = commercialOptedIn?.time ?: -1,
+                transactionalOptedIn = transactionalOptedIn,
+                commercialOptedIn = commercialOptedIn,
                 properties = properties,
                 isDoubleOptIn = false
             )
@@ -91,13 +92,13 @@ public class EmailRegistrationOptions private constructor(
         @JvmStatic
         @JvmOverloads
         public fun options(
-            transactionalOptedIn: Date? = null,
+            transactionalOptedIn: Instant? = null,
             properties: JsonMap? = null,
             doubleOptIn: Boolean
         ): EmailRegistrationOptions {
             return EmailRegistrationOptions(
-                transactionalOptedIn = transactionalOptedIn?.time ?: -1,
-                commercialOptedIn = -1,
+                transactionalOptedIn = transactionalOptedIn,
+                commercialOptedIn = null,
                 properties = properties,
                 isDoubleOptIn = doubleOptIn
             )
@@ -107,8 +108,14 @@ public class EmailRegistrationOptions private constructor(
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public fun fromJson(value: JsonValue): EmailRegistrationOptions {
             val map = value.optMap()
-            val commercialOptedIn = map.opt(COMMERCIAL_OPTED_IN_KEY).getLong(-1)
-            val transactionalOptedIn = map.opt(TRANSACTIONAL_OPTED_IN_KEY).getLong(-1)
+            // Options persisted by older SDK versions encoded "unset" as -1 rather than
+            // omitting the field, and the upload path filtered on `> 0`. Keep treating any
+            // non-positive value as unset, so a restored queue doesn't register an opt-in
+            // dated just before the epoch.
+            val commercialOptedIn = map.opt(COMMERCIAL_OPTED_IN_KEY)
+                .takeIf { it.isNumber }?.getLong(0)?.takeIf { it > 0 }?.let(Instant::ofEpochMilli)
+            val transactionalOptedIn = map.opt(TRANSACTIONAL_OPTED_IN_KEY)
+                .takeIf { it.isNumber }?.getLong(0)?.takeIf { it > 0 }?.let(Instant::ofEpochMilli)
             val properties = map.opt(PROPERTIES_KEY).map
             val doubleOptIn = map.opt(DOUBLE_OPT_IN_KEY).getBoolean(false)
             return EmailRegistrationOptions(

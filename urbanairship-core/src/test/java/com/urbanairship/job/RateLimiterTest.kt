@@ -4,6 +4,8 @@ package com.urbanairship.job
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.BaseTestCase
 import com.urbanairship.TestClock
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -31,14 +33,14 @@ public class RateLimiterTest {
             rateLimiter.status("foo")?.limitStatus
         )
 
-        clock.currentTimeMillis += 100
+        clock.currentTime += (100).milliseconds
         rateLimiter.track("foo")
         Assert.assertEquals(
             RateLimiter.LimitStatus.UNDER,
             rateLimiter.status("foo")?.limitStatus
         )
 
-        clock.currentTimeMillis += 100
+        clock.currentTime += (100).milliseconds
         rateLimiter.track("foo")
         Assert.assertEquals(
             RateLimiter.LimitStatus.OVER,
@@ -48,14 +50,14 @@ public class RateLimiterTest {
             800.milliseconds, rateLimiter.status("foo")?.nextAvailable
         )
 
-        clock.currentTimeMillis += 799
+        clock.currentTime += (799).milliseconds
         Assert.assertEquals(
             RateLimiter.LimitStatus.OVER,
             rateLimiter.status("foo")?.limitStatus
         )
         Assert.assertEquals(1.milliseconds, rateLimiter.status("foo")?.nextAvailable)
 
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
         Assert.assertEquals(
             rateLimiter.status("foo")?.limitStatus,
             RateLimiter.LimitStatus.UNDER
@@ -91,7 +93,7 @@ public class RateLimiterTest {
         )
         Assert.assertEquals(10.milliseconds, rateLimiter.status("foo")?.nextAvailable)
 
-        clock.currentTimeMillis += 8
+        clock.currentTime += (8).milliseconds
         Assert.assertEquals(
             RateLimiter.LimitStatus.OVER,
             rateLimiter.status("foo")?.limitStatus
@@ -107,7 +109,7 @@ public class RateLimiterTest {
         )
         Assert.assertEquals(10.milliseconds, rateLimiter.status("foo")?.nextAvailable)
 
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
         rateLimiter.track("foo")
         Assert.assertEquals(
             RateLimiter.LimitStatus.OVER,
@@ -115,7 +117,7 @@ public class RateLimiterTest {
         )
         Assert.assertEquals(10.milliseconds, rateLimiter.status("foo")?.nextAvailable)
 
-        clock.currentTimeMillis += 10
+        clock.currentTime += (10).milliseconds
         Assert.assertEquals(
             RateLimiter.LimitStatus.UNDER,
             rateLimiter.status("foo")?.limitStatus
@@ -162,7 +164,7 @@ public class RateLimiterTest {
         rateLimiter.track("bar")
         rateLimiter.track("bar")
 
-        clock.currentTimeMillis += 2
+        clock.currentTime += (2).milliseconds
 
         Assert.assertEquals(
             RateLimiter.LimitStatus.OVER,

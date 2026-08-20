@@ -37,8 +37,9 @@ import com.urbanairship.app.ActivityMonitor
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.webkit.AirshipWebViewClient
 import java.lang.ref.WeakReference
+import java.time.Instant
 import java.util.Objects
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -119,7 +120,7 @@ public class EmbeddedLayout(
             return null
         }
 
-        val timer = DisplayTimer(activity, 0)
+        val timer = DisplayTimer(activity)
 
         val presentation = (payload.presentation as? EmbeddedPresentation)
         if (presentation == null) {
@@ -136,13 +137,13 @@ public class EmbeddedLayout(
         })
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(milliseconds: Long) {
-                super.onForeground(milliseconds)
+            override fun onForeground(timestamp: Instant) {
+                super.onForeground(timestamp)
                 reporter.onVisibilityChanged(isVisible.value, true)
             }
 
-            override fun onBackground(milliseconds: Long) {
-                super.onBackground(milliseconds)
+            override fun onBackground(timestamp: Instant) {
+                super.onBackground(timestamp)
                 reporter.onVisibilityChanged(isVisible.value, false)
             }
         })
@@ -256,7 +257,7 @@ public class EmbeddedLayout(
         reporter.report(
             event = ReportingEvent.Dismiss(
                 data = ReportingEvent.DismissData.UserDismissed,
-                displayTime = (displayTimer?.time ?: 0).milliseconds,
+                displayTime = displayTimer?.time ?: Duration.ZERO,
                 context = state
             )
         )

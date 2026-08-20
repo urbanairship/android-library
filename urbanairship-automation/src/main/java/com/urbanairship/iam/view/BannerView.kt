@@ -43,7 +43,7 @@ internal open class BannerView(
     BannerDismissLayout.Listener {
 
     /** In-app message display timer. */
-    internal val timer: Timer = object : Timer(displayContent.durationMs) {
+    internal val timer: Timer = object : Timer(displayContent.duration) {
         override fun onFinish() {
             dismiss(true)
             val listener = listener

@@ -15,6 +15,7 @@ import com.urbanairship.job.JobResult
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.remoteconfig.MeteredUsageConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import io.mockk.coEvery
@@ -124,7 +125,7 @@ public class AirshipMeteredUsageTest {
             type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
             product = "test-product",
             reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
-            timestamp = 12,
+            timestamp = Instant.ofEpochMilli(12),
             contactId = "test-contact-id"
         )
 
@@ -166,7 +167,7 @@ public class AirshipMeteredUsageTest {
             type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
             product = "test-product",
             reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
-            timestamp = 12,
+            timestamp = Instant.ofEpochMilli(12),
             contactId = "test-contact-id"
         )
 
@@ -194,7 +195,7 @@ public class AirshipMeteredUsageTest {
             type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
             product = "test-product",
             reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
-            timestamp = 12,
+            timestamp = Instant.ofEpochMilli(12),
             contactId = "test-contact-id"
         ))
 
@@ -207,7 +208,7 @@ public class AirshipMeteredUsageTest {
             type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
             product = "test-product",
             reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
-            timestamp = 12,
+            timestamp = Instant.ofEpochMilli(12),
             contactId = null
         ))
 
@@ -256,7 +257,7 @@ public class AirshipMeteredUsageTest {
             type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
             product = "test-product",
             reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
-            timestamp = 12,
+            timestamp = Instant.ofEpochMilli(12),
             contactId = "test-contact-id"
         )
 
@@ -287,7 +288,7 @@ public class AirshipMeteredUsageTest {
             type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
             product = "test-product",
             reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
-            timestamp = 12,
+            timestamp = Instant.ofEpochMilli(12),
             contactId = "test-contact-id"
         )
 
@@ -318,7 +319,7 @@ public class AirshipMeteredUsageTest {
             type = MeteredUsageType.IN_APP_EXPERIENCE_IMPRESSION,
             product = "test-product",
             reportingContext = jsonMapOf("reporting" to "context").toJsonValue(),
-            timestamp = 12,
+            timestamp = Instant.ofEpochMilli(12),
             contactId = "test-contact-id"
         )
 
