@@ -549,6 +549,28 @@ public class IncomingPushRunnableTest {
         verify { pushManager.onNotificationPosted(message, TEST_NOTIFICATION_ID, "testNotificationTag") }
     }
 
+    /**
+     * The channel is looked up by the id the notification was built with, not the one the
+     * provider declared in its arguments — the two can differ, and only the former is what the
+     * system will post against.
+     */
+    @Test
+    public fun testNotificationChannelReadFromNotification(): TestResult = runTest {
+        every { pushManager.isPushEnabled } returns true
+        every { pushManager.isOptIn } returns true
+        every { pushManager.isUniqueCanonicalId("testPushID") } returns true
+
+        // createNotification() builds against "some-channel", while the provider's arguments
+        // declare TEST_NOTIFICATION_CHANNEL_ID.
+        notificationProvider.notification = createNotification()
+        notificationProvider.tag = "testNotificationTag"
+
+        pushRunnable.run()
+
+        verify { mockChannelRegistry.getNotificationChannelSync("some-channel") }
+        verify(exactly = 0) { mockChannelRegistry.getNotificationChannelSync(TEST_NOTIFICATION_CHANNEL_ID) }
+    }
+
     private fun createNotification(): Notification = NotificationCompat
         .Builder(context, "some-channel")
         .setContentTitle("Test NotificationBuilder Title")
