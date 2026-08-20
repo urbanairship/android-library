@@ -5,7 +5,6 @@ import android.R
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
@@ -204,11 +203,7 @@ internal class WebViewView(
             request: WebResourceRequest,
             error: WebResourceError
         ) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                UALog.e("Error loading web view! %d - %s", error.errorCode, error.description)
-            } else {
-                UALog.e("Error loading web view!")
-            }
+            UALog.e("Error loading web view! %d - %s", error.errorCode, error.description)
             this.error = true
         }
 

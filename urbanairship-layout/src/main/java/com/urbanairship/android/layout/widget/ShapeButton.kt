@@ -2,7 +2,6 @@
 package com.urbanairship.android.layout.widget
 
 import android.content.Context
-import android.os.Build
 import android.view.Gravity
 import android.view.SoundEffectConstants
 import android.view.View
@@ -41,9 +40,7 @@ public open class ShapeButton @JvmOverloads public constructor(
         )
         setBackground(background)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            foreground = ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple)
-        }
+        foreground = ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple)
 
         updateText()
 

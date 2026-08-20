@@ -2,7 +2,6 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.graphics.drawable.Drawable
-import android.os.Build
 import android.widget.Checkable
 import androidx.annotation.Dimension
 import androidx.appcompat.widget.AppCompatRadioButton
@@ -41,9 +40,7 @@ internal class ScoreItemView(
         )
 
         setBackground(background)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            foreground = ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple)
-        }
+        foreground = ContextCompat.getDrawable(context, R.drawable.ua_layout_imagebutton_ripple)
 
         configure()
     }

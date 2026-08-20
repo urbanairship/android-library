@@ -5,7 +5,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.Typeface
-import android.os.Build
 import androidx.core.content.res.ResourcesCompat
 
 /**
@@ -21,9 +20,7 @@ public class Fonts private constructor(context: Context) {
         val fonts = JELLY_BEAN_SYSTEM_FONT_FAMILIES.toMutableSet()
         fonts.addAll(LOLLIPOP_SYSTEM_FONT_FAMILIES)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            fonts.addAll(MARSHMALLOW_SYSTEM_FONT_FAMILIES)
-        }
+        fonts.addAll(MARSHMALLOW_SYSTEM_FONT_FAMILIES)
 
         systemFonts = fonts.toSet()
     }

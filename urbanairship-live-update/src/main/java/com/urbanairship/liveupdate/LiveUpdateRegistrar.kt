@@ -5,7 +5,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
-import android.os.Build
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -163,28 +162,22 @@ internal class LiveUpdateRegistrar(
             }
     }
 
-    /**
-     * End any Live Updates notifications that are no longer displayed.
-     * On API 21 and 22, the notification manager does not provide a way to query for
-     * active notifications, so this method will no-op.
-     */
+    /** End any Live Updates notifications that are no longer displayed. */
     fun stopLiveUpdatesForClearedNotifications() {
         scope.launch {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                val nm = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-                val activeNotifications = nm.activeNotifications.map { it.tag }
+            val nm = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+            val activeNotifications = nm.activeNotifications.map { it.tag }
 
-                dao.getAllActive()
-                    // Filter out any LUs that use custom handlers or have active notifications
-                    .filter { (update, _) ->
-                        handlers[update.type] is NotificationLiveUpdateHandler &&
-                                notificationTag(update.type, update.name) !in activeNotifications
-                    }
-                    // End any Live Updates that are no longer displayed
-                    .forEach { (update, content) ->
-                        stop(update.name, content?.content, update.timestamp, update.dismissalDate)
-                    }
-            }
+            dao.getAllActive()
+                // Filter out any LUs that use custom handlers or have active notifications
+                .filter { (update, _) ->
+                    handlers[update.type] is NotificationLiveUpdateHandler &&
+                            notificationTag(update.type, update.name) !in activeNotifications
+                }
+                // End any Live Updates that are no longer displayed
+                .forEach { (update, content) ->
+                    stop(update.name, content?.content, update.timestamp, update.dismissalDate)
+                }
         }
     }
 
