@@ -151,6 +151,24 @@ internal class ContainerLayoutView(
             }
         }
 
+    /**
+     * Whether any item takes exactly the whole of [horizontal].
+     *
+     * Separate from [establishesLength], which answers a parent asking whether we could supply the
+     * length its percentages need — an item that is a share of us can never be that. This asks a
+     * narrower question, about resolving our own items: we overlay rather than stack, so our size
+     * on either axis is our largest item, and the whole of the largest is the largest. That settles
+     * on the first pass where a fraction would halve away, so an item at the whole is worth
+     * resolving against even when nothing else supplies a length.
+     */
+    private fun hasFullPercentItem(horizontal: Boolean): Boolean =
+        itemDeclarations.any { (size, view) ->
+            if (view.visibility == GONE) return@any false
+
+            val dimension = if (horizontal) size.width else size.height
+            dimension.isPercent && dimension.getFloat() == 1f
+        }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         val widthMode = MeasureSpec.getMode(widthMeasureSpec)
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
@@ -200,12 +218,20 @@ internal class ContainerLayoutView(
         // tells us how much room we have, so it takes a non-percent item to give the axis a size
         // worth taking a percentage of. Without one the base would be 0 and every item would
         // collapse — the same shape the stacks now fall back to content on.
+        //
+        // An item at exactly the whole counts too: it supplies no length, but 100% of our largest
+        // item is that item, so resolving against the first pass settles instead of collapsing.
+        // Without this, two `100% x 100%` items left each other with nothing to take a share of.
         val resolveWidths = autoWidths &&
                 (borrowedWidth > 0 ||
-                        (widthMode == MeasureSpec.AT_MOST && establishesLength(horizontal = true)))
+                        (widthMode == MeasureSpec.AT_MOST &&
+                                (establishesLength(horizontal = true) ||
+                                        hasFullPercentItem(horizontal = true))))
         val resolveHeights = autoHeights &&
                 (borrowedHeight > 0 ||
-                        (heightMode == MeasureSpec.AT_MOST && establishesLength(horizontal = false)))
+                        (heightMode == MeasureSpec.AT_MOST &&
+                                (establishesLength(horizontal = false) ||
+                                        hasFullPercentItem(horizontal = false))))
 
         if (frameHeightRatios.size() == 0 && !autoWidths && !autoHeights) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
