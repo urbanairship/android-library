@@ -576,3 +576,323 @@ view:
               position:
                 horizontal: center
                 vertical: center
+
+        # ------------------------------------------------------------------ 4
+        # Exactly 100% is the one fraction that doesn't walk. On an axis whose length is the widest
+        # item, the whole of the widest IS the widest, so the measurement fed back settles on the
+        # first pass — which is what makes a column of full-width buttons line up with each other
+        # rather than each hugging its own label. Anything below the whole still walks to zero, and
+        # the stack axis sums rather than overlays, so 100% diverges there and stays basis-less.
+        - identifier: all-100-matches-the-widest
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 4 - everything at exactly 100%
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 'COLUMN - auto wide, three 100% rows'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#666666"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    bottom: 2
+                - size:
+                    width: auto
+                    height: auto
+                  view:
+                    type: linear_layout
+                    direction: vertical
+                    background_color:
+                      default:
+                        hex: "#eeeeee"
+                        alpha: 1
+                    items:
+                    - size:
+                        width: 100%
+                        height: 28
+                      view:
+                        type: label
+                        text: short
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#5588ff"
+                            alpha: 1
+                    - size:
+                        width: 100%
+                        height: 28
+                      view:
+                        type: label
+                        text: a medium one
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#33aa55"
+                            alpha: 1
+                    - size:
+                        width: 100%
+                        height: 28
+                      view:
+                        type: label
+                        text: the longest label of the three
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#aa5533"
+                            alpha: 1
+                  margin:
+                    bottom: 12
+
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 'ROW - auto tall, three 100% columns'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#666666"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    bottom: 2
+                - size:
+                    width: auto
+                    height: auto
+                  view:
+                    type: linear_layout
+                    direction: horizontal
+                    background_color:
+                      default:
+                        hex: "#eeeeee"
+                        alpha: 1
+                    items:
+                    - size:
+                        width: 70
+                        height: 100%
+                      view:
+                        type: label
+                        text: small
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 10
+                        background_color:
+                          default:
+                            hex: "#5588ff"
+                            alpha: 1
+                    - size:
+                        width: 70
+                        height: 100%
+                      view:
+                        type: label
+                        text: mid
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 16
+                        background_color:
+                          default:
+                            hex: "#33aa55"
+                            alpha: 1
+                    - size:
+                        width: 70
+                        height: 100%
+                      view:
+                        type: label
+                        text: big
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 26
+                        background_color:
+                          default:
+                            hex: "#aa5533"
+                            alpha: 1
+
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: "The three rows are all as wide as the longest label, and the three
+                      columns are all as tall as the biggest text.\n\nFAIL: each one hugs its own
+                      content, leaving ragged edges."
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 14
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+
+        # ------------------------------------------------------------------ 5
+        # The same rule on a container, where both axes are widest-item axes. Both items are
+        # `100% x 100%`; the white label is the larger of the two, so it is what the container
+        # measures, and the red one only reaches that size if 100% counts as a basis.
+        #
+        # Both are labels on purpose. An `empty_view` here has no size of its own and fills whatever
+        # it is offered, so it outgrows the label and the two platforms disagree about how much is
+        # on offer — which tests the wrong thing.
+        - identifier: all-100-container
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 5 - 100% inside an auto container
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+
+                - size:
+                    width: auto
+                    height: auto
+                  view:
+                    type: container
+                    items:
+                    - size:
+                        width: 100%
+                        height: 100%
+                      position:
+                        horizontal: center
+                        vertical: center
+                      view:
+                        type: label
+                        text: x
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#cc5555"
+                              alpha: 1
+                          alignment: center
+                          font_size: 10
+                        background_color:
+                          default:
+                            hex: "#cc5555"
+                            alpha: 1
+                    - size:
+                        width: 100%
+                        height: 100%
+                      position:
+                        horizontal: center
+                        vertical: center
+                      view:
+                        type: label
+                        text: the label that sets the size
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 16
+
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: "Red fills the block behind the white text, ending exactly where the text
+                      does.\n\nFAIL: red is only as wide as a single 'x', or missing entirely."
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 14
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
