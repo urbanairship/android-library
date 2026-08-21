@@ -3,7 +3,6 @@ package com.urbanairship.util
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.os.Build
 import androidx.annotation.RestrictTo
 
 /**
@@ -50,8 +49,8 @@ public object PendingIntentCompat {
     }
 
     private fun ensureExplicitMutability(flags: Int): Int {
-        // On M or above, add FLAG_IMMUTABLE unless FLAG_MUTABLE has already been set.
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && (flags and FLAG_MUTABLE) == 0) {
+        // Add FLAG_IMMUTABLE unless FLAG_MUTABLE has already been set.
+        if ((flags and FLAG_MUTABLE) == 0) {
             return flags or PendingIntent.FLAG_IMMUTABLE
         }
         return flags

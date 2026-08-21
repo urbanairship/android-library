@@ -3,10 +3,8 @@ package com.urbanairship.webkit
 
 import android.R
 import android.annotation.SuppressLint
-import android.annotation.TargetApi
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import android.util.AttributeSet
 import android.util.Base64
 import android.webkit.WebSettings
@@ -60,7 +58,6 @@ public open class AirshipWebView : WebView {
      * the view, used only if defStyle is 0 or cannot be found in the theme. Can be 0 to not
      * look for defaults.
      */
-    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     public constructor(
         context: Context, attrs: AttributeSet?, defStyle: Int, defResStyle: Int
     ) : super(context, attrs, defStyle, defResStyle) {

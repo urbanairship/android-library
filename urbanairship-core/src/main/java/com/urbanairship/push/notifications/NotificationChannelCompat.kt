@@ -7,10 +7,8 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.res.XmlResourceParser
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
 import android.util.Xml
-import androidx.annotation.RequiresApi
 import androidx.annotation.RestrictTo
 import androidx.annotation.XmlRes
 import androidx.core.util.ObjectsCompat
@@ -99,7 +97,6 @@ public class NotificationChannelCompat : JsonSerializable {
      *
      * @param notificationChannel A NotificationChannel instance.
      */
-    @RequiresApi(api = Build.VERSION_CODES.O)
     public constructor(notificationChannel: NotificationChannel) {
         this.bypassDnd = notificationChannel.canBypassDnd()
         this.showBadge = notificationChannel.canShowBadge()
@@ -134,7 +131,6 @@ public class NotificationChannelCompat : JsonSerializable {
      *
      * @return A NotificationChannel.
      */
-    @RequiresApi(api = Build.VERSION_CODES.O)
     public fun toNotificationChannel(): NotificationChannel {
         val channel = NotificationChannel(id, name, importance)
         channel.setBypassDnd(bypassDnd)

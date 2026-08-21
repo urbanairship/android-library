@@ -2,7 +2,6 @@
 package com.urbanairship.push
 
 import android.content.Context
-import android.os.Build
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.XmlRes
@@ -158,11 +157,9 @@ public open class PushManager @VisibleForTesting internal constructor(
             ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons)
         )
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            actionGroupMap.putAll(
-                ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides)
-            )
-        }
+        actionGroupMap.putAll(
+            ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides)
+        )
 
         this.statusObserver = PushNotificationStatusObserver(pushNotificationStatus)
     }

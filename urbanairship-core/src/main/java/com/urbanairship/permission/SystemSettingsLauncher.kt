@@ -6,7 +6,6 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.provider.Settings
 import androidx.annotation.MainThread
 import com.urbanairship.UALog
@@ -15,17 +14,15 @@ import com.urbanairship.Airship
 internal class SystemSettingsLauncher {
     @MainThread
     fun openAppNotificationSettings(context: Context): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            try {
-                context.applicationContext.startActivity(
-                    Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
-                        .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                        .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-                return true
-            } catch (e: ActivityNotFoundException) {
-                UALog.i(e) { "Failed to launch notification settings." }
-            }
+        try {
+            context.applicationContext.startActivity(
+                Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                    .putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+            return true
+        } catch (e: ActivityNotFoundException) {
+            UALog.i(e) { "Failed to launch notification settings." }
         }
 
         try {
