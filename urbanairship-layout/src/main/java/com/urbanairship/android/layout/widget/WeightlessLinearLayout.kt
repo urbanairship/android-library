@@ -222,6 +222,31 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         return false
     }
 
+    /**
+     * Whether any child takes exactly the whole of [horizontal] as a percentage.
+     *
+     * Only meaningful on our cross axis, where our length is the widest child rather than the sum:
+     * the whole of the widest IS the widest, so handing the measurement back settles where it
+     * started instead of walking. It is what makes a column of full-width buttons line up with each
+     * other rather than each hugging its own label.
+     *
+     * Anything below the whole still halves away to nothing, so it doesn't count, and the main axis
+     * never asks — children sum there, and `n` children at the whole diverge.
+     */
+    private fun hasFullPercentChild(horizontal: Boolean): Boolean {
+        for (i in 0..<childCount) {
+            val child = getChildAt(i) ?: continue
+            if (child.visibility == GONE) continue
+
+            val lp = child.layoutParams as? LayoutParams ?: continue
+            val declared = if (horizontal) lp.width else lp.height
+            val percent = if (horizontal) lp.maxWidthPercent else lp.maxHeightPercent
+
+            if (declared == 0 && percent == 1f) return true
+        }
+        return false
+    }
+
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         // Recorded before any child is measured, since that's when they ask. Anything short of
         // EXACTLY leaves us sizing to our content, so whatever ceiling we pass down is slack.
@@ -279,6 +304,14 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         // percent child ever asks. Unsynchronized: measurement is the main thread's.
         val crossAxisHasBasis: Boolean by lazy(LazyThreadSafetyMode.NONE) {
             widthMode == MeasureSpec.EXACTLY || establishesLength(horizontal = true)
+        }
+
+        // A child at exactly 100% is a third case, between the two above. It supplies no width, so
+        // it belongs in `maxWidth` like any other basis-less percent child — but unlike a fraction
+        // it settles rather than walks, so it still gets its share of the width it helped set, and
+        // a column of full-width rows ends up as wide as its longest one.
+        val crossAxisSharesTheWhole: Boolean by lazy(LazyThreadSafetyMode.NONE) {
+            hasFullPercentChild(horizontal = true)
         }
 
         var matchWidth = false
@@ -796,9 +829,11 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         // holding a distributed slot keeps it — that height is its share, not a measurement — and so
         // does everyone if the overflow branch already rationed the space.
         //
-        // Skipped when there is no basis: our width came from these children, so handing them a
-        // share of it is handing them a share of themselves. They keep what they measured.
-        if (crossAxisPercentChildren.isNotEmpty() && crossAxisHasBasis) {
+        // Skipped when there is no basis and nothing takes the whole: our width came from these
+        // children, so handing them a share of it is handing them a share of themselves. A child at
+        // the whole is the exception — that share is the width it already set, so giving it out
+        // changes nothing except to bring its siblings up to the same edge.
+        if (crossAxisPercentChildren.isNotEmpty() && (crossAxisHasBasis || crossAxisSharesTheWhole)) {
             val available = ((widthSizeAndState and MEASURED_SIZE_MASK) - paddingStart - paddingEnd)
                 .coerceAtLeast(0)
             for (child in crossAxisPercentChildren) {
@@ -908,6 +943,12 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         // did in an auto-width column. Same laziness, for the same reason.
         val crossAxisHasBasis: Boolean by lazy(LazyThreadSafetyMode.NONE) {
             heightMode == MeasureSpec.EXACTLY || establishesLength(horizontal = false)
+        }
+
+        // As in `measureVertical`: a child at exactly the whole settles rather than walks, so it
+        // still gets its share and a row of full-height columns ends up as tall as its tallest.
+        val crossAxisSharesTheWhole: Boolean by lazy(LazyThreadSafetyMode.NONE) {
+            hasFullPercentChild(horizontal = false)
         }
 
         // `P` — read from the layout params, so it's known before anything is measured.
@@ -1414,9 +1455,10 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         // it measured while tall. A child holding a distributed slot keeps it — that width is its
         // share, not a measurement — and so does everyone if the overflow branch already rationed
         // the space.
-        // Skipped when there is no basis: our height came from these children, so handing them a
-        // share of it is handing them a share of themselves. They keep what they measured.
-        if (crossAxisPercentChildren.isNotEmpty() && crossAxisHasBasis) {
+        // Skipped when there is no basis and nothing takes the whole: our height came from these
+        // children, so handing them a share of it is handing them a share of themselves. A child at
+        // the whole is the exception, as in `measureVertical`.
+        if (crossAxisPercentChildren.isNotEmpty() && (crossAxisHasBasis || crossAxisSharesTheWhole)) {
             val available = ((heightSizeAndState and MEASURED_SIZE_MASK) - paddingTop - paddingBottom)
                 .coerceAtLeast(0)
             for (child in crossAxisPercentChildren) {
