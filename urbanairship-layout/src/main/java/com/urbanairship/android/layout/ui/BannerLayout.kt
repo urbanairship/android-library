@@ -2,6 +2,7 @@ package com.urbanairship.android.layout.ui
 
 import android.app.Activity
 import android.content.Context
+import android.view.ContextThemeWrapper
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -16,6 +17,7 @@ import com.urbanairship.Predicate
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.ModelFactoryException
+import com.urbanairship.android.layout.R
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.display.DisplayArgs
 import com.urbanairship.android.layout.environment.DefaultViewEnvironment
@@ -142,8 +144,16 @@ internal class BannerLayout(
                 viewInfo = payload.view,
                 modelEnvironment = modelEnvironment
             )
+            // The activity, for its window: orientation and metrics have to come from where the
+            // banner is actually shown, which is the point of using it rather than the application
+            // context. Wrapped in our own theme so that is all we take from it — a host that themes
+            // its activities differently would otherwise reach the handful of icon tints that
+            // resolve `?attr/colorControlNormal`. Same pattern as `EmbeddedLayout` and
+            // `ThomasLayoutViewFactory`, and `getActivity()` unwraps the wrapper, so anything
+            // downstream still finds the activity.
+            val themedContext = ContextThemeWrapper(activity, R.style.UrbanAirship_Layout)
             val bannerView = ThomasBannerView(
-                context = activity,
+                context = themedContext,
                 model = model,
                 presentation = presentation,
                 environment = viewEnvironment
