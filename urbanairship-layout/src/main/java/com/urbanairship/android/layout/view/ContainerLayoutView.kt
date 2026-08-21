@@ -334,6 +334,28 @@ internal class ContainerLayoutView(
                 }
             )
         }
+
+        // Percent frames are skipped above because a share of us can't be what decides us. When
+        // they are all we have that leaves nothing, and resolving against nothing is worse than not
+        // resolving at all — the items disappear instead of merely failing to line up. Their own
+        // first-pass measurement is their content, and the largest of it is what a container is, so
+        // the largest is what the whole resolves to and it settles there.
+        if (base == 0) {
+            for (i in 0 until childCount) {
+                val child = getChildAt(i)
+                if (child.visibility == GONE || percents.indexOfKey(child.id) < 0) continue
+                val lp = child.layoutParams as ConstraintLayout.LayoutParams
+                base = max(
+                    base,
+                    if (horizontal) {
+                        child.measuredWidth + lp.leftMargin + lp.rightMargin
+                    } else {
+                        child.measuredHeight + lp.topMargin + lp.bottomMargin
+                    }
+                )
+            }
+        }
+
         return base
     }
 
