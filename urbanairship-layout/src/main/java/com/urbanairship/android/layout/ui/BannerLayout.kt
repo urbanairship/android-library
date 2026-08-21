@@ -119,7 +119,7 @@ internal class BannerLayout(
         val activity = activityList.firstOrNull() ?: return
         val presentation = (payload.presentation as? BannerPresentation) ?: return
 
-        val placement = presentation.getResolvedPlacement(context)
+        val placement = presentation.getResolvedPlacement(activity)
         val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
             activity,
             activityMonitor,
@@ -143,7 +143,7 @@ internal class BannerLayout(
                 modelEnvironment = modelEnvironment
             )
             val bannerView = ThomasBannerView(
-                context = context,
+                context = activity,
                 model = model,
                 presentation = presentation,
                 environment = viewEnvironment
