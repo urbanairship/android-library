@@ -8,9 +8,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -26,6 +28,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalInspectionMode
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -33,9 +37,15 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.urbanairship.R as CoreR
 import com.urbanairship.embedded.AirshipEmbeddedSelection
+import com.urbanairship.embedded.EmbeddedViewManager
 import kotlinx.coroutines.launch
 
 /**
@@ -45,7 +55,7 @@ import kotlinx.coroutines.launch
  * @param pagerState The [PagerState] driving the carousel.
  */
 @Stable
-public class AirshipEmbeddedCarouselState(
+public class AirshipEmbeddedCarouselState internal constructor(
     public val groupState: AirshipEmbeddedViewGroupState,
     public val pagerState: PagerState,
 ) {
@@ -57,13 +67,27 @@ public class AirshipEmbeddedCarouselState(
 
     /** `true` when at least one embedded view is available for display. */
     public val isAvailable: Boolean by derivedStateOf { groupState.items.value.isNotEmpty() }
+
+    /** Dismiss the currently displayed page's content. */
+    public fun dismissCurrent() {
+        groupState.items.value.getOrNull(pagerState.currentPage)?.let {
+            EmbeddedViewManager.dismiss(it.info.embeddedId, it.info.instanceId)
+        }
+    }
+
+    /** Dismiss all pending embedded content for the carousel's embedded ID. */
+    public fun dismissAll() {
+        EmbeddedViewManager.dismissAll(groupState.embeddedId)
+    }
 }
 
 /**
  * Creates and remembers an [AirshipEmbeddedCarouselState] for the given [embeddedId].
  *
  * @param embeddedId The embedded ID.
- * @param selection Controls how available instances are ordered.
+ * @param selection Controls which instances are selected for display. Only [AirshipEmbeddedSelection.ByComparator]
+ *   sorts instances deterministically; [AirshipEmbeddedSelection.Priority] and
+ *   [AirshipEmbeddedSelection.ByInstanceId] preserve arrival order, matching [AirshipEmbeddedViewGroup].
  */
 @Composable
 public fun rememberAirshipEmbeddedCarouselState(
@@ -82,7 +106,9 @@ public fun rememberAirshipEmbeddedCarouselState(
  *
  * @param embeddedId The embedded ID.
  * @param modifier The modifier to be applied to the layout.
- * @param selection The [AirshipEmbeddedSelection] that controls how instances are ordered.
+ * @param selection Controls which instances are selected for display. Only [AirshipEmbeddedSelection.ByComparator]
+ *   sorts instances deterministically; [AirshipEmbeddedSelection.Priority] and
+ *   [AirshipEmbeddedSelection.ByInstanceId] preserve arrival order, matching [AirshipEmbeddedViewGroup].
  * @param indicator Optional overlay composable for page indicators. Receives the [PagerState] and page count.
  *   Use [AirshipEmbeddedCarouselDefaults.dotsIndicator] for a simple default.
  * @param previousArrow Optional composable for a "previous page" button, positioned at [Alignment.CenterStart].
@@ -136,24 +162,29 @@ public fun AirshipEmbeddedCarousel(
 ) {
     val items by state.groupState.items
 
-    if (items.isEmpty()) {
-        placeholder?.invoke()
-        return
-    }
-
-    val scope = rememberCoroutineScope()
-
-    // Computed directly so they always reflect the latest items count and current page,
-    // avoiding stale captures that would occur inside a remember { derivedStateOf { } } block.
-    val hasPrevious = state.pagerState.currentPage > 0
-    val hasNext = state.pagerState.currentPage < items.size - 1
-
     Box(modifier = modifier) {
-        HorizontalPager(
-            state = state.pagerState,
-            modifier = Modifier.fillMaxSize(),
-        ) { page ->
-            items[page].content()
+        if (items.isEmpty()) {
+            placeholder?.invoke()
+            return@Box
+        }
+
+        val scope = rememberCoroutineScope()
+
+        val hasPrevious by remember { derivedStateOf { state.pagerState.currentPage > 0 } }
+        val hasNext by remember { derivedStateOf { state.pagerState.currentPage < items.size - 1 } }
+
+        if (LocalInspectionMode.current) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                BasicText(text = "AirshipEmbeddedCarousel (${items.size} pages)")
+            }
+        } else {
+            HorizontalPager(
+                state = state.pagerState,
+                key = { items[it].info.instanceId },
+                modifier = Modifier.fillMaxSize(),
+            ) { page ->
+                items[page].content()
+            }
         }
 
         indicator?.invoke(this, state.pagerState, items.size)
@@ -185,12 +216,20 @@ public object AirshipEmbeddedCarouselDefaults {
      * A minimal accessible "previous page" button, announced by TalkBack using one of
      * Airship's own localized strings (e.g. "Previous" in English, "Précédent" in French).
      * Replace with your own composable for custom styling.
+     *
+     * @param color The color of the arrow glyph.
+     * @param fontSize The size of the arrow glyph.
      */
-    public val previousArrow: @Composable (onClick: () -> Unit, enabled: Boolean) -> Unit =
+    public fun previousArrow(
+        color: Color = Color.Black,
+        fontSize: TextUnit = 24.sp,
+    ): @Composable (onClick: () -> Unit, enabled: Boolean) -> Unit =
         { onClick, enabled ->
             val description = stringResource(CoreR.string.ua_icon_button_backward_arrow)
+            val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
             BasicText(
-                text = "‹",
+                text = if (isRtl) "›" else "‹",
+                style = TextStyle(color = color, fontSize = fontSize),
                 modifier = Modifier
                     .semantics {
                         role = Role.Button
@@ -198,6 +237,8 @@ public object AirshipEmbeddedCarouselDefaults {
                         if (!enabled) disabled()
                     }
                     .clickable(enabled = enabled, onClick = onClick)
+                    .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+                    .wrapContentSize(Alignment.Center)
                     .padding(12.dp),
             )
         }
@@ -206,12 +247,20 @@ public object AirshipEmbeddedCarouselDefaults {
      * A minimal accessible "next page" button, announced by TalkBack using one of
      * Airship's own localized strings (e.g. "Next" in English, "Suivant" in French).
      * Replace with your own composable for custom styling.
+     *
+     * @param color The color of the arrow glyph.
+     * @param fontSize The size of the arrow glyph.
      */
-    public val nextArrow: @Composable (onClick: () -> Unit, enabled: Boolean) -> Unit =
+    public fun nextArrow(
+        color: Color = Color.Black,
+        fontSize: TextUnit = 24.sp,
+    ): @Composable (onClick: () -> Unit, enabled: Boolean) -> Unit =
         { onClick, enabled ->
             val description = stringResource(CoreR.string.ua_icon_button_forward_arrow)
+            val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
             BasicText(
-                text = "›",
+                text = if (isRtl) "‹" else "›",
+                style = TextStyle(color = color, fontSize = fontSize),
                 modifier = Modifier
                     .semantics {
                         role = Role.Button
@@ -219,6 +268,8 @@ public object AirshipEmbeddedCarouselDefaults {
                         if (!enabled) disabled()
                     }
                     .clickable(enabled = enabled, onClick = onClick)
+                    .defaultMinSize(minWidth = 48.dp, minHeight = 48.dp)
+                    .wrapContentSize(Alignment.Center)
                     .padding(12.dp),
             )
         }
@@ -260,4 +311,16 @@ public object AirshipEmbeddedCarouselDefaults {
                 }
             }
         }
+}
+
+@Preview
+@Composable
+private fun AirshipEmbeddedCarouselPreview() {
+    AirshipEmbeddedCarousel(
+        embeddedId = "embeddedId",
+        modifier = Modifier.fillMaxSize(),
+        indicator = AirshipEmbeddedCarouselDefaults.dotsIndicator,
+        previousArrow = AirshipEmbeddedCarouselDefaults.previousArrow(),
+        nextArrow = AirshipEmbeddedCarouselDefaults.nextArrow(),
+    )
 }
