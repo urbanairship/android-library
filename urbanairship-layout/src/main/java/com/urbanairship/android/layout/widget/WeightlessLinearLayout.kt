@@ -274,8 +274,12 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         // does it leaves us zero wide, and a share of zero is zero — the children disappear, and
         // the stack with them. No basis is the same situation the main axis already handles by
         // letting the percentages fall back to their content, so answer it the same way here.
-        val crossAxisHasBasis =
+        //
+        // Lazy because answering walks the subtree, and only a stack that actually has a cross-axis
+        // percent child ever asks. Unsynchronized: measurement is the main thread's.
+        val crossAxisHasBasis: Boolean by lazy(LazyThreadSafetyMode.NONE) {
             widthMode == MeasureSpec.EXACTLY || establishesLength(horizontal = true)
+        }
 
         var matchWidth = false
         var skippedMeasure = false
@@ -678,11 +682,15 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                 val margin = lp.marginStart + lp.marginEnd
                 val measuredWidth = child.measuredWidth + margin
 
-                // Same rule as the first pass: a child that's a fraction of our width doesn't get a
-                // say in what our width is. Leaving it out there but counting it here made our width
-                // depend on whether some *other* child happened to have a main-axis percent, since
-                // that's the only thing that brings us into this loop.
-                if (child !in crossAxisPercentChildren) {
+                // Same rule as the first pass, and the same exception: a child that's a fraction of
+                // our width doesn't get a say in what our width is, unless nothing else supplies
+                // one. Leaving it out there but counting it here made our width depend on whether
+                // some *other* child happened to have a main-axis percent, since that's the only
+                // thing that brings us into this loop.
+                //
+                // A child that's a percent on both axes only joins the set in this pass, so without
+                // the exception here it could still leave `maxWidth` at zero.
+                if (child !in crossAxisPercentChildren || !crossAxisHasBasis) {
                     maxWidth = max(maxWidth, measuredWidth)
 
                     val matchWidthLocally = widthMode != MeasureSpec.EXACTLY &&
@@ -895,6 +903,13 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         val heightMode = MeasureSpec.getMode(heightMeasureSpec)
         val heightSize = MeasureSpec.getSize(heightMeasureSpec)
 
+        // The vertical twin of the check in `measureVertical`: our cross axis is height here, and a
+        // lone `height: 50%` child in an auto-height row collapses the same way a `width: 50%` one
+        // did in an auto-width column. Same laziness, for the same reason.
+        val crossAxisHasBasis: Boolean by lazy(LazyThreadSafetyMode.NONE) {
+            heightMode == MeasureSpec.EXACTLY || establishesLength(horizontal = false)
+        }
+
         // `P` — read from the layout params, so it's known before anything is measured.
         val percentTotal = mainAxisPercentTotal(vertical = false)
 
@@ -1007,8 +1022,10 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
             childState = combineMeasuredStates(childState, child.measuredState)
 
             // A child that's a fraction of our height doesn't get a say in what our height is —
-            // otherwise the percentage would end up describing a length it set itself.
-            if (child !in crossAxisPercentChildren) {
+            // otherwise the percentage would end up describing a length it set itself. Unless it is
+            // all we have: with no basis the percentage is never taken, so what it measured is its
+            // content and counts like anyone else's.
+            if (child !in crossAxisPercentChildren || !crossAxisHasBasis) {
                 maxHeight = max(maxHeight, measuredHeight)
 
                 if (lp.maxWidthPercent > 0) {
@@ -1299,7 +1316,7 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
                 // say in what our height is. Leaving it out there but counting it here made our
                 // height depend on whether some *other* child happened to have a main-axis percent,
                 // since that's the only thing that brings us into this loop.
-                if (child !in crossAxisPercentChildren) {
+                if (child !in crossAxisPercentChildren || !crossAxisHasBasis) {
                     maxHeight = max(maxHeight, measuredHeight)
 
                     val matchHeightLocally = heightMode != MeasureSpec.EXACTLY &&
@@ -1397,7 +1414,9 @@ internal open class WeightlessLinearLayout @JvmOverloads public constructor(
         // it measured while tall. A child holding a distributed slot keeps it — that width is its
         // share, not a measurement — and so does everyone if the overflow branch already rationed
         // the space.
-        if (crossAxisPercentChildren.isNotEmpty()) {
+        // Skipped when there is no basis: our height came from these children, so handing them a
+        // share of it is handing them a share of themselves. They keep what they measured.
+        if (crossAxisPercentChildren.isNotEmpty() && crossAxisHasBasis) {
             val available = ((heightSizeAndState and MEASURED_SIZE_MASK) - paddingTop - paddingBottom)
                 .coerceAtLeast(0)
             for (child in crossAxisPercentChildren) {

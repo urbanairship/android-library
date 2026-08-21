@@ -276,3 +276,303 @@ view:
               position:
                 horizontal: center
                 vertical: center
+
+        # ------------------------------------------------------------------ 2
+        # The same thing on the other axis. A horizontal row takes its HEIGHT from its tallest item,
+        # so a `height: 50%` child that is also the tallest is a fraction of a length it sets itself.
+        # The vertical path was fixed first; this is the twin that shares none of its code.
+        - identifier: cross-axis-percent-horizontal
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 2 - 50% tall child, auto-tall row
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '1 DECLARED - row 120 tall'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#666666"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: 120
+                  view:
+                    type: linear_layout
+                    direction: horizontal
+                    background_color:
+                      default:
+                        hex: "#eeeeee"
+                        alpha: 1
+                    items:
+                    - size:
+                        width: 120
+                        height: 50%
+                      view:
+                        type: label
+                        text: 50%
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#5588ff"
+                            alpha: 1
+                  margin:
+                    bottom: 12
+
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '2 SIBLING - row auto, an 80pt block sets the height'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#666666"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: linear_layout
+                    direction: horizontal
+                    background_color:
+                      default:
+                        hex: "#eeeeee"
+                        alpha: 1
+                    items:
+                    - size:
+                        width: 120
+                        height: 80
+                      margin:
+                        end: 8
+                      view:
+                        type: label
+                        text: 80pt
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#888888"
+                            alpha: 1
+                    - size:
+                        width: 120
+                        height: 50%
+                      view:
+                        type: label
+                        text: 50%
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#5588ff"
+                            alpha: 1
+                  margin:
+                    bottom: 12
+
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: '3 SELF - row auto, the band is the only child'
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#666666"
+                          alpha: 1
+                      alignment: center
+                      font_size: 12
+                  margin:
+                    bottom: 2
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: linear_layout
+                    direction: horizontal
+                    background_color:
+                      default:
+                        hex: "#eeeeee"
+                        alpha: 1
+                    items:
+                    - size:
+                        width: 120
+                        height: 50%
+                      view:
+                        type: label
+                        text: 50% of nothing
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#5588ff"
+                            alpha: 1
+
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: "1 half the row. 2 half the grey block beside it.\n\n3 as tall as its own
+                      text.\n\nFAIL: any band is a sliver, or missing."
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 14
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
+
+        # ------------------------------------------------------------------ 3
+        # A child that is a percent on BOTH axes. It is a main-axis percent too, so it isn't measured
+        # in the first pass at all — it only joins the cross-axis set during the distribution pass,
+        # which is a second place the "does anything supply a width" question has to be asked.
+        #
+        # The column's height is declared, so the 50% height is a straightforward half of it. Only
+        # the width has nothing behind it.
+        - identifier: percent-on-both-axes
+          view:
+            type: container
+            items:
+            - size:
+                width: 100%
+                height: 100%
+              view:
+                type: linear_layout
+                direction: vertical
+                items:
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: 3 - percent on both axes
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 15
+                  margin:
+                    bottom: 12
+
+                - size:
+                    width: auto
+                    height: 200
+                  view:
+                    type: linear_layout
+                    direction: vertical
+                    background_color:
+                      default:
+                        hex: "#eeeeee"
+                        alpha: 1
+                    items:
+                    - size:
+                        width: 50%
+                        height: 50%
+                      view:
+                        type: label
+                        text: 50% by 50%
+                        text_appearance:
+                          color:
+                            default:
+                              hex: "#ffffff"
+                              alpha: 1
+                          alignment: center
+                          font_size: 12
+                        background_color:
+                          default:
+                            hex: "#aa5533"
+                            alpha: 1
+
+                - size:
+                    width: 100%
+                    height: auto
+                  view:
+                    type: label
+                    text: "The band is 100 tall, half the column, and as wide as its own text
+                      because nothing supplies a width.\n\nFAIL: the band or the grey column is
+                      missing."
+                    text_appearance:
+                      color:
+                        default:
+                          hex: "#000000"
+                          alpha: 1
+                      alignment: center
+                      font_size: 14
+                  margin:
+                    top: 12
+              margin:
+                top: 16
+                bottom: 16
+                start: 16
+                end: 16
+              position:
+                horizontal: center
+                vertical: center
