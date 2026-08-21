@@ -1,7 +1,6 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.ui
 
-import android.content.pm.ActivityInfo
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
@@ -31,8 +30,6 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.Reporter
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.event.ReportingEvent
-import com.urbanairship.android.layout.property.ModalPlacement
-import com.urbanairship.android.layout.property.Orientation
 import com.urbanairship.android.layout.reporting.DisplayTimer
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.view.ModalView
@@ -103,7 +100,6 @@ public class ModalActivity : AppCompatActivity() {
             }
 
             val placement = presentation.getResolvedPlacement(this)
-            setOrientationLock(placement)
 
             handleIgnoreSafeAreas(placement.shouldIgnoreSafeArea())
 
@@ -276,32 +272,6 @@ public class ModalActivity : AppCompatActivity() {
         // but we still want to set them for older API levels.
         window.statusBarColor = android.R.color.transparent
         window.navigationBarColor = android.R.color.transparent
-    }
-
-    private fun setOrientationLock(placement: ModalPlacement) {
-        // Large screens (sw >= 600dp) don't reliably honor requestedOrientation.
-        // Android 16+ (API 36) explicitly ignores it on large screens by design.
-        // https://developer.android.com/about/versions/16/behavior-changes-16#ignore-orientation
-        if (resources.configuration.smallestScreenWidthDp >= 600) return
-        try {
-            if (placement.orientationLock != null) {
-                requestedOrientation = if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O) {
-                    when (placement.orientationLock) {
-                        Orientation.PORTRAIT -> ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                        Orientation.LANDSCAPE -> ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                    }
-                } else {
-                    // Orientation locking isn't allowed on API 26 for transparent activities,
-                    // so we'll do the best we can and inherit the parent activity's orientation.
-                    // If the parent activity is locked to an orientation, we'll be locked to that
-                    // orientation, too. Otherwise, rotation will be allowed even though the layout
-                    // requested it to not be.
-                    ActivityInfo.SCREEN_ORIENTATION_BEHIND
-                }
-            }
-        } catch (e: Exception) {
-            UALog.e(e, "Unable to set orientation lock.")
-        }
     }
 
     public companion object {

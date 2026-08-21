@@ -173,12 +173,13 @@ public class BannerLayout(
             }
         }.also(activityMonitor::addApplicationListener)
 
+        val placement = presentation.getResolvedPlacement(activity)
         val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
             activity,
             activityMonitor,
             webViewClientFactory,
             imageCache,
-            getPlacement().shouldIgnoreSafeArea()
+            placement.shouldIgnoreSafeArea()
         )
 
         val viewModelProvider = ViewModelProvider(BannerViewModelStores.owner(viewInstanceId))
@@ -196,9 +197,14 @@ public class BannerLayout(
                 viewInfo = payload.view,
                 modelEnvironment = modelEnvironment
             )
-            // Create the banner view using our theme, to prevent app custom themes from affecting
-            // the banner view.
-            val themedContext = ContextThemeWrapper(context, R.style.UrbanAirship_Layout)
+            // The activity, for its window: orientation and metrics have to come from where the
+            // banner is actually shown, which is the point of using it rather than the application
+            // context. Wrapped in our own theme so that is all we take from it — a host that themes
+            // its activities differently would otherwise reach the handful of icon tints that
+            // resolve `?attr/colorControlNormal`. Same pattern as `EmbeddedLayout` and
+            // `ThomasLayoutViewFactory`, and `getActivity()` unwraps the wrapper, so anything
+            // downstream still finds the activity.
+            val themedContext = ContextThemeWrapper(activity, R.style.UrbanAirship_Layout)
             val bannerView = ThomasBannerView(
                 context = themedContext,
                 model = model,
