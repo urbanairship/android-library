@@ -29,7 +29,7 @@ import com.urbanairship.messagecenter.ui.MessageCenterFragment
 import com.urbanairship.messagecenter.ui.view.MessageListView
 import com.urbanairship.messagecenter.util.setTextOrHide
 import com.urbanairship.util.AccessibilityUtils
-import java.text.DateFormat
+import com.urbanairship.util.formatDate
 import com.urbanairship.R as coreR
 import com.urbanairship.messagecenter.core.R as CoreR
 
@@ -141,7 +141,7 @@ public class MessageListItem @JvmOverloads constructor(
     private fun setText(item: Message) = with(views) {
         primaryText.text = item.title
         secondaryText.setTextOrHide(item.subtitle)
-        tertiaryText.text = dateFormatter.format(item.sentDate)
+        tertiaryText.text = item.sentDate.formatDate()
     }
 
     /**
@@ -258,7 +258,7 @@ public class MessageListItem @JvmOverloads constructor(
             context.getString(
                 CoreR.string.ua_mc_description_title_and_date,
                 message.title,
-                dateFormatter.format(message.sentDate)
+                message.sentDate.formatDate()
             )
         )
 
@@ -359,8 +359,6 @@ public class MessageListItem @JvmOverloads constructor(
     )
 
     private companion object {
-        private val dateFormatter = DateFormat.getDateInstance(DateFormat.LONG)
-
         private val STATE_HIGHLIGHTED: IntArray = intArrayOf(coreR.attr.ua_state_highlighted)
     }
 }

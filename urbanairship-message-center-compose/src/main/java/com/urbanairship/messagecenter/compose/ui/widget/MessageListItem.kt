@@ -34,7 +34,7 @@ import com.urbanairship.messagecenter.compose.ui.theme.CheckboxColors
 import com.urbanairship.messagecenter.compose.ui.theme.MessageCenterTheme
 import com.urbanairship.messagecenter.compose.ui.theme.MsgCenterTheme
 import com.urbanairship.messagecenter.compose.ui.MessageCenterListViewModel.Action
-import java.text.DateFormat
+import com.urbanairship.util.formatDate
 import java.time.Instant
 import com.skydoves.landscapist.glide.GlideImage
 import com.urbanairship.R as CoreR
@@ -145,7 +145,7 @@ internal fun MessageListItem(
             Text(
                 style = typography.itemDate,
                 color = colors.messageListItemDate,
-                text = DateFormat.getDateInstance(DateFormat.LONG).format(message.sentDate)
+                text = message.sentDate.formatDate()
             )
         }
     }
@@ -223,7 +223,7 @@ private fun contentDescription(
         context.getString(
             McCoreR.string.ua_mc_description_title_and_date,
             message.title,
-            DateFormat.getDateInstance(DateFormat.LONG).format(message.sentDate)
+            message.sentDate.formatDate()
         )
     )
 
