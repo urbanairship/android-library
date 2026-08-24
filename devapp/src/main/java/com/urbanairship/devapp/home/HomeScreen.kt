@@ -121,8 +121,8 @@ internal fun HomeScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(200.dp),
-                        previousArrow = AirshipEmbeddedCarouselDefaults.previousArrow,
-                        nextArrow = AirshipEmbeddedCarouselDefaults.nextArrow,
+                        previousArrow = AirshipEmbeddedCarouselDefaults.previousArrow(),
+                        nextArrow = AirshipEmbeddedCarouselDefaults.nextArrow(),
                         indicator = AirshipEmbeddedCarouselDefaults.dotsIndicator,
                         placeholder = null
                     )
