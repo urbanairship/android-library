@@ -35,12 +35,19 @@ internal interface PercentBaseProvider {
  * provider is always the right one, and the wrapper views in between (button and toggle layouts,
  * async layouts) don't have to forward anything.
  *
- * Returns 0 when there's no provider above, which leaves percent-sized children to fall back to
+ * A viewport reaches only as far as the lengths that are measured against it, so the walk stops at
+ * an ancestor that sizes itself to its content: what is inside such a view is as long as its own
+ * content, however many scroll layouts sit above it. Without that, a `100%` row a few levels down
+ * takes a whole viewport for itself — a quiz with two options rendered one per screen, its second
+ * option and its Next button a screen and two screens below the fold.
+ *
+ * Returns 0 when there's no base to be had, which leaves percent-sized children to fall back to
  * their content rather than collapsing.
  */
 internal fun View.borrowedPercentBase(horizontal: Boolean): Int {
     var node = parent
     while (node is View) {
+        if (node is AutoSizeProvider && node.isAutoSized(horizontal)) return 0
         if (node is PercentBaseProvider) {
             val base = if (horizontal) node.percentBaseWidth else node.percentBaseHeight
             if (base > 0) return base

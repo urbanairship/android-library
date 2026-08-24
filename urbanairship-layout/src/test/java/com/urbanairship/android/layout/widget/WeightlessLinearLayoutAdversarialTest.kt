@@ -232,6 +232,64 @@ public class WeightlessLinearLayoutAdversarialTest {
         )
     }
 
+    /**
+     * A `100%` row a few levels under a scroll layout took a whole viewport for itself. The quiz in
+     * `Scenes/Modal/toggle-branching-simple-quiz.yml` rendered one option per screen: its two
+     * options are `100%` rows in an auto stack under an auto item, and its second option and its
+     * Next button ended up a screen and two screens below the fold.
+     *
+     * A viewport reaches only as far as the lengths measured against it, and a view sized by its
+     * content has none to hand on — what is inside it is as long as its own content, however many
+     * scroll layouts sit above it.
+     */
+    @Test
+    public fun testViewportDoesNotReachPastAnAutoSizedAncestor() {
+        val scroll = FakeScrollViewport(context, viewport = 840)
+        val content = verticalStack()
+        val wrapper = verticalStack()
+        val options = verticalStack()
+        val cat = FixedSizeView(context, 100, 40)
+        val dog = FixedSizeView(context, 100, 40)
+        val next = FixedSizeView(context, 100, 50)
+
+        options.addView(cat, percentHeight(1f))
+        options.addView(dog, percentHeight(1f))
+        wrapper.addView(options, autoHeight())
+        content.addView(wrapper, autoHeight())
+        content.addView(next, fixedHeight(50))
+        scroll.addView(content)
+
+        scroll.measure(exactly(500), exactly(840))
+
+        assertEquals("first option should size to its content", 40, cat.measuredHeight)
+        assertEquals("second option should size to its content", 40, dog.measuredHeight)
+        assertTrue(
+            "everything should fit the viewport (content ${content.measuredHeight})",
+            content.measuredHeight <= 840
+        )
+    }
+
+    /**
+     * The other half of the same rule: a stack measured against the viewport itself still resolves
+     * its percentages against it, and stays free to be longer than it and scroll.
+     */
+    @Test
+    public fun testViewportStillReachesTheScrollsOwnContent() {
+        val scroll = FakeScrollViewport(context, viewport = 300)
+        val content = verticalStack()
+        val whole = FixedSizeView(context, 100, 20)
+        val half = FixedSizeView(context, 100, 20)
+
+        content.addView(whole, percentHeight(1f))
+        content.addView(half, percentHeight(0.5f))
+        scroll.addView(content)
+
+        scroll.measure(exactly(500), exactly(300))
+
+        assertEquals("the whole of the viewport", 300, whole.measuredHeight)
+        assertEquals("half of the viewport", 150, half.measuredHeight)
+    }
+
     private companion object {
         const val WRAP = ViewGroup.LayoutParams.WRAP_CONTENT
         const val MATCH = ViewGroup.LayoutParams.MATCH_PARENT
@@ -255,6 +313,31 @@ public class WeightlessLinearLayoutAdversarialTest {
     private fun autoBoth() = WeightlessLinearLayout.LayoutParams(WRAP, WRAP)
     private fun ratioAutoHeight(ratio: Float) =
         WeightlessLinearLayout.LayoutParams(WRAP, WRAP, 0f, 0f, ratio)
+
+    /**
+     * Stands in for a vertical scroll layout: measures its content unbounded on the scroll axis,
+     * and lends the viewport it was given to percent-sized descendants.
+     */
+    private class FakeScrollViewport(
+        context: Context,
+        private val viewport: Int
+    ) : ViewGroup(context), PercentBaseProvider {
+        override val percentBaseWidth: Int = 0
+        override val percentBaseHeight: Int get() = viewport
+
+        override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+            getChildAt(0)?.measure(
+                widthMeasureSpec,
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
+            )
+            setMeasuredDimension(
+                View.MeasureSpec.getSize(widthMeasureSpec),
+                View.MeasureSpec.getSize(heightMeasureSpec)
+            )
+        }
+
+        override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) = Unit
+    }
 
     /** A view with a natural size that still honors EXACTLY/AT_MOST specs. */
     private class FixedSizeView(context: Context, val w: Int, val h: Int) : View(context) {
