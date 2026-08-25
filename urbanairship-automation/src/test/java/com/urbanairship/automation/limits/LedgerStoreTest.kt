@@ -203,6 +203,19 @@ public class LedgerStoreTest {
     }
 
     @Test
+    public fun testQueryBreaksTimestampTiesByInsertOrder(): TestResult = runTest {
+        val tie = Instant.ofEpochMilli(100)
+        val first = execution(scheduleId = "schedule-1", triggerId = "first", timestamp = tie)
+        val second = execution(scheduleId = "schedule-1", triggerId = "second", timestamp = tie)
+        val third = execution(scheduleId = "schedule-1", triggerId = "third", timestamp = tie)
+
+        store.recordEvents(listOf(first, second, third))
+
+        val result = store.events(scheduleId = "schedule-1", sharedId = null)
+        assertEquals(listOf(first, second, third), result)
+    }
+
+    @Test
     public fun testEffectiveCountDefaultsToOne() {
         assertEquals(1, execution(scheduleId = "s", count = null).effectiveCount)
         assertEquals(5, execution(scheduleId = "s", count = 5).effectiveCount)

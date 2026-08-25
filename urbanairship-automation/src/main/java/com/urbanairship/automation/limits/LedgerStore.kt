@@ -38,7 +38,7 @@ internal interface LedgerStoreInterface {
      *
      * @param scheduleId The evaluating schedule's ID.
      * @param sharedId The schedule's current shared group ID, if any.
-     * @return The eligible events.
+     * @return The eligible events, oldest first.
      */
     suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent>
 
@@ -72,16 +72,10 @@ internal class LedgerStore(
         UALog.v { "Fetching ledger events for schedule $scheduleId sharedId $sharedId" }
 
         return queue.run {
-            val entities = if (sharedId != null) {
-                dao.getEvents(scheduleId, sharedId)
-            } else {
-                dao.getEvents(scheduleId)
-            }
-
-            // Skip any undecodable rows (e.g. a forward-incompatible event
-            // written by a newer SDK) rather than failing the whole query,
-            // and return a stable ordering by record time.
-            entities
+            // The query already orders by record time. Skip any undecodable rows
+            // (e.g. a forward-incompatible event written by a newer SDK) rather
+            // than failing the whole query.
+            dao.getEvents(scheduleId, sharedId)
                 .mapNotNull { entity ->
                     try {
                         LedgerEvent.fromJson(entity.body)
@@ -90,7 +84,6 @@ internal class LedgerStore(
                         null
                     }
                 }
-                .sortedBy { it.timestamp }
         }
     }
 
@@ -112,6 +105,7 @@ internal class LedgerStore(
         val entity = LedgerEventEntity()
         entity.scheduleId = scheduleId
         entity.sharedId = sharedId
+        entity.timestamp = timestamp.toEpochMilli()
         entity.body = toJsonValue()
         return entity
     }
