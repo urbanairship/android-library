@@ -25,18 +25,21 @@ jobs:
             devapp/src/main/assets/sample_layouts/.layouts.version
           key: thomas-layouts-${{ hashFiles('layouts.version') }}
 
-      - name: Mint layouts read token
-        id: layouts_token
-        uses: actions/create-github-app-token@v1
-        with:
-          app-id: ${{ vars.ACTIONS_REPO_READER_APP_ID }}
-          private-key: ${{ secrets.ACTIONS_REPO_READER_KEY }}
-          owner: ${{ github.repository_owner }}
-          repositories: thomas-layouts
+      # ios-library-dev mints a token from the org's repo-reader GitHub App here,
+      # but that org secret is not shared with this repo, so we authenticate with
+      # a read-only deploy key on thomas-layouts instead.
+      - name: Setup layouts deploy key
+        env:
+          LAYOUTS_DEPLOY_KEY: ${{ secrets.THOMAS_LAYOUTS_DEPLOY_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$LAYOUTS_DEPLOY_KEY" > ~/.ssh/thomas_layouts_deploy
+          chmod 600 ~/.ssh/thomas_layouts_deploy
 
       - name: Fetch Thomas layouts
         env:
-          LAYOUTS_REPO_TOKEN: ${{ steps.layouts_token.outputs.token }}
+          LAYOUTS_REPO_URL: git@github.com:urbanairship/thomas-layouts.git
+          GIT_SSH_COMMAND: ssh -i $HOME/.ssh/thomas_layouts_deploy -o StrictHostKeyChecking=accept-new
         run: bash ./scripts/fetch-layouts.sh
 
       - name: Setup Java Version
