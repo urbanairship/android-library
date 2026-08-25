@@ -295,8 +295,8 @@ internal class AutomationPreparer internal constructor(
 
     /**
      * Records the audience-miss outcome when the schedule's miss behavior
-     * consumes budget. `penalize` records `audience_miss`; `cancel` records
-     * `audience_miss` with `cancel: true`; `skip` records nothing.
+     * consumes budget. `penalize` records `audience_miss` with `cancel: false`,
+     * `cancel` records it with `cancel: true`, and `skip` records nothing.
      */
     private suspend fun recordAudienceMiss(schedule: AutomationSchedule, triggerId: String?) {
         val behavior = schedule.effectiveAudienceMissBehavior

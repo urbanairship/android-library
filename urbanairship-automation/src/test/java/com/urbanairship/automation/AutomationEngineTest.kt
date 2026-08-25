@@ -371,7 +371,6 @@ public class AutomationEngineTest {
             triggerId = "trigger-1"
         )
         val sched = ledgerSchedule(sharedId = "group-1")
-        val triggeredData = ledgerScheduleData(sched, AutomationScheduleState.TRIGGERED, triggerInfo)
         val idleData = ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
 
         every { triggerProcessor.getTriggerResults() } answers {
@@ -384,7 +383,14 @@ public class AutomationEngineTest {
             )
         }
         coEvery { store.getSchedules() } answers { emptyList() }
-        coEvery { store.updateSchedule(eq("test"), any()) } answers { triggeredData }
+        // Apply the update block the way the real store does, against a
+        // throwaway IDLE schedule so the transition actually happens. `triggered`
+        // mutates in place, so it must not be the instance `getSchedule` returns.
+        coEvery { store.updateSchedule(eq("test"), any()) } answers {
+            secondArg<(AutomationScheduleData) -> AutomationScheduleData>()(
+                ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
+            )
+        }
         // Return a non-triggered state so the follow-up processing aborts,
         // isolating the record.
         coEvery { store.getSchedule(eq("test")) } answers { idleData }
@@ -405,9 +411,9 @@ public class AutomationEngineTest {
     }
 
     /**
-     * A trigger result that does not actually transition the schedule into
-     * TRIGGERED (here `updateSchedule` reports it stayed IDLE) must not record a
-     * `triggered` event.
+     * A redundant trigger result for a schedule that is already TRIGGERED must
+     * not record a `triggered` event: `triggered` no-ops, so this call did not
+     * cause the transition.
      */
     @Test
     public fun testNoTriggeredRecordWhenNotTransitioned(): TestResult = runTest {
@@ -429,7 +435,11 @@ public class AutomationEngineTest {
             )
         }
         coEvery { store.getSchedules() } answers { emptyList() }
-        coEvery { store.updateSchedule(eq("test"), any()) } answers { idleData }
+        coEvery { store.updateSchedule(eq("test"), any()) } answers {
+            secondArg<(AutomationScheduleData) -> AutomationScheduleData>()(
+                ledgerScheduleData(sched, AutomationScheduleState.TRIGGERED, triggerInfo)
+            )
+        }
         coEvery { store.getSchedule(eq("test")) } answers { idleData }
 
         engine.start()

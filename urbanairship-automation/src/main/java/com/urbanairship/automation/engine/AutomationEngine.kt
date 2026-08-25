@@ -325,14 +325,19 @@ internal class AutomationEngine(
                     data?.let { preparer.cancelled(it.schedule) }
                 }
                 TriggerExecutionType.EXECUTION -> {
-                    val updated = updateState(result.scheduleId) { it.triggered(result.triggerInfo, date) }
-                    // Record only when this call actually moved the schedule into
-                    // TRIGGERED for this result. `triggered` is a no-op unless the
-                    // schedule was idle, and it stamps this result's triggerInfo, so
-                    // matching both confirms the transition and avoids double-counting
-                    // a redundant trigger result.
-                    if (updated?.scheduleState == AutomationScheduleState.TRIGGERED &&
-                        updated.triggerInfo == result.triggerInfo) {
+                    // `triggered` is a no-op unless the schedule is idle, so capture
+                    // whether this call is the one that moved it into TRIGGERED. A
+                    // redundant trigger result leaves the state alone and records nothing.
+                    var didTrigger = false
+                    val updated = updateState(result.scheduleId) { data ->
+                        val wasIdle = data.scheduleState == AutomationScheduleState.IDLE
+                        data.triggered(result.triggerInfo, date).also {
+                            didTrigger = wasIdle &&
+                                    it.scheduleState == AutomationScheduleState.TRIGGERED
+                        }
+                    }
+
+                    if (didTrigger && updated != null) {
                         ledger.recordTriggered(
                             scheduleId = updated.schedule.identifier,
                             sharedId = updated.schedule.ledgerConfig?.sharedId,

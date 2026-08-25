@@ -25,12 +25,7 @@ internal interface AutomationLedgerInterface {
         triggerId: String?
     )
 
-    /**
-     * Records the single outcome `execution` event for an attempt.
-     *
-     * @param result How the execution resolved.
-     * @param cancel True if this outcome also cancelled the schedule.
-     */
+    /** Records the single outcome `execution` event for an attempt. */
     suspend fun recordExecution(
         scheduleId: String,
         sharedId: String?,
@@ -75,8 +70,7 @@ internal class AutomationLedger(
                 triggerId = triggerId,
                 timestamp = clock.now(),
                 result = result,
-                // Null keeps a non-cancelling outcome out of the JSON body.
-                cancel = if (cancel) true else null
+                cancel = cancel
             )
         )
     }
