@@ -21,6 +21,9 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.remoteconfig.RemoteAirshipConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.Locale
 import java.util.UUID
 import app.cash.turbine.test
@@ -175,7 +178,7 @@ public class RemoteDataTest {
     @Test
     public fun testContactIDChangesDispatchesUpdate(): TestResult = runTest {
         verify(exactly = 0) { mockRefreshManager.dispatchRefreshJob() }
-        contactIdUpdates.emit(ContactIdUpdate("some contact", null, false, 0))
+        contactIdUpdates.emit(ContactIdUpdate("some contact", null, false, Instant.ofEpochMilli(0)))
         testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
     }
@@ -203,13 +206,13 @@ public class RemoteDataTest {
         testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
 
-        testClock.currentTimeMillis += remoteData.getRefreshInterval().inWholeMilliseconds - 1
+        testClock.currentTime += (remoteData.getRefreshInterval().inWholeMilliseconds - 1).milliseconds
         testActivityMonitor.background()
         testActivityMonitor.foreground()
         testDispatcher.scheduler.advanceUntilIdle()
         verify(exactly = 1) { mockRefreshManager.dispatchRefreshJob() }
 
-        testClock.currentTimeMillis += 1
+        testClock.currentTime += (1).milliseconds
         testActivityMonitor.background()
         testActivityMonitor.foreground()
         testDispatcher.scheduler.advanceUntilIdle()
@@ -259,19 +262,19 @@ public class RemoteDataTest {
     public fun testPayloads(): TestResult = runTest {
         val contactFoo = RemoteDataPayload(
             type = "foo",
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf("foo" to "contact")
         )
 
         val channelFoo = RemoteDataPayload(
             type = "foo",
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf("foo" to "channel")
         )
 
         val channelBar = RemoteDataPayload(
             type = "bar",
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf("bar" to "channel")
         )
 
@@ -301,19 +304,19 @@ public class RemoteDataTest {
     public fun testPayloadFlow(): TestResult = runTest {
         val contactFoo = RemoteDataPayload(
             type = "foo",
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf("foo" to "contact")
         )
 
         val channelFoo = RemoteDataPayload(
             type = "foo",
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf("foo" to "channel")
         )
 
         val channelBar = RemoteDataPayload(
             type = "bar",
-            timestamp = 1L,
+            timestamp = Instant.ofEpochMilli(1),
             data = jsonMapOf("bar" to "channel")
         )
 

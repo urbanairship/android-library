@@ -13,6 +13,7 @@ import com.urbanairship.audience.CompoundAudienceSelector
 import com.urbanairship.json.JsonPredicate
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import java.time.Instant
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -68,8 +69,8 @@ public class ExperimentTest {
 
         val expected = Experiment(
             id = "cf9b8c05-05e2-4b8e-a2a3-7ed06d99cc1c",
-            lastUpdated = 1689091609003,
-            created = 1689012646203,
+            lastUpdated = Instant.ofEpochMilli(1689091609003),
+            created = Instant.ofEpochMilli(1689012646203),
             reportingMetadata = jsonMapOf("experiment_id" to "cf9b8c05-05e2-4b8e-a2a3-7ed06d99cc1c"),
             audience = AudienceSelector
                 .newBuilder()
@@ -91,7 +92,7 @@ public class ExperimentTest {
                     messageTypePredicate = JsonPredicate.parse(JsonValue.parseString("{\"value\": {\"equals\": \"transactional\"}}")),
                     campaignPredicate = null)
             ),
-            timeCriteria = TimeCriteria(1689012595000L, 1689091608000L),
+            timeCriteria = TimeCriteria(Instant.ofEpochMilli(1689012595000), Instant.ofEpochMilli(1689091608000)),
             type = ExperimentType.HOLDOUT_GROUP,
             resolutionType = ResolutionType.STATIC
         )
@@ -154,8 +155,8 @@ public class ExperimentTest {
 
         val expected = Experiment(
             id = "cf9b8c05-05e2-4b8e-a2a3-7ed06d99cc1c",
-            lastUpdated = 1689091609003,
-            created = 1689012646203,
+            lastUpdated = Instant.ofEpochMilli(1689091609003),
+            created = Instant.ofEpochMilli(1689012646203),
             reportingMetadata = jsonMapOf("experiment_id" to "cf9b8c05-05e2-4b8e-a2a3-7ed06d99cc1c"),
             audience = AudienceSelector
                 .newBuilder()
@@ -180,7 +181,7 @@ public class ExperimentTest {
                     messageTypePredicate = JsonPredicate.parse(JsonValue.parseString("{\"value\": {\"equals\": \"transactional\"}}")),
                     campaignPredicate = null)
             ),
-            timeCriteria = TimeCriteria(1689012595000L, 1689091608000L),
+            timeCriteria = TimeCriteria(Instant.ofEpochMilli(1689012595000), Instant.ofEpochMilli(1689091608000)),
             type = ExperimentType.HOLDOUT_GROUP,
             resolutionType = ResolutionType.STATIC
         )

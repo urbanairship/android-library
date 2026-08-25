@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 import java.util.Date
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
@@ -50,14 +51,14 @@ public object MessageCenterTestUtils {
             Message.KEY_MESSAGE_URL to "https://go.urbanairship.com/api/user/tests/messages/$messageId",
             Message.KEY_TITLE to "$messageId title",
             Message.KEY_IS_UNREAD to true,
-            Message.KEY_SENT_DATE to DateUtils.createIso8601TimeStamp(System.currentTimeMillis())
+            Message.KEY_SENT_DATE to DateUtils.createIso8601TimeStamp(Instant.now())
         )
         if (extras != null) {
             payload[Message.KEY_EXTRAS] = extras
         }
 
         expirationDate?.let {
-            payload[Message.KEY_EXPIRATION_DATE] = DateUtils.createIso8601TimeStamp(it.time)
+            payload[Message.KEY_EXPIRATION_DATE] = DateUtils.createIso8601TimeStamp(it.toInstant())
         }
 
         contentType?.let {

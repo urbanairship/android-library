@@ -20,6 +20,10 @@ import com.urbanairship.iam.info.InAppMessageColor
 import com.urbanairship.iam.info.InAppMessageTextInfo
 import com.urbanairship.push.PushManager
 import com.urbanairship.util.Clock
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import kotlin.time.Duration.Companion.days
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -169,9 +173,8 @@ internal class LegacyInAppMessaging(
                     dismissButtonColor = secondaryColor,
                     borderRadius = DEFAULT_BORDER_RADIUS_DP,
                     actions = legacyInAppMessage.clickActionValues,
-                    durationMs = (legacyInAppMessage.displayDurationMs ?: Banner.DEFAULT_DURATION_MS).coerceAtLeast(
-                        MIN_DURATION_MS
-                    ),
+                    duration = (legacyInAppMessage.displayDuration ?: Banner.DEFAULT_DURATION)
+                        .coerceAtLeast(MIN_DURATION),
                     placement = legacyInAppMessage.placement,
                     template = Banner.Template.MEDIA_LEFT,
                     body = InAppMessageTextInfo(legacyInAppMessage.alert ?: "", color = secondaryColor),
@@ -195,7 +198,7 @@ internal class LegacyInAppMessaging(
             identifier = legacyInAppMessage.id,
             data = AutomationSchedule.ScheduleData.InAppMessageData(inAppMessage),
             triggers = listOf(trigger),
-            endDate = legacyInAppMessage.expiryMs?.toULong() ?: (clock.currentTimeMillis() + DEFAULT_EXPIRY_MS).toULong(),
+            endDate = legacyInAppMessage.expiry ?: (clock.now() + DEFAULT_EXPIRY),
         ).let {
             scheduleExtender?.invoke(it) ?: it
         }
@@ -206,7 +209,7 @@ internal class LegacyInAppMessaging(
         internal const val DEFAULT_PRIMARY_COLOR: Int = Color.WHITE
         internal const val DEFAULT_SECONDARY_COLOR: Int = Color.BLACK
         internal const val DEFAULT_BORDER_RADIUS_DP = 2f
-        internal const val DEFAULT_EXPIRY_MS = 2592000000L // 30 days
-        internal const val MIN_DURATION_MS = 1000L // 1 second
+        internal val DEFAULT_EXPIRY = 30.days
+        internal val MIN_DURATION = 1.seconds
     }
 }

@@ -5,7 +5,6 @@ package com.urbanairship.util
 import com.urbanairship.AirshipDispatchers
 import java.util.UUID
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
@@ -56,7 +55,7 @@ internal abstract class AutoRefreshingDataProvider<T, R>(
                     backoff = if (fetched.data.isSuccess) {
                         emit(fetched)
                         hasEmittedForThisId = true
-                        taskSleeper.sleep(fetchCache.remainingCacheTimeMillis)
+                        taskSleeper.sleep(fetchCache.remainingCacheTime)
                         initialBackoff
                     } else {
                         // Only emit failure if we haven't successfully
@@ -132,11 +131,11 @@ internal abstract class AutoRefreshingDataProvider<T, R>(
         fun setCache(contactId: String, changeToken: UUID, value: Result<T>) {
             cachedResponse.set(
                 Triple(contactId, changeToken, value),
-                clock.currentTimeMillis() + maxCacheAge.inWholeMilliseconds
+                clock.now() + maxCacheAge
             )
         }
 
-        val remainingCacheTimeMillis: Duration
-            get() = cachedResponse.remainingCacheTimeMillis().milliseconds
+        val remainingCacheTime: Duration
+            get() = cachedResponse.remainingCacheTime()
     }
 }

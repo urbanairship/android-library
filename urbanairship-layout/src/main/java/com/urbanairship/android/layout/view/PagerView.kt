@@ -2,7 +2,6 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
-import android.os.Build
 import android.os.SystemClock
 import android.view.KeyEvent
 import android.view.MotionEvent
@@ -127,9 +126,7 @@ internal class PagerView(
 
     init {
         isFocusable = true
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            isFocusedByDefault = true
-        }
+        isFocusedByDefault = true
         addView(view, MATCH_PARENT, MATCH_PARENT)
         model.listener = modelListener
 

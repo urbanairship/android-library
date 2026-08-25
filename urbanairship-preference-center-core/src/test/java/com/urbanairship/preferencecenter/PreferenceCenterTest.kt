@@ -18,6 +18,7 @@ import com.urbanairship.remotedata.RemoteDataPayload
 import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.verify
+import java.time.Instant
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -45,13 +46,13 @@ public class PreferenceCenterTest {
 
         private val SINGLE_FORM_PAYLOAD = RemoteDataPayload(
             PAYLOAD_TYPE,
-            1L,
+            Instant.ofEpochMilli(1),
             jsonMapOf(KEY_PREFERENCE_FORMS to jsonListOf(FORM_1_PAYLOAD.toJson()))
         )
 
         private val MULTI_FORM_PAYLOAD = RemoteDataPayload(
             PAYLOAD_TYPE,
-            1L,
+            Instant.ofEpochMilli(1),
             jsonMapOf(KEY_PREFERENCE_FORMS to jsonListOf(FORM_1_PAYLOAD.toJson(), FORM_2_PAYLOAD.toJson()))
         )
     }

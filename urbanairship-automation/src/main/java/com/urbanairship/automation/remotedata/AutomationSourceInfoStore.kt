@@ -8,13 +8,14 @@ import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
-import com.urbanairship.json.requireField
+import com.urbanairship.json.requireEpochMillis
 import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
+import java.time.Instant
 
 internal data class AutomationSourceInfo(
     val remoteDataInfo: RemoteDataInfo?,
-    val payloadTimestamp: Long,
+    val payloadTimestamp: Instant,
     val airshipSDKVersion: String?
 ) : JsonSerializable {
     companion object {
@@ -27,7 +28,7 @@ internal data class AutomationSourceInfo(
                 val content = value.requireMap()
                 AutomationSourceInfo(
                     remoteDataInfo = content[REMOTE_DATA_INFO]?.let { RemoteDataInfo(it) },
-                    payloadTimestamp = content.requireField(PAYLOAD_TIMESTAMP),
+                    payloadTimestamp = content.requireEpochMillis(PAYLOAD_TIMESTAMP),
                     airshipSDKVersion = content[AIRSHIP_SDK_VERSION]?.requireString()
                 )
             } catch (_: JsonException) {
@@ -38,7 +39,7 @@ internal data class AutomationSourceInfo(
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
         REMOTE_DATA_INFO to remoteDataInfo,
-        PAYLOAD_TIMESTAMP to payloadTimestamp,
+        PAYLOAD_TIMESTAMP to payloadTimestamp.toEpochMilli(),
         AIRSHIP_SDK_VERSION to airshipSDKVersion
     ).toJsonValue()
 }
@@ -101,7 +102,7 @@ internal class AutomationSourceInfoStore(
 
         val store = AutomationSourceInfo(
             remoteDataInfo = null,
-            payloadTimestamp = lastUpdate,
+            payloadTimestamp = Instant.ofEpochMilli(lastUpdate),
             airshipSDKVersion = lastSDKVersion
         )
 

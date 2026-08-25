@@ -21,6 +21,7 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.push.PushMessage
 import java.io.ByteArrayOutputStream
+import java.time.Instant
 import java.util.UUID
 import java.util.zip.Deflater
 import java.util.zip.DeflaterOutputStream
@@ -64,7 +65,7 @@ public class SceneActionTest {
     @Test
     public fun testPerform_schedulesCompressedScene(): TestResult = runTest {
         val scheduleJob = Job()
-        val clock = TestClock().apply { currentTimeMillis = 9_876_543_210L }
+        val clock = TestClock().apply { currentTime = Instant.ofEpochMilli(9_876_543_210L) }
         val expectedLayout = AirshipLayout(JsonValue.parseString(MINIMAL_LAYOUT_JSON))
 
         val action = SceneAction(
@@ -77,7 +78,7 @@ public class SceneActionTest {
                 assertEquals(schedule.triggers.size, 1)
                 assertEquals(schedule.triggers[0].type, EventAutomationTriggerType.ACTIVE_SESSION.value)
                 assertEquals(schedule.triggers[0].goal, 1.0)
-                assertEquals(schedule.created, 9_876_543_210UL)
+                assertEquals(schedule.created, Instant.ofEpochMilli(9_876_543_210))
                 assertEquals(schedule.sendMetadata, null)
 
                 val message = (schedule.data as AutomationSchedule.ScheduleData.InAppMessageData).message

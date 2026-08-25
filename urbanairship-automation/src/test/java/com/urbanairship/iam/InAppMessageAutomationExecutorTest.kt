@@ -23,6 +23,7 @@ import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.coordinator.DisplayCoordinator
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import java.time.Instant
 import java.util.UUID
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -137,7 +138,7 @@ public class InAppMessageAutomationExecutorTest {
             identifier = preparedInfo.scheduleId,
             triggers = listOf(),
             data = AutomationSchedule.ScheduleData.InAppMessageData(preparedData.message),
-            created = 0u,
+            created = Instant.ofEpochMilli(0),
         )
 
         every { analytics.recordEvent(any(), any()) } answers {

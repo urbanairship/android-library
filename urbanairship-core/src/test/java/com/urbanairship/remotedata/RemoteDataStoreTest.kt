@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.BaseTestCase
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.jsonMapOf
+import java.time.Instant
 import java.util.Arrays
 import org.junit.After
 import org.junit.Assert
@@ -20,13 +21,13 @@ public class RemoteDataStoreTest {
     private var payloads = setOf(
         RemoteDataPayload(
             type = "type",
-            timestamp = 123,
+            timestamp = Instant.ofEpochMilli(123),
             data = jsonMapOf("foo" to "bar"),
             remoteDataInfo = RemoteDataInfo("some url", "some last modified", RemoteDataSource.APP)
         ),
         RemoteDataPayload(
             type = "otherType",
-            timestamp = 123,
+            timestamp = Instant.ofEpochMilli(123),
             data = jsonMapOf("baz" to "boz"),
             remoteDataInfo = null
         )

@@ -43,7 +43,7 @@ import com.urbanairship.debug.ui.theme.AirshipDebugTheme
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import java.io.Serializable
-import java.util.Date
+import java.time.Instant
 
 @Composable
 internal fun CreateEmailChannelScreen(
@@ -192,7 +192,7 @@ internal class CreateEmailChannelViewModel: ViewModel() {
         }
 
         val jsonProperties = JsonMap(properties.value.mapValues { it.value.jsonValue })
-        val date = Date()
+        val date = Instant.now()
 
         val options = when(registrationType.value) {
             RegistrationType.TRANSACTIONAL -> EmailRegistrationOptions.options(

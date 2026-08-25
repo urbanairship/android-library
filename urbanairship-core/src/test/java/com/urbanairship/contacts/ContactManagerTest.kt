@@ -16,6 +16,8 @@ import com.urbanairship.http.RequestResult
 import com.urbanairship.job.JobDispatcher
 import com.urbanairship.json.JsonValue
 import com.urbanairship.locale.LocaleManager
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
@@ -90,17 +92,17 @@ public class ContactManagerTest {
     private val anonIdentityResult = ContactApiClient.IdentityResult(
         contactId = "anon contact",
         isAnonymous = true,
-        channelAssociatedDateMs = testClock.currentTimeMillis,
+        channelAssociatedDate = testClock.currentTime,
         token = "some token",
-        tokenExpiryDateMs = testClock.currentTimeMillis + 36000
+        tokenExpiryDate = testClock.currentTime + 36000.milliseconds
     )
 
     private val nonAnonIdentifyResult = ContactApiClient.IdentityResult(
         contactId = "non anon contact",
         isAnonymous = false,
-        channelAssociatedDateMs = testClock.currentTimeMillis,
+        channelAssociatedDate = testClock.currentTime,
         token = "some token",
-        tokenExpiryDateMs = testClock.currentTimeMillis + 36000
+        tokenExpiryDate = testClock.currentTime + 36000.milliseconds
     )
 
     @Before
@@ -231,7 +233,7 @@ public class ContactManagerTest {
     @Test
     public fun testVerify(): TestResult = runTest {
         assertNull(contactManager.lastContactId)
-        contactManager.addOperation(ContactOperation.Verify(testClock.currentTimeMillis, true))
+        contactManager.addOperation(ContactOperation.Verify(testClock.currentTime, true))
         coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 200, value = anonIdentityResult, body = null, headers = emptyMap()
         )
@@ -248,7 +250,7 @@ public class ContactManagerTest {
     @Test
     public fun testVerifyFailsClientError(): TestResult = runTest {
         assertNull(contactManager.lastContactId)
-        contactManager.addOperation(ContactOperation.Verify(testClock.currentTimeMillis, true))
+        contactManager.addOperation(ContactOperation.Verify(testClock.currentTime, true))
         coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 400, value = null, body = null, headers = emptyMap()
         )
@@ -261,7 +263,7 @@ public class ContactManagerTest {
     @Test
     public fun testVerifyFailsServerError(): TestResult = runTest {
         assertNull(contactManager.lastContactId)
-        contactManager.addOperation(ContactOperation.Verify(testClock.currentTimeMillis, true))
+        contactManager.addOperation(ContactOperation.Verify(testClock.currentTime, true))
         coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             status = 500, value = null, body = null, headers = emptyMap()
         )
@@ -274,7 +276,7 @@ public class ContactManagerTest {
     @Test
     public fun testVerifyFailsException(): TestResult = runTest {
         assertNull(contactManager.lastContactId)
-        contactManager.addOperation(ContactOperation.Verify(testClock.currentTimeMillis, true))
+        contactManager.addOperation(ContactOperation.Verify(testClock.currentTime, true))
         coEvery { mockApiClient.resolve("some channel id", null, null) } returns RequestResult(
             IllegalArgumentException("neat")
         )
@@ -569,7 +571,7 @@ public class ContactManagerTest {
             assertEquals(true, awaitItem()?.isStable)
         }
 
-        contactManager.addOperation(ContactOperation.Verify(testClock.currentTimeMillis, true))
+        contactManager.addOperation(ContactOperation.Verify(testClock.currentTime, true))
         contactManager.contactIdUpdates.test {
             assertEquals(false, awaitItem()?.isStable)
         }
@@ -582,7 +584,7 @@ public class ContactManagerTest {
             assertEquals(true, awaitItem()?.isStable)
         }
 
-        contactManager.addOperation(ContactOperation.Verify(testClock.currentTimeMillis, false))
+        contactManager.addOperation(ContactOperation.Verify(testClock.currentTime, false))
         contactManager.contactIdUpdates.test {
             assertEquals(true, awaitItem()?.isStable)
         }
@@ -592,9 +594,9 @@ public class ContactManagerTest {
     public fun testUpdate(): TestResult = runTest {
         val subscriptions = listOf(
             ScopedSubscriptionListMutation.newUnsubscribeMutation(
-                "some list", Scope.APP, testClock.currentTimeMillis
+                "some list", Scope.APP, testClock.currentTime
             ), ScopedSubscriptionListMutation.newSubscribeMutation(
-                "some list", Scope.APP, testClock.currentTimeMillis
+                "some list", Scope.APP, testClock.currentTime
             )
         )
 
@@ -605,9 +607,9 @@ public class ContactManagerTest {
 
         val attributes = listOf(
             AttributeMutation.newRemoveAttributeMutation(
-                "some attribute", testClock.currentTimeMillis
+                "some attribute", testClock.currentTime
             ), AttributeMutation.newSetAttributeMutation(
-                "some attribute", JsonValue.wrap("some value"), testClock.currentTimeMillis
+                "some attribute", JsonValue.wrap("some value"), testClock.currentTime
             )
         )
 
@@ -1024,9 +1026,9 @@ public class ContactManagerTest {
 
         val subscriptions = listOf(
             ScopedSubscriptionListMutation.newUnsubscribeMutation(
-                "some list", Scope.APP, testClock.currentTimeMillis
+                "some list", Scope.APP, testClock.currentTime
             ), ScopedSubscriptionListMutation.newSubscribeMutation(
-                "some list", Scope.APP, testClock.currentTimeMillis
+                "some list", Scope.APP, testClock.currentTime
             )
         )
         val tags = listOf(
@@ -1035,9 +1037,9 @@ public class ContactManagerTest {
         )
         val attributes = listOf(
             AttributeMutation.newRemoveAttributeMutation(
-                "some attribute", testClock.currentTimeMillis
+                "some attribute", testClock.currentTime
             ), AttributeMutation.newSetAttributeMutation(
-                "some attribute", JsonValue.wrap("some value"), testClock.currentTimeMillis
+                "some attribute", JsonValue.wrap("some value"), testClock.currentTime
             )
         )
 
@@ -1120,9 +1122,9 @@ public class ContactManagerTest {
     public fun testConflict(): TestResult = runTest {
         val subscriptions = listOf(
             ScopedSubscriptionListMutation.newUnsubscribeMutation(
-                "some list", Scope.APP, testClock.currentTimeMillis
+                "some list", Scope.APP, testClock.currentTime
             ), ScopedSubscriptionListMutation.newSubscribeMutation(
-                "some list", Scope.APP, testClock.currentTimeMillis
+                "some list", Scope.APP, testClock.currentTime
             )
         )
         val tags = listOf(
@@ -1131,9 +1133,9 @@ public class ContactManagerTest {
         )
         val attributes = listOf(
             AttributeMutation.newRemoveAttributeMutation(
-                "some attribute", testClock.currentTimeMillis
+                "some attribute", testClock.currentTime
             ), AttributeMutation.newSetAttributeMutation(
-                "some attribute", JsonValue.wrap("some value"), testClock.currentTimeMillis
+                "some attribute", JsonValue.wrap("some value"), testClock.currentTime
             )
         )
 

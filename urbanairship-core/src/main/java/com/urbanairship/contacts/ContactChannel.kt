@@ -8,10 +8,11 @@ import androidx.core.util.ObjectsCompat
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.isoDateAsMilliseconds
+import com.urbanairship.json.isoDateAsInstant
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 
 /**
  * Channels associated with a contact.
@@ -354,19 +355,19 @@ public sealed class ContactChannel: JsonSerializable {
                 public val maskedAddress: String,
 
                 /** Date the user opted in to transactional emails. */
-                public val transactionalOptedIn: Long? = null,
+                public val transactionalOptedIn: Instant? = null,
 
                 /** Date the user opted out of transactional emails. */
-                public val transactionalOptedOut: Long? = null,
+                public val transactionalOptedOut: Instant? = null,
                 /**
                  * Date the user opted in to commercial emails.
                  *
                  * This field determines the email opted-in state.
                  */
-                public val commercialOptedIn: Long? = null,
+                public val commercialOptedIn: Instant? = null,
 
                 /** Date the user opted out of commercial emails. */
-                public val commercialOptedOut: Long? = null
+                public val commercialOptedOut: Instant? = null
             ) : RegistrationInfo() {
 
                 override fun equals(other: Any?): Boolean {
@@ -477,12 +478,12 @@ public sealed class ContactChannel: JsonSerializable {
                         REGISTERED_TYPE -> Registered(
                             maskedAddress = map.requireField(ADDRESS_KEY),
                             channelId = map.requireField(CHANNEL_ID_KEY),
-                            commercialOptedIn = map.isoDateAsMilliseconds(COMMERCIAL_OPTED_IN_KEY),
-                            commercialOptedOut = map.isoDateAsMilliseconds(COMMERCIAL_OPTED_OUT_KEY),
-                            transactionalOptedIn = map.isoDateAsMilliseconds(
+                            commercialOptedIn = map.isoDateAsInstant(COMMERCIAL_OPTED_IN_KEY),
+                            commercialOptedOut = map.isoDateAsInstant(COMMERCIAL_OPTED_OUT_KEY),
+                            transactionalOptedIn = map.isoDateAsInstant(
                                 TRANSACTIONAL_OPTED_IN_KEY
                             ),
-                            transactionalOptedOut = map.isoDateAsMilliseconds(
+                            transactionalOptedOut = map.isoDateAsInstant(
                                 TRANSACTIONAL_OPTED_OUT_KEY
                             )
                         )

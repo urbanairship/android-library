@@ -13,6 +13,7 @@ import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.info.FormValidationMode
 import com.urbanairship.android.layout.info.ScoreControllerInfo
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.hasFormInputHandler
 import com.urbanairship.android.layout.reporting.ThomasFormField
@@ -32,6 +33,10 @@ internal class ScoreController(
     environment = environment,
     properties = properties
 ) {
+
+    /** Wraps a view without resizing it, so what it wraps answers for it. */
+    override fun establishesLength(direction: Direction): Boolean =
+        view.establishesLength(direction)
     init {
         modelScope.launch {
             formState.formUpdates.collect { form ->

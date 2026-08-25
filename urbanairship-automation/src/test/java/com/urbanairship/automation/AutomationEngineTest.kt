@@ -24,6 +24,8 @@ import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.json.JsonValue
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
 import java.util.UUID
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -36,6 +38,7 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -68,14 +71,14 @@ public class AutomationEngineTest {
                     )
                 )
             ),
-            created = clock.currentTimeMillis.toULong()
+            created = clock.currentTime
         )
 
     private val scheduleData: AutomationScheduleData
         get() = AutomationScheduleData(
             schedule = schedule,
             scheduleState = AutomationScheduleState.IDLE,
-            scheduleStateChangeDate = clock.currentTimeMillis,
+            scheduleStateChangeDate = clock.currentTime,
             executionCount = 0,
             triggerSessionId = UUID.randomUUID().toString()
     )
@@ -100,7 +103,7 @@ public class AutomationEngineTest {
     private val scheduleConditionsChangedNotifier: ScheduleConditionsChangedNotifier = mockk(relaxed = true)
 
     private val sleeper = TestTaskSleeper(clock) { sleep ->
-        clock.currentTimeMillis += sleep.inWholeMilliseconds
+        clock.currentTime += (sleep.inWholeMilliseconds).milliseconds
     }
 
     private val engine: AutomationEngine = AutomationEngine(
@@ -149,7 +152,7 @@ public class AutomationEngineTest {
             triggerExecutionType = TriggerExecutionType.EXECUTION,
             triggerInfo = TriggeringInfo(
                 null,
-                clock.currentTimeMillis
+                clock.currentTime
             )
         )
 
@@ -262,8 +265,8 @@ public class AutomationEngineTest {
 
         // Mock result of stopSchedules
         coEvery { store.getSchedule(eq("test")) } answers {
-            val stopTime = clock.currentTimeMillis
-            scheduleData.setSchedule(scheduleData.schedule.copyWith(endDate = stopTime.toULong()))
+            val stopTime = clock.currentTime
+            scheduleData.setSchedule(scheduleData.schedule.copyWith(endDate = stopTime))
                 .finished(stopTime)
         }
 

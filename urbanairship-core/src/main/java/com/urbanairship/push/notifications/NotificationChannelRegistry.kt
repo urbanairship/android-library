@@ -3,7 +3,6 @@ package com.urbanairship.push.notifications
 
 import android.app.NotificationManager
 import android.content.Context
-import android.os.Build
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
@@ -57,10 +56,6 @@ public class NotificationChannelRegistry @VisibleForTesting internal constructor
      */
     public suspend fun getNotificationChannel(id: String): NotificationChannelCompat? {
         return scope.async {
-            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                return@async dataManager.getChannel(id) ?: getAndCreateDefaultChannel(id)
-            }
-
             notificationManager.getNotificationChannel(id)?.let {
                 return@async NotificationChannelCompat(it)
             }
@@ -110,40 +105,35 @@ public class NotificationChannelRegistry @VisibleForTesting internal constructor
     }
 
     /**
-     * Deletes a notification channel, by identifier. On Android O and above, this method
-     * will also delete the equivalent NotificationChannel on [NotificationManager].
+     * Deletes a notification channel, by identifier. Also deletes the equivalent
+     * NotificationChannel on [NotificationManager].
      *
      * @param id The notification channel identifier.
      */
     public fun deleteNotificationChannel(id: String) {
         scope.launch {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                notificationManager.deleteNotificationChannel(id)
-            }
+            notificationManager.deleteNotificationChannel(id)
             dataManager.deleteChannel(id)
         }
     }
 
     /**
      * Adds a notification channel and saves it to disk. This method is a no-op if a channel
-     * is already created with the same identifier. On Android O and above, this method
-     * will also create an equivalent NotificationChannel with [NotificationManager].
+     * is already created with the same identifier. Also creates an equivalent
+     * NotificationChannel with [NotificationManager].
      *
      * @param channelCompat A NotificationChannelCompat.
      */
     public fun createNotificationChannel(channelCompat: NotificationChannelCompat) {
         scope.launch {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                notificationManager.createNotificationChannel(channelCompat.toNotificationChannel())
-            }
+            notificationManager.createNotificationChannel(channelCompat.toNotificationChannel())
             dataManager.createChannel(channelCompat)
         }
     }
 
     /**
-     * Like [createNotificationChannel], but on Android O and above,
-     * the channel will not be created with the NotificationManager until it is accessed with
-     * [getNotificationChannel].
+     * Like [createNotificationChannel], but the channel is not created with the
+     * NotificationManager until it is accessed with [getNotificationChannel].
      *
      * @param channelCompat A [NotificationChannelCompat].
      */
@@ -155,8 +145,8 @@ public class NotificationChannelRegistry @VisibleForTesting internal constructor
 
     /**
      * Creates notification channels from an XML file. Any channel that is already created
-     * will no-op. On Android O and above, each channel will also create an equivalent
-     * NotificationChannel with NotificationManager.
+     * will no-op. Each channel also creates an equivalent NotificationChannel with
+     * NotificationManager.
      *
      * The resource file can define all attributes on the channel:
      * <pre>
@@ -185,10 +175,7 @@ public class NotificationChannelRegistry @VisibleForTesting internal constructor
             val channelCompats = NotificationChannelCompat.fromXml(context, resourceId)
 
             for (channelCompat in channelCompats) {
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    notificationManager.createNotificationChannel(channelCompat.toNotificationChannel())
-                }
-
+                notificationManager.createNotificationChannel(channelCompat.toNotificationChannel())
                 dataManager.createChannel(channelCompat)
             }
         }

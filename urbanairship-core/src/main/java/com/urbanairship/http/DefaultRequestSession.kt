@@ -168,7 +168,7 @@ public class DefaultRequestSession : RequestSession {
             }
 
             is RequestAuth.GeneratedAppToken -> {
-                val requestTime = clock.currentTimeMillis()
+                val requestTime = clock.now()
                 val nonce = nonceTokenFactory()
                 val timestamp = DateUtils.createIso8601TimeStamp(requestTime)
 
@@ -187,7 +187,7 @@ public class DefaultRequestSession : RequestSession {
             }
 
             is RequestAuth.GeneratedChannelToken -> {
-                val requestTime = clock.currentTimeMillis()
+                val requestTime = clock.now()
                 val nonce = nonceTokenFactory()
                 val timestamp = DateUtils.createIso8601TimeStamp(requestTime)
 

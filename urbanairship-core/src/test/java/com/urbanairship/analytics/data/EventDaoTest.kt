@@ -5,6 +5,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.analytics.AirshipEventData
 import com.urbanairship.analytics.EventType
 import com.urbanairship.json.JsonMap
+import java.time.Instant
 import org.junit.After
 import org.junit.Assert
 import org.junit.Test
@@ -44,7 +45,7 @@ public class EventDaoTest {
             "session-1",
             JsonMap.EMPTY_MAP.toJsonValue(),
             EventType.APP_FOREGROUND,
-            System.currentTimeMillis()
+            Instant.now()
         )
 
         val event2 = AirshipEventData(
@@ -52,7 +53,7 @@ public class EventDaoTest {
             "session-2",
             JsonMap.EMPTY_MAP.toJsonValue(),
             EventType.APP_FOREGROUND,
-            System.currentTimeMillis()
+            Instant.now()
         )
 
         val entity1 = EventEntity(event1)
@@ -90,7 +91,7 @@ public class EventDaoTest {
             "session-1",
             JsonMap.EMPTY_MAP.toJsonValue(),
             EventType.APP_FOREGROUND,
-            System.currentTimeMillis()
+            Instant.now()
         )
 
         val event2 = AirshipEventData(
@@ -98,7 +99,7 @@ public class EventDaoTest {
             "session-2",
             JsonMap.EMPTY_MAP.toJsonValue(),
             EventType.APP_FOREGROUND,
-            System.currentTimeMillis()
+            Instant.now()
         )
 
         val entity1 = EventEntity(event1)
@@ -137,7 +138,7 @@ public class EventDaoTest {
             "session-1",
             JsonMap.EMPTY_MAP.toJsonValue(),
             EventType.APP_FOREGROUND,
-            System.currentTimeMillis()
+            Instant.now()
         )
 
         val event2 = AirshipEventData(
@@ -145,14 +146,14 @@ public class EventDaoTest {
             "session-2",
             JsonMap.EMPTY_MAP.toJsonValue(),
             EventType.APP_FOREGROUND,
-            System.currentTimeMillis()
+            Instant.now()
         )
         val event3 = AirshipEventData(
             "event-3",
             "session-3",
             JsonMap.EMPTY_MAP.toJsonValue(),
             EventType.APP_FOREGROUND,
-            System.currentTimeMillis()
+            Instant.now()
         )
 
         val entity1 = EventEntity(event1)
@@ -176,7 +177,7 @@ public class EventDaoTest {
             "session-id",
             JsonMap.EMPTY_MAP.toJsonValue(),
             EventType.APP_FOREGROUND,
-            System.currentTimeMillis()
+            Instant.now()
         )
 
         private val ENTITY = EventEntity(EVENT)

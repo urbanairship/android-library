@@ -12,6 +12,8 @@ import com.urbanairship.json.JsonTypeConverters
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.DateUtils
+import com.urbanairship.util.TimeTypeConverters
+import java.time.Instant
 
 /**
  * Entities stored in the metered usage database.\
@@ -20,14 +22,14 @@ import com.urbanairship.util.DateUtils
 @OpenForTesting
 @Entity(tableName = "events")
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-@TypeConverters(UsageTypeConverter::class, JsonTypeConverters::class)
+@TypeConverters(UsageTypeConverter::class, JsonTypeConverters::class, TimeTypeConverters::class)
 public data class MeteredUsageEventEntity(
     @PrimaryKey val eventId: String,
     val entityId: String?,
     val type: MeteredUsageType,
     val product: String,
     val reportingContext: JsonValue?,
-    val timestamp: Long?,
+    val timestamp: Instant?,
     val contactId: String?
 ) {
     internal fun withAnalyticsDisabled(): MeteredUsageEventEntity {

@@ -7,6 +7,7 @@ import androidx.room.ForeignKey
 import androidx.room.ForeignKey.Companion.CASCADE
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import java.time.Instant
 
 @Entity(
     tableName = "occurrences",
@@ -23,7 +24,7 @@ internal class OccurrenceEntity {
     @PrimaryKey(autoGenerate = true)
     var id = 0
     var parentConstraintId: String? = null
-    var timeStamp: Long = 0
+    var timeStamp: Instant = Instant.EPOCH
 
     class Comparator : kotlin.Comparator<OccurrenceEntity> {
         override fun compare(self: OccurrenceEntity, other: OccurrenceEntity): Int {

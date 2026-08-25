@@ -3,6 +3,9 @@ package com.urbanairship.automation.engine
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.automation.EventAutomationTriggerType
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,7 +30,7 @@ class EventsHistoryTest {
         history.add(event)
 
         // Advance time past limit
-        clock.currentTimeMillis += EventsHistory.HISTORY_DURATION.inWholeMilliseconds + 1
+        clock.currentTime += (EventsHistory.HISTORY_DURATION.inWholeMilliseconds + 1).milliseconds
 
         // Add another event to trigger pruning
         val event2 = AutomationEvent.Event(EventAutomationTriggerType.FOREGROUND)

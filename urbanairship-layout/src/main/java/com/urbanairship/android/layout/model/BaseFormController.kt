@@ -11,6 +11,7 @@ import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ThomasFormStatus
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.info.FormInfo
+import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.EnableBehaviorType
 import com.urbanairship.android.layout.property.hasFormBehaviors
 import com.urbanairship.android.layout.property.hasPagerBehaviors
@@ -39,6 +40,10 @@ internal abstract class BaseFormController<T : View, I : FormInfo>(
     environment = environment,
     properties = properties
 ) {
+
+    /** Wraps a view without resizing it, so what it wraps answers for it. */
+    override fun establishesLength(direction: Direction): Boolean =
+        view.establishesLength(direction)
 
     abstract val view: AnyModel
     abstract fun buildFormData(state: State.Form): ThomasFormField.BaseForm

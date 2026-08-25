@@ -10,6 +10,7 @@ import com.urbanairship.iam.analytics.InAppMessageAnalyticsInterface
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.json.JsonValue
+import java.time.Instant
 import java.util.UUID
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -131,7 +132,7 @@ public class AutomationExecutorTest {
             identifier = "some id",
             triggers = listOf(),
             data = AutomationSchedule.ScheduleData.Actions(JsonValue.NULL),
-            created = 0U
+            created = Instant.ofEpochMilli(0)
         )
 
         coEvery { remoteDataAccess.isCurrent(eq(schedule)) } returns true
@@ -146,7 +147,7 @@ public class AutomationExecutorTest {
             identifier = "some id",
             triggers = listOf(),
             data = AutomationSchedule.ScheduleData.Actions(JsonValue.NULL),
-            created = 0U
+            created = Instant.ofEpochMilli(0)
         )
 
         coEvery { remoteDataAccess.isCurrent(any()) } returns false
@@ -216,7 +217,7 @@ public class AutomationExecutorTest {
             identifier = "some id",
             triggers = listOf(),
             data = AutomationSchedule.ScheduleData.Actions(JsonValue.wrap("neat")),
-            created = 0U
+            created = Instant.ofEpochMilli(0)
         )
 
         val preparedScheduleInfo = PreparedScheduleInfo(scheduleId = "prepared schedule id", triggerSessionId = UUID.randomUUID().toString())
@@ -242,7 +243,7 @@ public class AutomationExecutorTest {
                     displayContent = InAppMessageDisplayContent.CustomContent(Custom(JsonValue.NULL))
                 )
             ),
-            created = 0U
+            created = Instant.ofEpochMilli(0)
         )
 
         val preparedScheduleInfo = PreparedScheduleInfo(scheduleId = "prepared schedule id", triggerSessionId = UUID.randomUUID().toString())

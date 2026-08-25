@@ -2,7 +2,6 @@
 package com.urbanairship.push
 
 import android.content.Context
-import android.os.Build
 import androidx.annotation.RestrictTo
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.XmlRes
@@ -46,6 +45,7 @@ import com.urbanairship.push.notifications.AirshipNotificationProvider
 import com.urbanairship.push.notifications.NotificationActionButtonGroup
 import com.urbanairship.push.notifications.NotificationChannelRegistry
 import com.urbanairship.push.notifications.NotificationProvider
+import java.time.Instant
 import java.util.concurrent.ExecutorService
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
@@ -157,11 +157,9 @@ public open class PushManager @VisibleForTesting internal constructor(
             ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_buttons)
         )
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            actionGroupMap.putAll(
-                ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides)
-            )
-        }
+        actionGroupMap.putAll(
+            ActionButtonGroupsParser.fromXml(context, R.xml.ua_notification_button_overrides)
+        )
 
         this.statusObserver = PushNotificationStatusObserver(pushNotificationStatus)
     }
@@ -273,7 +271,7 @@ public open class PushManager @VisibleForTesting internal constructor(
         privacyManager.addListener { checkPermission() }
 
         activityMonitor.addApplicationListener(object : SimpleApplicationListener() {
-            override fun onForeground(milliseconds: Long) {
+            override fun onForeground(timestamp: Instant) {
                 checkPermission()
             }
         })

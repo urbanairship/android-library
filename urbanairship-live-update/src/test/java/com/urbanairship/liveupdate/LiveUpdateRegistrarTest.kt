@@ -13,6 +13,7 @@ import com.urbanairship.liveupdate.util.jsonMapOf
 import io.mockk.clearMocks
 import io.mockk.mockk
 import io.mockk.verifySequence
+import java.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
@@ -121,8 +122,8 @@ public class LiveUpdateRegistrarTest {
     private companion object {
         private const val NAME = "name"
         private const val TYPE = "type"
-        private const val TIMESTAMP = 1000L
-        private const val DISMISS_TIMESTAMP = 9000L
+        private val TIMESTAMP: Instant = Instant.ofEpochMilli(1000)
+        private val DISMISS_TIMESTAMP: Instant = Instant.ofEpochMilli(9000)
         private val CONTENT = jsonMapOf("foo" to "bar")
     }
 }

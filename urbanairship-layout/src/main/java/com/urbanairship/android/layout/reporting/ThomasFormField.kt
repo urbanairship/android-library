@@ -14,8 +14,9 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
+import com.urbanairship.util.minus
+import java.time.Instant as JavaInstant
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
@@ -119,7 +120,8 @@ public sealed class ThomasFormField<T>(
         val smsLocale: SmsLocale? = null,
         override val identifier: String,
         override val originalValue: String?,
-        override val fieldType: FieldType<String>
+        override val fieldType: FieldType<String>,
+        val isRedacted: Boolean = false
     ) : ThomasFormField<String>(when(textInput) {
         FormInputType.EMAIL -> Type.EMAIL
         FormInputType.SMS -> Type.SMS
@@ -128,6 +130,26 @@ public sealed class ThomasFormField<T>(
 
         override fun jsonValue(): JsonValue? {
             return State(originalValue ?: "", smsLocale).toJsonValue()
+        }
+
+        override fun formData(withState: Boolean): JsonMap {
+            val builder = JsonMap.newBuilder()
+            builder.put(KEY_TYPE, type)
+            if (withState) {
+                builder.put(KEY_STATUS, status.toJson(type))
+                builder.put(KEY_VALUE, JsonValue.wrapOpt(originalValue))
+            } else if (isRedacted) {
+                builder.put(KEY_VALUE, JsonValue.wrap(REDACTED_VALUE))
+                builder.put(KEY_IS_REDACTED, JsonValue.wrap(true))
+            } else {
+                val value = if (status is ThomasFormFieldStatus.Valid) {
+                    (status as ThomasFormFieldStatus.Valid<String>).result.value
+                } else {
+                    originalValue
+                }
+                builder.put(KEY_VALUE, JsonValue.wrapOpt(value))
+            }
+            return builder.build()
         }
 
         internal companion object {
@@ -242,6 +264,8 @@ public sealed class ThomasFormField<T>(
         private const val KEY_TYPE: String = "type"
         private const val KEY_VALUE: String = "value"
         private const val KEY_STATUS: String = "status"
+        private const val KEY_IS_REDACTED: String = "is_redacted"
+        private const val REDACTED_VALUE: String = "REDACTED"
         private const val KEY_SCORE_ID: String = "score_id"
         private const val KEY_CHILDREN: String = "children"
         private const val KEY_RESPONSE_TYPE: String = "response_type"
@@ -301,7 +325,7 @@ public sealed class ThomasFormField<T>(
         private val taskSleeper: TaskSleeper = TaskSleeper.default
     ) {
 
-        private var lastAttemptTimestamp: Long? = null
+        private var lastAttemptTimestamp: JavaInstant? = null
         private var fetchJob: Deferred<PendingResult<T>>? = null
         private var nextBackOff: Duration? = null
 
@@ -367,7 +391,7 @@ public sealed class ThomasFormField<T>(
             val nextBackOff = nextBackOff ?: return
             val lastAttemptTimestamp = lastAttemptTimestamp ?: return
 
-            val remaining = nextBackOff - (clock.currentTimeMillis() - lastAttemptTimestamp).milliseconds
+            val remaining = nextBackOff - (clock.now() - lastAttemptTimestamp)
             if (remaining.isPositive()) {
                 taskSleeper.sleep(remaining)
             }
@@ -375,7 +399,7 @@ public sealed class ThomasFormField<T>(
 
         private fun processResult(result: PendingResult<T>): PendingResult<T> {
             _resultsFlow.update { result }
-            lastAttemptTimestamp = clock.currentTimeMillis()
+            lastAttemptTimestamp = clock.now()
 
             nextBackOff = if (result.isError) {
                 nextBackOff?.let { minOf(it * 2, MAX_BACK_OFF) } ?: INITIAL_BACK_OFF

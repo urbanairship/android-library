@@ -111,7 +111,7 @@ internal class DefaultAutomationRootScreenViewModel: AutomationRootScreenViewMod
 
     init {
         Airship.onReady {
-            mutableState.value = inAppAutomation.inAppMessaging.displayInterval
+            mutableState.value = inAppAutomation.inAppMessaging.displayIntervalSeconds
         }
     }
 
@@ -120,7 +120,7 @@ internal class DefaultAutomationRootScreenViewModel: AutomationRootScreenViewMod
             return
         }
 
-        Airship.inAppAutomation.inAppMessaging.displayInterval = value
+        Airship.inAppAutomation.inAppMessaging.displayIntervalSeconds = value
         mutableState.value = value
     }
 }

@@ -11,6 +11,7 @@ import com.urbanairship.contacts.Scope
 import com.urbanairship.contacts.ScopedSubscriptionListMutation
 import com.urbanairship.util.CachedList
 import com.urbanairship.util.Clock
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -25,7 +26,7 @@ import kotlinx.coroutines.flow.update
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
     internal companion object {
-        internal const val EXPIRY_MS: Long = 600000 // 10 minutes
+        internal val EXPIRY = 10.minutes
     }
 
     internal var stableContactIdDelegate: (suspend () -> String)? = null
@@ -49,7 +50,7 @@ public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
         channel: ContactChannelMutation? = null
     ) {
         val overrides = AudienceOverrides.Contact(tags, attributes, subscriptions, channel?.let { listOf(it) })
-        records.append(Record(contactId, overrides), EXPIRY_MS)
+        records.append(Record(contactId, overrides), EXPIRY)
         notifyPendingChanged()
     }
 
@@ -60,7 +61,7 @@ public class AudienceOverridesProvider(clock: Clock = Clock.DEFAULT_CLOCK) {
         subscriptions: List<SubscriptionListMutation>? = null
     ) {
         val overrides = AudienceOverrides.Channel(tags, attributes, subscriptions)
-        records.append(Record(channelId, overrides), EXPIRY_MS)
+        records.append(Record(channelId, overrides), EXPIRY)
         notifyPendingChanged()
     }
 

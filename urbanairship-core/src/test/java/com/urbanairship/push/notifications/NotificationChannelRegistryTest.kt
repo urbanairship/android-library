@@ -48,16 +48,6 @@ public class NotificationChannelRegistryTest : BaseTestCase() {
         Dispatchers.setMain(testDispatcher)
     }
 
-    @Test
-    @Config(sdk = [25])
-    public fun testGetNotificationChannelAsyncPreOreo(): TestResult = runTest {
-        every { dataManager.getChannel("test") } returns channelCompat
-        val result = channelRegistry.getNotificationChannel("test")
-        testDispatcher.scheduler.advanceUntilIdle()
-
-        verify { dataManager.getChannel(any()) }
-        Assert.assertEquals(channelCompat, result)
-    }
 
     @Test
     public fun testGetNotificationChannelAsync(): TestResult = runTest {
@@ -69,13 +59,6 @@ public class NotificationChannelRegistryTest : BaseTestCase() {
         Assert.assertEquals(channelCompat, result)
     }
 
-    @Test
-    @Config(sdk = [25])
-    public fun testCreateNotificationChannelPreOreo() {
-        channelRegistry.createNotificationChannel(channelCompat)
-        testDispatcher.scheduler.advanceUntilIdle()
-        verify { dataManager.createChannel(channelCompat) }
-    }
 
     @Test
     public fun testCreateNotificationChannel() {
@@ -100,13 +83,6 @@ public class NotificationChannelRegistryTest : BaseTestCase() {
         verify { notificationManager.createNotificationChannel(channelCompat.toNotificationChannel()) }
     }
 
-    @Test
-    @Config(sdk = [25])
-    public fun testDeleteNotificationChannelPreOreo() {
-        channelRegistry.deleteNotificationChannel("test")
-        testDispatcher.scheduler.advanceUntilIdle()
-        verify { dataManager.deleteChannel("test") }
-    }
 
     @Test
     public fun testDeleteNotificationChannel() {

@@ -4,15 +4,21 @@ package com.urbanairship.android.layout.ui
 import android.content.Context
 import android.graphics.Rect
 import android.os.Build
+import android.transition.TransitionManager
 import android.view.View
 import androidx.annotation.RestrictTo
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintLayout.LayoutParams.MATCH_CONSTRAINT
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updatePadding
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
+import com.urbanairship.android.layout.property.BannerAnimation
 import com.urbanairship.android.layout.property.ConstrainedSize
 import com.urbanairship.android.layout.property.Shadow
+import com.urbanairship.android.layout.property.VerticalPosition
 import com.urbanairship.android.layout.util.ConstraintSetBuilder
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
@@ -37,6 +43,18 @@ public class ThomasBannerView internal constructor(
     private var bannerFrame: ConstrainedFrameLayout? = null
 
     /**
+     * The banner's configured animation, defaulting to a slide when the payload omits one.
+     */
+    private val bannerAnimation: BannerAnimation
+        get() = presentation.getResolvedPlacement(context).animation ?: BannerAnimation.Slide()
+
+    /**
+     * The edge the banner slides from/to.
+     */
+    private val bannerPosition: VerticalPosition
+        get() = presentation.getResolvedPlacement(context).position.vertical
+
+    /**
      * Listener notified when the banner frame's bounds (relative to this view) change. Used by
      * the host to size and position animations and swipe-to-dismiss gestures relative to the
      * banner content.
@@ -59,6 +77,69 @@ public class ThomasBannerView internal constructor(
         applyShadow(frame, placement.shadow)
 
         applySizeConstraints()
+
+        // A single listener drives inset handling for both branches. It recomputes from the root
+        // window insets (see applyWindowInsets) rather than trusting the dispatched value, so the
+        // result is identical across API levels (pre-30 real consumption vs 30+ no-op) and whether
+        // the host app is edge-to-edge or not. The incoming insets are returned unchanged so we
+        // never affect the host's own views.
+        ViewCompat.setOnApplyWindowInsetsListener(this) { _, insets ->
+            applyWindowInsets()
+            insets
+        }
+
+        animateIn(frame)
+    }
+
+    /**
+     * Applies window insets from the canonical, consumption-independent source
+     * ([ViewCompat.getRootWindowInsets]), so behavior is consistent on every supported API and
+     * regardless of the host's edge-to-edge state.
+     *
+     * - Safe-area banners: pad only the pinned edge (plus horizontal system-bar/cutout insets, plus
+     *   the IME for a bottom banner). The subtree is intentionally not re-dispatched, since the
+     *   whole banner is already inside the safe area.
+     * - Ignore-safe-area banners: leave the frame edge-to-edge, but hand the Thomas subtree the same
+     *   canonical insets so nested items that respect the safe area behave the same everywhere.
+     */
+    private fun applyWindowInsets() {
+        val insets = ViewCompat.getRootWindowInsets(this) ?: return
+
+        if (environment.isIgnoringSafeAreas) {
+            bannerFrame?.let { ViewCompat.dispatchApplyWindowInsets(it, insets) }
+            return
+        }
+
+        val bars = insets.getInsets(
+            WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.displayCutout()
+        )
+        val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+        val isTop = bannerPosition == VerticalPosition.TOP
+        val isBottom = bannerPosition == VerticalPosition.BOTTOM
+        updatePadding(
+            top = if (isBottom) 0 else bars.top,
+            bottom = if (isTop) 0 else maxOf(bars.bottom, ime.bottom),
+            left = bars.left,
+            right = bars.right
+        )
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        // Apply immediately from the root insets so the first frame is correct even if no dispatch
+        // is pending, then request a pass for later changes (rotation, IME).
+        applyWindowInsets()
+        ViewCompat.requestApplyInsets(this)
+    }
+
+    /** Runs the enter transition on the [frame] via the [TransitionFactory]. */
+    private fun animateIn(frame: View) {
+        frame.visibility = INVISIBLE
+        post {
+            val transition = TransitionFactory.enterTransition(bannerAnimation, frame, bannerPosition)
+            TransitionManager.beginDelayedTransition(this, transition)
+            frame.visibility = VISIBLE
+        }
     }
 
     private fun makeFrame(size: ConstrainedSize) =
@@ -108,7 +189,7 @@ public class ThomasBannerView internal constructor(
         val size = placement.size
         val margin = placement.margin
 
-        val ignoreSafeArea = false
+        val ignoreSafeArea = placement.shouldIgnoreSafeArea()
 
         // Percent base for the overflow/fitting math: the full window. Note that
         // ConstraintLayout's constrainPercent* sizing is parent-relative, so this base only
@@ -129,9 +210,9 @@ public class ThomasBannerView internal constructor(
         lastWindowHeight = windowHeightPx
 
         ConstraintSetBuilder.newBuilder(context)
-            .position(placement.position, viewId)
-            .width(size, ignoreSafeArea, viewId)
-            .height(size, ignoreSafeArea, viewId)
+            .position(placement.position.asPosition(), viewId)
+            .width(size, ignoreSafeArea, viewId, margin = margin)
+            .height(size, ignoreSafeArea, viewId, margin = margin)
             .aspectRatioWithinBounds(
                 size = size,
                 viewId = viewId,
@@ -149,8 +230,9 @@ public class ThomasBannerView internal constructor(
     override fun onConfigurationChanged(newConfig: android.content.res.Configuration?) {
         super.onConfigurationChanged(newConfig)
         // Re-fit only when the window bounds actually changed, to avoid layout churn.
-        val windowWidth = ResourceUtils.getWindowWidthPixels(context, false)
-        val windowHeight = ResourceUtils.getWindowHeightPixels(context, false)
+        val ignoreSafeArea = presentation.getResolvedPlacement(context).shouldIgnoreSafeArea()
+        val windowWidth = ResourceUtils.getWindowWidthPixels(context, ignoreSafeArea)
+        val windowHeight = ResourceUtils.getWindowHeightPixels(context, ignoreSafeArea)
         if (windowWidth != lastWindowWidth || windowHeight != lastWindowHeight) {
             applySizeConstraints()
         }

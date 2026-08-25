@@ -10,6 +10,7 @@ import com.urbanairship.liveupdate.data.LiveUpdateDatabase
 import com.urbanairship.liveupdate.util.jsonMapOf
 import io.mockk.mockk
 import io.mockk.spyk
+import java.time.Instant
 import junit.framework.TestCase
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -140,7 +141,7 @@ public class LiveUpdateStressTest {
             name = name,
             type = type,
             content = jsonMapOf("n" to n),
-            timestamp = System.currentTimeMillis(),
+            timestamp = Instant.now(),
             dismissalTimestamp = null
         )
 
@@ -148,7 +149,7 @@ public class LiveUpdateStressTest {
         registrar.stop(
             name = name,
             content = jsonMapOf("n" to n),
-            timestamp = System.currentTimeMillis(),
+            timestamp = Instant.now(),
             dismissalTimestamp = null
         )
 
@@ -156,7 +157,7 @@ public class LiveUpdateStressTest {
         registrar.update(
             name = name,
             content = jsonMapOf("n" to n),
-            timestamp = System.currentTimeMillis(),
+            timestamp = Instant.now(),
             dismissalTimestamp = null
         )
 }

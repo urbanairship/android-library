@@ -25,7 +25,6 @@ import android.graphics.Rect
 import android.graphics.Region
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.ShapeDrawable
-import android.os.Build
 import androidx.core.graphics.drawable.DrawableCompat
 
 /**
@@ -215,9 +214,7 @@ public open class DrawableWrapper : Drawable, Drawable.Callback {
             it.setState(getState())
             it.level = level
             it.bounds = bounds
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                it.layoutDirection = layoutDirection
-            }
+            it.layoutDirection = layoutDirection
 
             if (state != null) {
                 state.drawableState = it.constantState

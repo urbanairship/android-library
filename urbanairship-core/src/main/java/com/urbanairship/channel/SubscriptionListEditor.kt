@@ -32,7 +32,7 @@ public abstract class SubscriptionListEditor
         mutations.add(
             SubscriptionListMutation.newSubscribeMutation(
                 listId = trimmed,
-                timestamp = clock.currentTimeMillis()
+                timestamp = clock.now()
             )
         )
 
@@ -64,7 +64,7 @@ public abstract class SubscriptionListEditor
 
         mutations.add(
             SubscriptionListMutation.newUnsubscribeMutation(
-                trimmed, clock.currentTimeMillis()
+                trimmed, clock.now()
             )
         )
 

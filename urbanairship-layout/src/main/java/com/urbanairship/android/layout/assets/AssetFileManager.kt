@@ -4,7 +4,6 @@ package com.urbanairship.android.layout.assets
 
 import android.content.Context
 import android.net.Uri
-import android.os.Build
 import android.os.storage.StorageManager
 import androidx.annotation.RestrictTo
 import androidx.core.net.toFile
@@ -76,12 +75,10 @@ internal class DefaultAssetFileManager(
             }
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            try {
-                storageManager.setCacheBehaviorGroup(subDir, true)
-            } catch (e: IOException) {
-                UALog.e(e) { "Failed to set cache behavior group! $subDir" }
-            }
+        try {
+            storageManager.setCacheBehaviorGroup(subDir, true)
+        } catch (e: IOException) {
+            UALog.e(e) { "Failed to set cache behavior group! $subDir" }
         }
         return subDir
     }

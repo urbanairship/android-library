@@ -11,6 +11,7 @@ import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.optionalField
 import com.urbanairship.json.requireField
 import com.urbanairship.util.DateUtils
+import java.time.Instant
 
 /**
  * Defines subscription list mutations.
@@ -78,10 +79,10 @@ public class SubscriptionListMutation(
          * Creates a mutation to subscribe to a list.
          *
          * @param listId The ID of the list to subscribe to.
-         * @param timestamp The timestamp in milliseconds.
+         * @param timestamp The time of the mutation.
          * @return A new subscription list mutation.
          */
-        fun newSubscribeMutation(listId: String, timestamp: Long): SubscriptionListMutation {
+        fun newSubscribeMutation(listId: String, timestamp: Instant): SubscriptionListMutation {
             return SubscriptionListMutation(
                 action = ACTION_SUBSCRIBE,
                 listId = listId,
@@ -93,10 +94,10 @@ public class SubscriptionListMutation(
          * Creates a mutation to unsubscribe from a list.
          *
          * @param listId The ID of the list to unsubscribe from.
-         * @param timestamp The timestamp in milliseconds.
+         * @param timestamp The time of the mutation.
          * @return A new subscription list mutation.
          */
-        fun newUnsubscribeMutation(listId: String, timestamp: Long): SubscriptionListMutation {
+        fun newUnsubscribeMutation(listId: String, timestamp: Instant): SubscriptionListMutation {
             return SubscriptionListMutation(
                 action = ACTION_UNSUBSCRIBE,
                 listId = listId,

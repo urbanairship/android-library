@@ -16,6 +16,7 @@ import com.urbanairship.iam.info.InAppMessageMediaInfo
 import com.urbanairship.iam.info.InAppMessageTextInfo
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import kotlin.time.Duration.Companion.milliseconds
 import junit.framework.TestCase.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -128,7 +129,7 @@ public class InAppMessageTest {
                     backgroundColor = InAppMessageColor(Color.parseColor("#ffffff")),
                     dismissButtonColor = InAppMessageColor(Color.parseColor("#000000")),
                     borderRadius = 5F,
-                    durationMs = 100,
+                    duration = 100.milliseconds,
                     placement = Banner.Placement.TOP
                 )
             ),

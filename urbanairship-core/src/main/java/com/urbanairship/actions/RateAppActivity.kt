@@ -9,11 +9,14 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import com.google.android.play.core.review.ReviewManagerFactory
 import com.urbanairship.Autopilot
 import com.urbanairship.R
 import com.urbanairship.UALog
 import com.urbanairship.Airship
+import com.urbanairship.Platform
 import com.urbanairship.activity.ThemedActivity
+import com.urbanairship.google.PlayServicesUtils
 import com.urbanairship.util.AppStoreUtils
 
 /**
@@ -43,7 +46,25 @@ public class RateAppActivity public constructor() : ThemedActivity() {
     @SuppressLint("NewApi")
     public override fun onResume() {
         super.onResume()
-        displayDialog()
+        if (Airship.platform != Platform.AMAZON && PlayServicesUtils.isPlayReviewDependencyAvailable()) {
+            launchInAppReview()
+        } else {
+            displayDialog()
+        }
+    }
+
+    private fun launchInAppReview() {
+        val manager = ReviewManagerFactory.create(this)
+        manager.requestReviewFlow().addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                manager.launchReviewFlow(this, task.result).addOnCompleteListener {
+                    finish()
+                }
+            } else {
+                UALog.d("In-app review request failed, falling back to dialog")
+                displayDialog()
+            }
+        }
     }
 
     @SuppressLint("NewApi")

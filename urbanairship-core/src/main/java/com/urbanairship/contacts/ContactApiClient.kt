@@ -22,6 +22,9 @@ import com.urbanairship.json.requireField
 import com.urbanairship.util.Clock
 import com.urbanairship.util.DateUtils
 import com.urbanairship.util.UAHttpStatusUtil
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.Locale
 import java.util.TimeZone
 import kotlin.time.Duration.Companion.milliseconds
@@ -97,21 +100,10 @@ internal class ContactApiClient (
                 LOCALE_LANGUAGE to locale.language,
                 LOCALE_COUNTRY to locale.country,
 
-                COMMERCIAL_OPTED_IN_KEY to options.commercialOptedIn.let {
-                    if (it > 0) {
-                        DateUtils.createIso8601TimeStamp(it)
-                    } else {
-                        null
-                    }
-                },
+                COMMERCIAL_OPTED_IN_KEY to options.commercialOptedIn.optInTimestamp(),
 
-                TRANSACTIONAL_OPTED_IN_KEY to options.transactionalOptedIn.let {
-                    if (it > 0) {
-                        DateUtils.createIso8601TimeStamp(it)
-                    } else {
-                        null
-                    }
-                }), OPT_IN_MODE_KEY to options.isDoubleOptIn.let {
+                TRANSACTIONAL_OPTED_IN_KEY to options.transactionalOptedIn.optInTimestamp()
+                ), OPT_IN_MODE_KEY to options.isDoubleOptIn.let {
                 if (options.isDoubleOptIn) {
                     OPT_IN_DOUBLE
                 } else {
@@ -513,24 +505,35 @@ internal class ContactApiClient (
     internal data class IdentityResult(
         val contactId: String,
         val isAnonymous: Boolean,
-        val channelAssociatedDateMs: Long,
+        val channelAssociatedDate: Instant,
         val token: String,
-        val tokenExpiryDateMs: Long
+        val tokenExpiryDate: Instant
     ) {
         constructor(jsonMap: JsonMap, clock: Clock) : this(
             contactId = jsonMap.requireField<JsonMap>("contact").requireField("contact_id"),
             isAnonymous = jsonMap.requireField<JsonMap>("contact").requireField("is_anonymous"),
-            channelAssociatedDateMs = DateUtils.parseIso8601(
+            channelAssociatedDate = DateUtils.parseIso8601(
                 jsonMap.requireField<JsonMap>("contact")
                     .requireField<String>("channel_association_timestamp")
             ),
             token = jsonMap.requireField("token"),
             // "token_expires_in" is in milliseconds.
-            tokenExpiryDateMs = clock.currentTimeMillis() +
-                jsonMap.requireField<Long>("token_expires_in").milliseconds.inWholeMilliseconds
+            tokenExpiryDate = clock.now() +
+                jsonMap.requireField<Long>("token_expires_in").milliseconds
         )
     }
 }
+
+/**
+ * The opt-in date as an ISO 8601 timestamp, or `null` if it is unset or at/before the epoch.
+ *
+ * Before these dates were nullable, "unset" was encoded as a non-positive number and this path
+ * filtered on `> 0`. Keep dropping non-positive dates, so an opt-in dated at or before the epoch
+ * cannot register a channel as opted in.
+ */
+private fun Instant?.optInTimestamp(): String? = this
+    ?.takeIf { it.isAfter(Instant.EPOCH) }
+    ?.let(DateUtils::createIso8601TimeStamp)
 
 private fun List<TagGroupsMutation>.tagsPayload(): JsonMap? {
     val add = mutableMapOf<String, MutableSet<String>>()

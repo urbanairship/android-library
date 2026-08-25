@@ -2,6 +2,7 @@
 
 package com.urbanairship.contacts
 
+import java.time.Instant
 import java.util.UUID
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -45,10 +46,10 @@ public class ContactChannelTest {
             ContactChannel.Email.RegistrationInfo.Registered(
                 channelId = UUID.randomUUID().toString(),
                 maskedAddress = UUID.randomUUID().toString(),
-                transactionalOptedIn = 1000,
-                transactionalOptedOut = 2000,
-                commercialOptedIn = 3000,
-                commercialOptedOut = 4000
+                transactionalOptedIn = Instant.ofEpochMilli(1000),
+                transactionalOptedOut = Instant.ofEpochMilli(2000),
+                commercialOptedIn = Instant.ofEpochMilli(3000),
+                commercialOptedOut = Instant.ofEpochMilli(4000)
             )
         )
 

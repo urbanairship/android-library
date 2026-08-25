@@ -8,14 +8,20 @@ import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.json.JsonValue
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import java.util.UUID
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import org.junit.Test
 import org.junit.runner.RunWith
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @RunWith(AndroidJUnit4::class)
 public class AutomationScheduleDataTest {
@@ -24,7 +30,7 @@ public class AutomationScheduleDataTest {
 
     private val triggeringInfo = TriggeringInfo(
         context = null,
-        date = clock.currentTimeMillis
+        date = clock.currentTime
     )
 
     private val preparedScheduleInfo = PreparedScheduleInfo(
@@ -58,47 +64,47 @@ public class AutomationScheduleDataTest {
     @Test
     public fun testIsActive() {
         // no startDate or end
-        assertTrue(makeData().isActive(clock.currentTimeMillis))
+        assertTrue(makeData().isActive(clock.currentTime))
 
         // startDates in the future
-        var data = makeData(startDate = (clock.currentTimeMillis + 1).toULong())
-        assertFalse(data.isActive(clock.currentTimeMillis))
+        var data = makeData(startDate = (clock.currentTime + 1.milliseconds))
+        assertFalse(data.isActive(clock.currentTime))
 
         // startDates now
-        val current = clock.currentTimeMillis.toULong()
+        val current = clock.currentTime
         data = makeData(startDate = current)
-        assertTrue(data.isActive(current.toLong()))
+        assertTrue(data.isActive(current))
 
         // ends in the past
-        data.updateEndDate((clock.currentTimeMillis - 1).toULong())
-        assertFalse(data.isActive(clock.currentTimeMillis))
+        data.updateEndDate((clock.currentTime - 1.milliseconds))
+        assertFalse(data.isActive(clock.currentTime))
 
         // ends now
-        data.updateEndDate(clock.currentTimeMillis.toULong())
-        assertFalse(data.isActive(clock.currentTimeMillis))
+        data.updateEndDate(clock.currentTime)
+        assertFalse(data.isActive(clock.currentTime))
 
         // ends in the future
-        data.updateEndDate((clock.currentTimeMillis + 1).toULong())
-        assertTrue(data.isActive(clock.currentTimeMillis))
+        data.updateEndDate((clock.currentTime + 1.milliseconds))
+        assertTrue(data.isActive(clock.currentTime))
     }
 
     @Test
     public fun testIsExpired() {
         val data = makeData()
         // no end set
-        assertFalse(data.isExpired(clock.currentTimeMillis))
+        assertFalse(data.isExpired(clock.currentTime))
 
         // ends in the past
-        data.updateEndDate((clock.currentTimeMillis - 1).toULong())
-        assertTrue(data.isExpired(clock.currentTimeMillis))
+        data.updateEndDate((clock.currentTime - 1.milliseconds))
+        assertTrue(data.isExpired(clock.currentTime))
 
         // ends now
-        data.updateEndDate((clock.currentTimeMillis).toULong())
-        assertTrue(data.isExpired(clock.currentTimeMillis))
+        data.updateEndDate((clock.currentTime))
+        assertTrue(data.isExpired(clock.currentTime))
 
         // ends in the future
-        data.updateEndDate((clock.currentTimeMillis + 1).toULong())
-        assertFalse(data.isExpired(clock.currentTimeMillis))
+        data.updateEndDate((clock.currentTime + 1.milliseconds))
+        assertFalse(data.isExpired(clock.currentTime))
     }
 
     @Test
@@ -152,12 +158,12 @@ public class AutomationScheduleDataTest {
         assertNotNull(data.triggerInfo)
         assertNotNull(data.preparedScheduleInfo)
 
-        data.finished(clock.currentTimeMillis + 100)
+        data.finished(clock.currentTime + 100.milliseconds)
 
         assertNull(data.preparedScheduleInfo)
         assertNull(data.triggerInfo)
         assertEquals(AutomationScheduleState.FINISHED, data.scheduleState)
-        assertEquals(clock.currentTimeMillis + 100, data.scheduleStateChangeDate)
+        assertEquals(clock.currentTime + 100.milliseconds, data.scheduleStateChangeDate)
     }
 
     @Test
@@ -168,12 +174,12 @@ public class AutomationScheduleDataTest {
             preparedScheduleInfo = preparedScheduleInfo
         )
 
-        data.idle(clock.currentTimeMillis + 100)
+        data.idle(clock.currentTime + 100.milliseconds)
 
         assertNull(data.preparedScheduleInfo)
         assertNull(data.triggerInfo)
         assertEquals(AutomationScheduleState.IDLE, data.scheduleState)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -183,12 +189,12 @@ public class AutomationScheduleDataTest {
             preparedScheduleInfo = preparedScheduleInfo
         )
 
-        data.paused(clock.currentTimeMillis + 100)
+        data.paused(clock.currentTime + 100.milliseconds)
 
         assertNull(data.preparedScheduleInfo)
         assertNull(data.triggerInfo)
         assertEquals(data.scheduleState, AutomationScheduleState.PAUSED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -196,98 +202,98 @@ public class AutomationScheduleDataTest {
         val data = makeData(limit = 1U)
         data.setExecutionCount(1)
 
-        data.updateState(clock.currentTimeMillis + 100)
+        data.updateState(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testUpdateStateExpired() {
         val data = makeData()
-        data.updateEndDate(clock.currentTimeMillis.toULong())
+        data.updateEndDate(clock.currentTime)
 
-        data.updateState(clock.currentTimeMillis + 100)
+        data.updateState(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testUpdateFinishedToIdle() {
         val data = makeData(scheduleState = AutomationScheduleState.FINISHED)
 
-        data.updateState(clock.currentTimeMillis + 100)
+        data.updateState(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testUpdateStateFinished() {
         val data = makeData()
 
-        data.updateState(clock.currentTimeMillis + 100)
+        data.updateState(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime)
     }
 
     @Test
     public fun testPrepareCancelledPenalize() {
         val  data = makeData(limit = 2U, scheduleState = AutomationScheduleState.TRIGGERED)
 
-        data.prepareCancelled(clock.currentTimeMillis + 100, penalize = true)
+        data.prepareCancelled(clock.currentTime + 100.milliseconds, penalize = true)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.executionCount, 1)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testPrepareCancelled() {
         val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
 
-        data.prepareCancelled(clock.currentTimeMillis + 100, penalize = false)
+        data.prepareCancelled(clock.currentTime + 100.milliseconds, penalize = false)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.executionCount, 0)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testPrepareCancelledOverLimit() {
         val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
 
-        data.prepareCancelled(clock.currentTimeMillis + 100, penalize = true)
+        data.prepareCancelled(clock.currentTime + 100.milliseconds, penalize = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 1)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testPrepareCancelledExpired() {
         val data = makeData(limit = 2U, scheduleState = AutomationScheduleState.TRIGGERED)
-        data.updateEndDate(clock.currentTimeMillis.toULong())
+        data.updateEndDate(clock.currentTime)
 
-        data.prepareCancelled(clock.currentTimeMillis + 100, penalize = true)
+        data.prepareCancelled(clock.currentTime + 100.milliseconds, penalize = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 1)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testPrepareInterrupted() {
         val data = makeData(scheduleState = AutomationScheduleState.PREPARED)
 
-        data.prepareInterrupted(clock.currentTimeMillis + 100)
+        data.prepareInterrupted(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.TRIGGERED)
         assertEquals(data.executionCount, 0)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testTriggeredScheduleInterrupted() {
         val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
 
-        data.prepareInterrupted(clock.currentTimeMillis + 100)
+        data.prepareInterrupted(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.TRIGGERED)
         assertEquals(data.executionCount, 0)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime)
     }
 
     @Test
@@ -295,30 +301,30 @@ public class AutomationScheduleDataTest {
         val data = makeData(limit = 1U, scheduleState = AutomationScheduleState.TRIGGERED)
         data.setExecutionCount(1)
 
-        data.prepareInterrupted(clock.currentTimeMillis + 100)
+        data.prepareInterrupted(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testPrepareInterruptedExpired() {
         val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
-        data.updateEndDate(clock.currentTimeMillis.toULong())
+        data.updateEndDate(clock.currentTime)
 
-        data.prepareInterrupted(clock.currentTimeMillis + 100)
+        data.prepareInterrupted(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 0)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testExecutionCancelled() {
         val data = makeData(scheduleState = AutomationScheduleState.PREPARED)
 
-        data.executionCancelled(clock.currentTimeMillis + 100)
+        data.executionCancelled(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.executionCount, 0)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -328,11 +334,11 @@ public class AutomationScheduleDataTest {
             triggeringInfo = triggeringInfo
         )
 
-        data.executionCancelled(clock.currentTimeMillis + 100)
+        data.executionCancelled(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.executionCount, 0)
         assertNull(data.triggerInfo)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -347,7 +353,7 @@ public class AutomationScheduleDataTest {
         for (state in states) {
             val data = makeData(scheduleState = state)
 
-            data.executionCancelled(clock.currentTimeMillis + 100)
+            data.executionCancelled(clock.currentTime + 100.milliseconds)
             assertEquals(data.scheduleState, state)
         }
     }
@@ -357,28 +363,28 @@ public class AutomationScheduleDataTest {
         val data = makeData(limit = 1U, scheduleState = AutomationScheduleState.PREPARED)
         data.setExecutionCount(1)
 
-        data.executionCancelled(clock.currentTimeMillis + 100)
+        data.executionCancelled(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testExecutionCancelledExpired() {
-        val data = makeData(scheduleState = AutomationScheduleState.PREPARED, endDate = clock.currentTimeMillis.toULong())
+        val data = makeData(scheduleState = AutomationScheduleState.PREPARED, endDate = clock.currentTime)
 
-        data.executionCancelled(clock.currentTimeMillis + 100)
+        data.executionCancelled(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testPrepared() {
         val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
 
-        data.prepared(info = preparedScheduleInfo, clock.currentTimeMillis + 100)
+        data.prepared(info = preparedScheduleInfo, clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.PREPARED)
         assertEquals(data.preparedScheduleInfo, preparedScheduleInfo)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -386,20 +392,20 @@ public class AutomationScheduleDataTest {
         val data = makeData(limit = 1U, scheduleState = AutomationScheduleState.TRIGGERED)
         data.setExecutionCount(1)
 
-        data.prepared(info = preparedScheduleInfo, clock.currentTimeMillis + 100)
+        data.prepared(info = preparedScheduleInfo, clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertNull(data.preparedScheduleInfo)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testPreparedExpired() {
-        val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED, endDate = clock.currentTimeMillis.toULong())
+        val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED, endDate = clock.currentTime)
 
-        data.prepared(info = preparedScheduleInfo, clock.currentTimeMillis + 100)
+        data.prepared(info = preparedScheduleInfo, clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertNull(data.preparedScheduleInfo)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -407,10 +413,10 @@ public class AutomationScheduleDataTest {
         val data = makeData(limit = 2U, scheduleState = AutomationScheduleState.PREPARED)
         data.setExecutionCount(1)
 
-        data.executionSkipped(clock.currentTimeMillis + 100)
+        data.executionSkipped(clock.currentTime + 100.milliseconds)
         assertEquals(data.executionCount, 1)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -418,19 +424,19 @@ public class AutomationScheduleDataTest {
         val data = makeData(limit = 1U, scheduleState = AutomationScheduleState.PREPARED)
         data.setExecutionCount(1)
 
-        data.executionSkipped(clock.currentTimeMillis + 100)
+        data.executionSkipped(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testExecutionSkippedExpired() {
-        val data = makeData(limit = 2U, endDate = clock.currentTimeMillis.toULong(), scheduleState = AutomationScheduleState.PREPARED)
+        val data = makeData(limit = 2U, endDate = clock.currentTime, scheduleState = AutomationScheduleState.PREPARED)
         data.setExecutionCount(1)
 
-        data.executionSkipped(clock.currentTimeMillis + 100)
+        data.executionSkipped(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -438,9 +444,9 @@ public class AutomationScheduleDataTest {
         val data = makeData(limit = 2U, scheduleState = AutomationScheduleState.PREPARED)
         data.setExecutionCount(1)
 
-        data.executionInvalidated(clock.currentTimeMillis + 100)
+        data.executionInvalidated(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.TRIGGERED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -448,19 +454,19 @@ public class AutomationScheduleDataTest {
         val data = makeData(limit = 1U, scheduleState = AutomationScheduleState.PREPARED)
         data.setExecutionCount(1)
 
-        data.executionInvalidated(clock.currentTimeMillis + 100)
+        data.executionInvalidated(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testExecutionInvalidatedExpired() {
-        val data = makeData(limit = 2U, endDate = clock.currentTimeMillis.toULong(), scheduleState = AutomationScheduleState.PREPARED)
+        val data = makeData(limit = 2U, endDate = clock.currentTime, scheduleState = AutomationScheduleState.PREPARED)
         data.setExecutionCount(1)
 
-        data.executionInvalidated(clock.currentTimeMillis + 100)
+        data.executionInvalidated(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -468,9 +474,9 @@ public class AutomationScheduleDataTest {
         val data = makeData(scheduleState = AutomationScheduleState.PREPARED)
         data.setExecutionCount(1)
 
-        data.executing(clock.currentTimeMillis + 100)
+        data.executing(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.EXECUTING)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -478,60 +484,60 @@ public class AutomationScheduleDataTest {
         val data = makeData(limit = 3U, scheduleState = AutomationScheduleState.EXECUTING)
         data.setExecutionCount(1)
 
-        data.executionInterrupted(clock.currentTimeMillis + 100, retry = false)
+        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry = false)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.executionCount, 2)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testExecutionInterruptedRetry() {
         val data = makeData(limit = 3U,
-            interval = 10U,
+            interval = 10.seconds,
             scheduleState = AutomationScheduleState.EXECUTING,
             preparedScheduleInfo = preparedScheduleInfo,
-            endDate = clock.currentTimeMillis.toULong())
+            endDate = clock.currentTime)
         data.setExecutionCount(1)
 
-        data.executionInterrupted(clock.currentTimeMillis + 100, retry = true)
+        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 1)
         assertNull(data.preparedScheduleInfo)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testExecutionInterruptedOverLimit() {
         val data = makeData(
             limit = 2U,
-            interval = 10U,
+            interval = 10.seconds,
             scheduleState = AutomationScheduleState.EXECUTING,
             preparedScheduleInfo = preparedScheduleInfo)
         data.setExecutionCount(1)
 
-        data.executionInterrupted(clock.currentTimeMillis + 100, retry =  false)
+        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry =  false)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 2)
         assertNull(data.preparedScheduleInfo)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testExecutionInterruptedExpired() {
         val data = makeData(
             limit = 3U,
-            interval = 10U,
+            interval = 10.seconds,
             scheduleState = AutomationScheduleState.EXECUTING,
             preparedScheduleInfo = preparedScheduleInfo,
-            endDate = clock.currentTimeMillis.toULong()
+            endDate = clock.currentTime
         )
         data.setExecutionCount(1)
 
-        data.executionInterrupted(clock.currentTimeMillis + 100, retry =  true)
+        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry =  true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 1)
         assertNull(data.preparedScheduleInfo)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -539,16 +545,16 @@ public class AutomationScheduleDataTest {
         val data = makeData(
             limit = 3U,
             scheduleState = AutomationScheduleState.EXECUTING,
-            interval = 10U,
+            interval = 10.seconds,
             preparedScheduleInfo = preparedScheduleInfo
         )
         data.setExecutionCount(1)
 
-        data.executionInterrupted(clock.currentTimeMillis + 100, retry =  false)
+        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry =  false)
         assertEquals(data.scheduleState, AutomationScheduleState.PAUSED)
         assertEquals(data.executionCount, 2)
         assertNull(data.preparedScheduleInfo)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -560,46 +566,46 @@ public class AutomationScheduleDataTest {
         )
         data.setExecutionCount(1)
 
-        data.finishedExecuting(clock.currentTimeMillis + 100)
+        data.finishedExecuting(clock.currentTime + 100.milliseconds)
         assertNull(data.preparedScheduleInfo)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.executionCount, 2)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testFinishedExecutingOverLimit() {
         val data = makeData(
             limit = 2U,
-            interval = 10U,
+            interval = 10.seconds,
             scheduleState = AutomationScheduleState.EXECUTING,
             preparedScheduleInfo = preparedScheduleInfo
         )
         data.setExecutionCount(1)
 
-        data.finishedExecuting(clock.currentTimeMillis + 100)
+        data.finishedExecuting(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 2)
         assertNull(data.preparedScheduleInfo)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testFinishedExecutingExpired() {
         val data = makeData(
             limit = 3U,
-            interval = 10U,
+            interval = 10.seconds,
             scheduleState = AutomationScheduleState.EXECUTING,
             preparedScheduleInfo = preparedScheduleInfo,
-            endDate = clock.currentTimeMillis.toULong()
+            endDate = clock.currentTime
         )
         data.setExecutionCount(1)
 
-        data.finishedExecuting(clock.currentTimeMillis + 100)
+        data.finishedExecuting(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 2)
         assertNull(data.preparedScheduleInfo)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
@@ -607,31 +613,31 @@ public class AutomationScheduleDataTest {
         val data = makeData(
             limit = 3U,
             scheduleState = AutomationScheduleState.EXECUTING,
-            interval = 10U,
+            interval = 10.seconds,
             preparedScheduleInfo = preparedScheduleInfo
         )
         data.setExecutionCount(1)
 
-        data.finishedExecuting(clock.currentTimeMillis + 100)
+        data.finishedExecuting(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.PAUSED)
         assertEquals(data.executionCount, 2)
         assertNull(data.preparedScheduleInfo)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testShouldDelete() {
         var data = makeData()
 
-        assertFalse(data.shouldDelete(clock.currentTimeMillis))
+        assertFalse(data.shouldDelete(clock.currentTime))
 
         data = makeData(scheduleState = AutomationScheduleState.FINISHED)
-        assertTrue(data.shouldDelete(clock.currentTimeMillis))
+        assertTrue(data.shouldDelete(clock.currentTime))
 
         data = makeData(editGracePeriodDays = 10U, scheduleState = AutomationScheduleState.FINISHED)
-        assertFalse(data.shouldDelete(clock.currentTimeMillis))
-        assertFalse(data.shouldDelete(clock.currentTimeMillis + 1000 * 10 * 60 * 60 * 24 - 1))
-        assertTrue(data.shouldDelete(clock.currentTimeMillis + 1000 * 10 * 60 * 60 * 24))
+        assertFalse(data.shouldDelete(clock.currentTime))
+        assertFalse(data.shouldDelete(clock.currentTime + 1000.milliseconds * 10 * 60 * 60 * 24 - 1.milliseconds))
+        assertTrue(data.shouldDelete(clock.currentTime + 1000.milliseconds * 10 * 60 * 60 * 24))
     }
 
     @Test
@@ -642,13 +648,13 @@ public class AutomationScheduleDataTest {
             event = JsonValue.wrap("event"))
         val data = makeData()
         val previousTriggerSessionId = data.triggerSessionId
-        val date = clock.currentTimeMillis
-        data.triggered(TriggeringInfo(context, date), date + 100)
+        val date = clock.currentTime
+        data.triggered(TriggeringInfo(context, date), date + 100.milliseconds)
 
         assertEquals(data.triggerInfo?.context, context)
-        assertEquals(data.triggerInfo?.date, clock.currentTimeMillis)
+        assertEquals(data.triggerInfo?.date, clock.currentTime)
         assertEquals(data.scheduleState, AutomationScheduleState.TRIGGERED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
         assertFalse(data.triggerSessionId == previousTriggerSessionId)
     }
 
@@ -661,28 +667,28 @@ public class AutomationScheduleDataTest {
             type = "some-type",
             goal = 10.0,
             event = JsonValue.wrap("event"))
-        val date = clock.currentTimeMillis
-        data.triggered(TriggeringInfo(context, date), date + 100)
+        val date = clock.currentTime
+        data.triggered(TriggeringInfo(context, date), date + 100.milliseconds)
 
         assertNull(data.triggerInfo)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testTriggeredExpired() {
-        val data = makeData(limit = 2U, endDate = clock.currentTimeMillis.toULong())
+        val data = makeData(limit = 2U, endDate = clock.currentTime)
 
         val context = DeferredTriggerContext(
             type = "some-type",
             goal = 10.0,
             event = JsonValue.wrap("event"))
-        val date = clock.currentTimeMillis
-        data.triggered(TriggeringInfo(context, date), date + 100)
+        val date = clock.currentTime
+        data.triggered(TriggeringInfo(context, date), date + 100.milliseconds)
 
         assertNull(data.triggerInfo)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
-        assertEquals(data.scheduleStateChangeDate, clock.currentTimeMillis + 100)
+        assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     private fun makeData(
@@ -691,12 +697,12 @@ public class AutomationScheduleDataTest {
         group: String? = null,
         priority: Int? = null,
         limit: UInt? = null,
-        startDate: ULong? = null,
-        endDate: ULong? = null,
+        startDate: Instant? = null,
+        endDate: Instant? = null,
         audience: AutomationAudience? = null,
         compoundAudience: AutomationCompoundAudience? = null,
         delay: AutomationDelay? = null,
-        interval: ULong? = null,
+        interval: Duration? = null,
         data: AutomationSchedule.ScheduleData = AutomationSchedule.ScheduleData.Actions(JsonValue.wrap("actions")),
         bypassHoldoutGroups: Boolean? = null,
         editGracePeriodDays: ULong? = null,
@@ -707,7 +713,7 @@ public class AutomationScheduleDataTest {
         reportingContext: JsonValue? = null,
         productId: String? = null,
         minSDKVersion: String? = null,
-        created: ULong = clock.currentTimeMillis.toULong(),
+        created: Instant = clock.currentTime,
         queue: String? = null,
         triggeringInfo: TriggeringInfo? = null,
         preparedScheduleInfo: PreparedScheduleInfo? = null,
@@ -719,7 +725,7 @@ public class AutomationScheduleDataTest {
                 metadata, frequencyConstraintIDs, messageType, campaigns, reportingContext,
                 productId, minSDKVersion, created, queue),
             scheduleState = scheduleState,
-            scheduleStateChangeDate = clock.currentTimeMillis(),
+            scheduleStateChangeDate = clock.now(),
             executionCount = 0,
             triggerInfo = triggeringInfo,
             preparedScheduleInfo = preparedScheduleInfo,
@@ -727,7 +733,7 @@ public class AutomationScheduleDataTest {
         )
     }
 
-    private fun AutomationScheduleData.updateEndDate(endDate: ULong?) {
+    private fun AutomationScheduleData.updateEndDate(endDate: Instant?) {
         setSchedule(schedule.copyWith(endDate = endDate))
     }
 }

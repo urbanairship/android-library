@@ -49,20 +49,9 @@ internal object ProcessUtils {
             val activityThread = Class.forName(
                 "android.app.ActivityThread", false, ProcessUtils::class.java.classLoader
             )
-            val packageName: Any?
-            if (Build.VERSION.SDK_INT >= 18) {
-                val currentProcessName = activityThread.getDeclaredMethod("currentProcessName")
-                currentProcessName.isAccessible = true
-                packageName = currentProcessName.invoke(null)
-            } else {
-                val getActivityThread = activityThread.getDeclaredMethod(
-                    "currentActivityThread"
-                )
-                getActivityThread.isAccessible = true
-                val getProcessName = activityThread.getDeclaredMethod("getProcessName")
-                getProcessName.isAccessible = true
-                packageName = getProcessName.invoke(getActivityThread.invoke(null))
-            }
+            val currentProcessName = activityThread.getDeclaredMethod("currentProcessName")
+            currentProcessName.isAccessible = true
+            val packageName: Any? = currentProcessName.invoke(null)
             if (packageName is String) {
                 return packageName
             }

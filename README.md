@@ -111,7 +111,7 @@ Add your `google-services.json` file to your app directory.
 
 ## Requirements
 
-- Minimum SDK 23+ (Android 6.0+)
+- Minimum SDK 26+ (Android 8.0+)
 - Compile SDK 36+ (Android 15+)
 
 ## Documentation

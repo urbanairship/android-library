@@ -39,8 +39,9 @@ import com.urbanairship.app.ApplicationListener
 import com.urbanairship.app.SimpleApplicationListener
 import com.urbanairship.webkit.AirshipWebViewClient
 import java.lang.ref.WeakReference
+import java.time.Instant
 import java.util.Objects
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -142,7 +143,7 @@ public class BannerLayout(
             return null
         }
 
-        val timer = DisplayTimer(activity, 0)
+        val timer = DisplayTimer(activity)
 
         activity.lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onDestroy(owner: LifecycleOwner) {
@@ -161,23 +162,24 @@ public class BannerLayout(
         // composition while this banner is still displayed.)
         applicationListener?.let(activityMonitor::removeApplicationListener)
         applicationListener = object : SimpleApplicationListener() {
-            override fun onForeground(time: Long) {
-                super.onForeground(time)
+            override fun onForeground(timestamp: Instant) {
+                super.onForeground(timestamp)
                 reporter.onVisibilityChanged(isVisible.value, true)
             }
 
-            override fun onBackground(time: Long) {
-                super.onBackground(time)
+            override fun onBackground(timestamp: Instant) {
+                super.onBackground(timestamp)
                 reporter.onVisibilityChanged(isVisible.value, false)
             }
         }.also(activityMonitor::addApplicationListener)
 
+        val placement = presentation.getResolvedPlacement(activity)
         val viewEnvironment: ViewEnvironment = DefaultViewEnvironment(
             activity,
             activityMonitor,
             webViewClientFactory,
             imageCache,
-            getPlacement().shouldIgnoreSafeArea()
+            placement.shouldIgnoreSafeArea()
         )
 
         val viewModelProvider = ViewModelProvider(BannerViewModelStores.owner(viewInstanceId))
@@ -195,9 +197,14 @@ public class BannerLayout(
                 viewInfo = payload.view,
                 modelEnvironment = modelEnvironment
             )
-            // Create the banner view using our theme, to prevent app custom themes from affecting
-            // the banner view.
-            val themedContext = ContextThemeWrapper(context, R.style.UrbanAirship_Layout)
+            // The activity, for its window: orientation and metrics have to come from where the
+            // banner is actually shown, which is the point of using it rather than the application
+            // context. Wrapped in our own theme so that is all we take from it — a host that themes
+            // its activities differently would otherwise reach the handful of icon tints that
+            // resolve `?attr/colorControlNormal`. Same pattern as `EmbeddedLayout` and
+            // `ThomasLayoutViewFactory`, and `getActivity()` unwraps the wrapper, so anything
+            // downstream still finds the activity.
+            val themedContext = ContextThemeWrapper(activity, R.style.UrbanAirship_Layout)
             val bannerView = ThomasBannerView(
                 context = themedContext,
                 model = model,
@@ -316,7 +323,7 @@ public class BannerLayout(
         reporter.report(
             event = ReportingEvent.Dismiss(
                 data = data,
-                displayTime = (displayTimer?.time ?: 0).milliseconds,
+                displayTime = displayTimer?.time ?: Duration.ZERO,
                 context = LayoutData.EMPTY
             )
         )

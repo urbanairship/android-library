@@ -3,12 +3,13 @@
 package com.urbanairship.contacts
 
 import androidx.annotation.RestrictTo
+import java.time.Instant
 
 internal data class ContactIdUpdate(
     val contactId: String,
     val namedUserId: String?,
     val isStable: Boolean,
-    val resolveDateMs: Long) {
+    val resolveDate: Instant) {
 
     fun toContactInfo(): StableContactInfo = StableContactInfo(contactId, namedUserId)
 }

@@ -37,6 +37,7 @@ import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.info.InAppMessageButtonLayoutType
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
+import java.time.Instant
 import java.util.Locale
 import java.util.UUID
 import io.mockk.coEvery
@@ -47,6 +48,7 @@ import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.unmockkStatic
+import kotlin.time.Duration.Companion.milliseconds
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
@@ -59,6 +61,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import com.urbanairship.automation.engine.DelegatePreparerResult
 
 @RunWith(AndroidJUnit4::class)
 public class AutomationPreparerTest {
@@ -188,7 +191,7 @@ public class AutomationPreparerTest {
 
         coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
-            assertEquals(0L, args[0])
+            assertEquals(Instant.EPOCH, args[0])
             AirshipDeviceAudienceResult.miss
         }
 
@@ -199,7 +202,7 @@ public class AutomationPreparerTest {
             .evaluate(CompoundAudienceSelector.combine(
                 compoundAudienceSelector = schedule.compoundAudience?.selector,
                 deviceAudience = schedule.audience?.audienceSelector
-            ), schedule.created.toLong(), deviceInfoProvider) }
+            ), schedule.created, deviceInfoProvider) }
 
     }
 
@@ -226,7 +229,7 @@ public class AutomationPreparerTest {
 
         coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
-            assertEquals(0L, args[0])
+            assertEquals(Instant.EPOCH, args[0])
             AirshipDeviceAudienceResult.miss
         }
 
@@ -254,7 +257,7 @@ public class AutomationPreparerTest {
 
         coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
-            assertEquals(0L, args[0])
+            assertEquals(Instant.EPOCH, args[0])
             AirshipDeviceAudienceResult.miss
         }
 
@@ -282,7 +285,7 @@ public class AutomationPreparerTest {
 
         coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
-            assertEquals(0L, args[0])
+            assertEquals(Instant.EPOCH, args[0])
             AirshipDeviceAudienceResult.miss
         }
 
@@ -326,7 +329,7 @@ public class AutomationPreparerTest {
         coEvery { messagePreparer.prepare(any(), any()) } answers {
             val info: PreparedScheduleInfo = secondArg()
             assertFalse(info.additionalAudienceCheckResult)
-            return@answers Result.success(preparedMessageData)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
         }
 
         val preparedResult = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()) as? SchedulePrepareResult.Prepared
@@ -355,7 +358,7 @@ public class AutomationPreparerTest {
 
         coEvery { audienceSelector.evaluate(any(), any(), any()) } answers {
             val args = args
-            assertEquals(0L, args[0])
+            assertEquals(Instant.EPOCH, args[0])
             AirshipDeviceAudienceResult.miss
         }
 
@@ -419,7 +422,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals(schedule.sendMetadata, info.sendMetadata)
             assertEquals("contact id", info.contactId)
-            return@answers Result.success(preparedMessageData)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
         }
 
         val triggerSessionId = UUID.randomUUID().toString()
@@ -446,7 +449,7 @@ public class AutomationPreparerTest {
                 buttonLayoutType = InAppMessageButtonLayoutType.STACKED,
                 template = Banner.Template.MEDIA_LEFT,
                 borderRadius = 5F,
-                durationMs = 100L,
+                duration = 100.milliseconds,
                 placement = Banner.Placement.TOP
             )
         )
@@ -499,7 +502,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals("contact id", info.contactId)
 
-            return@answers Result.success(firstArg())
+            return@answers Result.success(DelegatePreparerResult.Prepared(firstArg()))
         }
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
@@ -567,7 +570,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals("contact id", info.contactId)
 
-            return@answers Result.success(firstArg())
+            return@answers Result.success(DelegatePreparerResult.Prepared(firstArg()))
         }
 
 
@@ -651,7 +654,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.campaigns, info.campaigns)
             assertEquals("contact id", info.contactId)
 
-            return@answers Result.success(preparedMessageData)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
         }
 
         mockkStatic(Airship::class)
@@ -749,7 +752,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleId)
             assertEquals(info.experimentResult, experimentResult)
 
-            return@answers Result.success(preparedMessageData)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
         }
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
@@ -802,7 +805,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleId)
             assertEquals(info.experimentResult, experimentResult)
 
-            return@answers Result.success(preparedMessageData)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
         }
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
@@ -849,7 +852,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleId)
             assertNull(info.experimentResult)
 
-            return@answers Result.success(preparedMessageData)
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
         }
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
@@ -890,7 +893,7 @@ public class AutomationPreparerTest {
             assertEquals(schedule.identifier, info.scheduleId)
             assertNull(info.experimentResult)
 
-            return@answers Result.success(firstArg())
+            return@answers Result.success(DelegatePreparerResult.Prepared(firstArg()))
         }
 
         val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
@@ -927,7 +930,7 @@ public class AutomationPreparerTest {
             identifier = "test-schedule",
             triggers = listOf(),
             data = scheduleData,
-            created = 0U,
+            created = Instant.ofEpochMilli(0),
             frequencyConstraintIds = constraints,
             audience = audience,
             compoundAudience = compoundAudience,

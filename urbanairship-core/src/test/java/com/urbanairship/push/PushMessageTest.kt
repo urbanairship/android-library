@@ -17,6 +17,7 @@ import com.urbanairship.json.JsonValue
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
+import java.time.Instant
 import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -53,13 +54,37 @@ public class PushMessageTest {
      */
     @Test
     public fun testNotExpired() {
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         val pushMessage = PushMessage(
             pushBundle = bundleOf(PushMessage.EXTRA_EXPIRATION to 1.toString()), // Set expiration in the future
             clock = clock
         )
         Assert.assertFalse("Message has not expired.", pushMessage.isExpired)
+    }
+
+    /**
+     * Test a non-numeric expiration is ignored instead of throwing.
+     */
+    @Test
+    public fun testNonNumericExpiration() {
+        val pushMessage = PushMessage(
+            pushBundle = bundleOf(PushMessage.EXTRA_EXPIRATION to "not a number"),
+            clock = clock
+        )
+        Assert.assertFalse("Malformed expiration should be ignored.", pushMessage.isExpired)
+    }
+
+    /**
+     * Test an expiration outside the range of an Instant is ignored instead of throwing.
+     */
+    @Test
+    public fun testOutOfRangeExpiration() {
+        val pushMessage = PushMessage(
+            pushBundle = bundleOf(PushMessage.EXTRA_EXPIRATION to "999999999999999999"),
+            clock = clock
+        )
+        Assert.assertFalse("Out of range expiration should be ignored.", pushMessage.isExpired)
     }
 
     /**

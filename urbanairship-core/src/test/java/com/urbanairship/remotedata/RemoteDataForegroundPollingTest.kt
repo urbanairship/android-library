@@ -20,6 +20,7 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
+import java.time.Instant
 import java.util.Locale
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -66,7 +67,7 @@ public class RemoteDataForegroundPollingTest {
         every { this@mockk.contactIdUpdateFlow } returns contactIdUpdates
     }
 
-    private val testClock = TestClock().apply { currentTimeMillis = 0 }
+    private val testClock = TestClock().apply { currentTime = Instant.ofEpochMilli(0) }
     private val testActivityMonitor = TestActivityMonitor()
 
     private val sleepGate = Channel<Unit>(Channel.UNLIMITED)

@@ -74,8 +74,8 @@ public class RemoteConfigTest {
                 interval = 200.milliseconds
             ),
             contactConfig = ContactConfig(
-                foregroundIntervalMs = 400,
-                channelRegistrationMaxResolveAgeMs = 300
+                foregroundInterval = 400.milliseconds,
+                channelRegistrationMaxResolveAge = 300.milliseconds
             ),
             fetchContactRemoteData = true,
             disabledFeatures = PrivacyManager.Feature.PUSH or PrivacyManager.Feature.ANALYTICS,

@@ -17,6 +17,7 @@ import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.deferred.DeferredTriggerContext
 import com.urbanairship.json.JsonValue
+import java.time.Instant
 import java.util.UUID
 import app.cash.turbine.test
 import junit.framework.TestCase.assertEquals
@@ -75,7 +76,7 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
                         type = "active_session",
                         goal = 1.0,
                         event = JsonValue.NULL),
-                    date = clock.currentTimeMillis()), result.triggerInfo)
+                    date = clock.now()), result.triggerInfo)
         }
     }
 
@@ -109,7 +110,7 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
                         type = "active_session",
                         goal = 1.0,
                         event = JsonValue.NULL),
-                    date = clock.currentTimeMillis()), result.triggerInfo)
+                    date = clock.now()), result.triggerInfo)
         }
     }
 
@@ -308,10 +309,10 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
                     data = AutomationSchedule.ScheduleData.Actions(actions = JsonValue.NULL),
                     triggers = listOf(trigger),
                     group = null,
-                    created = 0U
+                    created = Instant.ofEpochMilli(0)
                 ),
                 scheduleState = AutomationScheduleState.IDLE,
-                scheduleStateChangeDate = clock.currentTimeMillis(),
+                scheduleStateChangeDate = clock.now(),
                 executionCount = 0,
                 triggerSessionId = UUID.randomUUID().toString()
             )
@@ -356,10 +357,10 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
                 data = AutomationSchedule.ScheduleData.Actions(actions = JsonValue.NULL),
                 triggers = trigger,
                 group = group,
-                created = 0U
+                created = Instant.ofEpochMilli(0)
             ),
             scheduleState = AutomationScheduleState.IDLE,
-            scheduleStateChangeDate = clock.currentTimeMillis(),
+            scheduleStateChangeDate = clock.now(),
             executionCount = 0,
             triggerSessionId = UUID.randomUUID().toString()
         )

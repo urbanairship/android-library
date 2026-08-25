@@ -10,7 +10,10 @@
         "width": "75%",
         "height": "60%"
       },
-      "position": "bottom"
+      "position": {
+        "horizontal": "center",
+        "vertical": "bottom"
+      }
     }
   },
   "view": {

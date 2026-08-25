@@ -3,6 +3,9 @@ package com.urbanairship.util.timer
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestClock
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
 import junit.framework.TestCase.assertEquals
 import org.junit.After
@@ -18,7 +21,7 @@ public class ActiveTimerTest {
 
     @Before
     public fun setup() {
-        clock.currentTimeMillis = 0
+        clock.currentTime = Instant.ofEpochMilli(0)
     }
 
     @After
@@ -30,11 +33,11 @@ public class ActiveTimerTest {
     public fun testManualStartStopWorks() {
         createSubject()
         subject.start()
-        clock.currentTimeMillis = 2
+        clock.currentTime = Instant.ofEpochMilli(2)
 
         assertEquals(2.milliseconds, subject.time)
 
-        clock.currentTimeMillis = 3
+        clock.currentTime = Instant.ofEpochMilli(3)
         subject.stop()
 
         assertEquals(3.milliseconds, subject.time)
@@ -44,18 +47,18 @@ public class ActiveTimerTest {
     public fun testMultipleSessions() {
         createSubject()
         subject.start()
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
         assertEquals(1.milliseconds, subject.time)
         subject.stop()
 
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
         assertEquals(1.milliseconds, subject.time)
         subject.start()
-        clock.currentTimeMillis += 2
+        clock.currentTime += (2).milliseconds
         subject.stop()
         assertEquals(3.milliseconds, subject.time)
 
-        clock.currentTimeMillis += 1
+        clock.currentTime += (1).milliseconds
         assertEquals(3.milliseconds, subject.time)
     }
 
@@ -63,7 +66,7 @@ public class ActiveTimerTest {
     public fun testStartDoesntWorkIfAppInBackground() {
         createSubject(isForeground = false)
         subject.start()
-        clock.currentTimeMillis = 2
+        clock.currentTime = Instant.ofEpochMilli(2)
 
         assertEquals(0.milliseconds, subject.time)
     }
@@ -73,11 +76,11 @@ public class ActiveTimerTest {
         createSubject()
 
         subject.start()
-        clock.currentTimeMillis = 2
+        clock.currentTime = Instant.ofEpochMilli(2)
         assertEquals(2.milliseconds, subject.time)
-        clock.currentTimeMillis = 3
+        clock.currentTime = Instant.ofEpochMilli(3)
         subject.start()
-        clock.currentTimeMillis = 2
+        clock.currentTime = Instant.ofEpochMilli(2)
         subject.stop()
         assertEquals(2.milliseconds, subject.time)
     }
@@ -86,12 +89,12 @@ public class ActiveTimerTest {
     public fun testDoubleStopDoesntDoubleCounter() {
         createSubject()
         subject.start()
-        clock.currentTimeMillis = 3
+        clock.currentTime = Instant.ofEpochMilli(3)
         subject.stop()
 
         assertEquals(3.milliseconds, subject.time)
 
-        clock.currentTimeMillis = 5
+        clock.currentTime = Instant.ofEpochMilli(5)
         subject.stop()
 
         assertEquals(3.milliseconds, subject.time)
@@ -102,14 +105,14 @@ public class ActiveTimerTest {
         createSubject(isForeground = false)
 
         subject.start()
-        clock.currentTimeMillis = 3
+        clock.currentTime = Instant.ofEpochMilli(3)
         assertEquals(0.milliseconds, subject.time)
         stateTracker.foreground()
-        clock.currentTimeMillis += 3
+        clock.currentTime += (3).milliseconds
         assertEquals(3.milliseconds, subject.time)
 
         stateTracker.background()
-        clock.currentTimeMillis = 5
+        clock.currentTime = Instant.ofEpochMilli(5)
         assertEquals(3.milliseconds, subject.time)
     }
 
@@ -119,7 +122,7 @@ public class ActiveTimerTest {
         assertEquals(0.milliseconds, subject.time)
 
         stateTracker.foreground()
-        clock.currentTimeMillis += 3
+        clock.currentTime += (3).milliseconds
         assertEquals(0.milliseconds, subject.time)
 
     }
@@ -128,11 +131,11 @@ public class ActiveTimerTest {
     public fun testTimerStopsOnEnteringBackground() {
         createSubject()
         subject.start()
-        clock.currentTimeMillis = 2
+        clock.currentTime = Instant.ofEpochMilli(2)
         assertEquals(2.milliseconds, subject.time)
 
         stateTracker.background()
-        clock.currentTimeMillis = 5
+        clock.currentTime = Instant.ofEpochMilli(5)
         assertEquals(2.milliseconds, subject.time)
 
         subject.stop()

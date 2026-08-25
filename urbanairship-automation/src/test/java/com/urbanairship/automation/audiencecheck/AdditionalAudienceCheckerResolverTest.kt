@@ -14,6 +14,9 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.remoteconfig.AdditionalAudienceCheckConfig
 import com.urbanairship.remoteconfig.IAAConfig
 import com.urbanairship.remoteconfig.RemoteConfig
+import com.urbanairship.util.minus
+import com.urbanairship.util.plus
+import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import io.mockk.coEvery
@@ -49,7 +52,7 @@ public class AdditionalAudienceCheckerResolverTest {
 
     @Before
     public fun setup() {
-        clock.currentTimeMillis = 1
+        clock.currentTime = Instant.ofEpochMilli(1)
 
         cache = AirshipCache(
             context = context,
@@ -156,7 +159,7 @@ public class AdditionalAudienceCheckerResolverTest {
 
     @Test
     public fun testResolverThrowsOnNoUrlProvided(): TestResult = runTest {
-        clock.currentTimeMillis = 0
+        clock.currentTime = Instant.ofEpochMilli(0)
         makeResolver()
 
         val response = RequestResult(
@@ -181,7 +184,7 @@ public class AdditionalAudienceCheckerResolverTest {
 
         assertTrue(result.getOrThrow())
 
-        clock.currentTimeMillis = 1001
+        clock.currentTime = Instant.ofEpochMilli(1001)
         makeResolver(AdditionalAudienceCheckConfig(true, JsonValue.NULL, null))
         result = resolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
@@ -193,7 +196,7 @@ public class AdditionalAudienceCheckerResolverTest {
         )
         assertTrue(result.getOrThrow())
 
-        clock.currentTimeMillis += 2
+        clock.currentTime += (2).milliseconds
         result = resolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
             overrides = AdditionalAudienceCheckOverrides(

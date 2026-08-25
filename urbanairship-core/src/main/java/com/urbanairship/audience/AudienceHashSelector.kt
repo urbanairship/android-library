@@ -10,6 +10,7 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.util.Clock
+import java.time.Instant
 import java.util.Objects
 
 /** @hide */
@@ -59,7 +60,7 @@ public class AudienceHashSelector internal constructor(
     internal fun evaluate(
         channelId: String,
         contactId: String,
-        now: Long = Clock.DEFAULT_CLOCK.currentTimeMillis()
+        now: Instant = Clock.DEFAULT_CLOCK.now()
     ): Boolean {
         val properties = mapOf(
             HashIdentifiers.CONTACT.jsonValue to contactId,
@@ -78,7 +79,7 @@ public class AudienceHashSelector internal constructor(
      * Resolves the effective audience subset for the given time. Walks [overrides] in order and
      * returns the first whose schedule is active; otherwise falls back to the base [bucket].
      */
-    private fun effectiveBucket(now: Long): BucketSubset {
+    private fun effectiveBucket(now: Instant): BucketSubset {
         val overrides = this.overrides ?: return bucket
         return overrides.firstOrNull { it.schedule.isActive(now) }?.resolveBucket(now) ?: bucket
     }

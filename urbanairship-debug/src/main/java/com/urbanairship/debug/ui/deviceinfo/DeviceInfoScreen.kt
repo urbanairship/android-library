@@ -194,11 +194,7 @@ private fun DeviceInfoSection(
     val channelId = viewModel.channelId.collectAsState(null).value
     val userId = viewModel.contactId.collectAsState(null).value
     val context = LocalContext.current
-    val locale = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
-        LocaleList.getDefault().get(0)
-    } else{
-        Locale.getDefault()
-    }
+    val locale = LocaleList.getDefault().get(0)
 
     Section(title = "Info") {
         DebugSettingItem(

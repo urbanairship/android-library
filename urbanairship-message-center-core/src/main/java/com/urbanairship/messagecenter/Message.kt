@@ -11,7 +11,7 @@ import com.urbanairship.json.optionalField
 import com.urbanairship.json.optionalMap
 import com.urbanairship.json.requireField
 import com.urbanairship.util.DateUtils
-import java.util.Date
+import java.time.Instant
 import java.util.Objects
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
@@ -32,8 +32,8 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
     public val id: String,
     public val title: String,
     public val bodyUrl: String,
-    public val sentDate: Date,
-    public val expirationDate: Date?,
+    public val sentDate: Instant,
+    public val expirationDate: Instant?,
     public val isUnread: Boolean,
     public val extras: Map<String, String?>?,
     public val contentType: ContentType,
@@ -93,7 +93,7 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
     /** Indicates whether the message has been expired. */
     @IgnoredOnParcel
     public val isExpired: Boolean
-        get() = expirationDate?.before(Date()) ?: false
+        get() = expirationDate?.isBefore(Instant.now()) ?: false
 
     /** Indicates whether the message has been deleted. */
     @IgnoredOnParcel
@@ -244,9 +244,17 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
                     extras = json.optionalMap(KEY_EXTRAS)?.map?.mapValues { it.value.coerceString() },
                     bodyUrl = json.requireField(KEY_BODY_URL),
                     sentDate = json.optionalField<String>(KEY_SENT_DATE)
-                        ?.let { Date(DateUtils.parseIso8601(it)) } ?: Date(),
-                    expirationDate = json.optionalField<String>(KEY_EXPIRATION_DATE)
-                        ?.let { Date(DateUtils.parseIso8601(it, Long.MAX_VALUE)) },
+                        ?.let { DateUtils.parseIso8601(it) } ?: Instant.ofEpochMilli(System.currentTimeMillis()),
+                    // An unparseable expiry reads as no expiry. A null expirationDate already
+                    // means "never expires" everywhere it is consumed, so this needs no
+                    // far-future sentinel — and a sentinel would be worse: it makes the
+                    // message a candidate for the inbox's next-expiry refresh, scheduling an
+                    // absurd delay.
+                    expirationDate = json.optionalField<String>(KEY_EXPIRATION_DATE)?.let { raw ->
+                        runCatching { DateUtils.parseIso8601(raw) }
+                            .onFailure { UALog.w { "Ignoring unparseable message expiry: $raw" } }
+                            .getOrNull()
+                    },
                     isUnread = json.optionalField(KEY_IS_UNREAD) ?: false,
                     messageUrl = json.requireField(KEY_MESSAGE_URL),
                     reporting = json[KEY_MESSAGE_REPORTING],

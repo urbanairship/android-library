@@ -2,6 +2,8 @@
 package com.urbanairship.util
 
 import androidx.core.util.Predicate
+import java.time.Instant
+import kotlin.time.Duration
 
 /**
  * Caches a value in memory with an expiration.
@@ -15,20 +17,20 @@ internal class CachedValue<T> (
 ) {
 
     private val lock = Any()
-    private var expirationTime: Long = 0
+    private var expiration: Instant = Instant.EPOCH
     private var value: T? = null
 
-    fun set(value: T?, expiresAt: Long) {
+    fun set(value: T?, expiresAt: Instant) {
         synchronized(lock) {
             this.value = value
-            this.expirationTime = expiresAt
+            this.expiration = expiresAt
         }
     }
 
     fun expire() {
         synchronized(lock) {
             this.value = null
-            this.expirationTime = 0
+            this.expiration = Instant.EPOCH
         }
     }
 
@@ -38,17 +40,17 @@ internal class CachedValue<T> (
             if (!predicate.test(value)) { return@synchronized }
 
             this.value = null
-            this.expirationTime = 0
+            this.expiration = Instant.EPOCH
         }
     }
 
-    fun remainingCacheTimeMillis(): Long {
-        return maxOf(expirationTime - clock.currentTimeMillis(), 0)
+    fun remainingCacheTime(): Duration {
+        return (expiration - clock.now()).coerceAtLeast(Duration.ZERO)
     }
 
     fun get(): T? {
         synchronized(lock) {
-            if (remainingCacheTimeMillis() > 0) {
+            if (remainingCacheTime() > Duration.ZERO) {
                 return value
             }
 

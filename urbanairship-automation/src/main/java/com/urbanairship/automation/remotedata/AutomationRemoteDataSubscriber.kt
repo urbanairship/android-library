@@ -12,6 +12,7 @@ import com.urbanairship.automation.isNewSchedule
 import com.urbanairship.automation.limits.FrequencyConstraint
 import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.remotedata.RemoteDataSource
+import java.time.Instant
 import kotlin.collections.map
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -150,7 +151,7 @@ internal class AutomationRemoteDataSubscriber (
             // Otherwise check to see if we consider this a new schedule based on timestamp
             // and SDK version
             schedule.isNewSchedule(
-                sinceDate = lastSourceInfo?.payloadTimestamp ?: 0L,
+                sinceDate = lastSourceInfo?.payloadTimestamp ?: Instant.EPOCH,
                 lastSDKVersion = lastSourceInfo?.airshipSDKVersion
             )
         }

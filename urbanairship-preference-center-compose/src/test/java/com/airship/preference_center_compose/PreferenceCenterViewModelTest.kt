@@ -49,6 +49,7 @@ import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyOrder
+import java.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -1211,8 +1212,8 @@ public class PreferenceCenterViewModelTest {
             registrationInfo = ContactChannel.Email.RegistrationInfo.Registered(
                 channelId = "channel-id",
                 maskedAddress = "t**t@example.com",
-                transactionalOptedIn = 100L,
-                commercialOptedIn = 200L
+                transactionalOptedIn = Instant.ofEpochMilli(100),
+                commercialOptedIn = Instant.ofEpochMilli(200)
             )
         )
 

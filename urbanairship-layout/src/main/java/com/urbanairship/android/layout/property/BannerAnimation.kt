@@ -2,55 +2,79 @@
 package com.urbanairship.android.layout.property
 
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
-import com.urbanairship.json.optionalField
+import com.urbanairship.json.jsonMapOf
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
-/**
- * Banner enter/exit animation.
- *
- * Fades in and out using opacity, or slides in and out from the banner's placement edge.
- */
-public sealed class BannerAnimation {
-    public abstract val animateInMs: Long
-    public abstract val animateOutMs: Long
+public sealed class BannerAnimation(
+    public val type: BannerAnimationType
+) : JsonSerializable {
+
+    public abstract val animateIn: Duration?
+    public abstract val animateOut: Duration?
 
     public data class Fade(
-        override val animateInMs: Long,
-        override val animateOutMs: Long
-    ) : BannerAnimation()
+        override val animateIn: Duration? = null,
+        override val animateOut: Duration? = null
+    ) : BannerAnimation(BannerAnimationType.FADE) {
+
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            TYPE to type,
+            ANIMATE_IN to animateIn?.inWholeMilliseconds?.div(1000.0),
+            ANIMATE_OUT to animateOut?.inWholeMilliseconds?.div(1000.0)
+        ).toJsonValue()
+    }
 
     public data class Slide(
-        override val animateInMs: Long,
-        override val animateOutMs: Long
-    ) : BannerAnimation()
+        override val animateIn: Duration? = null,
+        override val animateOut: Duration? = null
+    ) : BannerAnimation(BannerAnimationType.SLIDE) {
+
+        override fun toJsonValue(): JsonValue = jsonMapOf(
+            TYPE to type,
+            ANIMATE_IN to animateIn?.inWholeMilliseconds?.div(1000.0),
+            ANIMATE_OUT to animateOut?.inWholeMilliseconds?.div(1000.0),
+        ).toJsonValue()
+    }
+
+    public enum class BannerAnimationType(public val json: String) : JsonSerializable {
+        FADE("fade"),
+        SLIDE("slide");
+
+        override fun toJsonValue(): JsonValue = JsonValue.wrap(json)
+
+        public companion object {
+
+            @Throws(JsonException::class)
+            public fun fromJson(value: JsonValue): BannerAnimationType {
+                val content = value.requireString()
+
+                return entries.firstOrNull { it.json == content }
+                    ?: throw JsonException("Unknown BannerAnimationType value: $content")
+            }
+        }
+    }
 
     public companion object {
-        private const val KEY_TYPE = "type"
-        private const val KEY_ANIMATE_IN_SECONDS = "animate_in_seconds"
-        private const val KEY_ANIMATE_OUT_SECONDS = "animate_out_seconds"
-
-        private const val TYPE_FADE = "fade"
-        private const val TYPE_SLIDE = "slide"
-
-        /** Default animation duration, if not specified in the payload. */
-        public const val DEFAULT_ANIMATION_MS: Long = 300L
-
-        /** Default animation, if not specified in the payload. */
-        public val DEFAULT: BannerAnimation = Slide(DEFAULT_ANIMATION_MS, DEFAULT_ANIMATION_MS)
+        private const val TYPE = "type"
+        private const val ANIMATE_IN = "animate_in_seconds"
+        private const val ANIMATE_OUT = "animate_out_seconds"
 
         @Throws(JsonException::class)
-        public fun fromJson(json: JsonValue): BannerAnimation {
-            val content = json.requireMap()
+        public fun fromJson(value: JsonValue): BannerAnimation {
+            val content = value.requireMap()
 
-            val animateInMs = content.optionalField<Double>(KEY_ANIMATE_IN_SECONDS)
-                ?.let { (it * 1000).toLong() } ?: DEFAULT_ANIMATION_MS
-            val animateOutMs = content.optionalField<Double>(KEY_ANIMATE_OUT_SECONDS)
-                ?.let { (it * 1000).toLong() } ?: DEFAULT_ANIMATION_MS
-
-            return when (val type = content.optionalField<String>(KEY_TYPE)?.lowercase()) {
-                TYPE_FADE -> Fade(animateInMs, animateOutMs)
-                TYPE_SLIDE -> Slide(animateInMs, animateOutMs)
-                else -> throw JsonException("Unknown BannerAnimation type: $type")
+            return when (BannerAnimationType.fromJson(content.require(TYPE))) {
+                BannerAnimationType.FADE -> Fade(
+                    animateIn = content[ANIMATE_IN]?.getDouble(0.0)?.seconds,
+                    animateOut = content[ANIMATE_OUT]?.getDouble(0.0)?.seconds
+                )
+                BannerAnimationType.SLIDE -> Slide(
+                    animateIn = content[ANIMATE_IN]?.getDouble(0.0)?.seconds,
+                    animateOut = content[ANIMATE_OUT]?.getDouble(0.0)?.seconds
+                )
             }
         }
     }

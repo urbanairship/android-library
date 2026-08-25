@@ -19,6 +19,7 @@ import com.urbanairship.json.requireField
 import com.urbanairship.json.requireMap
 import com.urbanairship.util.DateUtils
 import java.text.ParseException
+import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -156,12 +157,12 @@ internal data class FeatureFlagInfo(
     /**
      * Date of the object's creation
      */
-    val created: Long,
+    val created: Instant,
 
     /**
      * Date of the last update to the flag definition
      */
-    val lastUpdated: Long,
+    val lastUpdated: Instant,
 
     /**
      * The flag name

@@ -16,7 +16,8 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class AnalyticsDatabaseMigrationTest {
 
-    @Rule
+    @get:Rule
+    @JvmField
     var helper: MigrationTestHelper = MigrationTestHelper(
         InstrumentationRegistry.getInstrumentation(), AnalyticsDatabase::class.java
     )
@@ -42,17 +43,36 @@ class AnalyticsDatabaseMigrationTest {
         Assert.assertFalse(hasDuplicates(db))
     }
 
+    @Test
+    fun migrate3to4() {
+        var db = helper.createDatabase(TEST_DB, 3)
+
+        // Insert some events (including a nullable sessionId row).
+        insertEvent(db, "event-1", "session-1")
+        insertEvent(db, "event-2", null)
+        Assert.assertEquals(2, getEventCount(db).toLong())
+        db.close()
+
+        db = helper.runMigrationsAndValidate(TEST_DB, 4, true, AnalyticsDatabase.MIGRATION_3_4)
+
+        // Data should survive migration.
+        Assert.assertEquals(2, getEventCount(db).toLong())
+
+        // The unique index on eventId must be recreated.
+        Assert.assertTrue(hasUniqueIndexOnEventId(db))
+    }
+
     companion object {
 
         private const val TEST_DB = "ua_analytics.db"
 
-        private fun insertEvent(db: SupportSQLiteDatabase, eventId: String, sessionId: String) {
+        private fun insertEvent(db: SupportSQLiteDatabase, eventId: String, sessionId: String?) {
             val values = ContentValues()
             values.put("type", "test-event-type")
             values.put("eventId", eventId)
             values.put("time", "0")
             values.put("data", newBuilder().put("foo", "bar").build().toString())
-            values.put("sessionId", sessionId)
+            if (sessionId != null) values.put("sessionId", sessionId) else values.putNull("sessionId")
             values.put("eventSize", 100)
 
             db.insert("events", SQLiteDatabase.CONFLICT_REPLACE, values)
@@ -65,6 +85,21 @@ class AnalyticsDatabaseMigrationTest {
             cursor.close()
 
             return count
+        }
+
+        private fun hasUniqueIndexOnEventId(db: SupportSQLiteDatabase): Boolean {
+            val cursor = db.query("PRAGMA index_list(events)")
+            var found = false
+            while (cursor.moveToNext()) {
+                val name = cursor.getString(cursor.getColumnIndexOrThrow("name"))
+                val unique = cursor.getInt(cursor.getColumnIndexOrThrow("unique"))
+                if (name == "index_events_eventId" && unique == 1) {
+                    found = true
+                    break
+                }
+            }
+            cursor.close()
+            return found
         }
 
         /** Returns true if the events table contains rows with duplicate eventIds.  */

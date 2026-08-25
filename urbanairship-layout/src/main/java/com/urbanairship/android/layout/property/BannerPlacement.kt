@@ -11,11 +11,11 @@ import com.urbanairship.json.optionalList
 public class BannerPlacement public constructor(
     public val size: ConstrainedSize,
     public val margin: Margin?,
-    public val position: Position,
+    public val position: EdgePosition,
     public val ignoreSafeArea: Boolean,
     public val border: Border?,
     public val backgroundColor: Color?,
-    public val animation: BannerAnimation = BannerAnimation.DEFAULT,
+    public val animation: BannerAnimation?,
     public val swipeToDismiss: Boolean = true,
     public val shadow: Shadow? = null
 ) : SafeAreaAware {
@@ -41,19 +41,6 @@ public class BannerPlacement public constructor(
         public fun fromJson(json: JsonValue): BannerPlacement {
             val content = json.requireMap()
 
-            val positionJson = content.require(KEY_POSITION)
-            val position = if (positionJson.isString) {
-                // Legacy payloads specify only a vertical edge for the position.
-                Position(HorizontalPosition.CENTER, VerticalPosition.from(positionJson))
-            } else {
-                Position.fromJson(positionJson)
-            }
-
-            if (position.horizontal == HorizontalPosition.CENTER &&
-                position.vertical == VerticalPosition.CENTER) {
-                throw JsonException("Banner position must include at least one non-center edge!")
-            }
-
             val shadow = content[KEY_SHADOW]?.let { shadowJson ->
                 val resolved = shadowJson.optMap()
                     .optionalList(KEY_SELECTORS)
@@ -78,12 +65,11 @@ public class BannerPlacement public constructor(
             return BannerPlacement(
                 size = ConstrainedSize.fromJson(content.require(KEY_SIZE)),
                 margin = content[KEY_MARGIN]?.let(Margin::fromJson),
-                position = position,
+                position = EdgePosition.fromJson(content.require(KEY_POSITION)),
                 ignoreSafeArea = ignoreSafeAreaFromJson(content),
                 border = content[KEY_BORDER]?.let(Border::fromJson),
                 backgroundColor = content[KEY_BACKGROUND]?.let(Color::fromJson),
-                animation = content[KEY_ANIMATION]?.let(BannerAnimation::fromJson)
-                    ?: BannerAnimation.DEFAULT,
+                animation = content[KEY_ANIMATION]?.let(BannerAnimation::fromJson),
                 swipeToDismiss = swipeToDismiss,
                 shadow = shadow
             )

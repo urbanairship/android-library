@@ -14,8 +14,8 @@ import com.urbanairship.json.extend
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
 import com.urbanairship.json.toJsonMap
+import java.time.Instant
 import java.util.Date
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 /**
@@ -228,7 +228,7 @@ public class SetAttributesAction public constructor(
             data class Json(
                 val attributeName: String,
                 val instanceId: String,
-                val expiration: Date?,
+                val expiration: Instant?,
                 val value: JsonMap
             ) : Value()
 
@@ -237,7 +237,8 @@ public class SetAttributesAction public constructor(
                     is StringValue -> JsonValue.wrap(value)
                     is NumberValue -> JsonValue.wrap(value)
                     is DateValue -> JsonValue.wrap(value.time)
-                    is Json -> (expiration?.let { value.extend(KEY_EXPIRATION to it.time.milliseconds.inWholeSeconds) } ?: value).toJsonValue()
+                    // The `exp` wire field is a Unix timestamp in seconds.
+                    is Json -> (expiration?.let { value.extend(KEY_EXPIRATION to it.epochSecond) } ?: value).toJsonValue()
                 }
             }
 
@@ -268,7 +269,7 @@ public class SetAttributesAction public constructor(
                     }
                     val data = converted.toJsonValue().requireMap().map.toMutableMap()
                     val expiration = data.remove(KEY_EXPIRATION)?.number
-                        ?.let { Date(it.toLong().seconds.inWholeMilliseconds) }
+                        ?.let { Instant.ofEpochSecond(it.toLong()) }
                     return Json(
                         attributeName = components[0],
                         instanceId = components[1],

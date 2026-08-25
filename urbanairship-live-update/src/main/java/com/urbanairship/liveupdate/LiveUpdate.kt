@@ -3,6 +3,7 @@ package com.urbanairship.liveupdate
 import com.urbanairship.json.JsonMap
 import com.urbanairship.liveupdate.data.LiveUpdateContent
 import com.urbanairship.liveupdate.data.LiveUpdateState
+import java.time.Instant
 import java.util.Objects
 
 /**
@@ -19,9 +20,9 @@ public class LiveUpdate(
     public val name: String,
     public val type: String,
     public val content: JsonMap,
-    public val lastContentUpdateTime: Long,
-    public val lastStateChangeTime: Long,
-    public val dismissalTime: Long? = null,
+    public val lastContentUpdateTime: Instant,
+    public val lastStateChangeTime: Instant,
+    public val dismissalTime: Instant? = null,
 ) {
     internal companion object {
         internal fun from(state: LiveUpdateState, content: LiveUpdateContent) = LiveUpdate(
