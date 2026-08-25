@@ -115,7 +115,12 @@ internal class ScoreItemView(
     companion object {
         val CHECKED_STATE_SET: IntArray = intArrayOf(android.R.attr.state_checked)
 
-        /** The smallest a score item is drawn, which is a tappable one. */
+        /**
+         * The smallest a score item is drawn, which is a tappable one.
+         *
+         * Matches iOS rather than Android's usual 48dp minimum touch target, so score items are
+         * the same size on both platforms.
+         */
         @Dimension(unit = Dimension.DP)
         private const val MIN_TAPPABLE_DP: Int = 44
     }
