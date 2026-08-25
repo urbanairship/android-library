@@ -20,8 +20,8 @@ import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.automation.limits.LedgerStoreInterface
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.preferences.AsyncPrefKey
 import com.urbanairship.preferences.PreferenceStore
-import com.urbanairship.preferences.SyncPrefKey
 import com.urbanairship.util.Clock
 import java.time.Instant
 import java.util.UUID
@@ -55,17 +55,17 @@ internal class AutomationStoreMigrator(
 
         val converted = convert(oldSchedules)
         if (converted.isNotEmpty()) {
-            val ids = converted.map { it.scheduleData.schedule.identifier }
+            val byId = converted.associateBy { it.scheduleData.schedule.identifier }
+            val ids = byId.keys.toList()
 
             // Schedules already present in the new store indicate a prior
             // migration whose legacy cleanup failed. Re-running the upsert
             // would clobber whatever state they have since accumulated.
-            val didMigrate = store.getSchedules(ids).isEmpty()
+            val shouldMigrate = store.getSchedules(ids).isEmpty()
 
-            if (didMigrate) {
-                val map = converted.associateBy { it.scheduleData.schedule.identifier }
+            if (shouldMigrate) {
                 store.upsertSchedules(ids) { id, _ ->
-                    requireNotNull(map[id]?.scheduleData)
+                    requireNotNull(byId[id]).scheduleData
                 }
                 store.upsertTriggers(converted.flatMap { it.triggerData })
             }
@@ -92,9 +92,9 @@ internal class AutomationStoreMigrator(
      * pre-ledger.
      */
     private suspend fun backfillCurrentStoreIfNeeded() {
-        if (isLedgerBackfillCompleted()) return
-
         try {
+            if (isLedgerBackfillCompleted()) return
+
             val schedules = store.getSchedules()
             val events = backfillLedgerEvents(schedules, clock.now())
             if (events.isNotEmpty()) {
@@ -107,10 +107,10 @@ internal class AutomationStoreMigrator(
         }
     }
 
-    private fun isLedgerBackfillCompleted(): Boolean =
+    private suspend fun isLedgerBackfillCompleted(): Boolean =
         dataStore.get(LEDGER_BACKFILL_COMPLETED_KEY) == true
 
-    private fun markLedgerBackfillCompleted() {
+    private suspend fun markLedgerBackfillCompleted() {
         dataStore.put(LEDGER_BACKFILL_COMPLETED_KEY, true)
     }
 
@@ -317,8 +317,8 @@ internal class AutomationStoreMigrator(
 
     internal companion object {
 
-        private val LEDGER_BACKFILL_COMPLETED_KEY: SyncPrefKey<Boolean> =
-            SyncPrefKey.boolean("com.urbanairship.automation.ledger.backfillCompleted")
+        private val LEDGER_BACKFILL_COMPLETED_KEY: AsyncPrefKey<Boolean> =
+            AsyncPrefKey.boolean("com.urbanairship.automation.ledger.backfillCompleted")
 
         /**
          * Builds the backfill ledger events for a set of migrating schedules.
