@@ -20,11 +20,25 @@ internal interface LedgerDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(events: List<LedgerEventEntity>)
 
-    @Query("SELECT * FROM ledger_events WHERE scheduleId = :scheduleId")
-    suspend fun getEvents(scheduleId: String): List<LedgerEventEntity>
+    /**
+     * Fetches the events recorded under [scheduleId] or [sharedId], oldest
+     * first. A null [sharedId] matches no row — `sharedId = NULL` is never true
+     * in SQL — which narrows the query to the schedule's own events. Ties on
+     * timestamp fall back to insert order.
+     */
+    @Query(
+        "SELECT * FROM ledger_events " +
+            "WHERE scheduleId = :scheduleId OR sharedId = :sharedId " +
+            "ORDER BY timestamp ASC, id ASC"
+    )
+    suspend fun getEvents(scheduleId: String, sharedId: String?): List<LedgerEventEntity>
 
-    @Query("SELECT * FROM ledger_events WHERE scheduleId = :scheduleId OR sharedId = :sharedId")
-    suspend fun getEvents(scheduleId: String, sharedId: String): List<LedgerEventEntity>
+    /**
+     * True if any event is recorded under [scheduleId]. Answered from the
+     * indexed column, so no body is decoded.
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM ledger_events WHERE scheduleId = :scheduleId)")
+    suspend fun hasEvents(scheduleId: String): Boolean
 
     @Transaction
     suspend fun deleteEvents(scheduleIds: List<String>, sharedIds: List<String>) {
