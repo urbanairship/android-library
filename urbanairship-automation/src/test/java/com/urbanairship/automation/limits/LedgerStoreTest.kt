@@ -217,6 +217,33 @@ public class LedgerStoreTest {
         assertEquals(listOf(first, second, third), result)
     }
 
+    /**
+     * A row whose body cannot be decoded is skipped, and must not cost us the
+     * decodable events recorded either side of it.
+     */
+    @Test
+    public fun testQuerySkipsUndecodableRowsAndKeepsTheRest(): TestResult = runTest {
+        val first = execution(scheduleId = "schedule-1", timestamp = Instant.ofEpochMilli(100))
+        val last = execution(scheduleId = "schedule-1", timestamp = Instant.ofEpochMilli(300))
+
+        store.recordEvents(listOf(first, last))
+        db.dao.insertAll(listOf(undecodableRow(scheduleId = "schedule-1", timestamp = 200)))
+
+        // Ordering is preserved across the gap the skipped row leaves behind.
+        assertEquals(
+            listOf(first, last),
+            store.events(scheduleId = "schedule-1", sharedId = null)
+        )
+    }
+
+    /** A row that [LedgerEvent.fromJson] rejects, written straight to the DAO. */
+    private fun undecodableRow(scheduleId: String, timestamp: Long): LedgerEventEntity =
+        LedgerEventEntity(
+            scheduleId = scheduleId,
+            timestamp = timestamp,
+            body = JsonValue.wrap("not an event")
+        )
+
     @Test
     public fun testHasEvents(): TestResult = runTest {
         assertFalse(store.hasEvents("schedule-1"))
@@ -234,11 +261,7 @@ public class LedgerStoreTest {
      */
     @Test
     public fun testHasEventsCountsUndecodableRows(): TestResult = runTest {
-        val entity = LedgerEventEntity()
-        entity.scheduleId = "schedule-1"
-        entity.timestamp = 1
-        entity.body = JsonValue.wrap("not an event")
-        db.dao.insertAll(listOf(entity))
+        db.dao.insertAll(listOf(undecodableRow(scheduleId = "schedule-1", timestamp = 1)))
 
         assertTrue(store.events(scheduleId = "schedule-1", sharedId = null).isEmpty())
         assertTrue(store.hasEvents("schedule-1"))

@@ -43,16 +43,24 @@ internal interface LedgerDao {
     @Transaction
     suspend fun deleteEvents(scheduleIds: List<String>, sharedIds: List<String>) {
         if (scheduleIds.isNotEmpty()) {
-            runBatched(scheduleIds) { deleteByScheduleIds(it) }
+            runBatched(scheduleIds) { deleteByScheduleIdsBatchInternal(it) }
         }
         if (sharedIds.isNotEmpty()) {
-            runBatched(sharedIds) { deleteBySharedIds(it) }
+            runBatched(sharedIds) { deleteBySharedIdsBatchInternal(it) }
         }
     }
 
+    /**
+     * This query is only for internal use, with batched queries
+     * to avoid the max query params limit of 999.
+     */
     @Query("DELETE FROM ledger_events WHERE scheduleId IN (:scheduleIds)")
-    suspend fun deleteByScheduleIds(scheduleIds: Collection<String>)
+    suspend fun deleteByScheduleIdsBatchInternal(scheduleIds: Collection<String>)
 
+    /**
+     * This query is only for internal use, with batched queries
+     * to avoid the max query params limit of 999.
+     */
     @Query("DELETE FROM ledger_events WHERE sharedId IN (:sharedIds)")
-    suspend fun deleteBySharedIds(sharedIds: Collection<String>)
+    suspend fun deleteBySharedIdsBatchInternal(sharedIds: Collection<String>)
 }
