@@ -33,6 +33,13 @@ internal interface LedgerDao {
     )
     suspend fun getEvents(scheduleId: String, sharedId: String?): List<LedgerEventEntity>
 
+    /**
+     * True if any event is recorded under [scheduleId]. Answered from the
+     * indexed column, so no body is decoded.
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM ledger_events WHERE scheduleId = :scheduleId)")
+    suspend fun hasEvents(scheduleId: String): Boolean
+
     @Transaction
     suspend fun deleteEvents(scheduleIds: List<String>, sharedIds: List<String>) {
         if (scheduleIds.isNotEmpty()) {

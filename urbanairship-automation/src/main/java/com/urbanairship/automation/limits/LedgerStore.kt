@@ -42,6 +42,13 @@ internal interface LedgerStoreInterface {
      */
     suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent>
 
+    /**
+     * True if any event is recorded under [scheduleId], including events whose
+     * body cannot be decoded. Lets a caller tell "nothing recorded yet" apart
+     * from "already recorded" without reading the events back.
+     */
+    suspend fun hasEvents(scheduleId: String): Boolean
+
     /** Deletes every event recorded under any of the given [scopes]. */
     suspend fun deleteEvents(scopes: List<LedgerScope>)
 }
@@ -86,6 +93,9 @@ internal class LedgerStore(
                 }
         }
     }
+
+    override suspend fun hasEvents(scheduleId: String): Boolean =
+        queue.run { dao.hasEvents(scheduleId) }
 
     override suspend fun deleteEvents(scopes: List<LedgerScope>) {
         if (scopes.isEmpty()) {

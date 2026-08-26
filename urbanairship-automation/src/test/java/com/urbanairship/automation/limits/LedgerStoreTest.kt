@@ -5,9 +5,11 @@ package com.urbanairship.automation.limits
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.automation.limits.storage.LedgerDatabase
+import com.urbanairship.automation.limits.storage.LedgerEventEntity
 import com.urbanairship.json.JsonValue
 import java.time.Instant
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
@@ -213,6 +215,33 @@ public class LedgerStoreTest {
 
         val result = store.events(scheduleId = "schedule-1", sharedId = null)
         assertEquals(listOf(first, second, third), result)
+    }
+
+    @Test
+    public fun testHasEvents(): TestResult = runTest {
+        assertFalse(store.hasEvents("schedule-1"))
+
+        store.recordEvents(listOf(execution(scheduleId = "schedule-1")))
+
+        assertTrue(store.hasEvents("schedule-1"))
+        assertFalse(store.hasEvents("schedule-2"))
+    }
+
+    /**
+     * The whole point of [LedgerStoreInterface.hasEvents] over `events().isNotEmpty()`:
+     * a row that cannot be decoded still counts as recorded, so a caller asking
+     * "did I already write here?" is not told "no" and made to write again.
+     */
+    @Test
+    public fun testHasEventsCountsUndecodableRows(): TestResult = runTest {
+        val entity = LedgerEventEntity()
+        entity.scheduleId = "schedule-1"
+        entity.timestamp = 1
+        entity.body = JsonValue.wrap("not an event")
+        db.dao.insertAll(listOf(entity))
+
+        assertTrue(store.events(scheduleId = "schedule-1", sharedId = null).isEmpty())
+        assertTrue(store.hasEvents("schedule-1"))
     }
 
     @Test
