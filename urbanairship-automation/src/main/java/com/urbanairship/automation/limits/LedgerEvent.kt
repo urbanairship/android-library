@@ -198,10 +198,9 @@ internal sealed class LedgerEvent : JsonSerializable {
      * shared group when present.
      */
     val scopes: List<LedgerScope>
-        get() {
-            val result = mutableListOf<LedgerScope>(LedgerScope.Schedule(scheduleId))
-            sharedId?.let { result.add(LedgerScope.Shared(it)) }
-            return result
+        get() = buildList {
+            add(LedgerScope.Schedule(scheduleId))
+            sharedId?.let { add(LedgerScope.Shared(it)) }
         }
 
     internal companion object {

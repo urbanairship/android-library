@@ -5,9 +5,11 @@ package com.urbanairship.automation.limits
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.automation.limits.storage.LedgerDatabase
+import com.urbanairship.automation.limits.storage.LedgerEventEntity
 import com.urbanairship.json.JsonValue
 import java.time.Instant
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
@@ -200,6 +202,69 @@ public class LedgerStoreTest {
 
         val result = store.events(scheduleId = "schedule-1", sharedId = null)
         assertEquals(listOf(first, second, third), result)
+    }
+
+    @Test
+    public fun testQueryBreaksTimestampTiesByInsertOrder(): TestResult = runTest {
+        val tie = Instant.ofEpochMilli(100)
+        val first = execution(scheduleId = "schedule-1", triggerId = "first", timestamp = tie)
+        val second = execution(scheduleId = "schedule-1", triggerId = "second", timestamp = tie)
+        val third = execution(scheduleId = "schedule-1", triggerId = "third", timestamp = tie)
+
+        store.recordEvents(listOf(first, second, third))
+
+        val result = store.events(scheduleId = "schedule-1", sharedId = null)
+        assertEquals(listOf(first, second, third), result)
+    }
+
+    /**
+     * A row whose body cannot be decoded is skipped, and must not cost us the
+     * decodable events recorded either side of it.
+     */
+    @Test
+    public fun testQuerySkipsUndecodableRowsAndKeepsTheRest(): TestResult = runTest {
+        val first = execution(scheduleId = "schedule-1", timestamp = Instant.ofEpochMilli(100))
+        val last = execution(scheduleId = "schedule-1", timestamp = Instant.ofEpochMilli(300))
+
+        store.recordEvents(listOf(first, last))
+        db.dao.insertAll(listOf(undecodableRow(scheduleId = "schedule-1", timestamp = 200)))
+
+        // Ordering is preserved across the gap the skipped row leaves behind.
+        assertEquals(
+            listOf(first, last),
+            store.events(scheduleId = "schedule-1", sharedId = null)
+        )
+    }
+
+    /** A row that [LedgerEvent.fromJson] rejects, written straight to the DAO. */
+    private fun undecodableRow(scheduleId: String, timestamp: Long): LedgerEventEntity =
+        LedgerEventEntity(
+            scheduleId = scheduleId,
+            timestamp = timestamp,
+            body = JsonValue.wrap("not an event")
+        )
+
+    @Test
+    public fun testHasEvents(): TestResult = runTest {
+        assertFalse(store.hasEvents("schedule-1"))
+
+        store.recordEvents(listOf(execution(scheduleId = "schedule-1")))
+
+        assertTrue(store.hasEvents("schedule-1"))
+        assertFalse(store.hasEvents("schedule-2"))
+    }
+
+    /**
+     * The whole point of [LedgerStoreInterface.hasEvents] over `events().isNotEmpty()`:
+     * a row that cannot be decoded still counts as recorded, so a caller asking
+     * "did I already write here?" is not told "no" and made to write again.
+     */
+    @Test
+    public fun testHasEventsCountsUndecodableRows(): TestResult = runTest {
+        db.dao.insertAll(listOf(undecodableRow(scheduleId = "schedule-1", timestamp = 1)))
+
+        assertTrue(store.events(scheduleId = "schedule-1", sharedId = null).isEmpty())
+        assertTrue(store.hasEvents("schedule-1"))
     }
 
     @Test
