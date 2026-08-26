@@ -219,8 +219,20 @@ internal class LiveUpdateProcessor(
     }
 
     private suspend fun processClearAll() {
+        val active = dao.getAllActive()
+
+        // Unregister every active Live Update from the channel. Without this, clearing local
+        // state leaves the channel's Live Update tags in place with nothing left to ever remove
+        // them, so the device keeps being targeted for Live Updates it can no longer handle.
+        active.forEach { (state, _) ->
+            UALog.v { "Emitting Live Update remove mutation for '${state.name}' (clear all)." }
+            updates.trySend(
+                LiveUpdateMutation.Remove(name = state.name, startTime = state.timestamp)
+            )
+        }
+
         // Notify handlers that we're stopping all tracked Live Updates.
-        dao.getAllActive()
+        active
             .mapNotNull {
                 it.content?.let { content -> LiveUpdate.from(it.state, content) }
             }
