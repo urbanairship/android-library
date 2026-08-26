@@ -18,23 +18,22 @@ import com.urbanairship.json.JsonValue
     tableName = "ledger_events",
     indices = [Index("scheduleId"), Index("sharedId"), Index("timestamp")]
 )
-internal class LedgerEventEntity {
-
+internal data class LedgerEventEntity(
     @PrimaryKey(autoGenerate = true)
-    var id: Int = 0
+    val id: Int = 0,
 
     /** ID of the schedule that recorded the event. */
-    var scheduleId: String = ""
+    val scheduleId: String,
 
     /** Shared group ID the recording schedule had at record time, if any. */
-    var sharedId: String? = null
+    val sharedId: String? = null,
 
     /**
      * When the event was recorded, as epoch milliseconds. Duplicated out of
      * [body] so reads can order and window on it without decoding every row.
      */
-    var timestamp: Long = 0
+    val timestamp: Long,
 
     /** The JSON-encoded `LedgerEvent`. */
-    var body: JsonValue = JsonValue.NULL
-}
+    val body: JsonValue
+)

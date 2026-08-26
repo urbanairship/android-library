@@ -111,12 +111,10 @@ internal class LedgerStore(
         }
     }
 
-    private fun LedgerEvent.toEntity(): LedgerEventEntity {
-        val entity = LedgerEventEntity()
-        entity.scheduleId = scheduleId
-        entity.sharedId = sharedId
-        entity.timestamp = timestamp.toEpochMilli()
-        entity.body = toJsonValue()
-        return entity
-    }
+    private fun LedgerEvent.toEntity(): LedgerEventEntity = LedgerEventEntity(
+        scheduleId = scheduleId,
+        sharedId = sharedId,
+        timestamp = timestamp.toEpochMilli(),
+        body = toJsonValue()
+    )
 }
