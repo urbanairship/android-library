@@ -9,6 +9,8 @@ import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
+import com.urbanairship.automation.limits.LedgerExecutionResult
+import com.urbanairship.automation.limits.TestAutomationLedger
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.actions.InAppActionRunner
@@ -33,6 +35,7 @@ import io.mockk.mockk
 import io.mockk.runs
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -48,6 +51,7 @@ public class InAppMessageAutomationExecutorTest {
     private val analyticsFactory: InAppMessageAnalyticsFactory = mockk()
     private val conditionsChangedNotifier = ScheduleConditionsChangedNotifier()
     private val actionRunner: InAppActionRunner = mockk()
+    private val ledger = TestAutomationLedger()
 
     private val displayAdapterReady = MutableStateFlow(true)
     private val displayAdapter: DisplayAdapter = mockk {
@@ -59,7 +63,7 @@ public class InAppMessageAutomationExecutorTest {
         every { isReady } returns displayCoordinatorReady
     }
     private val executor = InAppMessageAutomationExecutor(
-        context, assetManager, analyticsFactory, conditionsChangedNotifier
+        context, assetManager, analyticsFactory, conditionsChangedNotifier, ledger
     )
 
     private val preparedInfo = PreparedScheduleInfo(
@@ -183,6 +187,19 @@ public class InAppMessageAutomationExecutorTest {
         verify { displayCoordinator.messageWillDisplay(any()) }
         verify { displayCoordinator.messageFinishedDisplaying(any()) }
         assertEquals(result, ScheduleExecuteResult.FINISHED)
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = preparedInfo.scheduleId,
+                    sharedId = null,
+                    triggerId = null,
+                    result = LedgerExecutionResult.SUCCEEDED,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
     }
 
     @Test
@@ -213,6 +230,19 @@ public class InAppMessageAutomationExecutorTest {
         }
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = info.scheduleId,
+                    sharedId = null,
+                    triggerId = null,
+                    result = LedgerExecutionResult.HOLDOUT,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
     }
 
     @Test
@@ -258,6 +288,8 @@ public class InAppMessageAutomationExecutorTest {
         val result = execute()
 
         assertEquals(result, ScheduleExecuteResult.RETRY)
+        // A failed display never reaches the success recording.
+        assertTrue(ledger.recorded.isEmpty())
     }
 
     @Test
@@ -276,6 +308,8 @@ public class InAppMessageAutomationExecutorTest {
         assertEquals(ScheduleExecuteResult.FINISHED, result)
 
         coVerify { analytics.recordEvent(any(), any()) }
+        // An additional-audience miss is not a budget-consuming execution.
+        assertTrue(ledger.recorded.isEmpty())
     }
 
     @Test
@@ -297,6 +331,20 @@ public class InAppMessageAutomationExecutorTest {
 
         assertEquals(result, ScheduleExecuteResult.CANCEL)
         verify { actionRunner.run(any(), any(), Action.Situation.AUTOMATION) }
+
+        // A cancelled display still displayed, so it records a success.
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = preparedInfo.scheduleId,
+                    sharedId = null,
+                    triggerId = null,
+                    result = LedgerExecutionResult.SUCCEEDED,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
     }
 
     private fun checkReady(): ScheduleReadyResult = executor.isReady(preparedData, preparedInfo)

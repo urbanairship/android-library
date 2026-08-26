@@ -19,6 +19,8 @@ import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolv
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.DeferredScheduleResult
 import com.urbanairship.automation.limits.FrequencyLimitManager
+import com.urbanairship.automation.limits.LedgerExecutionResult
+import com.urbanairship.automation.limits.TestAutomationLedger
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.cache.AirshipCache
 import com.urbanairship.contacts.StableContactInfo
@@ -86,6 +88,7 @@ public class AutomationPreparerTest {
     }
 
     private val triggerContext = DeferredTriggerContext("some type", 10.0, JsonValue.NULL)
+    private val ledger = TestAutomationLedger()
     private val audienceResolver: AdditionalAudienceCheckerResolver = mockk()
     private val analytics: Analytics = mockk()
     private val audienceEvaluator: AudienceEvaluator = spyk(
@@ -124,7 +127,8 @@ public class AutomationPreparerTest {
             remoteDataAccess = remoteDataAccess,
             deviceInfoProviderFactory = { deviceInfoProvider },
             additionalAudienceResolver = audienceResolver,
-            audienceEvaluator = audienceEvaluator
+            audienceEvaluator = audienceEvaluator,
+            ledger = ledger
         )
     }
 
@@ -289,9 +293,47 @@ public class AutomationPreparerTest {
             AirshipDeviceAudienceResult.miss
         }
 
-        assertEquals(SchedulePrepareResult.Penalize, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
+        assertEquals(
+            SchedulePrepareResult.Penalize,
+            preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString(), triggerId = "trigger-1")
+        )
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = schedule.identifier,
+                    sharedId = null,
+                    triggerId = "trigger-1",
+                    result = LedgerExecutionResult.AUDIENCE_MISS,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
 
         coVerify { audienceSelector.evaluate(any(), any(), any()) }
+    }
+
+    @Test
+    public fun testAudienceMismatchSkipRecordsNothing(): TestResult = runTest {
+        val schedule = makeSchedule(
+            audience = AutomationAudience(
+                audienceSelector = audienceSelector,
+                missBehavior = AutomationAudience.MissBehavior.SKIP
+            )
+        )
+
+        coEvery { remoteDataAccess.contactIdFor(any()) } answers { null }
+        coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.miss
+
+        assertEquals(
+            SchedulePrepareResult.Skip,
+            preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
+        )
+
+        assertTrue(ledger.recorded.isEmpty())
     }
 
     @Test
@@ -336,6 +378,10 @@ public class AutomationPreparerTest {
         assertNotNull(preparedResult)
         assertTrue(preparedResult?.schedule?.info?.additionalAudienceCheckResult == false)
 
+        // The additional audience check is enforced by the executor, not the
+        // preparer, so preparing an additional-audience miss records nothing.
+        assertTrue(ledger.recorded.isEmpty())
+
         coVerify { audienceResolver.resolve(any(), any()) }
     }
 
@@ -362,7 +408,23 @@ public class AutomationPreparerTest {
             AirshipDeviceAudienceResult.miss
         }
 
-        assertEquals(SchedulePrepareResult.Cancel, preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString()))
+        assertEquals(
+            SchedulePrepareResult.Cancel,
+            preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString(), triggerId = "trigger-cancel")
+        )
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = schedule.identifier,
+                    sharedId = null,
+                    triggerId = "trigger-cancel",
+                    result = LedgerExecutionResult.AUDIENCE_MISS,
+                    cancel = true
+                )
+            ),
+            ledger.recorded
+        )
 
         coVerify { audienceSelector.evaluate(any(), any(), any()) }
     }

@@ -16,6 +16,8 @@ import com.urbanairship.automation.engine.InterruptedBehavior
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
+import com.urbanairship.automation.limits.AutomationLedgerInterface
+import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.iam.analytics.InAppMessageAnalyticsFactory
 import kotlinx.coroutines.CoroutineDispatcher
@@ -31,6 +33,7 @@ internal class InAppMessageAutomationExecutor(
     private val assetManager: AssetCacheManager,
     private val analyticsFactory: InAppMessageAnalyticsFactory,
     private val scheduleConditionsChangedNotifier: ScheduleConditionsChangedNotifier,
+    private val ledger: AutomationLedgerInterface,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
 ) : AutomationExecutorDelegate<PreparedInAppMessageData> {
 
@@ -105,6 +108,7 @@ internal class InAppMessageAutomationExecutor(
                 event = LayoutResolutionEvent.control(preparedScheduleInfo.experimentResult),
                 layoutContext = null
             )
+            recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.HOLDOUT)
         } else {
             try {
                 UALog.i { "Displaying message ${preparedScheduleInfo.scheduleId}" }
@@ -112,6 +116,7 @@ internal class InAppMessageAutomationExecutor(
                     DisplayResult.CANCEL -> ScheduleExecuteResult.CANCEL
                     DisplayResult.FINISHED -> ScheduleExecuteResult.FINISHED
                 }
+                recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.SUCCEEDED)
                 data.message.actions?.let {
                     data.actionRunner.run(it.map, Action.Situation.AUTOMATION)
                 }
@@ -131,6 +136,19 @@ internal class InAppMessageAutomationExecutor(
         }
 
         return@withContext result
+    }
+
+    private suspend fun recordLedgerExecution(
+        info: PreparedScheduleInfo,
+        result: LedgerExecutionResult
+    ) {
+        ledger.recordExecution(
+            scheduleId = info.scheduleId,
+            sharedId = info.ledgerSharedId,
+            triggerId = info.triggerId,
+            result = result,
+            cancel = false
+        )
     }
 
     override suspend fun interrupted(

@@ -12,9 +12,14 @@ import com.urbanairship.automation.engine.InterruptedBehavior
 import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
+import com.urbanairship.automation.limits.AutomationLedgerInterface
+import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.json.JsonValue
 
-internal class ActionAutomationExecutor(val actionRunner: ActionRunner = DefaultActionRunner) : AutomationExecutorDelegate<JsonValue> {
+internal class ActionAutomationExecutor(
+    private val ledger: AutomationLedgerInterface,
+    val actionRunner: ActionRunner = DefaultActionRunner
+) : AutomationExecutorDelegate<JsonValue> {
 
     override fun isReady(
         data: JsonValue, preparedScheduleInfo: PreparedScheduleInfo
@@ -29,6 +34,15 @@ internal class ActionAutomationExecutor(val actionRunner: ActionRunner = Default
         }
 
         actionRunner.runSuspending(data.optMap().map, Action.Situation.AUTOMATION)
+
+        ledger.recordExecution(
+            scheduleId = preparedScheduleInfo.scheduleId,
+            sharedId = preparedScheduleInfo.ledgerSharedId,
+            triggerId = preparedScheduleInfo.triggerId,
+            result = LedgerExecutionResult.SUCCEEDED,
+            cancel = false
+        )
+
         return ScheduleExecuteResult.FINISHED
     }
 

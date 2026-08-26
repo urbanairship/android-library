@@ -14,6 +14,8 @@ import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.EventsHistory
 import com.urbanairship.automation.engine.TriggeringInfo
+import com.urbanairship.automation.limits.LedgerConfig
+import com.urbanairship.automation.limits.TestAutomationLedger
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
@@ -34,6 +36,7 @@ import io.mockk.coVerifySequence
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
@@ -102,6 +105,8 @@ public class AutomationEngineTest {
 
     private val scheduleConditionsChangedNotifier: ScheduleConditionsChangedNotifier = mockk(relaxed = true)
 
+    private val ledger = TestAutomationLedger()
+
     private val sleeper = TestTaskSleeper(clock) { sleep ->
         clock.currentTime += (sleep.inWholeMilliseconds).milliseconds
     }
@@ -118,7 +123,8 @@ public class AutomationEngineTest {
         sleeper = sleeper,
         dispatcher = testDispatcher,
         automationStoreMigrator = automationStoreMigrator,
-        eventsHistory = EventsHistory()
+        eventsHistory = EventsHistory(),
+        ledger = ledger
     )
 
     @Before
@@ -322,5 +328,123 @@ public class AutomationEngineTest {
         coVerify { triggerProcessor.cancel(listOf(schedule.identifier)) }
 
         assertNull(engine.getSchedule(schedule.identifier))
+    }
+
+    private fun ledgerSchedule(sharedId: String?): AutomationSchedule = AutomationSchedule(
+        identifier = "test",
+        triggers = listOf(),
+        data = AutomationSchedule.ScheduleData.InAppMessageData(
+            InAppMessage(
+                name = "test",
+                displayContent = InAppMessageDisplayContent.CustomContent(
+                    Custom(JsonValue.wrap("test"))
+                )
+            )
+        ),
+        created = clock.currentTime,
+        ledgerConfig = sharedId?.let { LedgerConfig(sharedId = it) }
+    )
+
+    private fun ledgerScheduleData(
+        schedule: AutomationSchedule,
+        state: AutomationScheduleState,
+        triggerInfo: TriggeringInfo?
+    ): AutomationScheduleData = AutomationScheduleData(
+        schedule = schedule,
+        scheduleState = state,
+        scheduleStateChangeDate = clock.currentTime,
+        executionCount = 0,
+        triggerInfo = triggerInfo,
+        triggerSessionId = UUID.randomUUID().toString()
+    )
+
+    /**
+     * An execution-type trigger result that moves an idle schedule into
+     * TRIGGERED must record a `triggered` ledger event, stamped with the
+     * schedule's shared ID and the causing trigger's ID.
+     */
+    @Test
+    public fun testRecordsTriggeredLedgerEvent(): TestResult = runTest {
+        val triggerInfo = TriggeringInfo(
+            context = null,
+            date = clock.currentTime,
+            triggerId = "trigger-1"
+        )
+        val sched = ledgerSchedule(sharedId = "group-1")
+        val idleData = ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
+
+        every { triggerProcessor.getTriggerResults() } answers {
+            flowOf(
+                TriggerResult(
+                    scheduleId = "test",
+                    triggerExecutionType = TriggerExecutionType.EXECUTION,
+                    triggerInfo = triggerInfo
+                )
+            )
+        }
+        coEvery { store.getSchedules() } answers { emptyList() }
+        // Apply the update block the way the real store does, against a
+        // throwaway IDLE schedule so the transition actually happens. `triggered`
+        // mutates in place, so it must not be the instance `getSchedule` returns.
+        coEvery { store.updateSchedule(eq("test"), any()) } answers {
+            secondArg<(AutomationScheduleData) -> AutomationScheduleData>()(
+                ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
+            )
+        }
+        // Return a non-triggered state so the follow-up processing aborts,
+        // isolating the record.
+        coEvery { store.getSchedule(eq("test")) } answers { idleData }
+
+        engine.start()
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Triggered(
+                    scheduleId = "test",
+                    sharedId = "group-1",
+                    triggerId = "trigger-1"
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    /**
+     * A redundant trigger result for a schedule that is already TRIGGERED must
+     * not record a `triggered` event: `triggered` no-ops, so this call did not
+     * cause the transition.
+     */
+    @Test
+    public fun testNoTriggeredRecordWhenNotTransitioned(): TestResult = runTest {
+        val triggerInfo = TriggeringInfo(
+            context = null,
+            date = clock.currentTime,
+            triggerId = "trigger-1"
+        )
+        val sched = ledgerSchedule(sharedId = "group-1")
+        val idleData = ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
+
+        every { triggerProcessor.getTriggerResults() } answers {
+            flowOf(
+                TriggerResult(
+                    scheduleId = "test",
+                    triggerExecutionType = TriggerExecutionType.EXECUTION,
+                    triggerInfo = triggerInfo
+                )
+            )
+        }
+        coEvery { store.getSchedules() } answers { emptyList() }
+        coEvery { store.updateSchedule(eq("test"), any()) } answers {
+            secondArg<(AutomationScheduleData) -> AutomationScheduleData>()(
+                ledgerScheduleData(sched, AutomationScheduleState.TRIGGERED, triggerInfo)
+            )
+        }
+        coEvery { store.getSchedule(eq("test")) } answers { idleData }
+
+        engine.start()
+        advanceUntilIdle()
+
+        assertTrue(ledger.recorded.isEmpty())
     }
 }

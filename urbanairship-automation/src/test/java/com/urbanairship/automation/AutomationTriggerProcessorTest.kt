@@ -76,7 +76,8 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
                         type = "active_session",
                         goal = 1.0,
                         event = JsonValue.NULL),
-                    date = clock.now()), result.triggerInfo)
+                    date = clock.now(),
+                    triggerId = "trigger-id"), result.triggerInfo)
         }
     }
 
@@ -110,7 +111,8 @@ public class AutomationTriggerProcessorTest: BaseTestCase() {
                         type = "active_session",
                         goal = 1.0,
                         event = JsonValue.NULL),
-                    date = clock.now()), result.triggerInfo)
+                    date = clock.now(),
+                    triggerId = "trigger-id"), result.triggerInfo)
         }
     }
 

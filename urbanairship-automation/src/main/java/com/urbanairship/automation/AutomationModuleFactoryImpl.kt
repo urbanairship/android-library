@@ -27,6 +27,7 @@ import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.EventsHistory
 import com.urbanairship.automation.engine.SerialAccessAutomationStore
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
+import com.urbanairship.automation.limits.AutomationLedger
 import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.automation.limits.LedgerStore
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
@@ -103,6 +104,7 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         val activityMonitor = GlobalActivityMonitor.shared(context)
         val displayCoordinatorManager = DisplayCoordinatorManager(dataStore, activityMonitor)
         val frequencyLimits = FrequencyLimitManager(context, runtimeConfig)
+        val ledger = AutomationLedger(LedgerStore(context, runtimeConfig))
         val automationStore = SerialAccessAutomationStore(
             AutomationStore.createDatabase(context, runtimeConfig)
         )
@@ -134,12 +136,13 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         )
 
         // Execution
-        val actionExecutor = ActionAutomationExecutor()
+        val actionExecutor = ActionAutomationExecutor(ledger = ledger)
         val messageExecutor = InAppMessageAutomationExecutor(
             context = context,
             assetManager = assetManager,
             analyticsFactory = analyticsFactory,
-            scheduleConditionsChangedNotifier = scheduleConditionNotifier
+            scheduleConditionsChangedNotifier = scheduleConditionNotifier,
+            ledger = ledger
         )
 
         val engine = AutomationEngine(
@@ -161,7 +164,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                     cache = cache
                 ),
                 queueConfigSupplier = { runtimeConfig.remoteConfig.iaaConfig?.retryingQueue },
-                audienceEvaluator = audienceEvaluator
+                audienceEvaluator = audienceEvaluator,
+                ledger = ledger
             ),
             scheduleConditionsChangedNotifier = scheduleConditionNotifier,
             eventsFeed = AutomationEventFeed(
@@ -180,7 +184,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 ledgerStore = LedgerStore(context, runtimeConfig),
                 dataStore = dataStore
             ),
-            eventsHistory = eventsHistory
+            eventsHistory = eventsHistory,
+            ledger = ledger
         )
 
         val automation = InAppAutomation(
