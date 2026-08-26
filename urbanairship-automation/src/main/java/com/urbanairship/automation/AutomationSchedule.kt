@@ -8,6 +8,7 @@ import com.urbanairship.automation.engine.AutomationScheduleData
 import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.limits.LedgerConfig
+import com.urbanairship.automation.limits.LimitConfig
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
@@ -104,7 +105,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     internal val queue: String? = null,
     internal val additionalAudienceCheckOverrides: AdditionalAudienceCheckOverrides? = null,
     internal val sendMetadata: String? = null,
-    internal val ledgerConfig: LedgerConfig? = null
+    internal val ledgerConfig: LedgerConfig? = null,
+    internal val limitConfig: LimitConfig? = null
 ) : JsonSerializable {
 
     /**
@@ -151,6 +153,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private val bypassHoldoutGroups: Boolean? = schedule.bypassHoldoutGroups
         private val sendMetadata: String? = schedule.sendMetadata
         private val ledgerConfig: LedgerConfig? = schedule.ledgerConfig
+        private val limitConfig: LimitConfig? = schedule.limitConfig
 
         /**
          * Set the triggers.
@@ -305,7 +308,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 queue = queue,
                 additionalAudienceCheckOverrides = additionalAudienceCheckOverrides,
                 sendMetadata = sendMetadata,
-                ledgerConfig = ledgerConfig
+                ledgerConfig = ledgerConfig,
+                limitConfig = limitConfig
             )
         }
     }
@@ -345,7 +349,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             queue = queue,
             additionalAudienceCheckOverrides = additionalAudienceCheckOverrides,
             sendMetadata = sendMetadata,
-            ledgerConfig = ledgerConfig
+            ledgerConfig = ledgerConfig,
+            limitConfig = limitConfig
         )
     }
 
@@ -446,6 +451,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private const val ADDITIONAL_AUDIENCE_CHECK_OVERRIDES = "additional_audience_check_overrides"
         private const val SEND_METADATA = "send_metadata"
         private const val LEDGER_CONFIG = "ledger_config"
+        private const val LIMIT_CONFIG = "limit_config"
 
         @Throws(
             JsonException::class,
@@ -493,7 +499,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 additionalAudienceCheckOverrides = content[ADDITIONAL_AUDIENCE_CHECK_OVERRIDES]
                     ?.let(AdditionalAudienceCheckOverrides::fromJson),
                 sendMetadata = content.optionalField(SEND_METADATA),
-                ledgerConfig = content[LEDGER_CONFIG]?.let(LedgerConfig::fromJson)
+                ledgerConfig = content[LEDGER_CONFIG]?.let(LedgerConfig::fromJson),
+                limitConfig = content[LIMIT_CONFIG]?.let(LimitConfig::fromJson)
             )
         }
     }
@@ -527,6 +534,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(ADDITIONAL_AUDIENCE_CHECK_OVERRIDES, additionalAudienceCheckOverrides)
         .putOpt(SEND_METADATA, sendMetadata)
         .putOpt(LEDGER_CONFIG, ledgerConfig)
+        .putOpt(LIMIT_CONFIG, limitConfig)
         .build()
         .toJsonValue()
 
@@ -562,6 +570,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         if (metadata != other.metadata) return false
         if (sendMetadata != other.sendMetadata) return false
         if (ledgerConfig != other.ledgerConfig) return false
+        if (limitConfig != other.limitConfig) return false
         return endDate == other.endDate
     }
 
@@ -569,7 +578,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         return Objects.hash(identifier, triggers, group, priority, limit, startDate, audience,
             compoundAudience, delay, interval, data, bypassHoldoutGroups, editGracePeriodDays,
             frequencyConstraintIds, messageType, campaigns, reportingContext, productId,
-            minSDKVersion, created, queue, metadata, sendMetadata, ledgerConfig, endDate)
+            minSDKVersion, created, queue, metadata, sendMetadata, ledgerConfig, limitConfig,
+            endDate)
     }
 }
 
