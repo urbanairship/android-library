@@ -85,11 +85,16 @@ internal class AutomationStoreMigrator(
      * its own backfill: it swallowed record failures but still marked the work
      * done, losing those counts for good.
      *
-     * Runs at most once per app: the completion flag is persisted, so later
-     * launches — where the current store's counts also include ledger-recorded
-     * executions — never double-count. It runs during migration, before the
-     * engine executes any schedule, so the counts captured here are purely
-     * pre-ledger.
+     * The completion flag is a fast path, not the guarantee. [PreferenceStore]
+     * degrades a failed write to a no-op, so the flag can silently fail to
+     * persist and this can run a second time. Skipping schedules that already
+     * hold ledger events makes that re-run harmless: it runs before the engine
+     * executes anything, so an event present here was recorded by an earlier
+     * attempt, never by an execution. The two live in separate databases and
+     * cannot be written atomically, which is why correctness rests on the
+     * events rather than on the flag.
+     *
+     * That same ordering is why the counts captured here are purely pre-ledger.
      */
     private suspend fun backfillCurrentStoreIfNeeded() {
         try {
@@ -97,6 +102,8 @@ internal class AutomationStoreMigrator(
 
             val schedules = store.getSchedules()
             val events = backfillLedgerEvents(schedules, clock.now())
+                .filter { !ledgerStore.hasEvents(it.scheduleId) }
+
             if (events.isNotEmpty()) {
                 ledgerStore.recordEvents(events)
             }
@@ -317,7 +324,7 @@ internal class AutomationStoreMigrator(
 
     internal companion object {
 
-        private val LEDGER_BACKFILL_COMPLETED_KEY: AsyncPrefKey<Boolean> =
+        internal val LEDGER_BACKFILL_COMPLETED_KEY: AsyncPrefKey<Boolean> =
             AsyncPrefKey.boolean("com.urbanairship.automation.ledger.backfillCompleted")
 
         /**

@@ -765,6 +765,26 @@ public class AutomationStoreMigratorTest {
         assertEquals(1, ledger.recorded.size)
     }
 
+    /**
+     * [PreferenceStore] degrades a failed write to a no-op, so the completion
+     * flag can silently fail to persist. The next launch must still not record
+     * the counts a second time.
+     */
+    @Test
+    public fun testBackfillDoesNotDoubleRecordWhenFlagIsLost(): TestResult = runTest {
+        automationStore.upsertSchedules(listOf("current-1")) { id, _ -> scheduleData(id, 2) }
+
+        migrator.migrateData()
+        assertEquals(1, ledger.recorded.size)
+
+        // As if the flag write had been swallowed on the previous launch.
+        preferenceStore.remove(AutomationStoreMigrator.LEDGER_BACKFILL_COMPLETED_KEY)
+
+        migrator.migrateData()
+
+        assertEquals(1, ledger.recorded.size)
+    }
+
     @Test
     public fun testCurrentStoreBackfillRunsOnce(): TestResult = runTest {
         automationStore.upsertSchedules(listOf("current-1")) { id, _ -> scheduleData(id, 2) }
@@ -834,6 +854,9 @@ public class AutomationStoreMigratorTest {
 
         override suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent> =
             emptyList()
+
+        override suspend fun hasEvents(scheduleId: String): Boolean =
+            recorded.any { it.scheduleId == scheduleId }
 
         override suspend fun deleteEvents(scopes: List<LedgerScope>) {}
     }
