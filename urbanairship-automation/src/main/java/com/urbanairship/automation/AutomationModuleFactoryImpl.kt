@@ -28,6 +28,7 @@ import com.urbanairship.automation.engine.EventsHistory
 import com.urbanairship.automation.engine.SerialAccessAutomationStore
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.limits.FrequencyLimitManager
+import com.urbanairship.automation.limits.LedgerStore
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
 import com.urbanairship.automation.remotedata.AutomationSourceInfoStore
@@ -175,7 +176,9 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 executionWindowProcessor = ExecutionWindowProcessor(context)),
             automationStoreMigrator = AutomationStoreMigrator(
                 legacyDatabase = AutomationDatabase.createDatabase(context, runtimeConfig),
-                automationStore
+                store = automationStore,
+                ledgerStore = LedgerStore(context, runtimeConfig),
+                dataStore = dataStore
             ),
             eventsHistory = eventsHistory
         )

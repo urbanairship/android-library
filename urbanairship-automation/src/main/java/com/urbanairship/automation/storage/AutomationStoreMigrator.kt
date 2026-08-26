@@ -15,8 +15,14 @@ import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.engine.triggerprocessor.TriggerData
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
+import com.urbanairship.automation.limits.LedgerEvent
+import com.urbanairship.automation.limits.LedgerExecutionResult
+import com.urbanairship.automation.limits.LedgerStoreInterface
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.preferences.AsyncPrefKey
+import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.util.Clock
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.TimeUnit
@@ -24,10 +30,24 @@ import kotlin.time.Duration.Companion.milliseconds
 
 internal class AutomationStoreMigrator(
     private val legacyDatabase: AutomationDatabase,
-    private val store: AutomationStoreInterface
+    private val store: AutomationStoreInterface,
+    private val ledgerStore: LedgerStoreInterface,
+    private val dataStore: PreferenceStore,
+    private val clock: Clock = Clock.DEFAULT_CLOCK
 ) {
 
     internal suspend fun migrateData() {
+        migrateLegacyStore()
+        backfillCurrentStoreIfNeeded()
+    }
+
+    /**
+     * Pre-rewrite (Java) store migration: moves any legacy schedules into the
+     * current store. Their execution counts reach the ledger through
+     * [backfillCurrentStoreIfNeeded], which runs straight after and sees the
+     * schedules this pass just moved.
+     */
+    private suspend fun migrateLegacyStore() {
         val legacyDao = legacyDatabase.scheduleDao
 
         val oldSchedules = legacyDao.getSchedules()
@@ -35,13 +55,70 @@ internal class AutomationStoreMigrator(
 
         val converted = convert(oldSchedules)
         if (converted.isNotEmpty()) {
-            val map = converted.associateBy { it.scheduleData.schedule.identifier }
-            store.upsertSchedules(map.keys.toList()) { id, _ ->
-                requireNotNull(map[id]?.scheduleData)
+            val byId = converted.associateBy { it.scheduleData.schedule.identifier }
+            val ids = byId.keys.toList()
+
+            // Schedules already present in the new store indicate a prior
+            // migration whose legacy cleanup failed. Re-running the upsert
+            // would clobber whatever state they have since accumulated.
+            val shouldMigrate = store.getSchedules(ids).isEmpty()
+
+            if (shouldMigrate) {
+                store.upsertSchedules(ids) { id, _ ->
+                    requireNotNull(byId[id]).scheduleData
+                }
+                store.upsertTriggers(converted.flatMap { it.triggerData })
             }
-            store.upsertTriggers(converted.flatMap { it.triggerData })
         }
         legacyDao.deleteSchedules(oldSchedules)
+    }
+
+    /**
+     * Post-rewrite (Kotlin) store backfill: on the first launch under the
+     * ledger, records execution counts already held in the current store so
+     * limits upgraded from a pre-ledger SDK are not reset. This is the only
+     * backfill pass, so it covers both schedules that were always in the
+     * current store and any [migrateLegacyStore] has just moved into it.
+     *
+     * A failure leaves the completion flag unset and the counts in the store,
+     * so the next launch retries. That is why the legacy pass does not record
+     * its own backfill: it swallowed record failures but still marked the work
+     * done, losing those counts for good.
+     *
+     * The completion flag is a fast path, not the guarantee. [PreferenceStore]
+     * degrades a failed write to a no-op, so the flag can silently fail to
+     * persist and this can run a second time. Skipping schedules that already
+     * hold ledger events makes that re-run harmless: it runs before the engine
+     * executes anything, so an event present here was recorded by an earlier
+     * attempt, never by an execution. The two live in separate databases and
+     * cannot be written atomically, which is why correctness rests on the
+     * events rather than on the flag.
+     *
+     * That same ordering is why the counts captured here are purely pre-ledger.
+     */
+    private suspend fun backfillCurrentStoreIfNeeded() {
+        try {
+            if (isLedgerBackfillCompleted()) return
+
+            val schedules = store.getSchedules()
+            val events = backfillLedgerEvents(schedules, clock.now())
+                .filter { !ledgerStore.hasEvents(it.scheduleId) }
+
+            if (events.isNotEmpty()) {
+                ledgerStore.recordEvents(events)
+            }
+            markLedgerBackfillCompleted()
+        } catch (ex: Exception) {
+            // Leave the flag unset so the backfill is retried on the next launch.
+            UALog.e(ex) { "Failed to backfill current store execution counts into ledger" }
+        }
+    }
+
+    private suspend fun isLedgerBackfillCompleted(): Boolean =
+        dataStore.get(LEDGER_BACKFILL_COMPLETED_KEY) == true
+
+    private suspend fun markLedgerBackfillCompleted() {
+        dataStore.put(LEDGER_BACKFILL_COMPLETED_KEY, true)
     }
 
     private fun convert(fullSchedules: List<FullSchedule>): List<Converted> {
@@ -244,4 +321,41 @@ internal class AutomationStoreMigrator(
         val scheduleData: AutomationScheduleData,
         val triggerData: List<TriggerData>
     )
+
+    internal companion object {
+
+        internal val LEDGER_BACKFILL_COMPLETED_KEY: AsyncPrefKey<Boolean> =
+            AsyncPrefKey.boolean("com.urbanairship.automation.ledger.backfillCompleted")
+
+        /**
+         * Builds the backfill ledger events for a set of migrating schedules.
+         *
+         * Each schedule with a non-zero execution count contributes a single
+         * `execution` event with `result: backfill` and `count` equal to that
+         * legacy count. Backfill events carry no `trigger_id` and are never
+         * recorded under a `shared_id`, so pre-ledger history stays scoped to
+         * the schedule and never pollutes a pooled group tally. The timestamp
+         * is the migration time — an upper bound on when those executions
+         * actually happened.
+         */
+        internal fun backfillLedgerEvents(
+            schedules: List<AutomationScheduleData>,
+            timestamp: Instant
+        ): List<LedgerEvent> {
+            return schedules.mapNotNull { data ->
+                val count = data.executionCount
+                if (count <= 0) return@mapNotNull null
+
+                LedgerEvent.Execution(
+                    scheduleId = data.schedule.identifier,
+                    sharedId = null,
+                    triggerId = null,
+                    timestamp = timestamp,
+                    count = count,
+                    result = LedgerExecutionResult.BACKFILL,
+                    cancel = null
+                )
+            }
+        }
+    }
 }
