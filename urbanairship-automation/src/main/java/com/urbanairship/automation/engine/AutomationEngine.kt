@@ -51,6 +51,9 @@ internal interface AutomationEngineInterface {
     suspend fun getSchedules(): List<AutomationSchedule>
     suspend fun getSchedule(identifier: String): AutomationSchedule?
     suspend fun getSchedules(group: String): List<AutomationSchedule>
+
+    /** Reconciles the ledger against the current schedules: retention + compaction. */
+    suspend fun reconcileLedger()
 }
 
 /** @hide */
@@ -286,6 +289,24 @@ internal class AutomationEngine(
         store.deleteSchedules(ids)
         triggerProcessor.cancel(ids)
         cancelPreprocessDelayJobs()
+    }
+
+    override suspend fun reconcileLedger(): Unit = withContext(dispatcher) {
+        waitForScheduleRestore()
+
+        UALog.d { "Reconciling ledger" }
+
+        // The persisted schedules, not the filtered public list: a schedule
+        // lingers in the store through its edit grace period after dropping out
+        // of a listing, so its ledger IDs stay live here until then — giving its
+        // events a tail rather than dropping them the moment the listing
+        // changes.
+        val schedules = store.getSchedules().map { it.schedule }
+
+        ledger.reconcile(
+            liveScheduleIds = schedules.map { it.identifier }.toSet(),
+            liveSharedIds = schedules.mapNotNull { it.ledgerConfig?.sharedId }.toSet()
+        )
     }
 
     override suspend fun getSchedules(): List<AutomationSchedule> = withContext(dispatcher) {

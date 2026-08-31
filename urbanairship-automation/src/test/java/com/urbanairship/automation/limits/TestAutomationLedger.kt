@@ -6,7 +6,8 @@ import java.time.Instant
 
 /**
  * Spy [AutomationLedgerInterface] used across executor/preparer/engine tests to
- * assert exactly which ledger events a code path records.
+ * assert exactly which ledger events a code path records, and which live IDs it
+ * reconciles against.
  */
 internal class TestAutomationLedger : AutomationLedgerInterface {
 
@@ -38,6 +39,16 @@ internal class TestAutomationLedger : AutomationLedgerInterface {
             val cancel: Boolean,
             val since: Instant
         ) : Recorded()
+
+        /**
+         * A reconciliation pass. Retention and compaction themselves are
+         * covered by `LedgerStoreTest`; this only captures the live IDs the
+         * caller derived.
+         */
+        data class Reconciled(
+            val liveScheduleIds: Set<String>,
+            val liveSharedIds: Set<String>
+        ) : Recorded()
     }
 
     val recorded = mutableListOf<Recorded>()
@@ -58,6 +69,10 @@ internal class TestAutomationLedger : AutomationLedgerInterface {
         cancel: Boolean
     ) {
         recorded.add(Recorded.Execution(scheduleId, sharedId, triggerId, result, cancel))
+    }
+
+    override suspend fun reconcile(liveScheduleIds: Set<String>, liveSharedIds: Set<String>) {
+        recorded.add(Recorded.Reconciled(liveScheduleIds, liveSharedIds))
     }
 
     override suspend fun recordExecutionIfNoneSince(

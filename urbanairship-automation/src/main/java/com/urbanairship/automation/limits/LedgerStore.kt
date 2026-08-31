@@ -3,6 +3,7 @@
 package com.urbanairship.automation.limits
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import com.urbanairship.UALog
 import com.urbanairship.automation.limits.storage.LedgerDao
 import com.urbanairship.automation.limits.storage.LedgerDatabase
@@ -10,6 +11,7 @@ import com.urbanairship.automation.limits.storage.LedgerEventEntity
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonException
 import com.urbanairship.util.SerialQueue
+import java.time.Instant
 
 /**
  * Persists and queries [LedgerEvent]s.
@@ -18,7 +20,8 @@ import com.urbanairship.util.SerialQueue
  * during limit checks are handled by higher layers. It supports appending
  * events, querying the events eligible for a schedule's limit evaluation
  * (events recorded under the schedule's own ID or its current shared group
- * ID), and deleting events by scope.
+ * ID), deleting events by scope, and the two maintenance passes that bound
+ * storage — retention and compaction.
  */
 internal interface LedgerStoreInterface {
 
@@ -51,6 +54,28 @@ internal interface LedgerStoreInterface {
 
     /** Deletes every event recorded under any of the given [scopes]. */
     suspend fun deleteEvents(scopes: List<LedgerScope>)
+
+    /**
+     * Retention: drops every event whose recording scopes are all dead.
+     *
+     * An event survives while any of the IDs it was recorded under is still
+     * live, so a shared group's pooled history outlives individual variants. An
+     * event is deleted only when its `scheduleId` is not in [liveScheduleIds]
+     * **and** its `sharedId` (if any) is not in [liveSharedIds].
+     *
+     * @param liveScheduleIds Schedule IDs that still reference the ledger.
+     * @param liveSharedIds Shared group IDs that still reference the ledger.
+     */
+    suspend fun retainEvents(liveScheduleIds: Set<String>, liveSharedIds: Set<String>)
+
+    /**
+     * Compaction: merges mergeable events per the age-tiered policy of
+     * [LedgerCompactor] and enforces the global backstop cap, rewriting the
+     * merged events in place.
+     *
+     * @param now Reference time used to bucket events by age.
+     */
+    suspend fun compact(now: Instant)
 }
 
 internal class LedgerStore(
@@ -82,15 +107,7 @@ internal class LedgerStore(
             // The query already orders by record time. Skip any undecodable rows
             // (e.g. a forward-incompatible event written by a newer SDK) rather
             // than failing the whole query.
-            dao.getEvents(scheduleId, sharedId)
-                .mapNotNull { entity ->
-                    try {
-                        LedgerEvent.fromJson(entity.body)
-                    } catch (e: JsonException) {
-                        UALog.e(e) { "Failed to decode ledger event, skipping: ${entity.body}" }
-                        null
-                    }
-                }
+            dao.getEvents(scheduleId, sharedId).mapNotNull(::decode)
         }
     }
 
@@ -109,6 +126,123 @@ internal class LedgerStore(
             val sharedIds = scopes.filterIsInstance<LedgerScope.Shared>().map { it.sharedId }
             dao.deleteEvents(scheduleIds, sharedIds)
         }
+    }
+
+    override suspend fun retainEvents(liveScheduleIds: Set<String>, liveSharedIds: Set<String>) {
+        UALog.v {
+            "Retaining ledger events for live schedules $liveScheduleIds shared $liveSharedIds"
+        }
+
+        queue.run {
+            // One predicate delete, so the common case — nothing orphaned —
+            // reads no rows at all.
+            if (liveScheduleIds.size + liveSharedIds.size <= MAX_LIVE_ID_PARAMETERS) {
+                dao.deleteOrphanedEvents(liveScheduleIds, liveSharedIds)
+                return@run
+            }
+
+            // Past the statement's variable limit the predicate cannot be bound,
+            // and `NOT IN` cannot be batched the way `IN` can, since a chunk
+            // would delete the rows another chunk keeps. Fall back to testing
+            // the rows in memory: the scope query loads no bodies, and the
+            // ledger is capped.
+            val orphanIds = dao.getEventScopes()
+                .filter { scope ->
+                    scope.scheduleId !in liveScheduleIds &&
+                            (scope.sharedId == null || scope.sharedId !in liveSharedIds)
+                }
+                .map { it.id }
+
+            if (orphanIds.isEmpty()) {
+                return@run
+            }
+
+            UALog.v { "Deleting ${orphanIds.size} orphaned ledger events" }
+            dao.deleteByIds(orphanIds)
+        }
+    }
+
+    override suspend fun compact(now: Instant) {
+        compact(now, LedgerCompactor.DEFAULT_MAX_EVENTS)
+    }
+
+    /**
+     * Cap-injectable variant used by tests to exercise the backstop path
+     * without seeding tens of thousands of rows.
+     */
+    @VisibleForTesting
+    internal suspend fun compact(now: Instant, maxEvents: Int) {
+        queue.run {
+            // Cheap pre-check before the full fetch and decode: compaction can
+            // only remove rows when the ledger is over the global cap (the
+            // backstop) or holds events old enough to age-bucket. Both are
+            // answerable from indexed columns, so the common case — a ledger
+            // under the cap with nothing older than a year — decodes nothing.
+            val total = dao.count()
+            if (total == 0) {
+                return@run
+            }
+
+            val oldest = dao.oldestTimestamp()?.let(Instant::ofEpochMilli)
+            val hasAgedEvents =
+                oldest != null && oldest.isBefore(now.minus(LedgerCompactor.RAW_MAX_AGE))
+            if (total <= maxEvents && !hasAgedEvents) {
+                return@run
+            }
+
+            // Undecodable rows are left in place rather than dropped, so a
+            // forward-incompatible event written by a newer SDK survives a
+            // compaction pass by this one. They cannot be merged but still
+            // occupy the cap, so they come off the compactor's budget.
+            val rows = dao.getAllEvents()
+            val decodable = rows.mapNotNull { row -> decode(row)?.let { row.id to it } }
+            val undecodable = rows.size - decodable.size
+            val budget = (maxEvents - undecodable).coerceAtLeast(0)
+
+            val plan = LedgerCompactor.plan(decodable, now, budget)
+            val remaining = rows.size - plan.replacedIds.size + plan.merged.size
+
+            // Non-mergeable events can keep the ledger over the cap; log it
+            // rather than silently exceeding the bound.
+            if (remaining > maxEvents) {
+                UALog.v {
+                    "Ledger still holds $remaining events after compaction, over the cap " +
+                            "of $maxEvents; remaining events are non-mergeable."
+                }
+            }
+
+            if (plan.merged.isEmpty()) {
+                return@run
+            }
+
+            UALog.v { "Compacting ledger from ${rows.size} to $remaining events" }
+
+            // Only the rows that folded together are rewritten; every other row
+            // keeps its identity, so one merged pair does not churn the ledger.
+            dao.replaceEvents(
+                deleteIds = plan.replacedIds,
+                events = plan.merged.map { it.toEntity() }
+            )
+        }
+    }
+
+    /**
+     * Decodes a stored row, or null when its body cannot be parsed (e.g. a
+     * forward-incompatible event written by a newer SDK).
+     */
+    private fun decode(entity: LedgerEventEntity): LedgerEvent? = try {
+        LedgerEvent.fromJson(entity.body)
+    } catch (e: JsonException) {
+        UALog.e(e) { "Failed to decode ledger event, skipping: ${entity.body}" }
+        null
+    }
+
+    private companion object {
+        /**
+         * Live IDs are bound one per SQL variable and a statement is capped at
+         * 999, so beyond this many the predicate delete cannot be used.
+         */
+        const val MAX_LIVE_ID_PARAMETERS = 999
     }
 
     private fun LedgerEvent.toEntity(): LedgerEventEntity = LedgerEventEntity(

@@ -337,8 +337,11 @@ public class AutomationEngineTest {
         assertNull(engine.getSchedule(schedule.identifier))
     }
 
-    private fun ledgerSchedule(sharedId: String?): AutomationSchedule = AutomationSchedule(
-        identifier = "test",
+    private fun ledgerSchedule(
+        sharedId: String?,
+        identifier: String = "test"
+    ): AutomationSchedule = AutomationSchedule(
+        identifier = identifier,
         triggers = listOf(),
         data = AutomationSchedule.ScheduleData.InAppMessageData(
             InAppMessage(
@@ -573,5 +576,57 @@ public class AutomationEngineTest {
         advanceUntilIdle()
 
         assertEquals(AutomationScheduleState.IDLE, stored.scheduleState)
+    }
+
+    /**
+     * Reconciliation derives the live ledger IDs from the persisted schedules —
+     * every schedule ID, plus the shared IDs of the schedules that have one.
+     */
+    @Test
+    public fun testReconcileLedgerDerivesLiveIds(): TestResult = runTest {
+        val withGroup = ledgerSchedule(sharedId = "group-1", identifier = "a")
+        val withoutGroup = ledgerSchedule(sharedId = null, identifier = "b")
+        val otherGroup = ledgerSchedule(sharedId = "group-2", identifier = "c")
+
+        coEvery { store.getSchedules() } answers {
+            listOf(withGroup, withoutGroup, otherGroup).map {
+                ledgerScheduleData(it, AutomationScheduleState.IDLE, triggerInfo = null)
+            }
+        }
+
+        engine.start()
+        advanceUntilIdle()
+        engine.reconcileLedger()
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Reconciled(
+                    liveScheduleIds = setOf("a", "b", "c"),
+                    liveSharedIds = setOf("group-1", "group-2")
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    @Test
+    public fun testReconcileLedgerWithNoSchedulesPassesEmptyLiveIds(): TestResult = runTest {
+        coEvery { store.getSchedules() } answers { emptyList() }
+
+        engine.start()
+        advanceUntilIdle()
+        engine.reconcileLedger()
+        advanceUntilIdle()
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Reconciled(
+                    liveScheduleIds = emptySet(),
+                    liveSharedIds = emptySet()
+                )
+            ),
+            ledger.recorded
+        )
     }
 }

@@ -21,6 +21,7 @@ import kotlin.time.Duration.Companion.seconds
 import io.mockk.coEvery
 import io.mockk.coJustRun
 import io.mockk.coVerify
+import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
@@ -55,6 +56,7 @@ public class AutomationRemoteDataSubscriberTest {
 
     private val engine: AutomationEngineInterface = mockk {
         coEvery { this@mockk.getSchedules() } returns emptyList()
+        coJustRun { this@mockk.reconcileLedger() }
     }
 
     private val frequencyLimitManager: FrequencyLimitManager = mockk {
@@ -496,5 +498,83 @@ public class AutomationRemoteDataSubscriberTest {
             ?.get(InAppRemoteData.REMOTE_INFO_METADATA_KEY)
             ?.let { RemoteDataInfo(it) }
             ?.source
+    }
+
+    /**
+     * Ledger cleanup runs once per update, after the schedules missing from the
+     * listing have been synced — so retention sees the post-sync schedule set.
+     */
+    @Test
+    public fun testReconcileLedgerRunsAfterUpdate(): TestResult = runTest {
+        val appSchedules = makeSchedules(source = RemoteDataSource.APP)
+        val data = InAppRemoteData(
+            payload = mapOf(
+                RemoteDataSource.APP to InAppRemoteData.Payload(
+                    InAppRemoteData.Data(appSchedules, emptyList()),
+                    clock.now()
+                )
+            )
+        )
+
+        coJustRun { engine.upsertSchedules(any()) }
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+        updatesFlow.emit(data)
+        advanceUntilIdle()
+
+        coVerify(timeout = 2000, exactly = 1) { engine.reconcileLedger() }
+        coVerifyOrder {
+            engine.upsertSchedules(appSchedules)
+            engine.reconcileLedger()
+        }
+    }
+
+    /**
+     * A failed cleanup must not tear down the subscription: the next update
+     * still syncs and still reconciles.
+     */
+    @Test
+    public fun testReconcileLedgerErrorIsSwallowed(): TestResult = runTest {
+        val firstSchedules = makeSchedules(source = RemoteDataSource.APP)
+
+        coJustRun { engine.upsertSchedules(any()) }
+        coJustRun { engine.stopSchedules(any()) }
+        coEvery { engine.reconcileLedger() } throws IllegalStateException("reconcile failed")
+
+        subscriber.subscribe()
+        advanceUntilIdle()
+
+        updatesFlow.emit(
+            InAppRemoteData(
+                payload = mapOf(
+                    RemoteDataSource.APP to InAppRemoteData.Payload(
+                        InAppRemoteData.Data(firstSchedules, emptyList()),
+                        clock.now()
+                    )
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        // Created after the clock moves, so the second update reads as newer
+        // than the source info the first one stored.
+        clock.currentTime = clock.currentTime.plusMillis(1)
+        val secondSchedules = makeSchedules(source = RemoteDataSource.APP)
+
+        updatesFlow.emit(
+            InAppRemoteData(
+                payload = mapOf(
+                    RemoteDataSource.APP to InAppRemoteData.Payload(
+                        InAppRemoteData.Data(secondSchedules, emptyList()),
+                        clock.now()
+                    )
+                )
+            )
+        )
+        advanceUntilIdle()
+
+        coVerify(timeout = 2000) { engine.upsertSchedules(secondSchedules) }
+        coVerify(exactly = 2) { engine.reconcileLedger() }
     }
 }

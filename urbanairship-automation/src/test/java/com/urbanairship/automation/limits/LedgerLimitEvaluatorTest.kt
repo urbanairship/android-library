@@ -167,6 +167,11 @@ public class LedgerLimitEvaluatorTest {
                 throw IllegalStateException("read failed")
             override suspend fun hasEvents(scheduleId: String): Boolean = false
             override suspend fun deleteEvents(scopes: List<LedgerScope>): Unit = Unit
+            override suspend fun retainEvents(
+                liveScheduleIds: Set<String>,
+                liveSharedIds: Set<String>
+            ): Unit = Unit
+            override suspend fun compact(now: Instant): Unit = Unit
         }
 
         // A ledger read failure must never wedge execution.

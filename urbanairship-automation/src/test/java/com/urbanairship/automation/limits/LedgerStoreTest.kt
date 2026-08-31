@@ -8,6 +8,8 @@ import com.urbanairship.automation.limits.storage.LedgerDatabase
 import com.urbanairship.automation.limits.storage.LedgerEventEntity
 import com.urbanairship.json.JsonValue
 import java.time.Instant
+import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
@@ -289,4 +291,271 @@ public class LedgerStoreTest {
             assertEquals(event, decoded)
         }
     }
+
+    // MARK: - Retention
+
+    @Test
+    public fun testRetainKeepsLiveScheduleAndDropsOrphans(): TestResult = runTest {
+        val liveOwn = execution(scheduleId = "live")
+        val liveViaGroup = execution(scheduleId = "dead-1", sharedId = "live-group")
+        val orphanWithGroup = execution(scheduleId = "dead-2", sharedId = "dead-group")
+        val orphanNoGroup = execution(scheduleId = "dead-3")
+
+        store.recordEvents(listOf(liveOwn, liveViaGroup, orphanWithGroup, orphanNoGroup))
+
+        store.retainEvents(liveScheduleIds = setOf("live"), liveSharedIds = setOf("live-group"))
+
+        // Kept: the own event of a live schedule, and an event pooled under a
+        // live group even though its recording schedule is gone.
+        assertEquals(listOf(liveOwn), store.events(scheduleId = "live", sharedId = null))
+        assertEquals(
+            listOf(liveViaGroup),
+            store.events(scheduleId = "dead-1", sharedId = "live-group")
+        )
+
+        // Dropped: fully orphaned events, including one with no shared group.
+        assertTrue(store.events(scheduleId = "dead-2", sharedId = "dead-group").isEmpty())
+        assertTrue(store.events(scheduleId = "dead-3", sharedId = null).isEmpty())
+    }
+
+    @Test
+    public fun testRetainWithNoLiveIdsDropsEverything(): TestResult = runTest {
+        store.recordEvents(
+            listOf(execution(scheduleId = "a"), execution(scheduleId = "b", sharedId = "g"))
+        )
+
+        store.retainEvents(liveScheduleIds = emptySet(), liveSharedIds = emptySet())
+
+        assertTrue(store.events(scheduleId = "a", sharedId = "g").isEmpty())
+        assertTrue(store.events(scheduleId = "b", sharedId = "g").isEmpty())
+    }
+
+    @Test
+    public fun testRetainKeepsEverythingWhenAllIdsAreLive(): TestResult = runTest {
+        val events = listOf(
+            execution(scheduleId = "a"),
+            execution(scheduleId = "b", sharedId = "g")
+        )
+        store.recordEvents(events)
+
+        store.retainEvents(liveScheduleIds = setOf("a", "b"), liveSharedIds = setOf("g"))
+
+        assertEquals(2, db.dao.count())
+    }
+
+    /**
+     * A row this SDK cannot decode still has readable scope columns, so
+     * retention judges it like any other row rather than leaking it forever.
+     */
+    @Test
+    public fun testRetainDropsUndecodableOrphans(): TestResult = runTest {
+        db.dao.insertAll(listOf(undecodableRow(scheduleId = "dead", timestamp = 1)))
+
+        store.retainEvents(liveScheduleIds = setOf("live"), liveSharedIds = emptySet())
+
+        assertEquals(0, db.dao.count())
+    }
+
+    // MARK: - Compaction
+
+    @Test
+    public fun testCompactMergesMergeableRows(): TestResult = runTest {
+        store.recordEvents(
+            listOf(
+                execution(scheduleId = "s", timestamp = date(2017, 3, 5)),
+                execution(scheduleId = "s", timestamp = date(2017, 9, 20))
+            )
+        )
+
+        store.compact(now = date(2020, 1, 1))
+
+        val result = store.events(scheduleId = "s", sharedId = null)
+        assertEquals(1, result.size)
+        assertEquals(2, result.first().effectiveCount)
+        assertEquals(date(2017, 9, 20), result.first().timestamp)
+    }
+
+    /**
+     * Under the cap with every event younger than a year, the cheap pre-check
+     * skips the decode entirely. Two recent events sharing an exact timestamp
+     * would merge in the raw tier if compaction ran, so their survival proves
+     * the guard short-circuited.
+     */
+    @Test
+    public fun testCompactSkipsWhenAllRecentAndUnderCap(): TestResult = runTest {
+        val recent = date(2019, 12, 25)
+        store.recordEvents(
+            listOf(
+                execution(scheduleId = "s", timestamp = recent),
+                execution(scheduleId = "s", timestamp = recent)
+            )
+        )
+
+        store.compact(now = date(2020, 1, 1))
+
+        assertEquals(2, store.events(scheduleId = "s", sharedId = null).size)
+    }
+
+    /**
+     * Over the cap, the pre-check must not short-circuit even when every event
+     * is recent: the backstop still has to run.
+     */
+    @Test
+    public fun testCompactOverCapCompactsEvenWhenRecent(): TestResult = runTest {
+        val recent = date(2019, 12, 25)
+        store.recordEvents(
+            listOf(
+                execution(scheduleId = "s", timestamp = recent),
+                execution(scheduleId = "s", timestamp = recent)
+            )
+        )
+
+        store.compact(now = date(2020, 1, 1), maxEvents = 1)
+
+        val result = store.events(scheduleId = "s", sharedId = null)
+        assertEquals(1, result.size)
+        assertEquals(2, result.first().effectiveCount)
+    }
+
+    /**
+     * When any event is old enough to age-bucket, the pre-check lets the decode
+     * proceed and the pass runs over the whole table — which also merges the
+     * recent same-timestamp duplicates a skipped run would have left alone.
+     */
+    @Test
+    public fun testCompactProceedsWhenAnyEventIsOld(): TestResult = runTest {
+        val recent = date(2019, 12, 25)
+        store.recordEvents(
+            listOf(
+                execution(scheduleId = "s", timestamp = recent),
+                execution(scheduleId = "s", timestamp = recent),
+                execution(scheduleId = "old", timestamp = date(2017, 3, 5))
+            )
+        )
+
+        store.compact(now = date(2020, 1, 1))
+
+        val result = store.events(scheduleId = "s", sharedId = null)
+        assertEquals(1, result.size)
+        assertEquals(2, result.first().effectiveCount)
+    }
+
+    @Test
+    public fun testCompactEmptyLedgerIsNoop(): TestResult = runTest {
+        store.compact(now = date(2020, 1, 1))
+
+        assertEquals(0, db.dao.count())
+    }
+
+    @Test
+    public fun testCompactLeavesNonMergeableRowsAlone(): TestResult = runTest {
+        val events = listOf(
+            execution(scheduleId = "s", timestamp = date(2017, 3, 5)),
+            execution(
+                scheduleId = "s",
+                timestamp = date(2017, 9, 20),
+                result = LedgerExecutionResult.AUDIENCE_MISS
+            )
+        )
+        store.recordEvents(events)
+
+        store.compact(now = date(2020, 1, 1))
+
+        assertEquals(events, store.events(scheduleId = "s", sharedId = null))
+    }
+
+    /**
+     * An event this SDK cannot decode is left in place rather than dropped, so
+     * a forward-incompatible event written by a newer SDK survives a compaction
+     * pass by this one.
+     */
+    @Test
+    public fun testCompactPreservesUndecodableRows(): TestResult = runTest {
+        store.recordEvents(
+            listOf(
+                execution(scheduleId = "s", timestamp = date(2017, 3, 5)),
+                execution(scheduleId = "s", timestamp = date(2017, 9, 20))
+            )
+        )
+        db.dao.insertAll(listOf(undecodableRow(scheduleId = "s", timestamp = 1)))
+
+        store.compact(now = date(2020, 1, 1))
+
+        // The two mergeable events collapsed into one; the undecodable row stayed.
+        assertEquals(2, db.dao.count())
+        assertEquals(1, store.events(scheduleId = "s", sharedId = null).size)
+    }
+
+    /**
+     * A merge rewrites only the rows that folded together. Rows nothing merged
+     * with keep their primary key, proving they were never deleted and
+     * re-inserted — a large ledger is not churned to persist one merged pair.
+     */
+    @Test
+    public fun testCompactRewritesOnlyMergedRows(): TestResult = runTest {
+        store.recordEvents(
+            listOf(
+                execution(scheduleId = "s", timestamp = date(2017, 3, 5)),
+                execution(scheduleId = "s", timestamp = date(2017, 9, 20)),
+                // Same yearly bucket, different scope: nothing to merge with.
+                execution(scheduleId = "other", timestamp = date(2017, 5, 1))
+            )
+        )
+        val untouchedId = db.dao.getAllEvents().single { it.scheduleId == "other" }.id
+
+        store.compact(now = date(2020, 1, 1))
+
+        assertEquals(2, db.dao.count())
+        assertEquals(untouchedId, db.dao.getAllEvents().single { it.scheduleId == "other" }.id)
+    }
+
+    // MARK: - Retention edge cases
+
+    /**
+     * With no live shared groups, retention still judges rows on their schedule
+     * alone — SQLite reads `sharedId NOT IN ()` as true, so the empty set must
+     * not orphan a live schedule's events.
+     */
+    @Test
+    public fun testRetainWithNoLiveSharedIdsKeepsLiveSchedules(): TestResult = runTest {
+        val live = execution(scheduleId = "live", sharedId = "group-1")
+        store.recordEvents(listOf(live, execution(scheduleId = "dead", sharedId = "group-1")))
+
+        store.retainEvents(liveScheduleIds = setOf("live"), liveSharedIds = emptySet())
+
+        assertEquals(listOf(live), store.events(scheduleId = "live", sharedId = null))
+        assertEquals(1, db.dao.count())
+    }
+
+    /** The mirror case: no live schedules, but a live group still pools history. */
+    @Test
+    public fun testRetainWithNoLiveScheduleIdsKeepsLiveGroups(): TestResult = runTest {
+        val pooled = execution(scheduleId = "dead", sharedId = "live-group")
+        store.recordEvents(listOf(pooled, execution(scheduleId = "dead", sharedId = null)))
+
+        store.retainEvents(liveScheduleIds = emptySet(), liveSharedIds = setOf("live-group"))
+
+        assertEquals(listOf(pooled), store.events(scheduleId = "dead", sharedId = "live-group"))
+        assertEquals(1, db.dao.count())
+    }
+
+    /**
+     * Past the SQL variable limit the predicate delete cannot be bound, so
+     * retention falls back to testing the rows in memory. Same outcome.
+     */
+    @Test
+    public fun testRetainFallsBackForOversizedLiveIdSets(): TestResult = runTest {
+        val live = execution(scheduleId = "live")
+        store.recordEvents(listOf(live, execution(scheduleId = "dead")))
+
+        val manyLiveIds = (0 until 1200).map { "schedule-$it" }.toSet() + "live"
+        store.retainEvents(liveScheduleIds = manyLiveIds, liveSharedIds = emptySet())
+
+        assertEquals(listOf(live), store.events(scheduleId = "live", sharedId = null))
+        assertEquals(1, db.dao.count())
+    }
+
+    /** UTC, matching the zone the compactor buckets in. */
+    private fun date(year: Int, month: Int, day: Int): Instant =
+        ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneOffset.UTC).toInstant()
 }
