@@ -214,24 +214,32 @@ internal class ContainerLayoutView(
         // keep the content size they measure below, matching iOS, where a percent with no parent
         // size to work from falls back to auto rather than collapsing.
         //
-        // A borrowed viewport is a real length and settles the axis on its own. An `AT_MOST` only
-        // tells us how much room we have, so it takes a non-percent item to give the axis a size
-        // worth taking a percentage of. Without one the base would be 0 and every item would
-        // collapse — the same shape the stacks now fall back to content on.
+        // A borrowed viewport is a real length and settles the axis on its own. Failing that it
+        // takes an item supplying a length to give the axis a size worth taking a percentage of —
+        // an `AT_MOST` only says how much room we have, and an `UNSPECIFIED` not even that. Without
+        // one the base would be 0 and every item would collapse.
+        //
+        // An item supplying a length is worth resolving against however we were measured, which is
+        // what the stacks already do: `solveMainAxisLength` takes a borrowed viewport first and
+        // otherwise solves from its own fixed content, bounded or not. Requiring `AT_MOST` here left
+        // a percent item at its own content in any hierarchy that ran out of length basis above us,
+        // which a `height: auto` modal is enough to do — its root stack has only a `100%` item to
+        // solve from, so it measures this whole subtree unbounded and a `height: 100%` background
+        // image stayed at the bitmap's intrinsic size.
         //
         // An item at exactly the whole counts too: it supplies no length, but 100% of our largest
         // item is that item, so resolving against the first pass settles instead of collapsing.
         // Without this, two `100% x 100%` items left each other with nothing to take a share of.
+        // Bounded only, matching the stacks, where the no-solution case — percentages summing to
+        // the whole or past it — likewise takes the bound only when there is a real one.
         val resolveWidths = autoWidths &&
                 (borrowedWidth > 0 ||
-                        (widthMode == MeasureSpec.AT_MOST &&
-                                (establishesLength(horizontal = true) ||
-                                        hasFullPercentItem(horizontal = true))))
+                        establishesLength(horizontal = true) ||
+                        (widthMode == MeasureSpec.AT_MOST && hasFullPercentItem(horizontal = true)))
         val resolveHeights = autoHeights &&
                 (borrowedHeight > 0 ||
-                        (heightMode == MeasureSpec.AT_MOST &&
-                                (establishesLength(horizontal = false) ||
-                                        hasFullPercentItem(horizontal = false))))
+                        establishesLength(horizontal = false) ||
+                        (heightMode == MeasureSpec.AT_MOST && hasFullPercentItem(horizontal = false)))
 
         if (frameHeightRatios.size() == 0 && !autoWidths && !autoHeights) {
             super.onMeasure(widthMeasureSpec, heightMeasureSpec)
@@ -241,10 +249,10 @@ internal class ContainerLayoutView(
         // First pass: measure percent items as auto. They can't resolve against a size we don't
         // have yet, and this clears any size left on them by an earlier pass.
         if (autoWidths) {
-            forEachFrame(framePercentWidths) { it.width = ViewGroup.LayoutParams.WRAP_CONTENT }
+            forEachFrame(framePercentWidths) { it.width = LayoutParams.WRAP_CONTENT }
         }
         if (autoHeights) {
-            forEachFrame(framePercentHeights) { it.height = ViewGroup.LayoutParams.WRAP_CONTENT }
+            forEachFrame(framePercentHeights) { it.height = LayoutParams.WRAP_CONTENT }
         }
 
         // Ratio items measure at WRAP_CONTENT height so the `"H,ratio:1"` the constraint set left on
@@ -254,8 +262,7 @@ internal class ContainerLayoutView(
         // pass below.
         for (i in 0 until frameHeightRatios.size()) {
             val frame = findViewById<View>(frameHeightRatios.keyAt(i)) ?: continue
-            val lp = frame.layoutParams as ConstraintLayout.LayoutParams
-            lp.height = ViewGroup.LayoutParams.WRAP_CONTENT
+            frame.applyParams { it.height = LayoutParams.WRAP_CONTENT }
         }
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
 
@@ -279,7 +286,6 @@ internal class ContainerLayoutView(
             val frameId = frameHeightRatios.keyAt(i)
             val ratio = frameHeightRatios.valueAt(i)
             val frame = findViewById<View>(frameId) ?: continue
-            val lp = frame.layoutParams as ConstraintLayout.LayoutParams
 
             // The solved width when there was one, otherwise whatever the item measured to without
             // one — the same fallback a percent item with no ratio gets here, so the two agree.
@@ -293,10 +299,12 @@ internal class ContainerLayoutView(
                 naturalW to naturalH
             }
 
-            if (lp.width != correctW || lp.height != correctH) {
-                lp.width = correctW
-                lp.height = correctH
-                needsRemeasure = true
+            frame.applyParams { lp ->
+                if (lp.width != correctW || lp.height != correctH) {
+                    lp.width = correctW
+                    lp.height = correctH
+                    needsRemeasure = true
+                }
             }
         }
 
@@ -307,10 +315,11 @@ internal class ContainerLayoutView(
      * The size percent items resolve against on one axis: the viewport borrowed from a scroll
      * layout when we were measured unbounded, or otherwise the box we wrap to.
      *
-     * That box is the extent of our *non-percent* items only. A container sized to its content
-     * can't take its size from an item that is a fraction of it — `H = max(H * percent)` has no
-     * solution but zero — so an auto container holding nothing but percent items measures 0 on
-     * that axis, and its items with it. This is where iOS's remeasure loop converges.
+     * That box is the extent of every item except the ones that are a *fraction* of us. A container
+     * sized to its content can't take its size from a fraction of itself — `H = max(H * percent)`
+     * has no solution but zero. An item at exactly the whole is not that: it is our largest item
+     * whenever it is the largest, and its content is a length like any other. This is where iOS's
+     * remeasure loop converges.
      */
     private fun percentBase(
         mode: Int,
@@ -318,12 +327,29 @@ internal class ContainerLayoutView(
         percents: SparseArray<Float>,
         horizontal: Boolean
     ): Int {
-        if (mode == MeasureSpec.UNSPECIFIED) return borrowed
+        // A borrowed viewport settles the axis outright. Without one, an unbounded spec carries no
+        // size to fall back on, so the content box below is all there is — the same order
+        // `solveMainAxisLength` takes it in.
+        if (mode == MeasureSpec.UNSPECIFIED && borrowed > 0) return borrowed
 
+        // Our non-percent items, plus any item at exactly the whole. We overlay rather than stack,
+        // so our size is our largest item — and an item at the whole *is* that largest item
+        // whenever it is the largest. Its first-pass measurement is its own content, a real length
+        // like any other, so counting it settles rather than dividing.
+        //
+        // A fraction still can't decide us: resolving a 60% item against its own content would only
+        // shrink it below that content and call the result stable.
+        //
+        // Counting the whole matters because leaving it out left a `100%` item resolving against
+        // whichever non-percent sibling happened to be present, however small — the dismiss button
+        // on a modal scene collapsed a full-page pager to 48pt.
         var base = 0
         for (i in 0 until childCount) {
             val child = getChildAt(i)
-            if (child.visibility == GONE || percents.indexOfKey(child.id) >= 0) continue
+            if (child.visibility == GONE) continue
+            // Absent from `percents` boxes to null: not a percent on this axis, so it counts.
+            val percent = percents.get(child.id)
+            if (percent != null && percent != 1f) continue
             val lp = child.layoutParams as ConstraintLayout.LayoutParams
             base = max(
                 base,
@@ -333,27 +359,6 @@ internal class ContainerLayoutView(
                     child.measuredHeight + lp.topMargin + lp.bottomMargin
                 }
             )
-        }
-
-        // Percent frames are skipped above because a share of us can't be what decides us. When
-        // they are all we have that leaves nothing, and resolving against nothing is worse than not
-        // resolving at all — the items disappear instead of merely failing to line up. Their own
-        // first-pass measurement is their content, and the largest of it is what a container is, so
-        // the largest is what the whole resolves to and it settles there.
-        if (base == 0) {
-            for (i in 0 until childCount) {
-                val child = getChildAt(i)
-                if (child.visibility == GONE || percents.indexOfKey(child.id) < 0) continue
-                val lp = child.layoutParams as ConstraintLayout.LayoutParams
-                base = max(
-                    base,
-                    if (horizontal) {
-                        child.measuredWidth + lp.leftMargin + lp.rightMargin
-                    } else {
-                        child.measuredHeight + lp.topMargin + lp.bottomMargin
-                    }
-                )
-            }
         }
 
         return base
@@ -373,25 +378,26 @@ internal class ContainerLayoutView(
         var changed = false
         for (i in 0 until percents.size()) {
             val frame = findViewById<View>(percents.keyAt(i)) ?: continue
-            val lp = frame.layoutParams as ConstraintLayout.LayoutParams
-            val margins = if (horizontal) {
-                lp.leftMargin + lp.rightMargin
-            } else {
-                lp.topMargin + lp.bottomMargin
-            }
-            // A percentage covers the space the item occupies, margins included, so they come out
-            // of its share — the same rule the linear layout's slot distribution uses.
-            val resolved = (minOf((percents.valueAt(i) * base).toInt(), base) - margins)
-                .coerceAtLeast(0)
+            frame.applyParams { lp ->
+                val margins = if (horizontal) {
+                    lp.leftMargin + lp.rightMargin
+                } else {
+                    lp.topMargin + lp.bottomMargin
+                }
+                // A percentage covers the space the item occupies, margins included, so they come
+                // out of its share — the same rule the linear layout's slot distribution uses.
+                val resolved = (minOf((percents.valueAt(i) * base).toInt(), base) - margins)
+                    .coerceAtLeast(0)
 
-            if (horizontal) resolvedFrameWidths.put(percents.keyAt(i), resolved)
+                if (horizontal) resolvedFrameWidths.put(percents.keyAt(i), resolved)
 
-            if (horizontal && lp.width != resolved) {
-                lp.width = resolved
-                changed = true
-            } else if (!horizontal && lp.height != resolved) {
-                lp.height = resolved
-                changed = true
+                if (horizontal && lp.width != resolved) {
+                    lp.width = resolved
+                    changed = true
+                } else if (!horizontal && lp.height != resolved) {
+                    lp.height = resolved
+                    changed = true
+                }
             }
         }
         return changed
@@ -403,7 +409,37 @@ internal class ContainerLayoutView(
     ) {
         for (i in 0 until frames.size()) {
             val frame = findViewById<View>(frames.keyAt(i)) ?: continue
-            block(frame.layoutParams as ConstraintLayout.LayoutParams)
+            frame.applyParams(block)
+        }
+    }
+
+    /**
+     * Applies [block] to the frame's params, and tells the frame if they changed.
+     *
+     * Every size we solve here is written straight onto the params rather than through
+     * `setLayoutParams`, so nothing marks the frame. ConstraintLayout copies params into its solver
+     * in `setChildrenConstraints()`, which it only reaches from `updateHierarchy()` when one of its
+     * *children* reports `isLayoutRequested` — a dirty flag on the container itself doesn't do it.
+     * So on any pass where the children are already clean the solve is silently dropped and the
+     * solver reuses the previous pass's dimensions.
+     *
+     * That is two bugs. A modal shrinking for the IME left its page laid out at the old height,
+     * overflowing the top by the difference; and the bounded pass that corrects an unbounded one
+     * never landed, so a `height: 100%` item kept whatever the unbounded pass had settled on.
+     * ConstraintLayout's own source flags the shape — "window insets change may do that, we receive
+     * a second onMeasure before onLayout".
+     *
+     * [View.forceLayout] rather than [View.requestLayout]: it sets the same flag `isLayoutRequested`
+     * reads, without walking a layout request up the tree — not something to start from inside a
+     * measure pass. Only on a real change, so a settled hierarchy still measures clean.
+     */
+    private inline fun View.applyParams(block: (ConstraintLayout.LayoutParams) -> Unit) {
+        val lp = layoutParams as ConstraintLayout.LayoutParams
+        val width = lp.width
+        val height = lp.height
+        block(lp)
+        if (lp.width != width || lp.height != height) {
+            forceLayout()
         }
     }
 
