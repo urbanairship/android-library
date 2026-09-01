@@ -75,7 +75,8 @@ public object ThomasLayoutViewFactory {
             activityMonitor = displayArgs.inAppActivityMonitor,
             webViewClientFactory = displayArgs.webViewClientFactory,
             imageCache = displayArgs.imageCache,
-            isIgnoringSafeAreas = false // Embedded views never ignore safe areas?
+            isIgnoringSafeAreas = false, // Embedded views never ignore safe areas?
+            layoutVersion = displayArgs.payload.version
         )
 
         val viewModelProvider = ViewModelProvider(SimpleViewModelStoreOwner)

@@ -179,7 +179,8 @@ public class BannerLayout(
             activityMonitor,
             webViewClientFactory,
             imageCache,
-            placement.shouldIgnoreSafeArea()
+            placement.shouldIgnoreSafeArea(),
+            payload.version
         )
 
         val viewModelProvider = ViewModelProvider(BannerViewModelStores.owner(viewInstanceId))
