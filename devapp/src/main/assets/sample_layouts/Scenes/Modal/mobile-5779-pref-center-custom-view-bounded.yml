@@ -1,0 +1,103 @@
+version: 1
+presentation:
+  type: modal
+  dismiss_on_touch_outside: true
+  android:
+    disable_back_button: false
+  default_placement:
+    size:
+      width: 100%
+      height: 100%
+    position:
+      horizontal: center
+      vertical: center
+    shade_color:
+      default:
+        type: hex
+        hex: '#000000'
+        alpha: 0.2
+view:
+  type: container
+  items:
+    - size:
+        width: 100%
+        height: 100%
+      position:
+        horizontal: center
+        vertical: center
+      view:
+        type: linear_layout
+        direction: vertical
+        # Gray surroundings so the Preference Center's own white surface reveals its bounds.
+        # (The list's opaque white background occludes any color placed behind it.)
+        background_color:
+          default:
+            type: hex
+            hex: '#BDBDBD'
+            alpha: 1
+        items:
+          # Marker: the top edge of the Preference Center sits directly below this.
+          - size:
+              width: 100%
+              height: auto
+            margin:
+              top: 8
+              bottom: 8
+              start: 16
+              end: 16
+            view:
+              type: label
+              text: "START OF PREFERENCE CENTER (marker)"
+              text_appearance:
+                alignment: center
+                styles:
+                  - bold
+                font_size: 16
+                font_families:
+                  - sans-serif
+                color:
+                  default:
+                    type: hex
+                    hex: '#0000CC'
+                    alpha: 1
+          # auto -> content is measured unbounded, wraps, and the scroll_layout above scrolls.
+          # A fixed height would bound it instead, which isn't supported inside a
+          # scroll_layout: the host takes the drag, so the list could never be scrolled.
+          - size:
+              width: 100%
+              height: 400
+            margin:
+              top: 16
+              bottom: 16
+              start: 0
+              end: 0
+            view:
+              type: custom_view
+              name: pref_center_custom_view
+              properties:
+                pref_center_id: app_default
+          # Marker: if auto-height is respected, this sits right under the pref center
+          # content. If the custom view fills 100%, it gets pushed a full screen down.
+          - size:
+              width: 100%
+              height: auto
+            margin:
+              top: 8
+              bottom: 8
+              start: 16
+              end: 16
+            view:
+              type: label
+              text: "END OF PREFERENCE CENTER (marker)"
+              text_appearance:
+                alignment: center
+                styles:
+                  - bold
+                font_size: 16
+                font_families:
+                  - sans-serif
+                color:
+                  default:
+                    type: hex
+                    hex: '#008000'
+                    alpha: 1
