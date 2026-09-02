@@ -1,0 +1,257 @@
+public class com/urbanairship/messagecenter/ui/MessageActivity : androidx/fragment/app/FragmentActivity {
+	public static final field Companion Lcom/urbanairship/messagecenter/ui/MessageActivity$Companion;
+	public fun <init> ()V
+	public static final fun createIntent (Landroid/content/Context;Ljava/lang/String;)Landroid/content/Intent;
+	protected fun onCreate (Landroid/os/Bundle;)V
+	protected fun onNewIntent (Landroid/content/Intent;)V
+	public fun onOptionsItemSelected (Landroid/view/MenuItem;)Z
+	protected fun onSaveInstanceState (Landroid/os/Bundle;)V
+}
+
+public final class com/urbanairship/messagecenter/ui/MessageActivity$Companion {
+	public final fun createIntent (Landroid/content/Context;Ljava/lang/String;)Landroid/content/Intent;
+}
+
+public class com/urbanairship/messagecenter/ui/MessageCenterActivity : androidx/fragment/app/FragmentActivity {
+	public fun <init> ()V
+	protected fun onCreate (Landroid/os/Bundle;)V
+	protected fun onNewIntent (Landroid/content/Intent;)V
+}
+
+public class com/urbanairship/messagecenter/ui/MessageCenterFragment : androidx/fragment/app/Fragment {
+	public static final field Companion Lcom/urbanairship/messagecenter/ui/MessageCenterFragment$Companion;
+	public static final field MESSAGE_ID Ljava/lang/String;
+	public fun <init> ()V
+	public final fun closeMessage ()V
+	public final fun getDisplayedMessage ()Lcom/urbanairship/messagecenter/Message;
+	protected final fun getListFragment ()Lcom/urbanairship/messagecenter/ui/MessageCenterListFragment;
+	public final fun getListPredicate ()Lcom/urbanairship/Predicate;
+	public final fun getListener ()Lcom/urbanairship/messagecenter/ui/MessageCenterFragment$Listener;
+	protected final fun getMessageFragment ()Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment;
+	protected final fun getSlidingPaneLayout ()Landroidx/slidingpanelayout/widget/SlidingPaneLayout;
+	public final fun isListEditing ()Z
+	public final fun isTwoPane ()Z
+	public static final fun newInstance (Ljava/lang/String;)Lcom/urbanairship/messagecenter/ui/MessageCenterFragment;
+	public fun onConfigurationChanged (Landroid/content/res/Configuration;)V
+	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
+	public final fun setListEditing (Z)V
+	public final fun setListPredicate (Lcom/urbanairship/Predicate;)V
+	public final fun setListener (Lcom/urbanairship/messagecenter/ui/MessageCenterFragment$Listener;)V
+	public final fun showMessage (Lcom/urbanairship/messagecenter/Message;)V
+	public final fun showMessage (Ljava/lang/String;)V
+	public final fun showMessage (Ljava/lang/String;Ljava/lang/String;)V
+	public static synthetic fun showMessage$default (Lcom/urbanairship/messagecenter/ui/MessageCenterFragment;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)V
+}
+
+public final class com/urbanairship/messagecenter/ui/MessageCenterFragment$Companion {
+	public final fun newInstance (Ljava/lang/String;)Lcom/urbanairship/messagecenter/ui/MessageCenterFragment;
+}
+
+public abstract interface class com/urbanairship/messagecenter/ui/MessageCenterFragment$Listener {
+	public abstract fun onCloseMessage ()V
+	public abstract fun onListEditModeChanged (Z)V
+	public abstract fun onMessageLoadError (Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;)V
+	public abstract fun onMessageLoaded (Lcom/urbanairship/messagecenter/Message;)V
+	public abstract fun onShowMessage (Lcom/urbanairship/messagecenter/Message;)Z
+}
+
+public class com/urbanairship/messagecenter/ui/MessageCenterListFragment : com/urbanairship/messagecenter/ui/MessageListFragment {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getToolbar ()Landroidx/appcompat/widget/Toolbar;
+	public final fun isVerticalDividerVisible ()Z
+	protected fun onEditModeChanged (Z)V
+	public fun onGetLayoutInflater (Landroid/os/Bundle;)Landroid/view/LayoutInflater;
+	public fun onStop ()V
+	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
+	public final fun setToolbar (Landroidx/appcompat/widget/Toolbar;)V
+	public final fun setVerticalDividerVisible (Z)V
+	protected final fun setupToolbar (Landroidx/appcompat/widget/Toolbar;)V
+}
+
+public class com/urbanairship/messagecenter/ui/MessageCenterMessageFragment : com/urbanairship/messagecenter/ui/MessageFragment {
+	public static final field ARG_MESSAGE_ID Ljava/lang/String;
+	public static final field ARG_MESSAGE_TITLE Ljava/lang/String;
+	public static final field ARG_SHOW_NAV_ICON Ljava/lang/String;
+	public static final field Companion Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment$Companion;
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getOnMessageCloseListener ()Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment$OnMessageCloseListener;
+	public final fun getOnMessageDeletedListener ()Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment$OnMessageDeletedListener;
+	public final fun getToolbar ()Landroidx/appcompat/widget/Toolbar;
+	public final fun isToolbarNavIconVisible ()Z
+	public static final fun newInstance (Ljava/lang/String;)Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment;
+	public static final fun newInstance (Ljava/lang/String;Ljava/lang/String;)Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment;
+	public static final fun newInstance (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;)Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment;
+	protected fun onCloseMessage ()V
+	public fun onGetLayoutInflater (Landroid/os/Bundle;)Landroid/view/LayoutInflater;
+	protected fun onMessageLoadError (Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;)V
+	protected fun onMessageLoaded (Lcom/urbanairship/messagecenter/Message;)V
+	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
+	public final fun setOnMessageCloseListener (Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment$OnMessageCloseListener;)V
+	public final fun setOnMessageDeletedListener (Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment$OnMessageDeletedListener;)V
+	public final fun setToolbar (Landroidx/appcompat/widget/Toolbar;)V
+	public final fun setToolbarNavIconVisible (Z)V
+	public final fun setToolbarTitle (Ljava/lang/String;)V
+	protected final fun setupToolbar (Landroidx/appcompat/widget/Toolbar;)V
+}
+
+public final class com/urbanairship/messagecenter/ui/MessageCenterMessageFragment$Companion {
+	public final fun newInstance (Ljava/lang/String;)Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment;
+	public final fun newInstance (Ljava/lang/String;Ljava/lang/String;)Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment;
+	public final fun newInstance (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;)Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment;
+	public static synthetic fun newInstance$default (Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment$Companion;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Boolean;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/ui/MessageCenterMessageFragment;
+}
+
+public abstract interface class com/urbanairship/messagecenter/ui/MessageCenterMessageFragment$OnMessageCloseListener {
+	public abstract fun onCloseMessage ()V
+}
+
+public abstract interface class com/urbanairship/messagecenter/ui/MessageCenterMessageFragment$OnMessageDeletedListener {
+	public abstract fun onDeleteMessage (Lcom/urbanairship/messagecenter/Message;)V
+}
+
+public class com/urbanairship/messagecenter/ui/MessageFragment : androidx/fragment/app/Fragment {
+	public static final field ARG_MESSAGE_ID Ljava/lang/String;
+	public static final field Companion Lcom/urbanairship/messagecenter/ui/MessageFragment$Companion;
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun clearMessage ()V
+	public final fun deleteMessage (Lcom/urbanairship/messagecenter/Message;)V
+	public final fun getCurrentMessage ()Lcom/urbanairship/messagecenter/Message;
+	public final fun getListener ()Lcom/urbanairship/messagecenter/ui/MessageFragment$Listener;
+	public final fun getMessageId ()Ljava/lang/String;
+	protected final fun getMessageView ()Lcom/urbanairship/messagecenter/ui/view/MessageView;
+	public final fun getShowEmptyView ()Z
+	protected final fun getViewModel ()Lcom/urbanairship/messagecenter/ui/view/MessageViewModel;
+	public final fun loadMessage (Ljava/lang/String;)V
+	public static final fun newInstance (Ljava/lang/String;)Lcom/urbanairship/messagecenter/ui/MessageFragment;
+	protected fun onCloseMessage ()V
+	protected fun onMessageLoadError (Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;)V
+	protected fun onMessageLoaded (Lcom/urbanairship/messagecenter/Message;)V
+	public fun onPause ()V
+	public fun onResume ()V
+	public fun onSaveInstanceState (Landroid/os/Bundle;)V
+	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
+	public fun onViewStateRestored (Landroid/os/Bundle;)V
+	public final fun setListener (Lcom/urbanairship/messagecenter/ui/MessageFragment$Listener;)V
+	protected final fun setMessageView (Lcom/urbanairship/messagecenter/ui/view/MessageView;)V
+	public final fun setShowEmptyView (Z)V
+}
+
+public final class com/urbanairship/messagecenter/ui/MessageFragment$Companion {
+	public final fun newInstance (Ljava/lang/String;)Lcom/urbanairship/messagecenter/ui/MessageFragment;
+}
+
+public abstract interface class com/urbanairship/messagecenter/ui/MessageFragment$Listener {
+	public abstract fun onCloseMessage ()V
+	public abstract fun onMessageLoadError (Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;)V
+	public abstract fun onMessageLoaded (Lcom/urbanairship/messagecenter/Message;)V
+}
+
+public class com/urbanairship/messagecenter/ui/MessageListFragment : androidx/fragment/app/Fragment {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun clearHighlighted ()V
+	public final fun deleteAllMessages ()V
+	protected final fun getMessageListView ()Lcom/urbanairship/messagecenter/ui/view/MessageListView;
+	public final fun getOnEditListener ()Lcom/urbanairship/messagecenter/ui/MessageListFragment$OnEditListener;
+	public final fun getOnMessageClickListener ()Lcom/urbanairship/messagecenter/ui/MessageListFragment$OnMessageClickListener;
+	public final fun getPredicate ()Lcom/urbanairship/Predicate;
+	protected final fun getViewModel ()Lcom/urbanairship/messagecenter/ui/view/MessageListViewModel;
+	public final fun isEditing ()Z
+	public final fun markAllMessagesRead ()V
+	protected fun onEditModeChanged (Z)V
+	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
+	public final fun refresh (Lkotlin/jvm/functions/Function0;)V
+	public static synthetic fun refresh$default (Lcom/urbanairship/messagecenter/ui/MessageListFragment;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public final fun setEditing (Z)V
+	public final fun setHighlighted (Ljava/lang/String;)V
+	protected final fun setMessageListView (Lcom/urbanairship/messagecenter/ui/view/MessageListView;)V
+	public final fun setOnEditListener (Lcom/urbanairship/messagecenter/ui/MessageListFragment$OnEditListener;)V
+	public final fun setOnMessageClickListener (Lcom/urbanairship/messagecenter/ui/MessageListFragment$OnMessageClickListener;)V
+	public final fun setPredicate (Lcom/urbanairship/Predicate;)V
+}
+
+public abstract interface class com/urbanairship/messagecenter/ui/MessageListFragment$OnEditListener {
+	public abstract fun onDeleteMessages (I)V
+	public abstract fun onEditModeChanged (Z)V
+	public abstract fun onMarkMessagesRead (I)V
+}
+
+public abstract interface class com/urbanairship/messagecenter/ui/MessageListFragment$OnMessageClickListener {
+	public abstract fun onMessageClick (Lcom/urbanairship/messagecenter/Message;)V
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageListView : android/widget/FrameLayout {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;II)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun clearHighlightedMessage ()V
+	public final fun getListener ()Lcom/urbanairship/messagecenter/ui/view/MessageListView$Listener;
+	public final fun isEditing ()Z
+	public final fun refresh ()V
+	public final fun refresh (Z)V
+	public final fun refresh (ZLkotlin/jvm/functions/Function0;)V
+	public static synthetic fun refresh$default (Lcom/urbanairship/messagecenter/ui/view/MessageListView;ZLkotlin/jvm/functions/Function0;ILjava/lang/Object;)V
+	public final fun render (Lcom/urbanairship/messagecenter/ui/view/MessageListState;)V
+	public final fun setEditing (Z)V
+	public final fun setHighlightedMessage (Lcom/urbanairship/messagecenter/Message;)V
+	public final fun setListener (Lcom/urbanairship/messagecenter/ui/view/MessageListView$Listener;)V
+}
+
+public abstract interface class com/urbanairship/messagecenter/ui/view/MessageListView$Listener {
+	public abstract fun onAction (Lcom/urbanairship/messagecenter/ui/view/MessageListAction;)V
+	public abstract fun onEditModeChanged (Z)V
+	public abstract fun onShowMessage (Lcom/urbanairship/messagecenter/Message;)V
+}
+
+public final class com/urbanairship/messagecenter/ui/view/MessageView : android/widget/FrameLayout {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;II)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getListener ()Lcom/urbanairship/messagecenter/ui/view/MessageView$Listener;
+	public final fun getShowEmptyView ()Z
+	public final fun pauseWebView ()V
+	public final fun render (Lcom/urbanairship/messagecenter/ui/view/MessageViewState;)V
+	public final fun restoreWebViewState (Landroid/os/Bundle;)V
+	public final fun resumeWebView ()V
+	public final fun saveWebViewState (Landroid/os/Bundle;)V
+	public final fun setListener (Lcom/urbanairship/messagecenter/ui/view/MessageView$Listener;)V
+	public final fun setShowEmptyView (Z)V
+}
+
+public abstract interface class com/urbanairship/messagecenter/ui/view/MessageView$Listener {
+	public abstract fun onCloseMessage ()V
+	public abstract fun onMessageLoadError (Lcom/urbanairship/messagecenter/ui/view/MessageViewState$Error$Type;)V
+	public abstract fun onMessageLoaded (Lcom/urbanairship/messagecenter/Message;)V
+	public abstract fun onRetryClicked ()V
+}
+
+public final class com/urbanairship/messagecenter/ui/widget/MessageListItem : android/widget/FrameLayout {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;II)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun bind (Lcom/urbanairship/messagecenter/Message;)V
+	public final fun getAccessibilityActionListener ()Lcom/urbanairship/messagecenter/ui/widget/MessageListItem$AccessibilityActionListener;
+	public fun onInitializeAccessibilityNodeInfo (Landroid/view/accessibility/AccessibilityNodeInfo;)V
+	public final fun setAccessibilityActionListener (Lcom/urbanairship/messagecenter/ui/widget/MessageListItem$AccessibilityActionListener;)V
+	public final fun setIconsEnabled (Z)V
+	public final fun setPlaceholderIcon (I)V
+}
+
+public abstract interface class com/urbanairship/messagecenter/ui/widget/MessageListItem$AccessibilityActionListener {
+	public abstract fun onDelete (Lcom/urbanairship/messagecenter/Message;)V
+	public abstract fun onMarkRead (Lcom/urbanairship/messagecenter/Message;)V
+}
+

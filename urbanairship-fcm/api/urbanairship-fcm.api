@@ -1,0 +1,17 @@
+public final class com/urbanairship/push/fcm/AirshipFirebaseIntegration {
+	public static final field INSTANCE Lcom/urbanairship/push/fcm/AirshipFirebaseIntegration;
+	public final fun isAirshipPush (Lcom/google/firebase/messaging/RemoteMessage;)Z
+	public final fun processMessage (Landroid/content/Context;Lcom/google/firebase/messaging/RemoteMessage;)Ljava/util/concurrent/Future;
+	public static final fun processMessageSync (Landroid/content/Context;Lcom/google/firebase/messaging/RemoteMessage;)V
+	public static final fun processNewToken (Landroid/content/Context;Ljava/lang/String;)V
+}
+
+public final class com/urbanairship/push/fcm/AirshipFirebaseMessagingService : com/google/firebase/messaging/FirebaseMessagingService {
+	public fun <init> ()V
+	public fun onMessageReceived (Lcom/google/firebase/messaging/RemoteMessage;)V
+	public fun onNewToken (Ljava/lang/String;)V
+}
+
+public final class com/urbanairship/push/fcm/FcmPushProvider$Companion {
+}
+

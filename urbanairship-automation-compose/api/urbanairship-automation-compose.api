@@ -1,0 +1,81 @@
+public final class com/urbanairship/automation/compose/AirshipBannerHostKt {
+	public static final fun AirshipBannerHost (Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AirshipBannerHost (Lcom/urbanairship/automation/compose/AirshipBannerHostState;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/urbanairship/automation/compose/AirshipBannerHostState {
+	public static final field $stable I
+	public final fun dismissAll (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun dismissCurrent (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public final fun isAvailable ()Z
+}
+
+public final class com/urbanairship/automation/compose/AirshipBannerHostStateKt {
+	public static final fun rememberAirshipBannerHostState (Landroidx/compose/runtime/Composer;I)Lcom/urbanairship/automation/compose/AirshipBannerHostState;
+}
+
+public final class com/urbanairship/automation/compose/AirshipEmbeddedViewDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/urbanairship/automation/compose/AirshipEmbeddedViewDefaults;
+	public final fun getContentAlignment ()Landroidx/compose/ui/Alignment;
+	public final fun getCrossfadeContentTransform ()Landroidx/compose/animation/ContentTransform;
+	public final fun getNoContentTransform ()Landroidx/compose/animation/ContentTransform;
+}
+
+public final class com/urbanairship/automation/compose/AirshipEmbeddedViewGroupKt {
+	public static final fun AirshipEmbeddedViewGroup (Lcom/urbanairship/automation/compose/AirshipEmbeddedViewGroupState;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function4;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AirshipEmbeddedViewGroup (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Lkotlin/jvm/functions/Function4;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AirshipEmbeddedViewGroup (Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/util/Comparator;Lkotlin/jvm/functions/Function4;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/urbanairship/automation/compose/AirshipEmbeddedViewGroupState {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getEmbeddedId ()Ljava/lang/String;
+	public final fun getItems ()Landroidx/compose/runtime/State;
+}
+
+public final class com/urbanairship/automation/compose/AirshipEmbeddedViewGroupStateKt {
+	public static final fun rememberAirshipEmbeddedViewGroupState (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Landroidx/compose/runtime/Composer;II)Lcom/urbanairship/automation/compose/AirshipEmbeddedViewGroupState;
+	public static final fun rememberAirshipEmbeddedViewGroupState (Ljava/lang/String;Ljava/util/Comparator;Landroidx/compose/runtime/Composer;I)Lcom/urbanairship/automation/compose/AirshipEmbeddedViewGroupState;
+}
+
+public final class com/urbanairship/automation/compose/AirshipEmbeddedViewKt {
+	public static final fun AirshipEmbeddedView (Lcom/urbanairship/automation/compose/AirshipEmbeddedViewState;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/Alignment;Landroidx/compose/animation/ContentTransform;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AirshipEmbeddedView (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Landroidx/compose/ui/Alignment;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/animation/ContentTransform;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AirshipEmbeddedView (Ljava/lang/String;Landroidx/compose/ui/Modifier;Ljava/util/Comparator;Landroidx/compose/ui/Alignment;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Landroidx/compose/animation/ContentTransform;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class com/urbanairship/automation/compose/AirshipEmbeddedViewState {
+	public static final field $stable I
+	public fun <init> (Ljava/lang/String;)V
+	public final fun dismissAll (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun dismissCurrent (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEmbeddedId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isAvailable ()Z
+}
+
+public final class com/urbanairship/automation/compose/AirshipEmbeddedViewStateKt {
+	public static final fun rememberAirshipEmbeddedViewState (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Landroidx/compose/runtime/Composer;II)Lcom/urbanairship/automation/compose/AirshipEmbeddedViewState;
+	public static final fun rememberAirshipEmbeddedViewState (Ljava/lang/String;Ljava/util/Comparator;Landroidx/compose/runtime/Composer;I)Lcom/urbanairship/automation/compose/AirshipEmbeddedViewState;
+}
+
+public final class com/urbanairship/automation/compose/ComposableSingletons$AirshipEmbeddedViewGroupKt {
+	public static final field INSTANCE Lcom/urbanairship/automation/compose/ComposableSingletons$AirshipEmbeddedViewGroupKt;
+	public fun <init> ()V
+	public final fun getLambda$1496033807$urbanairship_automation_compose ()Lkotlin/jvm/functions/Function4;
+}
+
+public final class com/urbanairship/automation/compose/EmbeddedViewItem {
+	public static final field $stable I
+	public final fun content (Landroidx/compose/runtime/Composer;I)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getInfo ()Lcom/urbanairship/embedded/AirshipEmbeddedInfo;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

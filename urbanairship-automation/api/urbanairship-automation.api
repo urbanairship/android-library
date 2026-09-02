@@ -1,0 +1,1010 @@
+public final class com/urbanairship/automation/AutomationAppState : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field BACKGROUND Lcom/urbanairship/automation/AutomationAppState;
+	public static final field FOREGROUND Lcom/urbanairship/automation/AutomationAppState;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/automation/AutomationAppState;
+	public static fun values ()[Lcom/urbanairship/automation/AutomationAppState;
+}
+
+public final class com/urbanairship/automation/AutomationAudience : com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/automation/AutomationAudience$Companion;
+	public fun <init> (Lcom/urbanairship/audience/AudienceSelector;Lcom/urbanairship/automation/AutomationAudience$MissBehavior;)V
+	public synthetic fun <init> (Lcom/urbanairship/audience/AudienceSelector;Lcom/urbanairship/automation/AutomationAudience$MissBehavior;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+}
+
+public final class com/urbanairship/automation/AutomationAudience$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/automation/AutomationAudience;
+}
+
+public final class com/urbanairship/automation/AutomationAudience$MissBehavior : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field CANCEL Lcom/urbanairship/automation/AutomationAudience$MissBehavior;
+	public static final field PENALIZE Lcom/urbanairship/automation/AutomationAudience$MissBehavior;
+	public static final field SKIP Lcom/urbanairship/automation/AutomationAudience$MissBehavior;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/automation/AutomationAudience$MissBehavior;
+	public static fun values ()[Lcom/urbanairship/automation/AutomationAudience$MissBehavior;
+}
+
+public final class com/urbanairship/automation/AutomationCompoundAudience : com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/automation/AutomationCompoundAudience$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+}
+
+public final class com/urbanairship/automation/AutomationCompoundAudience$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/automation/AutomationCompoundAudience;
+}
+
+public final class com/urbanairship/automation/AutomationDelay : com/urbanairship/json/JsonSerializable {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Long;Ljava/util/List;Lcom/urbanairship/automation/ExecutionWindow;Ljava/lang/String;Lcom/urbanairship/automation/AutomationAppState;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/Long;Ljava/util/List;Lcom/urbanairship/automation/ExecutionWindow;Ljava/lang/String;Lcom/urbanairship/automation/AutomationAppState;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAppState ()Lcom/urbanairship/automation/AutomationAppState;
+	public final fun getCancellationTriggers ()Ljava/util/List;
+	public final fun getRegionId ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/automation/AutomationSchedule : com/urbanairship/json/JsonSerializable {
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/UInt;Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/automation/AutomationAudience;Lcom/urbanairship/automation/AutomationCompoundAudience;Lcom/urbanairship/automation/AutomationDelay;Lkotlin/time/Duration;Lcom/urbanairship/automation/AutomationSchedule$ScheduleData;Ljava/lang/Boolean;Lkotlin/ULong;Lcom/urbanairship/json/JsonValue;Ljava/util/List;Ljava/lang/String;Lcom/urbanairship/json/JsonValue;Lcom/urbanairship/json/JsonValue;Ljava/lang/String;Ljava/lang/String;Ljava/time/Instant;Ljava/lang/String;Lcom/urbanairship/automation/AdditionalAudienceCheckOverrides;Ljava/lang/String;Lcom/urbanairship/automation/limits/LedgerConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAudience ()Lcom/urbanairship/automation/AutomationAudience;
+	public final fun getBypassHoldoutGroups ()Ljava/lang/Boolean;
+	public final fun getCompoundAudience ()Lcom/urbanairship/automation/AutomationCompoundAudience;
+	public final fun getData ()Lcom/urbanairship/automation/AutomationSchedule$ScheduleData;
+	public final fun getDelay ()Lcom/urbanairship/automation/AutomationDelay;
+	public final fun getEditGracePeriodDays-6VbMDqA ()Lkotlin/ULong;
+	public final fun getEndDate ()Ljava/time/Instant;
+	public final fun getGroup ()Ljava/lang/String;
+	public final fun getIdentifier ()Ljava/lang/String;
+	public final fun getInterval-FghU774 ()Lkotlin/time/Duration;
+	public final fun getIntervalSeconds ()Ljava/lang/Long;
+	public final fun getLimit-0hXNFcg ()Lkotlin/UInt;
+	public final fun getPriority ()Ljava/lang/Integer;
+	public final fun getStartDate ()Ljava/time/Instant;
+	public final fun getTriggers ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun newBuilder ()Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/automation/AutomationSchedule$Builder {
+	public final fun build ()Lcom/urbanairship/automation/AutomationSchedule;
+	public final fun setAudience (Lcom/urbanairship/automation/AutomationAudience;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final fun setCompoundAudience (Lcom/urbanairship/automation/AutomationCompoundAudience;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final fun setData (Lcom/urbanairship/automation/AutomationSchedule$ScheduleData;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final fun setDelay (Lcom/urbanairship/automation/AutomationDelay;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final fun setEditGracePeriodDays (Ljava/lang/Long;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final fun setEndDate (Ljava/time/Instant;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final fun setGroup (Ljava/lang/String;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final fun setInterval-BwNAW2A (Lkotlin/time/Duration;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final fun setIntervalSeconds (Ljava/lang/Long;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final fun setLimit (Ljava/lang/Integer;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final fun setPriority (Ljava/lang/Integer;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final fun setStartDate (Ljava/time/Instant;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final fun setTriggers (Ljava/util/List;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+}
+
+public abstract class com/urbanairship/automation/AutomationSchedule$ScheduleData : com/urbanairship/json/JsonSerializable {
+}
+
+public final class com/urbanairship/automation/AutomationSchedule$ScheduleData$Actions : com/urbanairship/automation/AutomationSchedule$ScheduleData {
+	public fun <init> (Lcom/urbanairship/json/JsonValue;)V
+	public final fun component1 ()Lcom/urbanairship/json/JsonValue;
+	public final fun copy (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/automation/AutomationSchedule$ScheduleData$Actions;
+	public static synthetic fun copy$default (Lcom/urbanairship/automation/AutomationSchedule$ScheduleData$Actions;Lcom/urbanairship/json/JsonValue;ILjava/lang/Object;)Lcom/urbanairship/automation/AutomationSchedule$ScheduleData$Actions;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActions ()Lcom/urbanairship/json/JsonValue;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/automation/AutomationSchedule$ScheduleData$Deferred : com/urbanairship/automation/AutomationSchedule$ScheduleData {
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/automation/AutomationSchedule$ScheduleData$InAppMessageData : com/urbanairship/automation/AutomationSchedule$ScheduleData {
+	public fun <init> (Lcom/urbanairship/iam/InAppMessage;)V
+	public final fun component1 ()Lcom/urbanairship/iam/InAppMessage;
+	public final fun copy (Lcom/urbanairship/iam/InAppMessage;)Lcom/urbanairship/automation/AutomationSchedule$ScheduleData$InAppMessageData;
+	public static synthetic fun copy$default (Lcom/urbanairship/automation/AutomationSchedule$ScheduleData$InAppMessageData;Lcom/urbanairship/iam/InAppMessage;ILjava/lang/Object;)Lcom/urbanairship/automation/AutomationSchedule$ScheduleData$InAppMessageData;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Lcom/urbanairship/iam/InAppMessage;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/automation/AutomationSchedule$ScheduleType : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field ACTIONS Lcom/urbanairship/automation/AutomationSchedule$ScheduleType;
+	public static final field DEFERRED Lcom/urbanairship/automation/AutomationSchedule$ScheduleType;
+	public static final field IN_APP_MESSAGE Lcom/urbanairship/automation/AutomationSchedule$ScheduleType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/automation/AutomationSchedule$ScheduleType;
+	public static fun values ()[Lcom/urbanairship/automation/AutomationSchedule$ScheduleType;
+}
+
+public abstract class com/urbanairship/automation/AutomationTrigger : com/urbanairship/json/JsonSerializable {
+	public synthetic fun <init> (Ljava/lang/String;DLjava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGoal ()D
+	public final fun getId ()Ljava/lang/String;
+	public final fun getType ()Ljava/lang/String;
+	public fun hashCode ()I
+}
+
+public final class com/urbanairship/automation/AutomationTrigger$Compound : com/urbanairship/automation/AutomationTrigger {
+	public fun <init> (Lcom/urbanairship/automation/CompoundAutomationTrigger;)V
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+}
+
+public final class com/urbanairship/automation/AutomationTrigger$Event : com/urbanairship/automation/AutomationTrigger {
+	public fun <init> (Lcom/urbanairship/automation/EventAutomationTrigger;)V
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+}
+
+public final class com/urbanairship/automation/CompoundAutomationTrigger : com/urbanairship/json/JsonSerializable {
+	public final fun getGoal ()D
+	public final fun getId ()Ljava/lang/String;
+	public final fun getType ()Lcom/urbanairship/automation/CompoundAutomationTriggerType;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+}
+
+public final class com/urbanairship/automation/CompoundAutomationTriggerType : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field AND Lcom/urbanairship/automation/CompoundAutomationTriggerType;
+	public static final field CHAIN Lcom/urbanairship/automation/CompoundAutomationTriggerType;
+	public static final field OR Lcom/urbanairship/automation/CompoundAutomationTriggerType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/automation/CompoundAutomationTriggerType;
+	public static fun values ()[Lcom/urbanairship/automation/CompoundAutomationTriggerType;
+}
+
+public final class com/urbanairship/automation/EventAutomationTrigger : com/urbanairship/json/JsonSerializable {
+	public fun <init> (Lcom/urbanairship/automation/EventAutomationTriggerType;DLcom/urbanairship/json/JsonPredicate;)V
+	public synthetic fun <init> (Lcom/urbanairship/automation/EventAutomationTriggerType;DLcom/urbanairship/json/JsonPredicate;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getGoal ()D
+	public final fun getId ()Ljava/lang/String;
+	public final fun getPredicate ()Lcom/urbanairship/json/JsonPredicate;
+	public final fun getType ()Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public final fun setGoal (D)V
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+}
+
+public final class com/urbanairship/automation/EventAutomationTriggerType : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field ACTIVE_SESSION Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field APP_INIT Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field BACKGROUND Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field CUSTOM_EVENT_COUNT Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field CUSTOM_EVENT_VALUE Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field FEATURE_FLAG_INTERACTION Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field FOREGROUND Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field IN_APP_DISPLAY Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field IN_APP_RESOLUTION Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field LAYOUT_BUTTON_TAP Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field LAYOUT_FORM_DISPLAY Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field LAYOUT_FORM_RESULT Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field LAYOUT_GESTURE Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field LAYOUT_PAGER_COMPLETED Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field LAYOUT_PAGER_SUMMARY Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field LAYOUT_PAGE_ACTION Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field LAYOUT_PAGE_SWIPE Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field LAYOUT_PAGE_VIEW Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field LAYOUT_PERMISSION_RESULT Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field REGION_ENTER Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field REGION_EXIT Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field SCREEN Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static final field VERSION Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/automation/EventAutomationTriggerType;
+	public static fun values ()[Lcom/urbanairship/automation/EventAutomationTriggerType;
+}
+
+public final class com/urbanairship/automation/ExecutionWindowResult$Now : com/urbanairship/automation/ExecutionWindowResult {
+	public static final field INSTANCE Lcom/urbanairship/automation/ExecutionWindowResult$Now;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/automation/ExecutionWindowResult$Retry : com/urbanairship/automation/ExecutionWindowResult {
+	public synthetic fun <init> (JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDelay-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/automation/InAppAutomation {
+	public static final field Companion Lcom/urbanairship/automation/InAppAutomation$Companion;
+	public final fun cancelSchedule (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun cancelSchedules (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun cancelSchedules (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getInAppMessaging ()Lcom/urbanairship/iam/InAppMessagingInterface;
+	public final fun getLegacyInAppMessaging ()Lcom/urbanairship/iam/legacy/LegacyInAppMessagingInterface;
+	public final fun getSchedules (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getSchedulesForGroup (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getStatus ()Lcom/urbanairship/automation/InAppAutomationRemoteDataStatus;
+	public final fun getStatusUpdates ()Lkotlinx/coroutines/flow/Flow;
+	public final fun isPaused ()Z
+	public final fun setPaused (Z)V
+	public static final fun shared ()Lcom/urbanairship/automation/InAppAutomation;
+	public final fun upsertSchedules (Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class com/urbanairship/automation/InAppAutomation$Companion {
+	public final fun shared ()Lcom/urbanairship/automation/InAppAutomation;
+}
+
+public final class com/urbanairship/automation/InAppAutomationKt {
+	public static final fun getInAppAutomation (Lcom/urbanairship/Airship;)Lcom/urbanairship/automation/InAppAutomation;
+}
+
+public final class com/urbanairship/automation/InAppAutomationRemoteDataStatus : java/lang/Enum {
+	public static final field OUT_OF_DATE Lcom/urbanairship/automation/InAppAutomationRemoteDataStatus;
+	public static final field STALE Lcom/urbanairship/automation/InAppAutomationRemoteDataStatus;
+	public static final field UP_TO_DATE Lcom/urbanairship/automation/InAppAutomationRemoteDataStatus;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/automation/InAppAutomationRemoteDataStatus;
+	public static fun values ()[Lcom/urbanairship/automation/InAppAutomationRemoteDataStatus;
+}
+
+public final class com/urbanairship/automation/storage/AutomationDatabase$Companion {
+	public final fun createDatabase (Landroid/content/Context;Lcom/urbanairship/config/AirshipRuntimeConfig;)Lcom/urbanairship/automation/storage/AutomationDatabase;
+	public final fun createInMemoryDatabase (Landroid/content/Context;)Lcom/urbanairship/automation/storage/AutomationDatabase;
+}
+
+public final class com/urbanairship/automation/storage/ScheduleState$Companion {
+	public final fun fromValue (I)Lcom/urbanairship/automation/storage/ScheduleState;
+}
+
+public final class com/urbanairship/embedded/AirshipEmbeddedObserver {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public fun <init> ([Ljava/lang/String;)V
+	public final fun getEmbeddedViewInfoFlow ()Lkotlinx/coroutines/flow/Flow;
+	public final fun getFilter ()Lkotlin/jvm/functions/Function1;
+	public final fun getListener ()Lcom/urbanairship/embedded/AirshipEmbeddedObserver$Listener;
+	public final fun setListener (Lcom/urbanairship/embedded/AirshipEmbeddedObserver$Listener;)V
+}
+
+public abstract interface class com/urbanairship/embedded/AirshipEmbeddedObserver$Listener {
+	public abstract fun onEmbeddedViewInfoUpdate (Ljava/util/List;)V
+}
+
+public final class com/urbanairship/embedded/AirshipEmbeddedView : android/widget/RelativeLayout {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Ljava/util/Comparator;)V
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;Ljava/util/Comparator;Ljava/lang/Integer;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;Ljava/util/Comparator;Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getComparator ()Ljava/util/Comparator;
+	public final fun getParentHeightProvider ()Lkotlin/jvm/functions/Function0;
+	public final fun getParentWidthProvider ()Lkotlin/jvm/functions/Function0;
+	public final fun getSelection ()Lcom/urbanairship/embedded/AirshipEmbeddedSelection;
+	public final fun setAnimations (Ljava/lang/Integer;Ljava/lang/Integer;)V
+	public final fun setComparator (Ljava/util/Comparator;)V
+	public final fun setParentHeightProvider (Lkotlin/jvm/functions/Function0;)V
+	public final fun setParentWidthProvider (Lkotlin/jvm/functions/Function0;)V
+	public final fun setSelection (Lcom/urbanairship/embedded/AirshipEmbeddedSelection;)V
+}
+
+public final class com/urbanairship/iam/InAppActivityMonitor : com/urbanairship/app/ActivityMonitor {
+	public static final field Companion Lcom/urbanairship/iam/InAppActivityMonitor$Companion;
+	public static final field EXCLUDE_FROM_AUTO_SHOW Ljava/lang/String;
+	public fun <init> (Lcom/urbanairship/app/ActivityMonitor;)V
+	public fun addActivityListener (Lcom/urbanairship/app/ActivityListener;)V
+	public fun addApplicationListener (Lcom/urbanairship/app/ApplicationListener;)V
+	public fun getForegroundState ()Lkotlinx/coroutines/flow/StateFlow;
+	public fun getResumedActivities ()Ljava/util/List;
+	public fun getResumedActivities (Lcom/urbanairship/Predicate;)Ljava/util/List;
+	public fun isAppForegrounded ()Z
+	public fun removeActivityListener (Lcom/urbanairship/app/ActivityListener;)V
+	public fun removeApplicationListener (Lcom/urbanairship/app/ApplicationListener;)V
+	public static final fun shared (Landroid/content/Context;)Lcom/urbanairship/iam/InAppActivityMonitor;
+}
+
+public final class com/urbanairship/iam/InAppActivityMonitor$Companion {
+	public final fun shared (Landroid/content/Context;)Lcom/urbanairship/iam/InAppActivityMonitor;
+}
+
+public final class com/urbanairship/iam/InAppMessage : com/urbanairship/json/JsonSerializable {
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/InAppMessageDisplayContent;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/json/JsonMap;Ljava/lang/Boolean;Lcom/urbanairship/iam/InAppMessage$DisplayBehavior;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/InAppMessageDisplayContent;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/json/JsonMap;Ljava/lang/Boolean;Lcom/urbanairship/iam/InAppMessage$DisplayBehavior;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActions ()Lcom/urbanairship/json/JsonMap;
+	public final fun getDisplayBehavior ()Lcom/urbanairship/iam/InAppMessage$DisplayBehavior;
+	public final fun getDisplayContent ()Lcom/urbanairship/iam/content/InAppMessageDisplayContent;
+	public final fun getExtras ()Lcom/urbanairship/json/JsonMap;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getRenderedLocale ()Lcom/urbanairship/json/JsonValue;
+	public fun hashCode ()I
+	public final fun isReportingEnabled ()Ljava/lang/Boolean;
+	public final fun newBuilder ()Lcom/urbanairship/iam/InAppMessage$Builder;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/InAppMessage$Builder {
+	public final fun build ()Lcom/urbanairship/iam/InAppMessage;
+	public final fun setActions (Lcom/urbanairship/json/JsonMap;)Lcom/urbanairship/iam/InAppMessage$Builder;
+	public final fun setDisplayBehavior (Lcom/urbanairship/iam/InAppMessage$DisplayBehavior;)Lcom/urbanairship/iam/InAppMessage$Builder;
+	public final fun setDisplayContent (Lcom/urbanairship/iam/content/InAppMessageDisplayContent;)Lcom/urbanairship/iam/InAppMessage$Builder;
+	public final fun setExtras (Lcom/urbanairship/json/JsonMap;)Lcom/urbanairship/iam/InAppMessage$Builder;
+	public final fun setName (Ljava/lang/String;)Lcom/urbanairship/iam/InAppMessage$Builder;
+	public final fun setReportingEnabled (Z)Lcom/urbanairship/iam/InAppMessage$Builder;
+}
+
+public final class com/urbanairship/iam/InAppMessage$DisplayBehavior : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field IMMEDIATE Lcom/urbanairship/iam/InAppMessage$DisplayBehavior;
+	public static final field STANDARD Lcom/urbanairship/iam/InAppMessage$DisplayBehavior;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/iam/InAppMessage$DisplayBehavior;
+	public static fun values ()[Lcom/urbanairship/iam/InAppMessage$DisplayBehavior;
+}
+
+public abstract interface class com/urbanairship/iam/InAppMessageContentExtender {
+	public fun extend (Lcom/urbanairship/iam/InAppMessage;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent;
+}
+
+public final class com/urbanairship/iam/InAppMessageContentExtender$DefaultImpls {
+	public static fun extend (Lcom/urbanairship/iam/InAppMessageContentExtender;Lcom/urbanairship/iam/InAppMessage;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent;
+}
+
+public abstract interface class com/urbanairship/iam/InAppMessageDisplayDelegate {
+	public abstract fun isMessageReadyToDisplay (Lcom/urbanairship/iam/InAppMessage;Ljava/lang/String;)Z
+	public abstract fun messageFinishedDisplaying (Lcom/urbanairship/iam/InAppMessage;Ljava/lang/String;)V
+	public abstract fun messageWillDisplay (Lcom/urbanairship/iam/InAppMessage;Ljava/lang/String;)V
+}
+
+public final class com/urbanairship/iam/InAppMessagePreview {
+	public fun <init> (Lcom/urbanairship/json/JsonValue;)V
+	public final fun display (Landroid/content/Context;)V
+}
+
+public abstract interface class com/urbanairship/iam/InAppMessagingInterface {
+	public abstract fun getDisplayDelegate ()Lcom/urbanairship/iam/InAppMessageDisplayDelegate;
+	public abstract fun getDisplayInterval-UwyO8pc ()J
+	public fun getDisplayIntervalSeconds ()J
+	public abstract fun getMessageContentExtender ()Lcom/urbanairship/iam/InAppMessageContentExtender;
+	public abstract fun getOnCheckSuppression ()Lkotlin/jvm/functions/Function3;
+	public abstract fun notifyDisplayConditionsChanged ()V
+	public abstract fun setAdapterFactoryBlock (Lcom/urbanairship/iam/adapter/CustomDisplayAdapterType;Lkotlin/jvm/functions/Function3;)V
+	public abstract fun setDisplayDelegate (Lcom/urbanairship/iam/InAppMessageDisplayDelegate;)V
+	public abstract fun setDisplayInterval-LRDsOJo (J)V
+	public fun setDisplayIntervalSeconds (J)V
+	public abstract fun setMessageContentExtender (Lcom/urbanairship/iam/InAppMessageContentExtender;)V
+	public abstract fun setOnCheckSuppression (Lkotlin/jvm/functions/Function3;)V
+}
+
+public final class com/urbanairship/iam/InAppMessagingInterface$DefaultImpls {
+	public static fun getDisplayIntervalSeconds (Lcom/urbanairship/iam/InAppMessagingInterface;)J
+	public static fun setDisplayIntervalSeconds (Lcom/urbanairship/iam/InAppMessagingInterface;J)V
+}
+
+public abstract class com/urbanairship/iam/SuppressionResult {
+}
+
+public final class com/urbanairship/iam/SuppressionResult$Show : com/urbanairship/iam/SuppressionResult {
+	public static final field INSTANCE Lcom/urbanairship/iam/SuppressionResult$Show;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/SuppressionResult$Suppress : com/urbanairship/iam/SuppressionResult {
+	public fun <init> (Lcom/urbanairship/automation/AutomationAudience$MissBehavior;)V
+	public final fun component1 ()Lcom/urbanairship/automation/AutomationAudience$MissBehavior;
+	public final fun copy (Lcom/urbanairship/automation/AutomationAudience$MissBehavior;)Lcom/urbanairship/iam/SuppressionResult$Suppress;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/SuppressionResult$Suppress;Lcom/urbanairship/automation/AutomationAudience$MissBehavior;ILjava/lang/Object;)Lcom/urbanairship/iam/SuppressionResult$Suppress;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBehavior ()Lcom/urbanairship/automation/AutomationAudience$MissBehavior;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/actions/CancelSchedulesAction : com/urbanairship/actions/Action {
+	public static final field Companion Lcom/urbanairship/iam/actions/CancelSchedulesAction$Companion;
+	public fun <init> ()V
+	public fun <init> (Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun acceptsArguments (Lcom/urbanairship/actions/ActionArguments;)Z
+	public static final fun getALL ()Ljava/lang/String;
+	public static final fun getDEFAULT_NAMES ()Ljava/util/Set;
+	public static final fun getGROUPS ()Ljava/lang/String;
+	public static final fun getIDS ()Ljava/lang/String;
+	public fun perform (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
+}
+
+public final class com/urbanairship/iam/actions/CancelSchedulesAction$Companion {
+	public final fun getALL ()Ljava/lang/String;
+	public final fun getDEFAULT_NAMES ()Ljava/util/Set;
+	public final fun getGROUPS ()Ljava/lang/String;
+	public final fun getIDS ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/actions/LandingPageAction : com/urbanairship/actions/Action {
+	public static final field Companion Lcom/urbanairship/iam/actions/LandingPageAction$Companion;
+	public fun <init> ()V
+	public fun <init> (F)V
+	public fun <init> (FLkotlin/jvm/functions/Function2;)V
+	public synthetic fun <init> (FLkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;FLcom/urbanairship/util/Clock;)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;FLcom/urbanairship/util/Clock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun acceptsArguments (Lcom/urbanairship/actions/ActionArguments;)Z
+	public static final fun getDEFAULT_NAMES ()Ljava/util/Set;
+	public fun perform (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
+}
+
+public final class com/urbanairship/iam/actions/LandingPageAction$Companion {
+	public final fun getDEFAULT_NAMES ()Ljava/util/Set;
+}
+
+public final class com/urbanairship/iam/actions/ScheduleAction : com/urbanairship/actions/Action {
+	public static final field Companion Lcom/urbanairship/iam/actions/ScheduleAction$Companion;
+	public fun <init> ()V
+	public fun <init> (Lkotlin/jvm/functions/Function2;)V
+	public synthetic fun <init> (Lkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun acceptsArguments (Lcom/urbanairship/actions/ActionArguments;)Z
+	public static final fun getDEFAULT_NAMES ()Ljava/util/Set;
+	public fun perform (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
+}
+
+public final class com/urbanairship/iam/actions/ScheduleAction$Companion {
+	public final fun getDEFAULT_NAMES ()Ljava/util/Set;
+}
+
+public abstract interface class com/urbanairship/iam/adapter/CustomDisplayAdapter {
+}
+
+public abstract interface class com/urbanairship/iam/adapter/CustomDisplayAdapter$CallbackAdapter : com/urbanairship/iam/adapter/CustomDisplayAdapter {
+	public abstract fun display (Landroid/content/Context;Lcom/urbanairship/iam/adapter/DisplayFinishedCallback;)V
+}
+
+public abstract interface class com/urbanairship/iam/adapter/CustomDisplayAdapter$SuspendingAdapter : com/urbanairship/iam/adapter/CustomDisplayAdapter {
+	public abstract fun display (Landroid/content/Context;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun isReady ()Lkotlinx/coroutines/flow/StateFlow;
+}
+
+public final class com/urbanairship/iam/adapter/CustomDisplayAdapterType : java/lang/Enum {
+	public static final field BANNER Lcom/urbanairship/iam/adapter/CustomDisplayAdapterType;
+	public static final field CUSTOM Lcom/urbanairship/iam/adapter/CustomDisplayAdapterType;
+	public static final field FULLSCREEN Lcom/urbanairship/iam/adapter/CustomDisplayAdapterType;
+	public static final field HTML Lcom/urbanairship/iam/adapter/CustomDisplayAdapterType;
+	public static final field MODAL Lcom/urbanairship/iam/adapter/CustomDisplayAdapterType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/iam/adapter/CustomDisplayAdapterType;
+	public static fun values ()[Lcom/urbanairship/iam/adapter/CustomDisplayAdapterType;
+}
+
+public abstract class com/urbanairship/iam/adapter/CustomDisplayResolution {
+}
+
+public final class com/urbanairship/iam/adapter/CustomDisplayResolution$ButtonTap : com/urbanairship/iam/adapter/CustomDisplayResolution {
+	public fun <init> (Lcom/urbanairship/iam/info/InAppMessageButtonInfo;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getInfo ()Lcom/urbanairship/iam/info/InAppMessageButtonInfo;
+	public fun hashCode ()I
+}
+
+public final class com/urbanairship/iam/adapter/CustomDisplayResolution$MessageTap : com/urbanairship/iam/adapter/CustomDisplayResolution {
+	public static final field INSTANCE Lcom/urbanairship/iam/adapter/CustomDisplayResolution$MessageTap;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/adapter/CustomDisplayResolution$TimedOut : com/urbanairship/iam/adapter/CustomDisplayResolution {
+	public static final field INSTANCE Lcom/urbanairship/iam/adapter/CustomDisplayResolution$TimedOut;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/adapter/CustomDisplayResolution$UserDismissed : com/urbanairship/iam/adapter/CustomDisplayResolution {
+	public static final field INSTANCE Lcom/urbanairship/iam/adapter/CustomDisplayResolution$UserDismissed;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/adapter/DisplayFinishedCallback : android/os/Parcelable {
+	public static final field CREATOR Landroid/os/Parcelable$Creator;
+	public static final field Companion Lcom/urbanairship/iam/adapter/DisplayFinishedCallback$Companion;
+	public synthetic fun <init> (Landroid/os/Parcel;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun describeContents ()I
+	public final fun finished (Lcom/urbanairship/iam/adapter/CustomDisplayResolution;)V
+	public final fun isValid ()Z
+	public final fun setValid (Z)V
+	public fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/urbanairship/iam/adapter/DisplayFinishedCallback$Companion {
+}
+
+public final class com/urbanairship/iam/content/AirshipLayout : android/os/Parcelable, com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/iam/content/AirshipLayout$Companion;
+	public synthetic fun <init> (Lcom/urbanairship/android/layout/info/LayoutInfo;Lcom/urbanairship/json/JsonValue;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun describeContents ()I
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLayoutInfo ()Lcom/urbanairship/android/layout/info/LayoutInfo;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+	public fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/urbanairship/iam/content/AirshipLayout$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/content/AirshipLayout;
+}
+
+public final class com/urbanairship/iam/content/Banner : com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/iam/content/Banner$Companion;
+	public static final field DEFAULT_DURATION_MS J
+	public static final field MAX_BUTTONS I
+	public synthetic fun <init> (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Banner$Template;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;FJLcom/urbanairship/iam/content/Banner$Placement;Lcom/urbanairship/json/JsonMap;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun copy ()Lcom/urbanairship/iam/content/Banner;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;)Lcom/urbanairship/iam/content/Banner;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;)Lcom/urbanairship/iam/content/Banner;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;)Lcom/urbanairship/iam/content/Banner;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;)Lcom/urbanairship/iam/content/Banner;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;)Lcom/urbanairship/iam/content/Banner;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Banner$Template;)Lcom/urbanairship/iam/content/Banner;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Banner$Template;Lcom/urbanairship/iam/info/InAppMessageColor;)Lcom/urbanairship/iam/content/Banner;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Banner$Template;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;)Lcom/urbanairship/iam/content/Banner;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Banner$Template;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;F)Lcom/urbanairship/iam/content/Banner;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Banner$Template;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;FJLcom/urbanairship/iam/content/Banner$Placement;Lcom/urbanairship/json/JsonMap;)Lcom/urbanairship/iam/content/Banner;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/content/Banner;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Banner$Template;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;FJLcom/urbanairship/iam/content/Banner$Placement;Lcom/urbanairship/json/JsonMap;ILjava/lang/Object;)Lcom/urbanairship/iam/content/Banner;
+	public final fun copy-26RPDK8 (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Banner$Template;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;FJLcom/urbanairship/iam/content/Banner$Placement;Lcom/urbanairship/json/JsonMap;)Lcom/urbanairship/iam/content/Banner;
+	public static synthetic fun copy-26RPDK8$default (Lcom/urbanairship/iam/content/Banner;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Banner$Template;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;FJLcom/urbanairship/iam/content/Banner$Placement;Lcom/urbanairship/json/JsonMap;ILjava/lang/Object;)Lcom/urbanairship/iam/content/Banner;
+	public final fun copy-bkPiSVE (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Banner$Template;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;FJ)Lcom/urbanairship/iam/content/Banner;
+	public final fun copy-z8BkMoA (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Banner$Template;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;FJLcom/urbanairship/iam/content/Banner$Placement;)Lcom/urbanairship/iam/content/Banner;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActions ()Lcom/urbanairship/json/JsonMap;
+	public final fun getBackgroundColor ()Lcom/urbanairship/iam/info/InAppMessageColor;
+	public final fun getBody ()Lcom/urbanairship/iam/info/InAppMessageTextInfo;
+	public final fun getBorderRadius ()F
+	public final fun getButtonLayoutType ()Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;
+	public final fun getButtons ()Ljava/util/List;
+	public final fun getDismissButtonColor ()Lcom/urbanairship/iam/info/InAppMessageColor;
+	public final fun getDuration-UwyO8pc ()J
+	public final fun getDurationMs ()J
+	public final fun getHeading ()Lcom/urbanairship/iam/info/InAppMessageTextInfo;
+	public final fun getMedia ()Lcom/urbanairship/iam/info/InAppMessageMediaInfo;
+	public final fun getPlacement ()Lcom/urbanairship/iam/content/Banner$Placement;
+	public final fun getTemplate ()Lcom/urbanairship/iam/content/Banner$Template;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/content/Banner$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/content/Banner;
+	public final fun getDEFAULT_DURATION-UwyO8pc ()J
+}
+
+public final class com/urbanairship/iam/content/Banner$Placement : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field BOTTOM Lcom/urbanairship/iam/content/Banner$Placement;
+	public static final field TOP Lcom/urbanairship/iam/content/Banner$Placement;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/iam/content/Banner$Placement;
+	public static fun values ()[Lcom/urbanairship/iam/content/Banner$Placement;
+}
+
+public final class com/urbanairship/iam/content/Banner$Template : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field MEDIA_LEFT Lcom/urbanairship/iam/content/Banner$Template;
+	public static final field MEDIA_RIGHT Lcom/urbanairship/iam/content/Banner$Template;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/iam/content/Banner$Template;
+	public static fun values ()[Lcom/urbanairship/iam/content/Banner$Template;
+}
+
+public final class com/urbanairship/iam/content/Custom : com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/iam/content/Custom$Companion;
+	public final fun copy (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/content/Custom;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/content/Custom;Lcom/urbanairship/json/JsonValue;ILjava/lang/Object;)Lcom/urbanairship/iam/content/Custom;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getValue ()Lcom/urbanairship/json/JsonValue;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/content/Custom$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/content/Custom;
+}
+
+public final class com/urbanairship/iam/content/Fullscreen : com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/iam/content/Fullscreen$Companion;
+	public static final field MAX_BUTTONS I
+	public final fun copy ()Lcom/urbanairship/iam/content/Fullscreen;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;)Lcom/urbanairship/iam/content/Fullscreen;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;)Lcom/urbanairship/iam/content/Fullscreen;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;)Lcom/urbanairship/iam/content/Fullscreen;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;)Lcom/urbanairship/iam/content/Fullscreen;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;)Lcom/urbanairship/iam/content/Fullscreen;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;)Lcom/urbanairship/iam/content/Fullscreen;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Fullscreen$Template;)Lcom/urbanairship/iam/content/Fullscreen;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Fullscreen$Template;Lcom/urbanairship/iam/info/InAppMessageColor;)Lcom/urbanairship/iam/content/Fullscreen;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Fullscreen$Template;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;)Lcom/urbanairship/iam/content/Fullscreen;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/content/Fullscreen;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Fullscreen$Template;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;ILjava/lang/Object;)Lcom/urbanairship/iam/content/Fullscreen;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackgroundColor ()Lcom/urbanairship/iam/info/InAppMessageColor;
+	public final fun getBody ()Lcom/urbanairship/iam/info/InAppMessageTextInfo;
+	public final fun getButtonLayoutType ()Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;
+	public final fun getButtons ()Ljava/util/List;
+	public final fun getDismissButtonColor ()Lcom/urbanairship/iam/info/InAppMessageColor;
+	public final fun getFooter ()Lcom/urbanairship/iam/info/InAppMessageButtonInfo;
+	public final fun getHeading ()Lcom/urbanairship/iam/info/InAppMessageTextInfo;
+	public final fun getMedia ()Lcom/urbanairship/iam/info/InAppMessageMediaInfo;
+	public final fun getTemplate ()Lcom/urbanairship/iam/content/Fullscreen$Template;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+	public final fun validate ()Z
+}
+
+public final class com/urbanairship/iam/content/Fullscreen$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/content/Fullscreen;
+}
+
+public final class com/urbanairship/iam/content/Fullscreen$Template : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field HEADER_BODY_MEDIA Lcom/urbanairship/iam/content/Fullscreen$Template;
+	public static final field HEADER_MEDIA_BODY Lcom/urbanairship/iam/content/Fullscreen$Template;
+	public static final field MEDIA_HEADER_BODY Lcom/urbanairship/iam/content/Fullscreen$Template;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/iam/content/Fullscreen$Template;
+	public static fun values ()[Lcom/urbanairship/iam/content/Fullscreen$Template;
+}
+
+public final class com/urbanairship/iam/content/HTML : com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/iam/content/HTML$Companion;
+	public final fun copy ()Lcom/urbanairship/iam/content/HTML;
+	public final fun copy (Ljava/lang/String;)Lcom/urbanairship/iam/content/HTML;
+	public final fun copy (Ljava/lang/String;J)Lcom/urbanairship/iam/content/HTML;
+	public final fun copy (Ljava/lang/String;JJ)Lcom/urbanairship/iam/content/HTML;
+	public final fun copy (Ljava/lang/String;JJLjava/lang/Boolean;)Lcom/urbanairship/iam/content/HTML;
+	public final fun copy (Ljava/lang/String;JJLjava/lang/Boolean;Ljava/lang/Boolean;)Lcom/urbanairship/iam/content/HTML;
+	public final fun copy (Ljava/lang/String;JJLjava/lang/Boolean;Ljava/lang/Boolean;Lcom/urbanairship/iam/info/InAppMessageColor;)Lcom/urbanairship/iam/content/HTML;
+	public final fun copy (Ljava/lang/String;JJLjava/lang/Boolean;Ljava/lang/Boolean;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;)Lcom/urbanairship/iam/content/HTML;
+	public final fun copy (Ljava/lang/String;JJLjava/lang/Boolean;Ljava/lang/Boolean;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;F)Lcom/urbanairship/iam/content/HTML;
+	public final fun copy (Ljava/lang/String;JJLjava/lang/Boolean;Ljava/lang/Boolean;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;FZ)Lcom/urbanairship/iam/content/HTML;
+	public final fun copy (Ljava/lang/String;JJLjava/lang/Boolean;Ljava/lang/Boolean;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;FZZ)Lcom/urbanairship/iam/content/HTML;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/content/HTML;Ljava/lang/String;JJLjava/lang/Boolean;Ljava/lang/Boolean;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;FZZILjava/lang/Object;)Lcom/urbanairship/iam/content/HTML;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowFullscreenDisplay ()Z
+	public final fun getAspectLock ()Ljava/lang/Boolean;
+	public final fun getBackgroundColor ()Lcom/urbanairship/iam/info/InAppMessageColor;
+	public final fun getBorderRadius ()F
+	public final fun getDismissButtonColor ()Lcom/urbanairship/iam/info/InAppMessageColor;
+	public final fun getForceFullScreenDisplay ()Z
+	public final fun getHeight ()J
+	public final fun getRequiresConnectivity ()Ljava/lang/Boolean;
+	public final fun getUrl ()Ljava/lang/String;
+	public final fun getWidth ()J
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/content/HTML$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/content/HTML;
+}
+
+public abstract class com/urbanairship/iam/content/InAppMessageDisplayContent : android/os/Parcelable, com/urbanairship/json/JsonSerializable {
+	public fun describeContents ()I
+	public fun isEmbedded ()Z
+	public abstract fun validate ()Z
+	public fun writeToParcel (Landroid/os/Parcel;I)V
+}
+
+public final class com/urbanairship/iam/content/InAppMessageDisplayContent$AirshipLayoutContent : com/urbanairship/iam/content/InAppMessageDisplayContent {
+	public fun <init> (Lcom/urbanairship/iam/content/AirshipLayout;)V
+	public final fun component1 ()Lcom/urbanairship/iam/content/AirshipLayout;
+	public final fun copy (Lcom/urbanairship/iam/content/AirshipLayout;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent$AirshipLayoutContent;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/content/InAppMessageDisplayContent$AirshipLayoutContent;Lcom/urbanairship/iam/content/AirshipLayout;ILjava/lang/Object;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent$AirshipLayoutContent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getLayout ()Lcom/urbanairship/iam/content/AirshipLayout;
+	public fun hashCode ()I
+	public fun isEmbedded ()Z
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+	public fun validate ()Z
+}
+
+public final class com/urbanairship/iam/content/InAppMessageDisplayContent$BannerContent : com/urbanairship/iam/content/InAppMessageDisplayContent {
+	public fun <init> (Lcom/urbanairship/iam/content/Banner;)V
+	public final fun component1 ()Lcom/urbanairship/iam/content/Banner;
+	public final fun copy (Lcom/urbanairship/iam/content/Banner;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent$BannerContent;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/content/InAppMessageDisplayContent$BannerContent;Lcom/urbanairship/iam/content/Banner;ILjava/lang/Object;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent$BannerContent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBanner ()Lcom/urbanairship/iam/content/Banner;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+	public fun validate ()Z
+}
+
+public final class com/urbanairship/iam/content/InAppMessageDisplayContent$CustomContent : com/urbanairship/iam/content/InAppMessageDisplayContent {
+	public fun <init> (Lcom/urbanairship/iam/content/Custom;)V
+	public final fun component1 ()Lcom/urbanairship/iam/content/Custom;
+	public final fun copy (Lcom/urbanairship/iam/content/Custom;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent$CustomContent;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/content/InAppMessageDisplayContent$CustomContent;Lcom/urbanairship/iam/content/Custom;ILjava/lang/Object;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent$CustomContent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCustom ()Lcom/urbanairship/iam/content/Custom;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+	public fun validate ()Z
+}
+
+public final class com/urbanairship/iam/content/InAppMessageDisplayContent$FullscreenContent : com/urbanairship/iam/content/InAppMessageDisplayContent {
+	public fun <init> (Lcom/urbanairship/iam/content/Fullscreen;)V
+	public final fun component1 ()Lcom/urbanairship/iam/content/Fullscreen;
+	public final fun copy (Lcom/urbanairship/iam/content/Fullscreen;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent$FullscreenContent;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/content/InAppMessageDisplayContent$FullscreenContent;Lcom/urbanairship/iam/content/Fullscreen;ILjava/lang/Object;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent$FullscreenContent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFullscreen ()Lcom/urbanairship/iam/content/Fullscreen;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+	public fun validate ()Z
+}
+
+public final class com/urbanairship/iam/content/InAppMessageDisplayContent$HTMLContent : com/urbanairship/iam/content/InAppMessageDisplayContent {
+	public fun <init> (Lcom/urbanairship/iam/content/HTML;)V
+	public final fun component1 ()Lcom/urbanairship/iam/content/HTML;
+	public final fun copy (Lcom/urbanairship/iam/content/HTML;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent$HTMLContent;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/content/InAppMessageDisplayContent$HTMLContent;Lcom/urbanairship/iam/content/HTML;ILjava/lang/Object;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent$HTMLContent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHtml ()Lcom/urbanairship/iam/content/HTML;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+	public fun validate ()Z
+}
+
+public final class com/urbanairship/iam/content/InAppMessageDisplayContent$ModalContent : com/urbanairship/iam/content/InAppMessageDisplayContent {
+	public fun <init> (Lcom/urbanairship/iam/content/Modal;)V
+	public final fun component1 ()Lcom/urbanairship/iam/content/Modal;
+	public final fun copy (Lcom/urbanairship/iam/content/Modal;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent$ModalContent;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/content/InAppMessageDisplayContent$ModalContent;Lcom/urbanairship/iam/content/Modal;ILjava/lang/Object;)Lcom/urbanairship/iam/content/InAppMessageDisplayContent$ModalContent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getModal ()Lcom/urbanairship/iam/content/Modal;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+	public fun validate ()Z
+}
+
+public final class com/urbanairship/iam/content/Modal : com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/iam/content/Modal$Companion;
+	public static final field MAX_BUTTONS I
+	public final fun copy ()Lcom/urbanairship/iam/content/Modal;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;)Lcom/urbanairship/iam/content/Modal;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;)Lcom/urbanairship/iam/content/Modal;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;)Lcom/urbanairship/iam/content/Modal;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;)Lcom/urbanairship/iam/content/Modal;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;)Lcom/urbanairship/iam/content/Modal;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;)Lcom/urbanairship/iam/content/Modal;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Modal$Template;)Lcom/urbanairship/iam/content/Modal;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Modal$Template;Lcom/urbanairship/iam/info/InAppMessageColor;)Lcom/urbanairship/iam/content/Modal;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Modal$Template;Lcom/urbanairship/iam/info/InAppMessageColor;F)Lcom/urbanairship/iam/content/Modal;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Modal$Template;Lcom/urbanairship/iam/info/InAppMessageColor;FLcom/urbanairship/iam/info/InAppMessageColor;)Lcom/urbanairship/iam/content/Modal;
+	public final fun copy (Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Modal$Template;Lcom/urbanairship/iam/info/InAppMessageColor;FLcom/urbanairship/iam/info/InAppMessageColor;Z)Lcom/urbanairship/iam/content/Modal;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/content/Modal;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/iam/info/InAppMessageMediaInfo;Lcom/urbanairship/iam/info/InAppMessageButtonInfo;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;Lcom/urbanairship/iam/content/Modal$Template;Lcom/urbanairship/iam/info/InAppMessageColor;FLcom/urbanairship/iam/info/InAppMessageColor;ZILjava/lang/Object;)Lcom/urbanairship/iam/content/Modal;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllowFullscreenDisplay ()Z
+	public final fun getBackgroundColor ()Lcom/urbanairship/iam/info/InAppMessageColor;
+	public final fun getBody ()Lcom/urbanairship/iam/info/InAppMessageTextInfo;
+	public final fun getBorderRadius ()F
+	public final fun getButtonLayoutType ()Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;
+	public final fun getButtons ()Ljava/util/List;
+	public final fun getDismissButtonColor ()Lcom/urbanairship/iam/info/InAppMessageColor;
+	public final fun getFooter ()Lcom/urbanairship/iam/info/InAppMessageButtonInfo;
+	public final fun getHeading ()Lcom/urbanairship/iam/info/InAppMessageTextInfo;
+	public final fun getMedia ()Lcom/urbanairship/iam/info/InAppMessageMediaInfo;
+	public final fun getTemplate ()Lcom/urbanairship/iam/content/Modal$Template;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+	public final fun validate ()Z
+}
+
+public final class com/urbanairship/iam/content/Modal$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/content/Modal;
+}
+
+public final class com/urbanairship/iam/content/Modal$Template : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field HEADER_BODY_MEDIA Lcom/urbanairship/iam/content/Modal$Template;
+	public static final field HEADER_MEDIA_BODY Lcom/urbanairship/iam/content/Modal$Template;
+	public static final field MEDIA_HEADER_BODY Lcom/urbanairship/iam/content/Modal$Template;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/iam/content/Modal$Template;
+	public static fun values ()[Lcom/urbanairship/iam/content/Modal$Template;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageButtonInfo : com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/iam/info/InAppMessageButtonInfo$Companion;
+	public static final field MAX_ID_LENGTH I
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/iam/info/InAppMessageButtonInfo$Behavior;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;F)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/info/InAppMessageTextInfo;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/iam/info/InAppMessageButtonInfo$Behavior;Lcom/urbanairship/iam/info/InAppMessageColor;Lcom/urbanairship/iam/info/InAppMessageColor;FILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getActions ()Lcom/urbanairship/json/JsonMap;
+	public final fun getBackgroundColor ()Lcom/urbanairship/iam/info/InAppMessageColor;
+	public final fun getBehavior ()Lcom/urbanairship/iam/info/InAppMessageButtonInfo$Behavior;
+	public final fun getBorderColor ()Lcom/urbanairship/iam/info/InAppMessageColor;
+	public final fun getBorderRadius ()F
+	public final fun getIdentifier ()Ljava/lang/String;
+	public final fun getLabel ()Lcom/urbanairship/iam/info/InAppMessageTextInfo;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageButtonInfo$Behavior : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field CANCEL Lcom/urbanairship/iam/info/InAppMessageButtonInfo$Behavior;
+	public static final field DISMISS Lcom/urbanairship/iam/info/InAppMessageButtonInfo$Behavior;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/iam/info/InAppMessageButtonInfo$Behavior;
+	public static fun values ()[Lcom/urbanairship/iam/info/InAppMessageButtonInfo$Behavior;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageButtonInfo$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/info/InAppMessageButtonInfo;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageButtonLayoutType : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType$Companion;
+	public static final field JOINED Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;
+	public static final field SEPARATE Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;
+	public static final field STACKED Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;
+	public static fun values ()[Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageButtonLayoutType$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageMediaInfo : com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/iam/info/InAppMessageMediaInfo$Companion;
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/info/InAppMessageMediaInfo$MediaType;Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getType ()Lcom/urbanairship/iam/info/InAppMessageMediaInfo$MediaType;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageMediaInfo$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/info/InAppMessageMediaInfo;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageMediaInfo$MediaType : java/lang/Enum {
+	public static final field IMAGE Lcom/urbanairship/iam/info/InAppMessageMediaInfo$MediaType;
+	public static final field VIDEO Lcom/urbanairship/iam/info/InAppMessageMediaInfo$MediaType;
+	public static final field VIMEO Lcom/urbanairship/iam/info/InAppMessageMediaInfo$MediaType;
+	public static final field YOUTUBE Lcom/urbanairship/iam/info/InAppMessageMediaInfo$MediaType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/iam/info/InAppMessageMediaInfo$MediaType;
+	public static fun values ()[Lcom/urbanairship/iam/info/InAppMessageMediaInfo$MediaType;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageTextInfo : com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/iam/info/InAppMessageTextInfo$Companion;
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/info/InAppMessageColor;Ljava/lang/Float;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageTextInfo$Alignment;Ljava/util/List;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/info/InAppMessageColor;Ljava/lang/Float;Ljava/util/List;Lcom/urbanairship/iam/info/InAppMessageTextInfo$Alignment;Ljava/util/List;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlignment ()Lcom/urbanairship/iam/info/InAppMessageTextInfo$Alignment;
+	public final fun getColor ()Lcom/urbanairship/iam/info/InAppMessageColor;
+	public final fun getDrawable (Landroid/content/Context;)I
+	public final fun getDrawableName ()Ljava/lang/String;
+	public final fun getFontFamilies ()Ljava/util/List;
+	public final fun getSize ()Ljava/lang/Float;
+	public final fun getStyle ()Ljava/util/List;
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageTextInfo$Alignment : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field CENTER Lcom/urbanairship/iam/info/InAppMessageTextInfo$Alignment;
+	public static final field LEFT Lcom/urbanairship/iam/info/InAppMessageTextInfo$Alignment;
+	public static final field RIGHT Lcom/urbanairship/iam/info/InAppMessageTextInfo$Alignment;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/iam/info/InAppMessageTextInfo$Alignment;
+	public static fun values ()[Lcom/urbanairship/iam/info/InAppMessageTextInfo$Alignment;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageTextInfo$Companion {
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/info/InAppMessageTextInfo;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageTextInfo$Style : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field BOLD Lcom/urbanairship/iam/info/InAppMessageTextInfo$Style;
+	public static final field ITALIC Lcom/urbanairship/iam/info/InAppMessageTextInfo$Style;
+	public static final field UNDERLINE Lcom/urbanairship/iam/info/InAppMessageTextInfo$Style;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/iam/info/InAppMessageTextInfo$Style;
+	public static fun values ()[Lcom/urbanairship/iam/info/InAppMessageTextInfo$Style;
+}
+
+public final class com/urbanairship/iam/legacy/LegacyInAppMessage {
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;)V
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;Ljava/lang/String;Lkotlin/time/Duration;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lcom/urbanairship/json/JsonValue;Lcom/urbanairship/json/JsonMap;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;Ljava/lang/String;Lkotlin/time/Duration;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lcom/urbanairship/json/JsonValue;Lcom/urbanairship/json/JsonMap;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;Ljava/lang/String;Lkotlin/time/Duration;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lcom/urbanairship/json/JsonValue;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;Ljava/lang/String;Lkotlin/time/Duration;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Integer;Ljava/lang/Integer;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;Ljava/lang/String;Lkotlin/time/Duration;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Integer;Ljava/lang/Integer;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;Ljava/lang/String;Lkotlin/time/Duration;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Ljava/lang/String;Ljava/util/Map;Ljava/lang/Integer;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;Ljava/lang/String;Lkotlin/time/Duration;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Ljava/lang/String;Ljava/util/Map;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;Ljava/lang/String;Lkotlin/time/Duration;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;Ljava/lang/String;Lkotlin/time/Duration;Ljava/time/Instant;Lcom/urbanairship/json/JsonMap;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;Ljava/lang/String;Lkotlin/time/Duration;Ljava/time/Instant;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/iam/content/Banner$Placement;Ljava/lang/String;Lkotlin/time/Duration;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAlert ()Ljava/lang/String;
+	public final fun getButtonActionValues ()Ljava/util/Map;
+	public final fun getButtonGroupId ()Ljava/lang/String;
+	public final fun getClickActionValues ()Lcom/urbanairship/json/JsonMap;
+	public final fun getDisplayDuration-FghU774 ()Lkotlin/time/Duration;
+	public final fun getDisplayDurationMs ()Ljava/lang/Long;
+	public final fun getExpiry ()Ljava/time/Instant;
+	public final fun getExtras ()Lcom/urbanairship/json/JsonMap;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getPlacement ()Lcom/urbanairship/iam/content/Banner$Placement;
+	public final fun getPrimaryColor ()Ljava/lang/Integer;
+	public final fun getSecondaryColor ()Ljava/lang/Integer;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/urbanairship/iam/legacy/LegacyInAppMessagingInterface {
+	public abstract fun getCustomMessageConverter ()Lkotlin/jvm/functions/Function1;
+	public abstract fun getDisplayAsapEnabled ()Z
+	public abstract fun getMessageExtender ()Lkotlin/jvm/functions/Function1;
+	public abstract fun getScheduleExtender ()Lkotlin/jvm/functions/Function1;
+	public abstract fun setCustomMessageConverter (Lkotlin/jvm/functions/Function1;)V
+	public abstract fun setDisplayAsapEnabled (Z)V
+	public abstract fun setMessageExtender (Lkotlin/jvm/functions/Function1;)V
+	public abstract fun setScheduleExtender (Lkotlin/jvm/functions/Function1;)V
+}
+
