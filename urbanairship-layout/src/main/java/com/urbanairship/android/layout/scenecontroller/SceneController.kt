@@ -48,9 +48,11 @@ public class SceneController internal constructor(
 }
 
 /** Pager controller class for external control over pager navigation. */
+// Note: no parameter defaults. If every parameter had one, Kotlin would generate a public
+// parameterless constructor, which would land in the BCV API dump as unintended public API.
 public class PagerController internal constructor(
-    private val pagerState: SharedState<State.Pager>? = null,
-    dispatcher: CoroutineDispatcher = Dispatchers.Main,
+    private val pagerState: SharedState<State.Pager>?,
+    dispatcher: CoroutineDispatcher,
 ) {
 
     private val _state = MutableStateFlow(

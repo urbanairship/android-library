@@ -27,7 +27,6 @@ public final class com/urbanairship/android/layout/AirshipCustomViewManager {
 }
 
 public final class com/urbanairship/android/layout/scenecontroller/PagerController {
-	public fun <init> ()V
 	public final fun getState ()Lkotlinx/coroutines/flow/StateFlow;
 	public final fun navigate (Lcom/urbanairship/android/layout/scenecontroller/PagerController$NavigationRequest;)Z
 }
