@@ -1,6 +1,5 @@
 package com.urbanairship.android.layout.scenecontroller
 
-import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
 import com.urbanairship.android.layout.model.PageRequest
@@ -35,8 +34,15 @@ public class SceneController internal constructor(
         dismiss.invoke(cancelFutureDisplays)
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
+
+        /**
+         * Creates an inert controller, for previewing and testing custom views.
+         *
+         * [dismiss] does nothing and [pager] has no scene to drive, so
+         * [PagerController.navigate] returns `false` and [PagerController.state] reports that
+         * navigation is unavailable in either direction.
+         */
         public fun empty(): SceneController = SceneController {}
     }
 }

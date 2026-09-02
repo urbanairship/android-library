@@ -47,6 +47,8 @@ public class BannerPresentation public constructor(
             ?: defaultPlacement
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val KEY_DURATION_SECONDS = "duration_seconds"
         private const val KEY_DURATION_MILLISECONDS = "duration_milliseconds"
