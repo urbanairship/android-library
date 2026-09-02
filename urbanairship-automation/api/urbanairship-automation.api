@@ -551,7 +551,6 @@ public final class com/urbanairship/iam/content/AirshipLayout : android/os/Parce
 	public synthetic fun <init> (Lcom/urbanairship/android/layout/info/LayoutInfo;Lcom/urbanairship/json/JsonValue;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun describeContents ()I
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getLayoutInfo ()Lcom/urbanairship/android/layout/info/LayoutInfo;
 	public fun hashCode ()I
 	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
 	public fun toString ()Ljava/lang/String;
