@@ -443,7 +443,7 @@ public class LiveUpdateProcessorTest {
         )
 
         processor.channelUpdates.test {
-            processor.enqueue(Operation.ClearAll(timestamp = 300))
+            processor.enqueue(Operation.ClearAll(timestamp = Instant.ofEpochMilli(300)))
             advanceUntilIdle()
 
             val mutations = listOf(awaitItem(), awaitItem()).map { it.toJsonValue().optMap() }
@@ -464,14 +464,14 @@ public class LiveUpdateProcessorTest {
         state = LiveUpdateState(
             name = name,
             type = "type",
-            timestamp = timestamp,
+            timestamp = Instant.ofEpochMilli(timestamp),
             dismissalDate = null,
             isActive = true
         ),
         content = LiveUpdateContent(
             name = name,
             content = jsonMapOf("foo" to "bar"),
-            timestamp = timestamp
+            timestamp = Instant.ofEpochMilli(timestamp)
         )
     )
 }
