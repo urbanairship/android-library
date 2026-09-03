@@ -20,19 +20,44 @@ jobs:
       - name: Get the version
         id: get_version
         run: |
-          echo "VERSION=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          VERSION="${GITHUB_REF#refs/tags/}"
+          # Defense in depth only - the primary control is that VERSION is never
+          # interpolated into a shell script body. The tag filter's trailing "*" accepts
+          # arbitrary suffixes, so fail closed on anything outside the charset our real
+          # tags use (20.12.0, 18.0.0-alpha, 17.0.0-beta, 7.3.0-dp1, 6.0.0-ea1).
+          if ! printf '%s' "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+[0-9A-Za-z.-]*$'; then
+            echo "::error::Refusing to release: tag is not a valid version string"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Get the release notes
         id: get_release_notes
         env:
           VERSION: ${{ steps.get_version.outputs.VERSION }}
         run: |
+          set -euo pipefail
+
+          # Pass the version to awk as a variable rather than splicing it into the
+          # program text, and anchor the heading match so 20.1.0 can't match 20.1.01.
+          NOTES=$(awk -v ver="$VERSION" '
+            $0 ~ "^## Version " ver "($|[ ]-)" {flag=1; next}
+            $0 ~ "^## Version " {flag=0}
+            flag
+          ' CHANGELOG.md)
+
+          if [ -z "$NOTES" ]; then
+            echo "::error::Could not find notes for Version $VERSION in CHANGELOG.md"
+            exit 1
+          fi
+
           delimiter="$(openssl rand -hex 8)"
           {
             echo "NOTES<<${delimiter}"
-            awk "/## Version $VERSION/{flag=1;next}/## Version/{flag=0}flag" CHANGELOG.md
-            echo ${delimiter}
-          } >> $GITHUB_OUTPUT
+            echo "$NOTES"
+            echo "${delimiter}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Setup Java Version
         uses: actions/setup-java@v4
@@ -47,9 +72,15 @@ jobs:
         run: mkdir -p ~/.gradle ; cp .github/ci-gradle.properties ~/.gradle/gradle.properties
 
       - name: Verify Version
+        env:
+          VERSION: ${{ steps.get_version.outputs.VERSION }}
         run: |
-          VERSION=${{ steps.get_version.outputs.VERSION }}
-          if [[ $(./gradlew -q getVersion) = $VERSION ]]; then exit 0 ; else exit 1; fi
+          set -euo pipefail
+          ACTUAL_VERSION=$(./gradlew -q getVersion)
+          if [[ "$ACTUAL_VERSION" != "$VERSION" ]]; then
+            echo "::error::Version mismatch: tag '$VERSION' does not match Gradle version '$ACTUAL_VERSION'"
+            exit 1
+          fi
 
       - name: Build
         run: ./gradlew assembleRelease packageDocs --stacktrace
