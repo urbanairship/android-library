@@ -87,9 +87,48 @@ public class LimitConfigTest {
 
     @Test
     public fun testEveryResultCounts() {
-        val events = LedgerExecutionResult.entries.map { execution(result = it) }
+        val events = LedgerExecutionResult.known.map { execution(result = it) }
         assertTrue(isOverLimit(limit = events.size.toUInt(), events = events))
         assertFalse(isOverLimit(limit = events.size.toUInt() + 1U, events = events))
+    }
+
+    /**
+     * A result written by a newer SDK must still count. Dropping it would let a
+     * schedule that had spent its budget execute again, which is the opposite
+     * of erring toward showing less.
+     */
+    @Test
+    public fun testUnrecognizedResultCounts() {
+        val events = listOf(
+            execution(result = LedgerExecutionResult.Unknown("some_future_result"))
+        )
+
+        assertTrue(isOverLimit(limit = 1U, events = events))
+    }
+
+    /** A rule listing only unrecognized results stays a no-op. */
+    @Test
+    public fun testRuleWithUnrecognizedResultSubtractsNothing() {
+        val rule = ExclusionRule.fromJson(
+            JsonValue.parseString(
+                """{"source":{"type":"any"},"match":{"type":"execution","results":["some_future_result"]}}"""
+            )
+        )
+
+        // The unknown value is dropped from the rule, leaving nothing to match...
+        assertEquals(
+            emptyList<LedgerExecutionResult>(),
+            (rule.match as LedgerEventMatch.Execution).results
+        )
+
+        // ...so the event stays counted.
+        assertTrue(
+            isOverLimit(
+                limit = 1U,
+                events = listOf(execution()),
+                exclude = ExclusionSet(listOf(rule))
+            )
+        )
     }
 
     @Test

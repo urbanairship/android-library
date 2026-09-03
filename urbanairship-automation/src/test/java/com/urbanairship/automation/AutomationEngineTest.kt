@@ -19,7 +19,7 @@ import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.limits.LedgerConfig
 import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.automation.limits.TestAutomationLedger
-import com.urbanairship.automation.limits.TestLedgerLimitEvaluator
+import com.urbanairship.automation.limits.LedgerLimitEvaluator
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
@@ -111,7 +111,9 @@ public class AutomationEngineTest {
 
     private val ledger = TestAutomationLedger()
 
-    private val limitEvaluator = TestLedgerLimitEvaluator()
+    private val limitEvaluator: LedgerLimitEvaluator = mockk {
+        coEvery { isOverLimit(any()) } returns false
+    }
 
     private val sleeper = TestTaskSleeper(clock) { sleep ->
         clock.currentTime += (sleep.inWholeMilliseconds).milliseconds
@@ -543,14 +545,14 @@ public class AutomationEngineTest {
             listOf(secondArg<(String, AutomationScheduleData?) -> AutomationScheduleData>()("test", stored))
         }
 
-        limitEvaluator.overLimit = true
+        coEvery { limitEvaluator.isOverLimit(any()) } returns true
 
         engine.start()
         advanceUntilIdle()
         engine.upsertSchedules(listOf(sched))
         advanceUntilIdle()
 
-        assertEquals(listOf("test"), limitEvaluator.evaluated)
+        coVerify { limitEvaluator.isOverLimit(match { it.identifier == "test" }) }
         assertEquals(AutomationScheduleState.FINISHED, stored.scheduleState)
     }
 
@@ -565,7 +567,7 @@ public class AutomationEngineTest {
             listOf(secondArg<(String, AutomationScheduleData?) -> AutomationScheduleData>()("test", stored))
         }
 
-        limitEvaluator.overLimit = false
+        coEvery { limitEvaluator.isOverLimit(any()) } returns false
 
         engine.start()
         advanceUntilIdle()

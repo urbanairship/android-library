@@ -321,9 +321,12 @@ internal sealed class LedgerEventMatch : JsonSerializable {
                     // Parse results leniently: drop any result value this SDK
                     // version does not recognize. A rule listing only unknown
                     // results ends up with an empty set, matching nothing.
+                    // Recorded events keep their unrecognized result so they
+                    // still count; a rule carrying one stays a no-op.
                     results = content.get(RESULTS)?.requireList()?.mapNotNull {
                         try {
                             LedgerExecutionResult.fromJson(it)
+                                .takeUnless { result -> result is LedgerExecutionResult.Unknown }
                         } catch (e: JsonException) {
                             null
                         }

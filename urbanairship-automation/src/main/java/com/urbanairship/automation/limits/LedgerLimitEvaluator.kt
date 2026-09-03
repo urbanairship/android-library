@@ -9,7 +9,9 @@ import com.urbanairship.automation.AutomationSchedule
  * Evaluates whether a schedule has reached its execution limit by counting
  * eligible ledger events, replacing the legacy in-schedule execution counter.
  */
-internal interface LedgerLimitEvaluatorInterface {
+internal class LedgerLimitEvaluator(
+    private val store: LedgerStoreInterface
+) {
 
     /**
      * Whether the schedule is at or over its limit.
@@ -20,15 +22,7 @@ internal interface LedgerLimitEvaluatorInterface {
      * `limit_config.exclude`, and compares the total against the schedule's
      * `limit` (null → 1, 0 → unlimited).
      */
-    suspend fun isOverLimit(schedule: AutomationSchedule): Boolean
-}
-
-/** Ledger-backed limit evaluator. */
-internal class LedgerLimitEvaluator(
-    private val store: LedgerStoreInterface
-) : LedgerLimitEvaluatorInterface {
-
-    override suspend fun isOverLimit(schedule: AutomationSchedule): Boolean {
+    suspend fun isOverLimit(schedule: AutomationSchedule): Boolean {
         // null means 1, 0 means no limit.
         val limit = schedule.limit ?: 1U
         if (limit == 0U) {

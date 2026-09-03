@@ -12,7 +12,7 @@ import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.limits.AutomationLedgerInterface
 import com.urbanairship.automation.limits.LedgerExecutionResult
-import com.urbanairship.automation.limits.LedgerLimitEvaluatorInterface
+import com.urbanairship.automation.limits.LedgerLimitEvaluator
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.updateOrCreate
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
@@ -65,7 +65,7 @@ internal class AutomationEngine(
     private val delayProcessor: AutomationDelayProcessorInterface,
     private val eventsHistory: EventsHistory,
     private val ledger: AutomationLedgerInterface,
-    private val limitEvaluator: LedgerLimitEvaluatorInterface,
+    private val limitEvaluator: LedgerLimitEvaluator,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val sleeper: TaskSleeper = TaskSleeper.default,
     private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
