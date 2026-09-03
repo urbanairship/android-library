@@ -539,6 +539,27 @@ public class LedgerStoreTest {
         assertEquals(1, db.dao.count())
     }
 
+    /** The DAO reports what it removed, on both of its strategies. */
+    @Test
+    public fun testDeleteOrphanedEventsReturnsDeletedCount(): TestResult = runTest {
+        store.recordEvents(
+            listOf(
+                execution(scheduleId = "live"),
+                execution(scheduleId = "dead-1"),
+                execution(scheduleId = "dead-2")
+            )
+        )
+
+        assertEquals(2, db.dao.deleteOrphanedEvents(setOf("live"), emptySet()))
+        assertEquals(0, db.dao.deleteOrphanedEvents(setOf("live"), emptySet()))
+
+        // And again past the variable limit, where it deletes by primary key.
+        store.recordEvents(listOf(execution(scheduleId = "dead-3")))
+        val oversized = (0 until 1200).map { "schedule-$it" }.toSet() + "live"
+        assertEquals(1, db.dao.deleteOrphanedEvents(oversized, emptySet()))
+        assertEquals(1, db.dao.count())
+    }
+
     /**
      * Past the SQL variable limit the predicate delete cannot be bound, so
      * retention falls back to testing the rows in memory. Same outcome.

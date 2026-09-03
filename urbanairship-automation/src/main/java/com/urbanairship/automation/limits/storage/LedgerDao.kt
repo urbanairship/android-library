@@ -9,6 +9,12 @@ import androidx.room.Query
 import androidx.room.Transaction
 import com.urbanairship.db.SuspendingBatchedQueryHelper.runBatched
 
+/**
+ * The maximum number of host parameters SQLite will bind in one statement.
+ * See: https://sqlite.org/limits.html#max_variable_number
+ */
+private const val MAX_STATEMENT_PARAMETERS = 999
+
 @Dao
 internal interface LedgerDao {
 
@@ -70,31 +76,35 @@ internal interface LedgerDao {
      * in [liveScheduleIds] **and** its shared group, if it has one, is not in
      * [liveSharedIds].
      *
-     * `sharedId IS NULL` is tested explicitly so rows with no shared group are
-     * judged on their schedule alone rather than falling into SQL's
-     * three-valued logic. SQLite evaluates `x NOT IN ()` as true, so empty live
-     * sets correctly orphan everything.
+     * Picks its own strategy. While the live IDs fit inside the statement
+     * variable limit this is a single predicate delete that reads no rows.
+     * Past that limit the predicate cannot be bound, and `NOT IN` cannot be
+     * batched the way `IN` can — a chunk would delete the rows another chunk
+     * keeps — so the orphans are identified from the scope columns instead and
+     * deleted by primary key in batches. Either way the whole pass is one
+     * transaction.
      *
-     * Binds one variable per live ID, so callers must keep the two sets'
-     * combined size under the 999-variable statement limit.
+     * @return the number of rows deleted.
      */
-    @Query(
-        "DELETE FROM ledger_events " +
-            "WHERE scheduleId NOT IN (:liveScheduleIds) " +
-            "AND (sharedId IS NULL OR sharedId NOT IN (:liveSharedIds))"
-    )
-    suspend fun deleteOrphanedEvents(
-        liveScheduleIds: Collection<String>,
-        liveSharedIds: Collection<String>
-    )
-
-    /** Deletes the rows with the given primary keys. */
     @Transaction
-    suspend fun deleteByIds(ids: List<Int>) {
-        if (ids.isEmpty()) {
-            return
+    suspend fun deleteOrphanedEvents(
+        liveScheduleIds: Set<String>,
+        liveSharedIds: Set<String>
+    ): Int {
+        if (liveScheduleIds.size + liveSharedIds.size <= MAX_STATEMENT_PARAMETERS) {
+            return deleteOrphanedEventsInternal(liveScheduleIds, liveSharedIds)
         }
-        runBatched(ids) { deleteByIdsBatchInternal(it) }
+
+        val orphanIds = getEventScopes()
+            .filter { scope ->
+                scope.scheduleId !in liveScheduleIds &&
+                        (scope.sharedId == null || scope.sharedId !in liveSharedIds)
+            }
+            .map { it.id }
+
+        var deleted = 0
+        runBatched(orphanIds) { deleted += deleteByIdsBatchInternal(it) }
+        return deleted
     }
 
     /**
@@ -138,5 +148,24 @@ internal interface LedgerDao {
      * to avoid the max query params limit of 999.
      */
     @Query("DELETE FROM ledger_events WHERE id IN (:ids)")
-    suspend fun deleteByIdsBatchInternal(ids: Collection<Int>)
+    suspend fun deleteByIdsBatchInternal(ids: Collection<Int>): Int
+
+    /**
+     * This query is only for internal use, by [deleteOrphanedEvents], which
+     * keeps the bound live IDs inside the statement variable limit.
+     *
+     * `sharedId IS NULL` is tested explicitly so rows with no shared group are
+     * judged on their schedule alone rather than falling into SQL's
+     * three-valued logic. SQLite evaluates `x NOT IN ()` as true, so empty live
+     * sets correctly orphan everything.
+     */
+    @Query(
+        "DELETE FROM ledger_events " +
+            "WHERE scheduleId NOT IN (:liveScheduleIds) " +
+            "AND (sharedId IS NULL OR sharedId NOT IN (:liveSharedIds))"
+    )
+    suspend fun deleteOrphanedEventsInternal(
+        liveScheduleIds: Collection<String>,
+        liveSharedIds: Collection<String>
+    ): Int
 }

@@ -134,31 +134,10 @@ internal class LedgerStore(
         }
 
         queue.run {
-            // One predicate delete, so the common case — nothing orphaned —
-            // reads no rows at all.
-            if (liveScheduleIds.size + liveSharedIds.size <= MAX_LIVE_ID_PARAMETERS) {
-                dao.deleteOrphanedEvents(liveScheduleIds, liveSharedIds)
-                return@run
+            val deleted = dao.deleteOrphanedEvents(liveScheduleIds, liveSharedIds)
+            if (deleted > 0) {
+                UALog.v { "Deleted $deleted orphaned ledger events" }
             }
-
-            // Past the statement's variable limit the predicate cannot be bound,
-            // and `NOT IN` cannot be batched the way `IN` can, since a chunk
-            // would delete the rows another chunk keeps. Fall back to testing
-            // the rows in memory: the scope query loads no bodies, and the
-            // ledger is capped.
-            val orphanIds = dao.getEventScopes()
-                .filter { scope ->
-                    scope.scheduleId !in liveScheduleIds &&
-                            (scope.sharedId == null || scope.sharedId !in liveSharedIds)
-                }
-                .map { it.id }
-
-            if (orphanIds.isEmpty()) {
-                return@run
-            }
-
-            UALog.v { "Deleting ${orphanIds.size} orphaned ledger events" }
-            dao.deleteByIds(orphanIds)
         }
     }
 
@@ -235,14 +214,6 @@ internal class LedgerStore(
     } catch (e: JsonException) {
         UALog.e(e) { "Failed to decode ledger event, skipping: ${entity.body}" }
         null
-    }
-
-    private companion object {
-        /**
-         * Live IDs are bound one per SQL variable and a statement is capped at
-         * 999, so beyond this many the predicate delete cannot be used.
-         */
-        const val MAX_LIVE_ID_PARAMETERS = 999
     }
 
     private fun LedgerEvent.toEntity(): LedgerEventEntity = LedgerEventEntity(
