@@ -2,14 +2,19 @@ package com.urbanairship.preferencecenter.compose.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -19,6 +24,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
@@ -29,6 +35,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.urbanairship.contacts.Scope
 import com.urbanairship.json.jsonMapOf
+import com.urbanairship.preferencecenter.compose.ui.item.BasePrefCenterItem
 import com.urbanairship.preferencecenter.compose.ui.item.DescriptionItem
 import com.urbanairship.preferencecenter.compose.ui.item.ItemViewHelper
 import com.urbanairship.preferencecenter.compose.ui.item.SectionBreakItem
@@ -109,6 +116,20 @@ public fun PreferenceCenterScreen(
 /**
  * Preference Center content.
  *
+ * The content adapts to the height it is given:
+ * - When measured with a **bounded** height (a full screen, or a `Modifier.height`/`heightIn`
+ *   applied by the caller), the list scrolls internally and only composes the visible items.
+ * - When measured with an **unbounded** height (inside a `Modifier.verticalScroll` parent, a lazy
+ *   list item, or a host that wraps its content such as a Thomas custom view sized `height: auto`),
+ *   the content wraps to its full height and does *not* scroll. Scrolling is then the
+ *   responsibility of the surrounding container, which must be scrollable to reach content that
+ *   overflows the viewport.
+ *
+ * Inside a scrolling View host, such as a `NestedScrollView` or a Thomas `scroll_layout`, the
+ * content must be measured with an unbounded height — for a Thomas custom view, size it
+ * `height: auto`. A bounded height inside a scrolling host is not supported: the host claims the
+ * vertical drag as soon as it crosses touch slop, so the list's own scrolling can never be reached.
+ *
  * @param identifier The preference center identifier.
  * @param modifier The modifier to be applied to the content.
  * @param contentPadding Optional padding to be applied to the content.
@@ -140,6 +161,20 @@ public fun PreferenceCenterContent(
 
 /**
  * Preference Center content.
+ *
+ * The content adapts to the height it is given:
+ * - When measured with a **bounded** height (a full screen, or a `Modifier.height`/`heightIn`
+ *   applied by the caller), the list scrolls internally and only composes the visible items.
+ * - When measured with an **unbounded** height (inside a `Modifier.verticalScroll` parent, a lazy
+ *   list item, or a host that wraps its content such as a Thomas custom view sized `height: auto`),
+ *   the content wraps to its full height and does *not* scroll. Scrolling is then the
+ *   responsibility of the surrounding container, which must be scrollable to reach content that
+ *   overflows the viewport.
+ *
+ * Inside a scrolling View host, such as a `NestedScrollView` or a Thomas `scroll_layout`, the
+ * content must be measured with an unbounded height — for a Thomas custom view, size it
+ * `height: auto`. A bounded height inside a scrolling host is not supported: the host claims the
+ * vertical drag as soon as it crosses touch slop, so the list's own scrolling can never be reached.
  *
  * @param state The preference center [state][PreferenceCenterState].
  * @param modifier The modifier to be applied to the content.
@@ -192,44 +227,102 @@ private fun ContentView(
     viewState: ViewState.Content,
     onAction: (Action) -> Unit
 ) {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        if (!viewState.title.isNullOrBlank() || !viewState.subtitle.isNullOrBlank()) {
-            item {
-                ItemViewHelper.createItemView(
-                    item = DescriptionItem(title = viewState.title, description = viewState.subtitle),
-                    viewState = viewState,
-                    onAction = onAction
-                )
-            }
-        }
+    // Hoisted so the scroll position survives a re-measure that swaps the branch below.
+    val listState = rememberLazyListState()
 
-        itemsIndexed(
-            items = viewState.listItems,
-            key = { _, item -> item.id },
-            contentType = { _, item -> item.javaClass }
-        ) { index, item ->
-            if (index > 1 && (item is SectionItem || item is SectionBreakItem)) {
-                when (item) {
-                    is SectionBreakItem -> HorizontalDivider(
-                        color = PrefCenterTheme.colors.divider,
-                    )
-                    is SectionItem -> {
-                        if (viewState.listItems[index - 1] !is SectionBreakItem) {
-                            HorizontalDivider(
-                                color = PrefCenterTheme.colors.divider,
-                                modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
-                            )
-                        }
+    // Min constraints are propagated so that a bounded height still forces the list to fill the
+    // space it was given, rather than relying solely on the modifier applied below.
+    BoxWithConstraints(propagateMinConstraints = true) {
+        if (constraints.hasBoundedHeight) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                if (viewState.hasHeader) {
+                    item {
+                        HeaderItem(viewState = viewState, onAction = onAction)
                     }
-                    else -> Unit
+                }
+
+                itemsIndexed(
+                    items = viewState.listItems,
+                    key = { _, item -> item.id },
+                    contentType = { _, item -> item.javaClass }
+                ) { index, item ->
+                    PreferenceItem(
+                        index = index,
+                        item = item,
+                        viewState = viewState,
+                        onAction = onAction
+                    )
                 }
             }
+        } else {
+            // A lazy list can't be measured without a viewport, and with an unbounded height every
+            // item is visible anyway, so wrap the content and leave scrolling to the host.
+            Column(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                if (viewState.hasHeader) {
+                    HeaderItem(viewState = viewState, onAction = onAction)
+                }
 
-            ItemViewHelper.createItemView(item = item, viewState = viewState, onAction = onAction)
+                viewState.listItems.forEachIndexed { index, item ->
+                    key(item.id) {
+                        PreferenceItem(
+                            index = index,
+                            item = item,
+                            viewState = viewState,
+                            onAction = onAction
+                        )
+                    }
+                }
+            }
         }
     }
+}
+
+/** Whether the config provides a title or subtitle to show above the list. */
+private val ViewState.Content.hasHeader: Boolean
+    get() = !title.isNullOrBlank() || !subtitle.isNullOrBlank()
+
+@Composable
+private fun HeaderItem(
+    viewState: ViewState.Content,
+    onAction: (Action) -> Unit
+) {
+    ItemViewHelper.createItemView(
+        item = DescriptionItem(title = viewState.title, description = viewState.subtitle),
+        viewState = viewState,
+        onAction = onAction
+    )
+}
+
+@Composable
+private fun PreferenceItem(
+    index: Int,
+    item: BasePrefCenterItem,
+    viewState: ViewState.Content,
+    onAction: (Action) -> Unit
+) {
+    if (index > 1 && (item is SectionItem || item is SectionBreakItem)) {
+        when (item) {
+            is SectionBreakItem -> HorizontalDivider(
+                color = PrefCenterTheme.colors.divider,
+            )
+            is SectionItem -> {
+                if (viewState.listItems[index - 1] !is SectionBreakItem) {
+                    HorizontalDivider(
+                        color = PrefCenterTheme.colors.divider,
+                        modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
+                    )
+                }
+            }
+            else -> Unit
+        }
+    }
+
+    ItemViewHelper.createItemView(item = item, viewState = viewState, onAction = onAction)
 }
 
 @Composable
@@ -351,6 +444,26 @@ internal fun PreviewPreferenceCenterContent() {
         PreferenceCenterScreen(
             rememberPreferenceCenterState(PreferenceCenterViewModel.forPreview(previewState))
         )
+    }
+}
+
+/**
+ * Content measured with an unbounded height, as it is when embedded in a host that wraps its
+ * content (e.g. a Thomas custom view sized with `height: auto`). Any vertically scrollable parent
+ * hands its children an infinite max height, so this reproduces that measurement without a host.
+ *
+ * `heightDp` only bounds the preview frame; the scrollable parent still passes an infinite height
+ * down, so the unbounded path is what gets exercised.
+ */
+@Preview("Content - unbounded height", heightDp = 600)
+@Composable
+internal fun PreviewPreferenceCenterContentUnbounded() {
+    PreferenceCenterTheme {
+        Column(Modifier.verticalScroll(rememberScrollState())) {
+            PreferenceCenterContent(
+                rememberPreferenceCenterState(PreferenceCenterViewModel.forPreview(previewState))
+            )
+        }
     }
 }
 

@@ -1,9 +1,7 @@
 package com.urbanairship.liveupdate
 
-import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Context.NOTIFICATION_SERVICE
 import android.content.Intent
 import androidx.annotation.VisibleForTesting
 import androidx.core.app.NotificationCompat
@@ -15,7 +13,9 @@ import com.urbanairship.json.JsonMap
 import com.urbanairship.liveupdate.CallbackLiveUpdateNotificationHandler.NotificationResult
 import com.urbanairship.liveupdate.LiveUpdateProcessor.HandlerCallback
 import com.urbanairship.liveupdate.LiveUpdateProcessor.Operation
+import com.urbanairship.liveupdate.data.LiveUpdateContent
 import com.urbanairship.liveupdate.data.LiveUpdateDao
+import com.urbanairship.liveupdate.data.LiveUpdateState
 import com.urbanairship.liveupdate.notification.LiveUpdateNotificationReceiver
 import com.urbanairship.liveupdate.notification.LiveUpdatePayload
 import com.urbanairship.liveupdate.notification.NotificationTimeoutCompat
@@ -24,9 +24,11 @@ import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
 import com.urbanairship.util.Clock
 import com.urbanairship.util.PendingIntentCompat
+import com.urbanairship.util.minus
 import java.time.Instant
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +47,9 @@ internal class LiveUpdateRegistrar(
     private val processor: LiveUpdateProcessor = LiveUpdateProcessor(dao),
     private val notificationManager: NotificationManagerCompat = NotificationManagerCompat.from(context),
     private val notificationTimeoutCompat: NotificationTimeoutCompat = NotificationTimeoutCompat(),
+    private val clock: Clock = Clock.DEFAULT_CLOCK,
+    /** Dispatcher that handler callbacks are invoked on. Injectable so tests can drive them. */
+    private val handlerDispatcher: CoroutineDispatcher = Dispatchers.Default,
 ) {
     private val job = SupervisorJob()
     private val scope: CoroutineScope = CoroutineScope(dispatcher + job)
@@ -162,24 +167,64 @@ internal class LiveUpdateRegistrar(
             }
     }
 
-    /** End any Live Updates notifications that are no longer displayed. */
-    fun stopLiveUpdatesForClearedNotifications() {
+    /**
+     * Ends any Live Update that has been inactive for longer than [MAX_INACTIVITY] *and* no longer
+     * has a notification in the shade.
+     *
+     * Both conditions are required, and neither is sufficient alone:
+     *
+     * Inactivity alone is not enough, because a Live Update whose notification is still displayed
+     * can still be refreshed by a later update, so there is nothing to clean up.
+     *
+     * A missing notification alone is also not enough. It may not have been posted yet, been
+     * dropped by an app upgrade, per-app notification cap, or because notifications are disabled.
+     *
+     * Live Updates handled by a [CustomLiveUpdateHandler] are skipped entirely: they own their own
+     * presentation, so we can't reason about whether they are stale.
+     */
+    fun endStaleLiveUpdates() {
         scope.launch {
-            val nm = context.getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            val activeNotifications = nm.activeNotifications.map { it.tag }
+            val now = clock.now()
 
-            dao.getAllActive()
-                // Filter out any LUs that use custom handlers or have active notifications
-                .filter { (update, _) ->
-                    handlers[update.type] is NotificationLiveUpdateHandler &&
-                            notificationTag(update.type, update.name) !in activeNotifications
+            // Cheap, local checks first. The notification snapshot is only read once we know
+            // something is actually stale, which also means it can never be captured before the
+            // query that decides which Live Updates we care about.
+            val stale = dao.getAllActive().filter { (state, content) ->
+                handlers[state.type] is NotificationLiveUpdateHandler &&
+                        now - lastActivityAt(state, content) > MAX_INACTIVITY
+            }
+
+            if (stale.isEmpty()) {
+                return@launch
+            }
+
+            val activeNotifications = try {
+                notificationManager.activeNotifications.map { it.tag }
+            } catch (e: Exception) {
+                // Known to throw on some OEM builds. Without a snapshot we cannot tell whether
+                // these are still displayed, so leave them for the next launch.
+                UALog.w(e) { "Unable to query active notifications. Skipping Live Update cleanup." }
+                return@launch
+            }
+
+            stale
+                .filter { (state, _) ->
+                    notificationTag(state.type, state.name) !in activeNotifications
                 }
-                // End any Live Updates that are no longer displayed
-                .forEach { (update, content) ->
-                    stop(update.name, content?.content, update.timestamp, update.dismissalDate)
+                .forEach { (state, content) ->
+                    UALog.v {
+                        "Ending stale Live Update '${state.name}': inactive for " +
+                                "${now - lastActivityAt(state, content)} with no notification " +
+                                "displayed (tag=${notificationTag(state.type, state.name)})."
+                    }
+                    stop(state.name, content?.content, state.timestamp, state.dismissalDate)
                 }
         }
     }
+
+    /** The last time we heard anything at all about this Live Update. */
+    private fun lastActivityAt(state: LiveUpdateState, content: LiveUpdateContent?): Instant =
+        maxOf(state.timestamp, content?.timestamp ?: Instant.EPOCH)
 
     private suspend fun handleCallback(callback: HandlerCallback) {
         val (action, update, message) = callback
@@ -191,11 +236,11 @@ internal class LiveUpdateRegistrar(
         }
 
         when (handler) {
-            is SuspendLiveUpdateNotificationHandler -> withContext(Dispatchers.Default) {
+            is SuspendLiveUpdateNotificationHandler -> withContext(handlerDispatcher) {
                 val result = handler.onUpdate(context, action, update)
                 handleResult(action, result, handler, update, message)
             }
-            is CallbackLiveUpdateNotificationHandler -> withContext(Dispatchers.Default) {
+            is CallbackLiveUpdateNotificationHandler -> withContext(handlerDispatcher) {
                 handler.onUpdate(context, action, update, object : CallbackLiveUpdateNotificationHandler.LiveUpdateResultCallback {
                     override fun ok(builder: NotificationCompat.Builder): NotificationResult? {
                         val result = LiveUpdateResult.ok(builder)
@@ -207,7 +252,7 @@ internal class LiveUpdateRegistrar(
                     }
                 })
             }
-            is CallbackLiveUpdateCustomHandler -> withContext(Dispatchers.Default) {
+            is CallbackLiveUpdateCustomHandler -> withContext(handlerDispatcher) {
                 handler.onUpdate(context, action, update, object : CallbackLiveUpdateCustomHandler.LiveUpdateResultCallback {
                     override fun ok() {
                         handleResult(action, LiveUpdateResult.ok<Nothing>(), handler, update, message)
@@ -218,7 +263,7 @@ internal class LiveUpdateRegistrar(
                     }
                 })
             }
-            is SuspendLiveUpdateCustomHandler -> withContext(Dispatchers.Default) {
+            is SuspendLiveUpdateCustomHandler -> withContext(handlerDispatcher) {
                 val result = handler.onUpdate(context, action, update)
                 handleResult(action, result, handler, update, message)
             }
@@ -238,7 +283,7 @@ internal class LiveUpdateRegistrar(
                     return postNotification(context, update, result.value, result.extender, message)
                 }
                 is LiveUpdateResult.Cancel -> {
-                    stop(update.name, update.content, Clock.DEFAULT_CLOCK.now(), null, message)
+                    stopUnlessAlreadyEnded(action, update, message)
                     cancelNotification(update.notificationTag)
                 }
             }
@@ -247,12 +292,34 @@ internal class LiveUpdateRegistrar(
                     // No-op. Custom handlers are responsible doing something with the update.
                 }
                 is LiveUpdateResult.Cancel -> {
-                    stop(update.name, update.content, Clock.DEFAULT_CLOCK.now(), null, null)
+                    stopUnlessAlreadyEnded(action, update, message = null)
                 }
             }
         }
 
         return null
+    }
+
+    /**
+     * Stops the Live Update in response to a handler cancelling it, unless it has already ended.
+     *
+     * An [LiveUpdateEvent.END] callback is itself the product of a stop, or of `clearAll`, so there
+     * is nothing left to stop. Enqueueing another would log a warning on every ordinary end — and
+     * if the Live Update has since been restarted under the same name, the redundant stop can end
+     * the new one: [LiveUpdateProcessor.processStop] only rejects it while the Live Update is
+     * inactive, and its staleness check compares the restart's timestamp against the current time,
+     * which is always later.
+     */
+    private fun stopUnlessAlreadyEnded(
+        action: LiveUpdateEvent,
+        update: LiveUpdate,
+        message: PushMessage?
+    ) {
+        if (action == LiveUpdateEvent.END) {
+            return
+        }
+
+        stop(update.name, update.content, clock.now(), null, message)
     }
 
     private fun postNotification(
@@ -324,6 +391,19 @@ internal class LiveUpdateRegistrar(
     internal companion object {
         @VisibleForTesting
         internal const val NOTIFICATION_ID = 1010
+
+        /**
+         * How long a Live Update may go without any activity before it becomes eligible to be
+         * ended by [endStaleLiveUpdates].
+         *
+         * Anchored to the iOS Live Activity ceiling (roughly 8 hours of updates plus 4 hours on
+         * the Lock Screen) so that the two platforms bound Live Updates on comparable timescales.
+         * Note this bounds *inactivity*, measured from the last event we saw for the Live Update —
+         * it is deliberately not a reimplementation of ActivityKit's dismissal from start time, so
+         * a Live Update that keeps receiving updates is never ended by us.
+         */
+        @VisibleForTesting
+        internal val MAX_INACTIVITY = 12.hours
     }
 }
 

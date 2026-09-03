@@ -65,6 +65,41 @@ public class LiveUpdateManagerTest {
         liveUpdateManager.init()
 
         verify { pushManager.addPushListener(any()) }
-        verify { channel.addChannelListener(any()) }
+        verify(exactly = 0) { registrar.clearAll(any()) }
+
+        // Not during init: handlers are registered from the takeOff onReady callback, which runs
+        // after init(), so the cleanup could not yet tell which Live Updates use notifications.
+        verify(exactly = 0) { registrar.endStaleLiveUpdates() }
+    }
+
+    @Test
+    public fun testOnAirshipReadyEndsStaleLiveUpdates() {
+        liveUpdateManager.init()
+        liveUpdateManager.onAirshipReady()
+
+        // Exactly once per process.
+        verify(exactly = 1) { registrar.endStaleLiveUpdates() }
+    }
+
+    @Test
+    public fun testInitWithPushDisabled() {
+        val store = PreferenceStore.inMemoryStore(context)
+        val manager = LiveUpdateManager(
+            context = context,
+            dataStore = store,
+            config = config,
+            privacyManager = PrivacyManager(store, PrivacyManager.Feature.NONE),
+            channel = channel,
+            pushManager = pushManager,
+            db = database,
+            registrar = registrar
+        )
+
+        manager.init()
+        manager.onAirshipReady()
+
+        verify(exactly = 1) { registrar.clearAll(any()) }
+        // Push is disabled, so there is no need to check staleness.
+        verify(exactly = 0) { registrar.endStaleLiveUpdates() }
     }
 }
