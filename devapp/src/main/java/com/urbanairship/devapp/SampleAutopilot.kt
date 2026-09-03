@@ -18,6 +18,7 @@ import com.urbanairship.devapp.thomas.customviews.CustomAdView
 import com.urbanairship.devapp.thomas.customviews.CustomMapView
 import com.urbanairship.devapp.thomas.customviews.CustomWeatherView
 import com.urbanairship.devapp.thomas.customviews.CustomWeatherViewXml
+import com.urbanairship.devapp.thomas.customviews.PreferenceCenterCustomView
 import com.urbanairship.devapp.thomas.customviews.SceneControllerCustomView
 import com.urbanairship.liveupdate.LiveUpdateManager
 import com.urbanairship.messagecenter.messageCenter
@@ -77,6 +78,7 @@ class SampleAutopilot : Autopilot() {
         AirshipCustomViewManager.register("ad_custom_view", CustomAdView())
         AirshipCustomViewManager.register("map_custom_view", CustomMapView())
         AirshipCustomViewManager.register("scene_controller_test", SceneControllerCustomView())
+        AirshipCustomViewManager.register("pref_center_custom_view", PreferenceCenterCustomView())
 
         // Set up message center deep link handling
         Airship.messageCenter.setOnShowMessageCenterListener { messageId: String? ->

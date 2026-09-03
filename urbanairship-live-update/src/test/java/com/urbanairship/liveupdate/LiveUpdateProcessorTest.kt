@@ -429,4 +429,49 @@ public class LiveUpdateProcessorTest {
             ensureAllEventsConsumed()
         }
     }
+
+    /**
+     * Clearing all Live Updates must unregister them from the channel. Without this, disabling the
+     * Push feature wipes local state while leaving the channel's Live Update tags in place, with
+     * nothing left that could ever remove them.
+     */
+    @Test
+    public fun testClearAllEmitsRemoveMutations(): TestResult = runTest(testDispatcher) {
+        coEvery { dao.getAllActive() } returns listOf(
+            activeLiveUpdate(name = "one", timestamp = 100),
+            activeLiveUpdate(name = "two", timestamp = 200)
+        )
+
+        processor.channelUpdates.test {
+            processor.enqueue(Operation.ClearAll(timestamp = Instant.ofEpochMilli(300)))
+            advanceUntilIdle()
+
+            val mutations = listOf(awaitItem(), awaitItem()).map { it.toJsonValue().optMap() }
+
+            assertEquals("remove", mutations[0].opt("action").optString())
+            assertEquals("one", mutations[0].opt("name").optString())
+            assertEquals(100L, mutations[0].opt("start_ts_ms").getLong(0))
+
+            assertEquals("remove", mutations[1].opt("action").optString())
+            assertEquals("two", mutations[1].opt("name").optString())
+            assertEquals(200L, mutations[1].opt("start_ts_ms").getLong(0))
+
+            ensureAllEventsConsumed()
+        }
+    }
+
+    private fun activeLiveUpdate(name: String, timestamp: Long) = LiveUpdateStateWithContent(
+        state = LiveUpdateState(
+            name = name,
+            type = "type",
+            timestamp = Instant.ofEpochMilli(timestamp),
+            dismissalDate = null,
+            isActive = true
+        ),
+        content = LiveUpdateContent(
+            name = name,
+            content = jsonMapOf("foo" to "bar"),
+            timestamp = Instant.ofEpochMilli(timestamp)
+        )
+    )
 }

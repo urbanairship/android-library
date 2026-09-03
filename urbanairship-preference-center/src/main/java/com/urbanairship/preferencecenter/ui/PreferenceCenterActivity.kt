@@ -1,9 +1,13 @@
 package com.urbanairship.preferencecenter.ui
 
+import android.content.res.Configuration
 import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentContainerView
 import com.urbanairship.Autopilot
@@ -29,6 +33,16 @@ public class PreferenceCenterActivity : FragmentActivity() {
         // first version  where edge to edge rendering is forced.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
             enableEdgeToEdge()
+            window.isNavigationBarContrastEnforced = false
+
+            // enableEdgeToEdge picks status bar icon appearance from day/night mode,
+            // ignoring the theme's windowLightStatusBar. Restore the theme attribute
+            // so apps can keep icons legible over a custom toolbar color.
+            val attrs = theme.obtainStyledAttributes(intArrayOf(android.R.attr.windowLightStatusBar))
+            val isNight = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+            val lightStatusBar = attrs.getBoolean(0, !isNight)
+            attrs.recycle()
+            WindowCompat.getInsetsController(window, window.decorView).isAppearanceLightStatusBars = lightStatusBar
         }
         super.onCreate(savedInstanceState)
         Autopilot.automaticTakeOff(application)
@@ -50,6 +64,18 @@ public class PreferenceCenterActivity : FragmentActivity() {
 
         // Restore the fragment, if we can
         val fragmentContainer = findViewById<FragmentContainerView>(R.id.fragment_container)
+
+        if (Build.VERSION.SDK_INT >= 35) {
+            // Pad the toolbar instead of the content root so the toolbar background
+            // extends behind the transparent status bar.
+            ViewCompat.setOnApplyWindowInsetsListener(view) { _, insets ->
+                val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+                topAppBar.setPadding(systemBars.left, systemBars.top, systemBars.right, 0)
+                fragmentContainer.setPadding(systemBars.left, 0, systemBars.right, systemBars.bottom)
+                insets
+            }
+            ViewCompat.requestApplyInsets(view)
+        }
         if (savedInstanceState != null) {
             fragment = fragmentContainer.getFragment() as PreferenceCenterFragment
         }

@@ -4,6 +4,16 @@
 
 [All Releases](https://github.com/urbanairship/android-library/releases)
 
+## Version 20.12.0 - August 25, 2026
+
+Minor release that fixes an issue where active Live Updates could stop receiving updates.
+Apps that make use of Live Updates should update to this version or newer.
+
+### Changes
+- Fixed an issue that could cause Live Updates to become unregistered from the channel if the notification was missing from the notification shade, leading to updates not being delivered. Live Updates are now only automatically ended by the SDK after 12 hours of inactivity with no notification displayed.
+- Fixed Live Update tags not being removed from the channel when the Push feature is disabled
+- Scenes no longer lock to the host Activity orientation
+
 ## Version 20.11.1 - August 18, 2026
 
 Patch release that fixes a DB migration issue introduced in 20.10.1.

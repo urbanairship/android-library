@@ -10,7 +10,6 @@ import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.Airship
 import com.urbanairship.channel.AirshipChannel
-import com.urbanairship.channel.AirshipChannelListener
 import com.urbanairship.config.AirshipRuntimeConfig
 import com.urbanairship.json.JsonMap
 import com.urbanairship.liveupdate.data.LiveUpdateDatabase
@@ -36,7 +35,7 @@ internal constructor(
     config: AirshipRuntimeConfig,
     private val privacyManager: PrivacyManager,
     private val pushManager: PushManager,
-    private val channel: AirshipChannel,
+    channel: AirshipChannel,
     db: LiveUpdateDatabase = LiveUpdateDatabase.createDatabase(context, config),
     private val registrar: LiveUpdateRegistrar = LiveUpdateRegistrar(context, channel, db.liveUpdateDao()),
 ) : AirshipComponent(context, dataStore) {
@@ -170,14 +169,8 @@ internal constructor(
     public override fun init() {
         super.init()
 
-        channel.addChannelListener(
-            listener = object : AirshipChannelListener {
-                override fun onChannelCreated(channelId: String) {
-                    updateLiveActivityEnablement()
-                }
-            }
-        )
-        privacyManager.addListener { updateLiveActivityEnablement() }
+        // Clear local Live Update state if the Push feature is turned off.
+        privacyManager.addListener { clearIfFeatureDisabled() }
 
         pushManager.addPushListener { message, _ ->
             message.liveUpdatePayload
@@ -185,17 +178,24 @@ internal constructor(
                 ?.let { registrar.onLiveUpdatePushReceived(message, it) }
         }
 
-        updateLiveActivityEnablement()
+        clearIfFeatureDisabled()
     }
 
-    private fun updateLiveActivityEnablement() {
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public override fun onAirshipReady() {
+        super.onAirshipReady()
+
         if (isFeatureEnabled) {
-            // Check for any active live Updates that have had their notifications cleared.
-            // This makes sure we'll end the live update if the notification is dropped due
-            // to an app upgrade or other cases where we don't get notified of the dismiss.
-            registrar.stopLiveUpdatesForClearedNotifications()
-        } else {
-            // Clear all live updates.
+            // Clean up any Live Updates that have gone stale and are no longer displayed.
+            // We need handlers to be registered before this call, which is why this is in
+            // onAirshipReady instead of the init method above.
+            registrar.endStaleLiveUpdates()
+        }
+    }
+
+    private fun clearIfFeatureDisabled() {
+        if (!isFeatureEnabled) {
             registrar.clearAll()
         }
     }
