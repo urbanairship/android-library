@@ -131,7 +131,6 @@ public data class EmbeddedViewItem internal constructor(
             embeddedId = request.embeddedViewId,
             embeddedLayout = layout,
             embeddedSize = layout.getPlacement()?.size?.toEmbeddedSize(),
-            // Consumers provide their own placeholder, if desired.
             placeholder = null,
             modifier = Modifier.fillMaxWidth()
         )
