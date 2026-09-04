@@ -11,6 +11,8 @@ import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProc
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.limits.AutomationLedgerInterface
+import com.urbanairship.automation.limits.LedgerExecutionResult
+import com.urbanairship.automation.limits.LedgerLimitEvaluator
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.updateOrCreate
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
@@ -63,6 +65,7 @@ internal class AutomationEngine(
     private val delayProcessor: AutomationDelayProcessorInterface,
     private val eventsHistory: EventsHistory,
     private val ledger: AutomationLedgerInterface,
+    private val limitEvaluator: LedgerLimitEvaluator,
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val sleeper: TaskSleeper = TaskSleeper.default,
     private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
@@ -213,10 +216,15 @@ internal class AutomationEngine(
 
         UALog.d { "Updating schedules $idToScheduleKeys" }
 
+        // The ledger read is a suspending DB call and cannot run inside the
+        // store's update block, so resolve each schedule's over-limit state up
+        // front and feed it in.
+        val overLimitById = idToSchedule.mapValues { (_, schedule) -> isOverLimit(schedule) }
+
         val updatedSchedules = store.upsertSchedules(idToSchedule.keys.toList()) { identifier, data ->
             val schedule = requireNotNull(idToSchedule[identifier])
             val stored = schedule.updateOrCreate(data, clock.now())
-            stored.updateState(clock.now())
+            stored.updateState(clock.now(), overLimitById[identifier] ?: false)
         }
 
         triggerProcessor.updateSchedules(updatedSchedules)
@@ -306,6 +314,20 @@ internal class AutomationEngine(
             .toList()
     }
 
+    /** Whether the schedule has reached its limit according to the ledger. */
+    private suspend fun isOverLimit(schedule: AutomationSchedule): Boolean =
+        limitEvaluator.isOverLimit(schedule)
+
+    /**
+     * Looks the schedule up by ID before evaluating its ledger limit. Returns
+     * `false` when the schedule can't be loaded, erring toward continuing rather
+     * than silently finishing.
+     */
+    private suspend fun isOverLimit(scheduleId: String): Boolean {
+        val data = store.getSchedule(scheduleId) ?: return false
+        return isOverLimit(data.schedule)
+    }
+
     private suspend fun updateState(
         identifier: String,
         updateBlock: (AutomationScheduleData) -> AutomationScheduleData
@@ -321,7 +343,10 @@ internal class AutomationEngine(
         try {
             when(result.triggerExecutionType) {
                 TriggerExecutionType.DELAY_CANCELLATION -> {
-                    val data = updateState(result.scheduleId) { it.executionCancelled(date) }
+                    val isOverLimit = isOverLimit(result.scheduleId)
+                    val data = updateState(result.scheduleId) {
+                        it.executionCancelled(date, isOverLimit)
+                    }
                     data?.let { preparer.cancelled(it.schedule) }
                 }
                 TriggerExecutionType.EXECUTION -> {
@@ -329,9 +354,10 @@ internal class AutomationEngine(
                     // whether this call is the one that moved it into TRIGGERED. A
                     // redundant trigger result leaves the state alone and records nothing.
                     var didTrigger = false
+                    val isOverLimit = isOverLimit(result.scheduleId)
                     val updated = updateState(result.scheduleId) { data ->
                         val wasIdle = data.scheduleState == AutomationScheduleState.IDLE
-                        data.triggered(result.triggerInfo, date).also {
+                        data.triggered(result.triggerInfo, date, isOverLimit).also {
                             didTrigger = wasIdle &&
                                     it.scheduleState == AutomationScheduleState.TRIGGERED
                         }
@@ -370,14 +396,35 @@ internal class AutomationEngine(
             val preparedInfo = data.preparedScheduleInfo
             if (data.scheduleState == AutomationScheduleState.EXECUTING && preparedInfo != null) {
                 val behavior = executor.interrupted(data.schedule, preparedInfo)
+                val retry = behavior == InterruptedBehavior.RETRY
+
+                if (!retry) {
+                    // The schedule executed - it was displaying or running actions
+                    // when the app went away - so it consumed budget. Record the
+                    // outcome unless the executor already got to, then read the
+                    // ledger with it counted.
+                    ledger.recordExecutionIfNoneSince(
+                        scheduleId = data.schedule.identifier,
+                        sharedId = preparedInfo.ledgerSharedId,
+                        triggerId = preparedInfo.triggerId,
+                        result = LedgerExecutionResult.SUCCEEDED,
+                        cancel = false,
+                        since = data.scheduleStateChangeDate
+                    )
+                }
+
+                val isOverLimit = isOverLimit(data.schedule)
                 updated = updateState(data.schedule.identifier) {
-                    it.executionInterrupted(now, retry = behavior == InterruptedBehavior.RETRY)
+                    it.executionInterrupted(now, retry = retry, isOverLimit = isOverLimit)
                 }
                 if (updated?.scheduleState == AutomationScheduleState.PAUSED) {
                     handleInterval(updated.schedule.interval ?: Duration.ZERO, data.schedule.identifier)
                 }
             } else {
-                updated = updateState(data.schedule.identifier) { it.prepareInterrupted(now) }
+                val isOverLimit = isOverLimit(data.schedule)
+                updated = updateState(data.schedule.identifier) {
+                    it.prepareInterrupted(now, isOverLimit)
+                }
             }
 
             if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
@@ -456,8 +503,9 @@ internal class AutomationEngine(
         waitForConditions(preparedData)
 
         if (!checkStillValid(preparedData)) {
+            val isOverLimit = isOverLimit(preparedData.schedule.schedule)
             val updated = updateState(preparedData.scheduleId) {
-                it.executionInvalidated(clock.now())
+                it.executionInvalidated(clock.now(), isOverLimit)
             }
 
             if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
@@ -561,6 +609,16 @@ internal class AutomationEngine(
         )
         UALog.v { "Preparing schedule $data result: $result" }
 
+        // Read the ledger after prepare so a penalizing audience miss, whose
+        // `audience_miss` event is recorded during prepare, is already counted.
+        // Only the transitions below consult it, so skip the read otherwise.
+        val isOverLimit = when (result) {
+            is SchedulePrepareResult.Prepared,
+            SchedulePrepareResult.Penalize,
+            SchedulePrepareResult.Skip -> isOverLimit(data.schedule)
+            else -> false
+        }
+
         val updated = updateState(data.schedule.identifier) {
             if (!it.isInState(listOf(AutomationScheduleState.TRIGGERED))) {
                 UALog.v { "Schedule $data no longer triggered" }
@@ -569,13 +627,13 @@ internal class AutomationEngine(
 
             return@updateState when(result) {
                 is SchedulePrepareResult.Prepared -> {
-                    it.prepared(result.schedule.info, clock.now())
+                    it.prepared(result.schedule.info, clock.now(), isOverLimit)
                 }
                 SchedulePrepareResult.Penalize -> {
-                    it.prepareCancelled(clock.now(), penalize = true)
+                    it.prepareCancelled(clock.now(), penalize = true, isOverLimit = isOverLimit)
                 }
                 SchedulePrepareResult.Skip -> {
-                    it.prepareCancelled(clock.now(), penalize = false)
+                    it.prepareCancelled(clock.now(), penalize = false, isOverLimit = isOverLimit)
                 }
                 else -> { it }
             }
@@ -621,8 +679,9 @@ internal class AutomationEngine(
         when (checkReady(data, preparedSchedule)) {
             ScheduleReadyResult.READY -> {}
             ScheduleReadyResult.INVALIDATE -> {
+                val isOverLimit = isOverLimit(data.schedule)
                 val updated =
-                    updateState(scheduleID) { it.executionInvalidated(clock.now()) }
+                    updateState(scheduleID) { it.executionInvalidated(clock.now(), isOverLimit) }
                 if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
                     startTaskToProcessTriggeredSchedule(scheduleID)
                 } else {
@@ -637,7 +696,8 @@ internal class AutomationEngine(
             }
 
             ScheduleReadyResult.SKIP -> {
-                updateState(scheduleID) { it.executionSkipped(clock.now()) }
+                val isOverLimit = isOverLimit(data.schedule)
+                updateState(scheduleID) { it.executionSkipped(clock.now(), isOverLimit) }
                 preparer.cancelled(data.schedule)
                 return true
             }
@@ -663,8 +723,11 @@ internal class AutomationEngine(
             }
 
             ScheduleExecuteResult.FINISHED -> {
+                // The execution ledger event is recorded during `execute`, so the
+                // read here counts it when deciding whether the limit is hit.
+                val isOverLimit = isOverLimit(data.schedule)
                 val update =
-                    updateState(scheduleID) { it.finishedExecuting(clock.now()) }
+                    updateState(scheduleID) { it.finishedExecuting(clock.now(), isOverLimit) }
                 if (update?.scheduleState == AutomationScheduleState.PAUSED) {
                     handleInterval(update.schedule.interval ?: Duration.ZERO, scheduleID)
                 }

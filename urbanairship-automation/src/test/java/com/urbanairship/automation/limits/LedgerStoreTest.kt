@@ -275,6 +275,28 @@ public class LedgerStoreTest {
         assertEquals(3, triggered(scheduleId = "s", count = 3).effectiveCount)
     }
 
+    /**
+     * An execution recorded by a newer SDK with a result this version does not
+     * know still parses, keeps the raw value through a round trip, and is
+     * visible to the limit read.
+     */
+    @Test
+    public fun testUnrecognizedResultRoundTripsAndIsVisible(): TestResult = runTest {
+        val body = JsonValue.parseString(
+            """{"type":"execution","schedule_id":"s","timestamp":1000,"result":"some_future_result"}"""
+        )
+        db.dao.insertAll(
+            listOf(LedgerEventEntity(scheduleId = "s", timestamp = 1000, body = body))
+        )
+
+        val event = store.events(scheduleId = "s", sharedId = null).single()
+        val result = (event as LedgerEvent.Execution).result
+        assertEquals(LedgerExecutionResult.Unknown("some_future_result"), result)
+
+        // Rewriting must not flatten the value to a placeholder.
+        assertEquals(body, event.toJsonValue())
+    }
+
     @Test
     public fun testEventJsonRoundTrip() {
         val events: List<LedgerEvent> = listOf(

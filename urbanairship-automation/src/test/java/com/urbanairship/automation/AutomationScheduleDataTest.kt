@@ -108,47 +108,6 @@ public class AutomationScheduleDataTest {
     }
 
     @Test
-    public fun testOverLimitNotSetDefaultsTo1() {
-        val data = makeData()
-        data.setExecutionCount(0)
-        assertFalse(data.isOverLimit())
-
-        data.setExecutionCount(1)
-        assertTrue(data.isOverLimit())
-    }
-
-    @Test
-    public fun testOverLimitUnlimited() {
-        val data = makeData(limit = 0U)
-
-        data.setExecutionCount(0)
-        assertFalse(data.isOverLimit())
-
-        data.setExecutionCount(1)
-        assertFalse(data.isOverLimit())
-
-        data.setExecutionCount(100)
-        assertFalse(data.isOverLimit())
-    }
-
-    @Test
-    public fun testOverLimit() {
-        val data = makeData(limit = 10U)
-
-        data.setExecutionCount(0)
-        assertFalse(data.isOverLimit())
-
-        data.setExecutionCount(9)
-        assertFalse(data.isOverLimit())
-
-        data.setExecutionCount(10)
-        assertTrue(data.isOverLimit())
-
-        data.setExecutionCount(11)
-        assertTrue(data.isOverLimit())
-    }
-
-    @Test
     public fun testFinished() {
         val data = makeData(
             triggeringInfo = triggeringInfo,
@@ -199,10 +158,9 @@ public class AutomationScheduleDataTest {
 
     @Test
     public fun testUpdateStateFinishesOverLimit() {
-        val data = makeData(limit = 1U)
-        data.setExecutionCount(1)
+        val data = makeData()
 
-        data.updateState(clock.currentTime + 100.milliseconds)
+        data.updateState(clock.currentTime + 100.milliseconds, isOverLimit = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
@@ -212,7 +170,7 @@ public class AutomationScheduleDataTest {
         val data = makeData()
         data.updateEndDate(clock.currentTime)
 
-        data.updateState(clock.currentTime + 100.milliseconds)
+        data.updateState(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
@@ -221,7 +179,7 @@ public class AutomationScheduleDataTest {
     public fun testUpdateFinishedToIdle() {
         val data = makeData(scheduleState = AutomationScheduleState.FINISHED)
 
-        data.updateState(clock.currentTime + 100.milliseconds)
+        data.updateState(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
@@ -230,7 +188,7 @@ public class AutomationScheduleDataTest {
     public fun testUpdateStateFinished() {
         val data = makeData()
 
-        data.updateState(clock.currentTime + 100.milliseconds)
+        data.updateState(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime)
     }
@@ -239,7 +197,7 @@ public class AutomationScheduleDataTest {
     public fun testPrepareCancelledPenalize() {
         val  data = makeData(limit = 2U, scheduleState = AutomationScheduleState.TRIGGERED)
 
-        data.prepareCancelled(clock.currentTime + 100.milliseconds, penalize = true)
+        data.prepareCancelled(clock.currentTime + 100.milliseconds, penalize = true, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.executionCount, 1)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
@@ -249,7 +207,7 @@ public class AutomationScheduleDataTest {
     public fun testPrepareCancelled() {
         val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
 
-        data.prepareCancelled(clock.currentTime + 100.milliseconds, penalize = false)
+        data.prepareCancelled(clock.currentTime + 100.milliseconds, penalize = false, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.executionCount, 0)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
@@ -259,7 +217,7 @@ public class AutomationScheduleDataTest {
     public fun testPrepareCancelledOverLimit() {
         val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
 
-        data.prepareCancelled(clock.currentTime + 100.milliseconds, penalize = true)
+        data.prepareCancelled(clock.currentTime + 100.milliseconds, penalize = true, isOverLimit = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 1)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
@@ -270,7 +228,7 @@ public class AutomationScheduleDataTest {
         val data = makeData(limit = 2U, scheduleState = AutomationScheduleState.TRIGGERED)
         data.updateEndDate(clock.currentTime)
 
-        data.prepareCancelled(clock.currentTime + 100.milliseconds, penalize = true)
+        data.prepareCancelled(clock.currentTime + 100.milliseconds, penalize = true, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 1)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
@@ -280,7 +238,7 @@ public class AutomationScheduleDataTest {
     public fun testPrepareInterrupted() {
         val data = makeData(scheduleState = AutomationScheduleState.PREPARED)
 
-        data.prepareInterrupted(clock.currentTime + 100.milliseconds)
+        data.prepareInterrupted(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.TRIGGERED)
         assertEquals(data.executionCount, 0)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
@@ -290,7 +248,7 @@ public class AutomationScheduleDataTest {
     public fun testTriggeredScheduleInterrupted() {
         val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
 
-        data.prepareInterrupted(clock.currentTime + 100.milliseconds)
+        data.prepareInterrupted(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.TRIGGERED)
         assertEquals(data.executionCount, 0)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime)
@@ -298,10 +256,9 @@ public class AutomationScheduleDataTest {
 
     @Test
     public fun testPrepareInterruptedOverLimit() {
-        val data = makeData(limit = 1U, scheduleState = AutomationScheduleState.TRIGGERED)
-        data.setExecutionCount(1)
+        val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
 
-        data.prepareInterrupted(clock.currentTime + 100.milliseconds)
+        data.prepareInterrupted(clock.currentTime + 100.milliseconds, isOverLimit = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
@@ -311,7 +268,7 @@ public class AutomationScheduleDataTest {
         val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
         data.updateEndDate(clock.currentTime)
 
-        data.prepareInterrupted(clock.currentTime + 100.milliseconds)
+        data.prepareInterrupted(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 0)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
@@ -321,7 +278,7 @@ public class AutomationScheduleDataTest {
     public fun testExecutionCancelled() {
         val data = makeData(scheduleState = AutomationScheduleState.PREPARED)
 
-        data.executionCancelled(clock.currentTime + 100.milliseconds)
+        data.executionCancelled(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.executionCount, 0)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
@@ -334,7 +291,7 @@ public class AutomationScheduleDataTest {
             triggeringInfo = triggeringInfo
         )
 
-        data.executionCancelled(clock.currentTime + 100.milliseconds)
+        data.executionCancelled(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.executionCount, 0)
         assertNull(data.triggerInfo)
@@ -353,17 +310,16 @@ public class AutomationScheduleDataTest {
         for (state in states) {
             val data = makeData(scheduleState = state)
 
-            data.executionCancelled(clock.currentTime + 100.milliseconds)
+            data.executionCancelled(clock.currentTime + 100.milliseconds, isOverLimit = false)
             assertEquals(data.scheduleState, state)
         }
     }
 
     @Test
     public fun testExecutionCancelledOverLimit() {
-        val data = makeData(limit = 1U, scheduleState = AutomationScheduleState.PREPARED)
-        data.setExecutionCount(1)
+        val data = makeData(scheduleState = AutomationScheduleState.PREPARED)
 
-        data.executionCancelled(clock.currentTime + 100.milliseconds)
+        data.executionCancelled(clock.currentTime + 100.milliseconds, isOverLimit = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
@@ -372,7 +328,7 @@ public class AutomationScheduleDataTest {
     public fun testExecutionCancelledExpired() {
         val data = makeData(scheduleState = AutomationScheduleState.PREPARED, endDate = clock.currentTime)
 
-        data.executionCancelled(clock.currentTime + 100.milliseconds)
+        data.executionCancelled(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
@@ -381,7 +337,7 @@ public class AutomationScheduleDataTest {
     public fun testPrepared() {
         val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
 
-        data.prepared(info = preparedScheduleInfo, clock.currentTime + 100.milliseconds)
+        data.prepared(info = preparedScheduleInfo, clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.PREPARED)
         assertEquals(data.preparedScheduleInfo, preparedScheduleInfo)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
@@ -389,10 +345,9 @@ public class AutomationScheduleDataTest {
 
     @Test
     public fun testPreparedOverLimit() {
-        val data = makeData(limit = 1U, scheduleState = AutomationScheduleState.TRIGGERED)
-        data.setExecutionCount(1)
+        val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED)
 
-        data.prepared(info = preparedScheduleInfo, clock.currentTime + 100.milliseconds)
+        data.prepared(info = preparedScheduleInfo, clock.currentTime + 100.milliseconds, isOverLimit = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertNull(data.preparedScheduleInfo)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
@@ -402,7 +357,7 @@ public class AutomationScheduleDataTest {
     public fun testPreparedExpired() {
         val data = makeData(scheduleState = AutomationScheduleState.TRIGGERED, endDate = clock.currentTime)
 
-        data.prepared(info = preparedScheduleInfo, clock.currentTime + 100.milliseconds)
+        data.prepared(info = preparedScheduleInfo, clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertNull(data.preparedScheduleInfo)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
@@ -413,7 +368,7 @@ public class AutomationScheduleDataTest {
         val data = makeData(limit = 2U, scheduleState = AutomationScheduleState.PREPARED)
         data.setExecutionCount(1)
 
-        data.executionSkipped(clock.currentTime + 100.milliseconds)
+        data.executionSkipped(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.executionCount, 1)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
@@ -421,50 +376,45 @@ public class AutomationScheduleDataTest {
 
     @Test
     public fun testExecutionSkippedOverLimit() {
-        val data = makeData(limit = 1U, scheduleState = AutomationScheduleState.PREPARED)
-        data.setExecutionCount(1)
+        val data = makeData(scheduleState = AutomationScheduleState.PREPARED)
 
-        data.executionSkipped(clock.currentTime + 100.milliseconds)
+        data.executionSkipped(clock.currentTime + 100.milliseconds, isOverLimit = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testExecutionSkippedExpired() {
-        val data = makeData(limit = 2U, endDate = clock.currentTime, scheduleState = AutomationScheduleState.PREPARED)
-        data.setExecutionCount(1)
+        val data = makeData(endDate = clock.currentTime, scheduleState = AutomationScheduleState.PREPARED)
 
-        data.executionSkipped(clock.currentTime + 100.milliseconds)
+        data.executionSkipped(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testExecutionInvalidated() {
-        val data = makeData(limit = 2U, scheduleState = AutomationScheduleState.PREPARED)
-        data.setExecutionCount(1)
+        val data = makeData(scheduleState = AutomationScheduleState.PREPARED)
 
-        data.executionInvalidated(clock.currentTime + 100.milliseconds)
+        data.executionInvalidated(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.TRIGGERED)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testExecutionInvalidatedOverLimit() {
-        val data = makeData(limit = 1U, scheduleState = AutomationScheduleState.PREPARED)
-        data.setExecutionCount(1)
+        val data = makeData(scheduleState = AutomationScheduleState.PREPARED)
 
-        data.executionInvalidated(clock.currentTime + 100.milliseconds)
+        data.executionInvalidated(clock.currentTime + 100.milliseconds, isOverLimit = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
 
     @Test
     public fun testExecutionInvalidatedExpired() {
-        val data = makeData(limit = 2U, endDate = clock.currentTime, scheduleState = AutomationScheduleState.PREPARED)
-        data.setExecutionCount(1)
+        val data = makeData(endDate = clock.currentTime, scheduleState = AutomationScheduleState.PREPARED)
 
-        data.executionInvalidated(clock.currentTime + 100.milliseconds)
+        data.executionInvalidated(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
     }
@@ -472,7 +422,6 @@ public class AutomationScheduleDataTest {
     @Test
     public fun testExecuting() {
         val data = makeData(scheduleState = AutomationScheduleState.PREPARED)
-        data.setExecutionCount(1)
 
         data.executing(clock.currentTime + 100.milliseconds)
         assertEquals(data.scheduleState, AutomationScheduleState.EXECUTING)
@@ -484,7 +433,7 @@ public class AutomationScheduleDataTest {
         val data = makeData(limit = 3U, scheduleState = AutomationScheduleState.EXECUTING)
         data.setExecutionCount(1)
 
-        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry = false)
+        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry = false, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.executionCount, 2)
         assertEquals(data.scheduleStateChangeDate, clock.currentTime + 100.milliseconds)
@@ -499,7 +448,7 @@ public class AutomationScheduleDataTest {
             endDate = clock.currentTime)
         data.setExecutionCount(1)
 
-        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry = true)
+        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry = true, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 1)
         assertNull(data.preparedScheduleInfo)
@@ -515,7 +464,7 @@ public class AutomationScheduleDataTest {
             preparedScheduleInfo = preparedScheduleInfo)
         data.setExecutionCount(1)
 
-        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry =  false)
+        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry =  false, isOverLimit = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 2)
         assertNull(data.preparedScheduleInfo)
@@ -533,7 +482,7 @@ public class AutomationScheduleDataTest {
         )
         data.setExecutionCount(1)
 
-        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry =  true)
+        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry =  true, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 1)
         assertNull(data.preparedScheduleInfo)
@@ -550,7 +499,7 @@ public class AutomationScheduleDataTest {
         )
         data.setExecutionCount(1)
 
-        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry =  false)
+        data.executionInterrupted(clock.currentTime + 100.milliseconds, retry =  false, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.PAUSED)
         assertEquals(data.executionCount, 2)
         assertNull(data.preparedScheduleInfo)
@@ -566,7 +515,7 @@ public class AutomationScheduleDataTest {
         )
         data.setExecutionCount(1)
 
-        data.finishedExecuting(clock.currentTime + 100.milliseconds)
+        data.finishedExecuting(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertNull(data.preparedScheduleInfo)
         assertEquals(data.scheduleState, AutomationScheduleState.IDLE)
         assertEquals(data.executionCount, 2)
@@ -583,7 +532,7 @@ public class AutomationScheduleDataTest {
         )
         data.setExecutionCount(1)
 
-        data.finishedExecuting(clock.currentTime + 100.milliseconds)
+        data.finishedExecuting(clock.currentTime + 100.milliseconds, isOverLimit = true)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 2)
         assertNull(data.preparedScheduleInfo)
@@ -601,7 +550,7 @@ public class AutomationScheduleDataTest {
         )
         data.setExecutionCount(1)
 
-        data.finishedExecuting(clock.currentTime + 100.milliseconds)
+        data.finishedExecuting(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
         assertEquals(data.executionCount, 2)
         assertNull(data.preparedScheduleInfo)
@@ -618,7 +567,7 @@ public class AutomationScheduleDataTest {
         )
         data.setExecutionCount(1)
 
-        data.finishedExecuting(clock.currentTime + 100.milliseconds)
+        data.finishedExecuting(clock.currentTime + 100.milliseconds, isOverLimit = false)
         assertEquals(data.scheduleState, AutomationScheduleState.PAUSED)
         assertEquals(data.executionCount, 2)
         assertNull(data.preparedScheduleInfo)
@@ -649,7 +598,7 @@ public class AutomationScheduleDataTest {
         val data = makeData()
         val previousTriggerSessionId = data.triggerSessionId
         val date = clock.currentTime
-        data.triggered(TriggeringInfo(context, date), date + 100.milliseconds)
+        data.triggered(TriggeringInfo(context, date), date + 100.milliseconds, isOverLimit = false)
 
         assertEquals(data.triggerInfo?.context, context)
         assertEquals(data.triggerInfo?.date, clock.currentTime)
@@ -660,15 +609,14 @@ public class AutomationScheduleDataTest {
 
     @Test
     public fun testTriggeredOverLimit() {
-        val data = makeData(limit = 1U)
-        data.setExecutionCount(1)
+        val data = makeData()
 
         val context = DeferredTriggerContext(
             type = "some-type",
             goal = 10.0,
             event = JsonValue.wrap("event"))
         val date = clock.currentTime
-        data.triggered(TriggeringInfo(context, date), date + 100.milliseconds)
+        data.triggered(TriggeringInfo(context, date), date + 100.milliseconds, isOverLimit = true)
 
         assertNull(data.triggerInfo)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)
@@ -677,14 +625,14 @@ public class AutomationScheduleDataTest {
 
     @Test
     public fun testTriggeredExpired() {
-        val data = makeData(limit = 2U, endDate = clock.currentTime)
+        val data = makeData(endDate = clock.currentTime)
 
         val context = DeferredTriggerContext(
             type = "some-type",
             goal = 10.0,
             event = JsonValue.wrap("event"))
         val date = clock.currentTime
-        data.triggered(TriggeringInfo(context, date), date + 100.milliseconds)
+        data.triggered(TriggeringInfo(context, date), date + 100.milliseconds, isOverLimit = false)
 
         assertNull(data.triggerInfo)
         assertEquals(data.scheduleState, AutomationScheduleState.FINISHED)

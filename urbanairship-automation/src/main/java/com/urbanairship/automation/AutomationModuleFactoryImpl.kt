@@ -29,6 +29,7 @@ import com.urbanairship.automation.engine.SerialAccessAutomationStore
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.limits.AutomationLedger
 import com.urbanairship.automation.limits.FrequencyLimitManager
+import com.urbanairship.automation.limits.LedgerLimitEvaluator
 import com.urbanairship.automation.limits.LedgerStore
 import com.urbanairship.automation.remotedata.AutomationRemoteDataAccess
 import com.urbanairship.automation.remotedata.AutomationRemoteDataSubscriber
@@ -104,7 +105,11 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         val activityMonitor = GlobalActivityMonitor.shared(context)
         val displayCoordinatorManager = DisplayCoordinatorManager(dataStore, activityMonitor)
         val frequencyLimits = FrequencyLimitManager(context, runtimeConfig)
-        val ledger = AutomationLedger(LedgerStore(context, runtimeConfig))
+        // A single store shared by the recorder, the limit evaluator, and the
+        // backfill, so limit reads reliably see what was written.
+        val ledgerStore = LedgerStore(context, runtimeConfig)
+        val ledger = AutomationLedger(ledgerStore)
+        val limitEvaluator = LedgerLimitEvaluator(ledgerStore)
         val automationStore = SerialAccessAutomationStore(
             AutomationStore.createDatabase(context, runtimeConfig)
         )
@@ -181,11 +186,12 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
             automationStoreMigrator = AutomationStoreMigrator(
                 legacyDatabase = AutomationDatabase.createDatabase(context, runtimeConfig),
                 store = automationStore,
-                ledgerStore = LedgerStore(context, runtimeConfig),
+                ledgerStore = ledgerStore,
                 dataStore = dataStore
             ),
             eventsHistory = eventsHistory,
-            ledger = ledger
+            ledger = ledger,
+            limitEvaluator = limitEvaluator
         )
 
         val automation = InAppAutomation(

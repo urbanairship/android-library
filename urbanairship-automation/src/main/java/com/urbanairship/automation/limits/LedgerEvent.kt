@@ -40,37 +40,67 @@ internal enum class LedgerEventType(val json: String) : JsonSerializable {
  * How an `execution` event resolved. This is the fine axis: it never affects
  * whether an execution is counted, only which executions an exclusion rule
  * can subtract.
+ *
+ * Modelled as a sealed class rather than an enum so a result written by a
+ * newer SDK still parses. Counting must not depend on recognizing the result:
+ * an event that fails to parse is skipped on read, which would drop it from
+ * the tally and let a schedule that had spent its budget execute again — the
+ * opposite of erring toward showing less.
  */
-internal enum class LedgerExecutionResult(val json: String) : JsonSerializable {
+internal sealed class LedgerExecutionResult(internal val json: String) : JsonSerializable {
     /** The schedule did its thing: the scene was displayed or the actions ran. */
-    SUCCEEDED("succeeded"),
+    data object SUCCEEDED : LedgerExecutionResult("succeeded")
 
     /**
      * A holdout group execution: everything except display or actions
      * occurred. Counts toward the limit like a real execution.
      */
-    HOLDOUT("holdout"),
+    data object HOLDOUT : LedgerExecutionResult("holdout")
 
     /**
      * A variant control: the user triggered the experiment but was assigned a
      * different variant. Not a holdout.
      */
-    CONTROL("control"),
+    data object CONTROL : LedgerExecutionResult("control")
 
     /** The audience check failed with a budget-consuming miss behavior. */
-    AUDIENCE_MISS("audience_miss"),
+    data object AUDIENCE_MISS : LedgerExecutionResult("audience_miss")
 
     /** Synthesized from a pre-ledger execution count during migration. */
-    BACKFILL("backfill");
+    data object BACKFILL : LedgerExecutionResult("backfill")
+
+    /**
+     * A result this SDK version does not recognize, carrying the value it was
+     * recorded with so a rewrite round-trips it rather than flattening it to a
+     * placeholder. The event counts toward its limit like any other execution,
+     * and matches no exclusion rule, so it errs toward showing less.
+     */
+    data class Unknown(val rawValue: String) : LedgerExecutionResult(rawValue)
 
     override fun toJsonValue(): JsonValue = JsonValue.wrap(json)
 
-    companion object {
+    internal companion object {
+        /**
+         * Every result this SDK version recognizes.
+         *
+         * Deliberately lazy: building this list eagerly would read the nested
+         * objects from the companion's own initializer, which runs while the
+         * sealed class is still initializing, and each element would come back
+         * null.
+         */
+        internal val known: List<LedgerExecutionResult> by lazy {
+            listOf(SUCCEEDED, HOLDOUT, CONTROL, AUDIENCE_MISS, BACKFILL)
+        }
+
+        /**
+         * Never rejects an unrecognized result: it becomes [Unknown] so the
+         * event still parses and still counts. Only a non-string value, which
+         * is malformed rather than merely newer, throws.
+         */
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): LedgerExecutionResult {
             val content = value.requireString()
-            return entries.firstOrNull { it.json == content }
-                ?: throw JsonException("Invalid ledger execution result $content")
+            return known.firstOrNull { it.json == content } ?: Unknown(content)
         }
     }
 }

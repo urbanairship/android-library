@@ -13,9 +13,13 @@ import com.urbanairship.automation.engine.AutomationScheduleData
 import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.EventsHistory
+import com.urbanairship.automation.engine.InterruptedBehavior
+import com.urbanairship.automation.engine.PreparedScheduleInfo
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.limits.LedgerConfig
+import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.automation.limits.TestAutomationLedger
+import com.urbanairship.automation.limits.LedgerLimitEvaluator
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
@@ -107,6 +111,10 @@ public class AutomationEngineTest {
 
     private val ledger = TestAutomationLedger()
 
+    private val limitEvaluator: LedgerLimitEvaluator = mockk {
+        coEvery { isOverLimit(any()) } returns false
+    }
+
     private val sleeper = TestTaskSleeper(clock) { sleep ->
         clock.currentTime += (sleep.inWholeMilliseconds).milliseconds
     }
@@ -124,7 +132,8 @@ public class AutomationEngineTest {
         dispatcher = testDispatcher,
         automationStoreMigrator = automationStoreMigrator,
         eventsHistory = EventsHistory(),
-        ledger = ledger
+        ledger = ledger,
+        limitEvaluator = limitEvaluator
     )
 
     @Before
@@ -446,5 +455,125 @@ public class AutomationEngineTest {
         advanceUntilIdle()
 
         assertTrue(ledger.recorded.isEmpty())
+    }
+
+    /**
+     * An execution that is interrupted and not retried consumed budget, but the
+     * executor never got to record it. Restore must record the outcome so the
+     * ledger-backed limit still counts it.
+     */
+    @Test
+    public fun testRecordsExecutionForTerminalInterruption(): TestResult = runTest {
+        val sched = ledgerSchedule(sharedId = "group-1")
+        val executing = ledgerScheduleData(sched, AutomationScheduleState.EXECUTING, triggerInfo = null)
+        executing.setPreparedScheduleInfo(
+            PreparedScheduleInfo(
+                scheduleId = "test",
+                triggerSessionId = UUID.randomUUID().toString(),
+                priority = 0,
+                ledgerSharedId = "group-1",
+                triggerId = "trigger-1"
+            )
+        )
+
+        coEvery { store.getSchedules() } answers { listOf(executing) }
+        coEvery { executor.interrupted(any(), any()) } answers { InterruptedBehavior.FINISH }
+        coEvery { store.updateSchedule(eq("test"), any()) } answers { executing }
+
+        engine.start()
+        advanceUntilIdle()
+
+        // Guarded on the moment the schedule started executing, so an outcome
+        // the executor already recorded is not counted twice.
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.ExecutionIfNoneSince(
+                    scheduleId = "test",
+                    sharedId = "group-1",
+                    triggerId = "trigger-1",
+                    result = LedgerExecutionResult.SUCCEEDED,
+                    cancel = false,
+                    since = executing.scheduleStateChangeDate
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    /**
+     * An interruption that will be retried has not consumed budget: the schedule
+     * runs again, and that run records its own outcome.
+     */
+    @Test
+    public fun testRecordsNothingForRetriedInterruption(): TestResult = runTest {
+        val sched = ledgerSchedule(sharedId = "group-1")
+        val executing = ledgerScheduleData(sched, AutomationScheduleState.EXECUTING, triggerInfo = null)
+        executing.setPreparedScheduleInfo(
+            PreparedScheduleInfo(
+                scheduleId = "test",
+                triggerSessionId = UUID.randomUUID().toString(),
+                priority = 0,
+                ledgerSharedId = "group-1",
+                triggerId = "trigger-1"
+            )
+        )
+
+        coEvery { store.getSchedules() } answers { listOf(executing) }
+        coEvery { executor.interrupted(any(), any()) } answers { InterruptedBehavior.RETRY }
+        coEvery { store.updateSchedule(eq("test"), any()) } answers { executing }
+        coEvery { store.getSchedule(eq("test")) } answers { null }
+
+        engine.start()
+        advanceUntilIdle()
+
+        assertTrue(ledger.recorded.isEmpty())
+    }
+
+    /**
+     * Upsert resolves each schedule's over-limit state from the ledger and feeds
+     * it into `updateState`, so a schedule that has already spent its budget is
+     * finished rather than left idle.
+     */
+    @Test
+    public fun testUpsertFinishesScheduleOverLedgerLimit(): TestResult = runTest {
+        val sched = ledgerSchedule(sharedId = "group-1")
+        val stored = ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
+
+        coEvery { store.getSchedules() } answers { emptyList() }
+        // Apply the update block the way the real store does.
+        coEvery { store.upsertSchedules(any(), any()) } answers {
+            listOf(secondArg<(String, AutomationScheduleData?) -> AutomationScheduleData>()("test", stored))
+        }
+
+        coEvery { limitEvaluator.isOverLimit(any()) } returns true
+
+        engine.start()
+        advanceUntilIdle()
+        engine.upsertSchedules(listOf(sched))
+        advanceUntilIdle()
+
+        coVerify { limitEvaluator.isOverLimit(match { it.identifier == "test" }) }
+        assertEquals(AutomationScheduleState.FINISHED, stored.scheduleState)
+    }
+
+    /** The same upsert leaves a schedule with budget left alone. */
+    @Test
+    public fun testUpsertKeepsScheduleUnderLedgerLimit(): TestResult = runTest {
+        val sched = ledgerSchedule(sharedId = "group-1")
+        val stored = ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
+
+        coEvery { store.getSchedules() } answers { emptyList() }
+        coEvery { store.upsertSchedules(any(), any()) } answers {
+            listOf(secondArg<(String, AutomationScheduleData?) -> AutomationScheduleData>()("test", stored))
+        }
+
+        coEvery { limitEvaluator.isOverLimit(any()) } returns false
+
+        engine.start()
+        advanceUntilIdle()
+        engine.upsertSchedules(listOf(sched))
+        advanceUntilIdle()
+
+        assertEquals(AutomationScheduleState.IDLE, stored.scheduleState)
     }
 }
