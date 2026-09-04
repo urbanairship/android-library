@@ -2,8 +2,13 @@
 package com.urbanairship.android.layout.view
 
 import android.content.Context
+import android.graphics.Canvas
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
+import android.os.Build
+import android.text.PrecomputedText
+import android.text.Spanned
+import android.text.TextUtils
 import android.util.TypedValue.COMPLEX_UNIT_SP
 import android.view.accessibility.AccessibilityEvent
 import androidx.appcompat.widget.AppCompatTextView
@@ -14,6 +19,7 @@ import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.info.LabelInfo
 import com.urbanairship.android.layout.model.Background
 import com.urbanairship.android.layout.model.BaseModel
+import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.LabelModel
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.util.LayoutUtils
@@ -22,10 +28,22 @@ import com.urbanairship.android.layout.util.ifNotEmpty
 
 internal class LabelView(
     context: Context,
-    private val model: LabelModel
+    private val model: LabelModel,
+    itemProperties: ItemProperties?
 ) : AppCompatTextView(context), BaseView {
 
     private var lastState: LabelModel.ResolvedState? = null
+
+    /** Whether the layout gave this label a height for its text to fit into. */
+    private val truncatesToHeight = itemProperties?.size?.height?.isAuto == false
+
+    /**
+     * Whether the dropped text is marked with an ellipsis.
+     *
+     * This should work back to API 28, but it was tested/confirmed to not actually work until 29.
+     */
+    private val marksTruncatedText =
+        truncatesToHeight && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
     init {
         // Initial setup from the model
@@ -36,6 +54,10 @@ internal class LabelView(
     }
 
     private fun setupInitialState() {
+        if (marksTruncatedText) {
+            ellipsize = TextUtils.TruncateAt.END
+        }
+
         updateViewContent(null)
         model.contentDescription(context).ifNotEmpty { contentDescription = it }
         if (model.viewInfo.accessibilityHidden == true) {
@@ -56,6 +78,97 @@ internal class LabelView(
 
         isClickable = false
         isFocusable = false
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+
+        // When truncating to height, we need to measure once first so that we can know how many
+        // lines exist, then we can clamp and remeasure with the number of lines that can fit.
+        if (truncatesToHeight && clampMaxLinesTo(heightMeasureSpec)) {
+            super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+        }
+    }
+
+    /**
+     * Limit the line count to what [heightMeasureSpec] has room for.
+     *
+     * @return a `Boolean` that indicates whether a remeasure is needed.
+     */
+    private fun clampMaxLinesTo(heightMeasureSpec: Int): Boolean {
+        if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.UNSPECIFIED) {
+            return false
+        }
+
+        val laidOut = layout ?: return false
+
+        val available =
+            MeasureSpec.getSize(heightMeasureSpec) - compoundPaddingTop - compoundPaddingBottom
+
+        // Count up to see how many lines fit, based on the measured line height
+        var fits = 0
+        while (fits < laidOut.lineCount && laidOut.getLineBottom(fits) <= available) {
+            fits++
+        }
+
+        // Always clamp to at least one line, even if it can't fit the text we need to draw into it.
+        val clamped = fits.coerceAtLeast(1)
+
+        // Return if we aren't changing anything. Setting maxLines triggers a layout,
+        // so we need to bail out here to avoid a measurement loop.
+        if (clamped == maxLines) {
+            return false
+        }
+
+        maxLines = clamped
+        return true
+    }
+
+    override fun setText(text: CharSequence?, type: BufferType?) {
+        // Swap in a PrecomputedText to ensure we're using StaticLayout and not DynamicLayout.
+        // We need to be a StaticLayout because maxLines and ellipsize won't work otherwise.
+        super.setText(precomputedOrNull(text) ?: text, type)
+    }
+
+    /**
+     * The [text] as a `PrecomputedText`, or `null` to set it unchanged.
+     *
+     * This only works on API 29+ (even though PrecomputedText is supposed to work in API 28).
+     */
+    private fun precomputedOrNull(text: CharSequence?): CharSequence? {
+        if (!marksTruncatedText || text !is Spanned) {
+            return null
+        }
+
+        // We shouldn't get here below Q because of the marksTruncatedText check above.
+        // This check avoids a NewApi violation, because lint can't trace the earlier check.
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return null
+        }
+
+        return PrecomputedText.create(text, textMetricsParams)
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        val laidOut = layout
+        if (!truncatesToHeight || laidOut == null || laidOut.lineCount <= maxLines) {
+            super.onDraw(canvas)
+            return
+        }
+
+        // If we're on API 26-28, we have a DynamicLayout, which ignores maxLines. The clip that
+        // TextView derives from extendedPaddingBottom isn't line-aligned, so the first dropped
+        // line doesn't get cut cleanly. This clips at the line boundary instead.
+        canvas.save()
+        canvas.clipRect(0, 0, width, extendedPaddingTop + laidOut.getLineTop(maxLines))
+        super.onDraw(canvas)
+        canvas.restore()
+    }
+
+    override fun scrollTo(x: Int, y: Int) {
+        // If we're truncating to height, block the LinkMovementMethodCompat from scrolling the
+        // TextView, because we don't want it to steal the drag gesture from a scrolling parent.
+        super.scrollTo(x, if (truncatesToHeight) 0 else y)
     }
 
     override fun onVisibilityAggregated(isVisible: Boolean) {
@@ -93,8 +206,6 @@ internal class LabelView(
         if (resolvedState == this.lastState) {
             return
         }
-
-        this.text = resolvedState.text
 
         val size = resolvedState.textAppearance.fontSize
         val startDrawable = getSizedDrawable(resolvedState.iconStart, size, HorizontalPosition.START)

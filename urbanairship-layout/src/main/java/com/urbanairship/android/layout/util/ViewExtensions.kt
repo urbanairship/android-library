@@ -7,6 +7,7 @@ import android.graphics.RectF
 import android.net.Uri
 import android.os.Looper
 import android.text.Editable
+import android.text.Layout
 import android.text.Spannable
 import android.text.Spanned
 import android.text.TextPaint
@@ -44,7 +45,6 @@ import com.urbanairship.android.layout.widget.CheckableView
 import com.urbanairship.android.layout.widget.CheckableViewAdapter
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
-import RoundedBackgroundSpan
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
@@ -284,7 +284,9 @@ internal fun TextView.setHtml(
 
         html.toSpannable().apply {
             convertUrlSpans(underlineLinks, linkColor)
-            convertHighlightSpans(highlightColor, highlightCornerRadius)
+            // The highlight reads its geometry off the laid-out text, so we pass it via a
+            // block so that RoundedBackgroundSpan can always operate on the current layout.
+            convertHighlightSpans(highlightColor, highlightCornerRadius) { this@setHtml.layout }
             linkifyText(underlineLinks, linkColor)
         }
     }
@@ -294,7 +296,11 @@ internal fun TextView.setHtml(
  * Finds standard background spans (from <span style='background-color'>)
  * and replaces them with custom RoundedBackgroundSpans.
  */
-private fun Spannable.convertHighlightSpans(color: Int, cornerRadius: Float) {
+private fun Spannable.convertHighlightSpans(
+    color: Int,
+    cornerRadius: Float,
+    layout: () -> Layout?
+) {
     val bgSpans = getSpans(0, length, android.text.style.BackgroundColorSpan::class.java)
         ?: emptyArray()
 
@@ -306,7 +312,8 @@ private fun Spannable.convertHighlightSpans(color: Int, cornerRadius: Float) {
         // Create the bubble with your specific styling
         val bubbleSpan = RoundedBackgroundSpan(
             backgroundColor = color,
-            cornerRadius = cornerRadius
+            cornerRadius = cornerRadius,
+            layout = layout
         )
 
         // Swap the spans

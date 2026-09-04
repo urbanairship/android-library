@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Real faces for each weight and style, so markdown bold and italic pick a drawn face rather than a
+  synthesised one. Both namespaces are declared: `app:` is what `ResourcesCompat.getFont` reads,
+  `android:` is what the platform reads if the family is ever inflated directly.
+-->
+<font-family xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <font
+        android:font="@font/noto_sans_regular"
+        android:fontStyle="normal"
+        android:fontWeight="400"
+        app:font="@font/noto_sans_regular"
+        app:fontStyle="normal"
+        app:fontWeight="400" />
+
+    <font
+        android:font="@font/noto_sans_italic"
+        android:fontStyle="italic"
+        android:fontWeight="400"
+        app:font="@font/noto_sans_italic"
+        app:fontStyle="italic"
+        app:fontWeight="400" />
+
+    <font
+        android:font="@font/noto_sans_bold"
+        android:fontStyle="normal"
+        android:fontWeight="700"
+        app:font="@font/noto_sans_bold"
+        app:fontStyle="normal"
+        app:fontWeight="700" />
+
+    <font
+        android:font="@font/noto_sans_bold_italic"
+        android:fontStyle="italic"
+        android:fontWeight="700"
+        app:font="@font/noto_sans_bold_italic"
+        app:fontStyle="italic"
+        app:fontWeight="700" />
+
+</font-family>
