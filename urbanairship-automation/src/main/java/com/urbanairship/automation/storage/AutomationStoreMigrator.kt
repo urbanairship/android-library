@@ -146,7 +146,7 @@ internal class AutomationStoreMigrator(
                     delay = getDelay(fullSchedule),
                     metadata = fullSchedule.schedule.metadata?.toJsonValue(),
                     campaigns = fullSchedule.schedule.campaigns,
-                    editGracePeriodDays = TimeUnit.MILLISECONDS.toDays(fullSchedule.schedule.editGracePeriod).toULong(),
+                    editGracePeriodDays = TimeUnit.MILLISECONDS.toDays(fullSchedule.schedule.editGracePeriod),
                     productId = fullSchedule.schedule.productId,
                     frequencyConstraintIds = fullSchedule.schedule.frequencyConstraintIds?.ifEmpty { null },
                     messageType = fullSchedule.schedule.messageType,

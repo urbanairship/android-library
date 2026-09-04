@@ -190,6 +190,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
      * Defaults to 24 hours. Values below 1 minute or above 24 hours are accepted but logged
      * as a warning.
      */
+    @get:JvmSynthetic
     public val backgroundReportingInterval: Duration
 
     /**
@@ -200,7 +201,18 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
      * [backgroundReportingInterval] is the source of truth; this is derived from it.
      */
     @JvmField
+    public val backgroundReportingIntervalMs: Long
+
+    /**
+     * Minimum delta in milliseconds between analytics uploads when
+     * adding location events while in the background.
+     */
+    @Deprecated(
+        "Renamed for casing consistency.",
+        ReplaceWith("backgroundReportingIntervalMs")
+    )
     public val backgroundReportingIntervalMS: Long
+        get() = backgroundReportingIntervalMs
 
     /**
      * Logger level when the application is in debug mode.
@@ -413,7 +425,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
         this.inProduction = inProduction
         this.analyticsEnabled = builder.analyticsEnabled
         this.backgroundReportingInterval = builder.backgroundReportingInterval
-        this.backgroundReportingIntervalMS = builder.backgroundReportingInterval.inWholeMilliseconds
+        this.backgroundReportingIntervalMs = builder.backgroundReportingInterval.inWholeMilliseconds
         this.autoLaunchApplication = builder.autoLaunchApplication
         this.channelCreationDelayEnabled = builder.channelCreationDelayEnabled
         this.channelCaptureEnabled = builder.channelCaptureEnabled
@@ -956,7 +968,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
                             configParser.getBoolean(name, analyticsEnabled)
                         )
 
-                        FIELD_BACKGROUND_REPORTING_INTERVAL_MS -> this.setBackgroundReportingIntervalMS(
+                        FIELD_BACKGROUND_REPORTING_INTERVAL_MS -> this.setBackgroundReportingIntervalMs(
                             configParser.getLong(
                                 name, backgroundReportingInterval.inWholeMilliseconds
                             )
@@ -1378,6 +1390,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
          * @param backgroundReportingInterval The background reporting interval.
          * @return The config options builder.
          */
+        @JvmSynthetic
         public fun setBackgroundReportingInterval(backgroundReportingInterval: Duration): Builder {
             this.backgroundReportingInterval = backgroundReportingInterval
             return this
@@ -1388,11 +1401,25 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
          *
          * Provided for Java callers, which cannot express a [Duration].
          *
+         * @param backgroundReportingIntervalMs The background reporting interval in milliseconds.
+         * @return The config options builder.
+         */
+        public fun setBackgroundReportingIntervalMs(backgroundReportingIntervalMs: Long): Builder {
+            return setBackgroundReportingInterval(backgroundReportingIntervalMs.milliseconds)
+        }
+
+        /**
+         * Set the background reporting interval, in milliseconds.
+         *
          * @param backgroundReportingIntervalMS The background reporting interval in milliseconds.
          * @return The config options builder.
          */
+        @Deprecated(
+            "Renamed for casing consistency.",
+            ReplaceWith("setBackgroundReportingIntervalMs(backgroundReportingIntervalMS)")
+        )
         public fun setBackgroundReportingIntervalMS(backgroundReportingIntervalMS: Long): Builder {
-            return setBackgroundReportingInterval(backgroundReportingIntervalMS.milliseconds)
+            return setBackgroundReportingIntervalMs(backgroundReportingIntervalMS)
         }
 
         /**

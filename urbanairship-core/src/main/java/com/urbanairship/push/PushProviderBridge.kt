@@ -78,6 +78,7 @@ public object PushProviderBridge {
          * wait until the push request is completed.
          * @return The process push request.
          */
+        @JvmSynthetic
         public fun setMaxCallbackWaitTime(duration: Duration): ProcessPushRequest {
             return this.also { it.maxCallbackWaitTime = duration }
         }

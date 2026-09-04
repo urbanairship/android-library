@@ -62,6 +62,7 @@ public class Banner @VisibleForTesting internal constructor(
     /**
      * The banner display duration. Defaults to 15 seconds.
      */
+    @get:JvmSynthetic
     public val duration: Duration = DEFAULT_DURATION,
     /**
      * The optional banner placement. [Placement]
@@ -212,6 +213,7 @@ public class Banner @VisibleForTesting internal constructor(
 
     public companion object {
         /** Default banner display duration. */
+        @get:JvmSynthetic
         public val DEFAULT_DURATION: Duration = 15.seconds
 
         /**

@@ -40,6 +40,7 @@ public class LegacyInAppMessage @JvmOverloads public constructor(
     /**
      * Display duration.
      */
+    @get:JvmSynthetic
     public val displayDuration: Duration? = null,
 
     /**
