@@ -16,6 +16,7 @@ import com.urbanairship.remotedata.RemoteData
 import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataPayload
 import com.urbanairship.remotedata.RemoteDataSource
+import com.urbanairship.util.DateUtils
 import com.urbanairship.util.Network
 import kotlin.collections.map
 import kotlinx.coroutines.flow.Flow
@@ -193,32 +194,70 @@ internal data class InAppRemoteData(
 ) {
     data class Data(
         val schedules: List<AutomationSchedule>,
-        val constraints: List<FrequencyConstraint>?
+        val constraints: List<FrequencyConstraint>?,
+        val failedSchedules: List<FailedScheduleRecord> = emptyList()
     ) {
         companion object {
             private const val SCHEDULES = "in_app_messages"
             private const val CONSTRAINTS = "frequency_constraints"
+            private const val IDENTIFIER = "id"
+            private const val CREATED = "created"
+            private const val MIN_SDK_VERSION = "min_sdk_version"
 
             @Throws(JsonException::class)
-            fun fromJson(value: JsonMap): Data {
+            fun fromJson(value: JsonMap, payloadTimestamp: Long): Data {
+                val schedules = mutableListOf<AutomationSchedule>()
+                val failedSchedules = mutableListOf<FailedScheduleRecord>()
+
+                value.require(SCHEDULES).requireList().forEach {
+                    try {
+                        schedules.add(AutomationSchedule.fromJson(it))
+                    } catch (ex: Exception) {
+                        UALog.e(ex) { "Failed to parse a schedule from $it" }
+                        partialSchedule(it, payloadTimestamp)?.let(failedSchedules::add)
+                    }
+                }
+
                 return Data(
-                    schedules = value.require(SCHEDULES).requireList().mapNotNull {
+                    schedules = schedules,
+                    constraints = value[CONSTRAINTS]?.requireList()?.map(FrequencyConstraint::fromJson),
+                    failedSchedules = failedSchedules
+                )
+            }
+
+            /**
+             * Best-effort extraction of just enough of a schedule to track it after a parse
+             * failure. Returns null if we can't even recover an identifier, in which case the
+             * schedule is untrackable and stays dropped.
+             */
+            private fun partialSchedule(value: JsonValue, payloadTimestamp: Long): FailedScheduleRecord? {
+                return try {
+                    val content = value.requireMap()
+                    val created = content[CREATED]?.string?.let {
                         try {
-                            AutomationSchedule.fromJson(it)
+                            DateUtils.parseIso8601(it)
                         } catch (ex: Exception) {
-                            UALog.e(ex) { "Failed to parse a schedule from $it" }
                             null
                         }
-                    },
-                    constraints = value[CONSTRAINTS]?.requireList()?.map(FrequencyConstraint::fromJson)
-                )
+                    } ?: payloadTimestamp
+
+                    FailedScheduleRecord(
+                        identifier = content.require(IDENTIFIER).requireString(),
+                        createdDate = created,
+                        minSDKVersion = content[MIN_SDK_VERSION]?.requireString()
+                    )
+                } catch (ex: Exception) {
+                    UALog.e(ex) { "Failed to parse a partial schedule from $value" }
+                    null
+                }
             }
         }
 
         fun copyWithUpdateSchedules(updateBlock: (AutomationSchedule) -> AutomationSchedule): Data {
             return Data(
                 schedules = this.schedules.map(updateBlock),
-                constraints = this.constraints
+                constraints = this.constraints,
+                failedSchedules = this.failedSchedules
             )
         }
     }
@@ -228,6 +267,10 @@ internal data class InAppRemoteData(
         val timestamp: Long,
         val remoteDataInfo: RemoteDataInfo? = null
     )
+
+    /** Every schedule that failed to parse across all payloads. */
+    val failedSchedules: List<FailedScheduleRecord>
+        get() = payload.values.flatMap { it.data.failedSchedules }
 
     companion object {
         const val LEGACY_REMOTE_INFO_METADATA_KEY = "com.urbanairship.iaa.REMOTE_DATA_METADATA"
@@ -248,7 +291,7 @@ internal data class InAppRemoteData(
                 REMOTE_INFO_METADATA_KEY to payload.remoteDataInfo
             ).toJsonValue()
 
-            val data = Data.fromJson(payload.data).copyWithUpdateSchedules { local ->
+            val data = Data.fromJson(payload.data, payload.timestamp).copyWithUpdateSchedules { local ->
                 val result = local.copyWith(metadata = metadata)
 
                 when(result.data) {

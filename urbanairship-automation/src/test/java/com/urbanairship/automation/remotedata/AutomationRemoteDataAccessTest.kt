@@ -310,6 +310,81 @@ public class AutomationRemoteDataAccessTest {
         assertEquals(InAppRemoteData(emptyMap()), result)
     }
 
+    @Test
+    public fun testParseTracksFailedSchedules() {
+        val data = parseData(
+            listOf(VALID_SCHEDULE, INVALID_SCHEDULE_WITH_ID),
+            payloadTimestamp = 999L
+        )
+
+        assertEquals(1, data.schedules.size)
+        assertEquals("valid_schedule", data.schedules.first().identifier)
+
+        assertEquals(listOf("failed_schedule_id"), data.failedSchedules.map { it.identifier })
+        assertEquals(CREATED_MILLIS, data.failedSchedules.first().createdDate)
+        assertEquals("18.0.0", data.failedSchedules.first().minSDKVersion)
+    }
+
+    @Test
+    public fun testParseIgnoresFailedScheduleWithoutId() {
+        // Without an ID there is nothing to track it by, so it stays dropped.
+        val invalidWithoutId = """
+            {
+                "created": "2023-12-20T12:00:00Z",
+                "type": "actions",
+                "actions": { "foo": "bar" }
+            }
+        """.trimIndent()
+
+        val data = parseData(listOf(VALID_SCHEDULE, invalidWithoutId), payloadTimestamp = 999L)
+
+        assertEquals(1, data.schedules.size)
+        assertTrue(data.failedSchedules.isEmpty())
+    }
+
+    @Test
+    public fun testParseFallsBackToPayloadTimestampForMissingCreated() {
+        val invalidWithoutCreated = """
+            {
+                "id": "failed_schedule_id",
+                "type": "actions",
+                "actions": { "foo": "bar" }
+            }
+        """.trimIndent()
+
+        val data = parseData(listOf(invalidWithoutCreated), payloadTimestamp = 999L)
+
+        assertEquals(999L, data.failedSchedules.first().createdDate)
+        assertNull(data.failedSchedules.first().minSDKVersion)
+    }
+
+    @Test
+    public fun testFromPayloadsAggregatesFailedSchedules() {
+        // Covers the full payload path, including the metadata pass in parse() that rebuilds Data.
+        val payload = RemoteDataPayload(
+            type = "in_app_messages",
+            timestamp = 999L,
+            data = JsonValue
+                .parseString("""{ "in_app_messages": [$VALID_SCHEDULE, $INVALID_SCHEDULE_WITH_ID] }""")
+                .requireMap(),
+            remoteDataInfo = makeRemoteDataInfo()
+        )
+
+        val result = InAppRemoteData.fromPayloads(listOf(payload))
+
+        assertEquals(1, result.payload[RemoteDataSource.APP]?.data?.schedules?.size)
+        assertEquals(listOf("failed_schedule_id"), result.failedSchedules.map { it.identifier })
+        assertEquals(CREATED_MILLIS, result.failedSchedules.first().createdDate)
+    }
+
+    private fun parseData(schedules: List<String>, payloadTimestamp: Long): InAppRemoteData.Data {
+        val json = JsonValue
+            .parseString("""{ "in_app_messages": [${schedules.joinToString(",")}] }""")
+            .requireMap()
+
+        return InAppRemoteData.Data.fromJson(json, payloadTimestamp)
+    }
+
     private fun makeRemoteDataInfo(source: RemoteDataSource = RemoteDataSource.APP): RemoteDataInfo {
         return RemoteDataInfo(
             url = "https://airship.test",
@@ -326,5 +401,32 @@ public class AutomationRemoteDataAccessTest {
             created = clock.currentTimeMillis.toULong(),
             metadata = jsonMapOf("com.urbanairship.iaa.REMOTE_DATA_INFO" to (remoteDataInfo ?: "")).toJsonValue()
         )
+    }
+
+    private companion object {
+        const val CREATED_MILLIS: Long = 1703073600000L
+
+        val VALID_SCHEDULE: String = """
+            {
+                "id": "valid_schedule",
+                "created": "2023-12-20T12:00:00Z",
+                "triggers": [
+                    { "type": "custom_event_count", "goal": 1, "id": "json-id" }
+                ],
+                "type": "actions",
+                "actions": { "foo": "bar" }
+            }
+        """.trimIndent()
+
+        /** Missing the required "triggers" field. */
+        val INVALID_SCHEDULE_WITH_ID: String = """
+            {
+                "id": "failed_schedule_id",
+                "created": "2023-12-20T12:00:00Z",
+                "min_sdk_version": "18.0.0",
+                "type": "actions",
+                "actions": { "foo": "bar" }
+            }
+        """.trimIndent()
     }
 }

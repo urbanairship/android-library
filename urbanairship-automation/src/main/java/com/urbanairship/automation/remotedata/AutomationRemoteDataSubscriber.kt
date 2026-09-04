@@ -109,11 +109,11 @@ internal class AutomationRemoteDataSubscriber (
         current: List<AutomationSchedule>
     ) {
 
-        val currentScheduleIDs = current.map { it.identifier }
+        val currentScheduleIDs = current.map { it.identifier }.toSet()
 
         if (payload == null) {
             if (currentScheduleIDs.isNotEmpty()) {
-                engine.stopSchedules(currentScheduleIDs)
+                engine.stopSchedules(currentScheduleIDs.toList())
             }
             return
         }
@@ -121,10 +121,16 @@ internal class AutomationRemoteDataSubscriber (
         val contactID = payload.remoteDataInfo?.contactId
         val lastSourceInfo = sourceInfoStore.getSourceInfo(source, contactID)
 
+        val failureResolution = resolveFailedSchedules(
+            lastSourceInfo = lastSourceInfo,
+            currentFailures = payload.data.failedSchedules
+        )
+
         val currentSourceInfo = AutomationSourceInfo(
             remoteDataInfo = payload.remoteDataInfo,
             payloadTimestamp = payload.timestamp,
-            airshipSDKVersion = airshipSDKVersion
+            airshipSDKVersion = airshipSDKVersion,
+            failedSchedules = failureResolution.tracked.ifEmpty { null }
         )
 
         if (currentSourceInfo == lastSourceInfo) {
@@ -147,6 +153,12 @@ internal class AutomationRemoteDataSubscriber (
                 return@filter true
             }
 
+            // A schedule we previously failed to parse now parses. It was never applied, so the
+            // timestamp check below would wrongly treat it as already handled.
+            if (failureResolution.recovered.contains(schedule.identifier)) {
+                return@filter true
+            }
+
             // Otherwise check to see if we consider this a new schedule based on timestamp
             // and SDK version
             schedule.isNewSchedule(
@@ -161,4 +173,49 @@ internal class AutomationRemoteDataSubscriber (
 
         sourceInfoStore.setSourceInfo(currentSourceInfo, source, contactID)
     }
+
+    /**
+     * Diffs the failures recorded on the last sync against the current ones.
+     *
+     * [FailureResolution.tracked] carries still-failing records forward with their original
+     * created date and min SDK version, so a retry is evaluated against the payload that first
+     * dropped them rather than the latest one.
+     */
+    private fun resolveFailedSchedules(
+        lastSourceInfo: AutomationSourceInfo?,
+        currentFailures: List<FailedScheduleRecord>
+    ): FailureResolution {
+        val previouslyFailed = lastSourceInfo?.failedSchedules ?: emptyList()
+        val currentlyFailedIDs = currentFailures.map { it.identifier }.toSet()
+
+        val recovered = previouslyFailed
+            .map { it.identifier }
+            .filter { !currentlyFailedIDs.contains(it) }
+            .toSet()
+
+        val stillFailing = previouslyFailed.filter { currentlyFailedIDs.contains(it.identifier) }
+        val stillFailingIDs = stillFailing.map { it.identifier }.toSet()
+
+        val newlyFailed = currentFailures
+            .filter { !stillFailingIDs.contains(it.identifier) }
+            .filter {
+                isNewSchedule(
+                    created = it.createdDate.toULong(),
+                    minSDKVersion = it.minSDKVersion,
+                    sinceDate = lastSourceInfo?.payloadTimestamp ?: 0L,
+                    lastSDKVersion = lastSourceInfo?.airshipSDKVersion
+                )
+            }
+
+        // Sorted so payload ordering can't produce a spurious source info change.
+        return FailureResolution(
+            tracked = (stillFailing + newlyFailed).sortedBy { it.identifier },
+            recovered = recovered
+        )
+    }
+
+    private data class FailureResolution(
+        val tracked: List<FailedScheduleRecord>,
+        val recovered: Set<String>
+    )
 }
