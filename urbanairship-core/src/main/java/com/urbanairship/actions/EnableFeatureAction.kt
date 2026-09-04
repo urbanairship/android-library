@@ -16,8 +16,14 @@ import com.urbanairship.permission.PermissionsManager
  * and [Action.Situation.FOREGROUND_NOTIFICATION_ACTION_BUTTON].
  *
  *
- * Accepted argument value - either [FEATURE_USER_NOTIFICATIONS], [FEATURE_BACKGROUND_LOCATION],
- * or [FEATURE_LOCATION].
+ * Accepted argument value - [FEATURE_USER_NOTIFICATIONS], [FEATURE_BACKGROUND_LOCATION],
+ * [FEATURE_LOCATION], or any [Permission] value, e.g. "camera" or "photo_library".
+ *
+ *
+ * Only [Permission.DISPLAY_NOTIFICATIONS] has a built-in delegate. Prompting for any other
+ * permission requires the app to register a [com.urbanairship.permission.PermissionDelegate]
+ * with [PermissionsManager], otherwise the prompt resolves to
+ * [com.urbanairship.permission.PermissionStatus.NOT_DETERMINED] and nothing is shown.
  *
  *
  * Result value: `true` if the feature was enabled, otherwise `false`.
@@ -44,7 +50,16 @@ public class EnableFeatureAction @JvmOverloads public constructor(
                     enableAirshipUsage = true, fallbackSystemSettings = true
                 )
             }
-            else -> super.parseArg(arguments)
+            else -> {
+                // Permissions added after these three are named by their Permission value,
+                // so no per-permission argument constant is needed.
+                val permission = Permission.entries.firstOrNull { it.value == feature.lowercase() }
+                if (permission != null) {
+                    Args(permission, enableAirshipUsage = true, fallbackSystemSettings = true)
+                } else {
+                    super.parseArg(arguments)
+                }
+            }
         }
     }
 

@@ -7,6 +7,10 @@ import com.urbanairship.json.JsonValue
 
 /**
  * Device permissions.
+ *
+ * Only [DISPLAY_NOTIFICATIONS] has a built-in delegate. Requesting any other permission
+ * requires the app to register a [PermissionDelegate] with [PermissionsManager], otherwise
+ * the request resolves to [PermissionStatus.NOT_DETERMINED] and nothing is shown.
  */
 public enum class Permission(public val value: String) : JsonSerializable {
 
@@ -14,7 +18,26 @@ public enum class Permission(public val value: String) : JsonSerializable {
     DISPLAY_NOTIFICATIONS("display_notifications"),
 
     // Access location
-    LOCATION("location");
+    LOCATION("location"),
+
+    // App Tracking Transparency. iOS only; Android has no equivalent OS prompt, so this
+    // resolves to NOT_DETERMINED unless the app maps it to a consent flow of its own.
+    APP_TRACKING_TRANSPARENCY("app_tracking_transparency"),
+
+    // Camera
+    CAMERA("camera"),
+
+    // Microphone
+    MICROPHONE("microphone"),
+
+    // Bluetooth
+    BLUETOOTH("bluetooth"),
+
+    // Photo library
+    PHOTO_LIBRARY("photo_library"),
+
+    // Contacts
+    CONTACTS("contacts");
 
     override fun toString(): String = name.lowercase()
 
