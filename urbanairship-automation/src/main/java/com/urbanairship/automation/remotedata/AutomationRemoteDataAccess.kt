@@ -54,10 +54,13 @@ internal class AutomationRemoteDataAccess(
     override val updatesFlow: Flow<InAppRemoteData> = remoteData
         .payloadFlow(REMOTE_DATA_TYPES)
         .map { payloads ->
+            // fromPayloads isolates failures per payload. This only guards against an unexpected
+            // throw escaping it, which would otherwise cancel the subscriber's collection and
+            // silently disable automation sync for the rest of the session.
             try {
                 InAppRemoteData.fromPayloads(payloads)
             } catch (ex: Exception) {
-                UALog.d(ex) { "Failed to parse in-app remote data payloads" }
+                UALog.e(ex) { "Failed to parse in-app remote data payloads" }
                 InAppRemoteData(emptyMap())
             }
         }
@@ -279,13 +282,26 @@ internal data class InAppRemoteData(
         fun fromPayloads(payloads: List<RemoteDataPayload>): InAppRemoteData {
             val parsed = mutableMapOf<RemoteDataSource, Payload>()
             payloads.forEach { payload ->
-                parsed.put(payload.remoteDataInfo?.source ?: RemoteDataSource.APP, parse(payload))
+                val source = payload.remoteDataInfo?.source ?: RemoteDataSource.APP
+                // A payload we can't parse is left out so it reads as "no payload" for its own
+                // source, rather than taking down the other sources with it.
+                parse(payload)?.let { parsed[source] = it }
             }
 
             return InAppRemoteData(parsed)
         }
 
-        private fun parse(payload: RemoteDataPayload): Payload {
+        private fun parse(payload: RemoteDataPayload): Payload? {
+            return try {
+                parsePayload(payload)
+            } catch (ex: Exception) {
+                UALog.e(ex) { "Failed to parse in-app remote data payload $payload" }
+                null
+            }
+        }
+
+        @Throws(JsonException::class)
+        private fun parsePayload(payload: RemoteDataPayload): Payload {
             val metadata = jsonMapOf(
                 LEGACY_REMOTE_INFO_METADATA_KEY to "",
                 REMOTE_INFO_METADATA_KEY to payload.remoteDataInfo

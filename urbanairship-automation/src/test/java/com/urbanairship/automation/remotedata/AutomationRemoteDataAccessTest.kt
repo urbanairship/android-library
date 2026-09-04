@@ -377,6 +377,65 @@ public class AutomationRemoteDataAccessTest {
         assertEquals(CREATED_MILLIS, result.failedSchedules.first().createdDate)
     }
 
+    @Test
+    public fun testCorruptPayloadDoesNotAffectOtherSources() {
+        // Missing the required "in_app_messages" key, so the whole payload fails to parse.
+        val corruptContact = RemoteDataPayload(
+            type = "in_app_messages",
+            timestamp = 999L,
+            data = JsonMap.EMPTY_MAP,
+            remoteDataInfo = makeRemoteDataInfo(RemoteDataSource.CONTACT)
+        )
+
+        val validApp = RemoteDataPayload(
+            type = "in_app_messages",
+            timestamp = 999L,
+            data = JsonValue
+                .parseString("""{ "in_app_messages": [$VALID_SCHEDULE] }""")
+                .requireMap(),
+            remoteDataInfo = makeRemoteDataInfo(RemoteDataSource.APP)
+        )
+
+        val result = InAppRemoteData.fromPayloads(listOf(validApp, corruptContact))
+
+        // The APP source survives; only CONTACT reads as having no payload.
+        assertEquals(
+            listOf("valid_schedule"),
+            result.payload[RemoteDataSource.APP]?.data?.schedules?.map { it.identifier }
+        )
+        assertNull(result.payload[RemoteDataSource.CONTACT])
+    }
+
+    @Test
+    public fun testBadConstraintOnlyFailsItsOwnSource() {
+        // A single malformed frequency constraint still fails its whole payload, but must not
+        // reach across sources.
+        val badConstraints = RemoteDataPayload(
+            type = "in_app_messages",
+            timestamp = 999L,
+            data = JsonValue
+                .parseString(
+                    """{ "in_app_messages": [], "frequency_constraints": [ { "id": "no-range" } ] }"""
+                )
+                .requireMap(),
+            remoteDataInfo = makeRemoteDataInfo(RemoteDataSource.CONTACT)
+        )
+
+        val validApp = RemoteDataPayload(
+            type = "in_app_messages",
+            timestamp = 999L,
+            data = JsonValue
+                .parseString("""{ "in_app_messages": [$VALID_SCHEDULE] }""")
+                .requireMap(),
+            remoteDataInfo = makeRemoteDataInfo(RemoteDataSource.APP)
+        )
+
+        val result = InAppRemoteData.fromPayloads(listOf(validApp, badConstraints))
+
+        assertEquals(1, result.payload[RemoteDataSource.APP]?.data?.schedules?.size)
+        assertNull(result.payload[RemoteDataSource.CONTACT])
+    }
+
     private fun parseData(schedules: List<String>, payloadTimestamp: Long): InAppRemoteData.Data {
         val json = JsonValue
             .parseString("""{ "in_app_messages": [${schedules.joinToString(",")}] }""")
