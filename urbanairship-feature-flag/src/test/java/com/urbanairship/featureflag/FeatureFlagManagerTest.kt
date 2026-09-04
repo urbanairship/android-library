@@ -105,6 +105,17 @@ public class FeatureFlagManagerTest {
     )
 
     @Test
+    public fun testWaitRefresh(): TestResult = runTest {
+        coEvery { remoteDataAccess.waitForRefresh(any()) } just runs
+
+        featureFlags.waitRefresh()
+        coVerify { remoteDataAccess.waitForRefresh(null) }
+
+        featureFlags.waitRefresh(maxTimeMillis = 5000)
+        coVerify { remoteDataAccess.waitForRefresh(5000) }
+    }
+
+    @Test
     public fun testNoFlags(): TestResult = runTest {
         coEvery {
             remoteDataAccess.fetchFlagRemoteInfo("test-ff")
