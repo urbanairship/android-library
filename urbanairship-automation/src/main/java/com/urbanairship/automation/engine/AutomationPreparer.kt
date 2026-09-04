@@ -112,9 +112,10 @@ internal class AutomationPreparer internal constructor(
 
                 if (!result.isMatch) {
                     UALog.v { "Local audience miss for schedule ${schedule.identifier}" }
-                    recordAudienceMiss(schedule, triggerId)
+                    val behavior = schedule.effectiveAudienceMissBehavior
+                    recordAudienceMiss(schedule, triggerId, behavior)
                     return@run RetryingQueue.Result.Success(
-                        result = schedule.audienceMissBehaviorResult(),
+                        result = behavior.toPrepareResult(),
                         ignoreReturnOrder = true
                     )
                 }
@@ -294,12 +295,19 @@ internal class AutomationPreparer internal constructor(
     }
 
     /**
-     * Records the audience-miss outcome when the schedule's miss behavior
-     * consumes budget. `penalize` records `audience_miss` with `cancel: false`,
-     * `cancel` records it with `cancel: true`, and `skip` records nothing.
+     * Records the audience-miss outcome when the miss behavior consumes budget.
+     * `PENALIZE` records `AUDIENCE_MISS`; `CANCEL` records `AUDIENCE_MISS` with
+     * `cancel = true`; `SKIP` records nothing.
+     *
+     * @param behavior The behavior actually applied, which a deferred response may have
+     * overridden. Passed in rather than read off the schedule so the ledger entry and the
+     * prepare result cannot disagree.
      */
-    private suspend fun recordAudienceMiss(schedule: AutomationSchedule, triggerId: String?) {
-        val behavior = schedule.effectiveAudienceMissBehavior
+    private suspend fun recordAudienceMiss(
+        schedule: AutomationSchedule,
+        triggerId: String?,
+        behavior: AutomationAudience.MissBehavior
+    ) {
         if (behavior == AutomationAudience.MissBehavior.SKIP) {
             return
         }
@@ -394,9 +402,12 @@ internal class AutomationPreparer internal constructor(
                         }
                     }
                 } else {
-                    recordAudienceMiss(schedule, triggerId)
+                    // The deferred response wins when it provides its own behavior.
+                    val behavior = result.result.missBehavior
+                        ?: schedule.effectiveAudienceMissBehavior
+                    recordAudienceMiss(schedule, triggerId, behavior)
                     RetryingQueue.Result.Success(
-                        result = schedule.audienceMissBehaviorResult(),
+                        result = behavior.toPrepareResult(),
                         ignoreReturnOrder = true
                     )
                 }
@@ -413,10 +424,6 @@ private val AutomationSchedule.effectiveAudienceMissBehavior: AutomationAudience
     get() = compoundAudience?.missBehavior
         ?: audience?.missBehavior
         ?: AutomationAudience.MissBehavior.PENALIZE
-
-private fun AutomationSchedule.audienceMissBehaviorResult(): SchedulePrepareResult {
-    return effectiveAudienceMissBehavior.toPrepareResult()
-}
 
 private fun AutomationSchedule.evaluateExperiments(): Boolean {
     return isInAppMessageType() && bypassHoldoutGroups != true
