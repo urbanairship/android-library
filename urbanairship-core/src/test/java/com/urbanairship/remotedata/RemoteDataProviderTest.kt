@@ -100,6 +100,45 @@ public class RemoteDataProviderTest {
     }
 
     @Test
+    public fun testRefreshUpdatesStatusFlow(): TestResult = runTest {
+        val locale = LocaleCompat.of("bs")
+        val randomValue = 100
+
+        val remoteDataInfo = RemoteDataInfo(
+            url = "example://",
+            lastModified = "some last modified",
+            source = RemoteDataSource.APP
+        )
+
+        provider.isRemoteDataInfoUpToDateCallback = { _, _, _ -> true }
+        provider.fetchRemoteDataCallback = { _, _, _ ->
+            RequestResult(
+                status = 200,
+                value = RemoteDataApiClient.Result(
+                    remoteDataInfo,
+                    payloads = setOf(
+                        RemoteDataPayload(
+                            type = "some type",
+                            timestamp = 1000,
+                            data = jsonMapOf("something" to "something"),
+                            remoteDataInfo = remoteDataInfo
+                        )
+                    )
+                ),
+                body = null,
+                headers = emptyMap()
+            )
+        }
+
+        assertTrue(provider.refresh("token-1", locale, randomValue) is RemoteDataProvider.RefreshResult.NewData)
+
+        // A new change token (e.g. app foreground) makes local data stale. After a
+        // successful refresh the status flow should report up to date again.
+        assertTrue(provider.refresh("token-2", locale, randomValue) is RemoteDataProvider.RefreshResult.NewData)
+        assertEquals(RemoteData.Status.UP_TO_DATE, provider.statusUpdates.value)
+    }
+
+    @Test
     public fun testRefreshDisabled(): TestResult = runTest {
         provider.fetchRemoteDataCallback = { _, _, _ ->
             val remoteDataInfo = RemoteDataInfo(
