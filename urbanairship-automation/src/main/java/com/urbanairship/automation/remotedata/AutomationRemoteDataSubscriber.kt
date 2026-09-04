@@ -14,6 +14,7 @@ import com.urbanairship.automation.limits.FrequencyLimitManager
 import com.urbanairship.remotedata.RemoteDataSource
 import java.time.Instant
 import kotlin.collections.map
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -87,6 +88,18 @@ internal class AutomationRemoteDataSubscriber (
         RemoteDataSource.entries.forEach { source ->
             val schedules = currentSchedules.filter { remoteDataAccess.sourceFor(it) == source }
             syncAutomations(data.payload[source], source, schedules)
+        }
+
+        // Now that the schedules missing from the listing have been stopped,
+        // clean up the ledger against what remains. Cleanup must never break
+        // syncing, so failures are logged and swallowed - except cancellation,
+        // which has to keep propagating out of the collector.
+        try {
+            engine.reconcileLedger()
+        } catch (ex: CancellationException) {
+            throw ex
+        } catch (ex: Exception) {
+            UALog.e(ex) { "Failed to reconcile ledger" }
         }
     }
 

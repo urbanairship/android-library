@@ -859,6 +859,13 @@ public class AutomationStoreMigratorTest {
             recorded.any { it.scheduleId == scheduleId }
 
         override suspend fun deleteEvents(scopes: List<LedgerScope>) {}
+
+        override suspend fun retainEvents(
+            liveScheduleIds: Set<String>,
+            liveSharedIds: Set<String>
+        ) {}
+
+        override suspend fun compact(now: Instant) {}
     }
 
     private fun makeSimpleLegacySchedule(): FullSchedule {

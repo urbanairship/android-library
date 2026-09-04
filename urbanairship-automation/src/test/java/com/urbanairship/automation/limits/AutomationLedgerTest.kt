@@ -7,7 +7,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
 import com.urbanairship.automation.limits.storage.LedgerDatabase
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.runTest
@@ -17,7 +19,8 @@ import org.junit.runner.RunWith
 
 /**
  * Covers [AutomationLedger.recordExecutionIfNoneSince], the guarded record used
- * by interruption recovery.
+ * by interruption recovery, and [AutomationLedger.reconcile], the maintenance
+ * pass run off remote-data reconciliation.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -144,5 +147,91 @@ public class AutomationLedgerTest {
         recordIfNoneSince()
 
         assertEquals(1, executions().size)
+    }
+
+    // MARK: - Reconciliation
+
+    @Test
+    public fun testReconcileRetainsBeforeCompacting(): TestResult = runTest {
+        // Retention has to run first: compacting the events of schedules that
+        // are about to be dropped is wasted work.
+        val spy = RecordingStore()
+        val spiedLedger = AutomationLedger(spy, clock)
+
+        spiedLedger.reconcile(liveScheduleIds = setOf("schedule-A"), liveSharedIds = setOf("group-1"))
+
+        assertEquals(listOf("retain", "compact"), spy.calls)
+        assertEquals(setOf("schedule-A"), spy.liveScheduleIds)
+        assertEquals(setOf("group-1"), spy.liveSharedIds)
+        assertEquals(clock.now(), spy.compactNow)
+    }
+
+    @Test
+    public fun testReconcileDropsOrphanedEvents(): TestResult = runTest {
+        store.recordEvents(
+            listOf(
+                LedgerEvent.Triggered(scheduleId = "schedule-A", timestamp = clock.now()),
+                LedgerEvent.Triggered(scheduleId = "gone", timestamp = clock.now())
+            )
+        )
+
+        ledger.reconcile(liveScheduleIds = setOf("schedule-A"), liveSharedIds = emptySet())
+
+        assertEquals(1, store.events("schedule-A", null).size)
+        assertTrue(store.events("gone", null).isEmpty())
+    }
+
+    @Test
+    public fun testReconcileCompactsSurvivors(): TestResult = runTest {
+        val old = clock.now()
+        store.recordEvents(
+            listOf(
+                LedgerEvent.Triggered(scheduleId = "schedule-A", timestamp = old),
+                LedgerEvent.Triggered(
+                    scheduleId = "schedule-A",
+                    timestamp = old.plus(1, ChronoUnit.DAYS)
+                )
+            )
+        )
+
+        // Both events are now over two years old, so they share a yearly bucket.
+        clock.currentTime = old.plus(3 * 365, ChronoUnit.DAYS)
+
+        ledger.reconcile(liveScheduleIds = setOf("schedule-A"), liveSharedIds = emptySet())
+
+        val result = store.events("schedule-A", null)
+        assertEquals(1, result.size)
+        assertEquals(2, result.first().effectiveCount)
+    }
+
+    /** Logs the maintenance calls so their order and arguments can be asserted. */
+    private class RecordingStore : LedgerStoreInterface {
+        val calls: MutableList<String> = mutableListOf()
+        var liveScheduleIds: Set<String>? = null
+        var liveSharedIds: Set<String>? = null
+        var compactNow: Instant? = null
+
+        override suspend fun recordEvents(events: List<LedgerEvent>) {}
+
+        override suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent> =
+            emptyList()
+
+        override suspend fun hasEvents(scheduleId: String): Boolean = false
+
+        override suspend fun deleteEvents(scopes: List<LedgerScope>) {}
+
+        override suspend fun retainEvents(
+            liveScheduleIds: Set<String>,
+            liveSharedIds: Set<String>
+        ) {
+            calls.add("retain")
+            this.liveScheduleIds = liveScheduleIds
+            this.liveSharedIds = liveSharedIds
+        }
+
+        override suspend fun compact(now: Instant) {
+            calls.add("compact")
+            compactNow = now
+        }
     }
 }

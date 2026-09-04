@@ -7,7 +7,8 @@ import com.urbanairship.util.Clock
 import java.time.Instant
 
 /**
- * Records ledger events from the live execution pipeline.
+ * Records ledger events from the live execution pipeline, and reconciles what
+ * has been recorded against the schedules that are still live.
  *
  * This is the write-side counterpart to [LedgerStoreInterface]: it turns the
  * coarse execution outcomes observed by the engine, preparer, and executors
@@ -51,6 +52,22 @@ internal interface AutomationLedgerInterface {
         cancel: Boolean,
         since: Instant
     )
+
+    /**
+     * Reconciles the ledger against the live schedules: drops the events no
+     * live schedule references any more, then compacts what remains.
+     *
+     * An event survives while any of the IDs it was recorded under is still
+     * live, so a group's pooled history outlives individual variants.
+     *
+     * Unlike the record calls, failures are not swallowed here: reconciling is
+     * maintenance that nothing in execution depends on, so the caller decides
+     * what a failed pass means for it.
+     *
+     * @param liveScheduleIds Schedule IDs that still reference the ledger.
+     * @param liveSharedIds Shared group IDs that still reference the ledger.
+     */
+    suspend fun reconcile(liveScheduleIds: Set<String>, liveSharedIds: Set<String>)
 }
 
 /** Ledger recorder backed by a [LedgerStoreInterface]. */
@@ -135,6 +152,15 @@ internal class AutomationLedger(
     } catch (ex: Exception) {
         UALog.e(ex) { "Failed to read ledger for $scheduleId, assuming nothing recorded" }
         false
+    }
+
+    override suspend fun reconcile(liveScheduleIds: Set<String>, liveSharedIds: Set<String>) {
+        UALog.v { "Reconciling ledger against ${liveScheduleIds.size} live schedules" }
+
+        // Retention first, so events orphaned by schedules that are gone are
+        // dropped before the survivors are merged.
+        store.retainEvents(liveScheduleIds, liveSharedIds)
+        store.compact(clock.now())
     }
 
     private suspend fun record(event: LedgerEvent) {
