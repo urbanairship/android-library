@@ -4,7 +4,6 @@ package com.urbanairship.android.layout.property
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
-import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.Drawable
 import android.text.style.ImageSpan
 import androidx.annotation.DrawableRes
@@ -107,9 +106,6 @@ public sealed class Image(
             }
 
             DrawableCompat.setTint(d, stateTint)
-            if (d is AnimatedVectorDrawable) {
-                d.start()
-            }
             return ShapeDrawableWrapper(d, 1f, scale, gravityPosition)
         }
 

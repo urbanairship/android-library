@@ -3,7 +3,9 @@ package com.urbanairship.android.layout.widget
 
 import android.content.Context
 import android.content.res.Resources
+import android.graphics.Canvas
 import android.graphics.Rect
+import android.graphics.drawable.AnimatedVectorDrawable
 import android.graphics.drawable.Drawable
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.shape.Shape
@@ -17,6 +19,28 @@ public class ShapeDrawableWrapper private constructor(
     private val tempRect = Rect()
 
     private var gravityPosition: HorizontalPosition = HorizontalPosition.CENTER
+
+    /**
+     * Whether we've already kicked off the wrapped drawable's animation, if it's an
+     * [AnimatedVectorDrawable].
+     *
+     * We only get one shot at this per instance, so a one-shot (non-looping) animation
+     * doesn't get restarted every time it's redrawn after finishing.
+     */
+    private var hasStartedAnimation = false
+
+    override fun draw(canvas: Canvas) {
+        if (!hasStartedAnimation) {
+            hasStartedAnimation = true
+            // Starting an AnimatedVectorDrawable only works reliably once it's actually
+            // being drawn, since that's the first point we're guaranteed to be attached to
+            // a window. Doing it here means every consumer of this wrapper gets it for
+            // free, no matter how it's nested (ImageView, compound drawable, LayerDrawable,
+            // StateListDrawable, etc.) or when it becomes visible.
+            (getDrawable() as? AnimatedVectorDrawable)?.start()
+        }
+        super.draw(canvas)
+    }
 
     public constructor(context: Context, shape: Shape) : this(
         shape.getDrawable(context), shape.aspectRatio, shape.scale, null
