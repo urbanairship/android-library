@@ -1,0 +1,44 @@
+public final class com/urbanairship/preferencecenter/ui/PreferenceCenterActivity : androidx/fragment/app/FragmentActivity {
+	public static final field Companion Lcom/urbanairship/preferencecenter/ui/PreferenceCenterActivity$Companion;
+	public fun <init> ()V
+}
+
+public final class com/urbanairship/preferencecenter/ui/PreferenceCenterActivity$Companion {
+}
+
+public class com/urbanairship/preferencecenter/ui/PreferenceCenterFragment : androidx/fragment/app/Fragment {
+	public static final field ARG_ID Ljava/lang/String;
+	public static final field Companion Lcom/urbanairship/preferencecenter/ui/PreferenceCenterFragment$Companion;
+	public fun <init> ()V
+	public static final fun create (Ljava/lang/String;)Lcom/urbanairship/preferencecenter/ui/PreferenceCenterFragment;
+	public fun onCreateView (Landroid/view/LayoutInflater;Landroid/view/ViewGroup;Landroid/os/Bundle;)Landroid/view/View;
+	public fun onResume ()V
+	public fun onViewCreated (Landroid/view/View;Landroid/os/Bundle;)V
+	public fun setOnDisplayPreferenceCenterListener (Lcom/urbanairship/preferencecenter/ui/PreferenceCenterFragment$OnDisplayPreferenceCenterListener;)V
+	public fun showHeaderItem (Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public final class com/urbanairship/preferencecenter/ui/PreferenceCenterFragment$Companion {
+	public final fun create (Ljava/lang/String;)Lcom/urbanairship/preferencecenter/ui/PreferenceCenterFragment;
+}
+
+public abstract interface class com/urbanairship/preferencecenter/ui/PreferenceCenterFragment$OnDisplayPreferenceCenterListener {
+	public abstract fun onDisplayPreferenceCenter (Ljava/lang/String;Ljava/lang/String;)Z
+}
+
+public final class com/urbanairship/preferencecenter/ui/PreferenceCenterView : android/widget/FrameLayout {
+	public fun <init> (Landroid/content/Context;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;)V
+	public fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;I)V
+	public synthetic fun <init> (Landroid/content/Context;Landroid/util/AttributeSet;IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getPreferenceCenterId ()Ljava/lang/String;
+	public final fun refresh ()V
+	public final fun setOnDisplayPreferenceCenterListener (Lcom/urbanairship/preferencecenter/ui/PreferenceCenterView$OnDisplayPreferenceCenterListener;)V
+	public final fun setPreferenceCenterId (Ljava/lang/String;)V
+	public final fun showHeaderItem (Ljava/lang/String;Ljava/lang/String;)V
+}
+
+public abstract interface class com/urbanairship/preferencecenter/ui/PreferenceCenterView$OnDisplayPreferenceCenterListener {
+	public abstract fun onDisplayPreferenceCenter (Ljava/lang/String;Ljava/lang/String;)Z
+}
+

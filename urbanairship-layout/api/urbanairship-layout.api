@@ -1,0 +1,60 @@
+public final class com/urbanairship/android/layout/AirshipCustomViewArguments {
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/json/JsonMap;Lcom/urbanairship/android/layout/AirshipCustomViewArguments$SizeInfo;Lcom/urbanairship/android/layout/scenecontroller/SceneController;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getName ()Ljava/lang/String;
+	public final fun getProperties ()Lcom/urbanairship/json/JsonMap;
+	public final fun getSceneController ()Lcom/urbanairship/android/layout/scenecontroller/SceneController;
+	public final fun getSizeInfo ()Lcom/urbanairship/android/layout/AirshipCustomViewArguments$SizeInfo;
+	public fun hashCode ()I
+}
+
+public final class com/urbanairship/android/layout/AirshipCustomViewArguments$SizeInfo {
+	public fun <init> (ZZ)V
+	public final fun isAutoHeight ()Z
+	public final fun isAutoWidth ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class com/urbanairship/android/layout/AirshipCustomViewHandler {
+	public abstract fun onCreateView (Landroid/content/Context;Lcom/urbanairship/android/layout/AirshipCustomViewArguments;)Landroid/view/View;
+}
+
+public final class com/urbanairship/android/layout/AirshipCustomViewManager {
+	public static final field INSTANCE Lcom/urbanairship/android/layout/AirshipCustomViewManager;
+	public final fun register (Ljava/lang/String;Lcom/urbanairship/android/layout/AirshipCustomViewHandler;)V
+	public final fun register (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)V
+	public final fun unregister (Ljava/lang/String;)V
+}
+
+public final class com/urbanairship/android/layout/scenecontroller/PagerController {
+	public final fun getState ()Lkotlinx/coroutines/flow/StateFlow;
+	public final fun navigate (Lcom/urbanairship/android/layout/scenecontroller/PagerController$NavigationRequest;)Z
+}
+
+public final class com/urbanairship/android/layout/scenecontroller/PagerController$NavigationRequest : java/lang/Enum {
+	public static final field BACK Lcom/urbanairship/android/layout/scenecontroller/PagerController$NavigationRequest;
+	public static final field NEXT Lcom/urbanairship/android/layout/scenecontroller/PagerController$NavigationRequest;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/android/layout/scenecontroller/PagerController$NavigationRequest;
+	public static fun values ()[Lcom/urbanairship/android/layout/scenecontroller/PagerController$NavigationRequest;
+}
+
+public final class com/urbanairship/android/layout/scenecontroller/PagerController$State {
+	public fun <init> ()V
+	public fun <init> (ZZ)V
+	public synthetic fun <init> (ZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCanGoBack ()Z
+	public final fun getCanGoNext ()Z
+}
+
+public final class com/urbanairship/android/layout/scenecontroller/SceneController {
+	public static final field Companion Lcom/urbanairship/android/layout/scenecontroller/SceneController$Companion;
+	public final fun dismiss (Z)V
+	public static synthetic fun dismiss$default (Lcom/urbanairship/android/layout/scenecontroller/SceneController;ZILjava/lang/Object;)V
+	public final fun getPager ()Lcom/urbanairship/android/layout/scenecontroller/PagerController;
+}
+
+public final class com/urbanairship/android/layout/scenecontroller/SceneController$Companion {
+	public final fun empty ()Lcom/urbanairship/android/layout/scenecontroller/SceneController;
+}
+

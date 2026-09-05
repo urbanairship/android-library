@@ -1,0 +1,14 @@
+public final class com/urbanairship/push/hms/AirshipHmsIntegration {
+	public static final field INSTANCE Lcom/urbanairship/push/hms/AirshipHmsIntegration;
+	public final fun isAirshipPush (Lcom/huawei/hms/push/RemoteMessage;)Z
+	public final fun processMessage (Landroid/content/Context;Lcom/huawei/hms/push/RemoteMessage;)Ljava/util/concurrent/Future;
+	public static final fun processMessageSync (Landroid/content/Context;Lcom/huawei/hms/push/RemoteMessage;)V
+	public static final fun processNewToken (Landroid/content/Context;Ljava/lang/String;)V
+}
+
+public final class com/urbanairship/push/hms/AirshipHmsMessageService : com/huawei/hms/push/HmsMessageService {
+	public fun <init> ()V
+	public fun onMessageReceived (Lcom/huawei/hms/push/RemoteMessage;)V
+	public fun onNewToken (Ljava/lang/String;)V
+}
+

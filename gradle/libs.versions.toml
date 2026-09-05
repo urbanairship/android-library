@@ -7,7 +7,10 @@ spotlessPlugin = '8.0.0'
 nmcpPlugin = '1.4.4'
 gradle-versions =  '0.53.0'
 kspPlugin = '2.3.6'
+# BCV and the bridge are wired up by the `airship-module` convention plugin, via buildSrc.
+# Keep BCV pinned to the version the bridge targets -- it uses BCV's internal task types.
 binary-compatibility-validator = '0.18.1'
+bcv-bridge = '0.2.0'
 
 # Spotless plugins
 ktlint = '1.1.1'
@@ -103,6 +106,7 @@ google-services = { id = 'com.google.gms.google-services', version.ref = "google
 spotless = { id = 'com.diffplug.spotless', version.ref = "spotlessPlugin" }
 benmanes-versions = { id = 'com.github.ben-manes.versions', version.ref = "gradle-versions" }
 binary-compatibility-validator = { id = 'org.jetbrains.kotlinx.binary-compatibility-validator', version.ref = "binary-compatibility-validator" }
+bcv-bridge = { id = 'io.github.tjokinen.android-bcv-bridge', version.ref = 'bcv-bridge' }
 dokka = { id = 'org.jetbrains.dokka', version.ref = "dokka" }
 
 [libraries]

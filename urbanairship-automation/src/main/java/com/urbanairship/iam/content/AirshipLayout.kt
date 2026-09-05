@@ -16,6 +16,11 @@ import com.urbanairship.json.jsonMapOf
  * Display content for Scenes and Surveys.
  */
 public class AirshipLayout private constructor(
+    /**
+     * The parsed layout, for internal rendering.
+     * @hide
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val layoutInfo: LayoutInfo,
     private val jsonValue: JsonValue //TODO: make LayoutInfo serializable and remove that field
 ) : JsonSerializable, Parcelable {

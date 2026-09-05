@@ -93,6 +93,33 @@ As a result of this change, the `copy()` methods on the following data classes a
 * `com.urbanairship.automation.AutomationSchedule.ScheduleData.Deferred`
 * `com.urbanairship.automation.compose.EmbeddedViewItem`
 
+### Internal APIs now marked `@RestrictTo`
+
+`AirshipLayout.layoutInfo` is now `@RestrictTo(LIBRARY_GROUP)` to better align with `LayoutInfo`, which was already restricted and not intended to be used by consumers of the SDK.
+
+## Other Changes
+
+### The custom view API is no longer flagged as restricted
+
+`com.urbanairship.android.layout` carried an overly restrictive package-level `@RestrictTo(LIBRARY_GROUP)` that applied to several APIs intended to be public:
+
+* `AirshipCustomViewManager.register` and `unregister`
+* `AirshipCustomViewHandler.onCreateView`
+* `AirshipCustomViewArguments`, along with its `properties`, `sizeInfo` and `sceneController` accessors
+
+Any `@Suppress("RestrictedApi")` or lint baseline entries your app added to work around this can be removed.
+
+`SceneController.Companion.empty()` has also been made public. It builds a no-op controller, which makes it possible to construct `AirshipCustomViewArguments` in a Compose `@Preview` or a unit test:
+
+```kotlin
+AirshipCustomViewArguments(
+    name = "preview",
+    properties = jsonMapOf(),
+    sizeInfo = AirshipCustomViewArguments.SizeInfo(true, true),
+    sceneController = SceneController.empty()
+)
+```
+
 ## Deprecated APIs
 
 * `AirshipConfigOptions.backgroundReportingIntervalMS` — use `backgroundReportingIntervalMs`.
