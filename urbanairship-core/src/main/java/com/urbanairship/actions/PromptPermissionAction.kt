@@ -26,7 +26,8 @@ import kotlinx.coroutines.launch
  *
  *
  * Expected value:
- * - permission: post_notifications, contacts, bluetooth, location, media, mic, or camera
+ * - permission: a [Permission] value, e.g. display_notifications, location, camera,
+ * or photo_library.
  * - fallback_system_settings: `true` to navigate to app settings if the permission is silently denied.
  * - allow_airship_usage: If the permission is granted, any Airship features that depend on the
  * permission will be enabled as well, e.g., enable user notifications on PushManager and push feature
