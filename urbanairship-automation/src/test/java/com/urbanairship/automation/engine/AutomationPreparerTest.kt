@@ -781,6 +781,115 @@ public class AutomationPreparerTest {
     }
 
     @Test
+    public fun testPrepareDeferredMissBehaviorOverridesSchedule(): TestResult = runTest {
+        val result = prepareDeferredAudienceMiss(
+            scheduleMissBehavior = AutomationAudience.MissBehavior.SKIP,
+            deferredMissBehavior = AutomationAudience.MissBehavior.CANCEL
+        )
+
+        assertEquals(SchedulePrepareResult.Cancel, result)
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = "test-schedule",
+                    sharedId = null,
+                    triggerId = "trigger-1",
+                    result = LedgerExecutionResult.AUDIENCE_MISS,
+                    cancel = true
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    @Test
+    public fun testPrepareDeferredMissBehaviorSkipRecordsNothing(): TestResult = runTest {
+        val result = prepareDeferredAudienceMiss(
+            scheduleMissBehavior = AutomationAudience.MissBehavior.PENALIZE,
+            deferredMissBehavior = AutomationAudience.MissBehavior.SKIP
+        )
+
+        // The ledger has to follow the behavior that was applied, not the schedule's.
+        assertEquals(SchedulePrepareResult.Skip, result)
+        assertTrue(ledger.recorded.isEmpty())
+    }
+
+    @Test
+    public fun testPrepareDeferredWithoutMissBehaviorKeepsScheduleBehavior(): TestResult = runTest {
+        val result = prepareDeferredAudienceMiss(
+            scheduleMissBehavior = AutomationAudience.MissBehavior.PENALIZE,
+            deferredMissBehavior = null
+        )
+
+        assertEquals(SchedulePrepareResult.Penalize, result)
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = "test-schedule",
+                    sharedId = null,
+                    triggerId = "trigger-1",
+                    result = LedgerExecutionResult.AUDIENCE_MISS,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    /**
+     * Prepares a deferred schedule whose local audience matches but whose deferred
+     * response reports an audience miss, carrying [deferredMissBehavior] when one is
+     * provided.
+     */
+    private suspend fun prepareDeferredAudienceMiss(
+        scheduleMissBehavior: AutomationAudience.MissBehavior,
+        deferredMissBehavior: AutomationAudience.MissBehavior?
+    ): SchedulePrepareResult {
+        val schedule = makeSchedule(
+            data = AutomationSchedule.ScheduleData.Deferred(
+                DeferredAutomationData(
+                    url = Uri.parse("https://sample.url"),
+                    retryOnTimeOut = false,
+                    type = DeferredAutomationData.DeferredType.IN_APP_MESSAGE
+                )
+            ),
+            audience = AutomationAudience(
+                audienceSelector = audienceSelector,
+                missBehavior = scheduleMissBehavior
+            )
+        )
+
+        coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
+        coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
+        coEvery { deviceInfoProvider.getChannelId() } returns "channel-id"
+        coEvery { deviceInfoProvider.locale } returns Locale.US
+        coEvery { deviceInfoProvider.isNotificationsOptedIn } returns true
+
+        mockExperimentsManager()
+
+        coEvery { deferredResolver.resolve<DeferredScheduleResult>(any(), any()) } answers {
+            return@answers DeferredResult.Success(
+                DeferredScheduleResult(
+                    isAudienceMatch = false,
+                    missBehavior = deferredMissBehavior
+                )
+            )
+        }
+
+        mockkStatic(Airship::class)
+        every { Airship.version } returns "1"
+
+        return preparer.prepare(
+            schedule,
+            triggerContext,
+            triggerSessionId = UUID.randomUUID().toString(),
+            triggerId = "trigger-1"
+        )
+    }
+
+    @Test
     public fun testExperiments(): TestResult = runTest {
         val schedule = makeSchedule(
             audience = AutomationAudience(
