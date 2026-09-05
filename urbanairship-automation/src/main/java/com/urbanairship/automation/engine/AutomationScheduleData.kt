@@ -246,7 +246,7 @@ internal class AutomationScheduleData(
             return false
         }
 
-        val gracePeriod = (schedule.editGracePeriodDays ?: return true).toLong().days
+        val gracePeriod = (schedule.editGracePeriodDays ?: return true).days
         val sinceLastChange = date - scheduleStateChangeDate
         return sinceLastChange >= gracePeriod
     }

@@ -79,6 +79,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
      *
      * Java callers, which cannot express a [Duration], should read [intervalSeconds].
      */
+    @get:JvmSynthetic
     public val interval: Duration? = null,
     /**
      * Schedule data
@@ -92,7 +93,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     /**
      * The edit grace period in days.
      */
-    public val editGracePeriodDays: ULong? = null,
+    public val editGracePeriodDays: Long? = null,
 
     internal val metadata: JsonValue? = null,
     internal val frequencyConstraintIds: List<String>? = null,
@@ -136,7 +137,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private var delay: AutomationDelay? = schedule.delay
         private var interval: Duration? = schedule.interval
         private var data: ScheduleData = schedule.data
-        private var editGracePeriodDays: ULong? = schedule.editGracePeriodDays
+        private var editGracePeriodDays: Long? = schedule.editGracePeriodDays
 
         // Internal
         private val identifier: String = schedule.identifier
@@ -242,6 +243,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @param interval The interval.
          * @return The builder object.
          */
+        @JvmSynthetic
         public fun setInterval(interval: Duration?): Builder = apply {
             this.interval = interval
         }
@@ -274,7 +276,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @return The builder object.
          */
         public fun setEditGracePeriodDays(editGracePeriodDays: Long?): Builder = apply {
-            this.editGracePeriodDays = editGracePeriodDays?.toULong()
+            this.editGracePeriodDays = editGracePeriodDays
         }
 
         /**
@@ -524,7 +526,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(METADATA, metadata)
         .putOpt(PRODUCT_ID, productId)
         .putOpt(BYPASS_HOLDOUT_GROUPS, bypassHoldoutGroups)
-        .putOpt(EDIT_GRACE_PERIOD_DAYS, editGracePeriodDays?.toLong())
+        .putOpt(EDIT_GRACE_PERIOD_DAYS, editGracePeriodDays)
         .putOpt(FREQUENCY_CONSTRAINT_IDS, frequencyConstraintIds)
         .putOpt(MESSAGE_TYPE, messageType)
         .putOpt(REPORTING_CONTEXT, reportingContext)

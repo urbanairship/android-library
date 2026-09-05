@@ -583,7 +583,7 @@ public class AutomationScheduleDataTest {
         data = makeData(scheduleState = AutomationScheduleState.FINISHED)
         assertTrue(data.shouldDelete(clock.currentTime))
 
-        data = makeData(editGracePeriodDays = 10U, scheduleState = AutomationScheduleState.FINISHED)
+        data = makeData(editGracePeriodDays = 10L, scheduleState = AutomationScheduleState.FINISHED)
         assertFalse(data.shouldDelete(clock.currentTime))
         assertFalse(data.shouldDelete(clock.currentTime + 1000.milliseconds * 10 * 60 * 60 * 24 - 1.milliseconds))
         assertTrue(data.shouldDelete(clock.currentTime + 1000.milliseconds * 10 * 60 * 60 * 24))
@@ -653,7 +653,7 @@ public class AutomationScheduleDataTest {
         interval: Duration? = null,
         data: AutomationSchedule.ScheduleData = AutomationSchedule.ScheduleData.Actions(JsonValue.wrap("actions")),
         bypassHoldoutGroups: Boolean? = null,
-        editGracePeriodDays: ULong? = null,
+        editGracePeriodDays: Long? = null,
         metadata: JsonValue? = null,
         frequencyConstraintIDs: List<String>? = null,
         messageType: String? = null,

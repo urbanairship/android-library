@@ -77,7 +77,7 @@ public class AutomationStoreMigratorTest {
                 interval = Duration.ZERO,
                 priority = 0,
                 limit = 0u,
-                editGracePeriodDays = 0u,
+                editGracePeriodDays = 0L,
                 triggers = listOf(
                     AutomationTrigger.Event(
                         trigger = EventAutomationTrigger(
@@ -222,7 +222,7 @@ public class AutomationStoreMigratorTest {
                 data = makeScheduleData(),
                 campaigns = jsonMapOf("campaigns" to "campaigns").toJsonValue(),
                 bypassHoldoutGroups = true,
-                editGracePeriodDays = 10U,
+                editGracePeriodDays = 10L,
                 metadata = jsonMapOf("meta" to "data").toJsonValue(),
                 frequencyConstraintIds = listOf("constraint1", "constraint2"),
                 messageType = "cool inapp",
@@ -361,7 +361,7 @@ public class AutomationStoreMigratorTest {
                 data = makeDeferredScheduleData(),
                 campaigns = jsonMapOf("campaigns" to "campaigns").toJsonValue(),
                 bypassHoldoutGroups = true,
-                editGracePeriodDays = 10U,
+                editGracePeriodDays = 10L,
                 metadata = jsonMapOf("meta" to "data").toJsonValue(),
                 frequencyConstraintIds = listOf("constraint1", "constraint2"),
                 messageType = "cool deferred",
@@ -502,7 +502,7 @@ public class AutomationStoreMigratorTest {
                 ),
                 campaigns = jsonMapOf("campaigns" to "campaigns").toJsonValue(),
                 bypassHoldoutGroups = true,
-                editGracePeriodDays = 10U,
+                editGracePeriodDays = 10L,
                 metadata = jsonMapOf("meta" to "data").toJsonValue(),
                 frequencyConstraintIds = listOf("constraint1", "constraint2"),
                 messageType =  "cool actions",
@@ -545,7 +545,7 @@ public class AutomationStoreMigratorTest {
                 interval = Duration.ZERO,
                 priority = 0,
                 limit = 0u,
-                editGracePeriodDays = 0u,
+                editGracePeriodDays = 0L,
                 triggers = listOf(
                     AutomationTrigger.Event(
                         trigger = EventAutomationTrigger(

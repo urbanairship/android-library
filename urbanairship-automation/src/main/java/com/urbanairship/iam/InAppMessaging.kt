@@ -18,6 +18,8 @@ public interface InAppMessagingInterface {
     /**
      * The interval to wait between displaying in-app messages.
      */
+    @get:JvmSynthetic
+    @set:JvmSynthetic
     public var displayInterval: Duration
 
     /**
