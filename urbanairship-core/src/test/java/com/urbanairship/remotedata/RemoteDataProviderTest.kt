@@ -124,7 +124,7 @@ public class RemoteDataProviderTest {
                     payloads = setOf(
                         RemoteDataPayload(
                             type = "some type",
-                            timestamp = 1000,
+                            timestamp = Instant.ofEpochMilli(1000),
                             data = jsonMapOf("something" to "something"),
                             remoteDataInfo = remoteDataInfo
                         )
