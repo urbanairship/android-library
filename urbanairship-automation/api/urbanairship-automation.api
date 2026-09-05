@@ -55,18 +55,18 @@ public final class com/urbanairship/automation/AutomationDelay : com/urbanairshi
 }
 
 public final class com/urbanairship/automation/AutomationSchedule : com/urbanairship/json/JsonSerializable {
-	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/UInt;Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/automation/AutomationAudience;Lcom/urbanairship/automation/AutomationCompoundAudience;Lcom/urbanairship/automation/AutomationDelay;Lkotlin/time/Duration;Lcom/urbanairship/automation/AutomationSchedule$ScheduleData;Ljava/lang/Boolean;Lkotlin/ULong;Lcom/urbanairship/json/JsonValue;Ljava/util/List;Ljava/lang/String;Lcom/urbanairship/json/JsonValue;Lcom/urbanairship/json/JsonValue;Ljava/lang/String;Ljava/lang/String;Ljava/time/Instant;Ljava/lang/String;Lcom/urbanairship/automation/AdditionalAudienceCheckOverrides;Ljava/lang/String;Lcom/urbanairship/automation/limits/LedgerConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Ljava/lang/Integer;Lkotlin/UInt;Ljava/time/Instant;Ljava/time/Instant;Lcom/urbanairship/automation/AutomationAudience;Lcom/urbanairship/automation/AutomationCompoundAudience;Lcom/urbanairship/automation/AutomationDelay;Lkotlin/time/Duration;Lcom/urbanairship/automation/AutomationSchedule$ScheduleData;Ljava/lang/Boolean;Ljava/lang/Long;Lcom/urbanairship/json/JsonValue;Ljava/util/List;Ljava/lang/String;Lcom/urbanairship/json/JsonValue;Lcom/urbanairship/json/JsonValue;Ljava/lang/String;Ljava/lang/String;Ljava/time/Instant;Ljava/lang/String;Lcom/urbanairship/automation/AdditionalAudienceCheckOverrides;Ljava/lang/String;Lcom/urbanairship/automation/limits/LedgerConfig;Lcom/urbanairship/automation/limits/LimitConfig;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAudience ()Lcom/urbanairship/automation/AutomationAudience;
 	public final fun getBypassHoldoutGroups ()Ljava/lang/Boolean;
 	public final fun getCompoundAudience ()Lcom/urbanairship/automation/AutomationCompoundAudience;
 	public final fun getData ()Lcom/urbanairship/automation/AutomationSchedule$ScheduleData;
 	public final fun getDelay ()Lcom/urbanairship/automation/AutomationDelay;
-	public final fun getEditGracePeriodDays-6VbMDqA ()Lkotlin/ULong;
+	public final fun getEditGracePeriodDays ()Ljava/lang/Long;
 	public final fun getEndDate ()Ljava/time/Instant;
 	public final fun getGroup ()Ljava/lang/String;
 	public final fun getIdentifier ()Ljava/lang/String;
-	public final fun getInterval-FghU774 ()Lkotlin/time/Duration;
+	public final synthetic fun getInterval-FghU774 ()Lkotlin/time/Duration;
 	public final fun getIntervalSeconds ()Ljava/lang/Long;
 	public final fun getLimit-0hXNFcg ()Lkotlin/UInt;
 	public final fun getPriority ()Ljava/lang/Integer;
@@ -87,7 +87,7 @@ public final class com/urbanairship/automation/AutomationSchedule$Builder {
 	public final fun setEditGracePeriodDays (Ljava/lang/Long;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
 	public final fun setEndDate (Ljava/time/Instant;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
 	public final fun setGroup (Ljava/lang/String;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
-	public final fun setInterval-BwNAW2A (Lkotlin/time/Duration;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
+	public final synthetic fun setInterval-BwNAW2A (Lkotlin/time/Duration;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
 	public final fun setIntervalSeconds (Ljava/lang/Long;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
 	public final fun setLimit (Ljava/lang/Integer;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
 	public final fun setPriority (Ljava/lang/Integer;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
@@ -387,14 +387,14 @@ public final class com/urbanairship/iam/InAppMessagePreview {
 
 public abstract interface class com/urbanairship/iam/InAppMessagingInterface {
 	public abstract fun getDisplayDelegate ()Lcom/urbanairship/iam/InAppMessageDisplayDelegate;
-	public abstract fun getDisplayInterval-UwyO8pc ()J
+	public abstract synthetic fun getDisplayInterval-UwyO8pc ()J
 	public fun getDisplayIntervalSeconds ()J
 	public abstract fun getMessageContentExtender ()Lcom/urbanairship/iam/InAppMessageContentExtender;
 	public abstract fun getOnCheckSuppression ()Lkotlin/jvm/functions/Function3;
 	public abstract fun notifyDisplayConditionsChanged ()V
 	public abstract fun setAdapterFactoryBlock (Lcom/urbanairship/iam/adapter/CustomDisplayAdapterType;Lkotlin/jvm/functions/Function3;)V
 	public abstract fun setDisplayDelegate (Lcom/urbanairship/iam/InAppMessageDisplayDelegate;)V
-	public abstract fun setDisplayInterval-LRDsOJo (J)V
+	public abstract synthetic fun setDisplayInterval-LRDsOJo (J)V
 	public fun setDisplayIntervalSeconds (J)V
 	public abstract fun setMessageContentExtender (Lcom/urbanairship/iam/InAppMessageContentExtender;)V
 	public abstract fun setOnCheckSuppression (Lkotlin/jvm/functions/Function3;)V
@@ -590,7 +590,7 @@ public final class com/urbanairship/iam/content/Banner : com/urbanairship/json/J
 	public final fun getButtonLayoutType ()Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;
 	public final fun getButtons ()Ljava/util/List;
 	public final fun getDismissButtonColor ()Lcom/urbanairship/iam/info/InAppMessageColor;
-	public final fun getDuration-UwyO8pc ()J
+	public final synthetic fun getDuration-UwyO8pc ()J
 	public final fun getDurationMs ()J
 	public final fun getHeading ()Lcom/urbanairship/iam/info/InAppMessageTextInfo;
 	public final fun getMedia ()Lcom/urbanairship/iam/info/InAppMessageMediaInfo;
@@ -603,7 +603,7 @@ public final class com/urbanairship/iam/content/Banner : com/urbanairship/json/J
 
 public final class com/urbanairship/iam/content/Banner$Companion {
 	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/content/Banner;
-	public final fun getDEFAULT_DURATION-UwyO8pc ()J
+	public final synthetic fun getDEFAULT_DURATION-UwyO8pc ()J
 }
 
 public final class com/urbanairship/iam/content/Banner$Placement : java/lang/Enum, com/urbanairship/json/JsonSerializable {
@@ -984,7 +984,7 @@ public final class com/urbanairship/iam/legacy/LegacyInAppMessage {
 	public final fun getButtonActionValues ()Ljava/util/Map;
 	public final fun getButtonGroupId ()Ljava/lang/String;
 	public final fun getClickActionValues ()Lcom/urbanairship/json/JsonMap;
-	public final fun getDisplayDuration-FghU774 ()Lkotlin/time/Duration;
+	public final synthetic fun getDisplayDuration-FghU774 ()Lkotlin/time/Duration;
 	public final fun getDisplayDurationMs ()Ljava/lang/Long;
 	public final fun getExpiry ()Ljava/time/Instant;
 	public final fun getExtras ()Lcom/urbanairship/json/JsonMap;

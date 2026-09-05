@@ -142,6 +142,29 @@ public class FeatureFlagManager internal constructor(
     public val status: FeatureFlagRemoteDataStatus
         get() = remoteData.status
 
+    /**
+     * Waits for the refresh of the feature flag rules.
+     * @param maxTimeMillis The max time in milliseconds to wait, or null to wait indefinitely.
+     */
+    public suspend fun waitRefresh(maxTimeMillis: Long? = null) {
+        remoteData.waitForRefresh(maxTimeMillis)
+    }
+
+    /**
+     * Waits for the refresh of the feature flag rules and returns a PendingResult.
+     * @param maxTimeMillis The max time in milliseconds to wait, or null to wait indefinitely.
+     * @return an instance of `PendingResult<Unit>`.
+     */
+    @JvmOverloads
+    public fun waitRefreshPendingResult(maxTimeMillis: Long? = null): PendingResult<Unit> {
+        val result = PendingResult<Unit>()
+        pendingResultScope.launch {
+            waitRefresh(maxTimeMillis)
+            result.setResult(Unit)
+        }
+        return result
+    }
+
     private suspend fun resolveFlag(name: String): Result<FeatureFlag> {
         val flagInfoResult = remoteDataFeatureFlagInfo(name)
         val remoteDataInfo = flagInfoResult.getOrNull()

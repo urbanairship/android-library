@@ -40,6 +40,11 @@ public final class com/urbanairship/featureflag/FeatureFlagManager : com/urbanai
 	public final fun getStatusUpdates ()Lkotlinx/coroutines/flow/Flow;
 	public static final fun shared ()Lcom/urbanairship/featureflag/FeatureFlagManager;
 	public final fun trackInteraction (Lcom/urbanairship/featureflag/FeatureFlag;)V
+	public final fun waitRefresh (Ljava/lang/Long;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun waitRefresh$default (Lcom/urbanairship/featureflag/FeatureFlagManager;Ljava/lang/Long;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun waitRefreshPendingResult ()Lcom/urbanairship/PendingResult;
+	public final fun waitRefreshPendingResult (Ljava/lang/Long;)Lcom/urbanairship/PendingResult;
+	public static synthetic fun waitRefreshPendingResult$default (Lcom/urbanairship/featureflag/FeatureFlagManager;Ljava/lang/Long;ILjava/lang/Object;)Lcom/urbanairship/PendingResult;
 }
 
 public final class com/urbanairship/featureflag/FeatureFlagManager$Companion {

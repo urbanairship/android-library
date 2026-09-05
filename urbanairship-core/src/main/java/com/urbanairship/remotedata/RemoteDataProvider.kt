@@ -145,6 +145,7 @@ internal abstract class RemoteDataProvider(
                 result.value.remoteDataInfo,
                 clock.now()
             )
+            notifyNewStatus(RemoteData.Status.UP_TO_DATE)
 
             return RefreshResult.NewData()
         }
@@ -160,6 +161,7 @@ internal abstract class RemoteDataProvider(
                 refreshState.remoteDataInfo,
                 clock.now()
             )
+            notifyNewStatus(RemoteData.Status.UP_TO_DATE)
             return RefreshResult.Skipped()
         }
 
