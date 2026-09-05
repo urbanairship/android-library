@@ -119,7 +119,8 @@ public class ModalActivity : AppCompatActivity() {
                 args.inAppActivityMonitor,
                 args.webViewClientFactory,
                 args.imageCache,
-                placement.shouldIgnoreSafeArea()
+                placement.shouldIgnoreSafeArea(),
+                args.payload.version
             )
 
             val view = ModalView(this, model, presentation, viewEnvironment).apply {

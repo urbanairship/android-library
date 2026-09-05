@@ -22,7 +22,8 @@ public class DefaultViewEnvironment(
     private val activityMonitor: ActivityMonitor,
     webViewClientFactory: Factory<AirshipWebViewClient>?,
     imageCache: ImageCache?,
-    override val isIgnoringSafeAreas: Boolean
+    override val isIgnoringSafeAreas: Boolean,
+    override val layoutVersion: Int
 ) : ViewEnvironment {
 
     private val webChromeClientFactory: Factory<WebChromeClient> =

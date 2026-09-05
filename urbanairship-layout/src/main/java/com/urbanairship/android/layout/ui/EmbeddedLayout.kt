@@ -153,7 +153,8 @@ public class EmbeddedLayout(
             activityMonitor,
             webViewClientFactory,
             imageCache,
-            false // Embedded views never ignore safe areas?
+            false, // Embedded views never ignore safe areas?
+            payload.version
         )
 
         val viewModelProvider = ViewModelProvider(EmbeddedViewModelStoreOwner)
