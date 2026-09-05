@@ -34,6 +34,10 @@ internal class FeatureFlagRemoteDataAccess(
         remoteData.waitForRefresh(RemoteDataSource.APP, MAX_TIMEOUT_MILLIS)
     }
 
+    suspend fun waitForRefresh(maxTimeMillis: Long?) {
+        remoteData.waitForRefresh(RemoteDataSource.APP, maxTimeMillis)
+    }
+
     suspend fun notifyOutOfDate(remoteDataInfo: RemoteDataInfo?) {
         remoteDataInfo?.apply {
             remoteData.notifyOutdated(remoteDataInfo)
