@@ -16,6 +16,33 @@ public final class com/urbanairship/automation/compose/AirshipBannerHostStateKt 
 	public static final fun rememberAirshipBannerHostState (Landroidx/compose/runtime/Composer;I)Lcom/urbanairship/automation/compose/AirshipBannerHostState;
 }
 
+public final class com/urbanairship/automation/compose/AirshipEmbeddedCarouselDefaults {
+	public static final field $stable I
+	public static final field INSTANCE Lcom/urbanairship/automation/compose/AirshipEmbeddedCarouselDefaults;
+	public final fun getDotsIndicator ()Lkotlin/jvm/functions/Function5;
+	public final fun nextArrow-xmD2r70 (JJ)Lkotlin/jvm/functions/Function4;
+	public static synthetic fun nextArrow-xmD2r70$default (Lcom/urbanairship/automation/compose/AirshipEmbeddedCarouselDefaults;JJILjava/lang/Object;)Lkotlin/jvm/functions/Function4;
+	public final fun previousArrow-xmD2r70 (JJ)Lkotlin/jvm/functions/Function4;
+	public static synthetic fun previousArrow-xmD2r70$default (Lcom/urbanairship/automation/compose/AirshipEmbeddedCarouselDefaults;JJILjava/lang/Object;)Lkotlin/jvm/functions/Function4;
+}
+
+public final class com/urbanairship/automation/compose/AirshipEmbeddedCarouselKt {
+	public static final fun AirshipEmbeddedCarousel (Lcom/urbanairship/automation/compose/AirshipEmbeddedCarouselState;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function5;Lkotlin/jvm/functions/Function4;Lkotlin/jvm/functions/Function4;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun AirshipEmbeddedCarousel (Ljava/lang/String;Landroidx/compose/ui/Modifier;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Lkotlin/jvm/functions/Function5;Lkotlin/jvm/functions/Function4;Lkotlin/jvm/functions/Function4;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun rememberAirshipEmbeddedCarouselState (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Landroidx/compose/runtime/Composer;II)Lcom/urbanairship/automation/compose/AirshipEmbeddedCarouselState;
+}
+
+public final class com/urbanairship/automation/compose/AirshipEmbeddedCarouselState {
+	public static final field $stable I
+	public final fun dismissAll ()V
+	public final fun dismissCurrent ()V
+	public final fun getCurrentPage ()I
+	public final fun getGroupState ()Lcom/urbanairship/automation/compose/AirshipEmbeddedViewGroupState;
+	public final fun getPageCount ()I
+	public final fun getPagerState ()Landroidx/compose/foundation/pager/PagerState;
+	public final fun isAvailable ()Z
+}
+
 public final class com/urbanairship/automation/compose/AirshipEmbeddedViewDefaults {
 	public static final field $stable I
 	public static final field INSTANCE Lcom/urbanairship/automation/compose/AirshipEmbeddedViewDefaults;
@@ -62,6 +89,12 @@ public final class com/urbanairship/automation/compose/AirshipEmbeddedViewState 
 public final class com/urbanairship/automation/compose/AirshipEmbeddedViewStateKt {
 	public static final fun rememberAirshipEmbeddedViewState (Ljava/lang/String;Lcom/urbanairship/embedded/AirshipEmbeddedSelection;Landroidx/compose/runtime/Composer;II)Lcom/urbanairship/automation/compose/AirshipEmbeddedViewState;
 	public static final fun rememberAirshipEmbeddedViewState (Ljava/lang/String;Ljava/util/Comparator;Landroidx/compose/runtime/Composer;I)Lcom/urbanairship/automation/compose/AirshipEmbeddedViewState;
+}
+
+public final class com/urbanairship/automation/compose/ComposableSingletons$AirshipEmbeddedCarouselKt {
+	public static final field INSTANCE Lcom/urbanairship/automation/compose/ComposableSingletons$AirshipEmbeddedCarouselKt;
+	public fun <init> ()V
+	public final fun getLambda$1973517473$urbanairship_automation_compose ()Lkotlin/jvm/functions/Function5;
 }
 
 public final class com/urbanairship/automation/compose/ComposableSingletons$AirshipEmbeddedViewGroupKt {

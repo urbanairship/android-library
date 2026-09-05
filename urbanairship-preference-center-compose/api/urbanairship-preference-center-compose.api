@@ -22,6 +22,7 @@ public final class com/urbanairship/preferencecenter/compose/ui/ComposableSingle
 	public final fun getLambda$-1982897450$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$-21196205$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
 	public final fun getLambda$-871806494$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
+	public final fun getLambda$1561809803$urbanairship_preference_center_compose ()Lkotlin/jvm/functions/Function2;
 }
 
 public final class com/urbanairship/preferencecenter/compose/ui/PreferenceCenterActivity : androidx/activity/ComponentActivity {

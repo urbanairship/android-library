@@ -70,7 +70,7 @@ public final class com/urbanairship/AirshipConfigOptions {
 	public final field appSecret Ljava/lang/String;
 	public final field appStoreUri Landroid/net/Uri;
 	public final field autoLaunchApplication Z
-	public final field backgroundReportingIntervalMS J
+	public final field backgroundReportingIntervalMs J
 	public final field channelCaptureEnabled Z
 	public final field channelCreationDelayEnabled Z
 	public final field customPushProvider Lcom/urbanairship/push/PushProvider;
@@ -95,7 +95,8 @@ public final class com/urbanairship/AirshipConfigOptions {
 	public final field urlAllowListScopeOpenUrl Ljava/util/List;
 	public synthetic fun <init> (Lcom/urbanairship/AirshipConfigOptions$Builder;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getAutoPauseInAppAutomationOnLaunch ()Z
-	public final fun getBackgroundReportingInterval-UwyO8pc ()J
+	public final synthetic fun getBackgroundReportingInterval-UwyO8pc ()J
+	public final fun getBackgroundReportingIntervalMS ()J
 	public final fun getChannelCreateOption ()Lcom/urbanairship/channel/AirshipChannelCreateOption;
 	public final fun getValidationOverride ()Lcom/urbanairship/inputvalidation/AirshipValidationOverride;
 	public final fun isPromptForPermissionOnUserNotificationsEnabled ()Z
@@ -160,8 +161,9 @@ public final class com/urbanairship/AirshipConfigOptions$Builder {
 	public final fun setAutoLaunchApplication (Z)Lcom/urbanairship/AirshipConfigOptions$Builder;
 	public final fun setAutoPauseInAppAutomationOnLaunch (Z)Lcom/urbanairship/AirshipConfigOptions$Builder;
 	public final fun setAutoPauseInAppAutomationOnLaunch (Z)V
-	public final fun setBackgroundReportingInterval-LRDsOJo (J)Lcom/urbanairship/AirshipConfigOptions$Builder;
+	public final synthetic fun setBackgroundReportingInterval-LRDsOJo (J)Lcom/urbanairship/AirshipConfigOptions$Builder;
 	public final fun setBackgroundReportingIntervalMS (J)Lcom/urbanairship/AirshipConfigOptions$Builder;
+	public final fun setBackgroundReportingIntervalMs (J)Lcom/urbanairship/AirshipConfigOptions$Builder;
 	public final fun setChannelCaptureEnabled (Z)Lcom/urbanairship/AirshipConfigOptions$Builder;
 	public final fun setChannelCreateOption (Lcom/urbanairship/channel/AirshipChannelCreateOption;)V
 	public final fun setChannelCreationDelayEnabled (Z)Lcom/urbanairship/AirshipConfigOptions$Builder;
@@ -3047,9 +3049,15 @@ public abstract interface class com/urbanairship/permission/OnPermissionStatusCh
 }
 
 public final class com/urbanairship/permission/Permission : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field APP_TRACKING_TRANSPARENCY Lcom/urbanairship/permission/Permission;
+	public static final field BLUETOOTH Lcom/urbanairship/permission/Permission;
+	public static final field CAMERA Lcom/urbanairship/permission/Permission;
+	public static final field CONTACTS Lcom/urbanairship/permission/Permission;
 	public static final field Companion Lcom/urbanairship/permission/Permission$Companion;
 	public static final field DISPLAY_NOTIFICATIONS Lcom/urbanairship/permission/Permission;
 	public static final field LOCATION Lcom/urbanairship/permission/Permission;
+	public static final field MICROPHONE Lcom/urbanairship/permission/Permission;
+	public static final field PHOTO_LIBRARY Lcom/urbanairship/permission/Permission;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public final fun getValue ()Ljava/lang/String;
 	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
@@ -3432,7 +3440,7 @@ public final class com/urbanairship/push/PushProviderBridge$ProcessPushRequest {
 	public final fun execute (Landroid/content/Context;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun execute$default (Lcom/urbanairship/push/PushProviderBridge$ProcessPushRequest;Landroid/content/Context;Ljava/lang/Runnable;ILjava/lang/Object;)V
 	public final fun executeSync (Landroid/content/Context;)V
-	public final fun setMaxCallbackWaitTime-LRDsOJo (J)Lcom/urbanairship/push/PushProviderBridge$ProcessPushRequest;
+	public final synthetic fun setMaxCallbackWaitTime-LRDsOJo (J)Lcom/urbanairship/push/PushProviderBridge$ProcessPushRequest;
 	public final fun setMaxCallbackWaitTimeMs (J)Lcom/urbanairship/push/PushProviderBridge$ProcessPushRequest;
 }
 
