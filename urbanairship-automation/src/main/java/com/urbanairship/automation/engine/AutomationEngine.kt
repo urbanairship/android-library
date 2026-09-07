@@ -12,10 +12,12 @@ import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
 import com.urbanairship.automation.engine.triggerprocessor.TriggerResult
 import com.urbanairship.automation.limits.AutomationLedgerInterface
 import com.urbanairship.automation.limits.LedgerExecutionResult
+import com.urbanairship.automation.limits.LedgerGroupReservations
 import com.urbanairship.automation.limits.LedgerLimitEvaluator
 import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.updateOrCreate
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
+import com.urbanairship.iam.InAppMessage
 import com.urbanairship.util.Clock
 import com.urbanairship.util.TaskSleeper
 import com.urbanairship.util.minus
@@ -72,6 +74,12 @@ internal class AutomationEngine(
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     private val sleeper: TaskSleeper = TaskSleeper.default,
     private val dispatcher: CoroutineDispatcher = AirshipDispatchers.newSerialDispatcher(),
+    /**
+     * Serializes the executions that pool a budget through a shared ledger
+     * group, so a sibling cannot read the tally while one of them is still
+     * displaying and has not recorded yet.
+     */
+    private val groupReservations: LedgerGroupReservations = LedgerGroupReservations(),
     private val automationStoreMigrator: AutomationStoreMigrator
 ) : AutomationEngineInterface {
 
@@ -697,32 +705,142 @@ internal class AutomationEngine(
     ) : Boolean {
 
         val scheduleID = data.schedule.identifier
-        when (checkReady(data, preparedSchedule)) {
-            ScheduleReadyResult.READY -> {}
-            ScheduleReadyResult.INVALIDATE -> {
-                val isOverLimit = isOverLimit(data.schedule)
-                val updated =
-                    updateState(scheduleID) { it.executionInvalidated(clock.now(), isOverLimit) }
-                if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
-                    startTaskToProcessTriggeredSchedule(scheduleID)
-                } else {
-                    preparer.cancelled(data.schedule)
-                }
-                return true
-            }
+        val sharedId = data.schedule.ledgerConfig?.sharedId
 
-            ScheduleReadyResult.NOT_READY -> {
-                this.scheduleConditionsChangedNotifier.wait()
-                return false
-            }
-
-            ScheduleReadyResult.SKIP -> {
-                val isOverLimit = isOverLimit(data.schedule)
-                updateState(scheduleID) { it.executionSkipped(clock.now(), isOverLimit) }
-                preparer.cancelled(data.schedule)
-                return true
-            }
+        // Schedules pooling a budget through `ledger_config.shared_id` are
+        // limited by a tally another schedule can add to, and the last check ran
+        // at prepare time — before the delay conditions and the pending
+        // execution queue, so arbitrarily long ago. Re-read before spending it.
+        //
+        // Ahead of `checkReady` because that charges the schedule's frequency
+        // constraints, and an attempt this drops must not spend an occurrence.
+        //
+        // Only worth reading for a pooled schedule: with no shared ID the sole
+        // writer of a counting event is this schedule's own execution, which
+        // cannot have happened while it sat here prepared.
+        //
+        // A reserving schedule re-reads again after taking its group, so on an
+        // uncontended group this looks like one read too many. It is not: this
+        // one drops a spent schedule without first queueing behind a sibling's
+        // whole display, and it is the only check a non-reserving pooled
+        // schedule gets.
+        if (sharedId != null && isOverLimit(data.schedule)) {
+            UALog.v { "Ledger group spent since prepare, skipping $scheduleID" }
+            skipOverLimit(data)
+            return true
         }
+
+        // A group only needs serializing while something in it is executing, so
+        // a schedule that reserves nothing runs straight through.
+        val reservedGroupId = sharedId?.takeIf { preparedSchedule.reservesLedgerGroup }
+            ?: return settle(runAttempt(data, preparedSchedule), data)
+
+        // Hold the group across the execution. The check above cannot see a
+        // sibling that is mid-display, because its event is not written until
+        // the display ends — the reservation covers exactly that window.
+        // Suspending here holds nothing else up: the pending-execution drain
+        // dispatches attempts without awaiting them, so only this group queues
+        // behind the holder.
+        val attempt = groupReservations.withGroup(reservedGroupId) {
+            // Waking can be much later — a sibling's display may have run for
+            // minutes — so nothing established before the wait still holds. The
+            // previous holder has recorded by now, so the ledger can answer.
+            if (isOverLimit(data.schedule)) {
+                UALog.v { "Ledger group $reservedGroupId spent while waiting, skipping $scheduleID" }
+                skipOverLimit(data)
+                return@withGroup AttemptOutcome.Settled(handled = true)
+            }
+
+            // `checkReady` covers pause, expiry and display readiness, but not
+            // whether the definition still exists — that is `checkStillValid`,
+            // which the drain runs microseconds before dispatching. Waiting on
+            // the group makes that gap unbounded, long enough for a remote-data
+            // refresh to remove or replace the campaign.
+            if (!checkStillValid(PreparedData(data, preparedSchedule))) {
+                UALog.v { "No longer valid after waiting on group $reservedGroupId: $scheduleID" }
+                return@withGroup AttemptOutcome.Unready(NotReadyVerdict.INVALIDATED)
+            }
+
+            runAttempt(data, preparedSchedule)
+        }
+
+        return settle(attempt, data)
+    }
+
+    /**
+     * What an attempt left for its caller.
+     *
+     * Only an unready verdict escapes a ledger-group reservation: handling
+     * [Unready.verdict] can wait on the conditions notifier, and every sibling
+     * in the group would stall behind it. Everything else an attempt settles is
+     * bounded, so it is done in place while the group is still held.
+     */
+    private sealed class AttemptOutcome {
+        /** The attempt is finished with; [handled] is `attemptExecute`'s result. */
+        data class Settled(val handled: Boolean) : AttemptOutcome()
+
+        /** Nothing ran, and this verdict still needs applying. */
+        data class Unready(val verdict: NotReadyVerdict) : AttemptOutcome()
+    }
+
+    /**
+     * Why an attempt did not run.
+     *
+     * Kept separate from [ScheduleReadyResult] so READY cannot reach the
+     * handler and force a dead branch, and so a schedule whose definition went
+     * stale while it waited can say that rather than borrowing a readiness
+     * verdict it never got.
+     */
+    private enum class NotReadyVerdict {
+        /** The definition is gone or no longer current. */
+        INVALIDATED,
+
+        /** Conditions are not met; wait for them to change and retry. */
+        WAIT_FOR_CONDITIONS,
+
+        /** This attempt is spent without executing. */
+        SKIP
+    }
+
+    /** The verdict this readiness result implies, or null when it is READY. */
+    private fun ScheduleReadyResult.asNotReadyVerdict(): NotReadyVerdict? = when (this) {
+        ScheduleReadyResult.READY -> null
+        ScheduleReadyResult.INVALIDATE -> NotReadyVerdict.INVALIDATED
+        ScheduleReadyResult.NOT_READY -> NotReadyVerdict.WAIT_FOR_CONDITIONS
+        ScheduleReadyResult.SKIP -> NotReadyVerdict.SKIP
+    }
+
+    private suspend fun settle(outcome: AttemptOutcome, data: AutomationScheduleData): Boolean =
+        when (outcome) {
+            is AttemptOutcome.Settled -> outcome.handled
+            is AttemptOutcome.Unready -> handleNotReady(outcome.verdict, data)
+        }
+
+    /** Finishes a schedule whose pooled budget is already spent. */
+    private suspend fun skipOverLimit(data: AutomationScheduleData) {
+        updateState(data.schedule.identifier) {
+            it.executionSkipped(clock.now(), isOverLimit = true)
+        }
+        preparer.cancelled(data.schedule)
+    }
+
+    /**
+     * Checks readiness and, when ready, executes and applies the outcome.
+     *
+     * Safe to run holding a ledger group: everything it settles is bounded. A
+     * non-ready verdict is handed back rather than handled, since handling it
+     * is not.
+     */
+    @MainThread
+    private suspend fun runAttempt(
+        data: AutomationScheduleData,
+        preparedSchedule: PreparedSchedule
+    ): AttemptOutcome {
+        checkReady(data, preparedSchedule).asNotReadyVerdict()?.let {
+            return AttemptOutcome.Unready(it)
+        }
+
+        val scheduleID = data.schedule.identifier
 
         UALog.v { "Executing schedule ${preparedSchedule.info.scheduleId}" }
 
@@ -736,11 +854,11 @@ internal class AutomationEngine(
 
         UALog.v { "Executing result ${preparedSchedule.info.scheduleId} $result" }
 
-        when (result) {
+        return when (result) {
             ScheduleExecuteResult.CANCEL -> {
                 store.deleteSchedules(listOf(scheduleID))
                 triggerProcessor.cancel(listOf(scheduleID))
-                return true
+                AttemptOutcome.Settled(handled = true)
             }
 
             ScheduleExecuteResult.FINISHED -> {
@@ -752,12 +870,45 @@ internal class AutomationEngine(
                 if (update?.scheduleState == AutomationScheduleState.PAUSED) {
                     handleInterval(update.schedule.interval ?: Duration.ZERO, scheduleID)
                 }
-                return true
+                AttemptOutcome.Settled(handled = true)
             }
 
-            ScheduleExecuteResult.RETRY -> return false
+            ScheduleExecuteResult.RETRY -> AttemptOutcome.Settled(handled = false)
         }
+    }
 
+    /** Applies the verdict of an attempt that did not run. */
+    private suspend fun handleNotReady(
+        verdict: NotReadyVerdict,
+        data: AutomationScheduleData
+    ): Boolean {
+        val scheduleID = data.schedule.identifier
+
+        return when (verdict) {
+            NotReadyVerdict.INVALIDATED -> {
+                val isOverLimit = isOverLimit(data.schedule)
+                val updated =
+                    updateState(scheduleID) { it.executionInvalidated(clock.now(), isOverLimit) }
+                if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
+                    startTaskToProcessTriggeredSchedule(scheduleID)
+                } else {
+                    preparer.cancelled(data.schedule)
+                }
+                true
+            }
+
+            NotReadyVerdict.WAIT_FOR_CONDITIONS -> {
+                this.scheduleConditionsChangedNotifier.wait()
+                false
+            }
+
+            NotReadyVerdict.SKIP -> {
+                val isOverLimit = isOverLimit(data.schedule)
+                updateState(scheduleID) { it.executionSkipped(clock.now(), isOverLimit) }
+                preparer.cancelled(data.schedule)
+                true
+            }
+        }
     }
 
 
@@ -800,3 +951,22 @@ internal class AutomationEngine(
         val priority: Int = schedule.schedule.priority ?: 0
     }
 }
+
+/**
+ * Whether an execution of this schedule should hold its ledger group for the
+ * duration.
+ *
+ * Embedded messages are excluded: they are placed into a host view instead of
+ * taking over the screen, so several are live at once by design and one can
+ * stay live indefinitely. Holding the group across one would stall its siblings
+ * for as long as the host view shows it.
+ */
+private val PreparedSchedule.reservesLedgerGroup: Boolean
+    get() = when (val data = data) {
+        is PreparedScheduleData.Action -> true
+        is PreparedScheduleData.InAppMessage -> !data.inAppMessage.isEmbedded()
+    }
+
+/** The message a prepared in-app schedule will display. */
+private val PreparedScheduleData.InAppMessage.inAppMessage: InAppMessage
+    get() = message.message

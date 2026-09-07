@@ -308,8 +308,20 @@ public class InAppMessageAutomationExecutorTest {
         assertEquals(ScheduleExecuteResult.FINISHED, result)
 
         coVerify { analytics.recordEvent(any(), any()) }
-        // An additional-audience miss is not a budget-consuming execution.
-        assertTrue(ledger.recorded.isEmpty())
+        // The attempt resolved and spends budget, so it has to be recorded -
+        // otherwise the schedule can never reach its limit.
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = preparedInfo.scheduleId,
+                    sharedId = preparedInfo.ledgerSharedId,
+                    triggerId = preparedInfo.triggerId,
+                    result = LedgerExecutionResult.AUDIENCE_MISS,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
     }
 
     @Test

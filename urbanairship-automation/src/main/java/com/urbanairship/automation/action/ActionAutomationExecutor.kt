@@ -30,20 +30,31 @@ internal class ActionAutomationExecutor(
     ): ScheduleExecuteResult {
 
         if (!preparedScheduleInfo.additionalAudienceCheckResult) {
+            // The attempt still resolved and still spends the schedule's budget,
+            // so it has to reach the ledger. Without an event the limit can
+            // never be reached and the schedule re-triggers forever.
+            recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.AUDIENCE_MISS)
             return ScheduleExecuteResult.FINISHED
         }
 
         actionRunner.runSuspending(data.optMap().map, Action.Situation.AUTOMATION)
 
-        ledger.recordExecution(
-            scheduleId = preparedScheduleInfo.scheduleId,
-            sharedId = preparedScheduleInfo.ledgerSharedId,
-            triggerId = preparedScheduleInfo.triggerId,
-            result = LedgerExecutionResult.SUCCEEDED,
-            cancel = false
-        )
+        recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.SUCCEEDED)
 
         return ScheduleExecuteResult.FINISHED
+    }
+
+    private suspend fun recordLedgerExecution(
+        info: PreparedScheduleInfo,
+        result: LedgerExecutionResult
+    ) {
+        ledger.recordExecution(
+            scheduleId = info.scheduleId,
+            sharedId = info.ledgerSharedId,
+            triggerId = info.triggerId,
+            result = result,
+            cancel = false
+        )
     }
 
     override suspend fun interrupted(

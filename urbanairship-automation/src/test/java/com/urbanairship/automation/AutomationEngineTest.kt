@@ -14,7 +14,12 @@ import com.urbanairship.automation.engine.AutomationScheduleState
 import com.urbanairship.automation.engine.AutomationStore
 import com.urbanairship.automation.engine.EventsHistory
 import com.urbanairship.automation.engine.InterruptedBehavior
+import com.urbanairship.automation.engine.PreparedSchedule
+import com.urbanairship.automation.engine.PreparedScheduleData
 import com.urbanairship.automation.engine.PreparedScheduleInfo
+import com.urbanairship.automation.engine.SchedulePrepareResult
+import com.urbanairship.automation.engine.ScheduleExecuteResult
+import com.urbanairship.automation.engine.ScheduleReadyResult
 import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.limits.LedgerConfig
 import com.urbanairship.automation.limits.LedgerExecutionResult
@@ -46,11 +51,13 @@ import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import kotlin.time.Duration.Companion.milliseconds
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -341,9 +348,11 @@ public class AutomationEngineTest {
 
     private fun ledgerSchedule(
         sharedId: String?,
-        identifier: String = "test"
+        identifier: String = "test",
+        priority: Int? = null
     ): AutomationSchedule = AutomationSchedule(
         identifier = identifier,
+        priority = priority,
         triggers = listOf(),
         data = AutomationSchedule.ScheduleData.InAppMessageData(
             InAppMessage(
@@ -630,5 +639,267 @@ public class AutomationEngineTest {
             ),
             ledger.recorded
         )
+    }
+
+    /**
+     * Whether the ledger reports the schedule's budget as spent. Read by the
+     * stubbed limit evaluator, so a test can spend the group part way through a
+     * run rather than having to count evaluator calls.
+     */
+    private var isGroupSpent = false
+
+    /**
+     * Drives one schedule from a trigger result all the way to `attemptExecute`.
+     *
+     * The engine's execute path had no coverage, so this wires the collaborators
+     * it actually consults: a store that holds state and applies update blocks,
+     * a preparer that hands back a prepared schedule, and an executor that
+     * reports ready.
+     *
+     * @param sharedId The schedule's ledger group, or null for an unpooled one.
+     * @param onConditionsMet Runs when the schedule clears its delay conditions,
+     * which is the seam between the prepare-time limit check and the
+     * execute-time one — the window a sibling would record in.
+     */
+    private suspend fun TestScope.driveToExecution(
+        sharedId: String?,
+        onConditionsMet: () -> Unit = {}
+    ): AutomationScheduleData {
+        val sched = ledgerSchedule(sharedId = sharedId)
+        val stored = ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
+        val triggerInfo = TriggeringInfo(
+            context = null,
+            date = clock.currentTime,
+            triggerId = "trigger-1"
+        )
+
+        coEvery { store.getSchedules() } answers { listOf(stored) }
+        coEvery { store.getSchedule("test") } answers { stored }
+        coEvery { store.updateSchedule("test", any()) } answers {
+            secondArg<(AutomationScheduleData) -> AutomationScheduleData>()(stored)
+        }
+
+        coEvery { limitEvaluator.isOverLimit(any()) } answers { isGroupSpent }
+
+        val prepared = PreparedSchedule(
+            info = PreparedScheduleInfo(
+                scheduleId = "test",
+                triggerSessionId = stored.triggerSessionId,
+                ledgerSharedId = sharedId,
+                triggerId = "trigger-1"
+            ),
+            data = PreparedScheduleData.Action(
+                JsonValue.wrap("actions")
+            ),
+            frequencyChecker = null
+        )
+
+        coEvery { preparer.prepare(any(), any(), any(), any()) } answers {
+            SchedulePrepareResult.Prepared(prepared)
+        }
+
+        every { executor.isValid(any()) } returns true
+        every { executor.isReady(any()) } returns ScheduleReadyResult.READY
+        coEvery { executor.execute(any()) } returns ScheduleExecuteResult.FINISHED
+
+        every { delayProcessor.areConditionsMet(any()) } answers {
+            onConditionsMet()
+            true
+        }
+
+        every { triggerProcessor.getTriggerResults() } answers {
+            flowOf(
+                TriggerResult(
+                    scheduleId = "test",
+                    triggerExecutionType = TriggerExecutionType.EXECUTION,
+                    triggerInfo = triggerInfo
+                )
+            )
+        }
+
+        engine.start()
+        advanceUntilIdle()
+
+        return stored
+    }
+
+    /** A pooled schedule with budget left executes. */
+    @Test
+    public fun testExecutesPooledScheduleWithBudget(): TestResult = runTest {
+        isGroupSpent = false
+
+        driveToExecution(sharedId = "group-1")
+
+        coVerify { executor.execute(any()) }
+    }
+
+    /**
+     * A pooled schedule whose group is spent between prepare and execute must
+     * not execute: the tally is shared, so a sibling can spend it while this
+     * one waits on its delay conditions.
+     */
+    @Test
+    public fun testSkipsPooledScheduleWhenGroupSpentBeforeExecuting(): TestResult = runTest {
+        isGroupSpent = false
+
+        val stored = driveToExecution(sharedId = "group-1") {
+            // A sibling in the group recorded while this schedule waited.
+            isGroupSpent = true
+        }
+
+        coVerify(exactly = 0) { executor.execute(any()) }
+        // `isReady` is where the frequency constraint is charged, so a dropped
+        // attempt must not reach it either.
+        verify(exactly = 0) { executor.isReady(any()) }
+        coVerify { preparer.cancelled(any()) }
+        assertEquals(AutomationScheduleState.FINISHED, stored.scheduleState)
+    }
+
+    /**
+     * Drives two schedules that pool one budget, holding the first inside
+     * `execute` so the second has to contend for the group.
+     *
+     * @param onFirstRecorded Runs when the first schedule's execution finishes,
+     * standing in for the ledger write it would have made.
+     * @return what each schedule did, keyed by schedule ID.
+     */
+    private suspend fun TestScope.driveTwoPooledSchedules(
+        firstIsHeld: CompletableDeferred<Unit>,
+        onFirstRecorded: () -> Unit
+    ): MutableList<String> {
+        val log = mutableListOf<String>()
+
+        // Priority orders the pending-execution drain, so "first" is dispatched
+        // ahead of "second" instead of the set's arbitrary order deciding.
+        val first = ledgerSchedule(sharedId = "group-1", identifier = "first", priority = -1)
+        val second = ledgerSchedule(sharedId = "group-1", identifier = "second")
+
+        val storedById = listOf(first, second).associate { sched ->
+            sched.identifier to
+                    ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
+        }
+
+        coEvery { store.getSchedules() } answers { storedById.values.toList() }
+        coEvery { store.getSchedule(any()) } answers { storedById[firstArg()] }
+        coEvery { store.updateSchedule(any(), any()) } answers {
+            val stored = storedById[firstArg<String>()] ?: return@answers null
+            secondArg<(AutomationScheduleData) -> AutomationScheduleData>()(stored)
+        }
+
+        coEvery { limitEvaluator.isOverLimit(any()) } answers { isGroupSpent }
+
+        coEvery { preparer.prepare(any(), any(), any(), any()) } answers {
+            val sched = firstArg<AutomationSchedule>()
+            SchedulePrepareResult.Prepared(
+                PreparedSchedule(
+                    info = PreparedScheduleInfo(
+                        scheduleId = sched.identifier,
+                        triggerSessionId = requireNotNull(storedById[sched.identifier])
+                            .triggerSessionId,
+                        ledgerSharedId = "group-1",
+                        triggerId = "trigger-1"
+                    ),
+                    data = PreparedScheduleData.Action(JsonValue.wrap("actions")),
+                    frequencyChecker = null
+                )
+            )
+        }
+
+        every { executor.isValid(any()) } returns true
+        every { executor.isReady(any()) } returns ScheduleReadyResult.READY
+        coEvery { executor.execute(any()) } coAnswers {
+            val id = firstArg<PreparedSchedule>().info.scheduleId
+            log.add("execute:$id")
+            if (id == "first") {
+                firstIsHeld.await()
+                // The executor records its outcome before returning, so the
+                // ledger can answer for it from here on.
+                onFirstRecorded()
+            }
+            ScheduleExecuteResult.FINISHED
+        }
+
+        every { delayProcessor.areConditionsMet(any()) } returns true
+
+        every { triggerProcessor.getTriggerResults() } answers {
+            flowOf(
+                TriggerResult(
+                    scheduleId = "first",
+                    triggerExecutionType = TriggerExecutionType.EXECUTION,
+                    triggerInfo = TriggeringInfo(null, clock.currentTime, "trigger-1")
+                ),
+                TriggerResult(
+                    scheduleId = "second",
+                    triggerExecutionType = TriggerExecutionType.EXECUTION,
+                    triggerInfo = TriggeringInfo(null, clock.currentTime, "trigger-1")
+                )
+            )
+        }
+
+        engine.start()
+        advanceUntilIdle()
+
+        return log
+    }
+
+    /**
+     * A sibling must not execute while another schedule in its group still is:
+     * the holder's event is not written until its execution ends, so a sibling
+     * reading the tally mid-flight would read a stale one and execute too.
+     */
+    @Test
+    public fun testPooledSiblingWaitsForInFlightExecution(): TestResult = runTest {
+        isGroupSpent = false
+        val releaseFirst = CompletableDeferred<Unit>()
+
+        val log = driveTwoPooledSchedules(releaseFirst) { isGroupSpent = true }
+
+        // The first is parked inside execute. The second must be queued behind
+        // the group rather than running against a tally that cannot see it.
+        assertEquals(listOf("execute:first"), log)
+
+        releaseFirst.complete(Unit)
+        advanceUntilIdle()
+
+        // The first spent the budget, so the second is dropped on the re-check
+        // it does after taking the group.
+        assertEquals(listOf("execute:first"), log)
+    }
+
+    /**
+     * The sibling waits rather than being dropped up front: a holder can fail
+     * without spending anything, and then the waiter should still get to run.
+     */
+    @Test
+    public fun testPooledSiblingRunsWhenHolderSpendsNothing(): TestResult = runTest {
+        isGroupSpent = false
+        val releaseFirst = CompletableDeferred<Unit>()
+
+        // The holder records nothing, so the budget is still there on wake.
+        val log = driveTwoPooledSchedules(releaseFirst) { }
+
+        assertEquals(listOf("execute:first"), log)
+
+        releaseFirst.complete(Unit)
+        advanceUntilIdle()
+
+        assertEquals(listOf("execute:first", "execute:second"), log)
+    }
+
+    /**
+     * An unpooled schedule is unaffected: nothing but its own execution can add
+     * to its tally, and that cannot happen while it sits prepared.
+     */
+    @Test
+    public fun testExecutesUnpooledScheduleWithoutRecheck(): TestResult = runTest {
+        isGroupSpent = false
+
+        driveToExecution(sharedId = null) {
+            // Even if the ledger changed its answer, an unpooled schedule has
+            // no sibling that could have spent anything.
+            isGroupSpent = true
+        }
+
+        coVerify { executor.execute(any()) }
     }
 }

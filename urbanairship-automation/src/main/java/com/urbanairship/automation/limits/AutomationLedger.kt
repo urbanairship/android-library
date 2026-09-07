@@ -118,41 +118,48 @@ internal class AutomationLedger(
         cancel: Boolean,
         since: Instant
     ) {
-        if (hasRecordedExecutionSince(scheduleId, sharedId, since)) {
-            UALog.v { "Execution already recorded for $scheduleId since $since, skipping" }
-            return
-        }
+        val event = LedgerEvent.Execution(
+            scheduleId = scheduleId,
+            sharedId = sharedId,
+            triggerId = triggerId,
+            timestamp = clock.now(),
+            result = result,
+            cancel = cancel
+        )
 
-        recordExecution(scheduleId, sharedId, triggerId, result, cancel)
+        try {
+            // Checked and appended in one critical section, so a concurrent
+            // recorder cannot slip between the two and let both write.
+            val recorded = store.recordEventsUnless(scheduleId, sharedId, listOf(event)) {
+                it.isRealExecutionBy(scheduleId, since)
+            }
+
+            if (!recorded) {
+                UALog.v { "Execution already recorded for $scheduleId since $since, skipping" }
+            }
+        } catch (ex: Exception) {
+            // Err toward recording: missing an execution lets a finished
+            // schedule run again, while a duplicate only spends budget the
+            // schedule had already used. The guarded append is atomic, so a
+            // failure wrote nothing and this cannot double up.
+            UALog.e(ex) { "Guarded ledger append failed for $scheduleId, recording unguarded" }
+            record(event)
+        }
     }
 
     /**
-     * Whether [scheduleId] recorded a real execution of its own at or after
+     * Whether this is a real execution [scheduleId] recorded itself at or after
      * [since].
      *
      * Backfill rows are ignored: they are synthesized from a pre-ledger count at
      * migration time, so they carry a timestamp newer than the interrupted
      * attempt they would otherwise mask, without standing for its outcome.
-     *
-     * A read failure answers false so the caller still records: missing an
-     * execution lets a finished schedule run again, while a duplicate only
-     * spends budget the schedule had already used.
      */
-    private suspend fun hasRecordedExecutionSince(
-        scheduleId: String,
-        sharedId: String?,
-        since: Instant
-    ): Boolean = try {
-        store.events(scheduleId, sharedId).any {
-            it is LedgerEvent.Execution &&
-                    it.scheduleId == scheduleId &&
-                    it.result != LedgerExecutionResult.BACKFILL &&
-                    !it.timestamp.isBefore(since)
-        }
-    } catch (ex: Exception) {
-        UALog.e(ex) { "Failed to read ledger for $scheduleId, assuming nothing recorded" }
-        false
-    }
+    private fun LedgerEvent.isRealExecutionBy(scheduleId: String, since: Instant): Boolean =
+        this is LedgerEvent.Execution &&
+                this.scheduleId == scheduleId &&
+                result != LedgerExecutionResult.BACKFILL &&
+                !timestamp.isBefore(since)
 
     override suspend fun reconcile(liveScheduleIds: Set<String>, liveSharedIds: Set<String>) {
         UALog.v { "Reconciling ledger against ${liveScheduleIds.size} live schedules" }

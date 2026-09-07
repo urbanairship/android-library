@@ -93,6 +93,12 @@ internal class InAppMessageAutomationExecutor(
                 event = LayoutResolutionEvent.audienceExcluded(),
                 layoutContext = null
             )
+            // The attempt still resolved and still spends the schedule's budget,
+            // so it has to reach the ledger. Without an event the limit can
+            // never be reached and the schedule re-triggers forever. Nothing is
+            // displayed on this path, so suspending here costs no display
+            // guarantees.
+            recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.AUDIENCE_MISS)
             return@withContext ScheduleExecuteResult.FINISHED
         }
 

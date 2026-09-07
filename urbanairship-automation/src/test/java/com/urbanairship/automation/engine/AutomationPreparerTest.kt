@@ -836,6 +836,76 @@ public class AutomationPreparerTest {
         )
     }
 
+    @Test
+    public fun testPrepareDeferredGiveUpTimeoutRecordsPenalty(): TestResult = runTest {
+        val result = prepareDeferredGiveUpTimeout()
+
+        // Penalizing spends the schedule's budget, so it has to reach the
+        // ledger - otherwise the schedule is penalized forever without ever
+        // reaching its limit.
+        assertEquals(SchedulePrepareResult.Penalize, result)
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = "test-schedule",
+                    sharedId = null,
+                    triggerId = "trigger-1",
+                    result = LedgerExecutionResult.AUDIENCE_MISS,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    /**
+     * Prepares a deferred schedule whose local audience matches but whose deferred
+     * resolve times out with `retryOnTimeOut = false`, so the preparer gives up
+     * and penalizes.
+     *
+     * Only the give-up case is exercised: `retryOnTimeOut = true` retries
+     * forever, so it never returns a prepare result to assert against.
+     */
+    private suspend fun prepareDeferredGiveUpTimeout(): SchedulePrepareResult {
+        val schedule = makeSchedule(
+            data = AutomationSchedule.ScheduleData.Deferred(
+                DeferredAutomationData(
+                    url = Uri.parse("https://sample.url"),
+                    retryOnTimeOut = false,
+                    type = DeferredAutomationData.DeferredType.IN_APP_MESSAGE
+                )
+            ),
+            audience = AutomationAudience(
+                audienceSelector = audienceSelector,
+                missBehavior = AutomationAudience.MissBehavior.PENALIZE
+            )
+        )
+
+        coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
+        coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
+        coEvery { deviceInfoProvider.getChannelId() } returns "channel-id"
+        coEvery { deviceInfoProvider.locale } returns Locale.US
+        coEvery { deviceInfoProvider.isNotificationsOptedIn } returns true
+
+        mockExperimentsManager()
+
+        coEvery {
+            deferredResolver.resolve<DeferredScheduleResult>(any(), any())
+        } returns DeferredResult.TimedOut()
+
+        mockkStatic(Airship::class)
+        every { Airship.version } returns "1"
+
+        return preparer.prepare(
+            schedule,
+            triggerContext,
+            triggerSessionId = UUID.randomUUID().toString(),
+            triggerId = "trigger-1"
+        )
+    }
+
     /**
      * Prepares a deferred schedule whose local audience matches but whose deferred
      * response reports an audience miss, carrying [deferredMissBehavior] when one is

@@ -223,16 +223,6 @@ internal sealed class LedgerEvent : JsonSerializable {
         ).toJsonValue()
     }
 
-    /**
-     * The scopes this event was recorded under: always its schedule, plus its
-     * shared group when present.
-     */
-    val scopes: List<LedgerScope>
-        get() = buildList {
-            add(LedgerScope.Schedule(scheduleId))
-            sharedId?.let { add(LedgerScope.Shared(it)) }
-        }
-
     internal companion object {
         private const val TYPE = "type"
         private const val SCHEDULE_ID = "schedule_id"

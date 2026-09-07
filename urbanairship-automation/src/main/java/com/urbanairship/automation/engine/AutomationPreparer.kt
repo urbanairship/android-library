@@ -312,12 +312,37 @@ internal class AutomationPreparer internal constructor(
             return
         }
 
+        recordPenalized(
+            schedule = schedule,
+            triggerId = triggerId,
+            cancel = behavior == AutomationAudience.MissBehavior.CANCEL
+        )
+    }
+
+    /**
+     * Records the budget-consuming outcome every `PENALIZE` prepare result
+     * shares, so a penalty always reaches the ledger. Without an event the
+     * penalty spends nothing and the schedule can be penalized forever without
+     * ever reaching its limit.
+     *
+     * The schema has no result of its own for a give-up deferred timeout, so it
+     * lands in the same `AUDIENCE_MISS` bucket the miss behaviors use. That is
+     * safe on the axis that decides delivery — the result never affects whether
+     * an execution counts, only which executions an exclusion rule can
+     * subtract — but a rule excluding `audience_miss` does also exclude
+     * timeouts.
+     */
+    private suspend fun recordPenalized(
+        schedule: AutomationSchedule,
+        triggerId: String?,
+        cancel: Boolean
+    ) {
         ledger.recordExecution(
             scheduleId = schedule.identifier,
             sharedId = schedule.ledgerConfig?.sharedId,
             triggerId = triggerId,
             result = LedgerExecutionResult.AUDIENCE_MISS,
-            cancel = behavior == AutomationAudience.MissBehavior.CANCEL
+            cancel = cancel
         )
     }
 
@@ -370,6 +395,11 @@ internal class AutomationPreparer internal constructor(
                 if (deferred.retryOnTimeOut != false) {
                     RetryingQueue.Result.Retry()
                 } else {
+                    // Giving up penalizes the schedule, which spends budget the
+                    // same way an audience miss does. `recordAudienceMiss` is
+                    // not reusable here: this penalizes regardless of the
+                    // schedule's miss behavior, `SKIP` included.
+                    recordPenalized(schedule, triggerId, cancel = false)
                     RetryingQueue.Result.Success(
                         result = SchedulePrepareResult.Penalize,
                         ignoreReturnOrder = true

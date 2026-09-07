@@ -213,6 +213,13 @@ public class AutomationLedgerTest {
 
         override suspend fun recordEvents(events: List<LedgerEvent>) {}
 
+        override suspend fun recordEventsUnless(
+            scheduleId: String,
+            sharedId: String?,
+            events: List<LedgerEvent>,
+            alreadyRecorded: (LedgerEvent) -> Boolean
+        ): Boolean = true
+
         override suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent> =
             emptyList()
 
