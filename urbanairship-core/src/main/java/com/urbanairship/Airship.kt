@@ -11,6 +11,7 @@ import com.urbanairship.Airship.deepLink
 import com.urbanairship.Airship.onReady
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.DeepLinkListener
+import com.urbanairship.ai.AirshipAI
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -164,6 +165,19 @@ public object Airship {
     @JvmStatic
     public val contact: Contact
         get() = requireReadyInstance().requireComponent()
+
+    /**
+     * The shared [AirshipAI] instance.
+     *
+     * Gated by [PrivacyManager.Feature.ON_DEVICE_AI] — disabled, no model resolves and every
+     * evaluation is skipped.
+     *
+     * Access is thread-safe. This property will block until Airship is ready.
+     * @throws IllegalStateException if `takeOff` has not been called.
+     */
+    @JvmStatic
+    public val ai: AirshipAI
+        get() = requireReadyInstance().ai
 
     /**
      * The shared [PrivacyManager] instance.

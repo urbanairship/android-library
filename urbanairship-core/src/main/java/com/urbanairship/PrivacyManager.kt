@@ -360,6 +360,9 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
             if (this.contains(FEATURE_FLAGS)) {
                 items.add("Feature Flags")
             }
+            if (this.contains(ON_DEVICE_AI)) {
+                items.add("On-Device AI")
+            }
 
             return "AirshipFeature: [${items.joinToString(", ")}]"
         }
@@ -464,6 +467,16 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
             public val FEATURE_FLAGS: Feature = Feature(rawValue = 1 shl 8)
 
             /**
+             * Enables Airship's on-device AI features, reached through [Airship.ai].
+             *
+             * Disabled, no model resolves and every evaluation is skipped, so features that
+             * consult a model fall back to their default behavior. App-supplied context is
+             * never sent to Airship either way.
+             */
+            @JvmField
+            public val ON_DEVICE_AI: Feature = Feature(rawValue = 1 shl 9)
+
+            /**
              * Helper flag that can be used to set enabled features to none.
              */
             @JvmField
@@ -474,7 +487,8 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
              */
             @JvmField
             public val ALL: Feature = IN_APP_AUTOMATION or ANALYTICS or MESSAGE_CENTER or
-                PUSH or ANALYTICS or TAGS_AND_ATTRIBUTES or CONTACTS or FEATURE_FLAGS
+                PUSH or ANALYTICS or TAGS_AND_ATTRIBUTES or CONTACTS or FEATURE_FLAGS or
+                ON_DEVICE_AI
 
             private val nameMap = mapOf(
                 "push" to PUSH,
@@ -484,6 +498,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
                 "tags_and_attributes" to TAGS_AND_ATTRIBUTES,
                 "in_app_automation" to IN_APP_AUTOMATION,
                 "feature_flags" to FEATURE_FLAGS,
+                "on_device_ai" to ON_DEVICE_AI,
                 "all" to ALL,
                 "none" to NONE
             )
