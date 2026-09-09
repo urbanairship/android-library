@@ -12,11 +12,11 @@ import android.transition.Visibility
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import com.urbanairship.android.layout.property.BannerAnimationEffect
+import com.urbanairship.android.layout.property.BannerTransitionEffect
 import com.urbanairship.android.layout.property.CornerPosition
 import com.urbanairship.android.layout.property.EdgePosition
 import com.urbanairship.android.layout.property.HorizontalPosition
-import com.urbanairship.android.layout.property.ModalAnimationEffect
+import com.urbanairship.android.layout.property.ModalTransitionEffect
 import com.urbanairship.android.layout.property.VerticalPosition
 import kotlin.apply
 import kotlin.time.Duration
@@ -28,15 +28,15 @@ internal object TransitionFactory {
      * slides/explodes/fades while the [shade] fades independently, so the scrim never moves with
      * the modal content. Used for both the enter and exit transition, each fed its own effect.
      */
-    fun modalTransition(effect: ModalAnimationEffect, frame: View, shade: View): Transition = when (effect) {
-        is ModalAnimationEffect.Fade ->
+    fun modalTransition(effect: ModalTransitionEffect, frame: View, shade: View): Transition = when (effect) {
+        is ModalTransitionEffect.Fade ->
             fade(effect.duration).apply {
                 addTarget(frame)
                 addTarget(shade)
             }
-        is ModalAnimationEffect.Slide ->
+        is ModalTransitionEffect.Slide ->
             compose(slide(effect.edge, effect.duration), frame, shade)
-        is ModalAnimationEffect.Explode ->
+        is ModalTransitionEffect.Explode ->
             compose(corner(effect.corner, effect.duration), frame, shade)
     }
 
@@ -47,13 +47,13 @@ internal object TransitionFactory {
      * transition, each fed its own effect.
      */
     fun bannerTransition(
-        effect: BannerAnimationEffect,
+        effect: BannerTransitionEffect,
         frame: View,
         position: VerticalPosition
     ): Transition = when (effect) {
-        is BannerAnimationEffect.Fade ->
+        is BannerTransitionEffect.Fade ->
             fade(effect.duration).apply { addTarget(frame) }
-        is BannerAnimationEffect.Slide ->
+        is BannerTransitionEffect.Slide ->
             bannerSlide(position, effect.duration).apply { addTarget(frame) }
     }
 

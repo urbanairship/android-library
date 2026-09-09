@@ -15,7 +15,7 @@ import androidx.core.view.updatePadding
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.environment.ViewEnvironment
 import com.urbanairship.android.layout.model.AnyModel
-import com.urbanairship.android.layout.property.BannerAnimation
+import com.urbanairship.android.layout.property.BannerTransition
 import com.urbanairship.android.layout.property.ConstrainedSize
 import com.urbanairship.android.layout.property.Shadow
 import com.urbanairship.android.layout.property.VerticalPosition
@@ -43,10 +43,10 @@ public class ThomasBannerView internal constructor(
     private var bannerFrame: ConstrainedFrameLayout? = null
 
     /**
-     * The banner's configured animation, defaulting to a slide when the payload omits one.
+     * The banner's configured transition, defaulting to a slide when the payload omits one.
      */
-    private val bannerAnimation: BannerAnimation
-        get() = presentation.getResolvedPlacement(context).animation ?: BannerAnimation.default()
+    private val bannerTransition: BannerTransition
+        get() = presentation.getResolvedPlacement(context).transition ?: BannerTransition.default()
 
     /**
      * The edge the banner slides from/to.
@@ -136,7 +136,7 @@ public class ThomasBannerView internal constructor(
     private fun animateIn(frame: View) {
         frame.visibility = INVISIBLE
         post {
-            val transition = TransitionFactory.bannerTransition(bannerAnimation.enter, frame, bannerPosition)
+            val transition = TransitionFactory.bannerTransition(bannerTransition.enter, frame, bannerPosition)
             TransitionManager.beginDelayedTransition(this, transition)
             frame.visibility = VISIBLE
         }

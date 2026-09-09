@@ -42,7 +42,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.currentStateAsState
 import com.urbanairship.UALog
-import com.urbanairship.android.layout.property.BannerAnimationEffect
+import com.urbanairship.android.layout.property.BannerTransitionEffect
 import com.urbanairship.android.layout.property.BannerPlacement
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.property.VerticalPosition
@@ -136,7 +136,7 @@ private fun BannerContent(
 
     val placement = remember(layout, configuration) { layout.getPlacement() }
     val duration = remember(layout) { layout.getPresentation().duration }
-    val animation = placement.animation
+    val bannerTransition = placement.transition
 
     // The bounds of the banner frame within the host, reported by the banner view once laid out.
     var frameBounds by remember { mutableStateOf<IntRect?>(null) }
@@ -185,7 +185,7 @@ private fun BannerContent(
     // Animate the banner in once the frame has been measured.
     LaunchedEffect(isFrameReady) {
         if (isFrameReady) {
-            transition.animateTo(0f, tween((animation?.enter?.duration?.inWholeMilliseconds ?: 0L).toInt(), easing = LinearEasing))
+            transition.animateTo(0f, tween((bannerTransition?.enter?.duration?.inWholeMilliseconds ?: 0L).toInt(), easing = LinearEasing))
         }
     }
 
@@ -199,7 +199,7 @@ private fun BannerContent(
                 try {
                     transition.animateTo(
                         targetValue = 1f,
-                        animationSpec = tween((animation?.exit?.duration?.inWholeMilliseconds ?: 0L).toInt(), easing = LinearEasing)
+                        animationSpec = tween((bannerTransition?.exit?.duration?.inWholeMilliseconds ?: 0L).toInt(), easing = LinearEasing)
                     )
                 } finally {
                     withContext(NonCancellable) {
@@ -260,12 +260,12 @@ private fun BannerContent(
                     // A swipe dismissal is driven entirely by dragOffset below, so `transition`
                     // never leaves 0 for it -- only entering and a timed-out exit reach here,
                     // which is exactly the phase `pendingDismissal` already distinguishes.
-                    val activeEffect = if (pendingDismissal != null) animation?.exit else animation?.enter
+                    val activeEffect = if (pendingDismissal != null) bannerTransition?.exit else bannerTransition?.enter
                     when (activeEffect) {
-                        is BannerAnimationEffect.Fade -> {
+                        is BannerTransitionEffect.Fade -> {
                             alpha = 1f - transition.value
                         }
-                        is BannerAnimationEffect.Slide -> {
+                        is BannerTransitionEffect.Slide -> {
                             // Slide in from (and out to) the banner's placement edge.
                             val slideOffset = transition.value * frameDistance() * dismissDirection
                             when (swipeAxis) {

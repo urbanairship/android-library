@@ -9,11 +9,11 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * What a banner draws for one direction of its animation. Same pattern as [ModalAnimationEffect],
+ * What a banner draws for one direction of its transition. Same pattern as [ModalTransitionEffect],
  * but slide has no edge of its own -- it's always the banner's own placement edge, so there's no
  * sensible independent value to give it.
  */
-public sealed class BannerAnimationEffect(
+public sealed class BannerTransitionEffect(
     public val type: Type
 ) : JsonSerializable {
 
@@ -21,7 +21,7 @@ public sealed class BannerAnimationEffect(
 
     public data class Fade(
         override val duration: Duration? = null
-    ) : BannerAnimationEffect(Type.FADE) {
+    ) : BannerTransitionEffect(Type.FADE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
@@ -31,7 +31,7 @@ public sealed class BannerAnimationEffect(
 
     public data class Slide(
         override val duration: Duration? = null
-    ) : BannerAnimationEffect(Type.SLIDE) {
+    ) : BannerTransitionEffect(Type.SLIDE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
@@ -52,7 +52,7 @@ public sealed class BannerAnimationEffect(
                 val content = value.requireString()
 
                 return entries.firstOrNull { it.json == content }
-                    ?: throw JsonException("Unknown BannerAnimationEffect type: $content")
+                    ?: throw JsonException("Unknown BannerTransitionEffect type: $content")
             }
         }
     }
@@ -62,7 +62,7 @@ public sealed class BannerAnimationEffect(
         private const val DURATION = "duration_seconds"
 
         @Throws(JsonException::class)
-        public fun fromJson(value: JsonValue): BannerAnimationEffect {
+        public fun fromJson(value: JsonValue): BannerTransitionEffect {
             val content = value.requireMap()
             val duration = content[DURATION]?.getDouble(0.0)?.seconds
 
@@ -74,10 +74,10 @@ public sealed class BannerAnimationEffect(
     }
 }
 
-/** A banner's own enter and exit animation. */
-public data class BannerAnimation(
-    val enter: BannerAnimationEffect,
-    val exit: BannerAnimationEffect
+/** A banner's own enter and exit transition. */
+public data class BannerTransition(
+    val enter: BannerTransitionEffect,
+    val exit: BannerTransitionEffect
 ) : JsonSerializable {
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
@@ -89,19 +89,19 @@ public data class BannerAnimation(
         private const val IN = "in"
         private const val OUT = "out"
 
-        /** A missing payload animation, defaulting to a slide both ways. */
-        public fun default(): BannerAnimation = BannerAnimation(
-            enter = BannerAnimationEffect.Slide(),
-            exit = BannerAnimationEffect.Slide()
+        /** A missing payload transition, defaulting to a slide both ways. */
+        public fun default(): BannerTransition = BannerTransition(
+            enter = BannerTransitionEffect.Slide(),
+            exit = BannerTransitionEffect.Slide()
         )
 
         @Throws(JsonException::class)
-        public fun fromJson(value: JsonValue): BannerAnimation {
+        public fun fromJson(value: JsonValue): BannerTransition {
             val content = value.requireMap()
 
-            return BannerAnimation(
-                enter = BannerAnimationEffect.fromJson(content.require(IN)),
-                exit = BannerAnimationEffect.fromJson(content.require(OUT))
+            return BannerTransition(
+                enter = BannerTransitionEffect.fromJson(content.require(IN)),
+                exit = BannerTransitionEffect.fromJson(content.require(OUT))
             )
         }
     }

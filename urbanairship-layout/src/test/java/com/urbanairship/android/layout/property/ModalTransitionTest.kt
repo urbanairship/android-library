@@ -10,7 +10,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class ModalAnimationTest {
+public class ModalTransitionTest {
 
     @Test
     public fun testFade() {
@@ -19,9 +19,9 @@ public class ModalAnimationTest {
               "out": { "type": "fade", "duration_seconds": 0.3 } }
         """.trimIndent()
 
-        val animation = ModalAnimation.fromJson(JsonValue.parseString(json))
-        assertEquals(ModalAnimationEffect.Fade(0.2.seconds), animation.enter)
-        assertEquals(ModalAnimationEffect.Fade(0.3.seconds), animation.exit)
+        val transition = ModalTransition.fromJson(JsonValue.parseString(json))
+        assertEquals(ModalTransitionEffect.Fade(0.2.seconds), transition.enter)
+        assertEquals(ModalTransitionEffect.Fade(0.3.seconds), transition.exit)
     }
 
     @Test
@@ -31,9 +31,9 @@ public class ModalAnimationTest {
               "out": { "type": "slide", "edge": { "horizontal": "center", "vertical": "bottom" } } }
         """.trimIndent()
 
-        val animation = ModalAnimation.fromJson(JsonValue.parseString(json))
-        val enter = animation.enter as ModalAnimationEffect.Slide
-        val exit = animation.exit as ModalAnimationEffect.Slide
+        val transition = ModalTransition.fromJson(JsonValue.parseString(json))
+        val enter = transition.enter as ModalTransitionEffect.Slide
+        val exit = transition.exit as ModalTransitionEffect.Slide
         assertEquals(VerticalPosition.TOP, enter.edge.vertical)
         assertEquals(VerticalPosition.BOTTOM, exit.edge.vertical)
     }
@@ -45,26 +45,26 @@ public class ModalAnimationTest {
               "out": { "type": "fade" } }
         """.trimIndent()
 
-        val animation = ModalAnimation.fromJson(JsonValue.parseString(json))
-        assertEquals(ModalAnimationEffect.Type.EXPLODE, animation.enter.type)
-        assertEquals(ModalAnimationEffect.Type.FADE, animation.exit.type)
+        val transition = ModalTransition.fromJson(JsonValue.parseString(json))
+        assertEquals(ModalTransitionEffect.Type.EXPLODE, transition.enter.type)
+        assertEquals(ModalTransitionEffect.Type.FADE, transition.exit.type)
     }
 
     @Test
     public fun testRoundTrip() {
-        val animation = ModalAnimation(
-            enter = ModalAnimationEffect.Explode(
+        val transition = ModalTransition(
+            enter = ModalTransitionEffect.Explode(
                 corner = CornerPosition(HorizontalEdge.START, VerticalEdge.BOTTOM),
                 duration = 0.6.seconds
             ),
-            exit = ModalAnimationEffect.Fade(duration = 0.4.seconds)
+            exit = ModalTransitionEffect.Fade(duration = 0.4.seconds)
         )
 
         // CornerPosition/EdgePosition aren't data classes, so they compare by
         // reference -- check the fields that actually carry the value instead.
-        val roundTripped = ModalAnimation.fromJson(animation.toJsonValue())
-        val enter = roundTripped.enter as ModalAnimationEffect.Explode
-        val exit = roundTripped.exit as ModalAnimationEffect.Fade
+        val roundTripped = ModalTransition.fromJson(transition.toJsonValue())
+        val enter = roundTripped.enter as ModalTransitionEffect.Explode
+        val exit = roundTripped.exit as ModalTransitionEffect.Fade
         assertEquals(HorizontalEdge.START, enter.corner.horizontal)
         assertEquals(VerticalEdge.BOTTOM, enter.corner.vertical)
         assertEquals(0.6.seconds, enter.duration)

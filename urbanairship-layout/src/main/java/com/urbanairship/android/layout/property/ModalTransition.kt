@@ -9,12 +9,12 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 /**
- * What a modal draws for one direction of its animation. An effect only ever plays its own
+ * What a modal draws for one direction of its transition. An effect only ever plays its own
  * direction, so its own [duration] lives here rather than on a wrapper as an
  * animateIn/animateOut pair that in/out would otherwise have to be cross-referenced against by
  * name.
  */
-public sealed class ModalAnimationEffect(
+public sealed class ModalTransitionEffect(
     public val type: Type
 ) : JsonSerializable {
 
@@ -23,7 +23,7 @@ public sealed class ModalAnimationEffect(
     /** Fades in or out using opacity. */
     public data class Fade(
         override val duration: Duration? = null
-    ) : ModalAnimationEffect(Type.FADE) {
+    ) : ModalTransitionEffect(Type.FADE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
@@ -35,7 +35,7 @@ public sealed class ModalAnimationEffect(
     public data class Slide(
         val edge: EdgePosition,
         override val duration: Duration? = null
-    ) : ModalAnimationEffect(Type.SLIDE) {
+    ) : ModalTransitionEffect(Type.SLIDE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
@@ -48,7 +48,7 @@ public sealed class ModalAnimationEffect(
     public data class Explode(
         val corner: CornerPosition,
         override val duration: Duration? = null
-    ) : ModalAnimationEffect(Type.EXPLODE) {
+    ) : ModalTransitionEffect(Type.EXPLODE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
@@ -71,7 +71,7 @@ public sealed class ModalAnimationEffect(
                 val content = value.requireString()
 
                 return entries.firstOrNull { it.json == content }
-                    ?: throw JsonException("Unknown ModalAnimationEffect type: $content")
+                    ?: throw JsonException("Unknown ModalTransitionEffect type: $content")
             }
         }
     }
@@ -83,7 +83,7 @@ public sealed class ModalAnimationEffect(
         private const val CORNER = "corner"
 
         @Throws(JsonException::class)
-        public fun fromJson(value: JsonValue): ModalAnimationEffect {
+        public fun fromJson(value: JsonValue): ModalTransitionEffect {
             val content = value.requireMap()
             val duration = content[DURATION]?.getDouble(0.0)?.seconds
 
@@ -103,13 +103,13 @@ public sealed class ModalAnimationEffect(
 }
 
 /**
- * A modal's own enter and exit animation. A plain animation and one whose entrance and exit are
+ * A modal's own enter and exit transition. A plain transition and one whose entrance and exit are
  * different effects entirely (explode in, fade out) are both just this, played twice, rather than
  * a symmetric case with a separate "asymmetric" one bolted on beside it.
  */
-public data class ModalAnimation(
-    val enter: ModalAnimationEffect,
-    val exit: ModalAnimationEffect
+public data class ModalTransition(
+    val enter: ModalTransitionEffect,
+    val exit: ModalTransitionEffect
 ) : JsonSerializable {
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
@@ -122,12 +122,12 @@ public data class ModalAnimation(
         private const val OUT = "out"
 
         @Throws(JsonException::class)
-        public fun fromJson(value: JsonValue): ModalAnimation {
+        public fun fromJson(value: JsonValue): ModalTransition {
             val content = value.requireMap()
 
-            return ModalAnimation(
-                enter = ModalAnimationEffect.fromJson(content.require(IN)),
-                exit = ModalAnimationEffect.fromJson(content.require(OUT))
+            return ModalTransition(
+                enter = ModalTransitionEffect.fromJson(content.require(IN)),
+                exit = ModalTransitionEffect.fromJson(content.require(OUT))
             )
         }
     }
