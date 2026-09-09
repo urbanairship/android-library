@@ -3,7 +3,6 @@ package com.urbanairship.contacts
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
-import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.TestActivityMonitor
 import com.urbanairship.TestAirshipRuntimeConfig
@@ -18,6 +17,7 @@ import com.urbanairship.channel.TagGroupsMutation
 import com.urbanairship.http.RequestResult
 import com.urbanairship.inputvalidation.AirshipInputValidation
 import com.urbanairship.json.JsonValue
+import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.push.PushListener
 import com.urbanairship.push.PushManager
 import com.urbanairship.push.PushMessage
@@ -38,16 +38,17 @@ import io.mockk.runs
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -80,6 +81,11 @@ public class ContactTest {
         every { updates } returns contactChannelFlow.asSharedFlow()
     }
 
+    private val subscriptionsFlow = MutableSharedFlow<AutoRefreshingDataProvider.IdentifiableResult<Map<String, Set<Scope>>>>()
+    private val mockSubscriptionsProvider = mockk<SubscriptionsProvider>(relaxUnitFun = true) {
+        every { updates } returns subscriptionsFlow.asSharedFlow()
+    }
+
     private val conflictEvents = Channel<ConflictEvent>(Channel.UNLIMITED)
     private val currentNamedUserIdUpdates = MutableStateFlow<String?>(null)
     private val contactIdUpdates = MutableStateFlow<ContactIdUpdate?>(null)
@@ -103,32 +109,35 @@ public class ContactTest {
         every { this@mockk.addInternalPushListener(capture(pushListeners)) } just runs
     }
 
-    private val contact: Contact by lazy {
-        Contact(
-            context = context,
-            preferenceStore = preferenceStore,
-            config = config,
+    private fun buildContact(
+        subscriptionsProvider: SubscriptionsProvider = SubscriptionsProvider(
+            apiClient = mockSubscriptionListApiClient,
             privacyManager = privacyManager,
-            airshipChannel = mockChannel,
-            audienceOverridesProvider = mockAudienceOverridesProvider,
-            activityMonitor = testActivityMonitor,
+            stableContactIdUpdates = mockContactManager.stableContactIdUpdates,
+            overrideUpdates = mockAudienceOverridesProvider.contactUpdates(mockContactManager.stableContactIdUpdates),
             clock = testClock,
-            contactManager = mockContactManager,
-            smsValidator = mockSmsValidator,
-            pushManager = mockPushManager,
-            subscriptionsProvider = SubscriptionsProvider(
-                apiClient = mockSubscriptionListApiClient,
-                privacyManager = privacyManager,
-                stableContactIdUpdates = mockContactManager.stableContactIdUpdates,
-                overrideUpdates = mockAudienceOverridesProvider.contactUpdates(mockContactManager.stableContactIdUpdates),
-                clock = testClock,
-                taskSleeper = TaskSleeper.default,
-                dispatcher = testDispatcher
-            ),
-            contactChannelsProvider = mockChannelsContactProvider,
-            subscriptionListDispatcher = testDispatcher
-        )
-    }
+            taskSleeper = TaskSleeper.default,
+            dispatcher = testDispatcher
+        ),
+        contactChannelsProvider: ContactChannelsProvider = mockChannelsContactProvider
+    ): Contact = Contact(
+        context = context,
+        preferenceStore = preferenceStore,
+        config = config,
+        privacyManager = privacyManager,
+        airshipChannel = mockChannel,
+        audienceOverridesProvider = mockAudienceOverridesProvider,
+        activityMonitor = testActivityMonitor,
+        clock = testClock,
+        contactManager = mockContactManager,
+        smsValidator = mockSmsValidator,
+        pushManager = mockPushManager,
+        subscriptionsProvider = subscriptionsProvider,
+        contactChannelsProvider = contactChannelsProvider,
+        subscriptionListDispatcher = testDispatcher
+    )
+
+    private val contact: Contact by lazy { buildContact() }
 
     @Before
     public fun setUp() {
@@ -1131,4 +1140,161 @@ public class ContactTest {
 
         coVerify(exactly = 2) { mockSmsValidator.validate(any()) }
     }
+
+    private fun channelsResult(
+        contactId: String,
+        address: String
+    ): AutoRefreshingDataProvider.IdentifiableResult<List<ContactChannel>> =
+        AutoRefreshingDataProvider.IdentifiableResult(
+            identifier = contactId,
+            data = Result.success(
+                listOf(
+                    ContactChannel.Email(
+                        ContactChannel.Email.RegistrationInfo.Pending(
+                            address = address,
+                            registrationOptions = EmailRegistrationOptions.options(null, null, true)
+                        )
+                    )
+                )
+            )
+        )
+
+    @Test
+    public fun testContactChannelsFlowEmitsForCurrentContact(): TestResult = runTest {
+        contactIdUpdates.value = ContactIdUpdate("contact x", "X", true, 0)
+
+        contact.contactChannelsFlow.test {
+            val forX = channelsResult("contact x", "x@example.com")
+            contactChannelFlow.emit(forX)
+
+            assertEquals(forX.data.getOrThrow(), awaitItem().getOrThrow())
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    public fun testContactChannelsFlowIgnoresOtherContactsData(): TestResult = runTest {
+        contactIdUpdates.value = ContactIdUpdate("contact y", "Y", true, 1)
+
+        contact.contactChannelsFlow.test {
+            // Another contact's data.
+            contactChannelFlow.emit(channelsResult("contact x", "x@example.com"))
+            expectNoEvents()
+
+            val forY = channelsResult("contact y", "y@example.com")
+            contactChannelFlow.emit(forY)
+
+            assertEquals(forY.data.getOrThrow(), awaitItem().getOrThrow())
+            ensureAllEventsConsumed()
+        }
+    }
+
+    // reset() + identify() must not surface the previous contact's channels.
+    @Test
+    public fun testContactChannelsFlowIgnoresDataWhileContactIsUnstable(): TestResult = runTest {
+        contactIdUpdates.value = ContactIdUpdate("contact x", "X", true, 0)
+
+        contact.contactChannelsFlow.test {
+            val forX = channelsResult("contact x", "x@example.com")
+            contactChannelFlow.emit(forX)
+            assertEquals(forX.data.getOrThrow(), awaitItem().getOrThrow())
+
+            // reset() + identify("Y") queued, so the contact ID is no longer stable.
+            contactIdUpdates.value = ContactIdUpdate("contact x", "X", false, 0)
+            contactChannelFlow.emit(forX)
+            expectNoEvents()
+
+            // Y resolves.
+            contactIdUpdates.value = ContactIdUpdate("contact y", "Y", true, 1)
+            val forY = channelsResult("contact y", "y@example.com")
+            contactChannelFlow.emit(forY)
+
+            assertEquals(forY.data.getOrThrow(), awaitItem().getOrThrow())
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    public fun testFetchContactChannelsIgnoresPreviousContact(): TestResult = runTest {
+        contactIdUpdates.value = ContactIdUpdate("contact y", "Y", true, 1)
+
+        val fetch = async { contact.fetchContactChannels() }
+        runCurrent()
+
+        // Must not be satisfied by the previous contact's data.
+        contactChannelFlow.emit(channelsResult("contact x", "x@example.com"))
+        runCurrent()
+        assertTrue(fetch.isActive)
+
+        val forY = channelsResult("contact y", "y@example.com")
+        contactChannelFlow.emit(forY)
+
+        assertEquals(forY.data.getOrThrow(), fetch.await().getOrThrow())
+    }
+
+    /** contactIdUpdates yields far more often than the data changes, don't re-emit. */
+    @Test
+    public fun testContactChannelsFlowDoesNotRepeatUnchangedData(): TestResult = runTest {
+        contactIdUpdates.value = ContactIdUpdate("contact x", "X", true, 0)
+
+        contact.contactChannelsFlow.test {
+            val forX = channelsResult("contact x", "x@example.com")
+            contactChannelFlow.emit(forX)
+            assertEquals(forX.data.getOrThrow(), awaitItem().getOrThrow())
+
+            // Same contact, only the resolve date moved (e.g. a Verify).
+            contactIdUpdates.value = ContactIdUpdate("contact x", "X", true, 5)
+            expectNoEvents()
+
+            // A real change still comes through.
+            val updated = channelsResult("contact x", "x2@example.com")
+            contactChannelFlow.emit(updated)
+            assertEquals(updated.data.getOrThrow(), awaitItem().getOrThrow())
+            ensureAllEventsConsumed()
+        }
+    }
+
+    @Test
+    public fun testSubscriptionListsFlowIgnoresOtherContactsData(): TestResult = runTest {
+        val contact = buildContact(subscriptionsProvider = mockSubscriptionsProvider)
+        contactIdUpdates.value = ContactIdUpdate("contact y", "Y", true, 1)
+
+        contact.subscriptionListsFlow.test {
+            subscriptionsFlow.emit(
+                AutoRefreshingDataProvider.IdentifiableResult(
+                    identifier = "contact x",
+                    data = Result.success(mapOf("x list" to setOf(Scope.APP)))
+                )
+            )
+            expectNoEvents()
+
+            val forY = AutoRefreshingDataProvider.IdentifiableResult(
+                identifier = "contact y",
+                data = Result.success(mapOf("y list" to setOf(Scope.EMAIL)))
+            )
+            subscriptionsFlow.emit(forY)
+
+            assertEquals(forY.data.getOrThrow(), awaitItem().getOrThrow())
+            ensureAllEventsConsumed()
+        }
+    }
+    /** Two contacts can hold identical data, the dedupe must not swallow the switch. */
+    @Test
+    public fun testContactChannelsFlowEmitsOnSwitchToIdenticalData(): TestResult = runTest {
+        contactIdUpdates.value = ContactIdUpdate("contact x", "X", true, 0)
+
+        contact.contactChannelsFlow.test {
+            val forX = channelsResult("contact x", "shared@example.com")
+            contactChannelFlow.emit(forX)
+            assertEquals(forX.data.getOrThrow(), awaitItem().getOrThrow())
+
+            contactIdUpdates.value = ContactIdUpdate("contact y", "Y", true, 1)
+            val forY = channelsResult("contact y", "shared@example.com")
+            contactChannelFlow.emit(forY)
+
+            assertEquals(forY.data.getOrThrow(), awaitItem().getOrThrow())
+            ensureAllEventsConsumed()
+        }
+    }
+
 }
