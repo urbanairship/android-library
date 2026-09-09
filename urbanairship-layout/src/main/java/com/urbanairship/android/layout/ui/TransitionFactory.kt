@@ -12,11 +12,11 @@ import android.transition.Visibility
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
-import com.urbanairship.android.layout.property.BannerAnimation
+import com.urbanairship.android.layout.property.BannerAnimationEffect
 import com.urbanairship.android.layout.property.CornerPosition
 import com.urbanairship.android.layout.property.EdgePosition
 import com.urbanairship.android.layout.property.HorizontalPosition
-import com.urbanairship.android.layout.property.ModalAnimation
+import com.urbanairship.android.layout.property.ModalAnimationEffect
 import com.urbanairship.android.layout.property.VerticalPosition
 import kotlin.apply
 import kotlin.time.Duration
@@ -24,65 +24,37 @@ import kotlin.time.Duration
 internal object TransitionFactory {
 
     /**
-     * Builds the enter transition: the content ([frame]) slides/explodes/fades while the
-     * [shade] fades independently, so the scrim never moves with the modal content.
+     * Builds the transition for one direction of a modal's animation: the content ([frame])
+     * slides/explodes/fades while the [shade] fades independently, so the scrim never moves with
+     * the modal content. Used for both the enter and exit transition, each fed its own effect.
      */
-    fun enterTransition(animation: ModalAnimation, frame: View, shade: View): Transition = when (animation) {
-        is ModalAnimation.Fade ->
-            fade(animation.animateIn).apply {
+    fun modalTransition(effect: ModalAnimationEffect, frame: View, shade: View): Transition = when (effect) {
+        is ModalAnimationEffect.Fade ->
+            fade(effect.duration).apply {
                 addTarget(frame)
                 addTarget(shade)
             }
-        is ModalAnimation.Slide ->
-            compose(slide(animation.origin, animation.animateIn), frame, shade)
-        is ModalAnimation.Explode ->
-            compose(corner(animation.enter, animation.animateIn), frame, shade)
+        is ModalAnimationEffect.Slide ->
+            compose(slide(effect.edge, effect.duration), frame, shade)
+        is ModalAnimationEffect.Explode ->
+            compose(corner(effect.corner, effect.duration), frame, shade)
     }
 
     /**
-     * Builds the exit transition: the content ([frame]) slides/explodes/fades while the
-     * [shade] fades independently, so the scrim never moves with the modal content.
+     * Builds the transition for one direction of a banner's animation, for the content
+     * ([frame]). Banners have no scrim, so the transition only targets the frame. A slide always
+     * plays toward/from the banner's own [position] edge. Used for both the enter and exit
+     * transition, each fed its own effect.
      */
-    fun exitTransition(animation: ModalAnimation, frame: View, shade: View): Transition = when (animation) {
-        is ModalAnimation.Fade ->
-            fade(animation.animateOut).apply {
-                addTarget(frame)
-                addTarget(shade)
-            }
-        is ModalAnimation.Slide ->
-            compose(slide(animation.origin, animation.animateOut), frame, shade)
-        is ModalAnimation.Explode ->
-            compose(corner(animation.exit, animation.animateOut), frame, shade)
-    }
-
-    /**
-     * Builds the banner enter transition for the content ([frame]). Banners have no scrim, so the
-     * transition only targets the frame. Slides originate from the banner's [position] edge.
-     */
-    fun enterTransition(
-        animation: BannerAnimation,
+    fun bannerTransition(
+        effect: BannerAnimationEffect,
         frame: View,
         position: VerticalPosition
-    ): Transition = when (animation) {
-        is BannerAnimation.Fade ->
-            fade(animation.animateIn).apply { addTarget(frame) }
-        is BannerAnimation.Slide ->
-            bannerSlide(position, animation.animateIn).apply { addTarget(frame) }
-    }
-
-    /**
-     * Builds the banner exit transition for the content ([frame]). Banners have no scrim, so the
-     * transition only targets the frame. Slides exit toward the banner's [position] edge.
-     */
-    fun exitTransition(
-        animation: BannerAnimation,
-        frame: View,
-        position: VerticalPosition
-    ): Transition = when (animation) {
-        is BannerAnimation.Fade ->
-            fade(animation.animateOut).apply { addTarget(frame) }
-        is BannerAnimation.Slide ->
-            bannerSlide(position, animation.animateOut).apply { addTarget(frame) }
+    ): Transition = when (effect) {
+        is BannerAnimationEffect.Fade ->
+            fade(effect.duration).apply { addTarget(frame) }
+        is BannerAnimationEffect.Slide ->
+            bannerSlide(position, effect.duration).apply { addTarget(frame) }
     }
 
     /** Targets [transition] with the frame transition and fades the [shade] alongside it. */
@@ -98,8 +70,8 @@ internal object TransitionFactory {
 
     private fun fade(duration: Duration?) = Fade().applyDuration(duration)
 
-    private fun slide(origin: EdgePosition, duration: Duration?) =
-        directional(origin.horizontal, origin.vertical, duration)
+    private fun slide(edge: EdgePosition, duration: Duration?) =
+        directional(edge.horizontal, edge.vertical, duration)
 
     private fun bannerSlide(position: VerticalPosition, duration: Duration?) =
         directional(null, position, duration)

@@ -46,7 +46,7 @@ public class ThomasBannerView internal constructor(
      * The banner's configured animation, defaulting to a slide when the payload omits one.
      */
     private val bannerAnimation: BannerAnimation
-        get() = presentation.getResolvedPlacement(context).animation ?: BannerAnimation.Slide()
+        get() = presentation.getResolvedPlacement(context).animation ?: BannerAnimation.default()
 
     /**
      * The edge the banner slides from/to.
@@ -136,7 +136,7 @@ public class ThomasBannerView internal constructor(
     private fun animateIn(frame: View) {
         frame.visibility = INVISIBLE
         post {
-            val transition = TransitionFactory.enterTransition(bannerAnimation, frame, bannerPosition)
+            val transition = TransitionFactory.bannerTransition(bannerAnimation.enter, frame, bannerPosition)
             TransitionManager.beginDelayedTransition(this, transition)
             frame.visibility = VISIBLE
         }

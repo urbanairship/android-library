@@ -8,56 +8,56 @@ import com.urbanairship.json.jsonMapOf
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-public sealed class ModalAnimation(
-    public val type: ModalAnimationType
+/**
+ * What a modal draws for one direction of its animation. An effect only ever plays its own
+ * direction, so its own [duration] lives here rather than on a wrapper as an
+ * animateIn/animateOut pair that in/out would otherwise have to be cross-referenced against by
+ * name.
+ */
+public sealed class ModalAnimationEffect(
+    public val type: Type
 ) : JsonSerializable {
 
-    public abstract val animateIn: Duration?
-    public abstract val animateOut: Duration?
+    public abstract val duration: Duration?
 
+    /** Fades in or out using opacity. */
     public data class Fade(
-        override val animateIn: Duration? = null,
-        override val animateOut: Duration? = null
-    ) : ModalAnimation(ModalAnimationType.FADE) {
+        override val duration: Duration? = null
+    ) : ModalAnimationEffect(Type.FADE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            ANIMATE_IN to animateIn?.inWholeMilliseconds?.div(1000.0),
-            ANIMATE_OUT to animateOut?.inWholeMilliseconds?.div(1000.0)
+            DURATION to duration?.inWholeMilliseconds?.div(1000.0)
         ).toJsonValue()
     }
 
+    /** Slides in or out from the given edge. */
     public data class Slide(
-        val origin: EdgePosition,
-        override val animateIn: Duration? = null,
-        override val animateOut: Duration? = null
-    ) : ModalAnimation(ModalAnimationType.SLIDE) {
+        val edge: EdgePosition,
+        override val duration: Duration? = null
+    ) : ModalAnimationEffect(Type.SLIDE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            ANIMATE_IN to animateIn?.inWholeMilliseconds?.div(1000.0),
-            ANIMATE_OUT to animateOut?.inWholeMilliseconds?.div(1000.0),
-            ORIGIN to origin
+            DURATION to duration?.inWholeMilliseconds?.div(1000.0),
+            EDGE to edge
         ).toJsonValue()
     }
 
+    /** Scales in or out from the given corner. */
     public data class Explode(
-        val enter: CornerPosition,
-        val exit: CornerPosition,
-        override val animateIn: Duration? = null,
-        override val animateOut: Duration? = null
-    ) : ModalAnimation(ModalAnimationType.EXPLODE) {
+        val corner: CornerPosition,
+        override val duration: Duration? = null
+    ) : ModalAnimationEffect(Type.EXPLODE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            ANIMATE_IN to animateIn?.inWholeMilliseconds?.div(1000.0),
-            ANIMATE_OUT to animateOut?.inWholeMilliseconds?.div(1000.0),
-            ENTER to enter,
-            EXIT to exit
+            DURATION to duration?.inWholeMilliseconds?.div(1000.0),
+            CORNER to corner
         ).toJsonValue()
     }
 
-    public enum class ModalAnimationType(public val json: String) : JsonSerializable {
+    public enum class Type(public val json: String) : JsonSerializable {
         FADE("fade"),
         SLIDE("slide"),
         EXPLODE("explode");
@@ -67,44 +67,68 @@ public sealed class ModalAnimation(
         public companion object {
 
             @Throws(JsonException::class)
-            public fun fromJson(value: JsonValue): ModalAnimationType {
+            public fun fromJson(value: JsonValue): Type {
                 val content = value.requireString()
 
                 return entries.firstOrNull { it.json == content }
-                    ?: throw JsonException("Unknown ModalAnimationType value: $content")
+                    ?: throw JsonException("Unknown ModalAnimationEffect type: $content")
             }
         }
     }
 
     public companion object {
         private const val TYPE = "type"
-        private const val ANIMATE_IN = "animate_in_seconds"
-        private const val ANIMATE_OUT = "animate_out_seconds"
-        private const val ORIGIN = "origin"
-        private const val ENTER = "enter"
-        private const val EXIT = "exit"
+        private const val DURATION = "duration_seconds"
+        private const val EDGE = "edge"
+        private const val CORNER = "corner"
+
+        @Throws(JsonException::class)
+        public fun fromJson(value: JsonValue): ModalAnimationEffect {
+            val content = value.requireMap()
+            val duration = content[DURATION]?.getDouble(0.0)?.seconds
+
+            return when (Type.fromJson(content.require(TYPE))) {
+                Type.FADE -> Fade(duration = duration)
+                Type.SLIDE -> Slide(
+                    edge = EdgePosition.fromJson(content.require(EDGE)),
+                    duration = duration
+                )
+                Type.EXPLODE -> Explode(
+                    corner = CornerPosition.fromJson(content.require(CORNER)),
+                    duration = duration
+                )
+            }
+        }
+    }
+}
+
+/**
+ * A modal's own enter and exit animation. A plain animation and one whose entrance and exit are
+ * different effects entirely (explode in, fade out) are both just this, played twice, rather than
+ * a symmetric case with a separate "asymmetric" one bolted on beside it.
+ */
+public data class ModalAnimation(
+    val enter: ModalAnimationEffect,
+    val exit: ModalAnimationEffect
+) : JsonSerializable {
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        IN to enter,
+        OUT to exit
+    ).toJsonValue()
+
+    public companion object {
+        private const val IN = "in"
+        private const val OUT = "out"
 
         @Throws(JsonException::class)
         public fun fromJson(value: JsonValue): ModalAnimation {
             val content = value.requireMap()
 
-            return when (ModalAnimationType.fromJson(content.require(TYPE))) {
-                ModalAnimationType.FADE -> Fade(
-                    animateIn = content[ANIMATE_IN]?.getDouble(0.0)?.seconds,
-                    animateOut = content[ANIMATE_OUT]?.getDouble(0.0)?.seconds
-                )
-                ModalAnimationType.SLIDE -> Slide(
-                    origin = EdgePosition.fromJson(content.require(ORIGIN)),
-                    animateIn = content[ANIMATE_IN]?.getDouble(0.0)?.seconds,
-                    animateOut = content[ANIMATE_OUT]?.getDouble(0.0)?.seconds
-                )
-                ModalAnimationType.EXPLODE -> Explode(
-                    enter = CornerPosition.fromJson(content.require(ENTER)),
-                    exit = CornerPosition.fromJson(content.require(EXIT)),
-                    animateIn = content[ANIMATE_IN]?.getDouble(0.0)?.seconds,
-                    animateOut = content[ANIMATE_OUT]?.getDouble(0.0)?.seconds
-                )
-            }
+            return ModalAnimation(
+                enter = ModalAnimationEffect.fromJson(content.require(IN)),
+                exit = ModalAnimationEffect.fromJson(content.require(OUT))
+            )
         }
     }
 }

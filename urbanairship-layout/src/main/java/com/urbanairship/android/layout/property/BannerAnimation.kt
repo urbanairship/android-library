@@ -8,38 +8,38 @@ import com.urbanairship.json.jsonMapOf
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
-public sealed class BannerAnimation(
-    public val type: BannerAnimationType
+/**
+ * What a banner draws for one direction of its animation. Same pattern as [ModalAnimationEffect],
+ * but slide has no edge of its own -- it's always the banner's own placement edge, so there's no
+ * sensible independent value to give it.
+ */
+public sealed class BannerAnimationEffect(
+    public val type: Type
 ) : JsonSerializable {
 
-    public abstract val animateIn: Duration?
-    public abstract val animateOut: Duration?
+    public abstract val duration: Duration?
 
     public data class Fade(
-        override val animateIn: Duration? = null,
-        override val animateOut: Duration? = null
-    ) : BannerAnimation(BannerAnimationType.FADE) {
+        override val duration: Duration? = null
+    ) : BannerAnimationEffect(Type.FADE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            ANIMATE_IN to animateIn?.inWholeMilliseconds?.div(1000.0),
-            ANIMATE_OUT to animateOut?.inWholeMilliseconds?.div(1000.0)
+            DURATION to duration?.inWholeMilliseconds?.div(1000.0)
         ).toJsonValue()
     }
 
     public data class Slide(
-        override val animateIn: Duration? = null,
-        override val animateOut: Duration? = null
-    ) : BannerAnimation(BannerAnimationType.SLIDE) {
+        override val duration: Duration? = null
+    ) : BannerAnimationEffect(Type.SLIDE) {
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            ANIMATE_IN to animateIn?.inWholeMilliseconds?.div(1000.0),
-            ANIMATE_OUT to animateOut?.inWholeMilliseconds?.div(1000.0),
+            DURATION to duration?.inWholeMilliseconds?.div(1000.0)
         ).toJsonValue()
     }
 
-    public enum class BannerAnimationType(public val json: String) : JsonSerializable {
+    public enum class Type(public val json: String) : JsonSerializable {
         FADE("fade"),
         SLIDE("slide");
 
@@ -48,34 +48,61 @@ public sealed class BannerAnimation(
         public companion object {
 
             @Throws(JsonException::class)
-            public fun fromJson(value: JsonValue): BannerAnimationType {
+            public fun fromJson(value: JsonValue): Type {
                 val content = value.requireString()
 
                 return entries.firstOrNull { it.json == content }
-                    ?: throw JsonException("Unknown BannerAnimationType value: $content")
+                    ?: throw JsonException("Unknown BannerAnimationEffect type: $content")
             }
         }
     }
 
     public companion object {
         private const val TYPE = "type"
-        private const val ANIMATE_IN = "animate_in_seconds"
-        private const val ANIMATE_OUT = "animate_out_seconds"
+        private const val DURATION = "duration_seconds"
+
+        @Throws(JsonException::class)
+        public fun fromJson(value: JsonValue): BannerAnimationEffect {
+            val content = value.requireMap()
+            val duration = content[DURATION]?.getDouble(0.0)?.seconds
+
+            return when (Type.fromJson(content.require(TYPE))) {
+                Type.FADE -> Fade(duration = duration)
+                Type.SLIDE -> Slide(duration = duration)
+            }
+        }
+    }
+}
+
+/** A banner's own enter and exit animation. */
+public data class BannerAnimation(
+    val enter: BannerAnimationEffect,
+    val exit: BannerAnimationEffect
+) : JsonSerializable {
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        IN to enter,
+        OUT to exit
+    ).toJsonValue()
+
+    public companion object {
+        private const val IN = "in"
+        private const val OUT = "out"
+
+        /** A missing payload animation, defaulting to a slide both ways. */
+        public fun default(): BannerAnimation = BannerAnimation(
+            enter = BannerAnimationEffect.Slide(),
+            exit = BannerAnimationEffect.Slide()
+        )
 
         @Throws(JsonException::class)
         public fun fromJson(value: JsonValue): BannerAnimation {
             val content = value.requireMap()
 
-            return when (BannerAnimationType.fromJson(content.require(TYPE))) {
-                BannerAnimationType.FADE -> Fade(
-                    animateIn = content[ANIMATE_IN]?.getDouble(0.0)?.seconds,
-                    animateOut = content[ANIMATE_OUT]?.getDouble(0.0)?.seconds
-                )
-                BannerAnimationType.SLIDE -> Slide(
-                    animateIn = content[ANIMATE_IN]?.getDouble(0.0)?.seconds,
-                    animateOut = content[ANIMATE_OUT]?.getDouble(0.0)?.seconds
-                )
-            }
+            return BannerAnimation(
+                enter = BannerAnimationEffect.fromJson(content.require(IN)),
+                exit = BannerAnimationEffect.fromJson(content.require(OUT))
+            )
         }
     }
 }
