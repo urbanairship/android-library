@@ -180,6 +180,13 @@ internal class AutomationRemoteDataSubscriber (
      * [FailureResolution.tracked] carries still-failing records forward with their original
      * created date and min SDK version, so a retry is evaluated against the payload that first
      * dropped them rather than the latest one.
+     *
+     * @param lastSourceInfo The checkpoint written by the previous sync for this source, or null
+     * if we have never synced it. Supplies both the previously tracked failures and the timestamp
+     * and SDK version a new failure is judged against.
+     * @param currentFailures The schedules that failed to parse in the payload being processed.
+     * @return The records to persist on the new checkpoint, and the ids that stopped failing and
+     * therefore need to bypass the timestamp check when they are upserted.
      */
     private fun resolveFailedSchedules(
         lastSourceInfo: AutomationSourceInfo?,

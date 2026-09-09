@@ -247,7 +247,10 @@ internal data class InAppRemoteData(
                     FailedScheduleRecord(
                         identifier = content.require(IDENTIFIER).requireString(),
                         createdDate = created,
-                        minSDKVersion = content[MIN_SDK_VERSION]?.requireString()
+                        // A malformed min SDK version only costs us the retry hint. Dropping the
+                        // whole record over it would make the schedule untrackable, and the next
+                        // sync would read its absence as a recovery and forget it entirely.
+                        minSDKVersion = content[MIN_SDK_VERSION]?.string
                     )
                 } catch (ex: Exception) {
                     UALog.e(ex) { "Failed to parse a partial schedule from $value" }

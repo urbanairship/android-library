@@ -359,6 +359,28 @@ public class AutomationRemoteDataAccessTest {
     }
 
     @Test
+    public fun testParseTracksFailedScheduleWithMalformedMinSDKVersion() {
+        // A min SDK version sent as a number is the same class of malformation we are tolerating
+        // everywhere else here, so it must not cost us the record. Losing it would leave the
+        // schedule untrackable and make the next sync read its absence as a recovery.
+        val invalidWithBadMinSDKVersion = """
+            {
+                "id": "failed_schedule_id",
+                "created": "2023-12-20T12:00:00Z",
+                "min_sdk_version": 18,
+                "type": "actions",
+                "actions": { "foo": "bar" }
+            }
+        """.trimIndent()
+
+        val data = parseData(listOf(invalidWithBadMinSDKVersion), payloadTimestamp = 999L)
+
+        assertEquals(listOf("failed_schedule_id"), data.failedSchedules.map { it.identifier })
+        assertEquals(CREATED_MILLIS, data.failedSchedules.first().createdDate)
+        assertNull(data.failedSchedules.first().minSDKVersion)
+    }
+
+    @Test
     public fun testFromPayloadsAggregatesFailedSchedules() {
         // Covers the full payload path, including the metadata pass in parse() that rebuilds Data.
         val payload = RemoteDataPayload(
