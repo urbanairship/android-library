@@ -33,7 +33,7 @@ internal class DefaultAirshipAi(
      * builds a backend would otherwise allocate one per evaluation.
      */
     @Volatile
-    private var builtInModel: Lazy<ModelInterface>? = null
+    private var builtInModel: Lazy<ModelAdapter>? = null
 
     @Volatile
     private var evaluationObserver: EvaluationObserver? = null
@@ -41,13 +41,13 @@ internal class DefaultAirshipAi(
     private val enabled: Boolean
         get() = privacyManager.isEnabled(PrivacyManager.Feature.ON_DEVICE_AI)
 
-    override val defaultModel: ModelInterface?
+    override val defaultModel: ModelAdapter?
         get() = if (enabled) builtInModel?.value else null
 
-    override fun model(usage: Usage<*>): ModelInterface? =
+    override fun model(usage: Usage<*>): ModelAdapter? =
         if (enabled) resolveModel(usage) else null
 
-    override fun gatedModel(usage: Usage<*>): ModelInterface? =
+    override fun gatedModel(usage: Usage<*>): ModelAdapter? =
         resolveModel(usage)?.let { PrivacyGatedModel(it, privacyManager) }
 
     override fun <Subject> setContextProvider(
@@ -69,7 +69,7 @@ internal class DefaultAirshipAi(
         modelResolver = resolver
     }
 
-    override fun registerModelFactory(factory: () -> ModelInterface) {
+    override fun registerModelFactory(factory: () -> ModelAdapter) {
         builtInModel = lazy(factory)
     }
 
@@ -132,7 +132,7 @@ internal class DefaultAirshipAi(
         )
     }
 
-    private fun resolveModel(usage: Usage<*>): ModelInterface? {
+    private fun resolveModel(usage: Usage<*>): ModelAdapter? {
         val selector = modelResolver?.resolve(usage) ?: ModelSelector.DefaultModel
         return when (selector) {
             ModelSelector.DefaultModel -> builtInModel?.value
@@ -154,9 +154,9 @@ internal class DefaultAirshipAi(
  * See [InternalAirshipAi.gatedModel].
  */
 private class PrivacyGatedModel(
-    private val wrapped: ModelInterface,
+    private val wrapped: ModelAdapter,
     private val privacyManager: PrivacyManager
-) : ModelInterface {
+) : ModelAdapter {
 
     private fun gate(availability: Availability): Availability =
         if (privacyManager.isEnabled(PrivacyManager.Feature.ON_DEVICE_AI)) {

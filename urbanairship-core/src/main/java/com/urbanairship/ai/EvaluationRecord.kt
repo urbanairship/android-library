@@ -15,7 +15,7 @@ import kotlin.time.Duration
  * fit its input window does so on its own copy.
  * @param outcome How it ended.
  * @param duration Wall-clock time across every attempt.
- * @param attempts ModelInterface calls made. Greater than 1 means output failed schema validation, or
+ * @param attempts ModelAdapter calls made. Greater than 1 means output failed schema validation, or
  * the model threw, and it was retried.
  */
 public class EvaluationRecord public constructor(

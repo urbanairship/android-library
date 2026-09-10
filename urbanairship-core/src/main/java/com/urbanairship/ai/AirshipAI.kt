@@ -83,7 +83,7 @@ public interface AirshipAi {
      * Read it inside an [ModelResolver] to fall back to another model only when the built-in
      * one is unavailable.
      */
-    public val defaultModel: ModelInterface?
+    public val defaultModel: ModelAdapter?
 
     /**
      * Returns the model resolved for [usage], or `null` when none is configured.
@@ -93,7 +93,7 @@ public interface AirshipAi {
      * @param usage The usage to resolve a model for.
      * @return The resolved model, or `null`.
      */
-    public fun model(usage: Usage<*>): ModelInterface?
+    public fun model(usage: Usage<*>): ModelAdapter?
 }
 
 /**
@@ -124,7 +124,7 @@ public interface InternalAirshipAi : AirshipAi {
      *
      * @param factory Returns the model to use. Invoked at most once, on first resolution.
      */
-    public fun registerModelFactory(factory: () -> ModelInterface)
+    public fun registerModelFactory(factory: () -> ModelAdapter)
 
     /**
      * Fetches the registered provider's context for a usage, or [EvaluationContext.EMPTY] when none is
@@ -145,5 +145,5 @@ public interface InternalAirshipAi : AirshipAi {
      * @param usage The usage to resolve a model for.
      * @return The resolved model, or `null`.
      */
-    public fun gatedModel(usage: Usage<*>): ModelInterface?
+    public fun gatedModel(usage: Usage<*>): ModelAdapter?
 }

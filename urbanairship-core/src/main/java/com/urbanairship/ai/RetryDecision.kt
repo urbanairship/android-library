@@ -24,7 +24,7 @@ public sealed class RetryDecision {
         public const val DEFAULT_MAX_ATTEMPTS: Int = 3
 
         /**
-         * The framework's default retry policy, used by [ModelInterface.retryDecision]'s default and
+         * The framework's default retry policy, used by [ModelAdapter.retryDecision]'s default and
          * available to models that want to fall back to it selectively.
          *
          * An [SchemaValidationException] retries immediately — the model already answered, it
@@ -49,8 +49,8 @@ public sealed class RetryDecision {
  * Thrown when a model's response doesn't conform to the evaluation's schema.
  *
  * The model already answered — it just produced a shape that doesn't match — so this is a
- * different failure than an error thrown by [ModelInterface.respond] itself. An
- * [ModelInterface.retryDecision] implementation can test for this type to retry it on a different
+ * different failure than an error thrown by [ModelAdapter.respond] itself. An
+ * [ModelAdapter.retryDecision] implementation can test for this type to retry it on a different
  * schedule than a network or timeout error. The constructor is public so that branch can be
  * unit-tested.
  *

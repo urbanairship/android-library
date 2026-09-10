@@ -23,7 +23,7 @@ public class EvaluationObserverTest {
     private val records get() = observer.records
 
     private suspend fun evaluate(
-        model: ModelInterface,
+        model: ModelAdapter,
         context: EvaluationContext = EvaluationContext.EMPTY,
         evaluation: TestEvaluation = TestEvaluation()
     ): EvaluationResult<TestOutput> =
@@ -57,7 +57,7 @@ public class EvaluationObserverTest {
 
         assertEquals(1, records.size)
         assertEquals(
-            EvaluationRecord.Outcome.Skipped("ModelInterface unavailable"),
+            EvaluationRecord.Outcome.Skipped("ModelAdapter unavailable"),
             records.first().outcome
         )
         // Never reached the model, so nothing was attempted.
