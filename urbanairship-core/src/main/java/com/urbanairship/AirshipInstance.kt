@@ -12,6 +12,8 @@ import androidx.annotation.RestrictTo
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.DeepLinkListener
 import com.urbanairship.actions.DefaultActionsManifest
+import com.urbanairship.ai.DefaultAirshipAi
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.app.GlobalActivityMonitor
@@ -61,6 +63,7 @@ internal class AirshipInstance(
     lateinit var runtimeConfig: AirshipRuntimeConfig
     lateinit var localeManager: LocaleManager
     lateinit var privacyManager: PrivacyManager
+    lateinit var ai: InternalAirshipAi
     lateinit var permissionsManager: PermissionsManager
     lateinit var airshipConfigOptions: AirshipConfigOptions
 
@@ -146,6 +149,8 @@ internal class AirshipInstance(
             configObserver = remoteConfigObserver,
             resetEnabledFeatures = airshipConfigOptions.resetEnabledFeatures
         )
+
+        this.ai = DefaultAirshipAi(privacyManager = privacyManager)
 
         this.permissionsManager = PermissionsManager(application)
 

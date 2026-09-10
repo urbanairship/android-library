@@ -290,6 +290,7 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
      * - [FEATURE_FEATURE_FLAGS]
      * - [FEATURE_ANALYTICS]
      * - [FEATURE_PUSH]
+     * - [FEATURE_ON_DEVICE_AI]
      */
     @JvmField
     public val enabledFeatures: Feature
@@ -1784,6 +1785,11 @@ public class AirshipConfigOptions private constructor(builder: Builder) {
          * Maps to the feature [PrivacyManager.Feature.MESSAGE_CENTER] when used in the properties or xml config.
          */
         public const val FEATURE_MESSAGE_CENTER: String = "message_center"
+
+        /**
+         * Maps to the feature [PrivacyManager.Feature.ON_DEVICE_AI] when used in the properties or xml config.
+         */
+        public const val FEATURE_ON_DEVICE_AI: String = "on_device_ai"
 
         /**
          * Maps to the feature [PrivacyManager.Feature.ANALYTICS] when used in the properties or xml config.
