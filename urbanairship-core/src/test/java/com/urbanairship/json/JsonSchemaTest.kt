@@ -319,6 +319,17 @@ public class JsonSchemaTest {
     }
 
     @Test
+    public fun testNullValuedExtensionIsDroppedSoSchemasRoundTrip() {
+        // A kept null would be omitted on the way back out, silently breaking equality.
+        val parsed = JsonSchema.fromJson(
+            JsonValue.parseString("""{"type":"string","x-null":null,"x-kept":1}""")
+        )
+
+        assertEquals(mapOf("x-kept" to JsonValue.wrap(1)), parsed.extensions)
+        assertEquals(parsed, JsonSchema.fromJson(parsed.toJsonValue()))
+    }
+
+    @Test
     public fun testConstructorKeepsOnlyVendorExtensionKeys() {
         val schema = JsonSchema(
             type = ValueType.StringType(),

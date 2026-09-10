@@ -4,11 +4,14 @@ package com.urbanairship.ai
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
 import com.urbanairship.PrivacyManager
+import com.urbanairship.json.JsonValue
+import java.util.concurrent.Executors
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
@@ -440,6 +443,91 @@ public class AirshipAITest {
 
         assertNotNull(result.output)
         assertEquals(1, model.respondCallCount)
+    }
+
+    @Test
+    public fun testUncappedZeroDelayRetryStillHitsTheCeiling() {
+        // An app policy that never caps and never delays leaves the loop with no suspension
+        // point of its own. On a single thread that starves the ceiling's timer and spins
+        // forever, so the retry path yields when the delay is zero. Real time and a real
+        // single-threaded dispatcher, since a virtual clock only advances on a delay.
+        var attempts = 0
+        val model = object : Model {
+            override fun retryDecision(usage: Usage<*>, error: Throwable, attempt: Int) =
+                RetryDecision.Retry(Duration.ZERO)
+
+            override suspend fun respond(request: ModelRequest): JsonValue {
+                attempts += 1
+                throw SampleError()
+            }
+        }
+
+        val executor = Executors.newSingleThreadExecutor()
+        try {
+            val result = runBlocking(executor.asCoroutineDispatcher()) {
+                testEvaluator(maxResponseTimeout = 100.milliseconds)
+                    .evaluate(TestEvaluation(), model, EvaluationContext.EMPTY)
+            }
+
+            assertTrue(result is EvaluationResult.Failed)
+            assertTrue(attempts > 1)
+        } finally {
+            executor.shutdown()
+        }
+    }
+
+    @Test
+    public fun testNaNPriorityDoesNotBreakTrimming() {
+        // priority is a public Double, so an app can hand us a divide-by-zero result.
+        val context = EvaluationContext(
+            listOf(
+                EvaluationContext.Item("keep", priority = 0.0),
+                EvaluationContext.Item("nan", priority = Double.NaN)
+            )
+        )
+
+        val (trimmed, dropped) = requireNotNull(context.droppingLowestPriorityItem())
+
+        // Double ordering puts NaN above every number, so it is the least important.
+        assertEquals("nan", dropped.content)
+        assertEquals(listOf("keep"), trimmed.items.map { it.content })
+    }
+
+    @Test
+    public fun testThrowingModelResolverSkipsRatherThanEscaping(): Unit = runTest {
+        // evaluate is documented to fail open; app code in the resolver must not break that.
+        val manager = testManager()
+        manager.setModelResolver { throw SampleError() }
+
+        assertTrue(manager.evaluate(TestEvaluation()) is EvaluationResult.Skipped)
+    }
+
+    @Test
+    public fun testThrowingModelFactorySkipsRatherThanEscaping(): Unit = runTest {
+        val manager = testManager()
+        manager.registerModelFactory { throw SampleError() }
+
+        assertTrue(manager.evaluate(TestEvaluation()) is EvaluationResult.Skipped)
+    }
+
+    @Test
+    public fun testThrowingAvailabilityGetterIsTreatedAsUnavailable(): Unit = runTest {
+        val model = object : Model {
+            override val availability: Availability get() = throw SampleError()
+            override suspend fun respond(request: ModelRequest) = allowResponse()
+        }
+
+        assertTrue(eval(model) is EvaluationResult.Skipped)
+    }
+
+    @Test
+    public fun testRecordExposesDurationToJavaCallers(): Unit = runTest {
+        // EvaluationObserver is Java-implementable, but Duration's accessor is name-mangled.
+        val observer = RecordingObserver()
+        testEvaluator().evaluate(TestEvaluation(), MockModel(), EvaluationContext.EMPTY, observer)
+
+        val record = observer.records.first()
+        assertEquals(record.duration.inWholeMilliseconds, record.durationMillis)
     }
 
     // MARK: context providers

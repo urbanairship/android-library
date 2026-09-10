@@ -56,8 +56,9 @@ public data class EvaluationContext @JvmOverloads public constructor(
      * [ModelRequest.droppingLowestPriorityContextItem].
      */
     internal fun droppingLowestPriorityItem(): Pair<EvaluationContext, Item>? {
-        val leastImportant = items.maxOfOrNull { it.priority } ?: return null
-        val index = items.indexOfFirst { it.priority == leastImportant }
+        // Index rather than value, so a NaN priority an app computed can't fail to match
+        // itself. Double ordering puts NaN above every number, so it drops first.
+        val index = items.indices.maxByOrNull { items[it].priority } ?: return null
         return EvaluationContext(items.filterIndexed { i, _ -> i != index }) to items[index]
     }
 

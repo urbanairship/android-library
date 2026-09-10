@@ -62,6 +62,7 @@ public final class com/urbanairship/AirshipConfigOptions {
 	public static final field FEATURE_IN_APP_AUTOMATION Ljava/lang/String;
 	public static final field FEATURE_MESSAGE_CENTER Ljava/lang/String;
 	public static final field FEATURE_NONE Ljava/lang/String;
+	public static final field FEATURE_ON_DEVICE_AI Ljava/lang/String;
 	public static final field FEATURE_PUSH Ljava/lang/String;
 	public static final field FEATURE_TAGS_AND_ATTRIBUTES Ljava/lang/String;
 	public static final field HMS_TRANSPORT Ljava/lang/String;
@@ -1235,6 +1236,7 @@ public final class com/urbanairship/ai/EvaluationRecord {
 	public synthetic fun <init> (Lcom/urbanairship/ai/Usage;Lcom/urbanairship/ai/ModelRequest;Lcom/urbanairship/ai/EvaluationRecord$Outcome;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getAttempts ()I
 	public final fun getDuration-UwyO8pc ()J
+	public final fun getDurationMillis ()J
 	public final fun getOutcome ()Lcom/urbanairship/ai/EvaluationRecord$Outcome;
 	public final fun getRequest ()Lcom/urbanairship/ai/ModelRequest;
 	public final fun getUsage ()Lcom/urbanairship/ai/Usage;

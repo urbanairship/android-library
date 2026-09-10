@@ -26,6 +26,13 @@ public class EvaluationRecord public constructor(
     public val attempts: Int
 ) {
 
+    /**
+     * [duration] in milliseconds, for Java callers — [kotlin.time.Duration] is a value class and
+     * its accessor is name-mangled beyond what Java can call.
+     */
+    public val durationMillis: Long
+        get() = duration.inWholeMilliseconds
+
     /** How an evaluation ended, before parsing into the feature's own type. */
     public sealed class Outcome {
 

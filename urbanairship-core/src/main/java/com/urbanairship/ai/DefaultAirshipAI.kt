@@ -2,6 +2,7 @@
 package com.urbanairship.ai
 
 import com.urbanairship.PrivacyManager
+import com.urbanairship.UALog
 import com.urbanairship.json.JsonValue
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -14,6 +15,8 @@ import kotlinx.coroutines.flow.onStart
  *
  * Gated by [PrivacyManager.Feature.ON_DEVICE_AI] — disabled, evaluations and context fetches
  * behave as though no model were ever registered, and nothing is reported to the observer.
+ * [gatedModel] is the one exception: it resolves either way, so a caller holding the result sees
+ * the gate through the model's availability rather than losing the reference.
  */
 internal class DefaultAirshipAI(
     private val privacyManager: PrivacyManager,
@@ -94,7 +97,15 @@ internal class DefaultAirshipAI(
         // that was replaced mid-flight.
         val observer = evaluationObserver
 
-        val model = model(evaluation.usage)
+        // The resolver and the model factory are both app code, and evaluate is documented to
+        // fail open, so a throw from either skips rather than reaching the feature.
+        val model = try {
+            model(evaluation.usage)
+        } catch (e: Exception) {
+            UALog.e(e) { "AI model resolution failed for ${evaluation.usage.rawValue}" }
+            null
+        }
+
         if (model == null) {
             evaluator.reportSkipped(evaluation, EvaluationContext.EMPTY, NO_MODEL, observer)
             return EvaluationResult.Skipped(NO_MODEL)

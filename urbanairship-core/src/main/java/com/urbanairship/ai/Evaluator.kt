@@ -15,6 +15,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.yield
 
 /**
  * Runs an evaluation against a model, applying the retry and validation policy.
@@ -46,7 +47,15 @@ internal class Evaluator(
             render = evaluation::prompt
         )
 
-        if (model.availability != Availability.Available) {
+        val availability = try {
+            model.availability
+        } catch (e: Exception) {
+            // App-implemented getter; a throw here means "can't use it", not "crash the caller".
+            UALog.w(e) { "AI model availability threw for ${usage.rawValue}" }
+            Availability.Unavailable(Availability.Reason.Other(e.toString()))
+        }
+
+        if (availability != Availability.Available) {
             // A model that never runs is the common outcome in the field, and the one an
             // observer most needs to see, so it is reported like any other.
             report(
@@ -203,6 +212,10 @@ internal class Evaluator(
                     // retryDecision is app-implementable, so clamp: anything past the ceiling
                     // would be cut off by the enclosing timeout anyway.
                     delay(minOf(decision.after, maxResponseTimeout))
+                } else {
+                    // An uncapped zero-delay policy would otherwise never suspend, leaving the
+                    // ceiling's timer unable to run on a single-threaded dispatcher.
+                    yield()
                 }
             }
         }

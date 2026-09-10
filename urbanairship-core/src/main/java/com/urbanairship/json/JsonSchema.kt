@@ -19,8 +19,8 @@ import kotlin.math.floor
  * @param type The expected shape of the value.
  * @param description Optional natural-language description, surfaced to the model.
  * @param extensions JSON Schema vendor extensions (`x-*`) carried verbatim as opaque JSON, so
- * new ones round-trip without parser changes. Keys without the prefix are dropped, and
- * [validate] ignores the rest — they are metadata for other consumers.
+ * new ones round-trip without parser changes. Keys without the prefix, and keys whose value is
+ * null, are dropped; [validate] ignores the rest — they are metadata for other consumers.
  */
 public class JsonSchema @JvmOverloads public constructor(
     public val type: ValueType,
@@ -29,8 +29,11 @@ public class JsonSchema @JvmOverloads public constructor(
 ) : JsonSerializable {
 
     /** JSON Schema vendor extensions (`x-*`) carried verbatim from the payload. */
-    public val extensions: Map<String, JsonValue> =
-        extensions.filterKeys { it.startsWith(EXTENSION_KEY_PREFIX) }
+    // Null-valued keys are dropped, not kept: JsonMap.Builder omits a null on the way out, so
+    // keeping one here would make an extension silently fail to round-trip.
+    public val extensions: Map<String, JsonValue> = extensions
+        .filterKeys { it.startsWith(EXTENSION_KEY_PREFIX) }
+        .filterValues { !it.isNull }
 
     /** The shape of a schema node. */
     public sealed class ValueType {
