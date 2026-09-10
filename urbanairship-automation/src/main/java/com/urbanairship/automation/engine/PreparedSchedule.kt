@@ -3,6 +3,7 @@
 package com.urbanairship.automation.engine
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.PreparedInAppMessageData
@@ -37,6 +38,7 @@ public data class PreparedScheduleInfo(
     internal val campaigns: JsonValue? = null,
     internal val contactId: String? = null,
     internal val experimentResult: ExperimentResult? = null,
+    internal val variantAudienceResult: VariantAudienceResult? = null,
     internal val reportingContext: JsonValue? = null,
     internal val triggerSessionId: String,
     internal val additionalAudienceCheckResult: Boolean = true,
@@ -61,6 +63,7 @@ public data class PreparedScheduleInfo(
         private const val CAMPAIGNS = "campaigns"
         private const val CONTACT_ID = "contact_id"
         private const val EXPERIMENT_RESULT = "experiment_result"
+        private const val VARIANT_AUDIENCE_RESULT = "variant_audience_result"
         private const val REPORTING_CONTEXT = "reporting_context"
         private const val TRIGGER_SESSION_ID = "trigger_session_id"
         private const val ADDITIONAL_AUDIENCE_CHECK_RESULT = "additional_audience_check_result"
@@ -78,6 +81,7 @@ public data class PreparedScheduleInfo(
                 campaigns = content[CAMPAIGNS],
                 contactId = content.optionalField(CONTACT_ID),
                 experimentResult = content[EXPERIMENT_RESULT]?.let { ExperimentResult.fromJson(it.requireMap()) },
+                variantAudienceResult = content[VARIANT_AUDIENCE_RESULT]?.let { VariantAudienceResult.fromJson(it) },
                 reportingContext = content[REPORTING_CONTEXT],
                 // Default to a UUID for backwards compatibility
                 triggerSessionId = content.optionalField(TRIGGER_SESSION_ID) ?: UUID.randomUUID().toString(),
@@ -96,6 +100,7 @@ public data class PreparedScheduleInfo(
         CAMPAIGNS to campaigns,
         CONTACT_ID to contactId,
         EXPERIMENT_RESULT to experimentResult,
+        VARIANT_AUDIENCE_RESULT to variantAudienceResult,
         REPORTING_CONTEXT to reportingContext,
         TRIGGER_SESSION_ID to triggerSessionId,
         ADDITIONAL_AUDIENCE_CHECK_RESULT to additionalAudienceCheckResult,
@@ -103,5 +108,34 @@ public data class PreparedScheduleInfo(
         SEND_METADATA to sendMetadata,
         LEDGER_SHARED_ID to ledgerSharedId,
         TRIGGER_ID to triggerId
+    ).toJsonValue()
+}
+
+/**
+ * This schedule's resolved outcome within its variant experiment, stamped at prepare time so
+ * execution acts on the same resolution it reports rather than re-hashing at execute time.
+ *
+ * @hide
+ */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public data class VariantAudienceResult(
+    public val outcome: VariantAudience.Outcome
+) : JsonSerializable {
+
+    internal companion object {
+        private const val OUTCOME = "outcome"
+
+        @Throws(JsonException::class)
+        fun fromJson(value: JsonValue): VariantAudienceResult {
+            val content = value.requireMap()
+            val rawOutcome = content.requireField<String>(OUTCOME)
+            val outcome = VariantAudience.Outcome.from(rawOutcome)
+                ?: throw JsonException("Invalid variant audience outcome $rawOutcome")
+            return VariantAudienceResult(outcome)
+        }
+    }
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        OUTCOME to outcome.json
     ).toJsonValue()
 }

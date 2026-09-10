@@ -111,6 +111,38 @@ public class LayoutResolutionEventTest {
     }
 
     @Test
+    public fun testVariantControl() {
+        val event = LayoutResolutionEvent.variantControl()
+        val expected = """
+            {
+               "resolution": {
+                  "display_time":"0.00",
+                  "type":"variant_control"
+               }
+            }
+        """.trimIndent()
+
+        assertEquals("in_app_resolution", event.eventType.reportingName)
+        assertEquals(JsonValue.parseString(expected), event.data?.toJsonValue())
+    }
+
+    @Test
+    public fun testVariantMiss() {
+        val event = LayoutResolutionEvent.variantMiss()
+        val expected = """
+            {
+               "resolution": {
+                  "display_time":"0.00",
+                  "type":"variant_miss"
+               }
+            }
+        """.trimIndent()
+
+        assertEquals("in_app_resolution", event.eventType.reportingName)
+        assertEquals(JsonValue.parseString(expected), event.data?.toJsonValue())
+    }
+
+    @Test
     public fun testAudienceExcludedEvent() {
         val event = LayoutResolutionEvent.audienceExcluded()
         val expected = """

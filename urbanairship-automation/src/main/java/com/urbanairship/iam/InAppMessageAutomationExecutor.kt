@@ -10,6 +10,7 @@ import com.urbanairship.actions.run
 import com.urbanairship.android.layout.analytics.DisplayResult
 import com.urbanairship.android.layout.analytics.events.LayoutResolutionEvent
 import com.urbanairship.android.layout.assets.AssetCacheManager
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.engine.InterruptedBehavior
@@ -102,6 +103,10 @@ internal class InAppMessageAutomationExecutor(
 
         var result = ScheduleExecuteResult.FINISHED
 
+        // Two unrelated checks (global holdout, and a variant experiment's own no-message
+        // arm) can both resolve to holdout for the same schedule at this same last-mile
+        // point; either one alone is sufficient, so check global holdout first and treat
+        // this as a single outcome rather than risk emitting both.
         if (preparedScheduleInfo.experimentResult?.isMatching == true) {
             UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} part of experiment." }
             data.analytics.recordEvent(
@@ -109,6 +114,22 @@ internal class InAppMessageAutomationExecutor(
                 layoutContext = null
             )
             recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.HOLDOUT)
+        } else if (preparedScheduleInfo.variantAudienceResult?.outcome == VariantAudience.Outcome.HOLDOUT) {
+            UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} resolved to variant holdout" }
+            data.analytics.recordEvent(
+                event = LayoutResolutionEvent.variantControl(),
+                layoutContext = null
+            )
+            // Identical to the global holdout mechanism in ledger terms; the two diverge
+            // only in which resolution event they report.
+            recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.HOLDOUT)
+        } else if (preparedScheduleInfo.variantAudienceResult?.outcome == VariantAudience.Outcome.VARIANT_MISS) {
+            UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} resolved to a sibling variant" }
+            data.analytics.recordEvent(
+                event = LayoutResolutionEvent.variantMiss(),
+                layoutContext = null
+            )
+            recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.VARIANT_MISS)
         } else {
             try {
                 UALog.i { "Displaying message ${preparedScheduleInfo.scheduleId}" }
