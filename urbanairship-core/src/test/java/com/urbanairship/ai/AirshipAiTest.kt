@@ -12,7 +12,10 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -223,11 +226,37 @@ public class AirshipAiTest {
     }
 
     @Test
-    public fun testCancellationErrorIsNotRetried(): Unit = runTest {
-        val model = MockModel(response = { throw CancellationException() }, maxAttempts = 5)
+    public fun testBackendsOwnTimeoutIsRetried(): Unit = runTest {
+        // A backend that wraps its call in withTimeout throws TimeoutCancellationException.
+        // Treating that as cancellation would silently deny those backends every retry.
+        var seen: Throwable? = null
+        val model = MockModel(maxAttempts = 3)
+        model.responses = mutableListOf(
+            { throw TimeoutCancellationExceptionFactory.create() },
+            { allowResponse() }
+        )
+        model.retryDecision = { error, attempt ->
+            seen = error
+            if (attempt < 3) RetryDecision.Retry(Duration.ZERO) else RetryDecision.Fail
+        }
 
-        assertTrue(eval(model) is EvaluationResult.Failed)
-        // Cancellation is terminal — without the dedicated branch, all 5 attempts would run.
+        assertNotNull(eval(model).output)
+        assertEquals(2, model.respondCallCount)
+        assertTrue(seen is CancellationException)
+    }
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    public fun testCancellingTheCallerPropagates(): Unit = runTest {
+        // The evaluation's own cancellation must reach the caller, not become a Failed.
+        val model = MockModel(maxAttempts = 5)
+        model.respondDelay = 10.seconds
+
+        val job = launch { eval(model) }
+        advanceTimeBy(1.seconds)
+        job.cancelAndJoin()
+
+        assertTrue(job.isCancelled)
         assertEquals(1, model.respondCallCount)
     }
 

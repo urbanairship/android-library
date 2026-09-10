@@ -44,6 +44,10 @@ public interface ModelAdapter {
      * returning [RetryDecision.Fail] once [attempt] says to stop. The framework enforces its
      * own wall-clock ceiling on the whole loop regardless of what this returns.
      *
+     * A timeout you raise inside [respond] arrives here like any other error, including the
+     * `TimeoutCancellationException` from your own `withTimeout`. Only cancellation of the
+     * evaluation itself bypasses this.
+     *
      * Defaults to [RetryDecision.defaultBackoff]: a schema mismatch retries immediately, any
      * other error backs off 1s then 4s, failing after three attempts. Override for a backend
      * where a retry is expensive or slow, or one that wants a different schedule.

@@ -14,6 +14,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
 internal class SampleError : Exception("boom")
@@ -155,3 +157,13 @@ internal fun testManager(
     privacyManager: PrivacyManager = testPrivacyManager(),
     evaluator: Evaluator = testEvaluator()
 ): DefaultAirshipAi = DefaultAirshipAi(privacyManager = privacyManager, evaluator = evaluator)
+
+/**
+ * Produces a real `TimeoutCancellationException`, which has no public constructor — the only
+ * way to get one is to let `withTimeout` expire.
+ */
+internal object TimeoutCancellationExceptionFactory {
+    fun create(): Throwable = runBlocking {
+        runCatching { withTimeout(1) { delay(Duration.INFINITE) } }.exceptionOrNull()!!
+    }
+}
