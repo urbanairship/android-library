@@ -14,8 +14,11 @@ public interface AirshipAI {
     /**
      * Registers the context provider for a usage.
      *
+     * Pass the constant the feature exposes; apps don't declare usages. The subject type on
+     * [Usage] binds the provider's parameter type, so a mismatched provider is a compile error.
+     *
      * ```
-     * val usage = Usage<MyMessage>("my_feature")
+     * // `usage` is the constant the feature module exposes, e.g. for message suppression.
      * Airship.ai.setContextProvider(usage) { message ->
      *     EvaluationContext(listOf(EvaluationContext.Item("Last booked: ${store.lastBooking}")))
      * }
@@ -57,7 +60,7 @@ public interface AirshipAI {
      *
      * ```
      * Airship.ai.setModelResolver { usage ->
-     *     if (usage == myUsage) ModelSelector.Custom(myModel)
+     *     if (usage == SomeFeature.usage) ModelSelector.Custom(myModel)
      *     else ModelSelector.DefaultModel
      * }
      * ```

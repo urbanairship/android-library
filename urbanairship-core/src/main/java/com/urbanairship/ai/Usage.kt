@@ -4,9 +4,17 @@ package com.urbanairship.ai
 /**
  * Identifies an AI use case — one key per evaluable feature.
  *
+ * Apps don't declare these. Each SDK feature that runs evaluations exposes its own typed
+ * constant, which is what you pass to [AirshipAI.setContextProvider] and compare against in a
+ * [ModelResolver].
+ *
  * [Subject] is the feature-specific data a provider receives, so registering a provider for the
- * wrong usage is a compile error. Equality is by [rawValue] alone, so an [ModelResolver] can
- * compare the `Usage<*>` it is handed against a feature's key.
+ * wrong usage is a compile error.
+ *
+ * [rawValue] alone is the identity: providers are keyed by it, and because the SDK owns every
+ * constant there is exactly one [Subject] per key. That is also what lets a `Usage<*>` — the
+ * erased form handed to a [ModelResolver] or carried on an [EvaluationRecord] — be compared
+ * against a feature's typed constant with `==`.
  *
  * @param rawValue The usage key.
  */
