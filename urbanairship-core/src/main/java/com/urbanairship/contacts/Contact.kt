@@ -50,6 +50,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Airship contact. A contact is distinct from a channel and represents a "user"
@@ -566,9 +567,8 @@ public class Contact internal constructor(
                 null
             }
         }.filterNotNull()
-            // The combine re-fires on every contact ID update, far more often than the data
-            // changes. Keyed on the contact ID too, so a switch between two contacts that hold
-            // identical data still emits.
+            // The combine re-fires far more often than the data changes. Keyed on the contact
+            // ID too, so a switch between contacts holding identical data still emits.
             .distinctUntilChanged()
             .map { (_, data) -> data }
 
@@ -608,12 +608,18 @@ public class Contact internal constructor(
      *
      * An empty set indicates that this contact is not subscribed to any lists.
      *
+     * Results in `null` if the contact has not resolved within [FETCH_TIMEOUT].
+     *
      * @return A [PendingResult] of the current set of subscription lists.
      */
     public fun fetchSubscriptionListsPendingResult(): PendingResult<Map<String, Set<Scope>>?> {
         val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
         subscriptionsScope.launch {
-            pendingResult.setResult(fetchSubscriptionLists().getOrNull())
+            val result = withTimeoutOrNull(FETCH_TIMEOUT) { fetchSubscriptionLists().getOrNull() }
+            if (result == null) {
+                UALog.w { "Timed out fetching subscription lists." }
+            }
+            pendingResult.setResult(result)
         }
         return pendingResult
     }
@@ -622,7 +628,8 @@ public class Contact internal constructor(
      * Returns the contact channels for the current contact.
      *
      * Suspends until channels for the current contact are available rather than returning a
-     * previous contact's. Callers that cannot wait indefinitely should use a timeout.
+     * previous contact's. Apply a timeout if you cannot wait indefinitely -
+     * [fetchContactChannelsPendingResult] applies a default one.
      *
      * @return A [Result] of the current contact channels.
      */
@@ -634,12 +641,18 @@ public class Contact internal constructor(
     /**
      * Returns the contact channels for the current contact.
      *
+     * Results in `null` if the contact has not resolved within [FETCH_TIMEOUT].
+     *
      * @return A [PendingResult] of the current contact channels.
      */
     public fun fetchContactChannelsPendingResult(): PendingResult<List<ContactChannel>?> {
         val pendingResult = PendingResult<List<ContactChannel>?>()
         subscriptionsScope.launch {
-            pendingResult.setResult(fetchContactChannels().getOrNull())
+            val result = withTimeoutOrNull(FETCH_TIMEOUT) { fetchContactChannels().getOrNull() }
+            if (result == null) {
+                UALog.w { "Timed out fetching contact channels." }
+            }
+            pendingResult.setResult(result)
         }
         return pendingResult
     }
@@ -667,6 +680,9 @@ public class Contact internal constructor(
 
         /** Default CRA max age. */
         private val CRA_MAX_AGE = TimeUnit.MINUTES.toMillis(10)
+
+        /** How long the PendingResult fetches wait for the contact to resolve. */
+        private val FETCH_TIMEOUT = TimeUnit.SECONDS.toMillis(30)
 
         private const val CONTACT_UPDATE_PUSH_KEY = "com.urbanairship.contact.update"
 

@@ -28,6 +28,7 @@ import com.urbanairship.util.TaskSleeper
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -54,6 +55,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -1297,4 +1299,44 @@ public class ContactTest {
         }
     }
 
+
+    @Test
+    public fun testFetchContactChannelsPendingResultTimesOut(): TestResult = runTest {
+        contactIdUpdates.value = ContactIdUpdate("contact y", "Y", true, 1)
+
+        // No provider data, so the read has nothing to resolve against.
+        val pendingResult = contact.fetchContactChannelsPendingResult()
+        advanceTimeBy(31.seconds)
+        runCurrent()
+
+        assertTrue(pendingResult.isDone)
+        assertNull(pendingResult.getResult())
+    }
+
+    @Test
+    public fun testFetchContactChannelsPendingResultReturnsChannels(): TestResult = runTest {
+        contactIdUpdates.value = ContactIdUpdate("contact y", "Y", true, 1)
+
+        val pendingResult = contact.fetchContactChannelsPendingResult()
+        runCurrent()
+
+        val forY = channelsResult("contact y", "y@example.com")
+        contactChannelFlow.emit(forY)
+        runCurrent()
+
+        assertEquals(forY.data.getOrThrow(), pendingResult.getResult())
+    }
+
+    @Test
+    public fun testFetchSubscriptionListsPendingResultTimesOut(): TestResult = runTest {
+        val contact = buildContact(subscriptionsProvider = mockSubscriptionsProvider)
+        contactIdUpdates.value = ContactIdUpdate("contact y", "Y", true, 1)
+
+        val pendingResult = contact.fetchSubscriptionListsPendingResult()
+        advanceTimeBy(31.seconds)
+        runCurrent()
+
+        assertTrue(pendingResult.isDone)
+        assertNull(pendingResult.getResult())
+    }
 }

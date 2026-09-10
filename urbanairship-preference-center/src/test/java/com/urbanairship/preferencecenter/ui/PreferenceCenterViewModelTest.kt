@@ -51,6 +51,7 @@ import io.mockk.verifyOrder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -61,6 +62,7 @@ import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
@@ -1281,6 +1283,34 @@ public class PreferenceCenterViewModelTest {
             contact.channelContacts
         }
         confirmVerified(contact, channel)
+    }
+
+
+    @Test
+    public fun showsErrorWhenContactDataNeverArrives(): TestResult = runTest {
+        val config = spyk(CHANNEL_SUBSCRIPTION_CONFIG)
+        every { config.hasChannelSubscriptions } returns true
+        every { config.hasContactSubscriptions } returns true
+        every { config.hasContactManagement } returns true
+
+        // Contact never resolves, so the contact channels flow never emits.
+        val neverEmits = MutableSharedFlow<Result<List<ContactChannel>>>()
+
+        viewModel(
+            config = config,
+            mockContact = { every { channelContacts } returns neverEmits },
+            dispatcher = testDispatcher
+        ).run {
+            states.test {
+                handle(Action.Refresh)
+                assertThat(awaitItem()).isEqualTo(State.Loading)
+
+                advanceTimeBy(31.seconds)
+
+                assertThat(awaitItem()).isInstanceOf(State.Error::class.java)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
     }
 
     private fun TestScope.viewModel(

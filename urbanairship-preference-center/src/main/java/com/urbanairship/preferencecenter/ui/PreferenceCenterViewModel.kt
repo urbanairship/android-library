@@ -42,6 +42,8 @@ import com.urbanairship.preferencecenter.ui.item.ContactSubscriptionItem
 import com.urbanairship.preferencecenter.ui.item.PrefCenterItem
 import com.urbanairship.preferencecenter.ui.item.SectionBreakItem
 import com.urbanairship.preferencecenter.ui.item.SectionItem
+import com.urbanairship.preferencecenter.util.CONTACT_DATA_TIMEOUT
+import com.urbanairship.preferencecenter.util.airshipFailIfSlowToStart
 import com.urbanairship.preferencecenter.util.airshipScanConcat
 import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
 import kotlin.time.Duration.Companion.seconds
@@ -554,13 +556,22 @@ internal class PreferenceCenterViewModel(
         return subscriptionsResult.getOrNull() ?: emptySet()
     }
 
-    private fun getContactSubscriptions(): Flow<Result<Map<String, Set<Scope>>>> = contact.subscriptions
+    private fun getContactSubscriptions(): Flow<Result<Map<String, Set<Scope>>>> =
+        contact.subscriptions.airshipFailIfSlowToStart(
+            timeout = CONTACT_DATA_TIMEOUT,
+            message = "Timed out waiting for contact subscriptions."
+        )
 
     private fun getContactSubscriptionsAsMap(subscriptionsResult: Result<Map<String, Set<Scope>>>): Map<String, Set<Scope>> {
         return subscriptionsResult.getOrNull() ?: emptyMap()
     }
 
-    private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = contact.channelContacts.mapNotNull {
+    private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = contact.channelContacts
+        .airshipFailIfSlowToStart(
+            timeout = CONTACT_DATA_TIMEOUT,
+            message = "Timed out waiting for contact channels."
+        )
+        .mapNotNull {
         it.getOrThrow().toSet()
     }
 
