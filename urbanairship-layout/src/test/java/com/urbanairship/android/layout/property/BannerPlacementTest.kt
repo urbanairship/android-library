@@ -32,8 +32,8 @@ public class BannerPlacementTest {
                 "vertical": "top"
               },
               "transition": {
-                "in": { "type": "slide", "duration_seconds": 0.25 },
-                "out": { "type": "slide", "duration_seconds": 0.5 }
+                "in": { "type": "slide", "duration_milliseconds": 250 },
+                "out": { "type": "slide", "duration_milliseconds": 500 }
               },
               "swipe_to_dismiss": true,
               "shadow": {
@@ -81,8 +81,8 @@ public class BannerPlacementTest {
             """
             "position": { "horizontal": "center", "vertical": "bottom" },
             "transition": {
-              "in": { "type": "fade", "duration_seconds": 0.4 },
-              "out": { "type": "fade", "duration_seconds": 0.2 }
+              "in": { "type": "fade", "duration_milliseconds": 400 },
+              "out": { "type": "fade", "duration_milliseconds": 200 }
             }
             """
         ))

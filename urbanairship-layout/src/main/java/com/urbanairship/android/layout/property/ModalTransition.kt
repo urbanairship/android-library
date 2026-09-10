@@ -6,7 +6,7 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * What a modal draws for one direction of its transition. An effect only ever plays its own
@@ -27,7 +27,7 @@ public sealed class ModalTransitionEffect(
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            DURATION to duration?.inWholeMilliseconds?.div(1000.0)
+            DURATION to duration?.inWholeMilliseconds
         ).toJsonValue()
     }
 
@@ -39,7 +39,7 @@ public sealed class ModalTransitionEffect(
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            DURATION to duration?.inWholeMilliseconds?.div(1000.0),
+            DURATION to duration?.inWholeMilliseconds,
             EDGE to edge
         ).toJsonValue()
     }
@@ -52,7 +52,7 @@ public sealed class ModalTransitionEffect(
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            DURATION to duration?.inWholeMilliseconds?.div(1000.0),
+            DURATION to duration?.inWholeMilliseconds,
             CORNER to corner
         ).toJsonValue()
     }
@@ -78,14 +78,14 @@ public sealed class ModalTransitionEffect(
 
     public companion object {
         private const val TYPE = "type"
-        private const val DURATION = "duration_seconds"
+        private const val DURATION = "duration_milliseconds"
         private const val EDGE = "edge"
         private const val CORNER = "corner"
 
         @Throws(JsonException::class)
         public fun fromJson(value: JsonValue): ModalTransitionEffect {
             val content = value.requireMap()
-            val duration = content[DURATION]?.getDouble(0.0)?.seconds
+            val duration = content[DURATION]?.getDouble(0.0)?.milliseconds
 
             return when (Type.fromJson(content.require(TYPE))) {
                 Type.FADE -> Fade(duration = duration)

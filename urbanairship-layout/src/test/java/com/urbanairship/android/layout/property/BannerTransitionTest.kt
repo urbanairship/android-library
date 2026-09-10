@@ -15,8 +15,8 @@ public class BannerTransitionTest {
     @Test
     public fun testFade() {
         val json = """
-            { "in": { "type": "fade", "duration_seconds": 0.3 },
-              "out": { "type": "fade", "duration_seconds": 0.3 } }
+            { "in": { "type": "fade", "duration_milliseconds": 300 },
+              "out": { "type": "fade", "duration_milliseconds": 300 } }
         """.trimIndent()
 
         val transition = BannerTransition.fromJson(JsonValue.parseString(json))

@@ -15,8 +15,8 @@ public class ModalTransitionTest {
     @Test
     public fun testFade() {
         val json = """
-            { "in": { "type": "fade", "duration_seconds": 0.2 },
-              "out": { "type": "fade", "duration_seconds": 0.3 } }
+            { "in": { "type": "fade", "duration_milliseconds": 200 },
+              "out": { "type": "fade", "duration_milliseconds": 300 } }
         """.trimIndent()
 
         val transition = ModalTransition.fromJson(JsonValue.parseString(json))

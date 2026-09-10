@@ -6,7 +6,7 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * What a banner draws for one direction of its transition. Same pattern as [ModalTransitionEffect],
@@ -25,7 +25,7 @@ public sealed class BannerTransitionEffect(
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            DURATION to duration?.inWholeMilliseconds?.div(1000.0)
+            DURATION to duration?.inWholeMilliseconds
         ).toJsonValue()
     }
 
@@ -35,7 +35,7 @@ public sealed class BannerTransitionEffect(
 
         override fun toJsonValue(): JsonValue = jsonMapOf(
             TYPE to type,
-            DURATION to duration?.inWholeMilliseconds?.div(1000.0)
+            DURATION to duration?.inWholeMilliseconds
         ).toJsonValue()
     }
 
@@ -59,12 +59,12 @@ public sealed class BannerTransitionEffect(
 
     public companion object {
         private const val TYPE = "type"
-        private const val DURATION = "duration_seconds"
+        private const val DURATION = "duration_milliseconds"
 
         @Throws(JsonException::class)
         public fun fromJson(value: JsonValue): BannerTransitionEffect {
             val content = value.requireMap()
-            val duration = content[DURATION]?.getDouble(0.0)?.seconds
+            val duration = content[DURATION]?.getDouble(0.0)?.milliseconds
 
             return when (Type.fromJson(content.require(TYPE))) {
                 Type.FADE -> Fade(duration = duration)
