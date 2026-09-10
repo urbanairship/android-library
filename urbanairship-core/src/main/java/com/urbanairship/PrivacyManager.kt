@@ -487,7 +487,7 @@ public class PrivacyManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
              */
             @JvmField
             public val ALL: Feature = IN_APP_AUTOMATION or ANALYTICS or MESSAGE_CENTER or
-                PUSH or ANALYTICS or TAGS_AND_ATTRIBUTES or CONTACTS or FEATURE_FLAGS or
+                PUSH or TAGS_AND_ATTRIBUTES or CONTACTS or FEATURE_FLAGS or
                 ON_DEVICE_AI
 
             private val nameMap = mapOf(

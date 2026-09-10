@@ -197,9 +197,12 @@ internal class Evaluator(
             val error = try {
                 return operation()
             } catch (e: CancellationException) {
-                // Cancellation (e.g. the timeout firing) is terminal — propagate it rather
-                // than burning a retry on it.
-                throw e
+                // Our ceiling, or a cancelled caller, cancels this coroutine — propagate that.
+                // A backend running its own withTimeout inside respond leaves us active, and
+                // kotlinx reports that as a CancellationException too; it is an ordinary failed
+                // attempt, and rethrowing would deny such a backend any retry at all.
+                currentCoroutineContext().ensureActive()
+                e
             } catch (e: Exception) {
                 e
             }
