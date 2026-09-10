@@ -36,7 +36,7 @@ public interface AirshipAi {
      */
     public fun <Subject> setContextProvider(
         usage: Usage<Subject>,
-        provider: ContextProvider<Subject>?
+        provider: EvaluationContextProvider<Subject>?
     )
 
     /**
@@ -46,7 +46,7 @@ public interface AirshipAi {
      *
      * @param provider The provider, or `null` to clear it.
      */
-    public fun setDefaultContextProvider(provider: DefaultContextProvider?)
+    public fun setDefaultContextProvider(provider: DefaultEvaluationContextProvider?)
 
     /**
      * Registers an observer called once per evaluation, whatever the outcome — including

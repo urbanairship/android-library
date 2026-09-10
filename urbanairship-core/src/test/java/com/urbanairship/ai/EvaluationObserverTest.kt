@@ -49,8 +49,8 @@ public class EvaluationObserverTest {
     public fun testUnavailableModelReports(): Unit = runTest {
         evaluate(
             MockModel(
-                availability = Availability.Unavailable(
-                    Availability.Reason.MissingModel
+                availability = ModelAvailability.Unavailable(
+                    ModelAvailability.Reason.MissingModel
                 )
             )
         )

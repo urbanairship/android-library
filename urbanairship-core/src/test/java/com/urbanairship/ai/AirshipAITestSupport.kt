@@ -64,12 +64,12 @@ internal class ContextRequiredEvaluation : TestEvaluation() {
  * attempts have failed. Set [retryDecision] to `null` to exercise the framework default instead.
  */
 internal class MockModel(
-    availability: Availability = Availability.Available,
+    availability: ModelAvailability = ModelAvailability.Available,
     response: () -> JsonValue = { allowResponse() },
     var maxAttempts: Int = 1
 ) : ModelAdapter {
 
-    var availabilityValue: Availability = availability
+    var availabilityValue: ModelAvailability = availability
     var responses: MutableList<() -> JsonValue> = mutableListOf(response)
     var respondDelay: Duration = Duration.ZERO
     var retryDelay: Duration = Duration.ZERO
@@ -87,7 +87,7 @@ internal class MockModel(
 
     val retryErrors: MutableList<Throwable> = mutableListOf()
 
-    override val availability: Availability
+    override val availability: ModelAvailability
         get() = availabilityValue
 
     override fun retryDecision(
@@ -116,7 +116,7 @@ internal class MockModel(
 /** Context provider returning a fixed set of items. */
 internal fun itemsProvider(
     vararg items: EvaluationContext.Item
-): ContextProvider<Unit> = ContextProvider { EvaluationContext(items.toList()) }
+): EvaluationContextProvider<Unit> = EvaluationContextProvider { EvaluationContext(items.toList()) }
 
 /** Collects the records handed to an observer. */
 internal class RecordingObserver : EvaluationObserver {

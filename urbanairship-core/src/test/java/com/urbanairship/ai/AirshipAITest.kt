@@ -158,8 +158,8 @@ public class AirshipAiTest {
     @Test
     public fun testSkippedWhenModelUnavailable(): Unit = runTest {
         val model = MockModel(
-            availability = Availability.Unavailable(
-                Availability.Reason.DeviceNotEligible
+            availability = ModelAvailability.Unavailable(
+                ModelAvailability.Reason.DeviceNotEligible
             )
         )
 
@@ -513,7 +513,7 @@ public class AirshipAiTest {
     @Test
     public fun testThrowingAvailabilityGetterIsTreatedAsUnavailable(): Unit = runTest {
         val model = object : ModelAdapter {
-            override val availability: Availability get() = throw SampleError()
+            override val availability: ModelAvailability get() = throw SampleError()
             override suspend fun respond(request: ModelRequest) = allowResponse()
         }
 
@@ -633,8 +633,8 @@ public class AirshipAiTest {
         val manager = testManager(testPrivacyManager(PrivacyManager.Feature.ON_DEVICE_AI))
         manager.registerModelFactory { MockModel() }
 
-        assertEquals(Availability.Available, manager.model(testUsage)?.availability)
-        assertEquals(Availability.Available, manager.defaultModel?.availability)
+        assertEquals(ModelAvailability.Available, manager.model(testUsage)?.availability)
+        assertEquals(ModelAvailability.Available, manager.defaultModel?.availability)
     }
 
     @Test
@@ -646,7 +646,7 @@ public class AirshipAiTest {
         // NotEnabled — so a caller holding onto it sees the gate reflected in its
         // availability rather than losing the reference outright.
         assertEquals(
-            Availability.Unavailable(Availability.Reason.NotEnabled),
+            ModelAvailability.Unavailable(ModelAvailability.Reason.NotEnabled),
             manager.gatedModel(testUsage)?.availability
         )
     }
@@ -660,16 +660,16 @@ public class AirshipAiTest {
         // A single resolved reference, held across the toggle — mirrors a caller that
         // resolves once and caches the result.
         val resolved = manager.gatedModel(testUsage)
-        assertEquals(Availability.Available, resolved?.availability)
+        assertEquals(ModelAvailability.Available, resolved?.availability)
 
         privacyManager.disable(PrivacyManager.Feature.ON_DEVICE_AI)
         assertEquals(
-            Availability.Unavailable(Availability.Reason.NotEnabled),
+            ModelAvailability.Unavailable(ModelAvailability.Reason.NotEnabled),
             resolved?.availability
         )
 
         privacyManager.enable(PrivacyManager.Feature.ON_DEVICE_AI)
-        assertEquals(Availability.Available, resolved?.availability)
+        assertEquals(ModelAvailability.Available, resolved?.availability)
     }
 
     @Test
@@ -681,16 +681,16 @@ public class AirshipAiTest {
         val resolved = requireNotNull(manager.gatedModel(testUsage))
 
         resolved.availabilityUpdates.test {
-            assertEquals(Availability.Available, awaitItem())
+            assertEquals(ModelAvailability.Available, awaitItem())
 
             privacyManager.disable(PrivacyManager.Feature.ON_DEVICE_AI)
             assertEquals(
-                Availability.Unavailable(Availability.Reason.NotEnabled),
+                ModelAvailability.Unavailable(ModelAvailability.Reason.NotEnabled),
                 awaitItem()
             )
 
             privacyManager.enable(PrivacyManager.Feature.ON_DEVICE_AI)
-            assertEquals(Availability.Available, awaitItem())
+            assertEquals(ModelAvailability.Available, awaitItem())
 
             cancelAndIgnoreRemainingEvents()
         }

@@ -22,7 +22,7 @@ internal class ProviderRegistry {
 
     fun <Subject> setContextProvider(
         usage: Usage<Subject>,
-        provider: ContextProvider<Subject>?
+        provider: EvaluationContextProvider<Subject>?
     ) {
         if (provider == null) {
             providers.remove(usage.rawValue)
@@ -34,7 +34,7 @@ internal class ProviderRegistry {
         }
     }
 
-    fun setDefaultContextProvider(provider: DefaultContextProvider?) {
+    fun setDefaultContextProvider(provider: DefaultEvaluationContextProvider?) {
         defaultProvider = provider?.let { fallback -> AnyProvider { fallback.provideContext() } }
     }
 

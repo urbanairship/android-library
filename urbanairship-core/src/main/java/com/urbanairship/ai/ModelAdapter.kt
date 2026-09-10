@@ -20,11 +20,11 @@ public interface ModelAdapter {
      * Whether the model can be used right now, and if not, why.
      *
      * Read fresh before each evaluation, which is skipped when this is
-     * [Availability.Unavailable]. Override only for a backend that can genuinely be
+     * [ModelAvailability.Unavailable]. Override only for a backend that can genuinely be
      * unusable; otherwise let a failure surface from [respond].
      */
-    public val availability: Availability
-        get() = Availability.Available
+    public val availability: ModelAvailability
+        get() = ModelAvailability.Available
 
     /**
      * Emits whenever [availability] changes.
@@ -33,7 +33,7 @@ public interface ModelAdapter {
      * availability never changes. Treat emissions as change notifications and read
      * [availability] for the value right now.
      */
-    public val availabilityUpdates: Flow<Availability>
+    public val availabilityUpdates: Flow<ModelAvailability>
         get() = flowOf(availability)
 
     /**
@@ -72,10 +72,10 @@ public interface ModelAdapter {
 }
 
 /** Whether a resolved model can be used right now. */
-public sealed class Availability {
+public sealed class ModelAvailability {
 
     /** The model can be used. */
-    public data object Available : Availability()
+    public data object Available : ModelAvailability()
 
     /**
      * The model can't be used.
@@ -84,7 +84,7 @@ public sealed class Availability {
      */
     public data class Unavailable public constructor(
         public val reason: Reason
-    ) : Availability()
+    ) : ModelAvailability()
 
     /** Why a model can't be used — outcomes an app can act on, not backend internals. */
     public sealed class Reason {

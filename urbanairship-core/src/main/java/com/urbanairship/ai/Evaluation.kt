@@ -10,7 +10,7 @@ import com.urbanairship.json.JsonValue
  * A typed request a feature module submits to the resolved model.
  *
  * [Output] is parsed from the model's JSON response; [Subject] is passed to the registered
- * [ContextProvider] at evaluation time.
+ * [EvaluationContextProvider] at evaluation time.
  *
  * @hide
  */
@@ -20,7 +20,7 @@ public interface Evaluation<Output, Subject> {
     /** Which AI usage this belongs to, binding the subject type the provider receives. */
     public val usage: Usage<Subject>
 
-    /** The subject passed to the registered [ContextProvider]. */
+    /** The subject passed to the registered [EvaluationContextProvider]. */
     public val subject: Subject
 
     /** The output contract. Payload-driven features parse this from the payload. */

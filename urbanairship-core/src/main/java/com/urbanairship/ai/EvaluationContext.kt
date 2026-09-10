@@ -75,7 +75,7 @@ public data class EvaluationContext @JvmOverloads public constructor(
  * Called immediately before each evaluation, on the path to displaying the feature, so keep the
  * work light. The SDK holds the provider until it is replaced or cleared.
  */
-public fun interface ContextProvider<Subject> {
+public fun interface EvaluationContextProvider<Subject> {
 
     /**
      * Returns the context for an evaluation.
@@ -88,7 +88,7 @@ public fun interface ContextProvider<Subject> {
 }
 
 /** Supplies context for usages with no provider of their own, e.g. general profile data. */
-public fun interface DefaultContextProvider {
+public fun interface DefaultEvaluationContextProvider {
 
     /**
      * Returns the context for an evaluation.

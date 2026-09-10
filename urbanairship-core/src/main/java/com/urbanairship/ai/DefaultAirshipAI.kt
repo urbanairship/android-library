@@ -52,12 +52,12 @@ internal class DefaultAirshipAi(
 
     override fun <Subject> setContextProvider(
         usage: Usage<Subject>,
-        provider: ContextProvider<Subject>?
+        provider: EvaluationContextProvider<Subject>?
     ) {
         providerRegistry.setContextProvider(usage, provider)
     }
 
-    override fun setDefaultContextProvider(provider: DefaultContextProvider?) {
+    override fun setDefaultContextProvider(provider: DefaultEvaluationContextProvider?) {
         providerRegistry.setDefaultContextProvider(provider)
     }
 
@@ -158,17 +158,17 @@ private class PrivacyGatedModel(
     private val privacyManager: PrivacyManager
 ) : ModelAdapter {
 
-    private fun gate(availability: Availability): Availability =
+    private fun gate(availability: ModelAvailability): ModelAvailability =
         if (privacyManager.isEnabled(PrivacyManager.Feature.ON_DEVICE_AI)) {
             availability
         } else {
-            Availability.Unavailable(Availability.Reason.NotEnabled)
+            ModelAvailability.Unavailable(ModelAvailability.Reason.NotEnabled)
         }
 
-    override val availability: Availability
+    override val availability: ModelAvailability
         get() = gate(wrapped.availability)
 
-    override val availabilityUpdates: Flow<Availability>
+    override val availabilityUpdates: Flow<ModelAvailability>
         get() = merge(
             wrapped.availabilityUpdates.map(::gate),
             // Only a change signal — the wrapped model's availability is re-read, not carried.

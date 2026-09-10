@@ -52,10 +52,10 @@ internal class Evaluator(
         } catch (e: Exception) {
             // App-implemented getter; a throw here means "can't use it", not "crash the caller".
             UALog.w(e) { "AI model availability threw for ${usage.rawValue}" }
-            Availability.Unavailable(Availability.Reason.Other(e.toString()))
+            ModelAvailability.Unavailable(ModelAvailability.Reason.Other(e.toString()))
         }
 
-        if (availability != Availability.Available) {
+        if (availability != ModelAvailability.Available) {
             // A model that never runs is the common outcome in the field, and the one an
             // observer most needs to see, so it is reported like any other.
             report(
