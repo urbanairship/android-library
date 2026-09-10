@@ -1121,8 +1121,8 @@ public final class com/urbanairship/activity/ThemedActivity$Companion {
 }
 
 public abstract interface class com/urbanairship/ai/AirshipAi {
-	public abstract fun getDefaultModel ()Lcom/urbanairship/ai/Model;
-	public abstract fun model (Lcom/urbanairship/ai/Usage;)Lcom/urbanairship/ai/Model;
+	public abstract fun getDefaultModel ()Lcom/urbanairship/ai/ModelInterface;
+	public abstract fun model (Lcom/urbanairship/ai/Usage;)Lcom/urbanairship/ai/ModelInterface;
 	public abstract fun setContextProvider (Lcom/urbanairship/ai/Usage;Lcom/urbanairship/ai/ContextProvider;)V
 	public abstract fun setDefaultContextProvider (Lcom/urbanairship/ai/DefaultContextProvider;)V
 	public abstract fun setEvaluationObserver (Lcom/urbanairship/ai/EvaluationObserver;)V
@@ -1278,17 +1278,17 @@ public final class com/urbanairship/ai/EvaluationRecord$Outcome$Skipped : com/ur
 	public fun toString ()Ljava/lang/String;
 }
 
-public abstract interface class com/urbanairship/ai/Model {
+public abstract interface class com/urbanairship/ai/ModelInterface {
 	public fun getAvailability ()Lcom/urbanairship/ai/Availability;
 	public fun getAvailabilityUpdates ()Lkotlinx/coroutines/flow/Flow;
 	public abstract fun respond (Lcom/urbanairship/ai/ModelRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun retryDecision (Lcom/urbanairship/ai/Usage;Ljava/lang/Throwable;I)Lcom/urbanairship/ai/RetryDecision;
 }
 
-public final class com/urbanairship/ai/Model$DefaultImpls {
-	public static fun getAvailability (Lcom/urbanairship/ai/Model;)Lcom/urbanairship/ai/Availability;
-	public static fun getAvailabilityUpdates (Lcom/urbanairship/ai/Model;)Lkotlinx/coroutines/flow/Flow;
-	public static fun retryDecision (Lcom/urbanairship/ai/Model;Lcom/urbanairship/ai/Usage;Ljava/lang/Throwable;I)Lcom/urbanairship/ai/RetryDecision;
+public final class com/urbanairship/ai/ModelInterface$DefaultImpls {
+	public static fun getAvailability (Lcom/urbanairship/ai/ModelInterface;)Lcom/urbanairship/ai/Availability;
+	public static fun getAvailabilityUpdates (Lcom/urbanairship/ai/ModelInterface;)Lkotlinx/coroutines/flow/Flow;
+	public static fun retryDecision (Lcom/urbanairship/ai/ModelInterface;Lcom/urbanairship/ai/Usage;Ljava/lang/Throwable;I)Lcom/urbanairship/ai/RetryDecision;
 }
 
 public final class com/urbanairship/ai/ModelRequest {
@@ -1308,8 +1308,8 @@ public abstract class com/urbanairship/ai/ModelSelector {
 }
 
 public final class com/urbanairship/ai/ModelSelector$Custom : com/urbanairship/ai/ModelSelector {
-	public fun <init> (Lcom/urbanairship/ai/Model;)V
-	public final fun getModel ()Lcom/urbanairship/ai/Model;
+	public fun <init> (Lcom/urbanairship/ai/ModelInterface;)V
+	public final fun getModel ()Lcom/urbanairship/ai/ModelInterface;
 }
 
 public final class com/urbanairship/ai/ModelSelector$DefaultModel : com/urbanairship/ai/ModelSelector {

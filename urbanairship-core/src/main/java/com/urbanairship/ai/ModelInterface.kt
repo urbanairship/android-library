@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.flowOf
  *
  * Implementing this needs Kotlin — [respond] is a suspend function.
  */
-public interface Model {
+public interface ModelInterface {
 
     /**
      * Whether the model can be used right now, and if not, why.
@@ -107,11 +107,11 @@ public sealed class Availability {
 }
 
 /**
- * A single request handed to an [Model]: instructions, output schema, and prioritized context.
+ * A single request handed to an [ModelInterface]: instructions, output schema, and prioritized context.
  *
  * The originating evaluation owns how context is labeled and laid out — a model only renders it
  * via [prompt] and, if its input window is tight, trims. The framework builds one per evaluation
- * and hands it to [Model.respond]; the constructor is public only so an app can build one to
+ * and hands it to [ModelInterface.respond]; the constructor is public only so an app can build one to
  * unit-test its own [EvaluationObserver].
  */
 public class ModelRequest public constructor(
@@ -167,7 +167,7 @@ public sealed class ModelSelector {
      *
      * @param model The model.
      */
-    public class Custom public constructor(public val model: Model) : ModelSelector()
+    public class Custom public constructor(public val model: ModelInterface) : ModelSelector()
 }
 
 /** Routes a usage to a model backend. */

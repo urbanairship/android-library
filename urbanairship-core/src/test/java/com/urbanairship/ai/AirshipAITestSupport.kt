@@ -67,7 +67,7 @@ internal class MockModel(
     availability: Availability = Availability.Available,
     response: () -> JsonValue = { allowResponse() },
     var maxAttempts: Int = 1
-) : Model {
+) : ModelInterface {
 
     var availabilityValue: Availability = availability
     var responses: MutableList<() -> JsonValue> = mutableListOf(response)

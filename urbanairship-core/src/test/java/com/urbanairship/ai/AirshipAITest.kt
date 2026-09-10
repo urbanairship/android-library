@@ -134,7 +134,7 @@ public class AirshipAiTest {
     // MARK: evaluator
 
     private suspend fun eval(
-        model: Model,
+        model: ModelInterface,
         context: EvaluationContext = EvaluationContext.EMPTY,
         evaluation: TestEvaluation = TestEvaluation(),
         maxResponseTimeout: Duration = Evaluator.DEFAULT_MAX_RESPONSE_TIMEOUT
@@ -452,7 +452,7 @@ public class AirshipAiTest {
         // forever, so the retry path yields when the delay is zero. Real time and a real
         // single-threaded dispatcher, since a virtual clock only advances on a delay.
         var attempts = 0
-        val model = object : Model {
+        val model = object : ModelInterface {
             override fun retryDecision(usage: Usage<*>, error: Throwable, attempt: Int) =
                 RetryDecision.Retry(Duration.ZERO)
 
@@ -512,7 +512,7 @@ public class AirshipAiTest {
 
     @Test
     public fun testThrowingAvailabilityGetterIsTreatedAsUnavailable(): Unit = runTest {
-        val model = object : Model {
+        val model = object : ModelInterface {
             override val availability: Availability get() = throw SampleError()
             override suspend fun respond(request: ModelRequest) = allowResponse()
         }

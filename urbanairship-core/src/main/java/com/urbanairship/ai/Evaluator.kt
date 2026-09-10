@@ -22,7 +22,7 @@ import kotlinx.coroutines.yield
  *
  * @param maxResponseTimeout A hard ceiling on an evaluation's total wall-clock time, including
  * every retry and the delays between them, independent of the schedule
- * [Model.retryDecision] picks. A backstop against a pathological hang, not a latency target.
+ * [ModelInterface.retryDecision] picks. A backstop against a pathological hang, not a latency target.
  * @param observerScope Where observer callbacks are dispatched.
  */
 internal class Evaluator(
@@ -33,7 +33,7 @@ internal class Evaluator(
 
     suspend fun <Output, Subject> evaluate(
         evaluation: Evaluation<Output, Subject>,
-        model: Model,
+        model: ModelInterface,
         context: EvaluationContext,
         observer: EvaluationObserver? = null
     ): EvaluationResult<Output> {
@@ -184,7 +184,7 @@ internal class Evaluator(
      * gets to do so.
      */
     private suspend fun <T> withRetry(
-        model: Model,
+        model: ModelInterface,
         usage: Usage<*>,
         operation: suspend () -> T
     ): T {
@@ -243,6 +243,6 @@ internal class Evaluator(
         /** Wall-clock ceiling on a whole evaluation, retries and their delays included. */
         val DEFAULT_MAX_RESPONSE_TIMEOUT: Duration = 120.seconds
 
-        private const val MODEL_UNAVAILABLE = "Model unavailable"
+        private const val MODEL_UNAVAILABLE = "ModelInterface unavailable"
     }
 }
