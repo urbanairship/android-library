@@ -2,10 +2,9 @@
 package com.urbanairship.ai
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.json.jsonMapOf
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import com.urbanairship.PrivacyManager
+import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonValue
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -20,17 +19,15 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 public class AirshipAIEvaluationObserverTest {
 
-    private val records = mutableListOf<AIEvaluationRecord>()
-    private val observer = AIEvaluationObserver { records.add(it) }
+    private val observer = RecordingObserver()
+    private val records get() = observer.records
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private suspend fun evaluate(
         model: AIModel,
         context: AIContext = AIContext.EMPTY,
         evaluation: TestEvaluation = TestEvaluation()
-    ): AIEvaluationResult<TestOutput> = AIEvaluator(
-        CoroutineScope(UnconfinedTestDispatcher())
-    ).evaluate(evaluation, model, context, observer)
+    ): AIEvaluationResult<TestOutput> =
+        testEvaluator().evaluate(evaluation, model, context, observer)
 
     @Test
     public fun testCompletedReportsRawOutput(): Unit = runTest {
@@ -59,9 +56,10 @@ public class AirshipAIEvaluationObserverTest {
         )
 
         assertEquals(1, records.size)
-        val outcome = records.first().outcome
-        assertTrue(outcome is AIEvaluationRecord.Outcome.Skipped)
-        assertEquals("Model unavailable", (outcome as AIEvaluationRecord.Outcome.Skipped).reason)
+        assertEquals(
+            AIEvaluationRecord.Outcome.Skipped("Model unavailable"),
+            records.first().outcome
+        )
         // Never reached the model, so nothing was attempted.
         assertEquals(0, records.first().attempts)
     }
@@ -80,8 +78,7 @@ public class AirshipAIEvaluationObserverTest {
         // The output passed schema validation, so it is reported as completed even though the
         // feature couldn't parse it — that's exactly when an app wants to see it.
         val evaluation = object : TestEvaluation() {
-            override fun parseOutput(json: com.urbanairship.json.JsonValue): TestOutput =
-                throw com.urbanairship.json.JsonException("nope")
+            override fun parseOutput(json: JsonValue): TestOutput = throw JsonException("nope")
         }
 
         val result = evaluate(MockAIModel(), evaluation = evaluation)
@@ -104,12 +101,79 @@ public class AirshipAIEvaluationObserverTest {
     }
 
     @Test
-    @OptIn(ExperimentalCoroutinesApi::class)
     public fun testNoObserverIsFine(): Unit = runTest {
-        val result = AIEvaluator(CoroutineScope(UnconfinedTestDispatcher()))
+        val result = testEvaluator()
             .evaluate(TestEvaluation(), MockAIModel(), AIContext.EMPTY, observer = null)
 
         assertTrue(result is AIEvaluationResult.Completed)
+    }
+
+    @Test
+    public fun testSchemaRetryIsReportedAsASingleRecord(): Unit = runTest {
+        val model = MockAIModel(maxAttempts = 3)
+        model.responses = mutableListOf({ offSchemaResponse() }, { allowResponse() })
+
+        evaluate(model)
+
+        assertEquals(1, records.size)
+        assertEquals(2, records.first().attempts)
+    }
+
+    @Test
+    public fun testObserverThatThrowsDoesNotReachTheCaller(): Unit = runTest {
+        // App code on an Airship pool thread; an uncaught throw would kill the process.
+        val thrower = AIEvaluationObserver { throw SampleError() }
+
+        val result = testEvaluator()
+            .evaluate(TestEvaluation(), MockAIModel(), AIContext.EMPTY, thrower)
+
+        assertTrue(result is AIEvaluationResult.Completed)
+    }
+
+    // MARK: skips the manager decides, before a model is consulted
+
+    @Test
+    public fun testNoModelConfiguredReports(): Unit = runTest {
+        // The most likely state during integration, and the one worth a signal.
+        val manager = testManager()
+        manager.setEvaluationObserver(observer)
+
+        manager.evaluate(TestEvaluation())
+
+        assertEquals(1, records.size)
+        assertEquals(
+            AIEvaluationRecord.Outcome.Skipped("No model configured"),
+            records.first().outcome
+        )
+        assertEquals(0, records.first().attempts)
+        assertEquals("rules", records.first().request.instructions)
+    }
+
+    @Test
+    public fun testMissingRequiredContextReports(): Unit = runTest {
+        val manager = testManager()
+        manager.registerModelFactory { MockAIModel() }
+        manager.setEvaluationObserver(observer)
+
+        manager.evaluate(ContextRequiredEvaluation())
+
+        assertEquals(1, records.size)
+        assertEquals(
+            AIEvaluationRecord.Outcome.Skipped("No context to personalize on"),
+            records.first().outcome
+        )
+    }
+
+    @Test
+    public fun testNothingReportsWhileAIDisabled(): Unit = runTest {
+        // The gate turns the feature off, observer included.
+        val manager = testManager(testPrivacyManager(PrivacyManager.Feature.NONE))
+        manager.registerModelFactory { MockAIModel() }
+        manager.setEvaluationObserver(observer)
+
+        manager.evaluate(TestEvaluation())
+
+        assertTrue(records.isEmpty())
     }
 
     @Test
@@ -121,6 +185,7 @@ public class AirshipAIEvaluationObserverTest {
         manager.evaluate(TestEvaluation())
 
         assertEquals(1, records.size)
+        assertTrue(records.first().outcome is AIEvaluationRecord.Outcome.Completed)
     }
 
     @Test
@@ -135,19 +200,5 @@ public class AirshipAIEvaluationObserverTest {
         manager.setEvaluationObserver(null)
         manager.evaluate(TestEvaluation())
         assertEquals(1, records.size)
-    }
-
-    @Test
-    public fun testSchemaRetryIsReportedAsASingleRecord(): Unit = runTest {
-        val model = MockAIModel(maxAttempts = 3)
-        model.responses = mutableListOf(
-            { jsonMapOf("unexpected_key" to "value").toJsonValue() },
-            { allowResponse() }
-        )
-
-        evaluate(model)
-
-        assertEquals(1, records.size)
-        assertEquals(2, records.first().attempts)
     }
 }

@@ -3,7 +3,6 @@ package com.urbanairship.ai
 
 import com.urbanairship.PrivacyManager
 import com.urbanairship.json.JsonValue
-import kotlin.time.Duration
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
@@ -14,7 +13,7 @@ import kotlinx.coroutines.flow.onStart
  * Default [InternalAirshipAI].
  *
  * Gated by [PrivacyManager.Feature.ON_DEVICE_AI] — disabled, evaluations and context fetches
- * behave as though no model were ever registered.
+ * behave as though no model were ever registered, and nothing is reported to the observer.
  */
 internal class DefaultAirshipAI(
     private val privacyManager: PrivacyManager,
@@ -26,8 +25,12 @@ internal class DefaultAirshipAI(
     @Volatile
     private var modelResolver: AIModelResolver? = null
 
+    /**
+     * Wrapped in `lazy` so the registered factory runs at most once — a factory that really
+     * builds a backend would otherwise allocate one per evaluation.
+     */
     @Volatile
-    private var defaultModelFactory: (() -> AIModel)? = null
+    private var builtInModel: Lazy<AIModel>? = null
 
     @Volatile
     private var evaluationObserver: AIEvaluationObserver? = null
@@ -36,7 +39,7 @@ internal class DefaultAirshipAI(
         get() = privacyManager.isEnabled(PrivacyManager.Feature.ON_DEVICE_AI)
 
     override val defaultModel: AIModel?
-        get() = if (enabled) defaultModelFactory?.invoke() else null
+        get() = if (enabled) builtInModel?.value else null
 
     override fun model(usage: AIUsage<*>): AIModel? =
         if (enabled) resolveModel(usage) else null
@@ -64,7 +67,7 @@ internal class DefaultAirshipAI(
     }
 
     override fun registerModelFactory(factory: () -> AIModel) {
-        defaultModelFactory = factory
+        builtInModel = lazy(factory)
     }
 
     override suspend fun <Subject> fetchContext(
@@ -81,16 +84,21 @@ internal class DefaultAirshipAI(
         evaluation: AIEvaluation<Output, Subject>,
         additionalContext: AIContext
     ): AIEvaluationResult<Output> {
+        // The privacy gate turns the whole feature off, observer included — an app that opted
+        // out doesn't need a record per evaluation telling it so.
         if (!enabled) {
-            return AIEvaluationResult.Skipped("AI disabled by privacy manager")
+            return AIEvaluationResult.Skipped(AI_DISABLED)
         }
-
-        val model = model(evaluation.usage)
-            ?: return AIEvaluationResult.Skipped("No model configured")
 
         // Snapshotted before the provider runs so one evaluation can't report to an observer
         // that was replaced mid-flight.
         val observer = evaluationObserver
+
+        val model = model(evaluation.usage)
+        if (model == null) {
+            evaluator.reportSkipped(evaluation, AIContext.EMPTY, NO_MODEL, observer)
+            return AIEvaluationResult.Skipped(NO_MODEL)
+        }
 
         // Provider context first, then the caller's additional context appended after (later
         // items win priority ties when the model trims to fit its window).
@@ -101,7 +109,8 @@ internal class DefaultAirshipAI(
         // With no context an opted-in evaluation would guess from the prompt alone, so skip
         // and let the caller fall back. Most evaluations opt out and run regardless.
         if (evaluation.requiresContext && merged.items.isEmpty()) {
-            return AIEvaluationResult.Skipped("No context to personalize on")
+            evaluator.reportSkipped(evaluation, merged, NO_CONTEXT, observer)
+            return AIEvaluationResult.Skipped(NO_CONTEXT)
         }
 
         return evaluator.evaluate(
@@ -115,9 +124,15 @@ internal class DefaultAirshipAI(
     private fun resolveModel(usage: AIUsage<*>): AIModel? {
         val selector = modelResolver?.resolve(usage) ?: AIModelSelector.DefaultModel
         return when (selector) {
-            AIModelSelector.DefaultModel -> defaultModelFactory?.invoke()
+            AIModelSelector.DefaultModel -> builtInModel?.value
             is AIModelSelector.Custom -> selector.model
         }
+    }
+
+    private companion object {
+        const val AI_DISABLED = "AI disabled by privacy manager"
+        const val NO_MODEL = "No model configured"
+        const val NO_CONTEXT = "No context to personalize on"
     }
 }
 
@@ -151,11 +166,11 @@ private class PrivacyGatedModel(
             .onStart { emit(gate(wrapped.availability)) }
             .distinctUntilChanged()
 
-    override val maxAttempts: Int
-        get() = wrapped.maxAttempts
-
-    override val responseTimeout: Duration
-        get() = wrapped.responseTimeout
+    override fun retryDecision(
+        usage: AIUsage<*>,
+        error: Throwable,
+        attempt: Int
+    ): AIRetryDecision = wrapped.retryDecision(usage, error, attempt)
 
     override suspend fun respond(request: AIModelRequest): JsonValue = wrapped.respond(request)
 }

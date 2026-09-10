@@ -77,7 +77,7 @@ public sealed class AIEvaluationResult<out Output> {
      *
      * @param value The structured output.
      */
-    public class Completed<out Output> public constructor(
+    public data class Completed<out Output> public constructor(
         public val value: Output
     ) : AIEvaluationResult<Output>()
 
@@ -86,7 +86,7 @@ public sealed class AIEvaluationResult<out Output> {
      *
      * @param reason Why it didn't run.
      */
-    public class Skipped public constructor(
+    public data class Skipped public constructor(
         public val reason: String
     ) : AIEvaluationResult<Nothing>()
 
@@ -95,7 +95,7 @@ public sealed class AIEvaluationResult<out Output> {
      *
      * @param error The error.
      */
-    public class Failed public constructor(
+    public data class Failed public constructor(
         public val error: Throwable
     ) : AIEvaluationResult<Nothing>()
 

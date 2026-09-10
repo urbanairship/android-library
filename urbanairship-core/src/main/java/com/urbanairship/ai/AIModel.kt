@@ -3,16 +3,14 @@ package com.urbanairship.ai
 
 import com.urbanairship.json.JsonSchema
 import com.urbanairship.json.JsonValue
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 
 /**
  * The framework's interface to a model backend.
  *
- * Answers one request; retry, timeout, and output validation live in the framework, tuned
- * through [maxAttempts] and [responseTimeout].
+ * Answers one request; retry and output validation live in the framework, with the retry
+ * schedule tuned through [retryDecision].
  */
 public interface AIModel {
 
@@ -36,17 +34,28 @@ public interface AIModel {
     public val availabilityUpdates: Flow<AIModelAvailability>
         get() = flowOf(availability)
 
-    /** Attempts, including the first, before the framework fails the evaluation. */
-    public val maxAttempts: Int
-        get() = DEFAULT_MAX_ATTEMPTS
-
     /**
-     * Wall-clock budget across *all* attempts, not per attempt.
+     * Decides what happens after a failed attempt.
      *
-     * A backend answering over the network should raise it, lower [maxAttempts], or both.
+     * Called each time [respond] throws or the response fails schema validation (as an
+     * [AISchemaValidationException]). There is no separate attempt cap — cap it yourself by
+     * returning [AIRetryDecision.Fail] once [attempt] says to stop. The framework enforces its
+     * own wall-clock ceiling on the whole loop regardless of what this returns.
+     *
+     * Defaults to [AIRetryDecision.defaultBackoff]: a schema mismatch retries immediately, any
+     * other error backs off 1s then 4s, failing after three attempts. Override for a backend
+     * where a retry is expensive or slow, or one that wants a different schedule.
+     *
+     * @param usage Which feature's evaluation this is.
+     * @param error The error from the attempt that just failed.
+     * @param attempt The attempt number that just failed, starting at 1.
+     * @return Whether to retry, and after how long.
      */
-    public val responseTimeout: Duration
-        get() = DEFAULT_RESPONSE_TIMEOUT
+    public fun retryDecision(
+        usage: AIUsage<*>,
+        error: Throwable,
+        attempt: Int
+    ): AIRetryDecision = AIRetryDecision.defaultBackoff(error, attempt)
 
     /**
      * Answers a single request.
@@ -58,14 +67,6 @@ public interface AIModel {
      * @return The model's structured response.
      */
     public suspend fun respond(request: AIModelRequest): JsonValue
-
-    public companion object {
-        /** Attempts a model makes by default before the framework fails the evaluation. */
-        public const val DEFAULT_MAX_ATTEMPTS: Int = 3
-
-        /** Wall-clock budget a model allows by default across all attempts. */
-        public val DEFAULT_RESPONSE_TIMEOUT: Duration = 30.seconds
-    }
 }
 
 /** Whether a resolved model can be used right now. */
@@ -110,7 +111,7 @@ public sealed class AIModelAvailability {
  * via [prompt] and, if its input window is tight, trims. The framework builds one per
  * evaluation; models don't construct these.
  */
-public class AIModelRequest internal constructor(
+public class AIModelRequest public constructor(
 
     /** The system instructions: the model's role and rules. */
     public val instructions: String,
@@ -121,6 +122,7 @@ public class AIModelRequest internal constructor(
     /** The prioritized context for this request. */
     public val context: AIContext,
 
+    /** Renders [context] into prompt text. Owned by the evaluation, not the model. */
     private val render: (AIContext) -> String
 ) {
 

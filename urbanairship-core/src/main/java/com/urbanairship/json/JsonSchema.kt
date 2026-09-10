@@ -167,14 +167,14 @@ public class JsonSchema @JvmOverloads public constructor(
 
             val type = when (val rawType = content.require(TYPE).requireString()) {
                 RAW_STRING -> ValueType.StringType(
-                    choices = content[ENUM]?.requireList()?.map { it.requireString() }
+                    choices = content.present(ENUM)?.requireList()?.map { it.requireString() }
                 )
                 RAW_BOOLEAN -> ValueType.BooleanType
                 RAW_INTEGER -> ValueType.IntegerType
                 RAW_NUMBER -> ValueType.NumberType
                 RAW_OBJECT -> ValueType.ObjectType(
-                    properties = content[PROPERTIES]?.requireMap()?.map?.mapValues { fromJson(it.value) },
-                    required = content[REQUIRED]?.requireList()?.map { it.requireString() }
+                    properties = content.present(PROPERTIES)?.requireMap()?.map?.mapValues { fromJson(it.value) },
+                    required = content.present(REQUIRED)?.requireList()?.map { it.requireString() }
                 )
                 RAW_ARRAY -> ValueType.ArrayType(items = fromJson(content.require(ITEMS)))
                 else -> throw JsonException("Unknown JSON schema type: $rawType")
@@ -182,7 +182,7 @@ public class JsonSchema @JvmOverloads public constructor(
 
             return JsonSchema(
                 type = type,
-                description = content[DESCRIPTION]?.takeUnless { it.isNull }?.requireString(),
+                description = content.present(DESCRIPTION)?.requireString(),
                 extensions = content.map.filterKeys { it.startsWith(EXTENSION_KEY_PREFIX) }
             )
         }
@@ -244,7 +244,7 @@ public class JsonSchema @JvmOverloads public constructor(
          * )
          * ```
          *
-         * @param properties The declared properties.
+         * @param properties The declared properties, or `null` to allow any.
          * @param required Property names the model must always emit, or `null` to require none.
          * @param description Optional description surfaced to the model.
          * @return The schema.
@@ -252,7 +252,7 @@ public class JsonSchema @JvmOverloads public constructor(
         @JvmStatic
         @JvmOverloads
         public fun obj(
-            properties: Map<String, JsonSchema>,
+            properties: Map<String, JsonSchema>? = null,
             required: List<String>? = null,
             description: String? = null
         ): JsonSchema = JsonSchema(ValueType.ObjectType(properties, required), description)
@@ -270,6 +270,16 @@ public class JsonSchema @JvmOverloads public constructor(
             items: JsonSchema,
             description: String? = null
         ): JsonSchema = JsonSchema(ValueType.ArrayType(items), description)
+
+        /**
+         * The value at [key], or `null` when the key is absent or explicitly JSON null.
+         *
+         * A serializer that writes nulls for absent fields is as good as omitting them, so
+         * every optional keyword reads through this. `items` deliberately does not — an array
+         * node without it is malformed, not unconstrained.
+         */
+        private fun JsonMap.present(key: String): JsonValue? =
+            this[key]?.takeUnless { it.isNull }
 
         @Throws(JsonException::class)
         private fun validate(value: JsonValue, schema: JsonSchema, path: String) {

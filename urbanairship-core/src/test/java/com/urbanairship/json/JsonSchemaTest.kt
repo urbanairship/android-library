@@ -195,6 +195,51 @@ public class JsonSchemaTest {
     }
 
     @Test
+    public fun testExplicitNullsAreTreatedAsAbsent() {
+        // A serializer that writes nulls for absent fields must not break the parse.
+        val parsed = JsonSchema.fromJson(
+            JsonValue.parseString(
+                """{"type":"object","description":null,"properties":null,"required":null}"""
+            )
+        )
+        val type = parsed.type as ValueType.ObjectType
+
+        assertNull(parsed.description)
+        assertNull(type.properties)
+        assertNull(type.required)
+        assertEquals(JsonSchema.obj(), parsed)
+    }
+
+    @Test
+    public fun testExplicitNullEnumIsTreatedAsAbsent() {
+        val parsed = JsonSchema.fromJson(
+            JsonValue.parseString("""{"type":"string","enum":null}""")
+        )
+        assertEquals(JsonSchema.string(), parsed)
+    }
+
+    @Test
+    public fun testArrayWithoutItemsThrows() {
+        // Unlike the optional keywords, a missing or null `items` is a malformed array node.
+        assertThrows(JsonException::class.java) {
+            JsonSchema.fromJson(JsonValue.parseString("""{"type":"array"}"""))
+        }
+        assertThrows(JsonException::class.java) {
+            JsonSchema.fromJson(JsonValue.parseString("""{"type":"array","items":null}"""))
+        }
+    }
+
+    @Test
+    public fun testUnconstrainedObjectAcceptsAnything() {
+        val schema = JsonSchema.obj()
+
+        schema.validate(jsonMapOf("anything" to 1, "at" to "all").toJsonValue())
+        assertThrows(JsonException::class.java) {
+            schema.validate(JsonValue.wrap("not an object"))
+        }
+    }
+
+    @Test
     public fun testUnknownTypeThrows() {
         assertThrows(JsonException::class.java) {
             JsonSchema.fromJson(JsonValue.parseString("""{"type": "tuple"}"""))

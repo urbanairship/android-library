@@ -4,15 +4,19 @@ package com.urbanairship.ai
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import app.cash.turbine.test
 import com.urbanairship.PrivacyManager
-import com.urbanairship.json.jsonMapOf
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertSame
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -129,9 +133,10 @@ public class AirshipAITest {
     private suspend fun eval(
         model: AIModel,
         context: AIContext = AIContext.EMPTY,
-        evaluation: TestEvaluation = TestEvaluation()
+        evaluation: TestEvaluation = TestEvaluation(),
+        maxResponseTimeout: Duration = AIEvaluator.DEFAULT_MAX_RESPONSE_TIMEOUT
     ): AIEvaluationResult<TestOutput> =
-        AIEvaluator().evaluate(evaluation, model, context)
+        testEvaluator(maxResponseTimeout).evaluate(evaluation, model, context)
 
     @Test
     public fun testCompletedWhenModelSucceeds(): Unit = runTest {
@@ -167,7 +172,7 @@ public class AirshipAITest {
 
     @Test
     public fun testFailedWhenResponseDoesNotMatchSchema(): Unit = runTest {
-        val model = MockAIModel(response = { jsonMapOf("unexpected_key" to "value").toJsonValue() })
+        val model = MockAIModel(response = { offSchemaResponse() })
         assertTrue(eval(model) is AIEvaluationResult.Failed)
     }
 
@@ -196,7 +201,7 @@ public class AirshipAITest {
     public fun testRetriesUntilOutputConformsToSchema(): Unit = runTest {
         val model = MockAIModel(maxAttempts = 3)
         model.responses = mutableListOf(
-            { jsonMapOf("unexpected_key" to "value").toJsonValue() },
+            { offSchemaResponse() },
             { allowResponse(allow = true, reason = "second try") }
         )
 
@@ -208,10 +213,7 @@ public class AirshipAITest {
 
     @Test
     public fun testFailsAfterExhaustingAttempts(): Unit = runTest {
-        val model = MockAIModel(
-            response = { jsonMapOf("unexpected_key" to "value").toJsonValue() },
-            maxAttempts = 2
-        )
+        val model = MockAIModel(response = { offSchemaResponse() }, maxAttempts = 2)
 
         assertTrue(eval(model) is AIEvaluationResult.Failed)
         assertEquals(2, model.respondCallCount)
@@ -227,7 +229,7 @@ public class AirshipAITest {
     }
 
     @Test
-    public fun testRetriesUpToMaxAttemptsOnOrdinaryFailure(): Unit = runTest {
+    public fun testRetriesUntilTheModelSaysToStop(): Unit = runTest {
         val model = MockAIModel(response = { throw SampleError() }, maxAttempts = 3)
 
         assertTrue(eval(model) is AIEvaluationResult.Failed)
@@ -235,11 +237,98 @@ public class AirshipAITest {
     }
 
     @Test
-    public fun testTimeoutTerminatesSlowModel(): Unit = runTest {
-        val model = MockAIModel(responseTimeout = 100.milliseconds)
+    public fun testCeilingTerminatesSlowModel(): Unit = runTest {
+        val model = MockAIModel()
         model.respondDelay = 60.seconds
 
+        assertTrue(eval(model, maxResponseTimeout = 100.milliseconds) is AIEvaluationResult.Failed)
+    }
+
+    @Test
+    @OptIn(ExperimentalCoroutinesApi::class)
+    public fun testRetryDelayIsAwaitedBetweenAttempts(): Unit = runTest {
+        val model = MockAIModel(response = { throw SampleError() }, maxAttempts = 3)
+        model.retryDelay = 2.seconds
+
+        val started = currentTime
+        eval(model)
+
+        // Two failures, so two delays before the third attempt gives up.
+        assertEquals(4.seconds.inWholeMilliseconds, currentTime - started)
+        assertEquals(3, model.respondCallCount)
+    }
+
+    @Test
+    public fun testRetryDelayIsClampedToTheCeiling(): Unit = runTest {
+        // An app-supplied delay past the ceiling must not park the evaluation forever.
+        val model = MockAIModel(response = { throw SampleError() }, maxAttempts = 5)
+        model.retryDelay = Duration.INFINITE
+
+        assertTrue(eval(model, maxResponseTimeout = 1.seconds) is AIEvaluationResult.Failed)
+    }
+
+    @Test
+    public fun testSchemaMismatchReachesRetryDecisionWrapped(): Unit = runTest {
+        // A model needs to tell "answered but didn't conform" apart from a thrown failure.
+        val model = MockAIModel(response = { offSchemaResponse() }, maxAttempts = 2)
+
+        eval(model)
+
+        assertTrue(model.retryErrors.all { it is AISchemaValidationException })
+    }
+
+    @Test
+    public fun testThrownErrorReachesRetryDecisionUnwrapped(): Unit = runTest {
+        val model = MockAIModel(response = { throw SampleError() }, maxAttempts = 2)
+
+        eval(model)
+
+        assertTrue(model.retryErrors.all { it is SampleError })
+    }
+
+    @Test
+    public fun testDefaultBackoffRetriesSchemaMismatchImmediately() {
+        val error = AISchemaValidationException(SampleError())
+        assertEquals(AIRetryDecision.Retry(Duration.ZERO), AIRetryDecision.defaultBackoff(error, 1))
+        assertEquals(AIRetryDecision.Retry(Duration.ZERO), AIRetryDecision.defaultBackoff(error, 2))
+        assertEquals(AIRetryDecision.Fail, AIRetryDecision.defaultBackoff(error, 3))
+    }
+
+    @Test
+    public fun testDefaultBackoffBacksOffOnAnyOtherError() {
+        val error = SampleError()
+        assertEquals(AIRetryDecision.Retry(1.seconds), AIRetryDecision.defaultBackoff(error, 1))
+        assertEquals(AIRetryDecision.Retry(4.seconds), AIRetryDecision.defaultBackoff(error, 2))
+        assertEquals(AIRetryDecision.Fail, AIRetryDecision.defaultBackoff(error, 3))
+    }
+
+    @Test
+    public fun testModelWithNoRetryDecisionUsesTheFrameworkDefault(): Unit = runTest {
+        val model = MockAIModel(response = { throw SampleError() })
+        model.retryDecision = null
+
         assertTrue(eval(model) is AIEvaluationResult.Failed)
+        // Three attempts, per defaultBackoff.
+        assertEquals(AIRetryDecision.DEFAULT_MAX_ATTEMPTS, model.respondCallCount)
+    }
+
+    @Test
+    public fun testErrorsArePropagatedRatherThanRetried(): Unit = runTest {
+        // An Error is not a failure to fail open on — retrying an OOM makes it worse.
+        val model = MockAIModel(response = { throw OutOfMemoryError("nope") }, maxAttempts = 5)
+
+        assertThrows(OutOfMemoryError::class.java) { runBlocking { eval(model) } }
+        assertEquals(1, model.respondCallCount)
+    }
+
+    @Test
+    public fun testResultsAndOutcomesCompareByValue() {
+        assertEquals(AIEvaluationResult.Skipped("nope"), AIEvaluationResult.Skipped("nope"))
+        assertEquals(AIEvaluationResult.Completed(7), AIEvaluationResult.Completed(7))
+        assertEquals(
+            AIEvaluationRecord.Outcome.Skipped("nope"),
+            AIEvaluationRecord.Outcome.Skipped("nope")
+        )
     }
 
     // MARK: manager
@@ -353,7 +442,48 @@ public class AirshipAITest {
         assertEquals(1, model.respondCallCount)
     }
 
+    // MARK: context providers
+
+    @Test
+    public fun testProviderFailureDegradesToEmptyContext(): Unit = runTest {
+        // The provider is app code on a display path; a throw must not take the display down.
+        val manager = testManager()
+        manager.setContextProvider(testUsage) { throw SampleError() }
+
+        assertEquals(AIContext.EMPTY, manager.fetchContext(testUsage, Unit))
+    }
+
+    @Test
+    public fun testProviderSubjectTypeMismatchDegradesToEmptyContext(): Unit = runTest {
+        // Two features sharing a usage key with different subject types.
+        val manager = testManager()
+        val stringUsage = AIUsage<String>(testUsage.rawValue)
+        manager.setContextProvider(stringUsage) { subject ->
+            AIContext(listOf(AIContext.Item(subject)))
+        }
+
+        assertEquals(AIContext.EMPTY, manager.fetchContext(testUsage, Unit))
+    }
+
     // MARK: per-usage model resolution
+
+    @Test
+    public fun testDefaultModelFactoryIsInvokedOnce() {
+        // A factory that really constructs a backend must not run per evaluation.
+        var invocations = 0
+        val manager = testManager()
+        manager.registerModelFactory {
+            invocations += 1
+            MockAIModel()
+        }
+
+        val first = manager.model(testUsage)
+        val second = manager.model(testUsage)
+
+        assertEquals(1, invocations)
+        assertSame(first, second)
+        assertSame(first, manager.defaultModel)
+    }
 
     @Test
     public fun testModelIsNullWhenNoneConfigured() {

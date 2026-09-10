@@ -34,21 +34,21 @@ public class AIEvaluationRecord public constructor(
          *
          * @param output The raw model output — untyped, so one observer can serve every usage.
          */
-        public class Completed public constructor(public val output: JsonValue) : Outcome()
+        public data class Completed public constructor(public val output: JsonValue) : Outcome()
 
         /**
          * The evaluation never ran.
          *
          * @param reason Why it didn't run.
          */
-        public class Skipped public constructor(public val reason: String) : Outcome()
+        public data class Skipped public constructor(public val reason: String) : Outcome()
 
         /**
          * The evaluation ran but threw.
          *
          * @param error The error.
          */
-        public class Failed public constructor(public val error: Throwable) : Outcome()
+        public data class Failed public constructor(public val error: Throwable) : Outcome()
     }
 }
 

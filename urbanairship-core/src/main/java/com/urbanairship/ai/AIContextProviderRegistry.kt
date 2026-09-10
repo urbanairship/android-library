@@ -3,6 +3,7 @@ package com.urbanairship.ai
 
 import com.urbanairship.UALog
 import java.util.concurrent.ConcurrentHashMap
+import kotlinx.coroutines.CancellationException
 
 /**
  * Holds the registered context providers, keyed by usage raw value, plus the fallback default
@@ -43,16 +44,21 @@ internal class AIContextProviderRegistry {
      * A usage-specific provider wins outright; the default provider is only a fallback for
      * usages that have none. The two are never combined.
      *
-     * A subject that doesn't match the type the provider was registered with means two features
-     * share a usage key with different subject types — an app bug the SDK fails soft on rather
-     * than crashing a display path.
+     * The provider is app code on the path to displaying a feature, so a throw degrades to
+     * empty context rather than taking that display down with it.
      */
     suspend fun fetchContext(usage: String, subject: Any?): AIContext {
         val provider = providers[usage] ?: defaultProvider ?: return AIContext.EMPTY
         return try {
             provider.fetch(subject)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: ClassCastException) {
+            // Two features sharing a usage key with different subject types.
             UALog.e(e) { "AI context provider for $usage received an unexpected subject type" }
+            AIContext.EMPTY
+        } catch (e: Exception) {
+            UALog.e(e) { "AI context provider for $usage failed" }
             AIContext.EMPTY
         }
     }

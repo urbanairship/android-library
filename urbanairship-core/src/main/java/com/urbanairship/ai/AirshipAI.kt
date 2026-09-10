@@ -15,7 +15,8 @@ public interface AirshipAI {
      * Registers the context provider for a usage.
      *
      * ```
-     * Airship.ai.setContextProvider(InAppMessageSuppression.usage) { message ->
+     * val usage = AIUsage<MyMessage>("my_feature")
+     * Airship.ai.setContextProvider(usage) { message ->
      *     AIContext(listOf(AIContext.Item("Last booked: ${store.lastBooking}")))
      * }
      * ```
@@ -39,7 +40,10 @@ public interface AirshipAI {
 
     /**
      * Registers an observer called once per evaluation, whatever the outcome — including
-     * evaluations skipped before a model ran.
+     * evaluations skipped before a model was consulted, such as when none is configured.
+     *
+     * Nothing fires while [com.urbanairship.PrivacyManager.Feature.ON_DEVICE_AI] is disabled;
+     * the gate turns the feature off, observer included.
      *
      * Per *evaluation*, not per display: a feature that re-evaluates produces a record each
      * time, so dedupe before treating these as impressions. Airship reports none of this itself.
@@ -53,7 +57,7 @@ public interface AirshipAI {
      *
      * ```
      * Airship.ai.setModelResolver { usage ->
-     *     if (usage == InAppMessageSuppression.usage) AIModelSelector.Custom(myModel)
+     *     if (usage == myUsage) AIModelSelector.Custom(myModel)
      *     else AIModelSelector.DefaultModel
      * }
      * ```
@@ -108,7 +112,7 @@ public interface InternalAirshipAI : AirshipAI {
     /**
      * Registers the SDK's built-in default model, replacing the current one.
      *
-     * @param factory Returns the model to use.
+     * @param factory Returns the model to use. Invoked at most once, on first resolution.
      */
     public fun registerModelFactory(factory: () -> AIModel)
 

@@ -4,18 +4,28 @@ package com.urbanairship.ai
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.UALog
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.TimeSource
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeout
 
-/** Runs an evaluation against a model, applying the retry, timeout, and validation policy. */
+/**
+ * Runs an evaluation against a model, applying the retry and validation policy.
+ *
+ * @param maxResponseTimeout A hard ceiling on an evaluation's total wall-clock time, including
+ * every retry and the delays between them, independent of the schedule
+ * [AIModel.retryDecision] picks. A backstop against a pathological hang, not a latency target.
+ * @param observerScope Where observer callbacks are dispatched.
+ */
 internal class AIEvaluator(
+    private val maxResponseTimeout: Duration = DEFAULT_MAX_RESPONSE_TIMEOUT,
     private val observerScope: CoroutineScope =
         CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
 ) {
@@ -60,13 +70,19 @@ internal class AIEvaluator(
         var attempts = 0
 
         val json = try {
-            withTimeout(model.responseTimeout) {
-                withRetry(model.maxAttempts, usage.rawValue) {
+            withTimeout(maxResponseTimeout) {
+                withRetry(model, usage) {
                     attempts += 1
-                    model.respond(request).also {
-                        // Inside the retry loop, so another attempt can correct bad output.
-                        schema.validate(it)
+                    val response = model.respond(request)
+                    // Validated inside the retry loop so another attempt can correct bad
+                    // output, and wrapped so retryDecision can tell a non-conforming answer
+                    // apart from a failure thrown by respond itself.
+                    try {
+                        schema.validate(response)
+                    } catch (e: Exception) {
+                        throw AISchemaValidationException(e)
                     }
+                    response
                 }
             }
         } catch (e: TimeoutCancellationException) {
@@ -76,7 +92,7 @@ internal class AIEvaluator(
             // CancellationException on its own is just a failure.
             currentCoroutineContext().ensureActive()
             return fail(observer, usage, request, started.elapsedNow(), attempts, e)
-        } catch (e: Throwable) {
+        } catch (e: Exception) {
             return fail(observer, usage, request, started.elapsedNow(), attempts, e)
         }
 
@@ -97,10 +113,38 @@ internal class AIEvaluator(
 
         return try {
             AIEvaluationResult.Completed(evaluation.parseOutput(json))
-        } catch (e: Throwable) {
+        } catch (e: Exception) {
             UALog.w(e) { "AI evaluation output could not be parsed for ${usage.rawValue}" }
             AIEvaluationResult.Failed(e)
         }
+    }
+
+    /**
+     * Reports an evaluation the manager skipped before a model was consulted, so the observer
+     * contract holds for outcomes that never reach [evaluate].
+     */
+    fun reportSkipped(
+        evaluation: AIEvaluation<*, *>,
+        context: AIContext,
+        reason: String,
+        observer: AIEvaluationObserver?
+    ) {
+        observer ?: return
+        report(
+            observer,
+            AIEvaluationRecord(
+                usage = evaluation.usage,
+                request = AIModelRequest(
+                    instructions = evaluation.instructions(),
+                    schema = evaluation.schema,
+                    context = context,
+                    render = evaluation::prompt
+                ),
+                outcome = AIEvaluationRecord.Outcome.Skipped(reason),
+                duration = Duration.ZERO,
+                attempts = 0
+            )
+        )
     }
 
     private fun <Output> fail(
@@ -126,41 +170,66 @@ internal class AIEvaluator(
     }
 
     /**
-     * Hands a finished evaluation to the observer on a coroutine of its own, so an observer that
-     * blocks — or one that reaches back into the SDK — can't delay the result reaching the
-     * feature that asked for it.
+     * Runs [operation], asking the model after each failure whether to retry and after how
+     * long. The model picks the schedule; the caller's `withTimeout` caps the total time it
+     * gets to do so.
      */
-    private fun report(observer: AIEvaluationObserver?, record: AIEvaluationRecord) {
-        observer ?: return
-        observerScope.launch { observer.onEvaluation(record) }
-    }
-
     private suspend fun <T> withRetry(
-        maxAttempts: Int,
-        usage: String,
+        model: AIModel,
+        usage: AIUsage<*>,
         operation: suspend () -> T
     ): T {
-        val attempts = maxOf(1, maxAttempts)
-        var lastError: Throwable? = null
+        var attempt = 0
 
-        for (attempt in 1..attempts) {
+        while (true) {
+            attempt += 1
             currentCoroutineContext().ensureActive()
-            try {
+
+            val error = try {
                 return operation()
             } catch (e: CancellationException) {
                 // Cancellation (e.g. the timeout firing) is terminal — propagate it rather
                 // than burning a retry on it.
                 throw e
-            } catch (e: Throwable) {
-                UALog.w(e) { "AI evaluation attempt $attempt/$attempts failed for $usage" }
-                lastError = e
+            } catch (e: Exception) {
+                e
+            }
+
+            UALog.w(error) { "AI evaluation attempt $attempt failed for ${usage.rawValue}" }
+
+            when (val decision = model.retryDecision(usage, error, attempt)) {
+                AIRetryDecision.Fail -> throw error
+                is AIRetryDecision.Retry -> if (decision.after > Duration.ZERO) {
+                    // retryDecision is app-implementable, so clamp: anything past the ceiling
+                    // would be cut off by the enclosing timeout anyway.
+                    delay(minOf(decision.after, maxResponseTimeout))
+                }
             }
         }
-
-        throw requireNotNull(lastError)
     }
 
-    private companion object {
-        const val MODEL_UNAVAILABLE = "Model unavailable"
+    /**
+     * Hands a finished evaluation to the observer on a coroutine of its own, so an observer
+     * that blocks — or one that reaches back into the SDK — can't delay the result reaching the
+     * feature that asked for it.
+     */
+    private fun report(observer: AIEvaluationObserver?, record: AIEvaluationRecord) {
+        observer ?: return
+        observerScope.launch {
+            try {
+                observer.onEvaluation(record)
+            } catch (e: Exception) {
+                // App code on an Airship pool thread — an uncaught throw here would take the
+                // process down with no app frames in the trace.
+                UALog.e(e) { "AI evaluation observer threw" }
+            }
+        }
+    }
+
+    internal companion object {
+        /** Wall-clock ceiling on a whole evaluation, retries and their delays included. */
+        val DEFAULT_MAX_RESPONSE_TIMEOUT: Duration = 120.seconds
+
+        private const val MODEL_UNAVAILABLE = "Model unavailable"
     }
 }
