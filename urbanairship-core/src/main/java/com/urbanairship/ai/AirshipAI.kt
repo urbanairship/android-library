@@ -122,7 +122,8 @@ public interface InternalAirshipAi : AirshipAi {
     /**
      * Registers the SDK's built-in default model, replacing the current one.
      *
-     * @param factory Returns the model to use. Invoked at most once, on first resolution.
+     * @param factory Returns the model to use. Invoked on first resolution and the result
+     * cached; a factory that throws is retried on the next resolution.
      */
     public fun registerModelFactory(factory: () -> ModelAdapter)
 

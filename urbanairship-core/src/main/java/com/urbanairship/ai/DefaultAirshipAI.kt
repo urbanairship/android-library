@@ -41,8 +41,17 @@ internal class DefaultAirshipAi(
     private val enabled: Boolean
         get() = privacyManager.isEnabled(PrivacyManager.Feature.ON_DEVICE_AI)
 
+    /** The registered factory is app code, so a throw means "no model", not a crash. */
+    private val builtIn: ModelAdapter?
+        get() = try {
+            builtInModel?.value
+        } catch (e: Exception) {
+            UALog.e(e) { "AI model factory failed" }
+            null
+        }
+
     override val defaultModel: ModelAdapter?
-        get() = if (enabled) builtInModel?.value else null
+        get() = if (enabled) builtIn else null
 
     override fun model(usage: Usage<*>): ModelAdapter? =
         if (enabled) resolveModel(usage) else null
@@ -97,15 +106,7 @@ internal class DefaultAirshipAi(
         // that was replaced mid-flight.
         val observer = evaluationObserver
 
-        // The resolver and the model factory are both app code, and evaluate is documented to
-        // fail open, so a throw from either skips rather than reaching the feature.
-        val model = try {
-            model(evaluation.usage)
-        } catch (e: Exception) {
-            UALog.e(e) { "AI model resolution failed for ${evaluation.usage.rawValue}" }
-            null
-        }
-
+        val model = model(evaluation.usage)
         if (model == null) {
             evaluator.reportSkipped(evaluation, EvaluationContext.EMPTY, NO_MODEL, observer)
             return EvaluationResult.Skipped(NO_MODEL)
@@ -132,10 +133,21 @@ internal class DefaultAirshipAi(
         )
     }
 
+    /**
+     * Resolves without throwing, so every caller — [model], [gatedModel], [defaultModel] and
+     * [evaluate] — fails open on an app resolver or factory that throws, rather than each
+     * having to remember its own guard.
+     */
     private fun resolveModel(usage: Usage<*>): ModelAdapter? {
-        val selector = modelResolver?.resolve(usage) ?: ModelSelector.DefaultModel
+        val selector = try {
+            modelResolver?.resolve(usage)
+        } catch (e: Exception) {
+            UALog.e(e) { "AI model resolver failed for ${usage.rawValue}" }
+            return null
+        } ?: ModelSelector.DefaultModel
+
         return when (selector) {
-            ModelSelector.DefaultModel -> builtInModel?.value
+            ModelSelector.DefaultModel -> builtIn
             is ModelSelector.Custom -> selector.model
         }
     }

@@ -511,6 +511,24 @@ public class AirshipAiTest {
     }
 
     @Test
+    public fun testThrowingResolverAlsoFailsOpenForGatedModel() {
+        // gatedModel is the sibling path to evaluate's; both go through resolveModel.
+        val manager = testManager()
+        manager.setModelResolver { throw SampleError() }
+
+        assertNull(manager.gatedModel(testUsage))
+    }
+
+    @Test
+    public fun testThrowingFactoryAlsoFailsOpenForDefaultModel() {
+        val manager = testManager()
+        manager.registerModelFactory { throw SampleError() }
+
+        assertNull(manager.defaultModel)
+        assertNull(manager.gatedModel(testUsage))
+    }
+
+    @Test
     public fun testThrowingAvailabilityGetterIsTreatedAsUnavailable(): Unit = runTest {
         val model = object : ModelAdapter {
             override val availability: ModelAvailability get() = throw SampleError()
