@@ -69,7 +69,10 @@ public interface Evaluation<Output, Subject> {
  * The outcome of a model evaluation.
  *
  * Treat anything but [Completed] as "no opinion" and proceed with default behavior.
+ *
+ * @hide
  */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public sealed class EvaluationResult<out Output> {
 
     /**
@@ -77,6 +80,7 @@ public sealed class EvaluationResult<out Output> {
      *
      * @param value The structured output.
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class Completed<out Output> public constructor(
         public val value: Output
     ) : EvaluationResult<Output>()
@@ -86,6 +90,7 @@ public sealed class EvaluationResult<out Output> {
      *
      * @param reason Why it didn't run.
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class Skipped public constructor(
         public val reason: String
     ) : EvaluationResult<Nothing>()
@@ -95,6 +100,7 @@ public sealed class EvaluationResult<out Output> {
      *
      * @param error The error.
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class Failed public constructor(
         public val error: Throwable
     ) : EvaluationResult<Nothing>()

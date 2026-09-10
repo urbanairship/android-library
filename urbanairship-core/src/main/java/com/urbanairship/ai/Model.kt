@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.flowOf
  *
  * Answers one request; retry and output validation live in the framework, with the retry
  * schedule tuned through [retryDecision].
+ *
+ * Implementing this needs Kotlin — [respond] is a suspend function.
  */
 public interface Model {
 
@@ -108,8 +110,9 @@ public sealed class Availability {
  * A single request handed to an [Model]: instructions, output schema, and prioritized context.
  *
  * The originating evaluation owns how context is labeled and laid out — a model only renders it
- * via [prompt] and, if its input window is tight, trims. The framework builds one per
- * evaluation; models don't construct these.
+ * via [prompt] and, if its input window is tight, trims. The framework builds one per evaluation
+ * and hands it to [Model.respond]; the constructor is public only so an app can build one to
+ * unit-test its own [EvaluationObserver].
  */
 public class ModelRequest public constructor(
 

@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.ai
 
+import androidx.annotation.RestrictTo
+
 /**
  * Identifies an AI use case — one key per evaluable feature.
  *
@@ -18,7 +20,9 @@ package com.urbanairship.ai
  *
  * @param rawValue The usage key.
  */
-public class Usage<Subject> public constructor(public val rawValue: String) {
+public class Usage<Subject> @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) constructor(
+    public val rawValue: String
+) {
     override fun equals(other: Any?): Boolean = other is Usage<*> && rawValue == other.rawValue
     override fun hashCode(): Int = rawValue.hashCode()
     override fun toString(): String = rawValue

@@ -1,6 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.ai
 
+import androidx.annotation.RestrictTo
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -55,6 +56,6 @@ public sealed class RetryDecision {
  *
  * @param cause The error describing what didn't conform.
  */
-public class SchemaValidationException public constructor(
+public class SchemaValidationException @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) constructor(
     override val cause: Throwable
 ) : Exception("AI model response did not conform to the evaluation schema", cause)

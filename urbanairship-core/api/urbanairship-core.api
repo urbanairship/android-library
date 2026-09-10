@@ -1278,43 +1278,6 @@ public final class com/urbanairship/ai/EvaluationRecord$Outcome$Skipped : com/ur
 	public fun toString ()Ljava/lang/String;
 }
 
-public abstract class com/urbanairship/ai/EvaluationResult {
-	public final fun getOutput ()Ljava/lang/Object;
-}
-
-public final class com/urbanairship/ai/EvaluationResult$Completed : com/urbanairship/ai/EvaluationResult {
-	public fun <init> (Ljava/lang/Object;)V
-	public final fun component1 ()Ljava/lang/Object;
-	public final fun copy (Ljava/lang/Object;)Lcom/urbanairship/ai/EvaluationResult$Completed;
-	public static synthetic fun copy$default (Lcom/urbanairship/ai/EvaluationResult$Completed;Ljava/lang/Object;ILjava/lang/Object;)Lcom/urbanairship/ai/EvaluationResult$Completed;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getValue ()Ljava/lang/Object;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/ai/EvaluationResult$Failed : com/urbanairship/ai/EvaluationResult {
-	public fun <init> (Ljava/lang/Throwable;)V
-	public final fun component1 ()Ljava/lang/Throwable;
-	public final fun copy (Ljava/lang/Throwable;)Lcom/urbanairship/ai/EvaluationResult$Failed;
-	public static synthetic fun copy$default (Lcom/urbanairship/ai/EvaluationResult$Failed;Ljava/lang/Throwable;ILjava/lang/Object;)Lcom/urbanairship/ai/EvaluationResult$Failed;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getError ()Ljava/lang/Throwable;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/ai/EvaluationResult$Skipped : com/urbanairship/ai/EvaluationResult {
-	public fun <init> (Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;)Lcom/urbanairship/ai/EvaluationResult$Skipped;
-	public static synthetic fun copy$default (Lcom/urbanairship/ai/EvaluationResult$Skipped;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/ai/EvaluationResult$Skipped;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getReason ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
 public abstract interface class com/urbanairship/ai/Model {
 	public fun getAvailability ()Lcom/urbanairship/ai/Availability;
 	public fun getAvailabilityUpdates ()Lkotlinx/coroutines/flow/Flow;
@@ -1385,12 +1348,10 @@ public final class com/urbanairship/ai/RetryDecision$Retry : com/urbanairship/ai
 }
 
 public final class com/urbanairship/ai/SchemaValidationException : java/lang/Exception {
-	public fun <init> (Ljava/lang/Throwable;)V
 	public fun getCause ()Ljava/lang/Throwable;
 }
 
 public final class com/urbanairship/ai/Usage {
-	public fun <init> (Ljava/lang/String;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getRawValue ()Ljava/lang/String;
 	public fun hashCode ()I
