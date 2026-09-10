@@ -4,7 +4,7 @@ package com.urbanairship.ai
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import com.urbanairship.PrivacyManager
-import com.urbanairship.json.JsonSchema
+import com.urbanairship.json.AirshipJsonSchema
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
@@ -20,10 +20,10 @@ internal class SampleError : Exception("boom")
 
 internal val testUsage: Usage<Unit> = Usage("test_usage")
 
-internal val testSchema: JsonSchema = JsonSchema.obj(
+internal val testSchema: AirshipJsonSchema = AirshipJsonSchema.obj(
     properties = mapOf(
-        "allow" to JsonSchema.boolean(description = "whether to allow"),
-        "reason" to JsonSchema.string()
+        "allow" to AirshipJsonSchema.boolean(description = "whether to allow"),
+        "reason" to AirshipJsonSchema.string()
     ),
     required = listOf("allow", "reason")
 )
@@ -39,7 +39,7 @@ internal data class TestOutput(val allow: Boolean, val reason: String)
 internal open class TestEvaluation : Evaluation<TestOutput, Unit> {
     override val usage: Usage<Unit> = testUsage
     override val subject: Unit = Unit
-    override val schema: JsonSchema = testSchema
+    override val schema: AirshipJsonSchema = testSchema
 
     override fun instructions(): String = "rules"
 
@@ -154,4 +154,4 @@ internal fun testEvaluator(
 internal fun testManager(
     privacyManager: PrivacyManager = testPrivacyManager(),
     evaluator: Evaluator = testEvaluator()
-): DefaultAirshipAI = DefaultAirshipAI(privacyManager = privacyManager, evaluator = evaluator)
+): DefaultAirshipAi = DefaultAirshipAi(privacyManager = privacyManager, evaluator = evaluator)

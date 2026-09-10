@@ -3,7 +3,7 @@ package com.urbanairship.ai
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.json.JsonException
-import com.urbanairship.json.JsonSchema
+import com.urbanairship.json.AirshipJsonSchema
 import com.urbanairship.json.JsonValue
 
 /**
@@ -24,7 +24,7 @@ public interface Evaluation<Output, Subject> {
     public val subject: Subject
 
     /** The output contract. Payload-driven features parse this from the payload. */
-    public val schema: JsonSchema
+    public val schema: AirshipJsonSchema
 
     /**
      * When `true`, skips the evaluation if the resolved context is empty.

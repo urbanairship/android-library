@@ -2,7 +2,7 @@
 package com.urbanairship.json
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.urbanairship.json.JsonSchema.ValueType
+import com.urbanairship.json.AirshipJsonSchema.ValueType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
@@ -14,14 +14,14 @@ import org.junit.runner.RunWith
 public class JsonSchemaTest {
 
     /** A schema exercising every value type, including a nested object and an array. */
-    private val schema = JsonSchema.obj(
+    private val schema = AirshipJsonSchema.obj(
         properties = mapOf(
-            "allow" to JsonSchema.boolean(),
-            "reason" to JsonSchema.string(),
-            "user" to JsonSchema.obj(
+            "allow" to AirshipJsonSchema.boolean(),
+            "reason" to AirshipJsonSchema.string(),
+            "user" to AirshipJsonSchema.obj(
                 properties = mapOf(
-                    "age" to JsonSchema.integer(),
-                    "tags" to JsonSchema.array(items = JsonSchema.string())
+                    "age" to AirshipJsonSchema.integer(),
+                    "tags" to AirshipJsonSchema.array(items = AirshipJsonSchema.string())
                 ),
                 required = listOf("age")
             )
@@ -29,8 +29,8 @@ public class JsonSchemaTest {
         required = listOf("allow")
     )
 
-    private val enumSchema = JsonSchema.obj(
-        properties = mapOf("result" to JsonSchema.string(choices = listOf("shipping", "quality", "praise"))),
+    private val enumSchema = AirshipJsonSchema.obj(
+        properties = mapOf("result" to AirshipJsonSchema.string(choices = listOf("shipping", "quality", "praise"))),
         required = listOf("result")
     )
 
@@ -77,8 +77,8 @@ public class JsonSchemaTest {
     public fun testValidateThrowsForMissingRequiredKeyNotInProperties() {
         // `required` may name a key with no entry in `properties` — its presence must
         // still be enforced.
-        val schema = JsonSchema.obj(
-            properties = mapOf("known" to JsonSchema.string()),
+        val schema = AirshipJsonSchema.obj(
+            properties = mapOf("known" to AirshipJsonSchema.string()),
             required = listOf("mustExist")
         )
 
@@ -169,7 +169,7 @@ public class JsonSchemaTest {
             }
         """.trimIndent()
 
-        val parsed = JsonSchema.fromJson(JsonValue.parseString(json))
+        val parsed = AirshipJsonSchema.fromJson(JsonValue.parseString(json))
         val type = parsed.type as ValueType.ObjectType
 
         assertEquals(ValueType.StringType(listOf("a", "b")), type.properties?.get("result")?.type)
@@ -181,7 +181,7 @@ public class JsonSchemaTest {
     @Test
     public fun testParsesObjectWithoutProperties() {
         // `properties` is optional per JSON Schema — an object node may omit it.
-        val parsed = JsonSchema.fromJson(
+        val parsed = AirshipJsonSchema.fromJson(
             JsonValue.parseString("""{"type": "object", "required": ["anything"]}""")
         )
         val type = parsed.type as ValueType.ObjectType
@@ -197,7 +197,7 @@ public class JsonSchemaTest {
     @Test
     public fun testExplicitNullsAreTreatedAsAbsent() {
         // A serializer that writes nulls for absent fields must not break the parse.
-        val parsed = JsonSchema.fromJson(
+        val parsed = AirshipJsonSchema.fromJson(
             JsonValue.parseString(
                 """{"type":"object","description":null,"properties":null,"required":null}"""
             )
@@ -207,31 +207,31 @@ public class JsonSchemaTest {
         assertNull(parsed.description)
         assertNull(type.properties)
         assertNull(type.required)
-        assertEquals(JsonSchema.obj(), parsed)
+        assertEquals(AirshipJsonSchema.obj(), parsed)
     }
 
     @Test
     public fun testExplicitNullEnumIsTreatedAsAbsent() {
-        val parsed = JsonSchema.fromJson(
+        val parsed = AirshipJsonSchema.fromJson(
             JsonValue.parseString("""{"type":"string","enum":null}""")
         )
-        assertEquals(JsonSchema.string(), parsed)
+        assertEquals(AirshipJsonSchema.string(), parsed)
     }
 
     @Test
     public fun testArrayWithoutItemsThrows() {
         // Unlike the optional keywords, a missing or null `items` is a malformed array node.
         assertThrows(JsonException::class.java) {
-            JsonSchema.fromJson(JsonValue.parseString("""{"type":"array"}"""))
+            AirshipJsonSchema.fromJson(JsonValue.parseString("""{"type":"array"}"""))
         }
         assertThrows(JsonException::class.java) {
-            JsonSchema.fromJson(JsonValue.parseString("""{"type":"array","items":null}"""))
+            AirshipJsonSchema.fromJson(JsonValue.parseString("""{"type":"array","items":null}"""))
         }
     }
 
     @Test
     public fun testUnconstrainedObjectAcceptsAnything() {
-        val schema = JsonSchema.obj()
+        val schema = AirshipJsonSchema.obj()
 
         schema.validate(jsonMapOf("anything" to 1, "at" to "all").toJsonValue())
         assertThrows(JsonException::class.java) {
@@ -242,25 +242,25 @@ public class JsonSchemaTest {
     @Test
     public fun testUnknownTypeThrows() {
         assertThrows(JsonException::class.java) {
-            JsonSchema.fromJson(JsonValue.parseString("""{"type": "tuple"}"""))
+            AirshipJsonSchema.fromJson(JsonValue.parseString("""{"type": "tuple"}"""))
         }
     }
 
     @Test
     public fun testSchemaRoundTrips() {
-        val original = JsonSchema.obj(
+        val original = AirshipJsonSchema.obj(
             properties = mapOf(
-                "result" to JsonSchema.string(choices = listOf("a", "b"), description = "pick one"),
-                "tags" to JsonSchema.array(items = JsonSchema.string()),
-                "details" to JsonSchema.obj(
-                    properties = mapOf("score" to JsonSchema.number()),
+                "result" to AirshipJsonSchema.string(choices = listOf("a", "b"), description = "pick one"),
+                "tags" to AirshipJsonSchema.array(items = AirshipJsonSchema.string()),
+                "details" to AirshipJsonSchema.obj(
+                    properties = mapOf("score" to AirshipJsonSchema.number()),
                     required = listOf("score")
                 )
             ),
             required = listOf("result", "details")
         )
 
-        assertEquals(original, JsonSchema.fromJson(original.toJsonValue()))
+        assertEquals(original, AirshipJsonSchema.fromJson(original.toJsonValue()))
     }
 
     // MARK: vendor extensions (x-*)
@@ -278,7 +278,7 @@ public class JsonSchemaTest {
             }
         """.trimIndent()
 
-        val parsed = JsonSchema.fromJson(JsonValue.parseString(json))
+        val parsed = AirshipJsonSchema.fromJson(JsonValue.parseString(json))
         assertEquals(JsonValue.wrap(true), parsed.extensions["x-ua-report"])
 
         val type = parsed.type as ValueType.ObjectType
@@ -291,7 +291,7 @@ public class JsonSchemaTest {
 
     @Test
     public fun testParseCapturesOnlyVendorPrefixedUnknownKeys() {
-        val parsed = JsonSchema.fromJson(
+        val parsed = AirshipJsonSchema.fromJson(
             JsonValue.parseString("""{"type": "string", "x-keep": 1, "randomUnknown": "dropped"}""")
         )
         assertEquals(mapOf("x-keep" to JsonValue.wrap(1)), parsed.extensions)
@@ -309,8 +309,8 @@ public class JsonSchemaTest {
             }
         """.trimIndent()
 
-        val parsed = JsonSchema.fromJson(JsonValue.parseString(json))
-        val reparsed = JsonSchema.fromJson(parsed.toJsonValue())
+        val parsed = AirshipJsonSchema.fromJson(JsonValue.parseString(json))
+        val reparsed = AirshipJsonSchema.fromJson(parsed.toJsonValue())
 
         // Equality compares extensions, so this also proves the serializer wrote them back
         // without clobbering a real keyword.
@@ -321,17 +321,17 @@ public class JsonSchemaTest {
     @Test
     public fun testNullValuedExtensionIsDroppedSoSchemasRoundTrip() {
         // A kept null would be omitted on the way back out, silently breaking equality.
-        val parsed = JsonSchema.fromJson(
+        val parsed = AirshipJsonSchema.fromJson(
             JsonValue.parseString("""{"type":"string","x-null":null,"x-kept":1}""")
         )
 
         assertEquals(mapOf("x-kept" to JsonValue.wrap(1)), parsed.extensions)
-        assertEquals(parsed, JsonSchema.fromJson(parsed.toJsonValue()))
+        assertEquals(parsed, AirshipJsonSchema.fromJson(parsed.toJsonValue()))
     }
 
     @Test
     public fun testConstructorKeepsOnlyVendorExtensionKeys() {
-        val schema = JsonSchema(
+        val schema = AirshipJsonSchema(
             type = ValueType.StringType(),
             extensions = mapOf(
                 "x-ok" to JsonValue.wrap(true),
@@ -345,16 +345,16 @@ public class JsonSchemaTest {
 
     @Test
     public fun testParsesScalarEnumRoot() {
-        val parsed = JsonSchema.fromJson(
+        val parsed = AirshipJsonSchema.fromJson(
             JsonValue.parseString("""{"type": "string", "enum": ["shipping", "quality"]}""")
         )
-        assertEquals(JsonSchema.string(choices = listOf("shipping", "quality")), parsed)
+        assertEquals(AirshipJsonSchema.string(choices = listOf("shipping", "quality")), parsed)
     }
 
     @Test
     public fun testArrayRootRoundTripsAndValidates() {
-        val original = JsonSchema.array(items = JsonSchema.string())
-        val parsed = JsonSchema.fromJson(original.toJsonValue())
+        val original = AirshipJsonSchema.array(items = AirshipJsonSchema.string())
+        val parsed = AirshipJsonSchema.fromJson(original.toJsonValue())
         assertEquals(original, parsed)
 
         parsed.validate(jsonListOf("a", "b").toJsonValue())
@@ -365,7 +365,7 @@ public class JsonSchemaTest {
 
     @Test
     public fun testScalarRootValidates() {
-        val schema = JsonSchema.string(choices = listOf("a", "b"))
+        val schema = AirshipJsonSchema.string(choices = listOf("a", "b"))
 
         schema.validate(JsonValue.wrap("a"))
         assertThrows(JsonException::class.java) {

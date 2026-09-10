@@ -5,7 +5,7 @@ import com.urbanairship.json.JsonValue
 import kotlin.time.Duration
 
 /**
- * A finished evaluation, handed to the observer set with [AirshipAI.setEvaluationObserver].
+ * A finished evaluation, handed to the observer set with [AirshipAi.setEvaluationObserver].
  *
  * Carries the context and prompt your own provider produced, so forwarding a record to a
  * third-party service sends that context off the device.

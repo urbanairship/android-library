@@ -22,7 +22,7 @@ import kotlin.math.floor
  * new ones round-trip without parser changes. Keys without the prefix, and keys whose value is
  * null, are dropped; [validate] ignores the rest — they are metadata for other consumers.
  */
-public class JsonSchema @JvmOverloads public constructor(
+public class AirshipJsonSchema @JvmOverloads public constructor(
     public val type: ValueType,
     public val description: String? = null,
     extensions: Map<String, JsonValue> = emptyMap()
@@ -67,7 +67,7 @@ public class JsonSchema @JvmOverloads public constructor(
          * rather than a set so the order round-trips.
          */
         public data class ObjectType @JvmOverloads public constructor(
-            public val properties: Map<String, JsonSchema>? = null,
+            public val properties: Map<String, AirshipJsonSchema>? = null,
             public val required: List<String>? = null
         ) : ValueType()
 
@@ -78,7 +78,7 @@ public class JsonSchema @JvmOverloads public constructor(
          * supported — a model can't guarantee positional output.
          */
         public data class ArrayType public constructor(
-            public val items: JsonSchema
+            public val items: AirshipJsonSchema
         ) : ValueType()
     }
 
@@ -127,7 +127,7 @@ public class JsonSchema @JvmOverloads public constructor(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is JsonSchema) return false
+        if (other !is AirshipJsonSchema) return false
         return type == other.type &&
                 description == other.description &&
                 extensions == other.extensions
@@ -165,7 +165,7 @@ public class JsonSchema @JvmOverloads public constructor(
          */
         @JvmStatic
         @Throws(JsonException::class)
-        public fun fromJson(value: JsonValue): JsonSchema {
+        public fun fromJson(value: JsonValue): AirshipJsonSchema {
             val content = value.requireMap()
 
             val type = when (val rawType = content.require(TYPE).requireString()) {
@@ -183,7 +183,7 @@ public class JsonSchema @JvmOverloads public constructor(
                 else -> throw JsonException("Unknown JSON schema type: $rawType")
             }
 
-            return JsonSchema(
+            return AirshipJsonSchema(
                 type = type,
                 description = content.present(DESCRIPTION)?.requireString(),
                 extensions = content.map.filterKeys { it.startsWith(EXTENSION_KEY_PREFIX) }
@@ -202,7 +202,7 @@ public class JsonSchema @JvmOverloads public constructor(
         public fun string(
             choices: List<String>? = null,
             description: String? = null
-        ): JsonSchema = JsonSchema(ValueType.StringType(choices), description)
+        ): AirshipJsonSchema = AirshipJsonSchema(ValueType.StringType(choices), description)
 
         /**
          * A boolean value (`true` or `false`).
@@ -212,8 +212,8 @@ public class JsonSchema @JvmOverloads public constructor(
          */
         @JvmStatic
         @JvmOverloads
-        public fun boolean(description: String? = null): JsonSchema =
-            JsonSchema(ValueType.BooleanType, description)
+        public fun boolean(description: String? = null): AirshipJsonSchema =
+            AirshipJsonSchema(ValueType.BooleanType, description)
 
         /**
          * A whole-number value (a JSON number with no fractional part).
@@ -223,8 +223,8 @@ public class JsonSchema @JvmOverloads public constructor(
          */
         @JvmStatic
         @JvmOverloads
-        public fun integer(description: String? = null): JsonSchema =
-            JsonSchema(ValueType.IntegerType, description)
+        public fun integer(description: String? = null): AirshipJsonSchema =
+            AirshipJsonSchema(ValueType.IntegerType, description)
 
         /**
          * A floating-point value.
@@ -234,15 +234,15 @@ public class JsonSchema @JvmOverloads public constructor(
          */
         @JvmStatic
         @JvmOverloads
-        public fun number(description: String? = null): JsonSchema =
-            JsonSchema(ValueType.NumberType, description)
+        public fun number(description: String? = null): AirshipJsonSchema =
+            AirshipJsonSchema(ValueType.NumberType, description)
 
         /**
          * A JSON object with declared [properties].
          *
          * ```
-         * JsonSchema.obj(
-         *     properties = mapOf("id" to JsonSchema.string(), "score" to JsonSchema.integer()),
+         * AirshipJsonSchema.obj(
+         *     properties = mapOf("id" to AirshipJsonSchema.string(), "score" to AirshipJsonSchema.integer()),
          *     required = listOf("id", "score")
          * )
          * ```
@@ -255,10 +255,10 @@ public class JsonSchema @JvmOverloads public constructor(
         @JvmStatic
         @JvmOverloads
         public fun obj(
-            properties: Map<String, JsonSchema>? = null,
+            properties: Map<String, AirshipJsonSchema>? = null,
             required: List<String>? = null,
             description: String? = null
-        ): JsonSchema = JsonSchema(ValueType.ObjectType(properties, required), description)
+        ): AirshipJsonSchema = AirshipJsonSchema(ValueType.ObjectType(properties, required), description)
 
         /**
          * A homogeneous array where every element matches [items].
@@ -270,9 +270,9 @@ public class JsonSchema @JvmOverloads public constructor(
         @JvmStatic
         @JvmOverloads
         public fun array(
-            items: JsonSchema,
+            items: AirshipJsonSchema,
             description: String? = null
-        ): JsonSchema = JsonSchema(ValueType.ArrayType(items), description)
+        ): AirshipJsonSchema = AirshipJsonSchema(ValueType.ArrayType(items), description)
 
         /**
          * The value at [key], or `null` when the key is absent or explicitly JSON null.
@@ -285,7 +285,7 @@ public class JsonSchema @JvmOverloads public constructor(
             this[key]?.takeUnless { it.isNull }
 
         @Throws(JsonException::class)
-        private fun validate(value: JsonValue, schema: JsonSchema, path: String) {
+        private fun validate(value: JsonValue, schema: AirshipJsonSchema, path: String) {
             when (val type = schema.type) {
                 is ValueType.StringType -> {
                     val string = value.string ?: throw typeError(path, RAW_STRING)

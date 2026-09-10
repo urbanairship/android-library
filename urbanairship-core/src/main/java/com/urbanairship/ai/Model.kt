@@ -1,7 +1,7 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.ai
 
-import com.urbanairship.json.JsonSchema
+import com.urbanairship.json.AirshipJsonSchema
 import com.urbanairship.json.JsonValue
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
@@ -120,7 +120,7 @@ public class ModelRequest public constructor(
     public val instructions: String,
 
     /** The contract the response must conform to. */
-    public val schema: JsonSchema,
+    public val schema: AirshipJsonSchema,
 
     /** The prioritized context for this request. */
     public val context: EvaluationContext,

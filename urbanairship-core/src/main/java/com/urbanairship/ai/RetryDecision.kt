@@ -1,7 +1,6 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.ai
 
-import androidx.annotation.RestrictTo
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -52,10 +51,11 @@ public sealed class RetryDecision {
  * The model already answered — it just produced a shape that doesn't match — so this is a
  * different failure than an error thrown by [Model.respond] itself. An
  * [Model.retryDecision] implementation can test for this type to retry it on a different
- * schedule than a network or timeout error.
+ * schedule than a network or timeout error. The constructor is public so that branch can be
+ * unit-tested.
  *
  * @param cause The error describing what didn't conform.
  */
-public class SchemaValidationException @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) constructor(
+public class SchemaValidationException public constructor(
     override val cause: Throwable
 ) : Exception("AI model response did not conform to the evaluation schema", cause)

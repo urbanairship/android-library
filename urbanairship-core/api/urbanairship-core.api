@@ -8,7 +8,7 @@ public final class com/urbanairship/Airship {
 	public static field logTakeOffStackTrace Z
 	public static final fun deepLink (Ljava/lang/String;)Z
 	public static final fun getActionRegistry ()Lcom/urbanairship/actions/ActionRegistry;
-	public static final fun getAi ()Lcom/urbanairship/ai/AirshipAI;
+	public static final fun getAi ()Lcom/urbanairship/ai/AirshipAi;
 	public static final fun getAirshipConfigOptions ()Lcom/urbanairship/AirshipConfigOptions;
 	public static final fun getAnalytics ()Lcom/urbanairship/analytics/Analytics;
 	public static final fun getApplication ()Landroid/app/Application;
@@ -1120,7 +1120,7 @@ public final class com/urbanairship/activity/ThemedActivity$Companion {
 	public final fun isAppCompatAvailable (Landroid/app/Activity;)Z
 }
 
-public abstract interface class com/urbanairship/ai/AirshipAI {
+public abstract interface class com/urbanairship/ai/AirshipAi {
 	public abstract fun getDefaultModel ()Lcom/urbanairship/ai/Model;
 	public abstract fun model (Lcom/urbanairship/ai/Usage;)Lcom/urbanairship/ai/Model;
 	public abstract fun setContextProvider (Lcom/urbanairship/ai/Usage;Lcom/urbanairship/ai/ContextProvider;)V
@@ -1292,11 +1292,11 @@ public final class com/urbanairship/ai/Model$DefaultImpls {
 }
 
 public final class com/urbanairship/ai/ModelRequest {
-	public fun <init> (Ljava/lang/String;Lcom/urbanairship/json/JsonSchema;Lcom/urbanairship/ai/EvaluationContext;Lkotlin/jvm/functions/Function1;)V
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/json/AirshipJsonSchema;Lcom/urbanairship/ai/EvaluationContext;Lkotlin/jvm/functions/Function1;)V
 	public final fun droppingLowestPriorityContextItem ()Lkotlin/Pair;
 	public final fun getContext ()Lcom/urbanairship/ai/EvaluationContext;
 	public final fun getInstructions ()Ljava/lang/String;
-	public final fun getSchema ()Lcom/urbanairship/json/JsonSchema;
+	public final fun getSchema ()Lcom/urbanairship/json/AirshipJsonSchema;
 	public final fun prompt ()Ljava/lang/String;
 }
 
@@ -1348,6 +1348,7 @@ public final class com/urbanairship/ai/RetryDecision$Retry : com/urbanairship/ai
 }
 
 public final class com/urbanairship/ai/SchemaValidationException : java/lang/Exception {
+	public fun <init> (Ljava/lang/Throwable;)V
 	public fun getCause ()Ljava/lang/Throwable;
 }
 
@@ -2974,6 +2975,128 @@ public final class com/urbanairship/job/RateLimiter$Status {
 	public final fun getNextAvailable-UwyO8pc ()J
 }
 
+public final class com/urbanairship/json/AirshipJsonSchema : com/urbanairship/json/JsonSerializable {
+	public static final field Companion Lcom/urbanairship/json/AirshipJsonSchema$Companion;
+	public static final field EXTENSION_KEY_PREFIX Ljava/lang/String;
+	public fun <init> (Lcom/urbanairship/json/AirshipJsonSchema$ValueType;)V
+	public fun <init> (Lcom/urbanairship/json/AirshipJsonSchema$ValueType;Ljava/lang/String;)V
+	public fun <init> (Lcom/urbanairship/json/AirshipJsonSchema$ValueType;Ljava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (Lcom/urbanairship/json/AirshipJsonSchema$ValueType;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final fun array (Lcom/urbanairship/json/AirshipJsonSchema;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun array (Lcom/urbanairship/json/AirshipJsonSchema;Ljava/lang/String;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun boolean ()Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun boolean (Ljava/lang/String;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public fun equals (Ljava/lang/Object;)Z
+	public static final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun getDescription ()Ljava/lang/String;
+	public final fun getExtensions ()Ljava/util/Map;
+	public final fun getType ()Lcom/urbanairship/json/AirshipJsonSchema$ValueType;
+	public fun hashCode ()I
+	public static final fun integer ()Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun integer (Ljava/lang/String;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun number ()Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun number (Ljava/lang/String;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun obj ()Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun obj (Ljava/util/Map;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun obj (Ljava/util/Map;Ljava/util/List;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun obj (Ljava/util/Map;Ljava/util/List;Ljava/lang/String;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun string ()Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun string (Ljava/util/List;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static final fun string (Ljava/util/List;Ljava/lang/String;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
+	public final fun validate (Lcom/urbanairship/json/JsonValue;)V
+}
+
+public final class com/urbanairship/json/AirshipJsonSchema$Companion {
+	public final fun array (Lcom/urbanairship/json/AirshipJsonSchema;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun array (Lcom/urbanairship/json/AirshipJsonSchema;Ljava/lang/String;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static synthetic fun array$default (Lcom/urbanairship/json/AirshipJsonSchema$Companion;Lcom/urbanairship/json/AirshipJsonSchema;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun boolean ()Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun boolean (Ljava/lang/String;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static synthetic fun boolean$default (Lcom/urbanairship/json/AirshipJsonSchema$Companion;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun integer ()Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun integer (Ljava/lang/String;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static synthetic fun integer$default (Lcom/urbanairship/json/AirshipJsonSchema$Companion;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun number ()Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun number (Ljava/lang/String;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static synthetic fun number$default (Lcom/urbanairship/json/AirshipJsonSchema$Companion;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun obj ()Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun obj (Ljava/util/Map;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun obj (Ljava/util/Map;Ljava/util/List;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun obj (Ljava/util/Map;Ljava/util/List;Ljava/lang/String;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static synthetic fun obj$default (Lcom/urbanairship/json/AirshipJsonSchema$Companion;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun string ()Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun string (Ljava/util/List;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun string (Ljava/util/List;Ljava/lang/String;)Lcom/urbanairship/json/AirshipJsonSchema;
+	public static synthetic fun string$default (Lcom/urbanairship/json/AirshipJsonSchema$Companion;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/json/AirshipJsonSchema;
+}
+
+public abstract class com/urbanairship/json/AirshipJsonSchema$ValueType {
+}
+
+public final class com/urbanairship/json/AirshipJsonSchema$ValueType$ArrayType : com/urbanairship/json/AirshipJsonSchema$ValueType {
+	public fun <init> (Lcom/urbanairship/json/AirshipJsonSchema;)V
+	public final fun component1 ()Lcom/urbanairship/json/AirshipJsonSchema;
+	public final fun copy (Lcom/urbanairship/json/AirshipJsonSchema;)Lcom/urbanairship/json/AirshipJsonSchema$ValueType$ArrayType;
+	public static synthetic fun copy$default (Lcom/urbanairship/json/AirshipJsonSchema$ValueType$ArrayType;Lcom/urbanairship/json/AirshipJsonSchema;ILjava/lang/Object;)Lcom/urbanairship/json/AirshipJsonSchema$ValueType$ArrayType;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getItems ()Lcom/urbanairship/json/AirshipJsonSchema;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/json/AirshipJsonSchema$ValueType$BooleanType : com/urbanairship/json/AirshipJsonSchema$ValueType {
+	public static final field INSTANCE Lcom/urbanairship/json/AirshipJsonSchema$ValueType$BooleanType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/json/AirshipJsonSchema$ValueType$IntegerType : com/urbanairship/json/AirshipJsonSchema$ValueType {
+	public static final field INSTANCE Lcom/urbanairship/json/AirshipJsonSchema$ValueType$IntegerType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/json/AirshipJsonSchema$ValueType$NumberType : com/urbanairship/json/AirshipJsonSchema$ValueType {
+	public static final field INSTANCE Lcom/urbanairship/json/AirshipJsonSchema$ValueType$NumberType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/json/AirshipJsonSchema$ValueType$ObjectType : com/urbanairship/json/AirshipJsonSchema$ValueType {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public fun <init> (Ljava/util/Map;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/Map;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun component2 ()Ljava/util/List;
+	public final fun copy (Ljava/util/Map;Ljava/util/List;)Lcom/urbanairship/json/AirshipJsonSchema$ValueType$ObjectType;
+	public static synthetic fun copy$default (Lcom/urbanairship/json/AirshipJsonSchema$ValueType$ObjectType;Ljava/util/Map;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/json/AirshipJsonSchema$ValueType$ObjectType;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getProperties ()Ljava/util/Map;
+	public final fun getRequired ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/json/AirshipJsonSchema$ValueType$StringType : com/urbanairship/json/AirshipJsonSchema$ValueType {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/urbanairship/json/AirshipJsonSchema$ValueType$StringType;
+	public static synthetic fun copy$default (Lcom/urbanairship/json/AirshipJsonSchema$ValueType$StringType;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/json/AirshipJsonSchema$ValueType$StringType;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChoices ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/urbanairship/json/JsonException : java/lang/Exception {
 	public fun <init> (Ljava/lang/String;)V
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
@@ -3130,128 +3253,6 @@ public final class com/urbanairship/json/JsonPredicate$PredicateType : java/lang
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/json/JsonPredicate$PredicateType;
 	public static fun values ()[Lcom/urbanairship/json/JsonPredicate$PredicateType;
-}
-
-public final class com/urbanairship/json/JsonSchema : com/urbanairship/json/JsonSerializable {
-	public static final field Companion Lcom/urbanairship/json/JsonSchema$Companion;
-	public static final field EXTENSION_KEY_PREFIX Ljava/lang/String;
-	public fun <init> (Lcom/urbanairship/json/JsonSchema$ValueType;)V
-	public fun <init> (Lcom/urbanairship/json/JsonSchema$ValueType;Ljava/lang/String;)V
-	public fun <init> (Lcom/urbanairship/json/JsonSchema$ValueType;Ljava/lang/String;Ljava/util/Map;)V
-	public synthetic fun <init> (Lcom/urbanairship/json/JsonSchema$ValueType;Ljava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public static final fun array (Lcom/urbanairship/json/JsonSchema;)Lcom/urbanairship/json/JsonSchema;
-	public static final fun array (Lcom/urbanairship/json/JsonSchema;Ljava/lang/String;)Lcom/urbanairship/json/JsonSchema;
-	public static final fun boolean ()Lcom/urbanairship/json/JsonSchema;
-	public static final fun boolean (Ljava/lang/String;)Lcom/urbanairship/json/JsonSchema;
-	public fun equals (Ljava/lang/Object;)Z
-	public static final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/json/JsonSchema;
-	public final fun getDescription ()Ljava/lang/String;
-	public final fun getExtensions ()Ljava/util/Map;
-	public final fun getType ()Lcom/urbanairship/json/JsonSchema$ValueType;
-	public fun hashCode ()I
-	public static final fun integer ()Lcom/urbanairship/json/JsonSchema;
-	public static final fun integer (Ljava/lang/String;)Lcom/urbanairship/json/JsonSchema;
-	public static final fun number ()Lcom/urbanairship/json/JsonSchema;
-	public static final fun number (Ljava/lang/String;)Lcom/urbanairship/json/JsonSchema;
-	public static final fun obj ()Lcom/urbanairship/json/JsonSchema;
-	public static final fun obj (Ljava/util/Map;)Lcom/urbanairship/json/JsonSchema;
-	public static final fun obj (Ljava/util/Map;Ljava/util/List;)Lcom/urbanairship/json/JsonSchema;
-	public static final fun obj (Ljava/util/Map;Ljava/util/List;Ljava/lang/String;)Lcom/urbanairship/json/JsonSchema;
-	public static final fun string ()Lcom/urbanairship/json/JsonSchema;
-	public static final fun string (Ljava/util/List;)Lcom/urbanairship/json/JsonSchema;
-	public static final fun string (Ljava/util/List;Ljava/lang/String;)Lcom/urbanairship/json/JsonSchema;
-	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
-	public fun toString ()Ljava/lang/String;
-	public final fun validate (Lcom/urbanairship/json/JsonValue;)V
-}
-
-public final class com/urbanairship/json/JsonSchema$Companion {
-	public final fun array (Lcom/urbanairship/json/JsonSchema;)Lcom/urbanairship/json/JsonSchema;
-	public final fun array (Lcom/urbanairship/json/JsonSchema;Ljava/lang/String;)Lcom/urbanairship/json/JsonSchema;
-	public static synthetic fun array$default (Lcom/urbanairship/json/JsonSchema$Companion;Lcom/urbanairship/json/JsonSchema;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/json/JsonSchema;
-	public final fun boolean ()Lcom/urbanairship/json/JsonSchema;
-	public final fun boolean (Ljava/lang/String;)Lcom/urbanairship/json/JsonSchema;
-	public static synthetic fun boolean$default (Lcom/urbanairship/json/JsonSchema$Companion;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/json/JsonSchema;
-	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/json/JsonSchema;
-	public final fun integer ()Lcom/urbanairship/json/JsonSchema;
-	public final fun integer (Ljava/lang/String;)Lcom/urbanairship/json/JsonSchema;
-	public static synthetic fun integer$default (Lcom/urbanairship/json/JsonSchema$Companion;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/json/JsonSchema;
-	public final fun number ()Lcom/urbanairship/json/JsonSchema;
-	public final fun number (Ljava/lang/String;)Lcom/urbanairship/json/JsonSchema;
-	public static synthetic fun number$default (Lcom/urbanairship/json/JsonSchema$Companion;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/json/JsonSchema;
-	public final fun obj ()Lcom/urbanairship/json/JsonSchema;
-	public final fun obj (Ljava/util/Map;)Lcom/urbanairship/json/JsonSchema;
-	public final fun obj (Ljava/util/Map;Ljava/util/List;)Lcom/urbanairship/json/JsonSchema;
-	public final fun obj (Ljava/util/Map;Ljava/util/List;Ljava/lang/String;)Lcom/urbanairship/json/JsonSchema;
-	public static synthetic fun obj$default (Lcom/urbanairship/json/JsonSchema$Companion;Ljava/util/Map;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/json/JsonSchema;
-	public final fun string ()Lcom/urbanairship/json/JsonSchema;
-	public final fun string (Ljava/util/List;)Lcom/urbanairship/json/JsonSchema;
-	public final fun string (Ljava/util/List;Ljava/lang/String;)Lcom/urbanairship/json/JsonSchema;
-	public static synthetic fun string$default (Lcom/urbanairship/json/JsonSchema$Companion;Ljava/util/List;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/json/JsonSchema;
-}
-
-public abstract class com/urbanairship/json/JsonSchema$ValueType {
-}
-
-public final class com/urbanairship/json/JsonSchema$ValueType$ArrayType : com/urbanairship/json/JsonSchema$ValueType {
-	public fun <init> (Lcom/urbanairship/json/JsonSchema;)V
-	public final fun component1 ()Lcom/urbanairship/json/JsonSchema;
-	public final fun copy (Lcom/urbanairship/json/JsonSchema;)Lcom/urbanairship/json/JsonSchema$ValueType$ArrayType;
-	public static synthetic fun copy$default (Lcom/urbanairship/json/JsonSchema$ValueType$ArrayType;Lcom/urbanairship/json/JsonSchema;ILjava/lang/Object;)Lcom/urbanairship/json/JsonSchema$ValueType$ArrayType;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getItems ()Lcom/urbanairship/json/JsonSchema;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/json/JsonSchema$ValueType$BooleanType : com/urbanairship/json/JsonSchema$ValueType {
-	public static final field INSTANCE Lcom/urbanairship/json/JsonSchema$ValueType$BooleanType;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/json/JsonSchema$ValueType$IntegerType : com/urbanairship/json/JsonSchema$ValueType {
-	public static final field INSTANCE Lcom/urbanairship/json/JsonSchema$ValueType$IntegerType;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/json/JsonSchema$ValueType$NumberType : com/urbanairship/json/JsonSchema$ValueType {
-	public static final field INSTANCE Lcom/urbanairship/json/JsonSchema$ValueType$NumberType;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/json/JsonSchema$ValueType$ObjectType : com/urbanairship/json/JsonSchema$ValueType {
-	public fun <init> ()V
-	public fun <init> (Ljava/util/Map;)V
-	public fun <init> (Ljava/util/Map;Ljava/util/List;)V
-	public synthetic fun <init> (Ljava/util/Map;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/util/Map;
-	public final fun component2 ()Ljava/util/List;
-	public final fun copy (Ljava/util/Map;Ljava/util/List;)Lcom/urbanairship/json/JsonSchema$ValueType$ObjectType;
-	public static synthetic fun copy$default (Lcom/urbanairship/json/JsonSchema$ValueType$ObjectType;Ljava/util/Map;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/json/JsonSchema$ValueType$ObjectType;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getProperties ()Ljava/util/Map;
-	public final fun getRequired ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/json/JsonSchema$ValueType$StringType : com/urbanairship/json/JsonSchema$ValueType {
-	public fun <init> ()V
-	public fun <init> (Ljava/util/List;)V
-	public synthetic fun <init> (Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/util/List;
-	public final fun copy (Ljava/util/List;)Lcom/urbanairship/json/JsonSchema$ValueType$StringType;
-	public static synthetic fun copy$default (Lcom/urbanairship/json/JsonSchema$ValueType$StringType;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/json/JsonSchema$ValueType$StringType;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getChoices ()Ljava/util/List;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
 public abstract interface class com/urbanairship/json/JsonSerializable {

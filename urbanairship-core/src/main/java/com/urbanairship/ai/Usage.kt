@@ -7,7 +7,7 @@ import androidx.annotation.RestrictTo
  * Identifies an AI use case — one key per evaluable feature.
  *
  * Apps don't declare these. Each SDK feature that runs evaluations exposes its own typed
- * constant, which is what you pass to [AirshipAI.setContextProvider] and compare against in a
+ * constant, which is what you pass to [AirshipAi.setContextProvider] and compare against in a
  * [ModelResolver].
  *
  * [Subject] is the feature-specific data a provider receives, so registering a provider for the

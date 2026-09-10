@@ -11,17 +11,17 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.onStart
 
 /**
- * Default [InternalAirshipAI].
+ * Default [InternalAirshipAi].
  *
  * Gated by [PrivacyManager.Feature.ON_DEVICE_AI] — disabled, evaluations and context fetches
  * behave as though no model were ever registered, and nothing is reported to the observer.
  * [gatedModel] is the one exception: it resolves either way, so a caller holding the result sees
  * the gate through the model's availability rather than losing the reference.
  */
-internal class DefaultAirshipAI(
+internal class DefaultAirshipAi(
     private val privacyManager: PrivacyManager,
     private val evaluator: Evaluator = Evaluator()
-) : InternalAirshipAI {
+) : InternalAirshipAi {
 
     private val providerRegistry = ProviderRegistry()
 
@@ -151,7 +151,7 @@ internal class DefaultAirshipAI(
  * A resolved model wrapped so its availability reflects [PrivacyManager.Feature.ON_DEVICE_AI] in
  * addition to the underlying model's own state.
  *
- * See [InternalAirshipAI.gatedModel].
+ * See [InternalAirshipAi.gatedModel].
  */
 private class PrivacyGatedModel(
     private val wrapped: Model,

@@ -8,14 +8,21 @@ import androidx.annotation.RestrictTo
  *
  * Gated by [com.urbanairship.PrivacyManager.Feature.ON_DEVICE_AI] — disabled, no model resolves
  * and every evaluation is skipped.
+ *
+ * These APIs are Kotlin-only: supplying context or a model means implementing a suspend
+ * function, which Java can't express usefully.
  */
-public interface AirshipAI {
+public interface AirshipAi {
 
     /**
      * Registers the context provider for a usage.
      *
      * Pass the constant the feature exposes; apps don't declare usages. The subject type on
      * [Usage] binds the provider's parameter type, so a mismatched provider is a compile error.
+     *
+     * A provider registered here *replaces* [setDefaultContextProvider] for this usage rather
+     * than adding to it — the two are never combined. Merge the general context in yourself if
+     * you want both.
      *
      * ```
      * // `usage` is the constant the feature module exposes, e.g. for message suppression.
@@ -90,13 +97,13 @@ public interface AirshipAI {
 }
 
 /**
- * Internal surface extending [AirshipAI] with evaluation and model registration, so feature
+ * Internal surface extending [AirshipAi] with evaluation and model registration, so feature
  * modules can be tested with a mock.
  *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface InternalAirshipAI : AirshipAI {
+public interface InternalAirshipAi : AirshipAi {
 
     /**
      * Runs an evaluation through the active model, failing open to [EvaluationResult.Skipped]

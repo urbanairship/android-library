@@ -25,7 +25,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-public class AirshipAITest {
+public class AirshipAiTest {
 
     // MARK: value types
 
