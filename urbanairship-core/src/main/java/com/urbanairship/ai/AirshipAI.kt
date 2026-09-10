@@ -15,9 +15,9 @@ public interface AirshipAI {
      * Registers the context provider for a usage.
      *
      * ```
-     * val usage = AIUsage<MyMessage>("my_feature")
+     * val usage = Usage<MyMessage>("my_feature")
      * Airship.ai.setContextProvider(usage) { message ->
-     *     AIContext(listOf(AIContext.Item("Last booked: ${store.lastBooking}")))
+     *     EvaluationContext(listOf(EvaluationContext.Item("Last booked: ${store.lastBooking}")))
      * }
      * ```
      *
@@ -25,8 +25,8 @@ public interface AirshipAI {
      * @param provider The provider, or `null` to clear it.
      */
     public fun <Subject> setContextProvider(
-        usage: AIUsage<Subject>,
-        provider: AIContextProvider<Subject>?
+        usage: Usage<Subject>,
+        provider: ContextProvider<Subject>?
     )
 
     /**
@@ -36,7 +36,7 @@ public interface AirshipAI {
      *
      * @param provider The provider, or `null` to clear it.
      */
-    public fun setDefaultContextProvider(provider: AIDefaultContextProvider?)
+    public fun setDefaultContextProvider(provider: DefaultContextProvider?)
 
     /**
      * Registers an observer called once per evaluation, whatever the outcome — including
@@ -50,30 +50,30 @@ public interface AirshipAI {
      *
      * @param observer The observer, or `null` to clear it.
      */
-    public fun setEvaluationObserver(observer: AIEvaluationObserver?)
+    public fun setEvaluationObserver(observer: EvaluationObserver?)
 
     /**
      * Registers a resolver that routes each usage to a model backend.
      *
      * ```
      * Airship.ai.setModelResolver { usage ->
-     *     if (usage == myUsage) AIModelSelector.Custom(myModel)
-     *     else AIModelSelector.DefaultModel
+     *     if (usage == myUsage) ModelSelector.Custom(myModel)
+     *     else ModelSelector.DefaultModel
      * }
      * ```
      *
      * @param resolver The resolver, or `null` to clear it, reverting every usage to the SDK
      * default.
      */
-    public fun setModelResolver(resolver: AIModelResolver?)
+    public fun setModelResolver(resolver: ModelResolver?)
 
     /**
      * The SDK's built-in default model, or `null` when none is registered.
      *
-     * Read it inside an [AIModelResolver] to fall back to another model only when the built-in
+     * Read it inside an [ModelResolver] to fall back to another model only when the built-in
      * one is unavailable.
      */
-    public val defaultModel: AIModel?
+    public val defaultModel: Model?
 
     /**
      * Returns the model resolved for [usage], or `null` when none is configured.
@@ -83,7 +83,7 @@ public interface AirshipAI {
      * @param usage The usage to resolve a model for.
      * @return The resolved model, or `null`.
      */
-    public fun model(usage: AIUsage<*>): AIModel?
+    public fun model(usage: Usage<*>): Model?
 }
 
 /**
@@ -96,7 +96,7 @@ public interface AirshipAI {
 public interface InternalAirshipAI : AirshipAI {
 
     /**
-     * Runs an evaluation through the active model, failing open to [AIEvaluationResult.Skipped]
+     * Runs an evaluation through the active model, failing open to [EvaluationResult.Skipped]
      * when no model is available.
      *
      * @param evaluation The evaluation to run.
@@ -105,26 +105,26 @@ public interface InternalAirshipAI : AirshipAI {
      * @return The result.
      */
     public suspend fun <Output, Subject> evaluate(
-        evaluation: AIEvaluation<Output, Subject>,
-        additionalContext: AIContext = AIContext.EMPTY
-    ): AIEvaluationResult<Output>
+        evaluation: Evaluation<Output, Subject>,
+        additionalContext: EvaluationContext = EvaluationContext.EMPTY
+    ): EvaluationResult<Output>
 
     /**
      * Registers the SDK's built-in default model, replacing the current one.
      *
      * @param factory Returns the model to use. Invoked at most once, on first resolution.
      */
-    public fun registerModelFactory(factory: () -> AIModel)
+    public fun registerModelFactory(factory: () -> Model)
 
     /**
-     * Fetches the registered provider's context for a usage, or [AIContext.EMPTY] when none is
+     * Fetches the registered provider's context for a usage, or [EvaluationContext.EMPTY] when none is
      * registered. Excludes the additional context an evaluation may append.
      *
      * @param usage The usage.
      * @param subject The feature-specific subject.
      * @return The context.
      */
-    public suspend fun <Subject> fetchContext(usage: AIUsage<Subject>, subject: Subject): AIContext
+    public suspend fun <Subject> fetchContext(usage: Usage<Subject>, subject: Subject): EvaluationContext
 
     /**
      * Like [model], but wrapped so its availability tracks
@@ -135,5 +135,5 @@ public interface InternalAirshipAI : AirshipAI {
      * @param usage The usage to resolve a model for.
      * @return The resolved model, or `null`.
      */
-    public fun gatedModel(usage: AIUsage<*>): AIModel?
+    public fun gatedModel(usage: Usage<*>): Model?
 }

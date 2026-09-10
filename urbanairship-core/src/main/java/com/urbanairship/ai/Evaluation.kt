@@ -10,17 +10,17 @@ import com.urbanairship.json.JsonValue
  * A typed request a feature module submits to the resolved model.
  *
  * [Output] is parsed from the model's JSON response; [Subject] is passed to the registered
- * [AIContextProvider] at evaluation time.
+ * [ContextProvider] at evaluation time.
  *
  * @hide
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public interface AIEvaluation<Output, Subject> {
+public interface Evaluation<Output, Subject> {
 
     /** Which AI usage this belongs to, binding the subject type the provider receives. */
-    public val usage: AIUsage<Subject>
+    public val usage: Usage<Subject>
 
-    /** The subject passed to the registered [AIContextProvider]. */
+    /** The subject passed to the registered [ContextProvider]. */
     public val subject: Subject
 
     /** The output contract. Payload-driven features parse this from the payload. */
@@ -52,7 +52,7 @@ public interface AIEvaluation<Output, Subject> {
      * model's input window is tight.
      * @return The prompt.
      */
-    public fun prompt(context: AIContext): String
+    public fun prompt(context: EvaluationContext): String
 
     /**
      * Parses a schema-validated response into this evaluation's output type.
@@ -70,7 +70,7 @@ public interface AIEvaluation<Output, Subject> {
  *
  * Treat anything but [Completed] as "no opinion" and proceed with default behavior.
  */
-public sealed class AIEvaluationResult<out Output> {
+public sealed class EvaluationResult<out Output> {
 
     /**
      * The model produced a structured result.
@@ -79,7 +79,7 @@ public sealed class AIEvaluationResult<out Output> {
      */
     public data class Completed<out Output> public constructor(
         public val value: Output
-    ) : AIEvaluationResult<Output>()
+    ) : EvaluationResult<Output>()
 
     /**
      * The evaluation never ran — model unavailable, no context, AI disabled.
@@ -88,7 +88,7 @@ public sealed class AIEvaluationResult<out Output> {
      */
     public data class Skipped public constructor(
         public val reason: String
-    ) : AIEvaluationResult<Nothing>()
+    ) : EvaluationResult<Nothing>()
 
     /**
      * The evaluation ran but threw.
@@ -97,7 +97,7 @@ public sealed class AIEvaluationResult<out Output> {
      */
     public data class Failed public constructor(
         public val error: Throwable
-    ) : AIEvaluationResult<Nothing>()
+    ) : EvaluationResult<Nothing>()
 
     /** The structured output if the evaluation completed, otherwise `null`. */
     public val output: Output?

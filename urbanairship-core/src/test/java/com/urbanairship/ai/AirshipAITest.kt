@@ -28,24 +28,24 @@ public class AirshipAITest {
 
     @Test
     public fun testResultOutputOnlyForCompleted() {
-        assertEquals(7, AIEvaluationResult.Completed(7).output)
-        assertNull(AIEvaluationResult.Skipped("nope").output)
-        assertNull(AIEvaluationResult.Failed(SampleError()).output)
+        assertEquals(7, EvaluationResult.Completed(7).output)
+        assertNull(EvaluationResult.Skipped("nope").output)
+        assertNull(EvaluationResult.Failed(SampleError()).output)
     }
 
     @Test
     public fun testEmptyContextIsEmpty() {
-        assertTrue(AIContext.EMPTY.items.isEmpty())
-        assertNull(AIContext.EMPTY.renderBullets())
+        assertTrue(EvaluationContext.EMPTY.items.isEmpty())
+        assertNull(EvaluationContext.EMPTY.renderBullets())
     }
 
     @Test
     public fun testContextRenderBulletsJoinsItemsInOrderWithoutPriorities() {
-        val context = AIContext(
+        val context = EvaluationContext(
             listOf(
-                AIContext.Item("b", priority = 2.0),
-                AIContext.Item("a", priority = 0.0),
-                AIContext.Item("", priority = 0.0)
+                EvaluationContext.Item("b", priority = 2.0),
+                EvaluationContext.Item("a", priority = 0.0),
+                EvaluationContext.Item("", priority = 0.0)
             )
         )
 
@@ -56,12 +56,12 @@ public class AirshipAITest {
     @Test
     public fun testDroppingLowestPriorityItemDropsEarliestLeastImportant() {
         // Lower value is more important, so the highest value is dropped first.
-        var context = AIContext(
+        var context = EvaluationContext(
             listOf(
-                AIContext.Item("keep-important", priority = 0.0),
-                AIContext.Item("drop-first", priority = 2.0),
-                AIContext.Item("drop-second", priority = 2.0),
-                AIContext.Item("keep-mid", priority = 1.0)
+                EvaluationContext.Item("keep-important", priority = 0.0),
+                EvaluationContext.Item("drop-first", priority = 2.0),
+                EvaluationContext.Item("drop-second", priority = 2.0),
+                EvaluationContext.Item("keep-mid", priority = 1.0)
             )
         )
 
@@ -80,39 +80,39 @@ public class AirshipAITest {
         context = dropped!!.first
         assertEquals(listOf("keep-important"), context.items.map { it.content })
 
-        assertNull(AIContext.EMPTY.droppingLowestPriorityItem())
+        assertNull(EvaluationContext.EMPTY.droppingLowestPriorityItem())
     }
 
     @Test
     public fun testAppendingKeepsOrderWithOtherItemsLast() {
         // Same value → the appended (later) item is dropped last, so it wins the tie.
-        val base = AIContext(listOf(AIContext.Item("provider", priority = 1.0)))
+        val base = EvaluationContext(listOf(EvaluationContext.Item("provider", priority = 1.0)))
         val merged = base.appending(
-            AIContext(listOf(AIContext.Item("authored", priority = 1.0)))
+            EvaluationContext(listOf(EvaluationContext.Item("authored", priority = 1.0)))
         )
 
         assertEquals(listOf("provider", "authored"), merged.items.map { it.content })
         assertEquals("provider", merged.droppingLowestPriorityItem()?.second?.content)
-        assertEquals(base, base.appending(AIContext.EMPTY))
+        assertEquals(base, base.appending(EvaluationContext.EMPTY))
     }
 
     @Test
     public fun testUsagesWithSameRawValueAreEqualWhateverTheSubject() {
         // A ModelResolver is handed a `Usage<*>` and compares it against a feature's own key.
-        val erased: AIUsage<*> = AIUsage<String>("test_usage")
+        val erased: Usage<*> = Usage<String>("test_usage")
         assertEquals(testUsage, erased)
         assertEquals(testUsage.hashCode(), erased.hashCode())
     }
 
     @Test
     public fun testDroppingContextItemFromRequestLeavesTheOriginalIntact() {
-        val context = AIContext(
+        val context = EvaluationContext(
             listOf(
-                AIContext.Item("keep", priority = 0.0),
-                AIContext.Item("drop", priority = 1.0)
+                EvaluationContext.Item("keep", priority = 0.0),
+                EvaluationContext.Item("drop", priority = 1.0)
             )
         )
-        val request = AIModelRequest(
+        val request = ModelRequest(
             instructions = "rules",
             schema = testSchema,
             context = context,
@@ -131,17 +131,17 @@ public class AirshipAITest {
     // MARK: evaluator
 
     private suspend fun eval(
-        model: AIModel,
-        context: AIContext = AIContext.EMPTY,
+        model: Model,
+        context: EvaluationContext = EvaluationContext.EMPTY,
         evaluation: TestEvaluation = TestEvaluation(),
-        maxResponseTimeout: Duration = AIEvaluator.DEFAULT_MAX_RESPONSE_TIMEOUT
-    ): AIEvaluationResult<TestOutput> =
+        maxResponseTimeout: Duration = Evaluator.DEFAULT_MAX_RESPONSE_TIMEOUT
+    ): EvaluationResult<TestOutput> =
         testEvaluator(maxResponseTimeout).evaluate(evaluation, model, context)
 
     @Test
     public fun testCompletedWhenModelSucceeds(): Unit = runTest {
-        val model = MockAIModel(response = { allowResponse(allow = false, reason = "not relevant") })
-        val context = AIContext(listOf(AIContext.Item("likes hiking")))
+        val model = MockModel(response = { allowResponse(allow = false, reason = "not relevant") })
+        val context = EvaluationContext(listOf(EvaluationContext.Item("likes hiking")))
 
         val result = eval(model, context)
 
@@ -154,26 +154,26 @@ public class AirshipAITest {
 
     @Test
     public fun testSkippedWhenModelUnavailable(): Unit = runTest {
-        val model = MockAIModel(
-            availability = AIModelAvailability.Unavailable(
-                AIModelAvailability.Reason.DeviceNotEligible
+        val model = MockModel(
+            availability = Availability.Unavailable(
+                Availability.Reason.DeviceNotEligible
             )
         )
 
-        assertTrue(eval(model) is AIEvaluationResult.Skipped)
+        assertTrue(eval(model) is EvaluationResult.Skipped)
         assertEquals(0, model.respondCallCount)
     }
 
     @Test
     public fun testFailedWhenModelThrows(): Unit = runTest {
-        val result = eval(MockAIModel(response = { throw SampleError() }))
-        assertTrue(result is AIEvaluationResult.Failed)
+        val result = eval(MockModel(response = { throw SampleError() }))
+        assertTrue(result is EvaluationResult.Failed)
     }
 
     @Test
     public fun testFailedWhenResponseDoesNotMatchSchema(): Unit = runTest {
-        val model = MockAIModel(response = { offSchemaResponse() })
-        assertTrue(eval(model) is AIEvaluationResult.Failed)
+        val model = MockModel(response = { offSchemaResponse() })
+        assertTrue(eval(model) is EvaluationResult.Failed)
     }
 
     @Test
@@ -184,22 +184,22 @@ public class AirshipAITest {
                 throw com.urbanairship.json.JsonException("nope")
         }
 
-        val result = eval(MockAIModel(), evaluation = evaluation)
-        assertTrue(result is AIEvaluationResult.Failed)
+        val result = eval(MockModel(), evaluation = evaluation)
+        assertTrue(result is EvaluationResult.Failed)
     }
 
     @Test
     public fun testUsesEmptyContextWhenNoProvider(): Unit = runTest {
-        val model = MockAIModel()
+        val model = MockModel()
         eval(model)
-        assertEquals(AIContext.EMPTY, model.lastRequest?.context)
+        assertEquals(EvaluationContext.EMPTY, model.lastRequest?.context)
     }
 
     // MARK: retry / timeout
 
     @Test
     public fun testRetriesUntilOutputConformsToSchema(): Unit = runTest {
-        val model = MockAIModel(maxAttempts = 3)
+        val model = MockModel(maxAttempts = 3)
         model.responses = mutableListOf(
             { offSchemaResponse() },
             { allowResponse(allow = true, reason = "second try") }
@@ -213,41 +213,41 @@ public class AirshipAITest {
 
     @Test
     public fun testFailsAfterExhaustingAttempts(): Unit = runTest {
-        val model = MockAIModel(response = { offSchemaResponse() }, maxAttempts = 2)
+        val model = MockModel(response = { offSchemaResponse() }, maxAttempts = 2)
 
-        assertTrue(eval(model) is AIEvaluationResult.Failed)
+        assertTrue(eval(model) is EvaluationResult.Failed)
         assertEquals(2, model.respondCallCount)
     }
 
     @Test
     public fun testCancellationErrorIsNotRetried(): Unit = runTest {
-        val model = MockAIModel(response = { throw CancellationException() }, maxAttempts = 5)
+        val model = MockModel(response = { throw CancellationException() }, maxAttempts = 5)
 
-        assertTrue(eval(model) is AIEvaluationResult.Failed)
+        assertTrue(eval(model) is EvaluationResult.Failed)
         // Cancellation is terminal — without the dedicated branch, all 5 attempts would run.
         assertEquals(1, model.respondCallCount)
     }
 
     @Test
     public fun testRetriesUntilTheModelSaysToStop(): Unit = runTest {
-        val model = MockAIModel(response = { throw SampleError() }, maxAttempts = 3)
+        val model = MockModel(response = { throw SampleError() }, maxAttempts = 3)
 
-        assertTrue(eval(model) is AIEvaluationResult.Failed)
+        assertTrue(eval(model) is EvaluationResult.Failed)
         assertEquals(3, model.respondCallCount)
     }
 
     @Test
     public fun testCeilingTerminatesSlowModel(): Unit = runTest {
-        val model = MockAIModel()
+        val model = MockModel()
         model.respondDelay = 60.seconds
 
-        assertTrue(eval(model, maxResponseTimeout = 100.milliseconds) is AIEvaluationResult.Failed)
+        assertTrue(eval(model, maxResponseTimeout = 100.milliseconds) is EvaluationResult.Failed)
     }
 
     @Test
     @OptIn(ExperimentalCoroutinesApi::class)
     public fun testRetryDelayIsAwaitedBetweenAttempts(): Unit = runTest {
-        val model = MockAIModel(response = { throw SampleError() }, maxAttempts = 3)
+        val model = MockModel(response = { throw SampleError() }, maxAttempts = 3)
         model.retryDelay = 2.seconds
 
         val started = currentTime
@@ -261,25 +261,25 @@ public class AirshipAITest {
     @Test
     public fun testRetryDelayIsClampedToTheCeiling(): Unit = runTest {
         // An app-supplied delay past the ceiling must not park the evaluation forever.
-        val model = MockAIModel(response = { throw SampleError() }, maxAttempts = 5)
+        val model = MockModel(response = { throw SampleError() }, maxAttempts = 5)
         model.retryDelay = Duration.INFINITE
 
-        assertTrue(eval(model, maxResponseTimeout = 1.seconds) is AIEvaluationResult.Failed)
+        assertTrue(eval(model, maxResponseTimeout = 1.seconds) is EvaluationResult.Failed)
     }
 
     @Test
     public fun testSchemaMismatchReachesRetryDecisionWrapped(): Unit = runTest {
         // A model needs to tell "answered but didn't conform" apart from a thrown failure.
-        val model = MockAIModel(response = { offSchemaResponse() }, maxAttempts = 2)
+        val model = MockModel(response = { offSchemaResponse() }, maxAttempts = 2)
 
         eval(model)
 
-        assertTrue(model.retryErrors.all { it is AISchemaValidationException })
+        assertTrue(model.retryErrors.all { it is SchemaValidationException })
     }
 
     @Test
     public fun testThrownErrorReachesRetryDecisionUnwrapped(): Unit = runTest {
-        val model = MockAIModel(response = { throw SampleError() }, maxAttempts = 2)
+        val model = MockModel(response = { throw SampleError() }, maxAttempts = 2)
 
         eval(model)
 
@@ -288,34 +288,34 @@ public class AirshipAITest {
 
     @Test
     public fun testDefaultBackoffRetriesSchemaMismatchImmediately() {
-        val error = AISchemaValidationException(SampleError())
-        assertEquals(AIRetryDecision.Retry(Duration.ZERO), AIRetryDecision.defaultBackoff(error, 1))
-        assertEquals(AIRetryDecision.Retry(Duration.ZERO), AIRetryDecision.defaultBackoff(error, 2))
-        assertEquals(AIRetryDecision.Fail, AIRetryDecision.defaultBackoff(error, 3))
+        val error = SchemaValidationException(SampleError())
+        assertEquals(RetryDecision.Retry(Duration.ZERO), RetryDecision.defaultBackoff(error, 1))
+        assertEquals(RetryDecision.Retry(Duration.ZERO), RetryDecision.defaultBackoff(error, 2))
+        assertEquals(RetryDecision.Fail, RetryDecision.defaultBackoff(error, 3))
     }
 
     @Test
     public fun testDefaultBackoffBacksOffOnAnyOtherError() {
         val error = SampleError()
-        assertEquals(AIRetryDecision.Retry(1.seconds), AIRetryDecision.defaultBackoff(error, 1))
-        assertEquals(AIRetryDecision.Retry(4.seconds), AIRetryDecision.defaultBackoff(error, 2))
-        assertEquals(AIRetryDecision.Fail, AIRetryDecision.defaultBackoff(error, 3))
+        assertEquals(RetryDecision.Retry(1.seconds), RetryDecision.defaultBackoff(error, 1))
+        assertEquals(RetryDecision.Retry(4.seconds), RetryDecision.defaultBackoff(error, 2))
+        assertEquals(RetryDecision.Fail, RetryDecision.defaultBackoff(error, 3))
     }
 
     @Test
     public fun testModelWithNoRetryDecisionUsesTheFrameworkDefault(): Unit = runTest {
-        val model = MockAIModel(response = { throw SampleError() })
+        val model = MockModel(response = { throw SampleError() })
         model.retryDecision = null
 
-        assertTrue(eval(model) is AIEvaluationResult.Failed)
+        assertTrue(eval(model) is EvaluationResult.Failed)
         // Three attempts, per defaultBackoff.
-        assertEquals(AIRetryDecision.DEFAULT_MAX_ATTEMPTS, model.respondCallCount)
+        assertEquals(RetryDecision.DEFAULT_MAX_ATTEMPTS, model.respondCallCount)
     }
 
     @Test
     public fun testErrorsArePropagatedRatherThanRetried(): Unit = runTest {
         // An Error is not a failure to fail open on — retrying an OOM makes it worse.
-        val model = MockAIModel(response = { throw OutOfMemoryError("nope") }, maxAttempts = 5)
+        val model = MockModel(response = { throw OutOfMemoryError("nope") }, maxAttempts = 5)
 
         assertThrows(OutOfMemoryError::class.java) { runBlocking { eval(model) } }
         assertEquals(1, model.respondCallCount)
@@ -323,11 +323,11 @@ public class AirshipAITest {
 
     @Test
     public fun testResultsAndOutcomesCompareByValue() {
-        assertEquals(AIEvaluationResult.Skipped("nope"), AIEvaluationResult.Skipped("nope"))
-        assertEquals(AIEvaluationResult.Completed(7), AIEvaluationResult.Completed(7))
+        assertEquals(EvaluationResult.Skipped("nope"), EvaluationResult.Skipped("nope"))
+        assertEquals(EvaluationResult.Completed(7), EvaluationResult.Completed(7))
         assertEquals(
-            AIEvaluationRecord.Outcome.Skipped("nope"),
-            AIEvaluationRecord.Outcome.Skipped("nope")
+            EvaluationRecord.Outcome.Skipped("nope"),
+            EvaluationRecord.Outcome.Skipped("nope")
         )
     }
 
@@ -335,9 +335,9 @@ public class AirshipAITest {
 
     @Test
     public fun testManagerUsesConfiguredModel(): Unit = runTest {
-        val model = MockAIModel(response = { allowResponse(allow = false, reason = "override") })
+        val model = MockModel(response = { allowResponse(allow = false, reason = "override") })
         val manager = testManager()
-        manager.setModelResolver { AIModelSelector.Custom(model) }
+        manager.setModelResolver { ModelSelector.Custom(model) }
 
         val result = manager.evaluate(TestEvaluation())
 
@@ -347,18 +347,18 @@ public class AirshipAITest {
 
     @Test
     public fun testManagerAppendsAdditionalContextAfterProviderContext(): Unit = runTest {
-        val model = MockAIModel()
+        val model = MockModel()
         val manager = testManager()
-        manager.setModelResolver { AIModelSelector.Custom(model) }
+        manager.setModelResolver { ModelSelector.Custom(model) }
         manager.setContextProvider(
             testUsage,
-            itemsProvider(AIContext.Item("provider", priority = 0.0))
+            itemsProvider(EvaluationContext.Item("provider", priority = 0.0))
         )
 
         manager.evaluate(
             TestEvaluation(),
-            additionalContext = AIContext(
-                listOf(AIContext.Item("authored", priority = 5.0))
+            additionalContext = EvaluationContext(
+                listOf(EvaluationContext.Item("authored", priority = 5.0))
             )
         )
 
@@ -370,18 +370,18 @@ public class AirshipAITest {
 
     @Test
     public fun testDefaultContextProviderIsOnlyAFallback(): Unit = runTest {
-        val model = MockAIModel()
+        val model = MockModel()
         val manager = testManager()
-        manager.setModelResolver { AIModelSelector.Custom(model) }
+        manager.setModelResolver { ModelSelector.Custom(model) }
         manager.setDefaultContextProvider {
-            AIContext(listOf(AIContext.Item("default")))
+            EvaluationContext(listOf(EvaluationContext.Item("default")))
         }
 
         manager.evaluate(TestEvaluation())
         assertEquals(listOf("default"), model.lastRequest?.context?.items?.map { it.content })
 
         // A usage-specific provider wins outright; the two are never combined.
-        manager.setContextProvider(testUsage, itemsProvider(AIContext.Item("specific")))
+        manager.setContextProvider(testUsage, itemsProvider(EvaluationContext.Item("specific")))
         manager.evaluate(TestEvaluation())
         assertEquals(listOf("specific"), model.lastRequest?.context?.items?.map { it.content })
     }
@@ -390,9 +390,9 @@ public class AirshipAITest {
     public fun testClearingContextProviderFallsBackToDefaultProvider(): Unit = runTest {
         val manager = testManager()
         manager.setDefaultContextProvider {
-            AIContext(listOf(AIContext.Item("default")))
+            EvaluationContext(listOf(EvaluationContext.Item("default")))
         }
-        manager.setContextProvider(testUsage, itemsProvider(AIContext.Item("specific")))
+        manager.setContextProvider(testUsage, itemsProvider(EvaluationContext.Item("specific")))
         manager.setContextProvider(testUsage, null)
 
         assertEquals(
@@ -405,21 +405,21 @@ public class AirshipAITest {
 
     @Test
     public fun testSkipsContextRequiringEvaluationWhenContextEmpty(): Unit = runTest {
-        val model = MockAIModel()
+        val model = MockModel()
         val manager = testManager()
-        manager.setModelResolver { AIModelSelector.Custom(model) }
+        manager.setModelResolver { ModelSelector.Custom(model) }
         // No provider registered, so the resolved context is empty.
 
-        assertTrue(manager.evaluate(ContextRequiredEvaluation()) is AIEvaluationResult.Skipped)
+        assertTrue(manager.evaluate(ContextRequiredEvaluation()) is EvaluationResult.Skipped)
         assertEquals(0, model.respondCallCount)
     }
 
     @Test
     public fun testRunsContextRequiringEvaluationWhenProviderSuppliesContext(): Unit = runTest {
-        val model = MockAIModel()
+        val model = MockModel()
         val manager = testManager()
-        manager.setModelResolver { AIModelSelector.Custom(model) }
-        manager.setContextProvider(testUsage, itemsProvider(AIContext.Item("likes hiking")))
+        manager.setModelResolver { ModelSelector.Custom(model) }
+        manager.setContextProvider(testUsage, itemsProvider(EvaluationContext.Item("likes hiking")))
 
         assertNotNull(manager.evaluate(ContextRequiredEvaluation()).output)
         assertEquals(1, model.respondCallCount)
@@ -429,13 +429,13 @@ public class AirshipAITest {
     public fun testRunsContextRequiringEvaluationWhenOnlyAdditionalContextProvided(): Unit = runTest {
         // The gate is on the merged context, so caller-supplied context satisfies it even
         // with no provider registered.
-        val model = MockAIModel()
+        val model = MockModel()
         val manager = testManager()
-        manager.setModelResolver { AIModelSelector.Custom(model) }
+        manager.setModelResolver { ModelSelector.Custom(model) }
 
         val result = manager.evaluate(
             ContextRequiredEvaluation(),
-            additionalContext = AIContext(listOf(AIContext.Item("authored")))
+            additionalContext = EvaluationContext(listOf(EvaluationContext.Item("authored")))
         )
 
         assertNotNull(result.output)
@@ -450,19 +450,19 @@ public class AirshipAITest {
         val manager = testManager()
         manager.setContextProvider(testUsage) { throw SampleError() }
 
-        assertEquals(AIContext.EMPTY, manager.fetchContext(testUsage, Unit))
+        assertEquals(EvaluationContext.EMPTY, manager.fetchContext(testUsage, Unit))
     }
 
     @Test
     public fun testProviderSubjectTypeMismatchDegradesToEmptyContext(): Unit = runTest {
         // Two features sharing a usage key with different subject types.
         val manager = testManager()
-        val stringUsage = AIUsage<String>(testUsage.rawValue)
+        val stringUsage = Usage<String>(testUsage.rawValue)
         manager.setContextProvider(stringUsage) { subject ->
-            AIContext(listOf(AIContext.Item(subject)))
+            EvaluationContext(listOf(EvaluationContext.Item(subject)))
         }
 
-        assertEquals(AIContext.EMPTY, manager.fetchContext(testUsage, Unit))
+        assertEquals(EvaluationContext.EMPTY, manager.fetchContext(testUsage, Unit))
     }
 
     // MARK: per-usage model resolution
@@ -474,7 +474,7 @@ public class AirshipAITest {
         val manager = testManager()
         manager.registerModelFactory {
             invocations += 1
-            MockAIModel()
+            MockModel()
         }
 
         val first = manager.model(testUsage)
@@ -487,43 +487,43 @@ public class AirshipAITest {
 
     @Test
     public fun testModelIsNullWhenNoneConfigured() {
-        assertNull(testManager().model(AIUsage<Unit>("test")))
+        assertNull(testManager().model(Usage<Unit>("test")))
     }
 
     @Test
     public fun testModelReturnsDefaultFactoryModelWhenNoResolver() {
-        val model = MockAIModel()
+        val model = MockModel()
         val manager = testManager()
         manager.registerModelFactory { model }
 
-        assertSame(model, manager.model(AIUsage<Unit>("any_usage")))
+        assertSame(model, manager.model(Usage<Unit>("any_usage")))
         assertSame(model, manager.defaultModel)
     }
 
     @Test
     public fun testResolverWinsOverDefaultFactory() {
-        val defaultModel = MockAIModel()
-        val usageModel = MockAIModel()
+        val defaultModel = MockModel()
+        val usageModel = MockModel()
         val manager = testManager()
         manager.registerModelFactory { defaultModel }
         manager.setModelResolver { usage ->
             if (usage == testUsage) {
-                AIModelSelector.Custom(usageModel)
+                ModelSelector.Custom(usageModel)
             } else {
-                AIModelSelector.DefaultModel
+                ModelSelector.DefaultModel
             }
         }
 
         assertSame(usageModel, manager.model(testUsage))
-        assertSame(defaultModel, manager.model(AIUsage<Unit>("other")))
+        assertSame(defaultModel, manager.model(Usage<Unit>("other")))
     }
 
     @Test
     public fun testClearingResolverFallsBackToDefaultFactory() {
-        val defaultModel = MockAIModel()
+        val defaultModel = MockModel()
         val manager = testManager()
         manager.registerModelFactory { defaultModel }
-        manager.setModelResolver { AIModelSelector.Custom(MockAIModel()) }
+        manager.setModelResolver { ModelSelector.Custom(MockModel()) }
         manager.setModelResolver(null)
 
         assertSame(defaultModel, manager.model(testUsage))
@@ -534,7 +534,7 @@ public class AirshipAITest {
     @Test
     public fun testModelIsNullWhenAIDisabled() {
         val manager = testManager(testPrivacyManager(PrivacyManager.Feature.NONE))
-        manager.registerModelFactory { MockAIModel() }
+        manager.registerModelFactory { MockModel() }
 
         assertNull(manager.model(testUsage))
         assertNull(manager.defaultModel)
@@ -543,22 +543,22 @@ public class AirshipAITest {
     @Test
     public fun testModelIsResolvedWhenAIEnabled() {
         val manager = testManager(testPrivacyManager(PrivacyManager.Feature.ON_DEVICE_AI))
-        manager.registerModelFactory { MockAIModel() }
+        manager.registerModelFactory { MockModel() }
 
-        assertEquals(AIModelAvailability.Available, manager.model(testUsage)?.availability)
-        assertEquals(AIModelAvailability.Available, manager.defaultModel?.availability)
+        assertEquals(Availability.Available, manager.model(testUsage)?.availability)
+        assertEquals(Availability.Available, manager.defaultModel?.availability)
     }
 
     @Test
     public fun testGatedModelReportsNotEnabledWhenAIDisabled() {
         val manager = testManager(testPrivacyManager(PrivacyManager.Feature.NONE))
-        manager.registerModelFactory { MockAIModel() }
+        manager.registerModelFactory { MockModel() }
 
         // Unlike model(), gatedModel() still returns an instance — just one reporting
         // NotEnabled — so a caller holding onto it sees the gate reflected in its
         // availability rather than losing the reference outright.
         assertEquals(
-            AIModelAvailability.Unavailable(AIModelAvailability.Reason.NotEnabled),
+            Availability.Unavailable(Availability.Reason.NotEnabled),
             manager.gatedModel(testUsage)?.availability
         )
     }
@@ -567,42 +567,42 @@ public class AirshipAITest {
     public fun testGatedModelStaysInSyncAsPrivacyManagerToggles() {
         val privacyManager = testPrivacyManager()
         val manager = testManager(privacyManager)
-        manager.registerModelFactory { MockAIModel() }
+        manager.registerModelFactory { MockModel() }
 
         // A single resolved reference, held across the toggle — mirrors a caller that
         // resolves once and caches the result.
         val resolved = manager.gatedModel(testUsage)
-        assertEquals(AIModelAvailability.Available, resolved?.availability)
+        assertEquals(Availability.Available, resolved?.availability)
 
         privacyManager.disable(PrivacyManager.Feature.ON_DEVICE_AI)
         assertEquals(
-            AIModelAvailability.Unavailable(AIModelAvailability.Reason.NotEnabled),
+            Availability.Unavailable(Availability.Reason.NotEnabled),
             resolved?.availability
         )
 
         privacyManager.enable(PrivacyManager.Feature.ON_DEVICE_AI)
-        assertEquals(AIModelAvailability.Available, resolved?.availability)
+        assertEquals(Availability.Available, resolved?.availability)
     }
 
     @Test
     public fun testGatedModelAvailabilityUpdatesEmitsOnPrivacyManagerChange(): Unit = runTest {
         val privacyManager = testPrivacyManager()
         val manager = testManager(privacyManager)
-        manager.registerModelFactory { MockAIModel() }
+        manager.registerModelFactory { MockModel() }
 
         val resolved = requireNotNull(manager.gatedModel(testUsage))
 
         resolved.availabilityUpdates.test {
-            assertEquals(AIModelAvailability.Available, awaitItem())
+            assertEquals(Availability.Available, awaitItem())
 
             privacyManager.disable(PrivacyManager.Feature.ON_DEVICE_AI)
             assertEquals(
-                AIModelAvailability.Unavailable(AIModelAvailability.Reason.NotEnabled),
+                Availability.Unavailable(Availability.Reason.NotEnabled),
                 awaitItem()
             )
 
             privacyManager.enable(PrivacyManager.Feature.ON_DEVICE_AI)
-            assertEquals(AIModelAvailability.Available, awaitItem())
+            assertEquals(Availability.Available, awaitItem())
 
             cancelAndIgnoreRemainingEvents()
         }
@@ -610,19 +610,19 @@ public class AirshipAITest {
 
     @Test
     public fun testEvaluateSkipsWhenAIDisabled(): Unit = runTest {
-        val model = MockAIModel()
+        val model = MockModel()
         val manager = testManager(testPrivacyManager(PrivacyManager.Feature.NONE))
-        manager.setModelResolver { AIModelSelector.Custom(model) }
+        manager.setModelResolver { ModelSelector.Custom(model) }
 
-        assertTrue(manager.evaluate(TestEvaluation()) is AIEvaluationResult.Skipped)
+        assertTrue(manager.evaluate(TestEvaluation()) is EvaluationResult.Skipped)
         assertEquals(0, model.respondCallCount)
     }
 
     @Test
     public fun testFetchContextReturnsEmptyWhenAIDisabled(): Unit = runTest {
         val manager = testManager(testPrivacyManager(PrivacyManager.Feature.NONE))
-        manager.setContextProvider(testUsage, itemsProvider(AIContext.Item("likes hiking")))
+        manager.setContextProvider(testUsage, itemsProvider(EvaluationContext.Item("likes hiking")))
 
-        assertEquals(AIContext.EMPTY, manager.fetchContext(testUsage, Unit))
+        assertEquals(EvaluationContext.EMPTY, manager.fetchContext(testUsage, Unit))
     }
 }

@@ -12,17 +12,17 @@ import kotlinx.coroutines.flow.flowOf
  * Answers one request; retry and output validation live in the framework, with the retry
  * schedule tuned through [retryDecision].
  */
-public interface AIModel {
+public interface Model {
 
     /**
      * Whether the model can be used right now, and if not, why.
      *
      * Read fresh before each evaluation, which is skipped when this is
-     * [AIModelAvailability.Unavailable]. Override only for a backend that can genuinely be
+     * [Availability.Unavailable]. Override only for a backend that can genuinely be
      * unusable; otherwise let a failure surface from [respond].
      */
-    public val availability: AIModelAvailability
-        get() = AIModelAvailability.Available
+    public val availability: Availability
+        get() = Availability.Available
 
     /**
      * Emits whenever [availability] changes.
@@ -31,18 +31,18 @@ public interface AIModel {
      * availability never changes. Treat emissions as change notifications and read
      * [availability] for the value right now.
      */
-    public val availabilityUpdates: Flow<AIModelAvailability>
+    public val availabilityUpdates: Flow<Availability>
         get() = flowOf(availability)
 
     /**
      * Decides what happens after a failed attempt.
      *
      * Called each time [respond] throws or the response fails schema validation (as an
-     * [AISchemaValidationException]). There is no separate attempt cap — cap it yourself by
-     * returning [AIRetryDecision.Fail] once [attempt] says to stop. The framework enforces its
+     * [SchemaValidationException]). There is no separate attempt cap — cap it yourself by
+     * returning [RetryDecision.Fail] once [attempt] says to stop. The framework enforces its
      * own wall-clock ceiling on the whole loop regardless of what this returns.
      *
-     * Defaults to [AIRetryDecision.defaultBackoff]: a schema mismatch retries immediately, any
+     * Defaults to [RetryDecision.defaultBackoff]: a schema mismatch retries immediately, any
      * other error backs off 1s then 4s, failing after three attempts. Override for a backend
      * where a retry is expensive or slow, or one that wants a different schedule.
      *
@@ -52,28 +52,28 @@ public interface AIModel {
      * @return Whether to retry, and after how long.
      */
     public fun retryDecision(
-        usage: AIUsage<*>,
+        usage: Usage<*>,
         error: Throwable,
         attempt: Int
-    ): AIRetryDecision = AIRetryDecision.defaultBackoff(error, attempt)
+    ): RetryDecision = RetryDecision.defaultBackoff(error, attempt)
 
     /**
      * Answers a single request.
      *
-     * At minimum, send [AIModelRequest.prompt]. If the prompt exceeds your input limit, shrink
-     * it with [AIModelRequest.droppingLowestPriorityContextItem].
+     * At minimum, send [ModelRequest.prompt]. If the prompt exceeds your input limit, shrink
+     * it with [ModelRequest.droppingLowestPriorityContextItem].
      *
      * @param request The request to answer.
      * @return The model's structured response.
      */
-    public suspend fun respond(request: AIModelRequest): JsonValue
+    public suspend fun respond(request: ModelRequest): JsonValue
 }
 
 /** Whether a resolved model can be used right now. */
-public sealed class AIModelAvailability {
+public sealed class Availability {
 
     /** The model can be used. */
-    public data object Available : AIModelAvailability()
+    public data object Available : Availability()
 
     /**
      * The model can't be used.
@@ -82,7 +82,7 @@ public sealed class AIModelAvailability {
      */
     public data class Unavailable public constructor(
         public val reason: Reason
-    ) : AIModelAvailability()
+    ) : Availability()
 
     /** Why a model can't be used — outcomes an app can act on, not backend internals. */
     public sealed class Reason {
@@ -105,13 +105,13 @@ public sealed class AIModelAvailability {
 }
 
 /**
- * A single request handed to an [AIModel]: instructions, output schema, and prioritized context.
+ * A single request handed to an [Model]: instructions, output schema, and prioritized context.
  *
  * The originating evaluation owns how context is labeled and laid out — a model only renders it
  * via [prompt] and, if its input window is tight, trims. The framework builds one per
  * evaluation; models don't construct these.
  */
-public class AIModelRequest public constructor(
+public class ModelRequest public constructor(
 
     /** The system instructions: the model's role and rules. */
     public val instructions: String,
@@ -120,10 +120,10 @@ public class AIModelRequest public constructor(
     public val schema: JsonSchema,
 
     /** The prioritized context for this request. */
-    public val context: AIContext,
+    public val context: EvaluationContext,
 
     /** Renders [context] into prompt text. Owned by the evaluation, not the model. */
-    private val render: (AIContext) -> String
+    private val render: (EvaluationContext) -> String
 ) {
 
     /**
@@ -147,28 +147,28 @@ public class AIModelRequest public constructor(
      * @return The trimmed request and the dropped item, or `null` when the context is already
      * empty.
      */
-    public fun droppingLowestPriorityContextItem(): Pair<AIModelRequest, AIContext.Item>? {
+    public fun droppingLowestPriorityContextItem(): Pair<ModelRequest, EvaluationContext.Item>? {
         val (trimmed, dropped) = context.droppingLowestPriorityItem() ?: return null
-        return AIModelRequest(instructions, schema, trimmed, render) to dropped
+        return ModelRequest(instructions, schema, trimmed, render) to dropped
     }
 }
 
-/** Selects which model backs an evaluation. Returned from an [AIModelResolver]. */
-public sealed class AIModelSelector {
+/** Selects which model backs an evaluation. Returned from an [ModelResolver]. */
+public sealed class ModelSelector {
 
     /** Use the SDK's built-in model, if one is registered and the device is eligible. */
-    public data object DefaultModel : AIModelSelector()
+    public data object DefaultModel : ModelSelector()
 
     /**
      * Use a custom model — your own backend, a third-party API, or another on-device runtime.
      *
      * @param model The model.
      */
-    public class Custom public constructor(public val model: AIModel) : AIModelSelector()
+    public class Custom public constructor(public val model: Model) : ModelSelector()
 }
 
 /** Routes a usage to a model backend. */
-public fun interface AIModelResolver {
+public fun interface ModelResolver {
 
     /**
      * Returns the selector to apply for [usage].
@@ -176,5 +176,5 @@ public fun interface AIModelResolver {
      * @param usage The usage being evaluated. Compare against a feature's usage key with `==`.
      * @return The model selector.
      */
-    public fun resolve(usage: AIUsage<*>): AIModelSelector
+    public fun resolve(usage: Usage<*>): ModelSelector
 }

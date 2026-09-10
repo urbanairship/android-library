@@ -17,29 +17,29 @@ import org.junit.runner.RunWith
  * in the field and the one an app most needs to see.
  */
 @RunWith(AndroidJUnit4::class)
-public class AirshipAIEvaluationObserverTest {
+public class EvaluationObserverTest {
 
     private val observer = RecordingObserver()
     private val records get() = observer.records
 
     private suspend fun evaluate(
-        model: AIModel,
-        context: AIContext = AIContext.EMPTY,
+        model: Model,
+        context: EvaluationContext = EvaluationContext.EMPTY,
         evaluation: TestEvaluation = TestEvaluation()
-    ): AIEvaluationResult<TestOutput> =
+    ): EvaluationResult<TestOutput> =
         testEvaluator().evaluate(evaluation, model, context, observer)
 
     @Test
     public fun testCompletedReportsRawOutput(): Unit = runTest {
-        evaluate(MockAIModel(response = { allowResponse(allow = true, reason = "ok") }))
+        evaluate(MockModel(response = { allowResponse(allow = true, reason = "ok") }))
 
         assertEquals(1, records.size)
         val outcome = records.first().outcome
-        assertTrue(outcome is AIEvaluationRecord.Outcome.Completed)
+        assertTrue(outcome is EvaluationRecord.Outcome.Completed)
         // Raw JSON rather than a typed value is what lets one observer serve every usage.
         assertEquals(
             "ok",
-            (outcome as AIEvaluationRecord.Outcome.Completed).output.optMap().opt("reason").string
+            (outcome as EvaluationRecord.Outcome.Completed).output.optMap().opt("reason").string
         )
         assertEquals("test_usage", records.first().usage.rawValue)
         assertEquals(1, records.first().attempts)
@@ -48,16 +48,16 @@ public class AirshipAIEvaluationObserverTest {
     @Test
     public fun testUnavailableModelReports(): Unit = runTest {
         evaluate(
-            MockAIModel(
-                availability = AIModelAvailability.Unavailable(
-                    AIModelAvailability.Reason.MissingModel
+            MockModel(
+                availability = Availability.Unavailable(
+                    Availability.Reason.MissingModel
                 )
             )
         )
 
         assertEquals(1, records.size)
         assertEquals(
-            AIEvaluationRecord.Outcome.Skipped("Model unavailable"),
+            EvaluationRecord.Outcome.Skipped("Model unavailable"),
             records.first().outcome
         )
         // Never reached the model, so nothing was attempted.
@@ -66,10 +66,10 @@ public class AirshipAIEvaluationObserverTest {
 
     @Test
     public fun testFailureReportsAttempts(): Unit = runTest {
-        evaluate(MockAIModel(response = { throw SampleError() }, maxAttempts = 3))
+        evaluate(MockModel(response = { throw SampleError() }, maxAttempts = 3))
 
         assertEquals(1, records.size)
-        assertTrue(records.first().outcome is AIEvaluationRecord.Outcome.Failed)
+        assertTrue(records.first().outcome is EvaluationRecord.Outcome.Failed)
         assertEquals(3, records.first().attempts)
     }
 
@@ -81,18 +81,18 @@ public class AirshipAIEvaluationObserverTest {
             override fun parseOutput(json: JsonValue): TestOutput = throw JsonException("nope")
         }
 
-        val result = evaluate(MockAIModel(), evaluation = evaluation)
+        val result = evaluate(MockModel(), evaluation = evaluation)
 
-        assertTrue(result is AIEvaluationResult.Failed)
+        assertTrue(result is EvaluationResult.Failed)
         assertEquals(1, records.size)
-        assertTrue(records.first().outcome is AIEvaluationRecord.Outcome.Completed)
+        assertTrue(records.first().outcome is EvaluationRecord.Outcome.Completed)
     }
 
     @Test
     public fun testRecordCarriesRequest(): Unit = runTest {
-        val context = AIContext(listOf(AIContext.Item("User interests: cats")))
+        val context = EvaluationContext(listOf(EvaluationContext.Item("User interests: cats")))
 
-        evaluate(MockAIModel(), context)
+        evaluate(MockModel(), context)
 
         val request = records.first().request
         assertEquals("rules", request.instructions)
@@ -103,14 +103,14 @@ public class AirshipAIEvaluationObserverTest {
     @Test
     public fun testNoObserverIsFine(): Unit = runTest {
         val result = testEvaluator()
-            .evaluate(TestEvaluation(), MockAIModel(), AIContext.EMPTY, observer = null)
+            .evaluate(TestEvaluation(), MockModel(), EvaluationContext.EMPTY, observer = null)
 
-        assertTrue(result is AIEvaluationResult.Completed)
+        assertTrue(result is EvaluationResult.Completed)
     }
 
     @Test
     public fun testSchemaRetryIsReportedAsASingleRecord(): Unit = runTest {
-        val model = MockAIModel(maxAttempts = 3)
+        val model = MockModel(maxAttempts = 3)
         model.responses = mutableListOf({ offSchemaResponse() }, { allowResponse() })
 
         evaluate(model)
@@ -122,12 +122,12 @@ public class AirshipAIEvaluationObserverTest {
     @Test
     public fun testObserverThatThrowsDoesNotReachTheCaller(): Unit = runTest {
         // App code on an Airship pool thread; an uncaught throw would kill the process.
-        val thrower = AIEvaluationObserver { throw SampleError() }
+        val thrower = EvaluationObserver { throw SampleError() }
 
         val result = testEvaluator()
-            .evaluate(TestEvaluation(), MockAIModel(), AIContext.EMPTY, thrower)
+            .evaluate(TestEvaluation(), MockModel(), EvaluationContext.EMPTY, thrower)
 
-        assertTrue(result is AIEvaluationResult.Completed)
+        assertTrue(result is EvaluationResult.Completed)
     }
 
     // MARK: skips the manager decides, before a model is consulted
@@ -142,7 +142,7 @@ public class AirshipAIEvaluationObserverTest {
 
         assertEquals(1, records.size)
         assertEquals(
-            AIEvaluationRecord.Outcome.Skipped("No model configured"),
+            EvaluationRecord.Outcome.Skipped("No model configured"),
             records.first().outcome
         )
         assertEquals(0, records.first().attempts)
@@ -152,14 +152,14 @@ public class AirshipAIEvaluationObserverTest {
     @Test
     public fun testMissingRequiredContextReports(): Unit = runTest {
         val manager = testManager()
-        manager.registerModelFactory { MockAIModel() }
+        manager.registerModelFactory { MockModel() }
         manager.setEvaluationObserver(observer)
 
         manager.evaluate(ContextRequiredEvaluation())
 
         assertEquals(1, records.size)
         assertEquals(
-            AIEvaluationRecord.Outcome.Skipped("No context to personalize on"),
+            EvaluationRecord.Outcome.Skipped("No context to personalize on"),
             records.first().outcome
         )
     }
@@ -168,7 +168,7 @@ public class AirshipAIEvaluationObserverTest {
     public fun testNothingReportsWhileAIDisabled(): Unit = runTest {
         // The gate turns the feature off, observer included.
         val manager = testManager(testPrivacyManager(PrivacyManager.Feature.NONE))
-        manager.registerModelFactory { MockAIModel() }
+        manager.registerModelFactory { MockModel() }
         manager.setEvaluationObserver(observer)
 
         manager.evaluate(TestEvaluation())
@@ -179,19 +179,19 @@ public class AirshipAIEvaluationObserverTest {
     @Test
     public fun testManagerForwardsObserver(): Unit = runTest {
         val manager = testManager()
-        manager.registerModelFactory { MockAIModel() }
+        manager.registerModelFactory { MockModel() }
         manager.setEvaluationObserver(observer)
 
         manager.evaluate(TestEvaluation())
 
         assertEquals(1, records.size)
-        assertTrue(records.first().outcome is AIEvaluationRecord.Outcome.Completed)
+        assertTrue(records.first().outcome is EvaluationRecord.Outcome.Completed)
     }
 
     @Test
     public fun testClearingObserverStopsTheReports(): Unit = runTest {
         val manager = testManager()
-        manager.registerModelFactory { MockAIModel() }
+        manager.registerModelFactory { MockModel() }
 
         manager.setEvaluationObserver(observer)
         manager.evaluate(TestEvaluation())

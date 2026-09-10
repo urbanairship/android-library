@@ -10,7 +10,7 @@ package com.urbanairship.ai
  *
  * @param items Context pieces in presentation order.
  */
-public data class AIContext @JvmOverloads public constructor(
+public data class EvaluationContext @JvmOverloads public constructor(
     public val items: List<Item> = emptyList()
 ) {
 
@@ -45,7 +45,7 @@ public data class AIContext @JvmOverloads public constructor(
      * @param other The context to append.
      * @return The merged context.
      */
-    public fun appending(other: AIContext): AIContext = AIContext(items + other.items)
+    public fun appending(other: EvaluationContext): EvaluationContext = EvaluationContext(items + other.items)
 
     /**
      * Returns a copy without its least-important item, paired with the item removed, or `null`
@@ -53,18 +53,18 @@ public data class AIContext @JvmOverloads public constructor(
      *
      * Lower priority values are more important, so the highest value goes first, earliest-first
      * within a value. Reached publicly through
-     * [AIModelRequest.droppingLowestPriorityContextItem].
+     * [ModelRequest.droppingLowestPriorityContextItem].
      */
-    internal fun droppingLowestPriorityItem(): Pair<AIContext, Item>? {
+    internal fun droppingLowestPriorityItem(): Pair<EvaluationContext, Item>? {
         val leastImportant = items.maxOfOrNull { it.priority } ?: return null
         val index = items.indexOfFirst { it.priority == leastImportant }
-        return AIContext(items.filterIndexed { i, _ -> i != index }) to items[index]
+        return EvaluationContext(items.filterIndexed { i, _ -> i != index }) to items[index]
     }
 
     public companion object {
         /** An empty context, used when the host supplies nothing. */
         @JvmField
-        public val EMPTY: AIContext = AIContext()
+        public val EMPTY: EvaluationContext = EvaluationContext()
     }
 }
 
@@ -74,25 +74,25 @@ public data class AIContext @JvmOverloads public constructor(
  * Called immediately before each evaluation, on the path to displaying the feature, so keep the
  * work light. The SDK holds the provider until it is replaced or cleared.
  */
-public fun interface AIContextProvider<Subject> {
+public fun interface ContextProvider<Subject> {
 
     /**
      * Returns the context for an evaluation.
      *
      * @param subject The feature-specific subject.
-     * @return The context, or [AIContext.EMPTY] to contribute nothing — the evaluation still
+     * @return The context, or [EvaluationContext.EMPTY] to contribute nothing — the evaluation still
      * runs.
      */
-    public suspend fun provideContext(subject: Subject): AIContext
+    public suspend fun provideContext(subject: Subject): EvaluationContext
 }
 
 /** Supplies context for usages with no provider of their own, e.g. general profile data. */
-public fun interface AIDefaultContextProvider {
+public fun interface DefaultContextProvider {
 
     /**
      * Returns the context for an evaluation.
      *
      * @return The context.
      */
-    public suspend fun provideContext(): AIContext
+    public suspend fun provideContext(): EvaluationContext
 }

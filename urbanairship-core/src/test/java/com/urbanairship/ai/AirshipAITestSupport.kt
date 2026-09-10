@@ -18,7 +18,7 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
 internal class SampleError : Exception("boom")
 
-internal val testUsage: AIUsage<Unit> = AIUsage("test_usage")
+internal val testUsage: Usage<Unit> = Usage("test_usage")
 
 internal val testSchema: JsonSchema = JsonSchema.obj(
     properties = mapOf(
@@ -36,14 +36,14 @@ internal fun offSchemaResponse(): JsonValue =
 
 internal data class TestOutput(val allow: Boolean, val reason: String)
 
-internal open class TestEvaluation : AIEvaluation<TestOutput, Unit> {
-    override val usage: AIUsage<Unit> = testUsage
+internal open class TestEvaluation : Evaluation<TestOutput, Unit> {
+    override val usage: Usage<Unit> = testUsage
     override val subject: Unit = Unit
     override val schema: JsonSchema = testSchema
 
     override fun instructions(): String = "rules"
 
-    override fun prompt(context: AIContext): String = "subject"
+    override fun prompt(context: EvaluationContext): String = "subject"
 
     override fun parseOutput(json: JsonValue): TestOutput {
         val map = json.requireMap()
@@ -63,44 +63,44 @@ internal class ContextRequiredEvaluation : TestEvaluation() {
  * [maxAttempts] drives the stub [retryDecision]: it retries after [retryDelay] until that many
  * attempts have failed. Set [retryDecision] to `null` to exercise the framework default instead.
  */
-internal class MockAIModel(
-    availability: AIModelAvailability = AIModelAvailability.Available,
+internal class MockModel(
+    availability: Availability = Availability.Available,
     response: () -> JsonValue = { allowResponse() },
     var maxAttempts: Int = 1
-) : AIModel {
+) : Model {
 
-    var availabilityValue: AIModelAvailability = availability
+    var availabilityValue: Availability = availability
     var responses: MutableList<() -> JsonValue> = mutableListOf(response)
     var respondDelay: Duration = Duration.ZERO
     var retryDelay: Duration = Duration.ZERO
 
     /** `null` falls through to the framework default. */
-    var retryDecision: ((Throwable, Int) -> AIRetryDecision)? = { _, attempt ->
-        if (attempt < maxAttempts) AIRetryDecision.Retry(retryDelay) else AIRetryDecision.Fail
+    var retryDecision: ((Throwable, Int) -> RetryDecision)? = { _, attempt ->
+        if (attempt < maxAttempts) RetryDecision.Retry(retryDelay) else RetryDecision.Fail
     }
 
     var respondCallCount: Int = 0
         private set
 
-    var lastRequest: AIModelRequest? = null
+    var lastRequest: ModelRequest? = null
         private set
 
     val retryErrors: MutableList<Throwable> = mutableListOf()
 
-    override val availability: AIModelAvailability
+    override val availability: Availability
         get() = availabilityValue
 
     override fun retryDecision(
-        usage: AIUsage<*>,
+        usage: Usage<*>,
         error: Throwable,
         attempt: Int
-    ): AIRetryDecision {
+    ): RetryDecision {
         retryErrors.add(error)
         return retryDecision?.invoke(error, attempt)
-            ?: AIRetryDecision.defaultBackoff(error, attempt)
+            ?: RetryDecision.defaultBackoff(error, attempt)
     }
 
-    override suspend fun respond(request: AIModelRequest): JsonValue {
+    override suspend fun respond(request: ModelRequest): JsonValue {
         respondCallCount += 1
         lastRequest = request
 
@@ -115,13 +115,13 @@ internal class MockAIModel(
 
 /** Context provider returning a fixed set of items. */
 internal fun itemsProvider(
-    vararg items: AIContext.Item
-): AIContextProvider<Unit> = AIContextProvider { AIContext(items.toList()) }
+    vararg items: EvaluationContext.Item
+): ContextProvider<Unit> = ContextProvider { EvaluationContext(items.toList()) }
 
 /** Collects the records handed to an observer. */
-internal class RecordingObserver : AIEvaluationObserver {
-    val records: MutableList<AIEvaluationRecord> = mutableListOf()
-    override fun onEvaluation(record: AIEvaluationRecord) {
+internal class RecordingObserver : EvaluationObserver {
+    val records: MutableList<EvaluationRecord> = mutableListOf()
+    override fun onEvaluation(record: EvaluationRecord) {
         records.add(record)
     }
 }
@@ -142,8 +142,8 @@ internal fun testPrivacyManager(
 /** The observer scope is unconfined so a report lands before the assertion that reads it. */
 @OptIn(ExperimentalCoroutinesApi::class)
 internal fun testEvaluator(
-    maxResponseTimeout: Duration = AIEvaluator.DEFAULT_MAX_RESPONSE_TIMEOUT
-): AIEvaluator = AIEvaluator(
+    maxResponseTimeout: Duration = Evaluator.DEFAULT_MAX_RESPONSE_TIMEOUT
+): Evaluator = Evaluator(
     maxResponseTimeout = maxResponseTimeout,
     observerScope = CoroutineScope(UnconfinedTestDispatcher())
 )
@@ -153,5 +153,5 @@ internal fun testEvaluator(
  */
 internal fun testManager(
     privacyManager: PrivacyManager = testPrivacyManager(),
-    evaluator: AIEvaluator = testEvaluator()
+    evaluator: Evaluator = testEvaluator()
 ): DefaultAirshipAI = DefaultAirshipAI(privacyManager = privacyManager, evaluator = evaluator)

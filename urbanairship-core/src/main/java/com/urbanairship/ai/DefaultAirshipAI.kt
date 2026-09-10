@@ -17,77 +17,77 @@ import kotlinx.coroutines.flow.onStart
  */
 internal class DefaultAirshipAI(
     private val privacyManager: PrivacyManager,
-    private val evaluator: AIEvaluator = AIEvaluator()
+    private val evaluator: Evaluator = Evaluator()
 ) : InternalAirshipAI {
 
-    private val providerRegistry = AIContextProviderRegistry()
+    private val providerRegistry = ProviderRegistry()
 
     @Volatile
-    private var modelResolver: AIModelResolver? = null
+    private var modelResolver: ModelResolver? = null
 
     /**
      * Wrapped in `lazy` so the registered factory runs at most once — a factory that really
      * builds a backend would otherwise allocate one per evaluation.
      */
     @Volatile
-    private var builtInModel: Lazy<AIModel>? = null
+    private var builtInModel: Lazy<Model>? = null
 
     @Volatile
-    private var evaluationObserver: AIEvaluationObserver? = null
+    private var evaluationObserver: EvaluationObserver? = null
 
     private val enabled: Boolean
         get() = privacyManager.isEnabled(PrivacyManager.Feature.ON_DEVICE_AI)
 
-    override val defaultModel: AIModel?
+    override val defaultModel: Model?
         get() = if (enabled) builtInModel?.value else null
 
-    override fun model(usage: AIUsage<*>): AIModel? =
+    override fun model(usage: Usage<*>): Model? =
         if (enabled) resolveModel(usage) else null
 
-    override fun gatedModel(usage: AIUsage<*>): AIModel? =
+    override fun gatedModel(usage: Usage<*>): Model? =
         resolveModel(usage)?.let { PrivacyGatedModel(it, privacyManager) }
 
     override fun <Subject> setContextProvider(
-        usage: AIUsage<Subject>,
-        provider: AIContextProvider<Subject>?
+        usage: Usage<Subject>,
+        provider: ContextProvider<Subject>?
     ) {
         providerRegistry.setContextProvider(usage, provider)
     }
 
-    override fun setDefaultContextProvider(provider: AIDefaultContextProvider?) {
+    override fun setDefaultContextProvider(provider: DefaultContextProvider?) {
         providerRegistry.setDefaultContextProvider(provider)
     }
 
-    override fun setEvaluationObserver(observer: AIEvaluationObserver?) {
+    override fun setEvaluationObserver(observer: EvaluationObserver?) {
         evaluationObserver = observer
     }
 
-    override fun setModelResolver(resolver: AIModelResolver?) {
+    override fun setModelResolver(resolver: ModelResolver?) {
         modelResolver = resolver
     }
 
-    override fun registerModelFactory(factory: () -> AIModel) {
+    override fun registerModelFactory(factory: () -> Model) {
         builtInModel = lazy(factory)
     }
 
     override suspend fun <Subject> fetchContext(
-        usage: AIUsage<Subject>,
+        usage: Usage<Subject>,
         subject: Subject
-    ): AIContext {
+    ): EvaluationContext {
         if (!enabled) {
-            return AIContext.EMPTY
+            return EvaluationContext.EMPTY
         }
         return providerRegistry.fetchContext(usage.rawValue, subject)
     }
 
     override suspend fun <Output, Subject> evaluate(
-        evaluation: AIEvaluation<Output, Subject>,
-        additionalContext: AIContext
-    ): AIEvaluationResult<Output> {
+        evaluation: Evaluation<Output, Subject>,
+        additionalContext: EvaluationContext
+    ): EvaluationResult<Output> {
         // The privacy gate turns the whole feature off, observer included — an app that opted
         // out doesn't need a record per evaluation telling it so.
         if (!enabled) {
-            return AIEvaluationResult.Skipped(AI_DISABLED)
+            return EvaluationResult.Skipped(AI_DISABLED)
         }
 
         // Snapshotted before the provider runs so one evaluation can't report to an observer
@@ -96,8 +96,8 @@ internal class DefaultAirshipAI(
 
         val model = model(evaluation.usage)
         if (model == null) {
-            evaluator.reportSkipped(evaluation, AIContext.EMPTY, NO_MODEL, observer)
-            return AIEvaluationResult.Skipped(NO_MODEL)
+            evaluator.reportSkipped(evaluation, EvaluationContext.EMPTY, NO_MODEL, observer)
+            return EvaluationResult.Skipped(NO_MODEL)
         }
 
         // Provider context first, then the caller's additional context appended after (later
@@ -110,7 +110,7 @@ internal class DefaultAirshipAI(
         // and let the caller fall back. Most evaluations opt out and run regardless.
         if (evaluation.requiresContext && merged.items.isEmpty()) {
             evaluator.reportSkipped(evaluation, merged, NO_CONTEXT, observer)
-            return AIEvaluationResult.Skipped(NO_CONTEXT)
+            return EvaluationResult.Skipped(NO_CONTEXT)
         }
 
         return evaluator.evaluate(
@@ -121,11 +121,11 @@ internal class DefaultAirshipAI(
         )
     }
 
-    private fun resolveModel(usage: AIUsage<*>): AIModel? {
-        val selector = modelResolver?.resolve(usage) ?: AIModelSelector.DefaultModel
+    private fun resolveModel(usage: Usage<*>): Model? {
+        val selector = modelResolver?.resolve(usage) ?: ModelSelector.DefaultModel
         return when (selector) {
-            AIModelSelector.DefaultModel -> builtInModel?.value
-            is AIModelSelector.Custom -> selector.model
+            ModelSelector.DefaultModel -> builtInModel?.value
+            is ModelSelector.Custom -> selector.model
         }
     }
 
@@ -143,21 +143,21 @@ internal class DefaultAirshipAI(
  * See [InternalAirshipAI.gatedModel].
  */
 private class PrivacyGatedModel(
-    private val wrapped: AIModel,
+    private val wrapped: Model,
     private val privacyManager: PrivacyManager
-) : AIModel {
+) : Model {
 
-    private fun gate(availability: AIModelAvailability): AIModelAvailability =
+    private fun gate(availability: Availability): Availability =
         if (privacyManager.isEnabled(PrivacyManager.Feature.ON_DEVICE_AI)) {
             availability
         } else {
-            AIModelAvailability.Unavailable(AIModelAvailability.Reason.NotEnabled)
+            Availability.Unavailable(Availability.Reason.NotEnabled)
         }
 
-    override val availability: AIModelAvailability
+    override val availability: Availability
         get() = gate(wrapped.availability)
 
-    override val availabilityUpdates: Flow<AIModelAvailability>
+    override val availabilityUpdates: Flow<Availability>
         get() = merge(
             wrapped.availabilityUpdates.map(::gate),
             // Only a change signal — the wrapped model's availability is re-read, not carried.
@@ -167,10 +167,10 @@ private class PrivacyGatedModel(
             .distinctUntilChanged()
 
     override fun retryDecision(
-        usage: AIUsage<*>,
+        usage: Usage<*>,
         error: Throwable,
         attempt: Int
-    ): AIRetryDecision = wrapped.retryDecision(usage, error, attempt)
+    ): RetryDecision = wrapped.retryDecision(usage, error, attempt)
 
-    override suspend fun respond(request: AIModelRequest): JsonValue = wrapped.respond(request)
+    override suspend fun respond(request: ModelRequest): JsonValue = wrapped.respond(request)
 }

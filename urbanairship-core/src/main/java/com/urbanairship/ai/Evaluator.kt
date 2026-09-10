@@ -21,45 +21,45 @@ import kotlinx.coroutines.withTimeout
  *
  * @param maxResponseTimeout A hard ceiling on an evaluation's total wall-clock time, including
  * every retry and the delays between them, independent of the schedule
- * [AIModel.retryDecision] picks. A backstop against a pathological hang, not a latency target.
+ * [Model.retryDecision] picks. A backstop against a pathological hang, not a latency target.
  * @param observerScope Where observer callbacks are dispatched.
  */
-internal class AIEvaluator(
+internal class Evaluator(
     private val maxResponseTimeout: Duration = DEFAULT_MAX_RESPONSE_TIMEOUT,
     private val observerScope: CoroutineScope =
         CoroutineScope(AirshipDispatchers.IO + SupervisorJob())
 ) {
 
     suspend fun <Output, Subject> evaluate(
-        evaluation: AIEvaluation<Output, Subject>,
-        model: AIModel,
-        context: AIContext,
-        observer: AIEvaluationObserver? = null
-    ): AIEvaluationResult<Output> {
+        evaluation: Evaluation<Output, Subject>,
+        model: Model,
+        context: EvaluationContext,
+        observer: EvaluationObserver? = null
+    ): EvaluationResult<Output> {
         val usage = evaluation.usage
         val schema = evaluation.schema
 
-        val request = AIModelRequest(
+        val request = ModelRequest(
             instructions = evaluation.instructions(),
             schema = schema,
             context = context,
             render = evaluation::prompt
         )
 
-        if (model.availability != AIModelAvailability.Available) {
+        if (model.availability != Availability.Available) {
             // A model that never runs is the common outcome in the field, and the one an
             // observer most needs to see, so it is reported like any other.
             report(
                 observer,
-                AIEvaluationRecord(
+                EvaluationRecord(
                     usage = usage,
                     request = request,
-                    outcome = AIEvaluationRecord.Outcome.Skipped(MODEL_UNAVAILABLE),
+                    outcome = EvaluationRecord.Outcome.Skipped(MODEL_UNAVAILABLE),
                     duration = Duration.ZERO,
                     attempts = 0
                 )
             )
-            return AIEvaluationResult.Skipped(MODEL_UNAVAILABLE)
+            return EvaluationResult.Skipped(MODEL_UNAVAILABLE)
         }
 
         // Metadata only: never the instructions, schema, prompt, context, or response. An
@@ -80,7 +80,7 @@ internal class AIEvaluator(
                     try {
                         schema.validate(response)
                     } catch (e: Exception) {
-                        throw AISchemaValidationException(e)
+                        throw SchemaValidationException(e)
                     }
                     response
                 }
@@ -102,20 +102,20 @@ internal class AIEvaluator(
         // Reported before parsing, so an output the feature can't parse is still visible.
         report(
             observer,
-            AIEvaluationRecord(
+            EvaluationRecord(
                 usage = usage,
                 request = request,
-                outcome = AIEvaluationRecord.Outcome.Completed(json),
+                outcome = EvaluationRecord.Outcome.Completed(json),
                 duration = duration,
                 attempts = attempts
             )
         )
 
         return try {
-            AIEvaluationResult.Completed(evaluation.parseOutput(json))
+            EvaluationResult.Completed(evaluation.parseOutput(json))
         } catch (e: Exception) {
             UALog.w(e) { "AI evaluation output could not be parsed for ${usage.rawValue}" }
-            AIEvaluationResult.Failed(e)
+            EvaluationResult.Failed(e)
         }
     }
 
@@ -124,23 +124,23 @@ internal class AIEvaluator(
      * contract holds for outcomes that never reach [evaluate].
      */
     fun reportSkipped(
-        evaluation: AIEvaluation<*, *>,
-        context: AIContext,
+        evaluation: Evaluation<*, *>,
+        context: EvaluationContext,
         reason: String,
-        observer: AIEvaluationObserver?
+        observer: EvaluationObserver?
     ) {
         observer ?: return
         report(
             observer,
-            AIEvaluationRecord(
+            EvaluationRecord(
                 usage = evaluation.usage,
-                request = AIModelRequest(
+                request = ModelRequest(
                     instructions = evaluation.instructions(),
                     schema = evaluation.schema,
                     context = context,
                     render = evaluation::prompt
                 ),
-                outcome = AIEvaluationRecord.Outcome.Skipped(reason),
+                outcome = EvaluationRecord.Outcome.Skipped(reason),
                 duration = Duration.ZERO,
                 attempts = 0
             )
@@ -148,25 +148,25 @@ internal class AIEvaluator(
     }
 
     private fun <Output> fail(
-        observer: AIEvaluationObserver?,
-        usage: AIUsage<*>,
-        request: AIModelRequest,
+        observer: EvaluationObserver?,
+        usage: Usage<*>,
+        request: ModelRequest,
         duration: Duration,
         attempts: Int,
         error: Throwable
-    ): AIEvaluationResult<Output> {
+    ): EvaluationResult<Output> {
         UALog.w(error) { "AI evaluation failed for ${usage.rawValue}" }
         report(
             observer,
-            AIEvaluationRecord(
+            EvaluationRecord(
                 usage = usage,
                 request = request,
-                outcome = AIEvaluationRecord.Outcome.Failed(error),
+                outcome = EvaluationRecord.Outcome.Failed(error),
                 duration = duration,
                 attempts = attempts
             )
         )
-        return AIEvaluationResult.Failed(error)
+        return EvaluationResult.Failed(error)
     }
 
     /**
@@ -175,8 +175,8 @@ internal class AIEvaluator(
      * gets to do so.
      */
     private suspend fun <T> withRetry(
-        model: AIModel,
-        usage: AIUsage<*>,
+        model: Model,
+        usage: Usage<*>,
         operation: suspend () -> T
     ): T {
         var attempt = 0
@@ -198,8 +198,8 @@ internal class AIEvaluator(
             UALog.w(error) { "AI evaluation attempt $attempt failed for ${usage.rawValue}" }
 
             when (val decision = model.retryDecision(usage, error, attempt)) {
-                AIRetryDecision.Fail -> throw error
-                is AIRetryDecision.Retry -> if (decision.after > Duration.ZERO) {
+                RetryDecision.Fail -> throw error
+                is RetryDecision.Retry -> if (decision.after > Duration.ZERO) {
                     // retryDecision is app-implementable, so clamp: anything past the ceiling
                     // would be cut off by the enclosing timeout anyway.
                     delay(minOf(decision.after, maxResponseTimeout))
@@ -213,7 +213,7 @@ internal class AIEvaluator(
      * that blocks — or one that reaches back into the SDK — can't delay the result reaching the
      * feature that asked for it.
      */
-    private fun report(observer: AIEvaluationObserver?, record: AIEvaluationRecord) {
+    private fun report(observer: EvaluationObserver?, record: EvaluationRecord) {
         observer ?: return
         observerScope.launch {
             try {

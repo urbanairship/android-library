@@ -9,10 +9,10 @@ import kotlinx.coroutines.CancellationException
  * Holds the registered context providers, keyed by usage raw value, plus the fallback default
  * provider.
  */
-internal class AIContextProviderRegistry {
+internal class ProviderRegistry {
 
     private fun interface AnyProvider {
-        suspend fun fetch(subject: Any?): AIContext
+        suspend fun fetch(subject: Any?): EvaluationContext
     }
 
     private val providers = ConcurrentHashMap<String, AnyProvider>()
@@ -21,8 +21,8 @@ internal class AIContextProviderRegistry {
     private var defaultProvider: AnyProvider? = null
 
     fun <Subject> setContextProvider(
-        usage: AIUsage<Subject>,
-        provider: AIContextProvider<Subject>?
+        usage: Usage<Subject>,
+        provider: ContextProvider<Subject>?
     ) {
         if (provider == null) {
             providers.remove(usage.rawValue)
@@ -34,12 +34,12 @@ internal class AIContextProviderRegistry {
         }
     }
 
-    fun setDefaultContextProvider(provider: AIDefaultContextProvider?) {
+    fun setDefaultContextProvider(provider: DefaultContextProvider?) {
         defaultProvider = provider?.let { fallback -> AnyProvider { fallback.provideContext() } }
     }
 
     /**
-     * Fetches the context registered for a usage, or [AIContext.EMPTY] when none is.
+     * Fetches the context registered for a usage, or [EvaluationContext.EMPTY] when none is.
      *
      * A usage-specific provider wins outright; the default provider is only a fallback for
      * usages that have none. The two are never combined.
@@ -47,8 +47,8 @@ internal class AIContextProviderRegistry {
      * The provider is app code on the path to displaying a feature, so a throw degrades to
      * empty context rather than taking that display down with it.
      */
-    suspend fun fetchContext(usage: String, subject: Any?): AIContext {
-        val provider = providers[usage] ?: defaultProvider ?: return AIContext.EMPTY
+    suspend fun fetchContext(usage: String, subject: Any?): EvaluationContext {
+        val provider = providers[usage] ?: defaultProvider ?: return EvaluationContext.EMPTY
         return try {
             provider.fetch(subject)
         } catch (e: CancellationException) {
@@ -56,10 +56,10 @@ internal class AIContextProviderRegistry {
         } catch (e: ClassCastException) {
             // Two features sharing a usage key with different subject types.
             UALog.e(e) { "AI context provider for $usage received an unexpected subject type" }
-            AIContext.EMPTY
+            EvaluationContext.EMPTY
         } catch (e: Exception) {
             UALog.e(e) { "AI context provider for $usage failed" }
-            AIContext.EMPTY
+            EvaluationContext.EMPTY
         }
     }
 }

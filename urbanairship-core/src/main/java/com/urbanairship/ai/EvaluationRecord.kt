@@ -18,9 +18,9 @@ import kotlin.time.Duration
  * @param attempts Model calls made. Greater than 1 means output failed schema validation, or
  * the model threw, and it was retried.
  */
-public class AIEvaluationRecord public constructor(
-    public val usage: AIUsage<*>,
-    public val request: AIModelRequest,
+public class EvaluationRecord public constructor(
+    public val usage: Usage<*>,
+    public val request: ModelRequest,
     public val outcome: Outcome,
     public val duration: Duration,
     public val attempts: Int
@@ -53,7 +53,7 @@ public class AIEvaluationRecord public constructor(
 }
 
 /** Observes finished evaluations. */
-public fun interface AIEvaluationObserver {
+public fun interface EvaluationObserver {
 
     /**
      * Called when an evaluation finishes.
@@ -63,5 +63,5 @@ public fun interface AIEvaluationObserver {
      *
      * @param record The finished evaluation.
      */
-    public fun onEvaluation(record: AIEvaluationRecord)
+    public fun onEvaluation(record: EvaluationRecord)
 }
