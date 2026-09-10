@@ -31,10 +31,9 @@ public class BannerPlacementTest {
                 "horizontal": "end",
                 "vertical": "top"
               },
-              "animation": {
-                "type": "slide",
-                "animate_in_seconds": 0.25,
-                "animate_out_seconds": 0.5
+              "transition": {
+                "in": { "type": "slide", "duration_milliseconds": 250 },
+                "out": { "type": "slide", "duration_milliseconds": 500 }
               },
               "swipe_to_dismiss": true,
               "shadow": {
@@ -65,10 +64,11 @@ public class BannerPlacementTest {
         assertEquals(VerticalPosition.TOP, placement.position.vertical)
         assertTrue(placement.swipeToDismiss)
 
-        val animation = placement.animation
-        assertTrue(animation is BannerAnimation.Slide)
-        assertEquals(250.milliseconds, animation?.animateIn)
-        assertEquals(500.milliseconds, animation?.animateOut)
+        val transition = placement.transition
+        assertTrue(transition?.enter is BannerTransitionEffect.Slide)
+        assertTrue(transition?.exit is BannerTransitionEffect.Slide)
+        assertEquals(250.milliseconds, transition?.enter?.duration)
+        assertEquals(500.milliseconds, transition?.exit?.duration)
 
         val shadow = placement.shadow?.androidShadow
         assertNotNull(shadow)
@@ -76,22 +76,22 @@ public class BannerPlacementTest {
     }
 
     @Test
-    public fun testParsingFadeAnimation() {
+    public fun testParsingFadeTransition() {
         val placement = BannerPlacement.fromJson(placementJson(
             """
             "position": { "horizontal": "center", "vertical": "bottom" },
-            "animation": {
-              "type": "fade",
-              "animate_in_seconds": 0.4,
-              "animate_out_seconds": 0.2
+            "transition": {
+              "in": { "type": "fade", "duration_milliseconds": 400 },
+              "out": { "type": "fade", "duration_milliseconds": 200 }
             }
             """
         ))
 
-        val animation = placement.animation
-        assertTrue(animation is BannerAnimation.Fade)
-        assertEquals(400.milliseconds, animation?.animateIn)
-        assertEquals(200.milliseconds, animation?.animateOut)
+        val transition = placement.transition
+        assertTrue(transition?.enter is BannerTransitionEffect.Fade)
+        assertTrue(transition?.exit is BannerTransitionEffect.Fade)
+        assertEquals(400.milliseconds, transition?.enter?.duration)
+        assertEquals(200.milliseconds, transition?.exit?.duration)
     }
 
     @Test
@@ -114,7 +114,7 @@ public class BannerPlacementTest {
         assertEquals(HorizontalPosition.CENTER, placement.position.horizontal)
         assertEquals(VerticalPosition.BOTTOM, placement.position.vertical)
         assertTrue(placement.swipeToDismiss)
-        assertNull(placement.animation)
+        assertNull(placement.transition)
         assertNull(placement.shadow)
     }
 
@@ -174,9 +174,9 @@ public class BannerPlacementTest {
     }
 
     @Test
-    public fun testUnknownAnimationTypeThrows() {
+    public fun testUnknownTransitionTypeThrows() {
         val json = placementJson(
-            """"position": { "horizontal": "center", "vertical": "top" }, "animation": { "type": "zoom" }"""
+            """"position": { "horizontal": "center", "vertical": "top" }, "transition": { "in": { "type": "zoom" }, "out": { "type": "fade" } }"""
         )
 
         assertThrows(JsonException::class.java) {

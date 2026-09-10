@@ -137,9 +137,9 @@ public class ModalActivity : AppCompatActivity() {
 
             setContentView(view)
 
-            placement.animation?.let {
-                window.enterTransition  = TransitionFactory.enterTransition(it, view.frameView, view.shadeView)
-                window.returnTransition = TransitionFactory.exitTransition(it, view.frameView, view.shadeView)
+            placement.transition?.let {
+                window.enterTransition  = TransitionFactory.modalTransition(it.enter, view.frameView, view.shadeView)
+                window.returnTransition = TransitionFactory.modalTransition(it.exit, view.frameView, view.shadeView)
             }
 
             ViewCompat.setOnApplyWindowInsetsListener(view) { v, windowInsets ->

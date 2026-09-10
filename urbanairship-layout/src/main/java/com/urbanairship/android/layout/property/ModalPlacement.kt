@@ -23,7 +23,7 @@ public class ModalPlacement(
     public val border: Border?,
     public val backgroundColor: Color?,
     public val shadow: Shadow?,
-    public val animation: ModalAnimation?
+    public val transition: ModalTransition?
 ) : SafeAreaAware {
 
     public override fun shouldIgnoreSafeArea(): Boolean {
@@ -39,7 +39,7 @@ public class ModalPlacement(
         private const val KEY_SHADE_COLOR = "shade_color"
         private const val KEY_SHADOW = "shadow"
         private const val KEY_SELECTORS = "selectors"
-        private const val KEY_ANIMATION = "animation"
+        private const val KEY_TRANSITION = "transition"
 
         @Throws(JsonException::class)
         public fun fromJson(json: JsonValue): ModalPlacement {
@@ -61,7 +61,7 @@ public class ModalPlacement(
                 border = content[KEY_BORDER]?.let(Border::fromJson),
                 backgroundColor = content[KEY_BACKGROUND_COLOR]?.let(Color::fromJson),
                 shadow = shadow,
-                animation = content[KEY_ANIMATION]?.let(ModalAnimation::fromJson)
+                transition = content[KEY_TRANSITION]?.let(ModalTransition::fromJson)
             )
         }
     }
