@@ -142,7 +142,9 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 ai
             ),
             analyticsFactory = analyticsFactory,
-            ai = Airship.internalAi
+            // Deliberately a lambda: this runs during `initModules()`, before takeoff
+            // completes, and `Airship.internalAi` waits for readiness.
+            ai = { if (Airship.isFlying) Airship.internalAi else null }
         )
 
         // Execution

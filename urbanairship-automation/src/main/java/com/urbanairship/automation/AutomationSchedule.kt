@@ -156,6 +156,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private val sendMetadata: String? = schedule.sendMetadata
         private val ledgerConfig: LedgerConfig? = schedule.ledgerConfig
         private val limitConfig: LimitConfig? = schedule.limitConfig
+        private val aiSuppression: AutomationAiSuppression? = schedule.aiSuppression
 
         /**
          * Set the triggers.
@@ -312,7 +313,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 additionalAudienceCheckOverrides = additionalAudienceCheckOverrides,
                 sendMetadata = sendMetadata,
                 ledgerConfig = ledgerConfig,
-                limitConfig = limitConfig
+                limitConfig = limitConfig,
+                aiSuppression = aiSuppression
             )
         }
     }

@@ -442,6 +442,29 @@ public class AutomationScheduleTests {
         verify(json, expected)
     }
 
+    @Test
+    public fun testNewBuilderKeepsAiSuppression() {
+        // Builder is public API: editing a schedule through it must not quietly drop
+        // fields the editor never touched.
+        val schedule = AutomationSchedule(
+            identifier = "test_schedule",
+            data = AutomationSchedule.ScheduleData.Actions(jsonMapOf("foo" to "bar").toJsonValue()),
+            triggers = listOf(),
+            created = Instant.ofEpochMilli(1703073600000),
+            aiSuppression = AutomationAiSuppression(
+                condition = "the user rents trucks",
+                subjectHints = mapOf("surface" to "home"),
+                missBehavior = AutomationAudience.MissBehavior.CANCEL
+            )
+        )
+
+        assertEquals(schedule, schedule.newBuilder().build())
+        assertEquals(
+            schedule.aiSuppression,
+            schedule.newBuilder().setGroup("edited").build().aiSuppression
+        )
+    }
+
     private fun verify(json: String, expected: AutomationSchedule) {
         val fromJson = AutomationSchedule.fromJson(JsonValue.parseString(json))
         assertEquals(fromJson, expected)

@@ -62,7 +62,7 @@ public class InAppMessageAiSuppressionTest {
     )
 
     private val preparer = InAppMessageAutomationPreparer(
-        assetsManager, coordinatorManager, adapterFactory, analyticsFactory, ai = ai
+        assetsManager, coordinatorManager, adapterFactory, analyticsFactory, ai = { ai }
     )
 
     private fun scheduleInfo(
@@ -171,6 +171,26 @@ public class InAppMessageAiSuppressionTest {
 
         assertTrue(result is DelegatePreparerResult.Prepared)
         assertNull(ai.evaluation)
+    }
+
+    @Test
+    public fun testAiManagerResolvedPerPrepareNotAtConstruction(): TestResult = runTest {
+        // The module factory builds this preparer from `initModules()`, which runs before
+        // takeoff completes; resolving `Airship.internalAi` there parks the takeoff
+        // coroutine on its own completion.
+        var lookups = 0
+        val lazyPreparer = InAppMessageAutomationPreparer(
+            assetsManager, coordinatorManager, adapterFactory, analyticsFactory,
+            ai = { lookups += 1; ai }
+        )
+        assertEquals(0, lookups)
+
+        ai.result = EvaluationResult.Completed(
+            InAppMessageSuppressionOutput(allow = false, reason = "not a renter")
+        )
+        lazyPreparer.prepare(message, scheduleInfo())
+
+        assertEquals(1, lookups)
     }
 
     private class FakeAi : InternalAirshipAi {
