@@ -148,12 +148,18 @@ internal class TextInputModel(
         }
 
         return when (viewInfo.inputType) {
+            // Inference fields (nothing to validate)
+            FormInputType.NUMBER -> inferenceField(text, attributes)
+            FormInputType.TEXT -> inferenceField(text, attributes)
+            FormInputType.TEXT_MULTILINE -> inferenceField(text, attributes)
+
+            // EMAIL/SMS intentionally excluded from inference. We only validate them.
             FormInputType.EMAIL -> {
                 val request = AirshipInputValidation.Request.ValidateEmail(
                     AirshipInputValidation.Request.Email(text)
                 )
 
-                return ThomasFormField.FieldType.Async(
+                ThomasFormField.FieldType.Async(
                     fetcher = ThomasFormField.AsyncValueFetcher(
                         processDelay = (1.5).seconds,
                         fetchBlock = {
@@ -178,7 +184,6 @@ internal class TextInputModel(
                     )
                 )
             }
-            FormInputType.NUMBER -> inferenceField(text, attributes)
             FormInputType.SMS -> {
                 val selectedLocale = smsLocale ?: return ThomasFormField.FieldType.just(
                     value = text,
@@ -198,7 +203,7 @@ internal class TextInputModel(
                     )
                 )
 
-                return ThomasFormField.FieldType.Async(
+                ThomasFormField.FieldType.Async(
                     fetcher = ThomasFormField.AsyncValueFetcher(
                         fetchBlock = {
                             val validator = inputValidator
@@ -222,8 +227,6 @@ internal class TextInputModel(
                     )
                 )
             }
-            FormInputType.TEXT -> inferenceField(text, attributes)
-            FormInputType.TEXT_MULTILINE -> inferenceField(text, attributes)
         }
     }
 
