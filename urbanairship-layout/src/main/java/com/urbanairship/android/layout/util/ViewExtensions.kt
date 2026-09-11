@@ -27,11 +27,9 @@ import android.widget.EditText
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
-import androidx.core.text.TextUtilsCompat
 import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.core.text.toSpannable
 import androidx.core.view.descendants
-import com.urbanairship.Airship
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.MarkdownOptions
@@ -212,8 +210,23 @@ internal val MotionEvent.isActionDown: Boolean
 internal val View.localBounds: RectF
     get() = RectF(0f, 0f, width.toFloat(), height.toFloat())
 
+/**
+ * Whether this view lays out right-to-left.
+ *
+ * The one place direction is detected. Reads the view's own resolved layout direction, which
+ * is what the platform resolves `Gravity.START`/`END`, `paddingStart`/`End` and every relative
+ * API from, and what `WeightlessLinearLayout` positions children by — so a view asking this
+ * gets the same answer as the layout around it.
+ *
+ * Deliberately not the Airship locale. A locale override selects which copy is delivered, not
+ * how it is laid out; reading it here gave mirrored content inside an unmirrored layout.
+ *
+ * Unresolved until the view is attached, so ask it while rendering rather than while
+ * constructing — or take it from [View.onRtlPropertiesChanged], which the platform calls as
+ * soon as there is an answer.
+ */
 internal val View.isLayoutRtl: Boolean
-    get() = TextUtilsCompat.getLayoutDirectionFromLocale(Airship.localeManager.locale) == View.LAYOUT_DIRECTION_RTL
+    get() = layoutDirection == View.LAYOUT_DIRECTION_RTL
 
 internal fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean =
     findTargetDescendant(view) { it.isClickable && it.isEnabled } != null

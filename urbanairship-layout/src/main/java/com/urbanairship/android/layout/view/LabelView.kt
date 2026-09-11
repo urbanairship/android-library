@@ -29,6 +29,7 @@ import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.ifNotEmpty
+import com.urbanairship.android.layout.util.isLayoutRtl
 
 internal class LabelView(
     context: Context,
@@ -196,11 +197,9 @@ internal class LabelView(
     override fun onRtlPropertiesChanged(layoutDirection: Int) {
         super.onRtlPropertiesChanged(layoutDirection)
 
-        textDirection = if (layoutDirection == LAYOUT_DIRECTION_RTL) {
-            TEXT_DIRECTION_RTL
-        } else {
-            TEXT_DIRECTION_LTR
-        }
+        // Through the shared helper rather than the parameter, so there is one place direction
+        // is detected. They agree: the platform always passes this view's own resolved value.
+        textDirection = if (isLayoutRtl) TEXT_DIRECTION_RTL else TEXT_DIRECTION_LTR
     }
 
     override fun onDraw(canvas: Canvas) {
