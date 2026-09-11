@@ -3,15 +3,19 @@ package com.urbanairship.android.layout.view
 
 import android.content.Context
 import android.graphics.Canvas
+import android.graphics.Paint
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.InsetDrawable
 import android.os.Build
 import android.text.PrecomputedText
+import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.style.ImageSpan
 import android.text.TextUtils
 import android.util.TypedValue.COMPLEX_UNIT_SP
 import android.view.accessibility.AccessibilityEvent
 import androidx.appcompat.widget.AppCompatTextView
+import androidx.core.graphics.withTranslation
 import androidx.core.view.ViewCompat
 import androidx.core.view.isVisible
 import androidx.core.widget.TextViewCompat
@@ -208,9 +212,12 @@ internal class LabelView(
         }
 
         val size = resolvedState.textAppearance.fontSize
-        val startDrawable = getSizedDrawable(resolvedState.iconStart, size, HorizontalPosition.START)
-        val endDrawable = getSizedDrawable(resolvedState.iconEnd, size,HorizontalPosition.END)
-        setCompoundDrawables(startDrawable, null, endDrawable, null)
+        setCompoundDrawables(
+            null,
+            null,
+            getSizedDrawable(resolvedState.iconEnd, size, HorizontalPosition.END),
+            null
+        )
 
         LayoutUtils.applyLabel(
             this,
@@ -218,6 +225,25 @@ internal class LabelView(
             model.viewInfo.markdownOptions,
             resolvedState.text
         )
+
+        // The start icon rides in the text, not in a compound drawable: a compound drawable sits
+        // against the view's content edge, so on a label wider than its text — a centred button
+        // label, say — it strands the icon away from the words it belongs to. The end icon stays
+        // a compound drawable, because sitting at the trailing edge is what it should do once the
+        // label is wider than its text.
+        getSizedDrawable(resolvedState.iconStart, size, HorizontalPosition.START)?.let { icon ->
+            text = SpannableStringBuilder(ICON_PLACEHOLDER)
+                .append(text)
+                .apply {
+                    setSpan(
+                        CenteredImageSpan(icon),
+                        0,
+                        ICON_PLACEHOLDER.length,
+                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                    )
+                }
+        }
+
         this.lastState = resolvedState
     }
 
@@ -241,5 +267,46 @@ internal class LabelView(
         finalDrawable.setBounds(0, 0, size + space, size)
 
         return finalDrawable
+    }
+
+    private companion object {
+        /** Stands in for the inline start icon; `U+FFFC` is not spoken by screen readers. */
+        const val ICON_PLACEHOLDER = "\uFFFC"
+    }
+}
+
+/**
+ * An [ImageSpan] centred on the text it sits in, taking only width and leaving the line's
+ * metrics to the text.
+ *
+ * [ImageSpan.ALIGN_CENTER] does this from API 29 on; below that the base class can only stand
+ * the drawable on the baseline, which reads as too high beside a square glyph.
+ */
+private class CenteredImageSpan(drawable: Drawable) : ImageSpan(drawable) {
+
+    override fun getSize(
+        paint: Paint,
+        text: CharSequence?,
+        start: Int,
+        end: Int,
+        fm: Paint.FontMetricsInt?
+    ): Int = drawable.bounds.width()
+
+    override fun draw(
+        canvas: Canvas,
+        text: CharSequence?,
+        start: Int,
+        end: Int,
+        x: Float,
+        top: Int,
+        y: Int,
+        bottom: Int,
+        paint: Paint
+    ) {
+        val metrics = paint.fontMetricsInt
+        val center = y + (metrics.ascent + metrics.descent) / 2
+        canvas.withTranslation(x, center - drawable.bounds.height() / 2f) {
+            drawable.draw(this)
+        }
     }
 }
