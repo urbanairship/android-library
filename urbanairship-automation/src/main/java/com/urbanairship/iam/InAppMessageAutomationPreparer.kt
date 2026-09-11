@@ -29,12 +29,7 @@ internal class InAppMessageAutomationPreparer(
     private val displayAdapterFactory: DisplayAdapterFactory,
     private val analyticsFactory: InAppMessageAnalyticsFactory,
     private val actionRunnerFactory: InAppActionRunnerFactory = InAppActionRunnerFactory(),
-    /**
-     * Resolved per prepare, not once at construction. The module factory builds this
-     * preparer from `initModules()`, which runs before takeoff completes, and reading
-     * `Airship.internalAi` there blocks the takeoff coroutine on its own completion.
-     */
-    private val ai: () -> InternalAirshipAi? = { null }
+    private val ai: InternalAirshipAi? = null
 ) : AutomationPreparerDelegate<InAppMessage, PreparedInAppMessageData> {
 
     var messageContentExtender: InAppMessageContentExtender?
@@ -127,7 +122,7 @@ internal class InAppMessageAutomationPreparer(
             return null
         }
 
-        val ai = this.ai() ?: return null
+        val ai = this.ai ?: return null
 
         val evaluation = InAppMessageSuppressionEvaluation(
             condition = suppression.condition,
