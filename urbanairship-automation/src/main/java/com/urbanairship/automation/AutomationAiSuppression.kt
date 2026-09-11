@@ -53,9 +53,14 @@ public data class AutomationAiSuppression internal constructor(
 
             return AutomationAiSuppression(
                 condition = content.requireField(CONDITION),
+                // A non-string hint drops that hint rather than the schedule: `requireString`
+                // would throw past `AutomationSchedule.fromJson`, where a parse failure costs
+                // the whole automation. Hints are the softest part of this payload, and the
+                // rest of the feature fails open.
                 subjectHints = content.optionalMap(SUBJECT_HINTS)
                     ?.map
-                    ?.mapValues { it.value.requireString() },
+                    ?.mapNotNull { (key, value) -> value.string?.let { key to it } }
+                    ?.toMap(),
                 missBehavior = content[MISS_BEHAVIOR]
                     ?.let(AutomationAudience.MissBehavior.Companion::fromJson)
             )

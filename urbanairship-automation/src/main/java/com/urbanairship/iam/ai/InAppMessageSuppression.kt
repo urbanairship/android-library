@@ -15,10 +15,6 @@ import com.urbanairship.json.JsonValue
  *     EvaluationContext(listOf(EvaluationContext.Item("Last booked: ${store.lastBooking}")))
  * }
  * ```
- *
- * Declared in this module but hung off [Usage.Companion], so every usage the SDK has is
- * reachable from one place whichever module owns it. Unlike a member it needs importing, which
- * the IDE offers on completion.
  */
 public val Usage.Companion.inAppMessageSuppression: Usage<InAppMessageSuppressionSubject>
     get() = IN_APP_MESSAGE_SUPPRESSION

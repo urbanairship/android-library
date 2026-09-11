@@ -74,9 +74,8 @@ public class InAppMessageSuppressionEvaluation public constructor(
         val parts = mutableListOf("Message name: ${subject.name}")
 
         subject.extras
-            ?.takeUnless { it.isNull }
-            ?.toString()
-            ?.takeUnless { it == "{}" }
+            ?.map
+            ?.takeUnless { it.isEmpty }
             ?.let { parts.add("Message Extras: $it") }
 
         parts.add("Message priority: ${subject.priority}")
