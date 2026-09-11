@@ -560,12 +560,19 @@ internal fun AutomationSchedule.isInAppMessageType(): Boolean {
     }
 }
 
-internal fun AutomationSchedule.isNewSchedule(sinceDate: Long, lastSDKVersion: String?): Boolean {
+internal fun isNewSchedule(
+    created: ULong,
+    minSDKVersion: String?,
+    sinceDate: Long,
+    lastSDKVersion: String?
+): Boolean {
     if (created.toLong() > sinceDate) {
         return true
     }
 
-    val minSDKVersion = minSDKVersion ?: return false
+    if (minSDKVersion == null) {
+        return false
+    }
 
     // We can skip checking if the min_sdk_version is newer than the current SDK version since
     // remote-data will filter them out. This flag is only a hint to the SDK to treat a schedule with
@@ -579,3 +586,6 @@ internal fun AutomationSchedule.isNewSchedule(sinceDate: Long, lastSDKVersion: S
         VersionUtils.isVersionNewer(lastSDKVersion, minSDKVersion)
     }
 }
+
+internal fun AutomationSchedule.isNewSchedule(sinceDate: Long, lastSDKVersion: String?): Boolean =
+    isNewSchedule(created, minSDKVersion, sinceDate, lastSDKVersion)

@@ -9,18 +9,60 @@ import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import com.urbanairship.json.requireField
+import com.urbanairship.json.toJsonList
 import com.urbanairship.remotedata.RemoteDataInfo
 import com.urbanairship.remotedata.RemoteDataSource
+
+/**
+ * A schedule that failed to parse, with just enough info to evaluate newness when we retry it on
+ * a later sync.
+ */
+internal data class FailedScheduleRecord(
+    val identifier: String,
+    val createdDate: Long,
+    val minSDKVersion: String?
+) : JsonSerializable {
+    companion object {
+        private const val IDENTIFIER = "identifier"
+        private const val CREATED_DATE = "createdDate"
+        private const val MIN_SDK_VERSION = "minSDKVersion"
+
+        fun fromJson(value: JsonValue): FailedScheduleRecord? {
+            return try {
+                val content = value.requireMap()
+                FailedScheduleRecord(
+                    identifier = content.require(IDENTIFIER).requireString(),
+                    createdDate = content.requireField(CREATED_DATE),
+                    minSDKVersion = content[MIN_SDK_VERSION]?.requireString()
+                )
+            } catch (_: JsonException) {
+                null
+            }
+        }
+    }
+
+    override fun toJsonValue(): JsonValue = jsonMapOf(
+        IDENTIFIER to identifier,
+        CREATED_DATE to createdDate,
+        MIN_SDK_VERSION to minSDKVersion
+    ).toJsonValue()
+}
 
 internal data class AutomationSourceInfo(
     val remoteDataInfo: RemoteDataInfo?,
     val payloadTimestamp: Long,
-    val airshipSDKVersion: String?
+    val airshipSDKVersion: String?,
+    /**
+     * Schedules that failed to parse, carried forward across syncs until they either parse
+     * successfully or are removed from remote data. Null when nothing is failing.
+     */
+    val failedSchedules: List<FailedScheduleRecord>? = null
 ) : JsonSerializable {
     companion object {
         private const val REMOTE_DATA_INFO = "remoteDataInfo"
         private const val PAYLOAD_TIMESTAMP = "payloadTimestamp"
         private const val AIRSHIP_SDK_VERSION = "airshipSDKVersion"
+        private const val FAILED_SCHEDULES = "failedSchedules"
 
         fun fromJson(value: JsonValue): AutomationSourceInfo? {
             return try {
@@ -28,7 +70,12 @@ internal data class AutomationSourceInfo(
                 AutomationSourceInfo(
                     remoteDataInfo = content[REMOTE_DATA_INFO]?.let { RemoteDataInfo(it) },
                     payloadTimestamp = content.requireField(PAYLOAD_TIMESTAMP),
-                    airshipSDKVersion = content[AIRSHIP_SDK_VERSION]?.requireString()
+                    airshipSDKVersion = content[AIRSHIP_SDK_VERSION]?.requireString(),
+                    // Parsed leniently so a single bad record can't discard the whole checkpoint.
+                    failedSchedules = content[FAILED_SCHEDULES]
+                        ?.optList()
+                        ?.mapNotNull(FailedScheduleRecord::fromJson)
+                        ?.ifEmpty { null }
                 )
             } catch (_: JsonException) {
                 null
@@ -39,7 +86,8 @@ internal data class AutomationSourceInfo(
     override fun toJsonValue(): JsonValue = jsonMapOf(
         REMOTE_DATA_INFO to remoteDataInfo,
         PAYLOAD_TIMESTAMP to payloadTimestamp,
-        AIRSHIP_SDK_VERSION to airshipSDKVersion
+        AIRSHIP_SDK_VERSION to airshipSDKVersion,
+        FAILED_SCHEDULES to failedSchedules?.toJsonList()
     ).toJsonValue()
 }
 

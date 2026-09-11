@@ -3,6 +3,8 @@ package com.urbanairship.automation.remotedata
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.urbanairship.TestClock
+import com.urbanairship.json.jsonListOf
+import com.urbanairship.json.jsonMapOf
 import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.remotedata.RemoteDataSource
 import java.util.UUID
@@ -37,5 +39,52 @@ public class AutomationSourceInfoStoreTest {
         assertNull(infoStore.getSourceInfo(RemoteDataSource.CONTACT, null))
         assertNull(infoStore.getSourceInfo(RemoteDataSource.CONTACT, UUID.randomUUID().toString()))
         assertEquals(sourceInfo, infoStore.getSourceInfo(RemoteDataSource.CONTACT, "foo"))
+    }
+
+    @Test
+    public fun testFailedSchedulesRoundTrip(): TestResult = runTest {
+        val sourceInfo = AutomationSourceInfo(
+            remoteDataInfo = null,
+            payloadTimestamp = clock.currentTimeMillis(),
+            airshipSDKVersion = "17.9.9",
+            failedSchedules = listOf(
+                FailedScheduleRecord("foo", 100L, "18.0.0"),
+                FailedScheduleRecord("bar", 200L, null)
+            )
+        )
+
+        infoStore.setSourceInfo(sourceInfo, RemoteDataSource.APP, null)
+
+        assertEquals(sourceInfo, infoStore.getSourceInfo(RemoteDataSource.APP, null))
+    }
+
+    @Test
+    public fun testNoFailedSchedulesRoundTripsAsNull(): TestResult = runTest {
+        val sourceInfo = AutomationSourceInfo(null, clock.currentTimeMillis(), "17.9.9")
+
+        infoStore.setSourceInfo(sourceInfo, RemoteDataSource.APP, null)
+
+        assertNull(infoStore.getSourceInfo(RemoteDataSource.APP, null)?.failedSchedules)
+    }
+
+    @Test
+    public fun testMalformedFailedScheduleDoesNotDiscardSourceInfo(): TestResult = runTest {
+        val json = jsonMapOf(
+            "payloadTimestamp" to 100L,
+            "airshipSDKVersion" to "17.9.9",
+            "failedSchedules" to jsonListOf(
+                jsonMapOf("identifier" to "foo", "createdDate" to 100L),
+                // Missing the required identifier.
+                jsonMapOf("createdDate" to 200L)
+            )
+        ).toJsonValue()
+
+        val parsed = AutomationSourceInfo.fromJson(json)
+
+        assertEquals(
+            listOf(FailedScheduleRecord("foo", 100L, null)),
+            parsed?.failedSchedules
+        )
+        assertEquals(100L, parsed?.payloadTimestamp)
     }
 }
