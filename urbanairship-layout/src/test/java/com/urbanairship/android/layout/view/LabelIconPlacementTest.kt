@@ -1,9 +1,11 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import android.content.pm.ApplicationInfo
 import android.graphics.Rect
 import android.graphics.drawable.InsetDrawable
 import android.text.Spanned
+import android.view.View
 import android.text.style.ImageSpan
 import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.LayoutState
@@ -58,11 +60,18 @@ public class LabelIconPlacementTest {
     @Before
     public fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        // The platform gates every bit of RTL resolution on the host app declaring
+        // android:supportsRtl, and a library's own manifest can't. Without this,
+        // setTextDirection is inert and layoutDirection never leaves LTR.
+        RuntimeEnvironment.getApplication().applicationInfo.also {
+            it.flags = it.flags or ApplicationInfo.FLAG_SUPPORTS_RTL
+        }
         // isLayoutRtl reads the Airship locale, which is the override message content honours.
         val localeManager: LocaleManager = mockk {
             every { locale } answers { airshipLocale }
         }
         mockkObject(Airship)
+        every { Airship.isFlyingOrTakingOff } returns true
         every { Airship.localeManager } returns localeManager
     }
 
@@ -130,46 +139,43 @@ public class LabelIconPlacementTest {
 
     /**
      * The gap belongs between the icon and the text, so it sits on whichever side the text is:
-     * the start icon leads, the end icon trails, and an RTL paragraph swaps which physical side
-     * that is.
+     * the start icon leads, the end icon trails, and RTL swaps which physical side that is.
      */
     @Test
-    public fun testGapSidesForLtrText() {
+    public fun testGapSidesInLtr() {
         assertEquals(0, insetBounds(startIcon = true).left)
         assertTrue(insetBounds(endIcon = true).left > 0)
     }
 
     @Test
-    public fun testGapSidesForRtlText() {
-        assertTrue(insetBounds(startIcon = true, text = ARABIC).left > 0)
-        assertEquals(0, insetBounds(endIcon = true, text = ARABIC).left)
+    public fun testGapSidesInRtl() {
+        airshipLocale = ARABIC_LOCALE
+
+        assertTrue(insetBounds(startIcon = true).left > 0)
+        assertEquals(0, insetBounds(endIcon = true).left)
     }
 
     /**
-     * The text decides, not the device: Latin text on an Arabic device still lays out
-     * left-to-right, so flipping the gap for the locale would strand it outside the icon.
+     * The locale decides, not the content. Left to the platform's first-strong default the
+     * paragraph would follow the characters, so Latin copy on an RTL device would lay out
+     * left-to-right while the rest of the layout mirrored — and the icons riding in that text
+     * would disagree with their own gap.
      */
     @Test
-    public fun testLtrTextKeepsLtrGapsOnAnRtlDevice() {
-        airshipLocale = Locale.forLanguageTag("ar-EG")
+    public fun testParagraphFollowsTheLocaleNotTheText() {
+        assertEquals(View.TEXT_DIRECTION_LTR, labelView(text = ARABIC).textDirection)
 
-        assertEquals(0, insetBounds(startIcon = true).left)
-        assertTrue(insetBounds(endIcon = true).left > 0)
+        airshipLocale = ARABIC_LOCALE
+        assertEquals(View.TEXT_DIRECTION_RTL, labelView(text = LATIN).textDirection)
     }
 
+    /** Which follows for the gap: the content can't pull it out from between icon and text. */
     @Test
-    public fun testRtlTextKeepsRtlGapsOnAnLtrDevice() {
-        assertTrue(insetBounds(startIcon = true, text = ARABIC).left > 0)
-        assertEquals(0, insetBounds(endIcon = true, text = ARABIC).left)
-    }
+    public fun testGapIgnoresTheTextsOwnDirection() {
+        assertEquals(0, insetBounds(startIcon = true, text = ARABIC).left)
 
-    /** Text with no direction of its own falls back to the locale. */
-    @Test
-    public fun testDirectionlessTextFollowsTheLocale() {
-        assertEquals(0, insetBounds(startIcon = true, text = "12 34").left)
-
-        airshipLocale = Locale.forLanguageTag("ar-EG")
-        assertTrue(insetBounds(startIcon = true, text = "12 34").left > 0)
+        airshipLocale = ARABIC_LOCALE
+        assertTrue(insetBounds(startIcon = true, text = LATIN).left > 0)
     }
 
     /** The child rect inside the icon's [InsetDrawable], which reveals which side the gap is on. */
@@ -243,5 +249,6 @@ public class LabelIconPlacementTest {
     private companion object {
         const val LATIN = "See Recommendations"
         const val ARABIC = "شاهد التوصيات"
+        val ARABIC_LOCALE: Locale = Locale.forLanguageTag("ar-EG")
     }
 }
