@@ -133,6 +133,21 @@ public class StackRationingTest {
         }
     }
 
+    /** A row divides what it has the same way a column does. */
+    @Test
+    public fun testARowSharesItsOverflowToo() {
+        val row = row()
+        row.measure(exactly(PAGE), exactly(PAGE))
+
+        val media = allMedia(row)
+        assertEquals("media count", 3, media.size)
+        assertEquals("band width", BAND, media.first().measuredWidth)
+        assertEquals("the two hugging images match", media[1].measuredWidth, media[2].measuredWidth)
+
+        val trailing = requireNotNull(findLabel(row, TRAILING)) { "no trailing label" }
+        assertTrue("trailing label has a width", trailing.measuredWidth > 0)
+    }
+
     private fun findLabel(view: View, text: String): View? {
         if (view is android.widget.TextView && view.text?.toString() == text) return view
         if (view is ViewGroup) {
@@ -183,6 +198,10 @@ public class StackRationingTest {
             }
         """.trimIndent()
 
+        return build(json)
+    }
+
+    private fun build(json: String): ViewGroup {
         val info = ViewInfo.viewInfoFromJson(JsonValue.parseString(json).requireMap())
         val view = LayoutViewModel().getOrCreateModel(info, mockEnv)
             .createView(context, viewEnv, null) as ViewGroup
@@ -192,6 +211,29 @@ public class StackRationingTest {
 
         return view
     }
+
+    /** The same shape as [page], laid out along the other axis. */
+    private fun row(): ViewGroup = build(
+        """
+        {
+          "type": "linear_layout",
+          "direction": "horizontal",
+          "items": [
+            {"size": {"width": $BAND, "height": "auto"}, "view": $MEDIA},
+            $HUGGING_ROW,
+            $HUGGING_ROW,
+            {
+              "size": {"width": "auto", "height": "auto"},
+              "view": {
+                "type": "label", "text": "$TRAILING",
+                "text_appearance": {"font_size": 14,
+                  "color": {"default": {"type": "hex", "hex": "#000000", "alpha": 1}}}
+              }
+            }
+          ]
+        }
+        """.trimIndent()
+    )
 
     private fun image(): Drawable = object : ColorDrawable(Color.RED) {
         override fun getIntrinsicWidth(): Int = 400
@@ -206,6 +248,17 @@ public class StackRationingTest {
         private val MEDIA = """
             {"type": "media", "media_type": "image", "media_fit": "fit_crop",
              "url": "https://example.com/photo.jpg"}
+        """.trimIndent()
+
+        private val HUGGING_ROW = """
+            {
+              "size": {"width": "auto", "height": "auto"},
+              "view": {
+                "type": "linear_layout",
+                "direction": "horizontal",
+                "items": [{"size": {"width": "auto", "height": "auto"}, "view": $MEDIA}]
+              }
+            }
         """.trimIndent()
 
         private val HUGGING = """
