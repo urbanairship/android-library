@@ -32,6 +32,7 @@ import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Effect
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State.Content.ContactChannelState
 import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
+import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import io.mockk.Runs
@@ -51,7 +52,6 @@ import io.mockk.verifyOrder
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -60,9 +60,9 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After

@@ -572,8 +572,8 @@ internal class PreferenceCenterViewModel(
             message = "Timed out waiting for contact channels."
         )
         .mapNotNull {
-        it.getOrThrow().toSet()
-    }
+            it.getOrThrow().toSet()
+        }
 
     @Parcelize
     internal sealed class State : Parcelable {

@@ -642,8 +642,8 @@ internal class DefaultPreferenceCenterViewModel(
             message = "Timed out waiting for contact channels."
         )
         .mapNotNull {
-        it.getOrThrow().toSet()
-    }
+            it.getOrThrow().toSet()
+        }
 
     internal sealed class Change {
         data object ShowLoading : Change()

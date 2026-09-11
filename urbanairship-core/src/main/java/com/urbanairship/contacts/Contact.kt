@@ -608,18 +608,19 @@ public class Contact internal constructor(
      *
      * An empty set indicates that this contact is not subscribed to any lists.
      *
-     * Results in `null` if the contact has not resolved within [FETCH_TIMEOUT].
+     * Results in `null` if the fetch failed, or if the contact has not resolved within
+     * [FETCH_TIMEOUT].
      *
      * @return A [PendingResult] of the current set of subscription lists.
      */
     public fun fetchSubscriptionListsPendingResult(): PendingResult<Map<String, Set<Scope>>?> {
         val pendingResult = PendingResult<Map<String, Set<Scope>>?>()
         subscriptionsScope.launch {
-            val result = withTimeoutOrNull(FETCH_TIMEOUT) { fetchSubscriptionLists().getOrNull() }
+            val result = withTimeoutOrNull(FETCH_TIMEOUT) { fetchSubscriptionLists() }
             if (result == null) {
                 UALog.w { "Timed out fetching subscription lists." }
             }
-            pendingResult.setResult(result)
+            pendingResult.setResult(result?.getOrNull())
         }
         return pendingResult
     }
@@ -641,18 +642,19 @@ public class Contact internal constructor(
     /**
      * Returns the contact channels for the current contact.
      *
-     * Results in `null` if the contact has not resolved within [FETCH_TIMEOUT].
+     * Results in `null` if the fetch failed, or if the contact has not resolved within
+     * [FETCH_TIMEOUT].
      *
      * @return A [PendingResult] of the current contact channels.
      */
     public fun fetchContactChannelsPendingResult(): PendingResult<List<ContactChannel>?> {
         val pendingResult = PendingResult<List<ContactChannel>?>()
         subscriptionsScope.launch {
-            val result = withTimeoutOrNull(FETCH_TIMEOUT) { fetchContactChannels().getOrNull() }
+            val result = withTimeoutOrNull(FETCH_TIMEOUT) { fetchContactChannels() }
             if (result == null) {
                 UALog.w { "Timed out fetching contact channels." }
             }
-            pendingResult.setResult(result)
+            pendingResult.setResult(result?.getOrNull())
         }
         return pendingResult
     }
