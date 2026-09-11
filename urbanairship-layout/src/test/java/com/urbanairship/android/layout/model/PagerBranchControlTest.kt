@@ -3,6 +3,7 @@ package com.urbanairship.android.layout.model
 
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasCapabilities
 import com.urbanairship.android.layout.environment.ThomasState
 import com.urbanairship.android.layout.property.Outcome
 import com.urbanairship.android.layout.property.PageBranching
@@ -44,7 +45,7 @@ public class PagerBranchControlTest {
             pager = null,
             video = null,
             asyncView = null,
-            ai = null
+            capabilities = ThomasCapabilities.NONE
         )
     )
 

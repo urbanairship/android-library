@@ -5,7 +5,6 @@ import com.urbanairship.Airship
 import com.urbanairship.android.layout.LayoutStateStorage
 import com.urbanairship.android.layout.ai.DefaultThomasAIInference
 import com.urbanairship.android.layout.ai.ThomasAIInference
-import com.urbanairship.android.layout.ai.ThomasAIStatus
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.model.PagerNextFallback
 import com.urbanairship.android.layout.property.AttributeValue
@@ -25,6 +24,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
@@ -44,15 +44,16 @@ internal class ModelEnvironment(
     val stateStorage: LayoutStateStorage? = null,
     val aiInference: ThomasAIInference? = DefaultThomasAIInference.create(),
     /**
-     * Null until the model reports in, and forever when there is no model to report — a layout
-     * with no AI never sees a `$ai` state key at all.
+     * [ThomasCapabilities.ai] is null until the model reports in, and forever when there is no
+     * model to report — a layout with no AI never sees a `$ai` state key at all.
      *
      * Subscribed here rather than per-model so every predicate reads the same snapshot, and so
      * [withState] shares it instead of opening a second subscription.
      */
-    val aiStatus: StateFlow<ThomasAIStatus?> = aiInference?.statusUpdates
-        ?.stateIn(modelScope, SharingStarted.Eagerly, null)
-        ?: MutableStateFlow(null).asStateFlow()
+    val capabilities: StateFlow<ThomasCapabilities> = aiInference?.statusUpdates
+        ?.map { ThomasCapabilities(ai = it) }
+        ?.stateIn(modelScope, SharingStarted.Eagerly, ThomasCapabilities.NONE)
+        ?: MutableStateFlow(ThomasCapabilities.NONE).asStateFlow()
 ) {
     val layoutEvents: Flow<LayoutEvent> = eventHandler.layoutEvents
 
@@ -78,7 +79,7 @@ internal class ModelEnvironment(
             channelRegistrar = this.channelRegistrar,
             viewIdResolver = this.viewIdResolver,
             aiInference = this.aiInference,
-            aiStatus = this.aiStatus
+            capabilities = this.capabilities
         )
 }
 

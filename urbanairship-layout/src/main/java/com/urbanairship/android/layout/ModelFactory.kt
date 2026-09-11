@@ -1,12 +1,12 @@
 package com.urbanairship.android.layout
 
-import com.urbanairship.android.layout.ai.ThomasAIStatus
 import com.urbanairship.android.layout.environment.FormType
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.PagersViewTracker
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasCapabilities
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.VideoCommandChannel
 import com.urbanairship.android.layout.environment.VideoControlState
@@ -296,7 +296,7 @@ internal class ThomasModelFactory : ModelFactory {
                         videoCommandChannels = videoCommandChannels,
                         videoBroadcastChannels = videoBroadcastChannels,
                         videoControlGroups = videoControlGroups,
-                        aiStatus = environment.aiStatus,
+                        capabilities = environment.capabilities,
                         parentLayoutState = parentLayoutState
                     )
                 )
@@ -427,7 +427,7 @@ internal class ThomasModelFactory : ModelFactory {
             videoCommandChannels: Map<Tag, VideoCommandChannel>,
             videoBroadcastChannels: Map<Tag, VideoGroupBroadcastChannel>,
             videoControlGroups: Map<Tag, Pair<String, String>>,
-            aiStatus: StateFlow<ThomasAIStatus?>,
+            capabilities: StateFlow<ThomasCapabilities>,
             parentLayoutState: LayoutState? = null
         ): LayoutState {
             val childForm = form.firstOrNull()
@@ -505,7 +505,7 @@ internal class ThomasModelFactory : ModelFactory {
                 score = scoreFlow,
                 layout = layoutFlow,
                 thomasState = makeThomasState(
-                    formFlow, layoutFlow, pagerFlow, videoFlow, asyncFlow, aiStatus
+                    formFlow, layoutFlow, pagerFlow, videoFlow, asyncFlow, capabilities
                 ),
                 pagerTracker = pagerTracker,
                 video = videoFlow,

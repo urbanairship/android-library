@@ -22,7 +22,7 @@ internal data class ThomasState(
     val pager: State.Pager?,
     val video: State.Video?,
     val asyncView: State.AsyncView?,
-    val ai: ThomasAIStatus?
+    val capabilities: ThomasCapabilities
 ): JsonSerializable {
 
     override fun toJsonValue(): JsonValue {
@@ -77,7 +77,7 @@ internal data class ThomasState(
                     ).toJsonValue())
                 }
 
-                ai?.let { status ->
+                capabilities.ai?.let { status ->
                     put(AI, jsonMapOf(
                         CURRENT to status
                     ).toJsonValue())
@@ -120,17 +120,41 @@ internal data class ThomasState(
     }
 }
 
+/**
+ * What the runtime can do right now, as the layout sees it.
+ *
+ * The [State] fields on [ThomasState] answer "which controllers enclose this node" — each is
+ * owned by a controller in the scene, keyed by its identifier, mutated as the user interacts,
+ * and restored from disk. These answer "what is available to the whole layout": one value for
+ * every node, pushed in from outside, read-only, and never persisted — a restored capability
+ * would be stale the moment it loaded.
+ *
+ * New controller state belongs in [State]. New runtime capabilities belong here.
+ *
+ * @param ai Which AI models the layout can reach, or `null` until one reports.
+ */
+internal data class ThomasCapabilities(
+    val ai: ThomasAIStatus? = null
+) {
+    companion object {
+        val NONE = ThomasCapabilities()
+    }
+}
+
 internal fun makeThomasState(
     formState: SharedState<State.Form>?,
     layoutState: SharedState<State.Layout>?,
     pagerState: SharedState<State.Pager>?,
     videoState: SharedState<State.Video>?,
     asyncView: SharedState<State.AsyncView>?,
-    aiStatus: StateFlow<ThomasAIStatus?> = MutableStateFlow(null).asStateFlow()
+    capabilities: StateFlow<ThomasCapabilities> =
+        MutableStateFlow(ThomasCapabilities.NONE).asStateFlow()
 ): StateFlow<ThomasState> {
 
     val layout = layoutState
-        ?: return MutableStateFlow(ThomasState(null, null, null, null, null, null)).asStateFlow()
+        ?: return MutableStateFlow(
+            ThomasState(null, null, null, null, null, ThomasCapabilities.NONE)
+        ).asStateFlow()
 
     return combineStates(
         flow1 = layout.changes,
@@ -138,7 +162,7 @@ internal fun makeThomasState(
         flow3 = pagerState?.changes ?: MutableStateFlow(null).asStateFlow(),
         flow4 = videoState?.changes ?: MutableStateFlow(null).asStateFlow(),
         flow5 = asyncView?.changes ?: MutableStateFlow(null).asStateFlow(),
-        flow6 = aiStatus,
+        flow6 = capabilities,
         transform = ::ThomasState
     )
 }
