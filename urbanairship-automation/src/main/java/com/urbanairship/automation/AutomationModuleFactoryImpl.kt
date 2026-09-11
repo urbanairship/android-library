@@ -7,6 +7,7 @@ import androidx.annotation.Keep
 import androidx.annotation.RestrictTo
 import com.urbanairship.automation.engine.ApplicationMetrics
 import com.urbanairship.preferences.PreferenceStore
+import com.urbanairship.Airship
 import com.urbanairship.PrivacyManager
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.ActionsManifest
@@ -140,7 +141,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
                 activityMonitor,
                 ai
             ),
-            analyticsFactory = analyticsFactory
+            analyticsFactory = analyticsFactory,
+            ai = Airship.internalAi
         )
 
         // Execution

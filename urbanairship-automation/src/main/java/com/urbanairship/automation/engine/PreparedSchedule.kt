@@ -3,6 +3,7 @@
 package com.urbanairship.automation.engine
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.automation.AutomationAiSuppression
 import com.urbanairship.automation.limits.AutomationLedgerInterface
 import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.automation.limits.LedgerExecutionResult
@@ -54,7 +55,12 @@ public data class PreparedScheduleInfo(
      * ID of the execution-causing trigger, carried through for ledger event
      * attribution.
      */
-    internal val triggerId: String? = null
+    internal val triggerId: String? = null,
+    /**
+     * The schedule's `ai_suppression` config, stamped here so the type-specific preparer can
+     * run the evaluation without re-reading a schedule that may have changed since.
+     */
+    internal val aiSuppression: AutomationAiSuppression? = null
 ) : JsonSerializable {
 
     internal companion object {
@@ -70,6 +76,7 @@ public data class PreparedScheduleInfo(
         private const val SEND_METADATA = "send_metadata"
         private const val LEDGER_SHARED_ID = "ledger_shared_id"
         private const val TRIGGER_ID = "trigger_id"
+        private const val AI_SUPPRESSION = "ai_suppression"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): PreparedScheduleInfo {
@@ -88,6 +95,7 @@ public data class PreparedScheduleInfo(
                 sendMetadata = content.optionalField(SEND_METADATA),
                 ledgerSharedId = content.optionalField(LEDGER_SHARED_ID),
                 triggerId = content.optionalField(TRIGGER_ID),
+                aiSuppression = content[AI_SUPPRESSION]?.let(AutomationAiSuppression::fromJson)
             )
         }
     }
@@ -104,7 +112,8 @@ public data class PreparedScheduleInfo(
         PRIORITY to priority,
         SEND_METADATA to sendMetadata,
         LEDGER_SHARED_ID to ledgerSharedId,
-        TRIGGER_ID to triggerId
+        TRIGGER_ID to triggerId,
+        AI_SUPPRESSION to aiSuppression
     ).toJsonValue()
 }
 

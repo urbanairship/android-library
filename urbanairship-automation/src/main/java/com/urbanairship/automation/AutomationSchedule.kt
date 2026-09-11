@@ -107,7 +107,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
     internal val additionalAudienceCheckOverrides: AdditionalAudienceCheckOverrides? = null,
     internal val sendMetadata: String? = null,
     internal val ledgerConfig: LedgerConfig? = null,
-    internal val limitConfig: LimitConfig? = null
+    internal val limitConfig: LimitConfig? = null,
+    internal val aiSuppression: AutomationAiSuppression? = null
 ) : JsonSerializable {
 
     /**
@@ -352,7 +353,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             additionalAudienceCheckOverrides = additionalAudienceCheckOverrides,
             sendMetadata = sendMetadata,
             ledgerConfig = ledgerConfig,
-            limitConfig = limitConfig
+            limitConfig = limitConfig,
+            aiSuppression = aiSuppression
         )
     }
 
@@ -454,6 +456,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         private const val SEND_METADATA = "send_metadata"
         private const val LEDGER_CONFIG = "ledger_config"
         private const val LIMIT_CONFIG = "limit_config"
+        private const val AI_SUPPRESSION = "ai_suppression"
 
         @Throws(
             JsonException::class,
@@ -502,7 +505,8 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                     ?.let(AdditionalAudienceCheckOverrides::fromJson),
                 sendMetadata = content.optionalField(SEND_METADATA),
                 ledgerConfig = content[LEDGER_CONFIG]?.let(LedgerConfig::fromJson),
-                limitConfig = content[LIMIT_CONFIG]?.let(LimitConfig::fromJson)
+                limitConfig = content[LIMIT_CONFIG]?.let(LimitConfig::fromJson),
+                aiSuppression = content[AI_SUPPRESSION]?.let(AutomationAiSuppression::fromJson)
             )
         }
     }
@@ -537,6 +541,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         .putOpt(SEND_METADATA, sendMetadata)
         .putOpt(LEDGER_CONFIG, ledgerConfig)
         .putOpt(LIMIT_CONFIG, limitConfig)
+        .putOpt(AI_SUPPRESSION, aiSuppression)
         .build()
         .toJsonValue()
 
@@ -573,6 +578,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
         if (sendMetadata != other.sendMetadata) return false
         if (ledgerConfig != other.ledgerConfig) return false
         if (limitConfig != other.limitConfig) return false
+        if (aiSuppression != other.aiSuppression) return false
         return endDate == other.endDate
     }
 
@@ -581,7 +587,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
             compoundAudience, delay, interval, data, bypassHoldoutGroups, editGracePeriodDays,
             frequencyConstraintIds, messageType, campaigns, reportingContext, productId,
             minSDKVersion, created, queue, metadata, sendMetadata, ledgerConfig, limitConfig,
-            endDate)
+            aiSuppression, endDate)
     }
 }
 

@@ -11,6 +11,7 @@ import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.audiencecheck.AdditionalAudienceCheckerResolver
 import com.urbanairship.automation.deferred.DeferredAutomationData
 import com.urbanairship.automation.deferred.DeferredScheduleResult
+import com.urbanairship.automation.AutomationAiSuppression
 import com.urbanairship.automation.isInAppMessageType
 import com.urbanairship.automation.limits.AutomationLedgerInterface
 import com.urbanairship.automation.limits.FrequencyChecker
@@ -133,11 +134,15 @@ internal class AutomationPreparer internal constructor(
                 data = schedule.data,
                 schedule = schedule,
                 triggerId = triggerId,
+                aiSuppression = schedule.aiSuppression,
                 onDeferredRequest = {
                     deferredRequest(it, triggerContext = deferredContext, deviceInfoProvider)
                 },
-                onPrepareInfo = {
-                    prepareInfo(schedule, experimentResult, deviceInfoProvider, triggerSessionId, triggerId)
+                onPrepareInfo = { aiSuppression ->
+                    prepareInfo(
+                        schedule, experimentResult, deviceInfoProvider, triggerSessionId,
+                        triggerId, aiSuppression
+                    )
                 },
                 onPrepareSchedule = { info, data ->
                     prepareSchedule(info, data, frequencyChecker)
@@ -151,7 +156,8 @@ internal class AutomationPreparer internal constructor(
         experimentResult: ExperimentResult?,
         deviceInfoProvider: DeviceInfoProvider,
         triggerSessionId: String,
-        triggerId: String?
+        triggerId: String?,
+        aiSuppression: AutomationAiSuppression?
     ): Result<PreparedScheduleInfo> {
         val additionalAudienceCheckResult = additionalAudienceResolver.resolve(
             deviceInfoProvider = deviceInfoProvider,
@@ -174,7 +180,8 @@ internal class AutomationPreparer internal constructor(
                 priority = schedule.priority ?: 0,
                 sendMetadata = schedule.sendMetadata,
                 ledgerSharedId = schedule.ledgerConfig?.sharedId,
-                triggerId = triggerId
+                triggerId = triggerId,
+                aiSuppression = aiSuppression
             )
         )
     }
@@ -213,13 +220,14 @@ internal class AutomationPreparer internal constructor(
         schedule: AutomationSchedule,
         triggerId: String?,
         onDeferredRequest: suspend (DeferredAutomationData) -> DeferredRequest,
-        onPrepareInfo: suspend () -> Result<PreparedScheduleInfo>,
+        aiSuppression: AutomationAiSuppression?,
+        onPrepareInfo: suspend (AutomationAiSuppression?) -> Result<PreparedScheduleInfo>,
         onPrepareSchedule: (PreparedScheduleInfo, PreparedScheduleData) -> PreparedSchedule,
     ): RetryingQueue.Result<SchedulePrepareResult> {
 
         when(data) {
             is AutomationSchedule.ScheduleData.Actions -> {
-                val info = onPrepareInfo().getOrElse {
+                val info = onPrepareInfo(aiSuppression).getOrElse {
                     UALog.e(it) { "Failed to prepare schedule data" }
                     return RetryingQueue.Result.Retry()
                 }
@@ -245,7 +253,7 @@ internal class AutomationPreparer internal constructor(
                     return RetryingQueue.Result.Success(SchedulePrepareResult.Skip)
                 }
 
-                val info = onPrepareInfo().getOrElse {
+                val info = onPrepareInfo(aiSuppression).getOrElse {
                     UALog.e(it) { "Failed to prepare schedule data" }
                     return RetryingQueue.Result.Retry()
                 }
@@ -272,12 +280,14 @@ internal class AutomationPreparer internal constructor(
                     deferredRequest = onDeferredRequest(data.deferred),
                     schedule = schedule,
                     triggerId = triggerId,
-                    onResult = {
+                    onResult = { data, deferredAiSuppression ->
                         prepareData(
                             prepareCache = prepareCache,
-                            data = it,
+                            data = data,
                             schedule = schedule,
                             triggerId = triggerId,
+                            // The deferred response wins when it carries its own config.
+                            aiSuppression = deferredAiSuppression ?: aiSuppression,
                             onDeferredRequest = onDeferredRequest,
                             onPrepareInfo = onPrepareInfo,
                             onPrepareSchedule = onPrepareSchedule,
@@ -403,7 +413,10 @@ internal class AutomationPreparer internal constructor(
         deferredRequest: DeferredRequest,
         schedule: AutomationSchedule,
         triggerId: String?,
-        onResult: suspend (AutomationSchedule.ScheduleData) -> RetryingQueue.Result<SchedulePrepareResult>
+        onResult: suspend (
+            AutomationSchedule.ScheduleData,
+            AutomationAiSuppression?
+        ) -> RetryingQueue.Result<SchedulePrepareResult>
     ): RetryingQueue.Result<SchedulePrepareResult> {
         UALog.v { "Resolving deferred ${schedule.identifier}" }
 
@@ -452,7 +465,10 @@ internal class AutomationPreparer internal constructor(
                                 UALog.v { "Failed to get result for deferred ${schedule.identifier}" }
                                 RetryingQueue.Result.Retry()
                             } else {
-                                onResult(AutomationSchedule.ScheduleData.Actions(actions))
+                                onResult(
+                                    AutomationSchedule.ScheduleData.Actions(actions),
+                                    result.result.aiSuppression
+                                )
                             }
                         }
                         DeferredAutomationData.DeferredType.IN_APP_MESSAGE -> {
@@ -461,7 +477,10 @@ internal class AutomationPreparer internal constructor(
                                 UALog.v { "Failed to get result for deferred ${schedule.identifier}" }
                                 RetryingQueue.Result.Retry()
                             } else {
-                                onResult(AutomationSchedule.ScheduleData.InAppMessageData(message))
+                                onResult(
+                                    AutomationSchedule.ScheduleData.InAppMessageData(message),
+                                    result.result.aiSuppression
+                                )
                             }
                         }
                     }
