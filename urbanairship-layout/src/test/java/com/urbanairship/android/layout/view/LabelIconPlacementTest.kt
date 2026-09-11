@@ -1,13 +1,10 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
-import android.content.pm.ApplicationInfo
-import android.graphics.Rect
-import android.graphics.drawable.InsetDrawable
 import android.text.Spanned
-import android.view.View
+import android.text.TextPaint
 import android.text.style.ImageSpan
-import com.urbanairship.Airship
+import android.text.style.ReplacementSpan
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.info.LabelInfo
@@ -15,12 +12,8 @@ import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.LabelModel
 import com.urbanairship.android.layout.model.ModelProperties
 import com.urbanairship.json.JsonValue
-import com.urbanairship.locale.LocaleManager
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkObject
-import io.mockk.unmockkObject
-import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -55,29 +48,13 @@ public class LabelIconPlacementTest {
         every { layoutState } returns LayoutState.EMPTY
     }
 
-    private var airshipLocale: Locale = Locale.US
-
     @Before
     public fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        // The platform gates every bit of RTL resolution on the host app declaring
-        // android:supportsRtl, and a library's own manifest can't. Without this,
-        // setTextDirection is inert and layoutDirection never leaves LTR.
-        RuntimeEnvironment.getApplication().applicationInfo.also {
-            it.flags = it.flags or ApplicationInfo.FLAG_SUPPORTS_RTL
-        }
-        // isLayoutRtl reads the Airship locale, which is the override message content honours.
-        val localeManager: LocaleManager = mockk {
-            every { locale } answers { airshipLocale }
-        }
-        mockkObject(Airship)
-        every { Airship.isFlyingOrTakingOff } returns true
-        every { Airship.localeManager } returns localeManager
     }
 
     @After
     public fun tearDown() {
-        unmockkObject(Airship)
         Dispatchers.resetMain()
     }
 
@@ -138,55 +115,43 @@ public class LabelIconPlacementTest {
     }
 
     /**
-     * The gap belongs between the icon and the text, so it sits on whichever side the text is:
-     * the start icon leads, the end icon trails, and RTL swaps which physical side that is.
+     * The gap is a span in the text run, not padding on the drawable, so the bidi algorithm
+     * puts it between icon and words in either direction. In the string the start icon leads
+     * its gap and the end icon trails its own — two neutrals beside a directional run reorder
+     * together, so that string order is all this has to get right.
      */
     @Test
-    public fun testGapSidesInLtr() {
-        assertEquals(0, insetBounds(startIcon = true).left)
-        assertTrue(insetBounds(endIcon = true).left > 0)
+    public fun testStartIconLeadsItsGap() {
+        val text = labelView(startIcon = true).text as Spanned
+
+        assertEquals(0, text.getSpanStart(imageSpans(text).single()))
+        assertEquals(1, text.getSpanStart(gapSpans(text).single()))
     }
 
     @Test
-    public fun testGapSidesInRtl() {
-        airshipLocale = ARABIC_LOCALE
+    public fun testEndIconTrailsItsGap() {
+        val text = labelView(endIcon = true).text as Spanned
 
-        assertTrue(insetBounds(startIcon = true).left > 0)
-        assertEquals(0, insetBounds(endIcon = true).left)
+        assertEquals(text.length - 1, text.getSpanStart(imageSpans(text).single()))
+        assertEquals(text.length - 2, text.getSpanStart(gapSpans(text).single()))
     }
 
-    /**
-     * The locale decides, not the content. Left to the platform's first-strong default the
-     * paragraph would follow the characters, so Latin copy on an RTL device would lay out
-     * left-to-right while the rest of the layout mirrored — and the icons riding in that text
-     * would disagree with their own gap.
-     */
+    /** Whatever the text's own direction is: string order is the same, bidi does the rest. */
     @Test
-    public fun testParagraphFollowsTheLocaleNotTheText() {
-        assertEquals(View.TEXT_DIRECTION_LTR, labelView(text = ARABIC).textDirection)
+    public fun testStringOrderIsTheSameForRtlText() {
+        val text = labelView(startIcon = true, endIcon = true, text = ARABIC).text as Spanned
 
-        airshipLocale = ARABIC_LOCALE
-        assertEquals(View.TEXT_DIRECTION_RTL, labelView(text = LATIN).textDirection)
+        assertEquals(0, text.getSpanStart(imageSpans(text).first()))
+        assertEquals(text.length - 1, text.getSpanStart(imageSpans(text).last()))
     }
 
-    /** Which follows for the gap: the content can't pull it out from between icon and text. */
+    /** The gap is the authored space, so it survives as a measurable width. */
     @Test
-    public fun testGapIgnoresTheTextsOwnDirection() {
-        assertEquals(0, insetBounds(startIcon = true, text = ARABIC).left)
+    public fun testGapCarriesTheAuthoredSpace() {
+        val text = labelView(startIcon = true).text as Spanned
+        val gap = gapSpans(text).single()
 
-        airshipLocale = ARABIC_LOCALE
-        assertTrue(insetBounds(startIcon = true, text = LATIN).left > 0)
-    }
-
-    /** The child rect inside the icon's [InsetDrawable], which reveals which side the gap is on. */
-    private fun insetBounds(
-        startIcon: Boolean = false,
-        endIcon: Boolean = false,
-        text: String = LATIN
-    ): Rect {
-        val view = labelView(startIcon = startIcon, endIcon = endIcon, text = text)
-        val icon = spans(view).single().drawable
-        return (icon as InsetDrawable).drawable!!.bounds
+        assertTrue(gap.getSize(TextPaint(), text, 1, 2, null) > 0)
     }
 
     private fun assertNoCompoundDrawables(view: LabelView) {
@@ -195,12 +160,16 @@ public class LabelIconPlacementTest {
 
     private fun spans(view: LabelView): List<ImageSpan> {
         val text = view.text
-        if (text !is Spanned) {
-            return emptyList()
-        }
-        return text.getSpans(0, text.length, ImageSpan::class.java)
-            .sortedBy { text.getSpanStart(it) }
+        return if (text is Spanned) imageSpans(text) else emptyList()
     }
+
+    private fun imageSpans(text: Spanned): List<ImageSpan> =
+        text.getSpans(0, text.length, ImageSpan::class.java).sortedBy { text.getSpanStart(it) }
+
+    private fun gapSpans(text: Spanned): List<ReplacementSpan> =
+        text.getSpans(0, text.length, ReplacementSpan::class.java)
+            .filterNot { it is ImageSpan }
+            .sortedBy { text.getSpanStart(it) }
 
     private fun labelView(
         startIcon: Boolean = false,
@@ -249,6 +218,5 @@ public class LabelIconPlacementTest {
     private companion object {
         const val LATIN = "See Recommendations"
         const val ARABIC = "شاهد التوصيات"
-        val ARABIC_LOCALE: Locale = Locale.forLanguageTag("ar-EG")
     }
 }

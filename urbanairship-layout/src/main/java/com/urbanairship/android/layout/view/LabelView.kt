@@ -5,12 +5,12 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.InsetDrawable
 import android.os.Build
 import android.text.PrecomputedText
 import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ImageSpan
+import android.text.style.ReplacementSpan
 import android.text.TextUtils
 import android.util.TypedValue.COMPLEX_UNIT_SP
 import android.view.accessibility.AccessibilityEvent
@@ -29,7 +29,6 @@ import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.ifNotEmpty
-import com.urbanairship.android.layout.util.isLayoutRtl
 
 internal class LabelView(
     context: Context,
@@ -88,12 +87,6 @@ internal class LabelView(
         if (marksTruncatedText) {
             ellipsize = TextUtils.TruncateAt.END
         }
-
-        // Thomas resolves direction from the Airship locale everywhere, so the paragraph has to
-        // as well. Left to the platform default of first-strong it would resolve from the text's
-        // own characters instead, and Latin copy on an RTL device would lay out left-to-right
-        // while the rest of the layout mirrored — including the icons that ride in this text.
-        textDirection = if (isLayoutRtl) TEXT_DIRECTION_RTL else TEXT_DIRECTION_LTR
 
         updateViewContent(null)
         model.contentDescription(context).ifNotEmpty { contentDescription = it }
@@ -257,67 +250,105 @@ internal class LabelView(
         // sits against the view's content edge, which on a label wider than its text — a
         // centred button label, say — strands the icon away from the words it belongs to and
         // makes the authored `space` between them meaningless. Inline, the icons travel with
-        // whatever alignment applies and `space` means the same thing on both sides.
-        val startIcon = getSizedDrawable(resolvedState.iconStart, size, HorizontalPosition.START)
-        val endIcon = getSizedDrawable(resolvedState.iconEnd, size, HorizontalPosition.END)
+        // whatever alignment applies and `space` means the same thing at either end.
+        val start = inlineIcon(resolvedState.iconStart, size, HorizontalPosition.START)
+        val end = inlineIcon(resolvedState.iconEnd, size, HorizontalPosition.END)
 
-        if (startIcon != null || endIcon != null) {
+        if (start != null || end != null) {
             val labelText = text
             text = SpannableStringBuilder().apply {
-                startIcon?.let { appendIcon(it) }
+                start?.let { appendIcon(it) }
                 append(labelText)
-                endIcon?.let { appendIcon(it) }
+                end?.let { appendIcon(it) }
             }
         }
 
         this.lastState = resolvedState
     }
 
-    private fun getSizedDrawable(
+    /**
+     * An icon to render inside the label's text, at one end of it.
+     *
+     * @param drawable The icon, sized to the text.
+     * @param space The authored gap between icon and text, in px.
+     * @param position Which end of the text it belongs to.
+     */
+    private class InlineIcon(
+        val drawable: Drawable,
+        val space: Int,
+        val position: HorizontalPosition
+    )
+
+    /**
+     * Returns [iconInfo] as an icon to render in the text, or null when there is no icon.
+     *
+     * The drawable carries no gap of its own — see [appendIcon] — so nothing here resolves a
+     * direction.
+     *
+     * @param iconInfo The icon.
+     * @param size The text size to match, in sp.
+     * @param position Which end of the text the icon belongs to.
+     * @return The icon, or null.
+     */
+    private fun inlineIcon(
         iconInfo: LabelInfo.LabelIcon?,
         size: Int,
         position: HorizontalPosition
-    ): Drawable? {
+    ): InlineIcon? {
         val resolvedIcon = iconInfo as? LabelInfo.LabelIcon.Floating ?: return null
-
         val drawable = resolvedIcon.icon.getDrawable(context, isEnabled, position) ?: return null
 
-        val size = spToPx(context, size).toInt()
-        val space = spToPx(context, resolvedIcon.space).toInt()
+        val sizePx = spToPx(context, size).toInt()
+        drawable.setBounds(0, 0, sizePx, sizePx)
 
-        // An InsetDrawable puts the gap between the icon and the text, so it goes on whichever
-        // side the text is: the start icon leads the text and the end icon trails it, and RTL
-        // swaps which physical side that is. Safe to ask the locale because `setupInitialState`
-        // pins the paragraph to it.
-        val gapOnLeft = (position == HorizontalPosition.END) != isLayoutRtl
-
-        val finalDrawable = InsetDrawable(
-            drawable,
-            if (gapOnLeft) space else 0,
-            0,
-            if (gapOnLeft) 0 else space,
-            0
+        return InlineIcon(
+            drawable = drawable,
+            space = spToPx(context, resolvedIcon.space).toInt(),
+            position = position
         )
-        finalDrawable.setBounds(0, 0, size + space, size)
-
-        return finalDrawable
     }
 
     /**
-     * Appends [icon] as an inline span, registering the callback that lets it redraw itself.
+     * Appends [icon] and its gap as inline spans.
+     *
+     * The gap is a sized span over a space character rather than padding on the drawable, so
+     * that it is part of the text run: two neutrals beside a directional run are reordered
+     * together, which puts the gap between the icon and the words in either direction without
+     * anything here resolving one. [InlineIcon.position] only decides their order in the
+     * string — the bidi algorithm decides what that order means on screen.
      *
      * @param icon The icon to append.
      */
-    private fun SpannableStringBuilder.appendIcon(icon: Drawable) {
-        icon.callback = spanDrawableCallback
-        val start = length
-        append(ICON_PLACEHOLDER)
-        setSpan(CenteredImageSpan(icon), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+    private fun SpannableStringBuilder.appendIcon(icon: InlineIcon) {
+        icon.drawable.callback = spanDrawableCallback
+
+        fun appendSpan(placeholder: String, span: Any) {
+            val start = length
+            append(placeholder)
+            setSpan(span, start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+        val gap = GapSpan(icon.space)
+        val image = CenteredImageSpan(icon.drawable)
+
+        when (icon.position) {
+            HorizontalPosition.START -> {
+                appendSpan(ICON_PLACEHOLDER, image)
+                appendSpan(GAP_PLACEHOLDER, gap)
+            }
+            else -> {
+                appendSpan(GAP_PLACEHOLDER, gap)
+                appendSpan(ICON_PLACEHOLDER, image)
+            }
+        }
     }
 
     private companion object {
         /** Stands in for an inline icon; `U+FFFC` is not spoken by screen readers. */
         const val ICON_PLACEHOLDER = "\uFFFC"
+
+        /** Carries the gap span. A real space, so it reorders with the icon beside it. */
+        const val GAP_PLACEHOLDER = " "
     }
 }
 
@@ -355,4 +386,33 @@ private class CenteredImageSpan(drawable: Drawable) : ImageSpan(drawable) {
             drawable.draw(this)
         }
     }
+}
+
+/**
+ * Occupies [width] px of a text run and draws nothing.
+ *
+ * Carries the gap between an inline icon and the text as part of the run, so the bidi
+ * algorithm places it rather than anything having to resolve a direction.
+ */
+private class GapSpan(private val width: Int) : ReplacementSpan() {
+
+    override fun getSize(
+        paint: Paint,
+        text: CharSequence?,
+        start: Int,
+        end: Int,
+        fm: Paint.FontMetricsInt?
+    ): Int = width
+
+    override fun draw(
+        canvas: Canvas,
+        text: CharSequence?,
+        start: Int,
+        end: Int,
+        x: Float,
+        top: Int,
+        y: Int,
+        bottom: Int,
+        paint: Paint
+    ): Unit = Unit
 }
