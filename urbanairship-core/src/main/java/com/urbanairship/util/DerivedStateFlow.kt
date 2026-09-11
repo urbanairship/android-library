@@ -97,11 +97,6 @@ public fun <T1, T2, T3, T4, T5, TR> combineStates(
     )
 }
 
-/**
- * kotlinx types `combine` only up to five flows. Past that it offers a vararg form that hands
- * back an `Array<*>`, so every argument would need an unchecked cast — the sixth flow is folded
- * in over a second combine instead, against a partially applied [transform].
- */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public fun <T1, T2, T3, T4, T5, T6, TR> combineStates(
     flow1: StateFlow<T1>,

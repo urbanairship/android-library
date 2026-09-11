@@ -14,10 +14,6 @@ import com.urbanairship.ai.Usage
  *     EvaluationContext(listOf(EvaluationContext.Item("Tier: ${account.tier}")))
  * }
  * ```
- *
- * Declared in this module but hung off [Usage.Companion], so every usage the SDK has is
- * reachable from one place whichever module owns it. Unlike a member it needs importing, which
- * the IDE offers on completion.
  */
 public val Usage.Companion.sceneTextInput: Usage<SceneTextInputSubject>
     get() = SCENE_TEXT_INPUT
