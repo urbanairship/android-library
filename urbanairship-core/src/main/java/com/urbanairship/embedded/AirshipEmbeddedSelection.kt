@@ -2,6 +2,8 @@
 
 package com.urbanairship.embedded
 
+import androidx.annotation.RestrictTo
+
 /**
  * Controls which pending embedded content instance is displayed in an `AirshipEmbeddedView`.
  */
@@ -41,4 +43,89 @@ public sealed class AirshipEmbeddedSelection {
     public data class ByInstanceId(
         public val instanceId: String
     ) : AirshipEmbeddedSelection()
+
+    /**
+     * Let the on-device model choose which pending instance to display.
+     *
+     * The placeholder shows while the model decides. If the model is unavailable, has nothing
+     * to tell the candidates apart, or returns no usable answer, [fallback] decides instead —
+     * so an absent model never means an empty view.
+     *
+     * @param config How the model should choose.
+     * @param fallback The selection to use when the model has no opinion.
+     */
+    public data class ByAi @JvmOverloads public constructor(
+        public val config: Config,
+        public val fallback: Fallback = Fallback.Priority
+    ) : AirshipEmbeddedSelection() {
+
+        /**
+         * Configuration for [ByAi].
+         *
+         * @param prompt Instruction describing how to choose among the pending instances.
+         *
+         * The model scores each candidate 1-10 against this, against what each candidate's
+         * layout says about itself (`content_description`), and against any user context an
+         * app's context provider supplies. A context provider is optional: a prompt that ranks
+         * on the content alone ("Prefer time-sensitive offers over evergreen content") works
+         * without one, while a prompt about the person ("Show content matching the user's
+         * interests") only differentiates if a provider is registered for
+         * [com.urbanairship.ai.Usage.Companion].`embeddedSelection`.
+         *
+         * @param strategy How scores and candidate priorities combine into the final order.
+         * @param minScoreThreshold The score the winner must reach for the model's answer to
+         * be used at all; below it, [fallback] decides. Null accepts any score.
+         * @param subjectHints Hints carried on the subject handed to the context provider.
+         * Never rendered into the prompt.
+         */
+        public data class Config @JvmOverloads public constructor(
+            public val prompt: String,
+            public val strategy: Strategy = Strategy.SCORE_THEN_PRIORITY,
+            public val minScoreThreshold: Int? = null,
+            public val subjectHints: Map<String, String> = emptyMap()
+        )
+
+        /** How model scores and candidate priorities combine into a final ordering. */
+        public enum class Strategy {
+
+            /** Score leads; priority breaks ties between equal scores. */
+            SCORE_THEN_PRIORITY,
+
+            /** Priority leads; score breaks ties between equal priorities. */
+            PRIORITY_THEN_SCORE
+        }
+
+        /**
+         * A non-AI selection used when [ByAi] has no answer.
+         *
+         * A narrower set than [AirshipEmbeddedSelection] by design: falling back to AI would
+         * be circular.
+         */
+        public sealed class Fallback {
+
+            /** Priority ordering, with sticky last-displayed behavior. */
+            public data object Priority : Fallback()
+
+            /** Sort with the given comparator and display the first. */
+            public data class ByComparator(
+                public val comparator: Comparator<AirshipEmbeddedInfo>
+            ) : Fallback()
+
+            /** Display the instance with this [AirshipEmbeddedInfo.instanceId]. */
+            public data class ByInstanceId(public val instanceId: String) : Fallback()
+
+            /**
+             * This fallback as the selection to apply.
+             *
+             * @hide
+             */
+            @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+            public val asSelection: AirshipEmbeddedSelection
+                get() = when (this) {
+                    Priority -> AirshipEmbeddedSelection.Priority
+                    is ByComparator -> AirshipEmbeddedSelection.ByComparator(comparator)
+                    is ByInstanceId -> AirshipEmbeddedSelection.ByInstanceId(instanceId)
+                }
+        }
+    }
 }
