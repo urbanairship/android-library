@@ -2438,11 +2438,12 @@ public final class com/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Fallb
 
 public final class com/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Fallback$ByInstanceId : com/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Fallback {
 	public fun <init> (Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;)Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Fallback$ByInstanceId;
-	public static synthetic fun copy$default (Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Fallback$ByInstanceId;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Fallback$ByInstanceId;
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Fallback$ByInstanceId;
+	public static synthetic fun copy$default (Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Fallback$ByInstanceId;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByAi$Fallback$ByInstanceId;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getInstanceId ()Ljava/lang/String;
+	public final fun getInstanceIds ()Ljava/util/List;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
@@ -2475,11 +2476,12 @@ public final class com/urbanairship/embedded/AirshipEmbeddedSelection$ByComparat
 
 public final class com/urbanairship/embedded/AirshipEmbeddedSelection$ByInstanceId : com/urbanairship/embedded/AirshipEmbeddedSelection {
 	public fun <init> (Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;)Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByInstanceId;
-	public static synthetic fun copy$default (Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByInstanceId;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByInstanceId;
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByInstanceId;
+	public static synthetic fun copy$default (Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByInstanceId;Ljava/util/List;ILjava/lang/Object;)Lcom/urbanairship/embedded/AirshipEmbeddedSelection$ByInstanceId;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getInstanceId ()Ljava/lang/String;
+	public final fun getInstanceIds ()Ljava/util/List;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }

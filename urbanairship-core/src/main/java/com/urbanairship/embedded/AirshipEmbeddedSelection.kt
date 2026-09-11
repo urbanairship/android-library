@@ -30,19 +30,33 @@ public sealed class AirshipEmbeddedSelection {
     ) : AirshipEmbeddedSelection()
 
     /**
-     * Display the specific embedded content instance whose
-     * [AirshipEmbeddedInfo.instanceId] matches [instanceId].
+     * Display the first of these [AirshipEmbeddedInfo.instanceId]s that is pending, bypassing
+     * ordering.
      *
-     * If the instance is not currently pending, the placeholder is shown (strict targeting;
-     * no substitution is made). This is useful when app-side logic has already selected the
-     * desired instance and wants to pin the view to it — for example, across a React Native
-     * bridge where a [Comparator] closure cannot be passed.
+     * An explicit order of preference, not a set: the earliest entry that is currently
+     * pending wins, and the placeholder shows while none of them are.
      *
-     * @param instanceId the [AirshipEmbeddedInfo.instanceId] of the instance to display.
+     * This is an **allow-list**. Pending content not named here is excluded entirely rather
+     * than ordered last, so newly pending content won't display until the app includes it.
+     *
+     * Carries no closure, unlike [ByComparator], so it survives a bridge to a wrapper SDK —
+     * an app that wants ordering it computes itself can observe the pending set, work out the
+     * order, and hand back the IDs.
+     *
+     * @param instanceIds the [AirshipEmbeddedInfo.instanceId]s to display, most preferred
+     * first.
      */
     public data class ByInstanceId(
-        public val instanceId: String
-    ) : AirshipEmbeddedSelection()
+        public val instanceIds: List<String>
+    ) : AirshipEmbeddedSelection() {
+
+        /**
+         * Targets a single instance.
+         *
+         * @param instanceId the [AirshipEmbeddedInfo.instanceId] to display.
+         */
+        public constructor(instanceId: String) : this(listOf(instanceId))
+    }
 
     /**
      * Let the on-device model choose which pending instance to display.
@@ -111,8 +125,22 @@ public sealed class AirshipEmbeddedSelection {
                 public val comparator: Comparator<AirshipEmbeddedInfo>
             ) : Fallback()
 
-            /** Display the instance with this [AirshipEmbeddedInfo.instanceId]. */
-            public data class ByInstanceId(public val instanceId: String) : Fallback()
+            /**
+             * Display the first of these [AirshipEmbeddedInfo.instanceId]s that is pending.
+             *
+             * An allow-list in preference order, as [AirshipEmbeddedSelection.ByInstanceId].
+             */
+            public data class ByInstanceId(
+                public val instanceIds: List<String>
+            ) : Fallback() {
+
+                /**
+                 * Targets a single instance.
+                 *
+                 * @param instanceId the [AirshipEmbeddedInfo.instanceId] to display.
+                 */
+                public constructor(instanceId: String) : this(listOf(instanceId))
+            }
 
             /**
              * This fallback as the selection to apply.
@@ -124,7 +152,7 @@ public sealed class AirshipEmbeddedSelection {
                 get() = when (this) {
                     Priority -> AirshipEmbeddedSelection.Priority
                     is ByComparator -> AirshipEmbeddedSelection.ByComparator(comparator)
-                    is ByInstanceId -> AirshipEmbeddedSelection.ByInstanceId(instanceId)
+                    is ByInstanceId -> AirshipEmbeddedSelection.ByInstanceId(instanceIds)
                 }
         }
     }

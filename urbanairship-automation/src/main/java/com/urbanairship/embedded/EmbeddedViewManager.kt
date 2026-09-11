@@ -153,17 +153,23 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
         pendingList: List<EmbeddedDisplayRequest>
     ): EmbeddedDisplayRequestResult {
         return when (selection) {
-                    is AirshipEmbeddedSelection.ByComparator -> {
-                        val sorted = pendingList
-                            .map { request -> request.embeddedInfo() to request }
-                            .sortedWith { a, b -> selection.comparator.compare(a.first, b.first) }
-                            .map { it.second }
-                        EmbeddedDisplayRequestResult(next = sorted.firstOrNull(), list = sorted)
-                    }
-                    is AirshipEmbeddedSelection.ByInstanceId -> {
-                        val match = pendingList.find { it.viewInstanceId == selection.instanceId }
-                        EmbeddedDisplayRequestResult(next = match, list = pendingList)
-                    }
+            is AirshipEmbeddedSelection.ByComparator -> {
+                val sorted = pendingList
+                    .map { request -> request.embeddedInfo() to request }
+                    .sortedWith { a, b -> selection.comparator.compare(a.first, b.first) }
+                    .map { it.second }
+                EmbeddedDisplayRequestResult(next = sorted.firstOrNull(), list = sorted)
+            }
+
+            is AirshipEmbeddedSelection.ByInstanceId -> {
+                // An allow-list in preference order: pending content not named is excluded
+                // entirely rather than ordered last, so the list is the named subset rather
+                // than everything pending.
+                val byId = pendingList.associateBy { it.viewInstanceId }
+                val ordered = selection.instanceIds.mapNotNull { byId[it] }
+                EmbeddedDisplayRequestResult(next = ordered.firstOrNull(), list = ordered)
+            }
+
             AirshipEmbeddedSelection.Priority -> {
                 val current = lastViewedLock.withLock {
                     lastViewed[embeddedViewId]?.let { lastId ->

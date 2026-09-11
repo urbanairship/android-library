@@ -85,9 +85,11 @@ public class AirshipEmbeddedCarouselState internal constructor(
  * Creates and remembers an [AirshipEmbeddedCarouselState] for the given [embeddedId].
  *
  * @param embeddedId The embedded ID.
- * @param selection Controls which instances are selected for display. Only [AirshipEmbeddedSelection.ByComparator]
- *   sorts instances deterministically; [AirshipEmbeddedSelection.Priority] and
- *   [AirshipEmbeddedSelection.ByInstanceId] preserve arrival order, matching [AirshipEmbeddedViewGroup].
+ * @param selection Controls which instances are selected for display, and in what order.
+ *   [AirshipEmbeddedSelection.ByComparator] sorts by its comparator and
+ *   [AirshipEmbeddedSelection.ByInstanceId] pages in the order its IDs are listed, showing only
+ *   those; [AirshipEmbeddedSelection.Priority] preserves arrival order, matching
+ *   [AirshipEmbeddedViewGroup].
  */
 @Composable
 public fun rememberAirshipEmbeddedCarouselState(
@@ -106,9 +108,11 @@ public fun rememberAirshipEmbeddedCarouselState(
  *
  * @param embeddedId The embedded ID.
  * @param modifier The modifier to be applied to the layout.
- * @param selection Controls which instances are selected for display. Only [AirshipEmbeddedSelection.ByComparator]
- *   sorts instances deterministically; [AirshipEmbeddedSelection.Priority] and
- *   [AirshipEmbeddedSelection.ByInstanceId] preserve arrival order, matching [AirshipEmbeddedViewGroup].
+ * @param selection Controls which instances are selected for display, and in what order.
+ *   [AirshipEmbeddedSelection.ByComparator] sorts by its comparator and
+ *   [AirshipEmbeddedSelection.ByInstanceId] pages in the order its IDs are listed, showing only
+ *   those; [AirshipEmbeddedSelection.Priority] preserves arrival order, matching
+ *   [AirshipEmbeddedViewGroup].
  * @param indicator Optional overlay composable for page indicators. Receives the [PagerState] and page count.
  *   Use [AirshipEmbeddedCarouselDefaults.dotsIndicator] for a simple default.
  * @param previousArrow Optional composable for a "previous page" button, positioned at [Alignment.CenterStart].

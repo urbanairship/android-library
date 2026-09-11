@@ -103,6 +103,10 @@ public class EmbeddedViewManagerTest {
         job.cancel()
     }
 
+    /**
+     * An ordered allow-list: the earliest named instance that is pending wins, and pending
+     * content not named is excluded rather than ordered last.
+     */
     @Test
     public fun testInstanceSelection(): TestResult = runTest {
         addPending("instance-a", 0)
@@ -111,17 +115,35 @@ public class EmbeddedViewManagerTest {
 
         val job = Job()
 
-        // Selecting by instance ID shows only that instance regardless of insertion order.
+        // Preference order, not arrival order: b is named first even though a arrived first.
         EmbeddedViewManager.displayRequests(
             testEmbeddedId,
-            selection = AirshipEmbeddedSelection.ByInstanceId("instance-b"),
+            selection = AirshipEmbeddedSelection.ByInstanceId(listOf("instance-b", "instance-a")),
             scope = this + job
         ).test {
-            assertEquals("instance-b", awaitItem().next?.viewInstanceId)
+            val result = awaitItem()
+            assertEquals("instance-b", result.next?.viewInstanceId)
+            // instance-c isn't named, so it isn't in the list at all.
+            assertEquals(
+                listOf("instance-b", "instance-a"),
+                result.list.map { it.viewInstanceId }
+            )
             cancelAndIgnoreRemainingEvents()
         }
 
-        // When the targeted instance is absent, next is null but the full list is still returned.
+        // The earliest *pending* entry wins, skipping ones that aren't pending.
+        EmbeddedViewManager.displayRequests(
+            testEmbeddedId,
+            selection = AirshipEmbeddedSelection.ByInstanceId(
+                listOf("instance-missing", "instance-c")
+            ),
+            scope = this + job
+        ).test {
+            assertEquals("instance-c", awaitItem().next?.viewInstanceId)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // None of them pending: nothing to show, and nothing in the list either.
         EmbeddedViewManager.displayRequests(
             testEmbeddedId,
             selection = AirshipEmbeddedSelection.ByInstanceId("instance-missing"),
@@ -129,19 +151,21 @@ public class EmbeddedViewManagerTest {
         ).test {
             val result = awaitItem()
             assertEquals(null, result.next?.viewInstanceId)
-            assertEquals(3, result.list.size)
+            assertEquals(0, result.list.size)
             cancelAndIgnoreRemainingEvents()
         }
 
-        // Dismissing the targeted instance causes next to become null.
+        // Dismissing the targeted instance falls to the next named one that is pending.
         EmbeddedViewManager.displayRequests(
             testEmbeddedId,
-            selection = AirshipEmbeddedSelection.ByInstanceId("instance-a"),
+            selection = AirshipEmbeddedSelection.ByInstanceId(
+                listOf("instance-a", "instance-c")
+            ),
             scope = this + job
         ).test {
             assertEquals("instance-a", awaitItem().next?.viewInstanceId)
             EmbeddedViewManager.dismiss(testEmbeddedId, "instance-a")
-            assertEquals(null, awaitItem().next?.viewInstanceId)
+            assertEquals("instance-c", awaitItem().next?.viewInstanceId)
             cancelAndIgnoreRemainingEvents()
         }
 
