@@ -49,6 +49,32 @@ internal class LabelView(
     private val marksTruncatedText =
         truncatesToHeight && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
+    /**
+     * Drives redraws for the inline start icon, which an animated drawable can't do for itself.
+     *
+     * A compound drawable gets this from `TextView`, which registers itself as the callback; a
+     * span drawable has none, so `invalidateSelf` goes nowhere and an animation advances its
+     * animator while the pixels stay on frame one. It can look like it works whenever
+     * something *else* is redrawing the label — changing text, a sibling animating — which is
+     * exactly the case that hides it.
+     *
+     * [View] can't be the callback directly: `invalidateDrawable` only invalidates a drawable
+     * `TextView.verifyDrawable` recognises, and a span's isn't one.
+     */
+    private val spanDrawableCallback = object : Drawable.Callback {
+        override fun invalidateDrawable(who: Drawable) = invalidate()
+
+        override fun scheduleDrawable(who: Drawable, what: Runnable, `when`: Long) {
+            // An AnimatedVectorDrawable drives itself off its own animator, but a frame-list
+            // drawable schedules through here.
+            handler?.postAtTime(what, who, `when`)
+        }
+
+        override fun unscheduleDrawable(who: Drawable, what: Runnable) {
+            handler?.removeCallbacks(what, who)
+        }
+    }
+
     init {
         // Initial setup from the model
         setupInitialState()
@@ -232,6 +258,7 @@ internal class LabelView(
         // a compound drawable, because sitting at the trailing edge is what it should do once the
         // label is wider than its text.
         getSizedDrawable(resolvedState.iconStart, size, HorizontalPosition.START)?.let { icon ->
+            icon.callback = spanDrawableCallback
             text = SpannableStringBuilder(ICON_PLACEHOLDER)
                 .append(text)
                 .apply {

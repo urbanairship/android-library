@@ -21,6 +21,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
@@ -68,6 +69,26 @@ public class LabelIconPlacementTest {
 
         assertNotNull(view.compoundDrawables[RIGHT])
         assertEquals(0, spans(view).size)
+    }
+
+    /**
+     * Without a callback an animated drawable's `invalidateSelf` goes nowhere, so the icon
+     * renders frame one and stops. A compound drawable gets one from `TextView`; a span
+     * drawable only has the one set here.
+     */
+    @Test
+    public fun testStartIconCanInvalidateTheLabel() {
+        val view = labelView(iconKey = "icon_start")
+        val icon = spans(view).single().drawable
+
+        assertNotNull(icon.callback)
+
+        // And it reaches the view, rather than being dropped by verifyDrawable the way
+        // registering the View itself would be.
+        val shadow = org.robolectric.Shadows.shadowOf(view)
+        shadow.clearWasInvalidated()
+        icon.invalidateSelf()
+        assertTrue(shadow.wasInvalidated())
     }
 
     @Test
