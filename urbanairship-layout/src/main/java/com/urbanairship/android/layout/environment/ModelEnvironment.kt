@@ -3,6 +3,9 @@ package com.urbanairship.android.layout.environment
 import com.urbanairship.UALog
 import com.urbanairship.Airship
 import com.urbanairship.android.layout.LayoutStateStorage
+import com.urbanairship.android.layout.ai.DefaultThomasAIInference
+import com.urbanairship.android.layout.ai.ThomasAIInference
+import com.urbanairship.android.layout.ai.ThomasAIStatus
 import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.model.PagerNextFallback
 import com.urbanairship.android.layout.property.AttributeValue
@@ -16,11 +19,15 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 internal class ModelEnvironment(
@@ -34,7 +41,18 @@ internal class ModelEnvironment(
     val eventHandler: LayoutEventHandler = LayoutEventHandler(modelScope),
     val pagerTracker: PagersViewTracker = PagersViewTracker(),
     val viewIdResolver: ThomasViewIdResolver = ThomasViewIdResolver(),
-    val stateStorage: LayoutStateStorage? = null
+    val stateStorage: LayoutStateStorage? = null,
+    val aiInference: ThomasAIInference? = DefaultThomasAIInference.create(),
+    /**
+     * Null until the model reports in, and forever when there is no model to report — a layout
+     * with no AI never sees a `$ai` state key at all.
+     *
+     * Subscribed here rather than per-model so every predicate reads the same snapshot, and so
+     * [withState] shares it instead of opening a second subscription.
+     */
+    val aiStatus: StateFlow<ThomasAIStatus?> = aiInference?.statusUpdates
+        ?.stateIn(modelScope, SharingStarted.Eagerly, null)
+        ?: MutableStateFlow(null).asStateFlow()
 ) {
     val layoutEvents: Flow<LayoutEvent> = eventHandler.layoutEvents
 
@@ -58,7 +76,9 @@ internal class ModelEnvironment(
             eventHandler = this.eventHandler,
             pagerTracker = this.pagerTracker,
             channelRegistrar = this.channelRegistrar,
-            viewIdResolver = this.viewIdResolver
+            viewIdResolver = this.viewIdResolver,
+            aiInference = this.aiInference,
+            aiStatus = this.aiStatus
         )
 }
 

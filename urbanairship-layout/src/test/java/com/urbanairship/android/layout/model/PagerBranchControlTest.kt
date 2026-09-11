@@ -43,7 +43,8 @@ public class PagerBranchControlTest {
             form = null,
             pager = null,
             video = null,
-            asyncView = null
+            asyncView = null,
+            ai = null
         )
     )
 

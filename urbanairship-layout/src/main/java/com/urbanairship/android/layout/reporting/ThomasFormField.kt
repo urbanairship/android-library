@@ -1,6 +1,7 @@
 package com.urbanairship.android.layout.reporting
 
 import androidx.annotation.RestrictTo
+import com.urbanairship.android.layout.ai.ThomasAIInferenceOutcome
 import com.urbanairship.android.layout.info.ThomasChannelRegistration
 import com.urbanairship.android.layout.property.AttributeValue
 import com.urbanairship.android.layout.property.FormInputType
@@ -37,7 +38,9 @@ public sealed class ThomasFormField<T>(
     internal data class Result<T>(
         val value: T,
         val channels: List<ThomasChannelRegistration>? = null,
-        val attributes: Map<AttributeName, AttributeValue>? = null
+        val attributes: Map<AttributeName, AttributeValue>? = null,
+        /** Set only on a text input whose payload asked for AI inference. */
+        val aiInference: ThomasAIInferenceOutcome? = null
     )
 
     internal val status: ThomasFormFieldStatus<T>
@@ -138,16 +141,17 @@ public sealed class ThomasFormField<T>(
             if (withState) {
                 builder.put(KEY_STATUS, status.toJson(type))
                 builder.put(KEY_VALUE, JsonValue.wrapOpt(originalValue))
-            } else if (isRedacted) {
-                builder.put(KEY_VALUE, JsonValue.wrap(REDACTED_VALUE))
-                builder.put(KEY_IS_REDACTED, JsonValue.wrap(true))
             } else {
-                val value = if (status is ThomasFormFieldStatus.Valid) {
-                    (status as ThomasFormFieldStatus.Valid<String>).result.value
+                val valid = status as? ThomasFormFieldStatus.Valid<String>
+                if (isRedacted) {
+                    builder.put(KEY_VALUE, JsonValue.wrap(REDACTED_VALUE))
+                    builder.put(KEY_IS_REDACTED, JsonValue.wrap(true))
                 } else {
-                    originalValue
+                    builder.put(KEY_VALUE, JsonValue.wrapOpt(valid?.result?.value ?: originalValue))
                 }
-                builder.put(KEY_VALUE, JsonValue.wrapOpt(value))
+                // Reported here and nowhere else. A redacted field still reports what the
+                // model derived — redaction hides the text, not the inference.
+                builder.put(KEY_AI_INFERENCE, valid?.result?.aiInference?.reported)
             }
             return builder.build()
         }
@@ -265,6 +269,7 @@ public sealed class ThomasFormField<T>(
         private const val KEY_VALUE: String = "value"
         private const val KEY_STATUS: String = "status"
         private const val KEY_IS_REDACTED: String = "is_redacted"
+        private const val KEY_AI_INFERENCE: String = "ai_inference"
         private const val REDACTED_VALUE: String = "REDACTED"
         private const val KEY_SCORE_ID: String = "score_id"
         private const val KEY_CHILDREN: String = "children"
@@ -475,6 +480,7 @@ internal sealed class ThomasFormFieldStatus<T> {
                     KEY_TYPE to type,
                     KEY_VALUE to JsonValue.wrap(result.value)
                 ))
+                builder.put(KEY_AI, result.aiInference?.stateProjection)
             }
         }
 
@@ -489,5 +495,6 @@ internal sealed class ThomasFormFieldStatus<T> {
         private const val KEY_TYPE = "type"
         private const val KEY_RESULT = "result"
         private const val KEY_VALUE = "value"
+        private const val KEY_AI = "ai"
     }
 }
