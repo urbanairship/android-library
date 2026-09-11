@@ -71,12 +71,14 @@ public class EmbeddedViewManagerTest {
 
     @Test
     public fun testDisplayRequestsCustomComparator(): TestResult = runTest {
-        addPending("low priority", 100)
         addPending("medium priority", 0)
+        addPending("low priority", 100)
 
         val job = Job()
 
-        // Custom one does reverse priority order
+        // Custom one does reverse priority order. The pending list is added lowest-priority
+        // first, so insertion order alone would answer "medium priority" here — this passes
+        // only if the comparator sees the requests' real priorities.
         EmbeddedViewManager.displayRequests(
             testEmbeddedId,
             selection = AirshipEmbeddedSelection.ByComparator(compareByDescending { it.priority }),

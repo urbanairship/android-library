@@ -109,14 +109,7 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
                 when (selection) {
                     is AirshipEmbeddedSelection.ByComparator -> {
                         val sorted = pendingList
-                            .map { request ->
-                                val info = AirshipEmbeddedInfo(
-                                    instanceId = request.viewInstanceId,
-                                    embeddedId = request.embeddedViewId,
-                                    extras = request.extras
-                                )
-                                Pair(info, request)
-                            }
+                            .map { request -> request.embeddedInfo() to request }
                             .sortedWith { a, b -> selection.comparator.compare(a.first, b.first) }
                             .map { it.second }
                         EmbeddedDisplayRequestResult(next = sorted.firstOrNull(), list = sorted)
@@ -140,4 +133,43 @@ public object EmbeddedViewManager : AirshipEmbeddedViewManager {
             .distinctUntilChanged()
             .shareIn(scope, replay = 1, started = WhileSubscribed())
     }
+}
+
+/**
+ * The pending request as the info a selection reasons about.
+ *
+ * Deliberately does not touch [EmbeddedDisplayRequest.layoutInfoProvider]: this runs for every
+ * candidate on every emission of the pending list, and the payload is behind a provider so that
+ * it isn't resolved on that path. What a layout says about itself is read only where a
+ * selection actually needs it — see [describing].
+ *
+ * @return The info.
+ */
+internal fun EmbeddedDisplayRequest.embeddedInfo(): AirshipEmbeddedInfo = AirshipEmbeddedInfo(
+    instanceId = viewInstanceId,
+    embeddedId = embeddedViewId,
+    // From the request rather than the type's default, so a comparator that sorts on priority
+    // sees the real value.
+    priority = priority,
+    extras = extras
+)
+
+/**
+ * The same info with the layout's `content_description` folded in, for a selection that reasons
+ * about what the content *is* rather than only about priority.
+ *
+ * Resolves the layout payload, so call it once per selection rather than per emission.
+ *
+ * @return The info, described as far as the layout describes itself.
+ */
+internal fun EmbeddedDisplayRequest.describing(): AirshipEmbeddedInfo {
+    val description = layoutInfoProvider()?.contentDescription ?: return embeddedInfo()
+    return AirshipEmbeddedInfo(
+        instanceId = viewInstanceId,
+        embeddedId = embeddedViewId,
+        priority = priority,
+        extras = extras,
+        contentDescription = description.description,
+        additionalContext = description.additionalContext
+    )
 }
