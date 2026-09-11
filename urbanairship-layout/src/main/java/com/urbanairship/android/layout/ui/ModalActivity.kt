@@ -18,6 +18,7 @@ import androidx.core.view.updatePadding
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.ai.DefaultThomasAIInference
 import com.urbanairship.android.layout.ModalPresentation
 import com.urbanairship.android.layout.ModelFactoryException
 import com.urbanairship.android.layout.ThomasListenerInterface
@@ -106,7 +107,8 @@ public class ModalActivity : AppCompatActivity() {
             modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
                 actionRunner = args.actionRunner,
-                displayTimer = displayTimer
+                displayTimer = displayTimer,
+                aiInference = DefaultThomasAIInference.create(args.ai)
             )
 
             val model = viewModel.getOrCreateModel(args.payload.view, modelEnvironment)

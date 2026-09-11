@@ -45,6 +45,7 @@ import com.urbanairship.android.layout.event.ReportingEvent
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.ui.ThomasLayoutViewFactory
 import com.urbanairship.app.GlobalActivityMonitor
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State
@@ -150,7 +151,8 @@ public fun MessageCenterMessage(
                                     onClose()
                                 }
                             )
-                        }
+                        },
+                        ai = state.ai
                     )
                 }
             }
@@ -199,7 +201,8 @@ private fun NativeContentView(
     content: State.MessageContent.Content.Native,
     onClose: () -> Unit,
     onAction: ((Action) -> Unit),
-    analyticsBuilder: (onDismissed: () -> Unit) -> ThomasListenerInterface
+    analyticsBuilder: (onDismissed: () -> Unit) -> ThomasListenerInterface,
+    ai: InternalAirshipAi?
 ) {
     val isAlreadyDismissed = remember(message.id) { mutableStateOf(false) }
 
@@ -219,7 +222,8 @@ private fun NativeContentView(
             actionRunner = { actions, _ ->
                 DefaultActionRunner.run(actions, AutomationAction.Situation.AUTOMATION)
             },
-            stateStorage = content.store
+            stateStorage = content.store,
+            ai = ai
         )
     }
 

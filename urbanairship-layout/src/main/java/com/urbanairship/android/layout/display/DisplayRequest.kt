@@ -4,6 +4,7 @@ package com.urbanairship.android.layout.display
 import android.content.Context
 import androidx.annotation.RestrictTo
 import com.urbanairship.android.layout.ThomasListenerInterface
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.android.layout.environment.ThomasActionRunner
 import com.urbanairship.android.layout.info.LayoutInfo
 import com.urbanairship.android.layout.util.Factory
@@ -23,11 +24,20 @@ public class DisplayRequest(
     private var actionRunner: ThomasActionRunner,
     private var imageCache: ImageCache? = null,
     private var webViewClientFactory: Factory<AirshipWebViewClient>? = null,
+    private val ai: InternalAirshipAi? = null,
     private val onDisplay: (context: Context, displayArgs: DisplayArgs) -> Unit
 ) {
 
     public fun display(context: Context) {
-        val args = DisplayArgs(payload, listener, activityMonitor, actionRunner, webViewClientFactory, imageCache)
+        val args = DisplayArgs(
+            payload = payload,
+            listener = listener,
+            inAppActivityMonitor = activityMonitor,
+            actionRunner = actionRunner,
+            webViewClientFactory = webViewClientFactory,
+            imageCache = imageCache,
+            ai = ai
+        )
         onDisplay(context, args)
     }
 }

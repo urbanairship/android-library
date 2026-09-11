@@ -42,7 +42,7 @@ internal class ModelEnvironment(
     val pagerTracker: PagersViewTracker = PagersViewTracker(),
     val viewIdResolver: ThomasViewIdResolver = ThomasViewIdResolver(),
     val stateStorage: LayoutStateStorage? = null,
-    val aiInference: ThomasAIInference? = DefaultThomasAIInference.create(),
+    val aiInference: ThomasAIInference? = null,
     /**
      * [ThomasCapabilities.ai] is null until the model reports in, and forever when there is no
      * model to report — a layout with no AI never sees a `$ai` state key at all.

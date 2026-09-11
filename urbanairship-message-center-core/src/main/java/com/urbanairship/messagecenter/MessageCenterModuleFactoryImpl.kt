@@ -7,6 +7,7 @@ import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.ActionsManifest
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -36,7 +37,8 @@ public class MessageCenterModuleFactoryImpl public constructor() : MessageCenter
         airshipChannel: AirshipChannel,
         pushManager: PushManager,
         analytics: Analytics,
-        meteredUsage: AirshipMeteredUsage
+        meteredUsage: AirshipMeteredUsage,
+        ai: InternalAirshipAi
     ): Module {
         val messageCenter =
             MessageCenter(
@@ -47,7 +49,8 @@ public class MessageCenterModuleFactoryImpl public constructor() : MessageCenter
                 channel = airshipChannel,
                 pushManager = pushManager,
                 analytics = analytics,
-                meteredUsage = meteredUsage
+                meteredUsage = meteredUsage,
+                ai = ai
             )
         return Module.Companion.singleComponent(messageCenter, MessageCenterActionsManifest())
     }

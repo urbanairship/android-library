@@ -132,16 +132,14 @@ internal class DefaultThomasAIInference(
     internal companion object {
 
         /**
-         * The manager-backed inference, or `null` until Airship is flying.
+         * Wraps an injected manager, or `null` when the host has none.
          *
-         * Gated on [Airship.isFlying], not `isFlyingOrTakingOff`: `Airship.internalAi` waits
-         * for readiness, and this is constructed on the main thread from every layout host
-         * (`ModalActivity.onCreate`, `EmbeddedLayout`, `BannerLayout`,
-         * `ThomasLayoutViewFactory`). During `TAKING_OFF` that wait would block the main
-         * thread until takeoff finished.
+         * Deliberately takes the manager rather than reading `Airship.internalAi`: layouts
+         * are built on the main thread, from a host that may be constructing them before
+         * takeoff completes, and that accessor waits for readiness.
          */
-        fun create(): ThomasAIInference? =
-            if (Airship.isFlying) DefaultThomasAIInference(Airship.internalAi) else null
+        fun create(ai: InternalAirshipAi?): ThomasAIInference? =
+            ai?.let { DefaultThomasAIInference(it) }
     }
 }
 

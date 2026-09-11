@@ -12,6 +12,7 @@ import com.urbanairship.actions.ActionRegistry
 import com.urbanairship.actions.ActionsManifest
 import com.urbanairship.analytics.AirshipEventFeed
 import com.urbanairship.analytics.Analytics
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.android.layout.analytics.DefaultMessageDisplayHistoryStore
 import com.urbanairship.app.GlobalActivityMonitor
 import com.urbanairship.audience.AudienceEvaluator
@@ -91,7 +92,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
         cache: AirshipCache,
-        audienceEvaluator: AudienceEvaluator
+        audienceEvaluator: AudienceEvaluator,
+        ai: InternalAirshipAi
     ): Module {
         val metrics = ApplicationMetrics(
             context = context,
@@ -135,7 +137,8 @@ public class AutomationModuleFactoryImpl : AutomationModuleFactory {
             displayAdapterFactory = DisplayAdapterFactory(
                 context,
                 NetworkMonitor.shared(context),
-                activityMonitor
+                activityMonitor,
+                ai
             ),
             analyticsFactory = analyticsFactory
         )

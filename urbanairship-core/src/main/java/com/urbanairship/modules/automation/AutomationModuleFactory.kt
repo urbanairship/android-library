@@ -7,6 +7,7 @@ import com.urbanairship.AirshipVersionInfo
 import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.analytics.AirshipEventFeed
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.cache.AirshipCache
@@ -41,6 +42,7 @@ public interface AutomationModuleFactory : AirshipVersionInfo {
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
         cache: AirshipCache,
-        audienceEvaluator: AudienceEvaluator
+        audienceEvaluator: AudienceEvaluator,
+        ai: InternalAirshipAi
     ): Module
 }
