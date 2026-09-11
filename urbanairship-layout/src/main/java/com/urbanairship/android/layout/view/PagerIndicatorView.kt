@@ -63,6 +63,27 @@ internal class PagerIndicatorView(
     }
 
     /**
+     * Lays the dots out square, at the height the item stated or at [DEFAULT_DOT_SIZE_DP].
+     *
+     * A shape draws into the bounds it is given and reports no size of its own, so dots take
+     * theirs from the row. An item that states `auto` leaves the row taking its height from the
+     * dots in turn, and the pair of them settle at nothing: `100% x auto` drew six 1px dots.
+     */
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val size = if (MeasureSpec.getMode(heightMeasureSpec) == MeasureSpec.EXACTLY) {
+            MeasureSpec.getSize(heightMeasureSpec)
+        } else {
+            ResourceUtils.dpToPx(context, DEFAULT_DOT_SIZE_DP).toInt()
+        }
+
+        for (i in 0 until childCount) {
+            getChildAt(i).layoutParams.width = size
+        }
+
+        super.onMeasure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(size, MeasureSpec.EXACTLY))
+    }
+
+    /**
      * Sets the number of indicator dots to be displayed.
      *
      * @param count The number of dots to display.
@@ -92,6 +113,12 @@ internal class PagerIndicatorView(
             }
             addView(view, lp)
         }
+    }
+
+    private companion object {
+
+        /** What a dot is when nothing states a height, matching iOS. */
+        private const val DEFAULT_DOT_SIZE_DP = 32
     }
 
     /**
