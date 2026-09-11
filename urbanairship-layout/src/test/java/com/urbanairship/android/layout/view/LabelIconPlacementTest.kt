@@ -1,6 +1,8 @@
 /* Copyright Airship and Contributors */
 package com.urbanairship.android.layout.view
 
+import android.graphics.Rect
+import android.graphics.drawable.InsetDrawable
 import android.text.Spanned
 import android.text.style.ImageSpan
 import com.urbanairship.android.layout.environment.LayoutState
@@ -10,8 +12,12 @@ import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.LabelModel
 import com.urbanairship.android.layout.model.ModelProperties
 import com.urbanairship.json.JsonValue
+import com.urbanairship.Airship
+import com.urbanairship.locale.LocaleManager
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -26,6 +32,7 @@ import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.util.Locale
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
@@ -45,13 +52,22 @@ public class LabelIconPlacementTest {
         every { layoutState } returns LayoutState.EMPTY
     }
 
+    private var airshipLocale: Locale = Locale.US
+
     @Before
     public fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        // isLayoutRtl reads the Airship locale, which is the override message content honours.
+        val localeManager: LocaleManager = mockk {
+            every { locale } answers { airshipLocale }
+        }
+        mockkObject(Airship)
+        every { Airship.localeManager } returns localeManager
     }
 
     @After
     public fun tearDown() {
+        unmockkObject(Airship)
         Dispatchers.resetMain()
     }
 
@@ -89,6 +105,39 @@ public class LabelIconPlacementTest {
         shadow.clearWasInvalidated()
         icon.invalidateSelf()
         assertTrue(shadow.wasInvalidated())
+    }
+
+    /**
+     * The gap belongs between the icon and the text. The start icon is inline, so in RTL it
+     * renders to the right of the text and the gap has to move to its left with it.
+     */
+    @Test
+    public fun testStartIconGapSitsAfterTheIconInLtr() {
+        assertEquals(0, innerBounds(iconKey = "icon_start").left)
+    }
+
+    @Test
+    public fun testStartIconGapSitsBeforeTheIconInRtl() {
+        airshipLocale = Locale.forLanguageTag("ar-EG")
+        assertTrue(innerBounds(iconKey = "icon_start").left > 0)
+    }
+
+    /** The end icon is absolutely positioned, so its gap never moves. */
+    @Test
+    public fun testEndIconGapDoesNotMoveInRtl() {
+        airshipLocale = Locale.forLanguageTag("ar-EG")
+        assertTrue(innerBounds(iconKey = "icon_end").left > 0)
+    }
+
+    /** The child rect inside the icon's [InsetDrawable], which reveals which side the gap is on. */
+    private fun innerBounds(iconKey: String): Rect {
+        val view = labelView(iconKey)
+        val icon = if (iconKey == "icon_start") {
+            spans(view).single().drawable
+        } else {
+            view.compoundDrawables[RIGHT]
+        }
+        return (icon as InsetDrawable).drawable!!.bounds
     }
 
     @Test

@@ -29,6 +29,7 @@ import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.ifNotEmpty
+import com.urbanairship.android.layout.util.isLayoutRtl
 
 internal class LabelView(
     context: Context,
@@ -286,11 +287,24 @@ internal class LabelView(
         val size = spToPx(context, size).toInt()
         val space = spToPx(context, resolvedIcon.space).toInt()
 
-        // Use an InsetDrawable to handle spacing between the icon and the text.
-        val insetLeft = if (position == HorizontalPosition.END) space else 0
-        val insetRight = if (position == HorizontalPosition.START) space else 0
+        // An InsetDrawable puts the gap between the icon and the text, so which side it goes on
+        // depends on which side the text is.
+        //
+        // The end icon is a compound drawable in the absolute right slot, so the text is always
+        // to its left. The start icon is inline and moves with the paragraph, so in RTL it sits
+        // to the right of the text and the gap has to move with it.
+        //
+        // `isLayoutRtl` rather than the view's `layoutDirection`: this runs on the first render,
+        // before the view is attached, and an unattached view has no resolved direction yet.
+        val gapOnLeft = position == HorizontalPosition.END || isLayoutRtl
 
-        val finalDrawable = InsetDrawable(drawable, insetLeft, 0, insetRight, 0)
+        val finalDrawable = InsetDrawable(
+            drawable,
+            if (gapOnLeft) space else 0,
+            0,
+            if (gapOnLeft) 0 else space,
+            0
+        )
         finalDrawable.setBounds(0, 0, size + space, size)
 
         return finalDrawable
