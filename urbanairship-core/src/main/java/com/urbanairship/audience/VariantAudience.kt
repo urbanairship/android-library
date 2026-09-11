@@ -123,6 +123,9 @@ public class VariantAudience internal constructor(
                     BucketSubset.fromJson(it.requireMap())
                         ?: throw JsonException("Invalid variant audience holdout subset in $json")
                 },
+                // Dropped rather than rejected when it isn't an object, unlike everything
+                // above: it only rides along on reporting events, so a malformed one costs
+                // reporting fidelity while rejecting it would cost the whole schedule.
                 reportingContext = json[KEY_REPORTING_CONTEXT]?.map
             )
         }
