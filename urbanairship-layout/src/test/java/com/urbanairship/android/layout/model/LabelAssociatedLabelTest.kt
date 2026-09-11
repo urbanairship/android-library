@@ -25,7 +25,6 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
-import java.util.Locale
 import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -142,7 +141,6 @@ public class LabelAssociatedLabelTest {
             every { Airship.runtimeConfig } returns TestAirshipRuntimeConfig(session = session)
             every { Airship.isFlyingOrTakingOff } returns true
             every { Airship.inputValidator } returns mockk<AirshipInputValidation.Validator>(relaxed = true)
-            every { Airship.localeManager } returns mockk { every { locale } returns Locale.US }
 
             val viewModel = LayoutViewModel()
             val modelEnv = viewModel.getOrCreateEnvironment(
@@ -212,7 +210,6 @@ public class LabelAssociatedLabelTest {
             every { Airship.runtimeConfig } returns TestAirshipRuntimeConfig(session = session)
             every { Airship.isFlyingOrTakingOff } returns true
             every { Airship.inputValidator } returns mockk<AirshipInputValidation.Validator>(relaxed = true)
-            every { Airship.localeManager } returns mockk { every { locale } returns Locale.US }
 
             val viewModel = LayoutViewModel()
             val modelEnv = viewModel.getOrCreateEnvironment(
@@ -286,7 +283,6 @@ public class LabelAssociatedLabelTest {
             every { Airship.runtimeConfig } returns TestAirshipRuntimeConfig(session = session)
             every { Airship.isFlyingOrTakingOff } returns true
             every { Airship.inputValidator } returns mockk<AirshipInputValidation.Validator>(relaxed = true)
-            every { Airship.localeManager } returns mockk { every { locale } returns Locale.US }
 
             val viewModel = LayoutViewModel()
             val modelEnv = viewModel.getOrCreateEnvironment(

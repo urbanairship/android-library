@@ -32,7 +32,6 @@ import androidx.core.text.method.LinkMovementMethodCompat
 import androidx.core.text.toSpannable
 import androidx.core.view.descendants
 import com.urbanairship.Airship
-import java.util.Locale
 import com.urbanairship.android.layout.gestures.PagerGestureEvent
 import com.urbanairship.android.layout.property.Border
 import com.urbanairship.android.layout.property.MarkdownOptions
@@ -213,22 +212,8 @@ internal val MotionEvent.isActionDown: Boolean
 internal val View.localBounds: RectF
     get() = RectF(0f, 0f, width.toFloat(), height.toFloat())
 
-/**
- * Whether content should lay out right-to-left, from the Airship locale — the override the SDK
- * honours everywhere else it resolves direction.
- *
- * Falls back to the default locale rather than throwing when Airship isn't up: this is asked
- * while rendering, and a view has to resolve a direction either way.
- */
 internal val View.isLayoutRtl: Boolean
-    get() {
-        val locale = if (Airship.isFlyingOrTakingOff) {
-            Airship.localeManager.locale
-        } else {
-            Locale.getDefault()
-        }
-        return TextUtilsCompat.getLayoutDirectionFromLocale(locale) == View.LAYOUT_DIRECTION_RTL
-    }
+    get() = TextUtilsCompat.getLayoutDirectionFromLocale(Airship.localeManager.locale) == View.LAYOUT_DIRECTION_RTL
 
 internal fun MotionEvent.isWithinClickableDescendantOf(view: View): Boolean =
     findTargetDescendant(view) { it.isClickable && it.isEnabled } != null
