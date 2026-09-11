@@ -10,6 +10,7 @@ import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.engine.InterruptedBehavior
 import com.urbanairship.automation.engine.PreparedScheduleInfo
+import com.urbanairship.automation.engine.recordExecution
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
 import com.urbanairship.automation.limits.AutomationLedgerInterface
@@ -30,18 +31,16 @@ internal class ActionAutomationExecutor(
     ): ScheduleExecuteResult {
 
         if (!preparedScheduleInfo.additionalAudienceCheckResult) {
+            // The attempt still resolved and still spends the schedule's budget,
+            // so it has to reach the ledger. Without an event the limit can
+            // never be reached and the schedule re-triggers forever.
+            ledger.recordExecution(preparedScheduleInfo, LedgerExecutionResult.AUDIENCE_MISS)
             return ScheduleExecuteResult.FINISHED
         }
 
         actionRunner.runSuspending(data.optMap().map, Action.Situation.AUTOMATION)
 
-        ledger.recordExecution(
-            scheduleId = preparedScheduleInfo.scheduleId,
-            sharedId = preparedScheduleInfo.ledgerSharedId,
-            triggerId = preparedScheduleInfo.triggerId,
-            result = LedgerExecutionResult.SUCCEEDED,
-            cancel = false
-        )
+        ledger.recordExecution(preparedScheduleInfo, LedgerExecutionResult.SUCCEEDED)
 
         return ScheduleExecuteResult.FINISHED
     }

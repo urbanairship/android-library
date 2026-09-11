@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.urbanairship.Airship
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.UALog
 import com.urbanairship.android.layout.LayoutDataStorage
 import com.urbanairship.android.layout.ThomasListenerInterface
@@ -26,6 +27,13 @@ import kotlinx.parcelize.Parcelize
 /** `ViewModel` for [MessageView]. */
 public class MessageViewModel(
     private val inbox: Inbox = Airship.messageCenter.inbox,
+    /**
+     * Supplied by [factory] from the component, not defaulted off the `Airship` singleton:
+     * a default would resolve on every construction, including from a layout host that is
+     * still taking off.
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public val ai: InternalAirshipAi? = null,
 ) : ViewModel() {
 
 
@@ -194,6 +202,7 @@ public class MessageViewModel(
             initializer {
                 MessageViewModel(
                     inbox = Airship.messageCenter.inbox,
+                    ai = Airship.messageCenter.ai,
                 )
             }
         }

@@ -4,7 +4,9 @@ package com.urbanairship.automation.engine
 
 import androidx.annotation.RestrictTo
 import com.urbanairship.audience.VariantAudience
+import com.urbanairship.automation.limits.AutomationLedgerInterface
 import com.urbanairship.automation.limits.FrequencyChecker
+import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.json.JsonException
@@ -143,4 +145,25 @@ public data class VariantAudienceResult(
         OUTCOME to outcome.json,
         REPORTING_CONTEXT to reportingContext
     ).toJsonValue()
+}
+
+/**
+ * Records the outcome of a prepared attempt.
+ *
+ * The single recorder every executor funnels through, so the mapping from
+ * [PreparedScheduleInfo] onto the ledger's scope keys lives in one place and a
+ * new budget-consuming outcome cannot quietly skip it.
+ */
+internal suspend fun AutomationLedgerInterface.recordExecution(
+    info: PreparedScheduleInfo,
+    result: LedgerExecutionResult,
+    cancel: Boolean = false
+) {
+    recordExecution(
+        scheduleId = info.scheduleId,
+        sharedId = info.ledgerSharedId,
+        triggerId = info.triggerId,
+        result = result,
+        cancel = cancel
+    )
 }

@@ -112,8 +112,37 @@ public class LayoutListenerTest {
 
     @Test
     public fun testCancelled() {
+        // A cancel only means the layout was dismissed if it was on screen to
+        // begin with.
+        listener.onVisibilityChanged(isVisible = true, isForegrounded = true)
         listener.onDismiss(true)
         assertEquals(displayResult, DisplayResult.CANCEL)
+    }
+
+    /**
+     * A queued banner or embedded view resolved out of its queue is cancelled
+     * without ever becoming visible. Nothing was displayed, so a caller metering
+     * displays must be able to tell it apart from a real dismissal.
+     */
+    @Test
+    public fun testCancelledWithoutDisplayIsDropped() {
+        listener.onDismiss(true)
+        assertEquals(displayResult, DisplayResult.DROPPED)
+    }
+
+    /** Visible while backgrounded still counts as displayed. */
+    @Test
+    public fun testCancelledAfterBackgroundedDisplayIsNotDropped() {
+        listener.onVisibilityChanged(isVisible = true, isForegrounded = false)
+        listener.onDismiss(true)
+        assertEquals(displayResult, DisplayResult.CANCEL)
+    }
+
+    /** A normal dismissal is never a drop, displayed or not. */
+    @Test
+    public fun testDismissedWithoutDisplayIsNotDropped() {
+        listener.onDismiss(false)
+        assertEquals(displayResult, DisplayResult.FINISHED)
     }
 
     @Test

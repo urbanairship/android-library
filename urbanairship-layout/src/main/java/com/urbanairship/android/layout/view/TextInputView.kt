@@ -26,7 +26,6 @@ import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.spToPx
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
-import com.urbanairship.android.layout.util.isLayoutRtl
 import com.urbanairship.android.layout.util.textChanges
 import com.urbanairship.android.layout.widget.TappableView
 import kotlinx.coroutines.channels.Channel
@@ -103,11 +102,8 @@ internal class TextInputView(
                     it.setBounds(0, 0, size, size)
                 }
 
-                if (isLayoutRtl) {
-                    input.setCompoundDrawables(endDrawable, null, null, null)
-                } else {
-                    input.setCompoundDrawables(null, null, endDrawable, null)
-                }
+                // Relative, so the platform puts it at the trailing edge in either direction.
+                input.setCompoundDrawablesRelative(null, null, endDrawable, null)
             }
         }
 

@@ -96,3 +96,19 @@ public fun <T1, T2, T3, T4, T5, TR> combineStates(
         updates = combine(flow1, flow2, flow3, flow4, flow5, transform)
     )
 }
+
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public fun <T1, T2, T3, T4, T5, T6, TR> combineStates(
+    flow1: StateFlow<T1>,
+    flow2: StateFlow<T2>,
+    flow3: StateFlow<T3>,
+    flow4: StateFlow<T4>,
+    flow5: StateFlow<T5>,
+    flow6: StateFlow<T6>,
+    transform: (t1: T1, t2: T2, t3: T3, t4: T4, t5: T5, t6: T6) -> TR
+): StateFlow<TR> = combineStates(
+    combineStates(flow1, flow2, flow3, flow4, flow5) { t1, t2, t3, t4, t5 ->
+        { t6: T6 -> transform(t1, t2, t3, t4, t5, t6) }
+    },
+    flow6
+) { partial, t6 -> partial(t6) }

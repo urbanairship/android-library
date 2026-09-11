@@ -10,6 +10,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.ai.DefaultThomasAIInference
 import com.urbanairship.android.layout.EmbeddedPresentation
 import com.urbanairship.android.layout.LayoutStateStorage
 import com.urbanairship.android.layout.ModelFactoryException
@@ -89,7 +90,8 @@ public object ThomasLayoutViewFactory {
                 reporter = reporter,
                 actionRunner = displayArgs.actionRunner,
                 displayTimer = timer,
-                stateStorage = displayArgs.stateStorage?.let { LayoutStateStorage(it) }
+                stateStorage = displayArgs.stateStorage?.let { LayoutStateStorage(it) },
+                aiInference = DefaultThomasAIInference.create(displayArgs.ai)
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = displayArgs.payload.view,

@@ -9,6 +9,7 @@ import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
 import com.urbanairship.Airship
 import com.urbanairship.analytics.AirshipEventFeed
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.audience.AudienceEvaluator
 import com.urbanairship.cache.AirshipCache
@@ -52,7 +53,8 @@ public object Modules {
         channel: AirshipChannel,
         pushManager: PushManager,
         analytics: Analytics,
-        meteredUsage: AirshipMeteredUsage
+        meteredUsage: AirshipMeteredUsage,
+        ai: InternalAirshipAi
     ): Module? {
         try {
             return createFactory(
@@ -65,7 +67,8 @@ public object Modules {
                 airshipChannel = channel,
                 pushManager = pushManager,
                 analytics = analytics,
-                meteredUsage = meteredUsage
+                meteredUsage = meteredUsage,
+                ai = ai
             )
         } catch (e: Exception) {
             UALog.e(e, "Failed to build Message Center module")
@@ -87,7 +90,8 @@ public object Modules {
         deferredResolver: DeferredResolver,
         eventFeed: AirshipEventFeed,
         cache: AirshipCache,
-        audienceEvaluator: AudienceEvaluator
+        audienceEvaluator: AudienceEvaluator,
+        ai: InternalAirshipAi
     ): Module? {
         try {
             return createFactory(
@@ -106,7 +110,8 @@ public object Modules {
                 deferredResolver = deferredResolver,
                 eventFeed = eventFeed,
                 cache = cache,
-                audienceEvaluator = audienceEvaluator
+                audienceEvaluator = audienceEvaluator,
+                ai = ai
             )
         } catch (e: Exception) {
             UALog.e(e, "Failed to build Automation module")

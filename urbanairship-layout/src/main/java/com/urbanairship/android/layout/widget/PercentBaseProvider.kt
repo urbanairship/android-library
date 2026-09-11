@@ -78,26 +78,6 @@ internal interface AutoSizeProvider {
 }
 
 /**
- * Whether the length this view was given on an axis is slack inherited from an auto-sized ancestor.
- *
- * Walks up to the nearest view that can answer, the same way [borrowedPercentBase] does and for the
- * same reason: the wrapper views in between — button and toggle layouts, async layouts — hold no
- * size of their own and pass their spec straight through, so they'd only have to forward the answer
- * unchanged. The first ancestor that owns a length is the one that decides.
- *
- * Returns false when nothing above answers, which keeps the existing behaviour for any hierarchy
- * this doesn't model.
- */
-internal fun View.hasAutoSizedAncestor(horizontal: Boolean): Boolean {
-    var node = parent
-    while (node is View) {
-        if (node is AutoSizeProvider) return node.isAutoSized(horizontal)
-        node = node.parent
-    }
-    return false
-}
-
-/**
  * Interface for Views that can say whether anything in their subtree gives an axis a length that
  * isn't a share of something above it.
  *

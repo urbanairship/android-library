@@ -88,6 +88,7 @@ internal class DefaultPrivacyViewModel(
             PrivacyManager.Feature.FEATURE_FLAGS to "Feature Flags",
             PrivacyManager.Feature.IN_APP_AUTOMATION to "In App Automation",
             PrivacyManager.Feature.MESSAGE_CENTER to "Message Center",
+            PrivacyManager.Feature.ON_DEVICE_AI to "On-Device AI",
             PrivacyManager.Feature.PUSH to "Push",
             PrivacyManager.Feature.TAGS_AND_ATTRIBUTES to "Tags & Attributes"
         )

@@ -500,8 +500,41 @@ public class InAppMessageAutomationExecutorTest {
         assertEquals(ScheduleExecuteResult.FINISHED, result)
 
         coVerify { analytics.recordEvent(any(), any()) }
-        // An additional-audience miss is not a budget-consuming execution.
+        // The attempt resolved and spends budget, so it has to be recorded -
+        // otherwise the schedule can never reach its limit.
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = preparedInfo.scheduleId,
+                    sharedId = preparedInfo.ledgerSharedId,
+                    triggerId = preparedInfo.triggerId,
+                    result = LedgerExecutionResult.AUDIENCE_MISS,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    /**
+     * A display resolved out of its queue without ever appearing spends no
+     * budget and runs none of the message's actions: both follow from having
+     * displayed, and it did not.
+     */
+    @Test
+    public fun testDroppedDisplayRecordsNothingAndRunsNoActions(): TestResult = runTest {
+        every { displayCoordinator.messageWillDisplay(any()) } just runs
+        every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
+
+        coEvery { displayAdapter.display(any(), any()) } coAnswers { DisplayResult.DROPPED }
+        coEvery { assetManager.clearCache(any()) } just runs
+        coEvery { actionRunner.run(any(), any(), Action.Situation.AUTOMATION) } just runs
+
+        val result = execute()
+
+        assertEquals(ScheduleExecuteResult.CANCEL, result)
         assertTrue(ledger.recorded.isEmpty())
+        verify(exactly = 0) { actionRunner.run(any(), any(), Action.Situation.AUTOMATION) }
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.PagersViewTracker
 import com.urbanairship.android.layout.environment.SharedState
 import com.urbanairship.android.layout.environment.State
+import com.urbanairship.android.layout.environment.ThomasCapabilities
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.VideoCommandChannel
 import com.urbanairship.android.layout.environment.VideoControlState
@@ -94,6 +95,7 @@ import com.urbanairship.android.layout.model.VideoController
 import com.urbanairship.android.layout.model.WebViewModel
 import com.urbanairship.android.layout.property.Direction
 import com.urbanairship.android.layout.property.ViewType
+import kotlinx.coroutines.flow.StateFlow
 
 internal class ModelFactoryException(message: String) : Exception(message)
 
@@ -294,6 +296,7 @@ internal class ThomasModelFactory : ModelFactory {
                         videoCommandChannels = videoCommandChannels,
                         videoBroadcastChannels = videoBroadcastChannels,
                         videoControlGroups = videoControlGroups,
+                        capabilities = environment.capabilities,
                         parentLayoutState = parentLayoutState
                     )
                 )
@@ -424,6 +427,7 @@ internal class ThomasModelFactory : ModelFactory {
             videoCommandChannels: Map<Tag, VideoCommandChannel>,
             videoBroadcastChannels: Map<Tag, VideoGroupBroadcastChannel>,
             videoControlGroups: Map<Tag, Pair<String, String>>,
+            capabilities: StateFlow<ThomasCapabilities>,
             parentLayoutState: LayoutState? = null
         ): LayoutState {
             val childForm = form.firstOrNull()
@@ -500,7 +504,9 @@ internal class ThomasModelFactory : ModelFactory {
                 radio = radioFlow,
                 score = scoreFlow,
                 layout = layoutFlow,
-                thomasState = makeThomasState(formFlow, layoutFlow, pagerFlow, videoFlow, asyncFlow),
+                thomasState = makeThomasState(
+                    formFlow, layoutFlow, pagerFlow, videoFlow, asyncFlow, capabilities
+                ),
                 pagerTracker = pagerTracker,
                 video = videoFlow,
                 videoControl = videoControl,

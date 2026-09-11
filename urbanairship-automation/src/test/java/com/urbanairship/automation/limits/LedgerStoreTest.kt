@@ -601,4 +601,47 @@ public class LedgerStoreTest {
     /** UTC, matching the zone the compactor buckets in. */
     private fun date(year: Int, month: Int, day: Int): Instant =
         ZonedDateTime.of(year, month, day, 0, 0, 0, 0, ZoneOffset.UTC).toInstant()
+
+    @Test
+    public fun testRecordEventsUnlessAppendsWhenNothingMatches(): TestResult = runTest {
+        store.recordEvents(listOf(triggered("schedule-1")))
+
+        val appended = store.recordEventsUnless(
+            scheduleId = "schedule-1",
+            sharedId = null,
+            events = listOf(execution("schedule-1"))
+        ) { it is LedgerEvent.Execution }
+
+        assertTrue(appended)
+        assertEquals(2, store.events("schedule-1", null).size)
+    }
+
+    @Test
+    public fun testRecordEventsUnlessSkipsWhenSomethingMatches(): TestResult = runTest {
+        store.recordEvents(listOf(execution("schedule-1")))
+
+        val appended = store.recordEventsUnless(
+            scheduleId = "schedule-1",
+            sharedId = null,
+            events = listOf(execution("schedule-1"))
+        ) { it is LedgerEvent.Execution }
+
+        assertFalse(appended)
+        assertEquals(1, store.events("schedule-1", null).size)
+    }
+
+    @Test
+    public fun testRecordEventsUnlessJudgesTheSharedGroupToo(): TestResult = runTest {
+        // Recorded by a sibling under the shared group, so it is part of the
+        // set the predicate has to see.
+        store.recordEvents(listOf(execution("schedule-2", sharedId = "group-1")))
+
+        val appended = store.recordEventsUnless(
+            scheduleId = "schedule-1",
+            sharedId = "group-1",
+            events = listOf(execution("schedule-1", sharedId = "group-1"))
+        ) { it is LedgerEvent.Execution }
+
+        assertFalse(appended)
+    }
 }

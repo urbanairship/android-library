@@ -12,6 +12,7 @@ import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestResult
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Test
@@ -204,6 +205,55 @@ public class AutomationLedgerTest {
         assertEquals(2, result.first().effectiveCount)
     }
 
+    /**
+     * A cancellation is an orderly shutdown, not a write failure: it has to keep
+     * propagating instead of being logged and swallowed like an I/O error.
+     */
+    @Test
+    public fun testCancellationIsNotSwallowed(): TestResult = runTest {
+        val cancelling = object : LedgerStoreInterface by RecordingStore() {
+            override suspend fun recordEvents(events: List<LedgerEvent>): Unit =
+                throw CancellationException("shutting down")
+
+            override suspend fun recordEventsUnless(
+                scheduleId: String,
+                sharedId: String?,
+                events: List<LedgerEvent>,
+                alreadyRecorded: (LedgerEvent) -> Boolean
+            ): Boolean = throw CancellationException("shutting down")
+        }
+        val ledger = AutomationLedger(cancelling, clock)
+
+        var recordCancelled = false
+        try {
+            ledger.recordExecution(
+                scheduleId = "schedule-A",
+                sharedId = null,
+                triggerId = null,
+                result = LedgerExecutionResult.SUCCEEDED,
+                cancel = false
+            )
+        } catch (ex: CancellationException) {
+            recordCancelled = true
+        }
+        assertTrue(recordCancelled)
+
+        var guardedCancelled = false
+        try {
+            ledger.recordExecutionIfNoneSince(
+                scheduleId = "schedule-A",
+                sharedId = null,
+                triggerId = null,
+                result = LedgerExecutionResult.SUCCEEDED,
+                cancel = false,
+                since = Instant.EPOCH
+            )
+        } catch (ex: CancellationException) {
+            guardedCancelled = true
+        }
+        assertTrue(guardedCancelled)
+    }
+
     /** Logs the maintenance calls so their order and arguments can be asserted. */
     private class RecordingStore : LedgerStoreInterface {
         val calls: MutableList<String> = mutableListOf()
@@ -212,6 +262,13 @@ public class AutomationLedgerTest {
         var compactNow: Instant? = null
 
         override suspend fun recordEvents(events: List<LedgerEvent>) {}
+
+        override suspend fun recordEventsUnless(
+            scheduleId: String,
+            sharedId: String?,
+            events: List<LedgerEvent>,
+            alreadyRecorded: (LedgerEvent) -> Boolean
+        ): Boolean = true
 
         override suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent> =
             emptyList()

@@ -13,6 +13,7 @@ import com.urbanairship.Predicate
 import com.urbanairship.preferences.PreferenceStore
 import com.urbanairship.PrivacyManager
 import com.urbanairship.UALog
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.analytics.Analytics
 import com.urbanairship.channel.AirshipChannel
 import com.urbanairship.config.AirshipRuntimeConfig
@@ -43,7 +44,13 @@ public constructor(
     private val privacyManager: PrivacyManager,
     public val inbox: Inbox,
     private val pushManager: PushManager,
-    dispatcher: CoroutineDispatcher
+    dispatcher: CoroutineDispatcher,
+    /**
+     * Injected rather than reached through `Airship`: the view layer builds Thomas layouts,
+     * and resolving the manager from a layout host waits on takeoff.
+     */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public val ai: InternalAirshipAi? = null
 ) : JobAwareAirshipComponent(context, dataStore) {
 
     private val job = SupervisorJob()
@@ -99,7 +106,8 @@ public constructor(
         channel: AirshipChannel,
         pushManager: PushManager,
         analytics: Analytics,
-        meteredUsage: AirshipMeteredUsage
+        meteredUsage: AirshipMeteredUsage,
+        ai: InternalAirshipAi? = null
     ) : this(
         context = context,
         dataStore = dataStore,
@@ -115,7 +123,8 @@ public constructor(
             JobDispatcher.shared(context).scheduleInboxUpdateJob(reason)
         },
         pushManager = pushManager,
-        dispatcher = Dispatchers.IO
+        dispatcher = Dispatchers.IO,
+        ai = ai
     )
 
 
