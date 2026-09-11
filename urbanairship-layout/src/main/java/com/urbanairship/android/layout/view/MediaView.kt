@@ -55,6 +55,7 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
 import org.intellij.lang.annotations.Language
+import com.urbanairship.android.layout.util.isLayoutRtl
 
 /**
  * Media view.
@@ -634,10 +635,9 @@ internal class MediaView(
             MediaFit.CENTER_INSIDE -> "object-fit: contain;"
             MediaFit.CENTER_CROP -> "object-fit: cover;"
             MediaFit.FIT_CROP -> {
-                val isRtl = LAYOUT_DIRECTION_RTL == layoutDirection
                 val horizontal = when (viewInfo.position.horizontal) {
-                    HorizontalPosition.START -> if (isRtl) "right" else "left"
-                    HorizontalPosition.END -> if (isRtl) "left" else "right"
+                    HorizontalPosition.START -> if (isLayoutRtl) "right" else "left"
+                    HorizontalPosition.END -> if (isLayoutRtl) "left" else "right"
                     HorizontalPosition.CENTER -> "center"
                 }
                 val vertical = when (viewInfo.position.vertical) {

@@ -17,6 +17,7 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
+import com.urbanairship.android.layout.util.isLayoutRtl
 
 /** Variant of `LinearLayout` that replaces weight with max percentage sizes.*/
 internal open class WeightlessLinearLayout @JvmOverloads constructor(
@@ -1851,7 +1852,6 @@ internal open class WeightlessLinearLayout @JvmOverloads constructor(
      * @see .onLayout
      */
     private fun layoutHorizontal(left: Int, top: Int, right: Int, bottom: Int) {
-        val isLayoutRtl = layoutDirection == LAYOUT_DIRECTION_RTL
         val paddingTop = getPaddingTop()
 
         var childTop: Int
