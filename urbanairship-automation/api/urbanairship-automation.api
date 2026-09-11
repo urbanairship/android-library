@@ -546,6 +546,41 @@ public final class com/urbanairship/iam/adapter/DisplayFinishedCallback : androi
 public final class com/urbanairship/iam/adapter/DisplayFinishedCallback$Companion {
 }
 
+public final class com/urbanairship/iam/ai/InAppMessageSuppressionEvaluation$Output {
+	public fun <init> (ZLjava/lang/String;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Ljava/lang/String;
+	public final fun copy (ZLjava/lang/String;)Lcom/urbanairship/iam/ai/InAppMessageSuppressionEvaluation$Output;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/ai/InAppMessageSuppressionEvaluation$Output;ZLjava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/iam/ai/InAppMessageSuppressionEvaluation$Output;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAllow ()Z
+	public final fun getReason ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/iam/ai/InAppMessageSuppressionKt {
+	public static final fun getInAppMessageSuppression (Lcom/urbanairship/ai/Usage$Companion;)Lcom/urbanairship/ai/Usage;
+}
+
+public final class com/urbanairship/iam/ai/InAppMessageSuppressionSubject {
+	public fun <init> (Ljava/lang/String;Lcom/urbanairship/json/JsonValue;ILjava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Lcom/urbanairship/json/JsonValue;ILjava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lcom/urbanairship/json/JsonValue;
+	public final fun component3 ()I
+	public final fun component4 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;Lcom/urbanairship/json/JsonValue;ILjava/util/Map;)Lcom/urbanairship/iam/ai/InAppMessageSuppressionSubject;
+	public static synthetic fun copy$default (Lcom/urbanairship/iam/ai/InAppMessageSuppressionSubject;Ljava/lang/String;Lcom/urbanairship/json/JsonValue;ILjava/util/Map;ILjava/lang/Object;)Lcom/urbanairship/iam/ai/InAppMessageSuppressionSubject;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getExtras ()Lcom/urbanairship/json/JsonValue;
+	public final fun getHints ()Ljava/util/Map;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPriority ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
 public final class com/urbanairship/iam/content/AirshipLayout : android/os/Parcelable, com/urbanairship/json/JsonSerializable {
 	public static final field Companion Lcom/urbanairship/iam/content/AirshipLayout$Companion;
 	public synthetic fun <init> (Lcom/urbanairship/android/layout/info/LayoutInfo;Lcom/urbanairship/json/JsonValue;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
