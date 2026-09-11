@@ -189,19 +189,19 @@ public class LimitConfigTest {
     public fun testExcludeByResult() {
         val events = listOf(
             execution(result = LedgerExecutionResult.SUCCEEDED),
-            execution(result = LedgerExecutionResult.CONTROL)
+            execution(result = LedgerExecutionResult.HOLDOUT)
         )
         val exclude = ExclusionSet(
             listOf(
                 ExclusionRule(
                     source = LedgerSource.AnySchedule,
                     match = LedgerEventMatch.Execution(
-                        results = listOf(LedgerExecutionResult.CONTROL)
+                        results = listOf(LedgerExecutionResult.HOLDOUT)
                     )
                 )
             )
         )
-        // The control execution is subtracted; only the succeeded one counts.
+        // The holdout execution is subtracted; only the succeeded one counts.
         assertTrue(isOverLimit(limit = 1U, events = events, exclude = exclude))
         assertFalse(isOverLimit(limit = 2U, events = events, exclude = exclude))
     }
@@ -384,11 +384,11 @@ public class LimitConfigTest {
             """
             { "or": [ { "source": { "type": "any" },
                         "match": { "type": "execution",
-                                   "results": ["future_result", "control"] } } ] }
+                                   "results": ["future_result", "variant_miss"] } } ] }
             """
         )
         val events = listOf(
-            execution(result = LedgerExecutionResult.CONTROL),
+            execution(result = LedgerExecutionResult.VARIANT_MISS),
             execution(result = LedgerExecutionResult.SUCCEEDED)
         )
         assertTrue(isOverLimit(limit = 1U, events = events, exclude = exclude))
@@ -423,7 +423,7 @@ public class LimitConfigTest {
                         "source": { "type": "schedule", "schedule_id": "sched-x" },
                         "match": {
                           "type": "execution",
-                          "results": ["control", "holdout"],
+                          "results": ["variant_miss", "holdout"],
                           "cancel": true,
                           "trigger_id": "trig-1",
                           "shared_group": { "type": "id", "shared_id": "grp" },
@@ -449,7 +449,7 @@ public class LimitConfigTest {
                     endTimestamp = Instant.ofEpochMilli(2000)
                 ),
                 sharedGroup = SharedGroupMatch.Id("grp"),
-                results = listOf(LedgerExecutionResult.CONTROL, LedgerExecutionResult.HOLDOUT),
+                results = listOf(LedgerExecutionResult.VARIANT_MISS, LedgerExecutionResult.HOLDOUT),
                 cancel = true,
                 triggerId = "trig-1"
             ),
@@ -477,7 +477,7 @@ public class LimitConfigTest {
                     ExclusionRule(
                         source = LedgerSource.OwnSchedule,
                         match = LedgerEventMatch.Execution(
-                            results = listOf(LedgerExecutionResult.CONTROL)
+                            results = listOf(LedgerExecutionResult.HOLDOUT)
                         )
                     ),
                     ExclusionRule(
@@ -505,11 +505,11 @@ public class LimitConfigTest {
 
     /**
      * A pooled A/B group: two variants recorded executions under the shared
-     * group; the winner also has a variant-control event.
+     * group; the winner also has a holdout event.
      */
     private fun experimentEvents(): List<LedgerEvent> = listOf(
         execution(scheduleId = scheduleId, sharedId = sharedId, result = LedgerExecutionResult.SUCCEEDED),
-        execution(scheduleId = scheduleId, sharedId = sharedId, result = LedgerExecutionResult.CONTROL),
+        execution(scheduleId = scheduleId, sharedId = sharedId, result = LedgerExecutionResult.HOLDOUT),
         execution(scheduleId = otherScheduleId, sharedId = sharedId, result = LedgerExecutionResult.SUCCEEDED),
         execution(scheduleId = otherScheduleId, sharedId = sharedId, result = LedgerExecutionResult.SUCCEEDED)
     )
@@ -517,7 +517,7 @@ public class LimitConfigTest {
     @Test
     public fun testScenarioDifference() {
         // Pick up where the winner left off: exclude other schedules' events and
-        // the winner's own control events. Only the winner's one succeeded
+        // the winner's own holdout events. Only the winner's one succeeded
         // execution counts.
         val exclude = ExclusionSet(
             listOf(
@@ -525,7 +525,7 @@ public class LimitConfigTest {
                 ExclusionRule(
                     source = LedgerSource.OwnSchedule,
                     match = LedgerEventMatch.Execution(
-                        results = listOf(LedgerExecutionResult.CONTROL)
+                        results = listOf(LedgerExecutionResult.HOLDOUT)
                     )
                 )
             )
@@ -536,14 +536,14 @@ public class LimitConfigTest {
 
     @Test
     public fun testScenarioContinue() {
-        // Count all shared history, excluding only the winner's own control.
+        // Count all shared history, excluding only the winner's own holdout.
         // 3 succeeded executions remain (1 own + 2 other).
         val exclude = ExclusionSet(
             listOf(
                 ExclusionRule(
                     source = LedgerSource.OwnSchedule,
                     match = LedgerEventMatch.Execution(
-                        results = listOf(LedgerExecutionResult.CONTROL)
+                        results = listOf(LedgerExecutionResult.HOLDOUT)
                     )
                 )
             )
@@ -560,7 +560,7 @@ public class LimitConfigTest {
         // post-reset scope: just the winner's own events.
         val ownEvents = listOf(
             execution(scheduleId = scheduleId, result = LedgerExecutionResult.SUCCEEDED),
-            execution(scheduleId = scheduleId, result = LedgerExecutionResult.CONTROL)
+            execution(scheduleId = scheduleId, result = LedgerExecutionResult.HOLDOUT)
         )
         assertTrue(isOverLimit(limit = 2U, events = ownEvents))
         assertFalse(isOverLimit(limit = 3U, events = ownEvents))

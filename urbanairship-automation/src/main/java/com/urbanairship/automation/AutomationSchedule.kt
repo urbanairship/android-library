@@ -514,7 +514,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
                 sendMetadata = content.optionalField(SEND_METADATA),
                 ledgerConfig = content[LEDGER_CONFIG]?.let(LedgerConfig::fromJson),
                 limitConfig = content[LIMIT_CONFIG]?.let(LimitConfig::fromJson),
-                variantAudience = content[VARIANT_AUDIENCE]?.let { VariantAudience.fromJson(it.optMap()) }
+                variantAudience = content[VARIANT_AUDIENCE]?.let { VariantAudience.fromJson(it.requireMap()) }
             )
         }
     }

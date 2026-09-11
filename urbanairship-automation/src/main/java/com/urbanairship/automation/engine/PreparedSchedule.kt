@@ -132,11 +132,8 @@ public data class VariantAudienceResult(
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): VariantAudienceResult {
             val content = value.requireMap()
-            val rawOutcome = content.requireField<String>(OUTCOME)
-            val outcome = VariantAudience.Outcome.from(rawOutcome)
-                ?: throw JsonException("Invalid variant audience outcome $rawOutcome")
             return VariantAudienceResult(
-                outcome = outcome,
+                outcome = VariantAudience.Outcome.from(content.requireField(OUTCOME)),
                 reportingContext = content[REPORTING_CONTEXT]?.map
             )
         }

@@ -103,6 +103,8 @@ internal class InAppMessageAutomationExecutor(
 
         var result = ScheduleExecuteResult.FINISHED
 
+        val variantOutcome = preparedScheduleInfo.variantAudienceResult?.outcome
+
         // Two unrelated checks (global holdout, and a variant experiment's own no-message
         // arm) can both resolve to holdout for the same schedule at this same last-mile
         // point; either one alone is sufficient, so check global holdout first and treat
@@ -114,22 +116,37 @@ internal class InAppMessageAutomationExecutor(
                 layoutContext = null
             )
             recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.HOLDOUT)
-        } else if (preparedScheduleInfo.variantAudienceResult?.outcome == VariantAudience.Outcome.HOLDOUT) {
-            UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} resolved to variant holdout" }
-            data.analytics.recordEvent(
-                event = LayoutResolutionEvent.variantControl(),
-                layoutContext = null
-            )
-            // Identical to the global holdout mechanism in ledger terms; the two diverge
-            // only in which resolution event they report.
-            recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.HOLDOUT)
-        } else if (preparedScheduleInfo.variantAudienceResult?.outcome == VariantAudience.Outcome.VARIANT_MISS) {
-            UALog.i { "Schedule ${preparedScheduleInfo.scheduleId} resolved to a sibling variant" }
-            data.analytics.recordEvent(
-                event = LayoutResolutionEvent.variantMiss(),
-                layoutContext = null
-            )
-            recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.VARIANT_MISS)
+        } else if (variantOutcome != null && variantOutcome.isDisplaySkipped) {
+            // Gated on the same property InAppMessageAutomationPreparer skips asset caching
+            // on, so the two can't disagree about which outcomes display.
+            UALog.i {
+                "Schedule ${preparedScheduleInfo.scheduleId} skipped display: ${variantOutcome.json}"
+            }
+            when (variantOutcome) {
+                VariantAudience.Outcome.HOLDOUT -> {
+                    data.analytics.recordEvent(
+                        event = LayoutResolutionEvent.variantControl(),
+                        layoutContext = null
+                    )
+                    // Identical to the global holdout mechanism in ledger terms; the two
+                    // diverge only in which resolution event they report.
+                    recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.HOLDOUT)
+                }
+                // An outcome this version can't name still says the experiment resolved to
+                // something other than this schedule's message, which is what variant_miss
+                // reports — the weaker of the two skip claims, so it's the safe one.
+                VariantAudience.Outcome.VARIANT_MISS,
+                is VariantAudience.Outcome.Unknown -> {
+                    data.analytics.recordEvent(
+                        event = LayoutResolutionEvent.variantMiss(),
+                        layoutContext = null
+                    )
+                    recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.VARIANT_MISS)
+                }
+                // isDisplaySkipped already excluded it; listed so a new outcome won't compile
+                // until it picks a side here.
+                VariantAudience.Outcome.MATCHED -> Unit
+            }
         } else {
             try {
                 UALog.i { "Displaying message ${preparedScheduleInfo.scheduleId}" }

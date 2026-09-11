@@ -3,7 +3,6 @@
 package com.urbanairship.audience
 
 import androidx.annotation.RestrictTo
-import com.urbanairship.UALog
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
@@ -35,32 +34,54 @@ public class VariantAudience internal constructor(
     public val reportingContext: JsonMap? = null
 ) : JsonSerializable {
 
-    /** Where a device's resolved hash bucket falls within the experiment. */
+    /**
+     * Where a device's resolved hash bucket falls within the experiment.
+     *
+     * Modelled as a sealed class rather than an enum so an outcome stamped by a newer SDK
+     * still reads back: the resolution is persisted at prepare time and re-read at execute
+     * time, and rejecting the value would take the whole stored schedule with it.
+     */
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public enum class Outcome(public val json: String) {
+    public sealed class Outcome(public val json: String) {
         /** The bucket falls in this schedule's own arm: proceed with a normal execution. */
-        MATCHED("matched"),
+        public data object MATCHED : Outcome("matched")
 
         /** The bucket falls in the experiment's shared no-message arm. */
-        HOLDOUT("holdout"),
+        public data object HOLDOUT : Outcome("holdout")
 
         /**
          * The bucket falls in neither this arm nor the holdout arm — some sibling schedule's
          * arm owns it.
          */
-        VARIANT_MISS("variant_miss");
+        public data object VARIANT_MISS : Outcome("variant_miss")
 
         /**
-         * True for [HOLDOUT] and [VARIANT_MISS] — the outcomes where this schedule does not
-         * display.
+         * An outcome this SDK version does not recognize, carrying the value it was stamped
+         * with so a rewrite round-trips it rather than flattening it to a placeholder.
+         * Display is skipped: a schedule whose resolution this version can't read must not
+         * display on the strength of not understanding it.
          */
+        public data class Unknown(public val rawValue: String) : Outcome(rawValue)
+
+        /** True for every outcome but [MATCHED] — the ones where this schedule does not display. */
         public val isDisplaySkipped: Boolean
             get() = this != MATCHED
 
         /** @hide */
         @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public companion object {
-            public fun from(value: String): Outcome? = entries.firstOrNull { it.json == value }
+            /**
+             * Every outcome this SDK version recognizes.
+             *
+             * Deliberately lazy: building this list eagerly would read the nested objects
+             * from the companion's own initializer, which runs while the sealed class is
+             * still initializing, and each element would come back null.
+             */
+            private val known: List<Outcome> by lazy { listOf(MATCHED, HOLDOUT, VARIANT_MISS) }
+
+            /** Never rejects an unrecognized outcome: it becomes [Unknown]. */
+            public fun from(value: String): Outcome =
+                known.firstOrNull { it.json == value } ?: Unknown(value)
         }
     }
 
@@ -72,24 +93,34 @@ public class VariantAudience internal constructor(
         private const val KEY_HOLDOUT_SUBSET = "holdout_subset"
         private const val KEY_REPORTING_CONTEXT = "reporting_context"
 
-        public fun fromJson(json: JsonMap): VariantAudience? {
-            try {
-                val hash = AudienceHash.fromJson(json.require(KEY_HASH).optMap())
-                    ?: return null
+        /**
+         * Parses a `variant_audience` payload.
+         *
+         * Throws rather than returning null for a payload it can't read. A schedule whose
+         * experiment this version can't evaluate must not fall back to displaying to
+         * everyone, so the failure has to reach the caller and take the schedule with it.
+         *
+         * @param json The `variant_audience` payload.
+         * @return The parsed [VariantAudience].
+         * @throws JsonException if any part of the payload is missing or unreadable.
+         */
+        @Throws(JsonException::class)
+        public fun fromJson(json: JsonMap): VariantAudience {
+            val hash = AudienceHash.fromJson(json.require(KEY_HASH).requireMap())
+                ?: throw JsonException("Invalid variant audience hash in $json")
 
-                val audienceSubset = BucketSubset.fromJson(json.require(KEY_AUDIENCE_SUBSET).optMap())
-                    ?: return null
+            val audienceSubset = BucketSubset.fromJson(json.require(KEY_AUDIENCE_SUBSET).requireMap())
+                ?: throw JsonException("Invalid variant audience subset in $json")
 
-                return VariantAudience(
-                    hash = hash,
-                    audienceSubset = audienceSubset,
-                    holdoutSubset = json[KEY_HOLDOUT_SUBSET]?.let { BucketSubset.fromJson(it.optMap()) },
-                    reportingContext = json[KEY_REPORTING_CONTEXT]?.map
-                )
-            } catch (ex: JsonException) {
-                UALog.e { "failed to parse VariantAudience from json $json" }
-                return null
-            }
+            return VariantAudience(
+                hash = hash,
+                audienceSubset = audienceSubset,
+                holdoutSubset = json[KEY_HOLDOUT_SUBSET]?.let {
+                    BucketSubset.fromJson(it.requireMap())
+                        ?: throw JsonException("Invalid variant audience holdout subset in $json")
+                },
+                reportingContext = json[KEY_REPORTING_CONTEXT]?.map
+            )
         }
     }
 

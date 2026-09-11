@@ -106,7 +106,7 @@ internal data class AudienceHash(
             .put(KEY_PREFIX, prefix)
             .put(KEY_IDENTIFIERS, property.jsonValue)
             .put(KEY_ALGORITHM, algorithm.jsonValue)
-            .put(KEY_SEED, (seed ?: 0))
+            .put(KEY_SEED, seed?.let(JsonValue::wrap))
             .put(KEY_HASH_BUCKETS, numberOfHashBuckets)
             .put(KEY_OVERRIDES, overrides)
             .build()

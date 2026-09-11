@@ -227,11 +227,15 @@ public class InAppMessageAutomationExecutorTest {
         every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
         coEvery { assetManager.clearCache(any()) } just runs
 
-        every { analytics.recordEvent(any(), any()) } answers {
-            assertEquals(LayoutResolutionEvent.control(experimentResult).eventType, firstArg<LayoutEvent>().eventType)
-        }
+        val recordedEvents = mutableListOf<LayoutEvent>()
+        every { analytics.recordEvent(any(), any()) } answers { recordedEvents.add(firstArg()) }
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        assertEquals(
+            listOf(LayoutResolutionEvent.control(experimentResult).data?.toJsonValue()),
+            recordedEvents.map { it.data?.toJsonValue() }
+        )
 
         assertEquals(
             listOf(
@@ -268,13 +272,15 @@ public class InAppMessageAutomationExecutorTest {
         every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
         coEvery { assetManager.clearCache(any()) } just runs
 
-        every { analytics.recordEvent(any(), any()) } answers {
-            assertEquals(LayoutResolutionEvent.control(experimentResult).eventType, firstArg<LayoutEvent>().eventType)
-        }
+        val recordedEvents = mutableListOf<LayoutEvent>()
+        every { analytics.recordEvent(any(), any()) } answers { recordedEvents.add(firstArg()) }
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
 
-        verify(exactly = 1) { analytics.recordEvent(any(), any()) }
+        assertEquals(
+            listOf(LayoutResolutionEvent.control(experimentResult).data?.toJsonValue()),
+            recordedEvents.map { it.data?.toJsonValue() }
+        )
 
         assertEquals(
             listOf(
@@ -300,11 +306,15 @@ public class InAppMessageAutomationExecutorTest {
         every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
         coEvery { assetManager.clearCache(any()) } just runs
 
-        every { analytics.recordEvent(any(), any()) } answers {
-            assertEquals(LayoutResolutionEvent.variantControl().eventType, firstArg<LayoutEvent>().eventType)
-        }
+        val recordedEvents = mutableListOf<LayoutEvent>()
+        every { analytics.recordEvent(any(), any()) } answers { recordedEvents.add(firstArg()) }
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        assertEquals(
+            listOf(LayoutResolutionEvent.variantControl().data?.toJsonValue()),
+            recordedEvents.map { it.data?.toJsonValue() }
+        )
 
         // A variant experiment's own holdout arm is indistinguishable from the global holdout
         // mechanism in ledger terms, even though it reports its own resolution event.
@@ -332,11 +342,56 @@ public class InAppMessageAutomationExecutorTest {
         every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
         coEvery { assetManager.clearCache(any()) } just runs
 
-        every { analytics.recordEvent(any(), any()) } answers {
-            assertEquals(LayoutResolutionEvent.variantMiss().eventType, firstArg<LayoutEvent>().eventType)
-        }
+        val recordedEvents = mutableListOf<LayoutEvent>()
+        every { analytics.recordEvent(any(), any()) } answers { recordedEvents.add(firstArg()) }
 
         assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        assertEquals(
+            listOf(LayoutResolutionEvent.variantMiss().data?.toJsonValue()),
+            recordedEvents.map { it.data?.toJsonValue() }
+        )
+
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = info.scheduleId,
+                    sharedId = null,
+                    triggerId = null,
+                    result = LedgerExecutionResult.VARIANT_MISS,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    @Test
+    public fun testExecuteUnknownVariantOutcomeSkipsDisplay(): TestResult = runTest {
+        // An outcome stamped by a newer SDK must not display just because this version can't
+        // name it. It reports as a variant miss: "not this schedule's message" is all an
+        // unreadable outcome still tells us.
+        val info = preparedInfo.copy(
+            variantAudienceResult = VariantAudienceResult(
+                outcome = VariantAudience.Outcome.Unknown("some_future_arm")
+            )
+        )
+
+        every { displayCoordinator.messageWillDisplay(any()) } just runs
+        every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
+        coEvery { assetManager.clearCache(any()) } just runs
+
+        val recordedEvents = mutableListOf<LayoutEvent>()
+        every { analytics.recordEvent(any(), any()) } answers { recordedEvents.add(firstArg()) }
+
+        assertEquals(execute(info), ScheduleExecuteResult.FINISHED)
+
+        coVerify(exactly = 0) { displayAdapter.display(any(), any()) }
+
+        assertEquals(
+            listOf(LayoutResolutionEvent.variantMiss().data?.toJsonValue()),
+            recordedEvents.map { it.data?.toJsonValue() }
+        )
 
         assertEquals(
             listOf(

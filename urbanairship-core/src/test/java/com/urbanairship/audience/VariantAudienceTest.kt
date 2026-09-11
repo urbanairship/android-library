@@ -1,6 +1,7 @@
 package com.urbanairship.audience
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -43,7 +44,7 @@ public class VariantAudienceTest {
             }
         """.trimIndent()
 
-        return requireNotNull(VariantAudience.fromJson(JsonValue.parseString(json).requireMap()))
+        return VariantAudience.fromJson(JsonValue.parseString(json).requireMap())
     }
 
     @Test
@@ -116,5 +117,76 @@ public class VariantAudienceTest {
         assertFalse(VariantAudience.Outcome.MATCHED.isDisplaySkipped)
         assertTrue(VariantAudience.Outcome.HOLDOUT.isDisplaySkipped)
         assertTrue(VariantAudience.Outcome.VARIANT_MISS.isDisplaySkipped)
+        assertTrue(VariantAudience.Outcome.Unknown("some_future_arm").isDisplaySkipped)
+    }
+
+    @Test
+    public fun testOutcomeFrom() {
+        assertEquals(VariantAudience.Outcome.MATCHED, VariantAudience.Outcome.from("matched"))
+        assertEquals(VariantAudience.Outcome.HOLDOUT, VariantAudience.Outcome.from("holdout"))
+        assertEquals(VariantAudience.Outcome.VARIANT_MISS, VariantAudience.Outcome.from("variant_miss"))
+    }
+
+    @Test
+    public fun testOutcomeFromKeepsAnUnrecognizedValue() {
+        val outcome = VariantAudience.Outcome.from("some_future_arm")
+        assertEquals(VariantAudience.Outcome.Unknown("some_future_arm"), outcome)
+        assertEquals("some_future_arm", outcome.json)
+    }
+
+    @Test(expected = JsonException::class)
+    public fun testParseRejectsAnUnreadableHash() {
+        VariantAudience.fromJson(
+            JsonValue.parseString(
+                """
+                {
+                    "audience_hash": {
+                        "hash_prefix": "prefix:",
+                        "num_hash_buckets": 16384,
+                        "hash_identifier": "contact",
+                        "hash_algorithm": "some_future_algorithm"
+                    },
+                    "audience_subset": { "min_hash_bucket": 0, "max_hash_bucket": 1 }
+                }
+                """.trimIndent()
+            ).requireMap()
+        )
+    }
+
+    @Test(expected = JsonException::class)
+    public fun testParseRejectsAMissingSubset() {
+        VariantAudience.fromJson(
+            JsonValue.parseString(
+                """
+                {
+                    "audience_hash": {
+                        "hash_prefix": "prefix:",
+                        "num_hash_buckets": 16384,
+                        "hash_identifier": "contact",
+                        "hash_algorithm": "farm_hash"
+                    }
+                }
+                """.trimIndent()
+            ).requireMap()
+        )
+    }
+
+    @Test(expected = JsonException::class)
+    public fun testParseRejectsANonMapSubset() {
+        VariantAudience.fromJson(
+            JsonValue.parseString(
+                """
+                {
+                    "audience_hash": {
+                        "hash_prefix": "prefix:",
+                        "num_hash_buckets": 16384,
+                        "hash_identifier": "contact",
+                        "hash_algorithm": "farm_hash"
+                    },
+                    "audience_subset": "not a map"
+                }
+                """.trimIndent()
+            ).requireMap()
+        )
     }
 }

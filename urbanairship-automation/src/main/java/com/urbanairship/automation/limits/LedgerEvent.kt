@@ -64,9 +64,6 @@ internal sealed class LedgerExecutionResult(internal val json: String) : JsonSer
      */
     data object HOLDOUT : LedgerExecutionResult("holdout")
 
-    /** A result this SDK version does not yet assign any meaning to. */
-    data object CONTROL : LedgerExecutionResult("control")
-
     /**
      * Reached the same last mile as [HOLDOUT], but the resolved hash bucket
      * landed in neither this schedule's own arm nor its holdout arm — i.e.
@@ -105,7 +102,7 @@ internal sealed class LedgerExecutionResult(internal val json: String) : JsonSer
          * null.
          */
         internal val known: List<LedgerExecutionResult> by lazy {
-            listOf(SUCCEEDED, HOLDOUT, CONTROL, VARIANT_MISS, AUDIENCE_MISS, BACKFILL)
+            listOf(SUCCEEDED, HOLDOUT, VARIANT_MISS, AUDIENCE_MISS, BACKFILL)
         }
 
         /**

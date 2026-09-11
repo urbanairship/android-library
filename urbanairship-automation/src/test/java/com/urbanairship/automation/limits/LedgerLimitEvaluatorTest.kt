@@ -198,7 +198,7 @@ public class LedgerLimitEvaluatorTest {
                       "or": [
                         {
                           "source": { "type": "own_schedule" },
-                          "match": { "type": "execution", "results": ["control"] }
+                          "match": { "type": "execution", "results": ["holdout"] }
                         }
                       ]
                     }
@@ -214,7 +214,7 @@ public class LedgerLimitEvaluatorTest {
             ExclusionRule(
                 source = LedgerSource.OwnSchedule,
                 match = LedgerEventMatch.Execution(
-                    results = listOf(LedgerExecutionResult.CONTROL)
+                    results = listOf(LedgerExecutionResult.HOLDOUT)
                 )
             ),
             schedule.limitConfig?.exclude?.or?.firstOrNull()
