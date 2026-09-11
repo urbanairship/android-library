@@ -51,7 +51,7 @@ internal class LabelView(
         truncatesToHeight && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
     /**
-     * Drives redraws for the inline start icon, which an animated drawable can't do for itself.
+     * Drives redraws for the inline icons, which an animated drawable can't do for itself.
      *
      * A compound drawable gets this from `TextView`, which registers itself as the callback; a
      * span drawable has none, so `invalidateSelf` goes nowhere and an animation advances its
@@ -239,12 +239,6 @@ internal class LabelView(
         }
 
         val size = resolvedState.textAppearance.fontSize
-        setCompoundDrawables(
-            null,
-            null,
-            getSizedDrawable(resolvedState.iconEnd, size, HorizontalPosition.END),
-            null
-        )
 
         LayoutUtils.applyLabel(
             this,
@@ -253,23 +247,21 @@ internal class LabelView(
             resolvedState.text
         )
 
-        // The start icon rides in the text, not in a compound drawable: a compound drawable sits
-        // against the view's content edge, so on a label wider than its text — a centred button
-        // label, say — it strands the icon away from the words it belongs to. The end icon stays
-        // a compound drawable, because sitting at the trailing edge is what it should do once the
-        // label is wider than its text.
-        getSizedDrawable(resolvedState.iconStart, size, HorizontalPosition.START)?.let { icon ->
-            icon.callback = spanDrawableCallback
-            text = SpannableStringBuilder(ICON_PLACEHOLDER)
-                .append(text)
-                .apply {
-                    setSpan(
-                        CenteredImageSpan(icon),
-                        0,
-                        ICON_PLACEHOLDER.length,
-                        Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-                    )
-                }
+        // Both icons ride in the text rather than in compound drawables. A compound drawable
+        // sits against the view's content edge, which on a label wider than its text — a
+        // centred button label, say — strands the icon away from the words it belongs to and
+        // makes the authored `space` between them meaningless. Inline, the icons travel with
+        // whatever alignment applies and `space` means the same thing on both sides.
+        val startIcon = getSizedDrawable(resolvedState.iconStart, size, HorizontalPosition.START)
+        val endIcon = getSizedDrawable(resolvedState.iconEnd, size, HorizontalPosition.END)
+
+        if (startIcon != null || endIcon != null) {
+            val labelText = text
+            text = SpannableStringBuilder().apply {
+                startIcon?.let { appendIcon(it) }
+                append(labelText)
+                endIcon?.let { appendIcon(it) }
+            }
         }
 
         this.lastState = resolvedState
@@ -287,16 +279,13 @@ internal class LabelView(
         val size = spToPx(context, size).toInt()
         val space = spToPx(context, resolvedIcon.space).toInt()
 
-        // An InsetDrawable puts the gap between the icon and the text, so which side it goes on
-        // depends on which side the text is.
-        //
-        // The end icon is a compound drawable in the absolute right slot, so the text is always
-        // to its left. The start icon is inline and moves with the paragraph, so in RTL it sits
-        // to the right of the text and the gap has to move with it.
+        // An InsetDrawable puts the gap between the icon and the text, so it goes on whichever
+        // side the text is: the start icon leads the text and the end icon trails it, and RTL
+        // swaps which physical side that is.
         //
         // `isLayoutRtl` rather than the view's `layoutDirection`: this runs on the first render,
         // before the view is attached, and an unattached view has no resolved direction yet.
-        val gapOnLeft = position == HorizontalPosition.END || isLayoutRtl
+        val gapOnLeft = (position == HorizontalPosition.END) != isLayoutRtl
 
         val finalDrawable = InsetDrawable(
             drawable,
@@ -310,8 +299,20 @@ internal class LabelView(
         return finalDrawable
     }
 
+    /**
+     * Appends [icon] as an inline span, registering the callback that lets it redraw itself.
+     *
+     * @param icon The icon to append.
+     */
+    private fun SpannableStringBuilder.appendIcon(icon: Drawable) {
+        icon.callback = spanDrawableCallback
+        val start = length
+        append(ICON_PLACEHOLDER)
+        setSpan(CenteredImageSpan(icon), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+    }
+
     private companion object {
-        /** Stands in for the inline start icon; `U+FFFC` is not spoken by screen readers. */
+        /** Stands in for an inline icon; `U+FFFC` is not spoken by screen readers. */
         const val ICON_PLACEHOLDER = "\uFFFC"
     }
 }

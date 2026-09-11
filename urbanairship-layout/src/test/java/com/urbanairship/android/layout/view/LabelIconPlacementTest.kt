@@ -5,6 +5,7 @@ import android.graphics.Rect
 import android.graphics.drawable.InsetDrawable
 import android.text.Spanned
 import android.text.style.ImageSpan
+import com.urbanairship.Airship
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.info.LabelInfo
@@ -12,12 +13,12 @@ import com.urbanairship.android.layout.model.ItemProperties
 import com.urbanairship.android.layout.model.LabelModel
 import com.urbanairship.android.layout.model.ModelProperties
 import com.urbanairship.json.JsonValue
-import com.urbanairship.Airship
 import com.urbanairship.locale.LocaleManager
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.unmockkObject
+import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -27,19 +28,19 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertTrue
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import java.util.Locale
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.RuntimeEnvironment
 
 /**
- * A start icon has to travel with the text, so a label wider than its text — a centred button
- * label — keeps the icon beside the words instead of against the view's edge. An end icon does
- * the opposite: the trailing edge is where it belongs once the label has room to spare.
+ * Both icons travel with the text, so a label wider than its text — a centred button label —
+ * keeps them beside the words rather than against its edges, and the authored `space` between
+ * icon and text means the same thing on both sides. This matches the web renderer; a compound
+ * drawable can do neither.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(RobolectricTestRunner::class)
@@ -73,17 +74,36 @@ public class LabelIconPlacementTest {
 
     @Test
     public fun testStartIconIsInlineWithTheText() {
-        val view = labelView(iconKey = "icon_start")
+        val view = labelView(startIcon = true)
 
-        assertNull(view.compoundDrawables[LEFT])
-        assertNotNull(spans(view).singleOrNull())
+        assertNoCompoundDrawables(view)
+        assertEquals(1, spans(view).size)
     }
 
     @Test
-    public fun testEndIconStaysOnTheTrailingEdge() {
-        val view = labelView(iconKey = "icon_end")
+    public fun testEndIconIsInlineWithTheText() {
+        val view = labelView(endIcon = true)
 
-        assertNotNull(view.compoundDrawables[RIGHT])
+        assertNoCompoundDrawables(view)
+        assertEquals(1, spans(view).size)
+    }
+
+    /** The start icon leads the text and the end icon trails it. */
+    @Test
+    public fun testBothIconsBracketTheText() {
+        val view = labelView(startIcon = true, endIcon = true)
+        val text = view.text as Spanned
+
+        assertEquals(2, spans(view).size)
+        assertEquals(0, text.getSpanStart(spans(view).first()))
+        assertEquals(text.length, text.getSpanEnd(spans(view).last()))
+    }
+
+    @Test
+    public fun testTextIsUntouchedWithoutIcons() {
+        val view = labelView()
+
+        assertNoCompoundDrawables(view)
         assertEquals(0, spans(view).size)
     }
 
@@ -93,74 +113,62 @@ public class LabelIconPlacementTest {
      * drawable only has the one set here.
      */
     @Test
-    public fun testStartIconCanInvalidateTheLabel() {
-        val view = labelView(iconKey = "icon_start")
-        val icon = spans(view).single().drawable
+    public fun testIconsCanInvalidateTheLabel() {
+        val view = labelView(startIcon = true, endIcon = true)
 
-        assertNotNull(icon.callback)
+        spans(view).forEach { span ->
+            assertNotNull(span.drawable.callback)
 
-        // And it reaches the view, rather than being dropped by verifyDrawable the way
-        // registering the View itself would be.
-        val shadow = org.robolectric.Shadows.shadowOf(view)
-        shadow.clearWasInvalidated()
-        icon.invalidateSelf()
-        assertTrue(shadow.wasInvalidated())
+            // And it reaches the view, rather than being dropped by verifyDrawable the way
+            // registering the View itself would be.
+            val shadow = org.robolectric.Shadows.shadowOf(view)
+            shadow.clearWasInvalidated()
+            span.drawable.invalidateSelf()
+            assertTrue(shadow.wasInvalidated())
+        }
     }
 
     /**
-     * The gap belongs between the icon and the text. The start icon is inline, so in RTL it
-     * renders to the right of the text and the gap has to move to its left with it.
+     * The gap belongs between the icon and the text, so it sits on whichever side the text is:
+     * the start icon leads, the end icon trails, and RTL swaps which physical side that is.
      */
     @Test
-    public fun testStartIconGapSitsAfterTheIconInLtr() {
-        assertEquals(0, innerBounds(iconKey = "icon_start").left)
+    public fun testGapSidesInLtr() {
+        assertEquals(0, insetBounds(startIcon = true).left)
+        assertTrue(insetBounds(endIcon = true).left > 0)
     }
 
     @Test
-    public fun testStartIconGapSitsBeforeTheIconInRtl() {
+    public fun testGapSidesInRtl() {
         airshipLocale = Locale.forLanguageTag("ar-EG")
-        assertTrue(innerBounds(iconKey = "icon_start").left > 0)
-    }
 
-    /** The end icon is absolutely positioned, so its gap never moves. */
-    @Test
-    public fun testEndIconGapDoesNotMoveInRtl() {
-        airshipLocale = Locale.forLanguageTag("ar-EG")
-        assertTrue(innerBounds(iconKey = "icon_end").left > 0)
+        assertTrue(insetBounds(startIcon = true).left > 0)
+        assertEquals(0, insetBounds(endIcon = true).left)
     }
 
     /** The child rect inside the icon's [InsetDrawable], which reveals which side the gap is on. */
-    private fun innerBounds(iconKey: String): Rect {
-        val view = labelView(iconKey)
-        val icon = if (iconKey == "icon_start") {
-            spans(view).single().drawable
-        } else {
-            view.compoundDrawables[RIGHT]
-        }
+    private fun insetBounds(startIcon: Boolean = false, endIcon: Boolean = false): Rect {
+        val view = labelView(startIcon = startIcon, endIcon = endIcon)
+        val icon = spans(view).single().drawable
         return (icon as InsetDrawable).drawable!!.bounds
     }
 
-    @Test
-    public fun testTextIsUntouchedWithoutIcons() {
-        val view = labelView(iconKey = null)
-
-        assertNull(view.compoundDrawables[LEFT])
-        assertNull(view.compoundDrawables[RIGHT])
-        assertEquals(0, spans(view).size)
+    private fun assertNoCompoundDrawables(view: LabelView) {
+        view.compoundDrawables.forEach { assertNull(it) }
     }
 
-    private fun spans(view: LabelView): Array<out ImageSpan> {
+    private fun spans(view: LabelView): List<ImageSpan> {
         val text = view.text
         if (text !is Spanned) {
-            return emptyArray()
+            return emptyList()
         }
         return text.getSpans(0, text.length, ImageSpan::class.java)
+            .sortedBy { text.getSpanStart(it) }
     }
 
-    private fun labelView(iconKey: String?): LabelView {
-        val icon = iconKey?.let {
-            """
-            , "$it": {
+    private fun labelView(startIcon: Boolean = false, endIcon: Boolean = false): LabelView {
+        fun icon(key: String) = """
+            , "$key": {
                 "type": "floating",
                 "space": 8,
                 "icon": {
@@ -170,8 +178,7 @@ public class LabelIconPlacementTest {
                     "scale": 1
                 }
             }
-            """
-        } ?: ""
+        """
 
         val info = LabelInfo(
             JsonValue.parseString(
@@ -184,7 +191,8 @@ public class LabelIconPlacementTest {
                         "alignment": "center",
                         "color": { "default": { "hex": "#000000", "alpha": 1 } }
                     }
-                    $icon
+                    ${if (startIcon) icon("icon_start") else ""}
+                    ${if (endIcon) icon("icon_end") else ""}
                 }
                 """
             ).requireMap()
@@ -196,10 +204,5 @@ public class LabelIconPlacementTest {
             mockk(relaxed = true),
             ItemProperties(size = null)
         ) as LabelView
-    }
-
-    private companion object {
-        const val LEFT = 0
-        const val RIGHT = 2
     }
 }
