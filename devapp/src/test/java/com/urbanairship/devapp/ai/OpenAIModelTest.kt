@@ -4,6 +4,8 @@ package com.urbanairship.devapp.ai
 import com.urbanairship.json.AirshipJsonSchema
 import com.urbanairship.json.JsonValue
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -98,6 +100,23 @@ class OpenAIModelTest {
             ),
             strictSchemaOf(schema)
         )
+    }
+
+    /**
+     * `properties: null` means "any object" in AirshipJsonSchema. Strict mode has no way to
+     * say that, and defaulting to an empty property map would hand the model a schema only
+     * `{}` satisfies — so the conversion refuses instead of quietly narrowing it.
+     */
+    @Test
+    fun testOpenObjectIsRejectedRatherThanForcedEmpty() {
+        val schema = AirshipJsonSchema.fromJson(
+            JsonValue.parseString("""{ "type": "object" }""")
+        )
+
+        val thrown = assertThrows(IllegalArgumentException::class.java) {
+            strictSchemaOf(schema)
+        }
+        assertTrue(thrown.message!!.contains("open object"))
     }
 
     private fun strictSchemaOf(schema: AirshipJsonSchema): JsonValue =

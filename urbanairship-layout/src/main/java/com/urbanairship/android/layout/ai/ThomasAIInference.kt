@@ -7,6 +7,7 @@ import com.urbanairship.ai.Evaluation
 import com.urbanairship.ai.EvaluationContext
 import com.urbanairship.ai.EvaluationResult
 import com.urbanairship.ai.InternalAirshipAi
+import com.urbanairship.ai.ModelAdapter
 import com.urbanairship.ai.ModelAvailability
 import com.urbanairship.ai.Usage
 import com.urbanairship.json.AirshipJsonSchema
@@ -15,6 +16,8 @@ import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.util.UUID
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
@@ -82,21 +85,30 @@ internal interface ThomasAIInference {
 /**
  * [ThomasAIInference] backed by the SDK's AI manager.
  *
- * The model is resolved once, at construction: the app's resolver isn't re-consulted per
- * keystroke, and [statusUpdates] follows that one model.
+ * The model is resolved per use, not once at construction. A scene can be built before the app
+ * registers its resolver — `Autopilot.onAirshipReady()` is the documented place to do it, and an
+ * activity restored after process death constructs its layout earlier still — and a model cached
+ * from that moment would strand the scene for its whole lifetime.
  */
 internal class DefaultThomasAIInference(
     private val ai: InternalAirshipAi
 ) : ThomasAIInference {
 
-    private val model = ai.gatedModel(Usage.sceneTextInput)
+    private val model: ModelAdapter?
+        get() = ai.gatedModel(Usage.sceneTextInput)
 
     override val isAvailable: Boolean
         get() = model?.availability == ModelAvailability.Available
 
-    override val statusUpdates: Flow<ThomasAIStatus> =
-        model?.availabilityUpdates?.map { ThomasAIStatus(it == ModelAvailability.Available) }
+    // Resolved when collected rather than when constructed, for the same reason. A collector
+    // that subscribes before the app has a resolver still reports "unavailable" for its whole
+    // subscription, so this narrows the window rather than closing it.
+    override val statusUpdates: Flow<ThomasAIStatus> = flow {
+        val updates = model?.availabilityUpdates
+            ?.map { ThomasAIStatus(it == ModelAvailability.Available) }
             ?: flowOf(ThomasAIStatus(textInputInference = false))
+        emitAll(updates)
+    }
 
     override suspend fun run(request: ThomasAIInferenceRequest): JsonValue? {
         val result = ai.evaluate(
@@ -119,9 +131,17 @@ internal class DefaultThomasAIInference(
 
     internal companion object {
 
-        /** The manager-backed inference, or `null` before takeOff. */
+        /**
+         * The manager-backed inference, or `null` until Airship is flying.
+         *
+         * Gated on [Airship.isFlying], not `isFlyingOrTakingOff`: `Airship.internalAi` waits
+         * for readiness, and this is constructed on the main thread from every layout host
+         * (`ModalActivity.onCreate`, `EmbeddedLayout`, `BannerLayout`,
+         * `ThomasLayoutViewFactory`). During `TAKING_OFF` that wait would block the main
+         * thread until takeoff finished.
+         */
         fun create(): ThomasAIInference? =
-            if (Airship.isFlyingOrTakingOff) DefaultThomasAIInference(Airship.internalAi) else null
+            if (Airship.isFlying) DefaultThomasAIInference(Airship.internalAi) else null
     }
 }
 

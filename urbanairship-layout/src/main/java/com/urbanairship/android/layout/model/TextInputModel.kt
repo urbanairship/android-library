@@ -288,7 +288,13 @@ internal class TextInputModel(
                         ?.let { ThomasAIInferenceOutcome.Complete(it, inference.outputSchema) }
                         ?: ThomasAIInferenceOutcome.Failed
 
-                    lastInference = text to outcome
+                    // Only a real answer is memoized. A cached failure is never retried:
+                    // the early return above short-circuits before the fetcher, and the
+                    // fetcher's own retry backoff never applies because a failure resolves
+                    // as `Valid`, not `Error`.
+                    if (outcome is ThomasAIInferenceOutcome.Complete) {
+                        lastInference = text to outcome
+                    }
 
                     ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
                         result = result.copy(aiInference = outcome)

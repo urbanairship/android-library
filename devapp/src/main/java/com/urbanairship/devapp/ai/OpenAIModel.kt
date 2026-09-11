@@ -12,7 +12,9 @@ import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.time.Duration.Companion.seconds
+import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.job
 import kotlinx.coroutines.withContext
 
 /**
@@ -53,7 +55,7 @@ class OpenAIModel(
         parseContent(post(body))
     }
 
-    private fun post(body: JsonMap): JsonValue {
+    private suspend fun post(body: JsonMap): JsonValue {
         val connection = (URL(ENDPOINT).openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             connectTimeout = CONNECT_TIMEOUT.inWholeMilliseconds.toInt()
@@ -62,6 +64,11 @@ class OpenAIModel(
             setRequestProperty("Content-Type", "application/json")
             doOutput = true
         }
+
+        // HttpURLConnection doesn't observe coroutine cancellation, so a superseded keystroke
+        // would otherwise keep paying for a call whose answer is already discarded. Closing the
+        // socket is what actually stops it.
+        val cancellation = coroutineContext.job.invokeOnCompletion { connection.disconnect() }
 
         try {
             connection.outputStream.use { it.write(body.toString().toByteArray()) }
@@ -76,6 +83,7 @@ class OpenAIModel(
 
             return JsonValue.parseString(response)
         } finally {
+            cancellation.dispose()
             connection.disconnect()
         }
     }
@@ -111,7 +119,13 @@ class OpenAIModel(
          */
         internal fun strictSchema(schema: AirshipJsonSchema): JsonMap = when (val type = schema.type) {
             is AirshipJsonSchema.ValueType.ObjectType -> {
-                val properties = type.properties ?: emptyMap()
+                // `properties == null` means "any object" in AirshipJsonSchema, which strict
+                // mode cannot express: it requires every property be listed and
+                // `additionalProperties` be false. Defaulting to an empty map would quietly
+                // produce a schema only `{}` satisfies, so say so instead.
+                val properties = requireNotNull(type.properties) {
+                    "OpenAI strict mode cannot express an open object; give the schema explicit properties"
+                }
                 val required = type.required?.toSet() ?: emptySet()
                 jsonMapOf(
                     "type" to "object",

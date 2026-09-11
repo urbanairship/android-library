@@ -157,6 +157,31 @@ public class TextInputInferenceTest {
         )
     }
 
+    @Test
+    public fun testFailedAnswerIsNotMemoized(): TestResult = runTest(testDispatcher) {
+        // The memo holds one entry, so only text that resolves to the same string as the
+        // previous evaluation reaches it — the mirror of testUnchangedTextReusesTheAnswer.
+        // A failure parked there is never retried: the memo short-circuits before the
+        // fetcher, and the fetcher's retry backoff never applies because a failure resolves
+        // as valid rather than as an error.
+        val model = model(withInference = true)
+
+        inference.response = null
+        type(model, "late")
+        assertEquals(
+            JsonValue.parseString("""{ "result": "failed" }"""),
+            field().formData(withState = false).get("ai_inference")
+        )
+
+        inference.response = JsonValue.parseString("""{ "topic": "shipping" }""")
+        type(model, "late ")
+
+        assertEquals(
+            JsonValue.parseString("""{ "result": "success", "output": { "topic": "shipping" } }"""),
+            field().formData(withState = false).get("ai_inference")
+        )
+    }
+
     private fun TestScope.type(model: TextInputModel, value: String) {
         model.onViewAttached(mockView)
         textFlow.value = value
