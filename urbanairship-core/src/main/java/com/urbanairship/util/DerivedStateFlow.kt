@@ -97,6 +97,11 @@ public fun <T1, T2, T3, T4, T5, TR> combineStates(
     )
 }
 
+/**
+ * kotlinx types `combine` only up to five flows. Past that it offers a vararg form that hands
+ * back an `Array<*>`, so every argument would need an unchecked cast — the sixth flow is folded
+ * in over a second combine instead, against a partially applied [transform].
+ */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public fun <T1, T2, T3, T4, T5, T6, TR> combineStates(
     flow1: StateFlow<T1>,
@@ -106,21 +111,9 @@ public fun <T1, T2, T3, T4, T5, T6, TR> combineStates(
     flow5: StateFlow<T5>,
     flow6: StateFlow<T6>,
     transform: (t1: T1, t2: T2, t3: T3, t4: T4, t5: T5, t6: T6) -> TR
-): StateFlow<TR> {
-    return DerivedStateFlow(
-        onValue = {
-            transform(flow1.value, flow2.value, flow3.value, flow4.value, flow5.value, flow6.value)
-        },
-        updates = combine(flow1, flow2, flow3, flow4, flow5, flow6) { values ->
-            @Suppress("UNCHECKED_CAST")
-            transform(
-                values[0] as T1,
-                values[1] as T2,
-                values[2] as T3,
-                values[3] as T4,
-                values[4] as T5,
-                values[5] as T6
-            )
-        }
-    )
-}
+): StateFlow<TR> = combineStates(
+    combineStates(flow1, flow2, flow3, flow4, flow5) { t1, t2, t3, t4, t5 ->
+        { t6: T6 -> transform(t1, t2, t3, t4, t5, t6) }
+    },
+    flow6
+) { partial, t6 -> partial(t6) }
