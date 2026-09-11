@@ -2,7 +2,6 @@
 package com.urbanairship.android.layout.widget
 
 import android.view.View
-import android.view.ViewGroup
 
 /**
  * Interface for Views that measure their content unbounded on an axis and can say what size
@@ -76,50 +75,6 @@ internal interface AutoSizeProvider {
 
     /** True when this view sizes itself to its content on the axis, rather than to an allowance. */
     fun isAutoSized(horizontal: Boolean): Boolean
-}
-
-/**
- * Whether the length this view was given on an axis is slack inherited from an auto-sized ancestor.
- *
- * Walks up to the nearest view that can answer, the same way [borrowedPercentBase] does and for the
- * same reason: the wrapper views in between — button and toggle layouts, async layouts — hold no
- * size of their own and pass their spec straight through, so they'd only have to forward the answer
- * unchanged. The first ancestor that owns a length is the one that decides.
- *
- * Returns false when nothing above answers, which keeps the existing behaviour for any hierarchy
- * this doesn't model.
- */
-internal fun View.hasAutoSizedAncestor(horizontal: Boolean): Boolean {
-    var node = parent
-    while (node is View) {
-        if (node is AutoSizeProvider) return node.isAutoSized(horizontal)
-        node = node.parent
-    }
-    return false
-}
-
-/**
- * Whether the length this view was offered on an axis was measured out of content it is part of,
- * rather than written by the author.
- *
- * Stronger than [hasAutoSizedAncestor], which reads the spec a view was handed: a stack that has
- * settled its own length hands its `auto` children exact lengths — its cross axis, or a ration of
- * its main one — and those children then report a length of their own. The number is still their
- * subtree's extent divided up, so the walk carries on past them.
- *
- * A view whose own item states a length stops it: that length is a box, however the stack above
- * arrived at its own.
- */
-internal fun View.hasContentSizedAncestor(horizontal: Boolean): Boolean {
-    var node = parent
-    while (node is View) {
-        val lp = node.layoutParams
-        val declared = if (horizontal) lp?.width else lp?.height
-        if (declared == ViewGroup.LayoutParams.WRAP_CONTENT) return true
-        if (node is AutoSizeProvider) return node.isAutoSized(horizontal)
-        node = node.parent
-    }
-    return false
 }
 
 /**

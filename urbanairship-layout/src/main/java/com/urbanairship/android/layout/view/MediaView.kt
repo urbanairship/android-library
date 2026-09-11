@@ -36,11 +36,11 @@ import com.urbanairship.android.layout.property.hasTapHandler
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils
 import com.urbanairship.android.layout.util.ThomasImageSizeResolver
+import com.urbanairship.android.layout.util.hasContentSizedAncestor
 import com.urbanairship.android.layout.util.debouncedClicks
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isActionUp
 import com.urbanairship.android.layout.widget.CropImageView
-import com.urbanairship.android.layout.widget.hasContentSizedAncestor
 import com.urbanairship.android.layout.widget.ShrinkableView
 import com.urbanairship.android.layout.widget.TappableView
 import com.urbanairship.android.layout.widget.TouchAwareWebView

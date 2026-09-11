@@ -11,6 +11,7 @@ import android.view.accessibility.AccessibilityNodeInfo
 import androidx.core.view.GravityCompat
 import androidx.core.view.ViewCompat
 import com.urbanairship.android.layout.R
+import com.urbanairship.android.layout.util.hasAutoSizedAncestor
 import java.util.Collections
 import kotlin.math.abs
 import kotlin.math.max
