@@ -2,9 +2,11 @@
 package com.urbanairship.android.layout.view
 
 import android.text.Spanned
+import android.content.pm.ApplicationInfo
 import android.text.TextPaint
 import android.text.style.ImageSpan
 import android.text.style.ReplacementSpan
+import android.view.View
 import com.urbanairship.android.layout.environment.LayoutState
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.info.LabelInfo
@@ -51,6 +53,11 @@ public class LabelIconPlacementTest {
     @Before
     public fun setUp() {
         Dispatchers.setMain(testDispatcher)
+        // The platform gates all RTL resolution on the host app declaring android:supportsRtl,
+        // and a library's own manifest can't. Without this, setTextDirection is a silent no-op.
+        RuntimeEnvironment.getApplication().applicationInfo.also {
+            it.flags = it.flags or ApplicationInfo.FLAG_SUPPORTS_RTL
+        }
     }
 
     @After
@@ -143,6 +150,24 @@ public class LabelIconPlacementTest {
 
         assertEquals(0, text.getSpanStart(imageSpans(text).first()))
         assertEquals(text.length - 1, text.getSpanStart(imageSpans(text).last()))
+    }
+
+    /**
+     * `icon_start` means the layout's start, not the text's: a leading icon is chrome, so in an
+     * RTL layout it belongs on the right even when the words are Latin.
+     */
+    @Test
+    public fun testParagraphFollowsTheLayoutDirection() {
+        val view = labelView(startIcon = true)
+
+        // Driven through the real property, not by calling the hook: setTextDirection re-enters
+        // onRtlPropertiesChanged with the view's own direction, so a hand-called hook would just
+        // be overwritten.
+        view.layoutDirection = View.LAYOUT_DIRECTION_RTL
+        assertEquals(View.TEXT_DIRECTION_RTL, view.textDirection)
+
+        view.layoutDirection = View.LAYOUT_DIRECTION_LTR
+        assertEquals(View.TEXT_DIRECTION_LTR, view.textDirection)
     }
 
     /** The gap is the authored space, so it survives as a measurable width. */

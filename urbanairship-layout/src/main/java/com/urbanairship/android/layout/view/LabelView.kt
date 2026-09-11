@@ -179,6 +179,30 @@ internal class LabelView(
         return PrecomputedText.create(text, textMetricsParams)
     }
 
+    /**
+     * Pins the paragraph to the layout direction, so `icon_start` means the layout's start
+     * rather than the text's.
+     *
+     * A leading icon is chrome, not prose: in an RTL layout it belongs on the right even when
+     * the words are Latin, exactly as `alignment: start` already resolves through
+     * `Gravity.START`. Left at the platform default of first-strong the paragraph would follow
+     * its own characters instead, and Latin copy in an RTL layout would keep its icons on the
+     * left while everything around them mirrored.
+     *
+     * Done here rather than at construction because a view has no resolved layout direction
+     * until it is attached. The spans don't need rebuilding — their order in the string is the
+     * same either way, and the paragraph is what turns that order into sides.
+     */
+    override fun onRtlPropertiesChanged(layoutDirection: Int) {
+        super.onRtlPropertiesChanged(layoutDirection)
+
+        textDirection = if (layoutDirection == LAYOUT_DIRECTION_RTL) {
+            TEXT_DIRECTION_RTL
+        } else {
+            TEXT_DIRECTION_LTR
+        }
+    }
+
     override fun onDraw(canvas: Canvas) {
         val laidOut = layout
         if (!truncatesToHeight || laidOut == null || laidOut.lineCount <= maxLines) {
