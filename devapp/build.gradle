@@ -6,6 +6,21 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
+// Key for the sample OpenAIModel: local.properties (gitignored) wins, else the environment.
+// Empty means the devapp registers no AI model, so scenes take their non-AI path.
+def openAiApiKey = {
+    def local = rootProject.file('local.properties')
+    if (local.exists()) {
+        def properties = new Properties()
+        local.withInputStream { properties.load(it) }
+        def key = properties.getProperty('openai.apiKey')
+        if (key?.trim()) {
+            return key.trim()
+        }
+    }
+    return System.getenv('OPENAI_API_KEY')?.trim() ?: ''
+}()
+
 android {
     namespace = 'com.urbanairship.devapp'
 
@@ -19,6 +34,8 @@ android {
         versionName "1.0"
         vectorDrawables.useSupportLibrary = true
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField "String", "OPENAI_API_KEY", "\"${openAiApiKey}\""
     }
 
     buildFeatures {
@@ -140,6 +157,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.ext.truth)
 
     // Robolectric / Mockito
+    testImplementation(libs.junit)
     testImplementation(libs.robolectric.core)
     androidTestImplementation(libs.robolectric.annotations)
 

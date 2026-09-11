@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.MutableCreationExtras
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.android.layout.ui.ThomasLayoutViewFactory
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.Action
 import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.State
@@ -22,7 +23,8 @@ import com.urbanairship.messagecenter.compose.ui.MessageCenterMessageViewModel.S
 @Stable
 public class MessageCenterMessageState internal constructor(
     private val onAction: (Action) -> Unit,
-    private val makeAnalytics: (Message, onDismiss: () -> Unit) -> ThomasListenerInterface
+    private val makeAnalytics: (Message, onDismiss: () -> Unit) -> ThomasListenerInterface,
+    internal val ai: InternalAirshipAi? = null
 ) {
     internal var viewState by mutableStateOf<State>(State.Empty)
 
@@ -75,7 +77,8 @@ internal fun rememberMessageCenterMessageState(
     val state = remember {
         MessageCenterMessageState(
             onAction = viewModel::handle,
-            makeAnalytics = viewModel::makeAnalytics
+            makeAnalytics = viewModel::makeAnalytics,
+            ai = viewModel.ai
         )
     }
 

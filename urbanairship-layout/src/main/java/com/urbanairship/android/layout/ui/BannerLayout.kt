@@ -14,6 +14,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import com.urbanairship.UALog
+import com.urbanairship.android.layout.ai.DefaultThomasAIInference
+import com.urbanairship.android.layout.ai.ThomasAIInference
 import com.urbanairship.android.layout.AirshipBannerViewManager
 import com.urbanairship.android.layout.BannerPresentation
 import com.urbanairship.android.layout.ModelFactoryException
@@ -101,6 +103,7 @@ public class BannerLayout(
     private val externalListener: ThomasListenerInterface = args.listener
     private val imageCache: ImageCache? = args.imageCache
     private val actionRunner: ThomasActionRunner = args.actionRunner
+    private val aiInference: ThomasAIInference? = DefaultThomasAIInference.create(args.ai)
 
     private val reporter: Reporter = ExternalReporter(externalListener)
 
@@ -192,7 +195,8 @@ public class BannerLayout(
             val modelEnvironment = viewModel.getOrCreateEnvironment(
                 reporter = reporter,
                 actionRunner = actionRunner,
-                displayTimer = timer
+                displayTimer = timer,
+                aiInference = aiInference
             )
             val model = viewModel.getOrCreateModel(
                 viewInfo = payload.view,

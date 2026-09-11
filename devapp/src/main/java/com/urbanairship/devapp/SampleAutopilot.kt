@@ -13,6 +13,7 @@ import com.urbanairship.Airship
 import com.urbanairship.AirshipConfigOptions
 import com.urbanairship.Autopilot
 import com.urbanairship.android.layout.AirshipCustomViewManager
+import com.urbanairship.devapp.ai.DevAI
 import com.urbanairship.devapp.glance.SampleAppWidgetLiveUpdate
 import com.urbanairship.devapp.thomas.customviews.CustomAdView
 import com.urbanairship.devapp.thomas.customviews.CustomMapView
@@ -109,6 +110,9 @@ class SampleAutopilot : Autopilot() {
 
         // Register the "squareview" InApp Message Content Extender
         SampleInAppMessageContentExtender.register()
+
+        // Route AI evaluations to OpenAI when a key is configured.
+        DevAI.register()
     }
 
     override fun createAirshipConfigOptions(context: Context): AirshipConfigOptions? {

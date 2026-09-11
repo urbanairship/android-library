@@ -26,4 +26,17 @@ public class Usage<Subject> @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) construc
     override fun equals(other: Any?): Boolean = other is Usage<*> && rawValue == other.rawValue
     override fun hashCode(): Int = rawValue.hashCode()
     override fun toString(): String = rawValue
+
+    /**
+     * Where every feature's usage is reachable from, whichever module declares it.
+     *
+     * A feature module extends this with the usage it owns, so an app finds them all by
+     * completing on `Usage.` rather than having to know which module to import:
+     *
+     * ```
+     * public val Usage.Companion.sceneTextInput: Usage<SceneTextInputSubject>
+     *     get() = SCENE_TEXT_INPUT
+     * ```
+     */
+    public companion object
 }

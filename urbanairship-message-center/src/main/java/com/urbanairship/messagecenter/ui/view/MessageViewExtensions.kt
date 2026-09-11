@@ -92,6 +92,7 @@ private fun MessageView.bindInternal(
         viewModel.currentMessage?.let { viewModel.makeAnalytics(it, onDismiss) }
     }
     storageFactory = { viewModel.viewStateStorage }
+    aiProvider = { viewModel.ai }
 
     val job = launch { viewModel.states.collect(::render) }
     activeBindingJob = job
@@ -102,6 +103,7 @@ private fun MessageView.bindInternal(
                 activeBindingJob = null
                 analyticsFactory = null
                 storageFactory = null
+                aiProvider = null
                 if (reportDismissOnClose) {
                     onDismissed()
                 }

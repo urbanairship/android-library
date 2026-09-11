@@ -3,6 +3,8 @@ package com.urbanairship.android.layout.model
 
 import android.content.Context
 import com.urbanairship.Airship
+import com.urbanairship.android.layout.ai.ThomasAIInferenceOutcome
+import com.urbanairship.android.layout.ai.ThomasAIInferenceRequest
 import com.urbanairship.android.layout.environment.ModelEnvironment
 import com.urbanairship.android.layout.environment.ThomasForm
 import com.urbanairship.android.layout.environment.ViewEnvironment
@@ -13,6 +15,7 @@ import com.urbanairship.android.layout.property.EventHandler
 import com.urbanairship.android.layout.property.FormInputType
 import com.urbanairship.android.layout.property.SmsLocale
 import com.urbanairship.android.layout.property.hasTapHandler
+import com.urbanairship.android.layout.reporting.AttributeName
 import com.urbanairship.android.layout.reporting.ThomasFormField
 import com.urbanairship.android.layout.view.TextInputView
 import com.urbanairship.inputvalidation.AirshipInputValidation
@@ -51,6 +54,13 @@ internal class TextInputModel(
     }
 
     private val currentInput = MutableStateFlow("")
+
+    /**
+     * The last completed inference and the text it was run on, so text that comes back
+     * unchanged — a restore, or an edit to trailing whitespace — reuses the answer instead of
+     * paying for the model again.
+     */
+    private var lastInference: Pair<String, ThomasAIInferenceOutcome>? = null
 
     private val inputValidator: AirshipInputValidation.Validator?
         get() {
@@ -138,12 +148,18 @@ internal class TextInputModel(
         }
 
         return when (viewInfo.inputType) {
+            // Inference fields (nothing to validate)
+            FormInputType.NUMBER -> inferenceField(text, attributes)
+            FormInputType.TEXT -> inferenceField(text, attributes)
+            FormInputType.TEXT_MULTILINE -> inferenceField(text, attributes)
+
+            // EMAIL/SMS intentionally excluded from inference. We only validate them.
             FormInputType.EMAIL -> {
                 val request = AirshipInputValidation.Request.ValidateEmail(
                     AirshipInputValidation.Request.Email(text)
                 )
 
-                return ThomasFormField.FieldType.Async(
+                ThomasFormField.FieldType.Async(
                     fetcher = ThomasFormField.AsyncValueFetcher(
                         processDelay = (1.5).seconds,
                         fetchBlock = {
@@ -168,13 +184,6 @@ internal class TextInputModel(
                     )
                 )
             }
-            FormInputType.NUMBER -> {
-                return ThomasFormField.FieldType.just(
-                    value = text,
-                    attributes = attributes,
-                    channels = channelRegistration(text)?.let { listOf(it) }
-                )
-            }
             FormInputType.SMS -> {
                 val selectedLocale = smsLocale ?: return ThomasFormField.FieldType.just(
                     value = text,
@@ -194,7 +203,7 @@ internal class TextInputModel(
                     )
                 )
 
-                return ThomasFormField.FieldType.Async(
+                ThomasFormField.FieldType.Async(
                     fetcher = ThomasFormField.AsyncValueFetcher(
                         fetchBlock = {
                             val validator = inputValidator
@@ -218,17 +227,81 @@ internal class TextInputModel(
                     )
                 )
             }
-            FormInputType.TEXT -> ThomasFormField.FieldType.just(
-                value = text,
-                attributes = attributes,
-                channels = channelRegistration(text)?.let { listOf(it) }
-            )
-            FormInputType.TEXT_MULTILINE -> ThomasFormField.FieldType.just(
-                value = text,
-                attributes = attributes,
-                channels = channelRegistration(text)?.let { listOf(it) }
+        }
+    }
+
+    /**
+     * Returns the field for an input with no address to validate: valid as typed, carrying the
+     * payload's AI inference — if it asked for any — post-processed onto the result.
+     *
+     * Inference never decides validity. A missing model, a skipped evaluation and a failed one
+     * all resolve valid carrying [ThomasAIInferenceOutcome.Failed], so a layout can branch to a
+     * non-AI path instead of the form stalling on an answer that isn't coming.
+     *
+     * @param text The trimmed input.
+     * @param attributes The attributes the input sets.
+     * @return The field.
+     */
+    private fun inferenceField(
+        text: String,
+        attributes: Map<AttributeName, AttributeValue>?
+    ): ThomasFormField.FieldType<String> {
+        val result = ThomasFormField.Result(
+            value = text,
+            channels = channelRegistration(text)?.let { listOf(it) },
+            attributes = attributes
+        )
+
+        val inference = viewInfo.aiInference
+            ?: return ThomasFormField.FieldType.Instant(result)
+
+        lastInference?.let { (inferred, outcome) ->
+            if (inferred == text) {
+                return ThomasFormField.FieldType.Instant(result.copy(aiInference = outcome))
+            }
+        }
+
+        val executor = environment.aiInference
+        if (executor == null || !executor.isAvailable) {
+            // Resolved without the settle delay: there is nothing to wait for.
+            return ThomasFormField.FieldType.Instant(
+                result.copy(aiInference = ThomasAIInferenceOutcome.Failed)
             )
         }
+
+        val request = ThomasAIInferenceRequest(
+            prompt = inference.prompt,
+            text = text,
+            outputSchema = inference.outputSchema,
+            additionalContext = inference.additionalContext,
+            subjectHints = inference.subjectHints
+        )
+
+        // Post-processed through the model the way email and SMS post-process through
+        // validation, so the async field machinery supplies the settle delay, cancellation on
+        // newer input, and the pending status that keeps the field out of a submit.
+        return ThomasFormField.FieldType.Async(
+            fetcher = ThomasFormField.AsyncValueFetcher(
+                processDelay = AI_INFERENCE_PROCESS_DELAY,
+                fetchBlock = {
+                    val outcome = executor.run(request)
+                        ?.let { ThomasAIInferenceOutcome.Complete(it, inference.outputSchema) }
+                        ?: ThomasAIInferenceOutcome.Failed
+
+                    // Only a real answer is memoized. A cached failure is never retried:
+                    // the early return above short-circuits before the fetcher, and the
+                    // fetcher's own retry backoff never applies because a failure resolves
+                    // as `Valid`, not `Error`.
+                    if (outcome is ThomasAIInferenceOutcome.Complete) {
+                        lastInference = text to outcome
+                    }
+
+                    ThomasFormField.AsyncValueFetcher.PendingResult.Valid(
+                        result = result.copy(aiInference = outcome)
+                    )
+                }
+            )
+        )
     }
 
     private fun channelRegistration(address: String?): ThomasChannelRegistration? {
@@ -320,5 +393,13 @@ internal class TextInputModel(
             fieldType = method,
             isRedacted = viewInfo.redactInput
         )
+    }
+
+    private companion object {
+        /**
+         * How long the input must be idle before it goes to the model. Longer than
+         * validation's delay — an evaluation costs far more than an address lookup.
+         */
+        val AI_INFERENCE_PROCESS_DELAY = 2.seconds
     }
 }

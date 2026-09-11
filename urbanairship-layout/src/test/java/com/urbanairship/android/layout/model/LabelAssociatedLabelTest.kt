@@ -141,6 +141,7 @@ public class LabelAssociatedLabelTest {
             every { Airship.runtimeConfig } returns TestAirshipRuntimeConfig(session = session)
             every { Airship.isFlyingOrTakingOff } returns true
             every { Airship.inputValidator } returns mockk<AirshipInputValidation.Validator>(relaxed = true)
+            every { Airship.internalAi } returns mockk(relaxed = true)
 
             val viewModel = LayoutViewModel()
             val modelEnv = viewModel.getOrCreateEnvironment(
@@ -210,6 +211,7 @@ public class LabelAssociatedLabelTest {
             every { Airship.runtimeConfig } returns TestAirshipRuntimeConfig(session = session)
             every { Airship.isFlyingOrTakingOff } returns true
             every { Airship.inputValidator } returns mockk<AirshipInputValidation.Validator>(relaxed = true)
+            every { Airship.internalAi } returns mockk(relaxed = true)
 
             val viewModel = LayoutViewModel()
             val modelEnv = viewModel.getOrCreateEnvironment(
@@ -283,6 +285,7 @@ public class LabelAssociatedLabelTest {
             every { Airship.runtimeConfig } returns TestAirshipRuntimeConfig(session = session)
             every { Airship.isFlyingOrTakingOff } returns true
             every { Airship.inputValidator } returns mockk<AirshipInputValidation.Validator>(relaxed = true)
+            every { Airship.internalAi } returns mockk(relaxed = true)
 
             val viewModel = LayoutViewModel()
             val modelEnv = viewModel.getOrCreateEnvironment(

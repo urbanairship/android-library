@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.Context
 import com.urbanairship.Predicate
 import com.urbanairship.UALog
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.android.layout.Thomas
 import com.urbanairship.android.layout.analytics.DisplayResult
 import com.urbanairship.android.layout.analytics.LayoutListener
@@ -36,7 +37,8 @@ internal class AirshipLayoutDisplayDelegate(
     private val priority: Int,
     private val messageExtras: JsonMap?,
     private val activityMonitor: ActivityMonitor,
-    private val actionRunner: InAppActionRunner
+    private val actionRunner: InAppActionRunner,
+    private val ai: InternalAirshipAi? = null
 ) : DelegatingDisplayAdapter.Delegate {
 
     override val activityPredicate: Predicate<Activity>? = null
@@ -81,7 +83,8 @@ internal class AirshipLayoutDisplayDelegate(
                 }
             },
             embeddedViewManager = EmbeddedViewManager,
-            bannerViewManager = BannerViewManager
+            bannerViewManager = BannerViewManager,
+            ai = ai
         )
 
         return withContext(Dispatchers.Main.immediate) {

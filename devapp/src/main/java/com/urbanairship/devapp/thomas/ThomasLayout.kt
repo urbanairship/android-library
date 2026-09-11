@@ -14,7 +14,9 @@ import com.urbanairship.json.requireField
 import java.io.InputStream
 import java.util.Scanner
 import org.json.JSONException
+import org.yaml.snakeyaml.LoaderOptions
 import org.yaml.snakeyaml.Yaml
+import org.yaml.snakeyaml.constructor.SafeConstructor
 
 internal class ThomasLayout {
     enum class Type(val directory: String): JsonSerializable {
@@ -52,7 +54,7 @@ internal class ThomasLayout {
             if (assetsPath.endsWith(".json")) {
                 return JsonValue.parseString(string).optMap()
             } else if (assetsPath.endsWith(".yml") || assetsPath.endsWith(".yaml")) {
-                val map: Map<String, Object> = Yaml().load(string)
+                val map: Map<String, Object> = yaml().load(string)
                 return JsonValue.wrap(map).optMap()
             }
 
@@ -87,6 +89,15 @@ internal class ThomasLayout {
             }
         }
 
+        /**
+         * SnakeYAML capped to 50 collection aliases by default, which a hand-written scene
+         * blows past as soon as it reuses an anchored block — a shared text appearance, say —
+         * across more than a handful of pages.
+         */
+        private fun yaml(): Yaml = Yaml(
+            SafeConstructor(LoaderOptions().apply { maxAliasesForCollections = MAX_YAML_ALIASES })
+        )
+
         private fun readStream(inputStream: InputStream): String {
             Scanner(inputStream, "UTF-8")
                 .useDelimiter("\\A")
@@ -97,6 +108,7 @@ internal class ThomasLayout {
             private const val KEY_PATH = "asset_path"
             private const val KEY_NAME = "name"
             private const val KEY_TYPE = "type"
+            private const val MAX_YAML_ALIASES = 10_000
 
             fun from(json: JsonValue): LayoutFile? {
                 return try {

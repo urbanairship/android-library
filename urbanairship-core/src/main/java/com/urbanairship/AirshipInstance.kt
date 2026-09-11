@@ -319,7 +319,8 @@ internal class AirshipInstance(
             channel = channel,
             pushManager = pushManager,
             analytics = analytics,
-            meteredUsage = meteredUsageManager
+            meteredUsage = meteredUsageManager,
+            ai = ai
         )
         processModule(messageCenterModule)
 
@@ -338,7 +339,8 @@ internal class AirshipInstance(
             deferredResolver = deferredResolver,
             eventFeed = eventFeed,
             cache = cache,
-            audienceEvaluator = audienceEvaluator
+            audienceEvaluator = audienceEvaluator,
+            ai = ai
         )
         processModule(automationModule)
 

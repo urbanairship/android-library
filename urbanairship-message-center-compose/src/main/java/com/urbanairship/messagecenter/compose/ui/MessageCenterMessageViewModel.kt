@@ -10,6 +10,7 @@ import com.urbanairship.UALog
 import com.urbanairship.android.layout.LayoutDataStorage
 import com.urbanairship.android.layout.ThomasListenerInterface
 import com.urbanairship.iam.content.AirshipLayout
+import com.urbanairship.ai.InternalAirshipAi
 import com.urbanairship.messagecenter.Inbox
 import com.urbanairship.messagecenter.Message
 import com.urbanairship.messagecenter.MessageCenter
@@ -25,6 +26,12 @@ import kotlinx.coroutines.launch
 
 internal interface MessageCenterMessageViewModel {
     val states: StateFlow<State>
+
+    /**
+     * The AI manager for layouts this screen hosts, from the component rather than the
+     * `Airship` singleton so a layout host never resolves it mid-takeoff.
+     */
+    val ai: InternalAirshipAi?
 
     val scope: CoroutineScope
 
@@ -106,6 +113,7 @@ internal interface MessageCenterMessageViewModel {
 internal class DefaultMessageCenterMessageViewModel(
     messageId: String? = null,
     private val inbox: Inbox = MessageCenter.shared().inbox,
+    override val ai: InternalAirshipAi? = null,
 ) : ViewModel(), MessageCenterMessageViewModel {
 
     /**
@@ -297,6 +305,7 @@ internal class DefaultMessageCenterMessageViewModel(
                 DefaultMessageCenterMessageViewModel(
                     messageId = this[MESSAGE_ID_KEY],
                     inbox = MessageCenter.shared().inbox,
+                    ai = MessageCenter.shared().ai,
                 )
             }
         }
