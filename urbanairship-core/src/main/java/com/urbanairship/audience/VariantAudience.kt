@@ -44,15 +44,18 @@ public class VariantAudience internal constructor(
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public sealed class Outcome(public val json: String) {
         /** The bucket falls in this schedule's own arm: proceed with a normal execution. */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public data object MATCHED : Outcome("matched")
 
         /** The bucket falls in the experiment's shared no-message arm. */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public data object HOLDOUT : Outcome("holdout")
 
         /**
          * The bucket falls in neither this arm nor the holdout arm — some sibling schedule's
          * arm owns it.
          */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public data object VARIANT_MISS : Outcome("variant_miss")
 
         /**
@@ -61,6 +64,7 @@ public class VariantAudience internal constructor(
          * Display is skipped: a schedule whose resolution this version can't read must not
          * display on the strength of not understanding it.
          */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         public data class Unknown(public val rawValue: String) : Outcome(rawValue)
 
         /** True for every outcome but [MATCHED] — the ones where this schedule does not display. */
