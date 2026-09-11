@@ -852,6 +852,19 @@ public class AutomationStoreMigratorTest {
             recorded.addAll(events)
         }
 
+        override suspend fun recordEventsUnless(
+            scheduleId: String,
+            sharedId: String?,
+            events: List<LedgerEvent>,
+            alreadyRecorded: (LedgerEvent) -> Boolean
+        ): Boolean {
+            if (recorded.any(alreadyRecorded)) {
+                return false
+            }
+            recordEvents(events)
+            return true
+        }
+
         override suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent> =
             emptyList()
 

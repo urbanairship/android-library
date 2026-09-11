@@ -60,7 +60,7 @@ public class ActionAutomationExecutorTest {
     }
 
     @Test
-    public fun testAdditionalAudienceMissRecordsNothing(): TestResult = runTest {
+    public fun testAdditionalAudienceMissRecordsAudienceMiss(): TestResult = runTest {
         val result = executor.execute(
             actions,
             preparedInfo.copy(additionalAudienceCheckResult = false)
@@ -68,7 +68,20 @@ public class ActionAutomationExecutorTest {
 
         assertEquals(ScheduleExecuteResult.FINISHED, result)
         assertTrue(actionRunner.ranActions.isEmpty())
-        assertTrue(ledger.recorded.isEmpty())
+        // The attempt resolved and spends budget, so it has to be recorded -
+        // otherwise the schedule can never reach its limit.
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = "some id",
+                    sharedId = "group-1",
+                    triggerId = "trigger-1",
+                    result = LedgerExecutionResult.AUDIENCE_MISS,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
     }
 
     private class TestActionRunner : ActionRunner {

@@ -14,6 +14,7 @@ import com.urbanairship.automation.AutomationSchedule
 import com.urbanairship.automation.engine.AutomationExecutorDelegate
 import com.urbanairship.automation.engine.InterruptedBehavior
 import com.urbanairship.automation.engine.PreparedScheduleInfo
+import com.urbanairship.automation.engine.recordExecution
 import com.urbanairship.automation.engine.ScheduleExecuteResult
 import com.urbanairship.automation.engine.ScheduleReadyResult
 import com.urbanairship.automation.limits.AutomationLedgerInterface
@@ -93,6 +94,12 @@ internal class InAppMessageAutomationExecutor(
                 event = LayoutResolutionEvent.audienceExcluded(),
                 layoutContext = null
             )
+            // The attempt still resolved and still spends the schedule's budget,
+            // so it has to reach the ledger. Without an event the limit can
+            // never be reached and the schedule re-triggers forever. Nothing is
+            // displayed on this path, so suspending here costs no display
+            // guarantees.
+            ledger.recordExecution(preparedScheduleInfo, LedgerExecutionResult.AUDIENCE_MISS)
             return@withContext ScheduleExecuteResult.FINISHED
         }
 
@@ -108,17 +115,29 @@ internal class InAppMessageAutomationExecutor(
                 event = LayoutResolutionEvent.control(preparedScheduleInfo.experimentResult),
                 layoutContext = null
             )
-            recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.HOLDOUT)
+            ledger.recordExecution(preparedScheduleInfo, LedgerExecutionResult.HOLDOUT)
         } else {
             try {
                 UALog.i { "Displaying message ${preparedScheduleInfo.scheduleId}" }
-                result = when(data.displayAdapter.display(context, data.analytics)) {
-                    DisplayResult.CANCEL -> ScheduleExecuteResult.CANCEL
+                val displayResult = data.displayAdapter.display(context, data.analytics)
+                result = when (displayResult) {
+                    DisplayResult.CANCEL, DisplayResult.DROPPED -> ScheduleExecuteResult.CANCEL
                     DisplayResult.FINISHED -> ScheduleExecuteResult.FINISHED
                 }
-                recordLedgerExecution(preparedScheduleInfo, LedgerExecutionResult.SUCCEEDED)
-                data.message.actions?.let {
-                    data.actionRunner.run(it.map, Action.Situation.AUTOMATION)
+
+                // A dropped display never appeared — the request was resolved
+                // out of its queue — so nothing that follows from having
+                // displayed should happen: it spent no budget, or a pooled group
+                // pays for a message nobody saw, and the message's actions
+                // belong to a display that did not occur. A cancel, by contrast,
+                // means it was displayed and then dismissed.
+                if (displayResult == DisplayResult.DROPPED) {
+                    UALog.i { "Display dropped ${preparedScheduleInfo.scheduleId}" }
+                } else {
+                    ledger.recordExecution(preparedScheduleInfo, LedgerExecutionResult.SUCCEEDED)
+                    data.message.actions?.let {
+                        data.actionRunner.run(it.map, Action.Situation.AUTOMATION)
+                    }
                 }
             } catch (ex: Exception) {
                 UALog.e(ex) { "Failed to display message" }
@@ -136,19 +155,6 @@ internal class InAppMessageAutomationExecutor(
         }
 
         return@withContext result
-    }
-
-    private suspend fun recordLedgerExecution(
-        info: PreparedScheduleInfo,
-        result: LedgerExecutionResult
-    ) {
-        ledger.recordExecution(
-            scheduleId = info.scheduleId,
-            sharedId = info.ledgerSharedId,
-            triggerId = info.triggerId,
-            result = result,
-            cancel = false
-        )
     }
 
     override suspend fun interrupted(

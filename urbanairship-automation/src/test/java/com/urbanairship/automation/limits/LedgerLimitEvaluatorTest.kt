@@ -163,6 +163,12 @@ public class LedgerLimitEvaluatorTest {
     public fun testReadFailureIsNotOverLimit(): TestResult = runTest {
         val failing = object : LedgerStoreInterface {
             override suspend fun recordEvents(events: List<LedgerEvent>): Unit = Unit
+            override suspend fun recordEventsUnless(
+                scheduleId: String,
+                sharedId: String?,
+                events: List<LedgerEvent>,
+                alreadyRecorded: (LedgerEvent) -> Boolean
+            ): Boolean = true
             override suspend fun events(scheduleId: String, sharedId: String?): List<LedgerEvent> =
                 throw IllegalStateException("read failed")
             override suspend fun hasEvents(scheduleId: String): Boolean = false

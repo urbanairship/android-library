@@ -719,6 +719,7 @@ public final class com/urbanairship/iam/content/HTML$Companion {
 
 public abstract class com/urbanairship/iam/content/InAppMessageDisplayContent : android/os/Parcelable, com/urbanairship/json/JsonSerializable {
 	public fun describeContents ()I
+	public fun isBanner ()Z
 	public fun isEmbedded ()Z
 	public abstract fun validate ()Z
 	public fun writeToParcel (Landroid/os/Parcel;I)V
@@ -732,6 +733,7 @@ public final class com/urbanairship/iam/content/InAppMessageDisplayContent$Airsh
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getLayout ()Lcom/urbanairship/iam/content/AirshipLayout;
 	public fun hashCode ()I
+	public fun isBanner ()Z
 	public fun isEmbedded ()Z
 	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
 	public fun toString ()Ljava/lang/String;
