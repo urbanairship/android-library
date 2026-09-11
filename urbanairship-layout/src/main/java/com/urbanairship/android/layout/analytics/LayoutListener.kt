@@ -23,7 +23,17 @@ import com.urbanairship.json.JsonSerializable
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public enum class DisplayResult {
-    CANCEL, FINISHED
+    CANCEL,
+    FINISHED,
+
+    /**
+     * Resolved without ever appearing — a queued banner or embedded view
+     * dropped before it was shown, rather than dismissed by the user.
+     *
+     * Distinct from [CANCEL] because nothing was displayed, so nothing was
+     * spent: a caller metering displays must not count it.
+     */
+    DROPPED
 }
 
 /** @hide */
@@ -33,6 +43,9 @@ public class LayoutListener (
     private val analytics: LayoutMessageAnalyticsInterface,
     private var onDismiss: ((DisplayResult) -> Unit)?
 ) : ThomasListenerInterface {
+
+    /** Whether the layout ever reached the screen. */
+    private var wasDisplayed: Boolean = false
 
     override fun onReportingEvent(event: ReportingEvent) {
         when (event) {
@@ -130,12 +143,27 @@ public class LayoutListener (
             return
         }
 
-        val result = if (cancel) DisplayResult.CANCEL else DisplayResult.FINISHED
+        val result = when {
+            !cancel -> DisplayResult.FINISHED
+            // Cancelled without ever becoming visible: the request was resolved
+            // out of its queue rather than dismissed by whoever was looking at
+            // it. Banners and embedded views are queued, so this is reachable
+            // for them; everything else is marked visible as it is displayed.
+            !wasDisplayed -> DisplayResult.DROPPED
+            else -> DisplayResult.CANCEL
+        }
         dismiss(result)
         this.onDismiss = null
     }
 
     override fun onVisibilityChanged(isVisible: Boolean, isForegrounded: Boolean) {
+        // Tracked on visibility alone, unlike the display event below, which is
+        // also gated on the app being foregrounded. A caller metering displays
+        // should err toward counting one that reached the screen at all.
+        if (isVisible) {
+            wasDisplayed = true
+        }
+
         if (isVisible && isForegrounded) {
             analytics.recordEvent(InAppDisplayEvent(), null)
         }

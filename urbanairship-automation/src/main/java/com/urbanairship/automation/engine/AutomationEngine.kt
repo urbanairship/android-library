@@ -719,52 +719,139 @@ internal class AutomationEngine(
         // writer of a counting event is this schedule's own execution, which
         // cannot have happened while it sat here prepared.
         //
-        // A reserving schedule re-reads again after taking its group, so on an
+        // Every pooled schedule re-reads again once it has the group, so on an
         // uncontended group this looks like one read too many. It is not: this
-        // one drops a spent schedule without first queueing behind a sibling's
-        // whole display, and it is the only check a non-reserving pooled
-        // schedule gets.
+        // one drops an already-spent schedule without first queueing behind a
+        // sibling's whole display.
         if (sharedId != null && isOverLimit(data.schedule)) {
             UALog.v { "Ledger group spent since prepare, skipping $scheduleID" }
             skipOverLimit(data)
             return true
         }
 
-        // A group only needs serializing while something in it is executing, so
-        // a schedule that reserves nothing runs straight through.
-        val reservedGroupId = sharedId?.takeIf { preparedSchedule.reservesLedgerGroup }
-            ?: return settle(runAttempt(data, preparedSchedule), data)
+        if (sharedId == null) {
+            return settle(runAttempt(data, preparedSchedule), data)
+        }
 
-        // Hold the group across the execution. The check above cannot see a
+        // A schedule that cannot hold its group — an embedded message or a
+        // banner — waits for whoever does, then marks itself in flight instead.
+        // Both are shown by a host that may never appear, so holding across
+        // their own display would stall the group for as long as nothing shows
+        // them. The two halves cover the two directions: waiting here means a
+        // reserving sibling mid-display has recorded before this one reads the
+        // tally, and the mark means this execution is visible to a reserving
+        // sibling that starts while it is still going.
+        if (!preparedSchedule.reservesLedgerGroup) {
+            val blocked = groupReservations.withGroup(sharedId) {
+                revalidateAfterWaiting(data, preparedSchedule, sharedId)
+                    // Marked while the group is still held, so a sibling that
+                    // takes it next sees this execution even though its event is
+                    // not written yet.
+                    ?: run { groupReservations.enterInFlight(sharedId); null }
+            }
+
+            if (blocked != null) {
+                return settle(blocked, data)
+            }
+
+            try {
+                return settle(runAttempt(data, preparedSchedule), data)
+            } finally {
+                groupReservations.exitInFlight(sharedId)
+            }
+        }
+
+        // Hold the group across the execution. The pre-check above cannot see a
         // sibling that is mid-display, because its event is not written until
         // the display ends — the reservation covers exactly that window.
         // Suspending here holds nothing else up: the pending-execution drain
         // dispatches attempts without awaiting them, so only this group queues
         // behind the holder.
-        val attempt = groupReservations.withGroup(reservedGroupId) {
-            // Waking can be much later — a sibling's display may have run for
-            // minutes — so nothing established before the wait still holds. The
-            // previous holder has recorded by now, so the ledger can answer.
-            if (isOverLimit(data.schedule)) {
-                UALog.v { "Ledger group $reservedGroupId spent while waiting, skipping $scheduleID" }
-                skipOverLimit(data)
-                return@withGroup AttemptOutcome.Settled(handled = true)
-            }
-
-            // `checkReady` covers pause, expiry and display readiness, but not
-            // whether the definition still exists — that is `checkStillValid`,
-            // which the drain runs microseconds before dispatching. Waiting on
-            // the group makes that gap unbounded, long enough for a remote-data
-            // refresh to remove or replace the campaign.
-            if (!checkStillValid(PreparedData(data, preparedSchedule))) {
-                UALog.v { "No longer valid after waiting on group $reservedGroupId: $scheduleID" }
-                return@withGroup AttemptOutcome.Unready(NotReadyVerdict.INVALIDATED)
-            }
-
-            runAttempt(data, preparedSchedule)
+        val attempt = groupReservations.withGroup(sharedId) {
+            revalidateAfterWaiting(data, preparedSchedule, sharedId)
+                ?: runAttempt(data, preparedSchedule)
         }
 
         return settle(attempt, data)
+    }
+
+    /**
+     * Re-establishes what a wait on a ledger group invalidated, or the outcome
+     * to settle instead of running.
+     *
+     * The four checks run in a deliberate order, and each depends on the ones
+     * before it:
+     *
+     * 1. **Validity.** The only call that re-fetches the schedule, so passing it
+     *    is what makes [data] trustworthy for everything below. Reading the
+     *    limit first would evaluate it against a snapshot whose
+     *    `ledger_config.shared_id` may have changed while this attempt waited,
+     *    and a stale over-limit answer would finish the schedule terminally
+     *    instead of routing it back through invalidation.
+     * 2. **Limit.** A definitive spend, so it decides the schedule's fate.
+     *    Ahead of the softer reasons below, which only stand it down, so a
+     *    schedule with no budget left is finished rather than parked.
+     * 3. **In-flight siblings.** A spend that has not landed yet, so it makes
+     *    this attempt wait rather than deciding anything — the mark always
+     *    clears once the sibling's attempt resolves, unlike the limit. After
+     *    the limit read, which would otherwise be masked by it.
+     * 4. **Delay conditions.** Readiness rather than budget, so it comes last,
+     *    next to the `checkReady` that follows in `runAttempt`.
+     */
+    @MainThread
+    private suspend fun revalidateAfterWaiting(
+        data: AutomationScheduleData,
+        preparedSchedule: PreparedSchedule,
+        groupId: String
+    ): AttemptOutcome? {
+        val scheduleID = data.schedule.identifier
+
+        // `checkReady` covers pause, expiry and display readiness, but not
+        // whether the definition still exists — that is `checkStillValid`, which
+        // the drain runs microseconds before dispatching. Waiting on the group
+        // makes that gap unbounded, long enough for a remote-data refresh to
+        // remove or replace the campaign.
+        if (!checkStillValid(PreparedData(data, preparedSchedule))) {
+            UALog.v { "No longer valid after waiting on group $groupId: $scheduleID" }
+            // Invalidated without consulting the limit. The snapshot is stale,
+            // and its `shared_id` may name a group this schedule has since left,
+            // so judging the budget on it could finish the schedule against a
+            // group it is no longer in. Reprocessing re-prepares against the
+            // current definition, which evaluates the right group.
+            return AttemptOutcome.Settled(
+                handled = invalidateExecution(data, isOverLimit = false)
+            )
+        }
+
+        // Whoever held the group has recorded by now, so the ledger can answer.
+        if (isOverLimit(data.schedule)) {
+            UALog.v { "Ledger group $groupId spent while waiting, skipping $scheduleID" }
+            skipOverLimit(data)
+            return AttemptOutcome.Settled(handled = true)
+        }
+
+        // A sibling that cannot hold the group — an embedded message or banner
+        // — can still have an execution in flight, and its event is not written
+        // yet, so the read above cannot see it. That pending spend is a reason
+        // to wait, but not to decide the limit: unlike the limit, it always
+        // clears eventually, since the whole point of marking in flight is that
+        // the mark is released once the attempt actually resolves.
+        if (groupReservations.inFlight(groupId) > 0) {
+            UALog.v { "Group $groupId has an execution in flight, waiting: $scheduleID" }
+            return AttemptOutcome.WaitForGroup(groupId)
+        }
+
+        // The drain checked the delay conditions microseconds before dispatching
+        // this attempt, but waiting on the group makes that gap unbounded — long
+        // enough for the user to leave the screen or region the delay gates the
+        // schedule to. `checkReady` does not cover them: it tests pause,
+        // `isActive` and the executor's own readiness.
+        if (!delayProcessor.areConditionsMet(data.schedule.delay)) {
+            UALog.v { "Delay conditions no longer met after waiting on $groupId: $scheduleID" }
+            return AttemptOutcome.Unready(NotReadyVerdict.WAIT_FOR_CONDITIONS)
+        }
+
+        return null
     }
 
     /**
@@ -781,6 +868,14 @@ internal class AutomationEngine(
 
         /** Nothing ran, and this verdict still needs applying. */
         data class Unready(val verdict: NotReadyVerdict) : AttemptOutcome()
+
+        /**
+         * A sibling that cannot hold [groupId] has an execution in flight.
+         * Requeues once it clears, the same way [Unready] requeues — unlike
+         * them, retrying here needs no fresh trigger, since the group itself
+         * says when to look again.
+         */
+        data class WaitForGroup(val groupId: String) : AttemptOutcome()
     }
 
     /**
@@ -814,7 +909,35 @@ internal class AutomationEngine(
         when (outcome) {
             is AttemptOutcome.Settled -> outcome.handled
             is AttemptOutcome.Unready -> handleNotReady(outcome.verdict, data)
+
+            is AttemptOutcome.WaitForGroup -> {
+                // Waited for outside the reservation: nothing here holds the
+                // group's mutex, so a reserving sibling is free to take it
+                // (and this schedule's own turn) while this suspends.
+                groupReservations.awaitInFlightClear(outcome.groupId)
+                false
+            }
         }
+
+    /**
+     * Unwinds a prepared attempt that is no longer valid, sending the schedule
+     * back to be reprocessed unless [isOverLimit] finishes it.
+     */
+    private suspend fun invalidateExecution(
+        data: AutomationScheduleData,
+        isOverLimit: Boolean
+    ): Boolean {
+        val scheduleID = data.schedule.identifier
+        val updated =
+            updateState(scheduleID) { it.executionInvalidated(clock.now(), isOverLimit) }
+
+        if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
+            startTaskToProcessTriggeredSchedule(scheduleID)
+        } else {
+            preparer.cancelled(data.schedule)
+        }
+        return true
+    }
 
     /** Finishes a schedule whose pooled budget is already spent. */
     private suspend fun skipOverLimit(data: AutomationScheduleData) {
@@ -885,17 +1008,8 @@ internal class AutomationEngine(
         val scheduleID = data.schedule.identifier
 
         return when (verdict) {
-            NotReadyVerdict.INVALIDATED -> {
-                val isOverLimit = isOverLimit(data.schedule)
-                val updated =
-                    updateState(scheduleID) { it.executionInvalidated(clock.now(), isOverLimit) }
-                if (updated?.scheduleState == AutomationScheduleState.TRIGGERED) {
-                    startTaskToProcessTriggeredSchedule(scheduleID)
-                } else {
-                    preparer.cancelled(data.schedule)
-                }
-                true
-            }
+            NotReadyVerdict.INVALIDATED ->
+                invalidateExecution(data, isOverLimit(data.schedule))
 
             NotReadyVerdict.WAIT_FOR_CONDITIONS -> {
                 this.scheduleConditionsChangedNotifier.wait()
@@ -956,15 +1070,18 @@ internal class AutomationEngine(
  * Whether an execution of this schedule should hold its ledger group for the
  * duration.
  *
- * Embedded messages are excluded: they are placed into a host view instead of
- * taking over the screen, so several are live at once by design and one can
- * stay live indefinitely. Holding the group across one would stall its siblings
- * for as long as the host view shows it.
+ * Embedded messages and banners are excluded: both are placed into a queue for
+ * a host to show rather than taking over the screen — `AirshipLayout` groups
+ * them together for exactly this reason, since a banner sits unshown for as
+ * long as the app goes without a host to show it in, same as an embedded view.
+ * Holding the group across either would stall its siblings for as long as
+ * nothing shows it, which can be indefinitely.
  */
 private val PreparedSchedule.reservesLedgerGroup: Boolean
     get() = when (val data = data) {
         is PreparedScheduleData.Action -> true
-        is PreparedScheduleData.InAppMessage -> !data.inAppMessage.isEmbedded()
+        is PreparedScheduleData.InAppMessage ->
+            !data.inAppMessage.isEmbedded() && !data.inAppMessage.isBanner()
     }
 
 /** The message a prepared in-app schedule will display. */

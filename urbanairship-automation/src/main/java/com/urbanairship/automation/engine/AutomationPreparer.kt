@@ -113,7 +113,7 @@ internal class AutomationPreparer internal constructor(
                 if (!result.isMatch) {
                     UALog.v { "Local audience miss for schedule ${schedule.identifier}" }
                     val behavior = schedule.effectiveAudienceMissBehavior
-                    recordAudienceMiss(schedule, triggerId, behavior)
+                    recordPenalty(schedule, triggerId, behavior)
                     return@run RetryingQueue.Result.Success(
                         result = behavior.toPrepareResult(),
                         ignoreReturnOrder = true
@@ -230,13 +230,10 @@ internal class AutomationPreparer internal constructor(
                         RetryingQueue.Result.Retry()
                     },
                     onSuccess = { result ->
-                        when (result) {
-                            is DelegatePreparerResult.Prepared -> RetryingQueue.Result.Success(
-                                SchedulePrepareResult.Prepared(onPrepareSchedule(info, PreparedScheduleData.Action(result.data)))
+                        settleDelegateOutcome(result, schedule, triggerId) { prepared ->
+                            RetryingQueue.Result.Success(
+                                SchedulePrepareResult.Prepared(onPrepareSchedule(info, PreparedScheduleData.Action(prepared)))
                             )
-                            DelegatePreparerResult.Cancel -> RetryingQueue.Result.Success(SchedulePrepareResult.Cancel, ignoreReturnOrder = true)
-                            DelegatePreparerResult.Skip -> RetryingQueue.Result.Success(SchedulePrepareResult.Skip, ignoreReturnOrder = true)
-                            DelegatePreparerResult.Penalize -> RetryingQueue.Result.Success(SchedulePrepareResult.Penalize, ignoreReturnOrder = true)
                         }
                     }
                 )
@@ -259,13 +256,10 @@ internal class AutomationPreparer internal constructor(
                         RetryingQueue.Result.Retry()
                     },
                     onSuccess = { result ->
-                        when (result) {
-                            is DelegatePreparerResult.Prepared -> RetryingQueue.Result.Success(
-                                SchedulePrepareResult.Prepared(onPrepareSchedule(info, PreparedScheduleData.InAppMessage(result.data)))
+                        settleDelegateOutcome(result, schedule, triggerId) { prepared ->
+                            RetryingQueue.Result.Success(
+                                SchedulePrepareResult.Prepared(onPrepareSchedule(info, PreparedScheduleData.InAppMessage(prepared)))
                             )
-                            DelegatePreparerResult.Cancel -> RetryingQueue.Result.Success(SchedulePrepareResult.Cancel, ignoreReturnOrder = true)
-                            DelegatePreparerResult.Skip -> RetryingQueue.Result.Success(SchedulePrepareResult.Skip, ignoreReturnOrder = true)
-                            DelegatePreparerResult.Penalize -> RetryingQueue.Result.Success(SchedulePrepareResult.Penalize, ignoreReturnOrder = true)
                         }
                     }
                 )
@@ -295,15 +289,18 @@ internal class AutomationPreparer internal constructor(
     }
 
     /**
-     * Records the audience-miss outcome when the miss behavior consumes budget.
-     * `PENALIZE` records `AUDIENCE_MISS`; `CANCEL` records `AUDIENCE_MISS` with
-     * `cancel = true`; `SKIP` records nothing.
+     * Records an outcome that ends an attempt with a miss behavior, when that
+     * behavior consumes budget. `PENALIZE` records `AUDIENCE_MISS`; `CANCEL`
+     * records `AUDIENCE_MISS` with `cancel = true`; `SKIP` records nothing.
      *
-     * @param behavior The behavior actually applied, which a deferred response may have
-     * overridden. Passed in rather than read off the schedule so the ledger entry and the
-     * prepare result cannot disagree.
+     * Used for both a failed audience check and an app suppression, which spend
+     * a schedule's budget the same way.
+     *
+     * @param behavior The behavior actually applied, which a deferred response or an
+     * app suppression may have decided. Passed in rather than read off the schedule so
+     * the ledger entry and the prepare result cannot disagree.
      */
-    private suspend fun recordAudienceMiss(
+    private suspend fun recordPenalty(
         schedule: AutomationSchedule,
         triggerId: String?,
         behavior: AutomationAudience.MissBehavior
@@ -344,6 +341,43 @@ internal class AutomationPreparer internal constructor(
             result = LedgerExecutionResult.AUDIENCE_MISS,
             cancel = cancel
         )
+    }
+
+    /**
+     * Maps a delegate's outcome to a prepare result, recording the ones that
+     * spend the schedule's budget.
+     *
+     * A delegate can end an attempt with its own miss behavior — the app's
+     * `onCheckSuppression` does exactly that — which consumes budget the same
+     * way an audience miss does. Every delegate outcome routes through here, so
+     * such a path reaches the ledger without each delegate having to record for
+     * itself.
+     *
+     * @param onPrepared Wraps the delegate's data, which only the caller knows
+     * the shape of.
+     */
+    private suspend fun <DataOut> settleDelegateOutcome(
+        outcome: DelegatePreparerResult<DataOut>,
+        schedule: AutomationSchedule,
+        triggerId: String?,
+        onPrepared: (DataOut) -> RetryingQueue.Result<SchedulePrepareResult>
+    ): RetryingQueue.Result<SchedulePrepareResult> = when (outcome) {
+        is DelegatePreparerResult.Prepared -> onPrepared(outcome.data)
+
+        DelegatePreparerResult.Cancel -> {
+            recordPenalty(schedule, triggerId, AutomationAudience.MissBehavior.CANCEL)
+            RetryingQueue.Result.Success(SchedulePrepareResult.Cancel, ignoreReturnOrder = true)
+        }
+
+        DelegatePreparerResult.Skip -> {
+            recordPenalty(schedule, triggerId, AutomationAudience.MissBehavior.SKIP)
+            RetryingQueue.Result.Success(SchedulePrepareResult.Skip, ignoreReturnOrder = true)
+        }
+
+        DelegatePreparerResult.Penalize -> {
+            recordPenalty(schedule, triggerId, AutomationAudience.MissBehavior.PENALIZE)
+            RetryingQueue.Result.Success(SchedulePrepareResult.Penalize, ignoreReturnOrder = true)
+        }
     }
 
     private suspend fun evaluateExperiments(
@@ -435,7 +469,7 @@ internal class AutomationPreparer internal constructor(
                     // The deferred response wins when it provides its own behavior.
                     val behavior = result.result.missBehavior
                         ?: schedule.effectiveAudienceMissBehavior
-                    recordAudienceMiss(schedule, triggerId, behavior)
+                    recordPenalty(schedule, triggerId, behavior)
                     RetryingQueue.Result.Success(
                         result = behavior.toPrepareResult(),
                         ignoreReturnOrder = true

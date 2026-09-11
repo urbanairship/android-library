@@ -4,6 +4,7 @@ package com.urbanairship.automation.limits
 
 import com.urbanairship.UALog
 import com.urbanairship.util.Clock
+import kotlinx.coroutines.CancellationException
 import java.time.Instant
 
 /**
@@ -137,6 +138,10 @@ internal class AutomationLedger(
             if (!recorded) {
                 UALog.v { "Execution already recorded for $scheduleId since $since, skipping" }
             }
+        } catch (ex: CancellationException) {
+            // An orderly shutdown, not a write failure. Recording again would
+            // only throw at Room and log as if something went wrong.
+            throw ex
         } catch (ex: Exception) {
             // Err toward recording: missing an execution lets a finished
             // schedule run again, while a duplicate only spends budget the
@@ -173,6 +178,10 @@ internal class AutomationLedger(
     private suspend fun record(event: LedgerEvent) {
         try {
             store.recordEvents(listOf(event))
+        } catch (ex: CancellationException) {
+            // Keeps propagating: a ledger write must never break execution, but
+            // it must not swallow a cancellation either.
+            throw ex
         } catch (ex: Exception) {
             UALog.e(ex) { "Failed to record ledger event $event" }
         }

@@ -501,6 +501,92 @@ public class AutomationPreparerTest {
         coVerify { messagePreparer.prepare(any(), any()) }
     }
 
+    /**
+     * An app suppression that penalizes spends the schedule's budget exactly as
+     * an audience miss does, so it has to reach the ledger - otherwise the
+     * schedule is suppressed forever without ever reaching its limit.
+     */
+    @Test
+    public fun testSuppressedPenalizeRecordsPenalty(): TestResult = runTest {
+        val result = prepareSuppressedMessage(DelegatePreparerResult.Penalize)
+
+        assertEquals(SchedulePrepareResult.Penalize, result)
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = "test-schedule",
+                    sharedId = null,
+                    triggerId = "trigger-1",
+                    result = LedgerExecutionResult.AUDIENCE_MISS,
+                    cancel = false
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    /** A suppression that cancels records the same event flagged as a cancel. */
+    @Test
+    public fun testSuppressedCancelRecordsPenaltyWithCancel(): TestResult = runTest {
+        val result = prepareSuppressedMessage(DelegatePreparerResult.Cancel)
+
+        assertEquals(SchedulePrepareResult.Cancel, result)
+        assertEquals(
+            listOf(
+                TestAutomationLedger.Recorded.Execution(
+                    scheduleId = "test-schedule",
+                    sharedId = null,
+                    triggerId = "trigger-1",
+                    result = LedgerExecutionResult.AUDIENCE_MISS,
+                    cancel = true
+                )
+            ),
+            ledger.recorded
+        )
+    }
+
+    /** A suppression that skips spends nothing, so it records nothing. */
+    @Test
+    public fun testSuppressedSkipRecordsNothing(): TestResult = runTest {
+        val result = prepareSuppressedMessage(DelegatePreparerResult.Skip)
+
+        assertEquals(SchedulePrepareResult.Skip, result)
+        assertTrue(ledger.recorded.isEmpty())
+    }
+
+    /**
+     * Prepares a message whose local audience matches but whose delegate ends
+     * the attempt with [outcome] - the shape the app's `onCheckSuppression`
+     * produces.
+     */
+    private suspend fun prepareSuppressedMessage(
+        outcome: DelegatePreparerResult<PreparedInAppMessageData>
+    ): SchedulePrepareResult {
+        val schedule = makeSchedule(
+            audience = AutomationAudience(
+                audienceSelector = audienceSelector,
+                missBehavior = AutomationAudience.MissBehavior.PENALIZE
+            )
+        )
+
+        coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contact id", null)
+        coEvery { remoteDataAccess.contactIdFor(any()) } returns "contact id"
+        coEvery { remoteDataAccess.requiredUpdate(any()) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(any()) } returns true
+        coEvery { audienceSelector.evaluate(any(), any(), any()) } returns AirshipDeviceAudienceResult.match
+
+        mockExperimentsManager()
+
+        coEvery { messagePreparer.prepare(any(), any()) } returns Result.success(outcome)
+
+        return preparer.prepare(
+            schedule,
+            triggerContext,
+            triggerSessionId = UUID.randomUUID().toString(),
+            triggerId = "trigger-1"
+        )
+    }
+
     @Test
     public fun testPrepareInvalidMessage(): TestResult = runTest {
         val invalidBanner = InAppMessageDisplayContent.BannerContent(

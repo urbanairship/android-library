@@ -24,6 +24,7 @@ import com.urbanairship.automation.engine.TriggeringInfo
 import com.urbanairship.automation.limits.LedgerConfig
 import com.urbanairship.automation.limits.LedgerExecutionResult
 import com.urbanairship.automation.limits.TestAutomationLedger
+import com.urbanairship.automation.limits.LedgerGroupReservations
 import com.urbanairship.automation.limits.LedgerLimitEvaluator
 import com.urbanairship.automation.engine.triggerprocessor.AutomationTriggerProcessor
 import com.urbanairship.automation.engine.triggerprocessor.TriggerExecutionType
@@ -32,6 +33,8 @@ import com.urbanairship.automation.storage.AutomationStoreMigrator
 import com.urbanairship.automation.utils.ScheduleConditionsChangedNotifier
 import com.urbanairship.util.TaskSleeper
 import com.urbanairship.iam.InAppMessage
+import com.urbanairship.iam.PreparedInAppMessageData
+import com.urbanairship.iam.content.AirshipLayout
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.json.JsonValue
@@ -122,6 +125,13 @@ public class AutomationEngineTest {
         coEvery { isOverLimit(any()) } returns false
     }
 
+    /**
+     * Exposed rather than left to the engine's own default, so a test can
+     * directly observe whether a schedule is holding a ledger group's
+     * reservation or only its in-flight mark.
+     */
+    private val groupReservations = LedgerGroupReservations()
+
     private val sleeper = TestTaskSleeper(clock) { sleep ->
         clock.currentTime += (sleep.inWholeMilliseconds).milliseconds
     }
@@ -140,7 +150,8 @@ public class AutomationEngineTest {
         automationStoreMigrator = automationStoreMigrator,
         eventsHistory = EventsHistory(),
         ledger = ledger,
-        limitEvaluator = limitEvaluator
+        limitEvaluator = limitEvaluator,
+        groupReservations = groupReservations
     )
 
     @Before
@@ -765,6 +776,7 @@ public class AutomationEngineTest {
      */
     private suspend fun TestScope.driveTwoPooledSchedules(
         firstIsHeld: CompletableDeferred<Unit>,
+        onFirstRecordedRestoreSecond: ((MutableMap<String, AutomationScheduleData>) -> Unit)? = null,
         onFirstRecorded: () -> Unit
     ): MutableList<String> {
         val log = mutableListOf<String>()
@@ -774,10 +786,15 @@ public class AutomationEngineTest {
         val first = ledgerSchedule(sharedId = "group-1", identifier = "first", priority = -1)
         val second = ledgerSchedule(sharedId = "group-1", identifier = "second")
 
+        // Mutable, so a test can model remote data replacing a stored schedule
+        // while it waits. The store hands back whatever is in here, which is a
+        // different instance from the snapshot the attempt was prepared with -
+        // as it is in production, where each read loads afresh.
         val storedById = listOf(first, second).associate { sched ->
             sched.identifier to
                     ledgerScheduleData(sched, AutomationScheduleState.IDLE, triggerInfo = null)
-        }
+        }.toMutableMap()
+        storedForTest = storedById
 
         coEvery { store.getSchedules() } answers { storedById.values.toList() }
         coEvery { store.getSchedule(any()) } answers { storedById[firstArg()] }
@@ -790,6 +807,7 @@ public class AutomationEngineTest {
 
         coEvery { preparer.prepare(any(), any(), any(), any()) } answers {
             val sched = firstArg<AutomationSchedule>()
+            log.add("prepare:${sched.identifier}")
             SchedulePrepareResult.Prepared(
                 PreparedSchedule(
                     info = PreparedScheduleInfo(
@@ -799,7 +817,11 @@ public class AutomationEngineTest {
                         ledgerSharedId = "group-1",
                         triggerId = "trigger-1"
                     ),
-                    data = PreparedScheduleData.Action(JsonValue.wrap("actions")),
+                    data = when (sched.identifier) {
+                        in embeddedSchedules -> PreparedScheduleData.InAppMessage(embeddedMessageData())
+                        in bannerSchedules -> PreparedScheduleData.InAppMessage(bannerMessageData())
+                        else -> PreparedScheduleData.Action(JsonValue.wrap("actions"))
+                    },
                     frequencyChecker = null
                 )
             )
@@ -815,11 +837,12 @@ public class AutomationEngineTest {
                 // The executor records its outcome before returning, so the
                 // ledger can answer for it from here on.
                 onFirstRecorded()
+                onFirstRecordedRestoreSecond?.invoke(storedById)
             }
             ScheduleExecuteResult.FINISHED
         }
 
-        every { delayProcessor.areConditionsMet(any()) } returns true
+        every { delayProcessor.areConditionsMet(any()) } answers { areConditionsMet }
 
         every { triggerProcessor.getTriggerResults() } answers {
             flowOf(
@@ -856,14 +879,14 @@ public class AutomationEngineTest {
 
         // The first is parked inside execute. The second must be queued behind
         // the group rather than running against a tally that cannot see it.
-        assertEquals(listOf("execute:first"), log)
+        assertEquals(listOf("prepare:first", "prepare:second", "execute:first"), log)
 
         releaseFirst.complete(Unit)
         advanceUntilIdle()
 
         // The first spent the budget, so the second is dropped on the re-check
         // it does after taking the group.
-        assertEquals(listOf("execute:first"), log)
+        assertFalse(log.contains("execute:second"))
     }
 
     /**
@@ -878,13 +901,310 @@ public class AutomationEngineTest {
         // The holder records nothing, so the budget is still there on wake.
         val log = driveTwoPooledSchedules(releaseFirst) { }
 
-        assertEquals(listOf("execute:first"), log)
+        assertFalse(log.contains("execute:second"))
 
         releaseFirst.complete(Unit)
         advanceUntilIdle()
 
-        assertEquals(listOf("execute:first", "execute:second"), log)
+        assertTrue(log.contains("execute:second"))
     }
+
+    /**
+     * Schedules prepared as embedded messages, which cannot hold their ledger
+     * group across their own display.
+     */
+    private val embeddedSchedules = mutableSetOf<String>()
+
+    /**
+     * Schedules prepared as banner messages, which — like embedded ones —
+     * cannot hold their ledger group across their own display.
+     */
+    private val bannerSchedules = mutableSetOf<String>()
+
+    /**
+     * Whether the delay conditions currently hold. Read by the stubbed delay
+     * processor, so a test can have the user leave the gated screen while a
+     * sibling waits on its group.
+     */
+    private var areConditionsMet = true
+
+    /** The schedules the two-sibling harness stored, for asserting final state. */
+    private var storedForTest: MutableMap<String, AutomationScheduleData> = mutableMapOf()
+
+    /** A prepared embedded message, so `reservesLedgerGroup` is false for it. */
+    private fun embeddedMessageData(): PreparedInAppMessageData {
+        val layout = """
+            {
+              "layout": {
+                "version": 1,
+                "presentation": {
+                  "type": "embedded",
+                  "embedded_id": "home_banner",
+                  "default_placement": { "size": { "width": "50%", "height": "50%" } }
+                },
+                "view": { "type": "container", "items": [] }
+              }
+            }
+        """.trimIndent()
+
+        return PreparedInAppMessageData(
+            message = InAppMessage(
+                name = "embedded",
+                displayContent = InAppMessageDisplayContent.AirshipLayoutContent(
+                    AirshipLayout.fromJson(JsonValue.parseString(layout))
+                )
+            ),
+            displayAdapter = mockk(relaxed = true),
+            displayCoordinator = mockk(relaxed = true),
+            analytics = mockk(relaxed = true),
+            actionRunner = mockk(relaxed = true)
+        )
+    }
+
+    /** A prepared banner message, so `reservesLedgerGroup` is false for it. */
+    private fun bannerMessageData(): PreparedInAppMessageData {
+        val layout = """
+            {
+              "layout": {
+                "version": 1,
+                "presentation": {
+                  "type": "banner",
+                  "default_placement": {
+                    "size": { "width": "100%", "height": "25%" },
+                    "position": { "horizontal": "center", "vertical": "bottom" }
+                  }
+                },
+                "view": { "type": "container", "items": [] }
+              }
+            }
+        """.trimIndent()
+
+        return PreparedInAppMessageData(
+            message = InAppMessage(
+                name = "banner",
+                displayContent = InAppMessageDisplayContent.AirshipLayoutContent(
+                    AirshipLayout.fromJson(JsonValue.parseString(layout))
+                )
+            ),
+            displayAdapter = mockk(relaxed = true),
+            displayCoordinator = mockk(relaxed = true),
+            analytics = mockk(relaxed = true),
+            actionRunner = mockk(relaxed = true)
+        )
+    }
+
+    /**
+     * A banner is queued for a host the same way an embedded message is — it
+     * can sit unshown indefinitely if the app never surfaces a banner host —
+     * so it must not reserve its group either. Checked directly against
+     * [groupReservations]: mid-display, a banner must hold only its in-flight
+     * mark, never the reservation itself, which an action or a non-banner
+     * message would hold instead.
+     */
+    @Test
+    public fun testBannerDoesNotReserveGroup(): TestResult = runTest {
+        isGroupSpent = false
+        bannerSchedules.add("first")
+        val releaseFirst = CompletableDeferred<Unit>()
+
+        val log = driveTwoPooledSchedules(releaseFirst) { isGroupSpent = true }
+
+        assertTrue(log.contains("execute:first"))
+        assertFalse(groupReservations.isReserved("group-1"))
+        assertEquals(1, groupReservations.inFlight("group-1"))
+
+        releaseFirst.complete(Unit)
+        advanceUntilIdle()
+
+        // Woken once the mark cleared, and the banner spent the budget by then.
+        assertFalse(log.contains("execute:second"))
+        assertEquals(
+            AutomationScheduleState.FINISHED,
+            requireNotNull(storedForTest["second"]).scheduleState
+        )
+    }
+
+    /**
+     * A cancelled execution must still drop its in-flight mark. Nothing times
+     * the mark out, so leaking one wedges the whole group: every sibling would
+     * suspend on `awaitInFlightClear` for the life of the process.
+     */
+    @Test
+    public fun testInFlightMarkIsClearedWhenCancelledMidDisplay(): TestResult = runTest {
+        isGroupSpent = false
+        embeddedSchedules.add("first")
+        val releaseFirst = CompletableDeferred<Unit>()
+
+        driveTwoPooledSchedules(releaseFirst) { isGroupSpent = true }
+
+        // "first" is parked mid-display holding only its in-flight mark.
+        assertEquals(1, groupReservations.inFlight("group-1"))
+
+        engine.stop()
+        advanceUntilIdle()
+
+        assertEquals(0, groupReservations.inFlight("group-1"))
+    }
+
+    /**
+     * The contrast case: an action holds the reservation itself for its whole
+     * execution, unlike the banner above.
+     */
+    @Test
+    public fun testActionReservesGroup(): TestResult = runTest {
+        isGroupSpent = false
+        val releaseFirst = CompletableDeferred<Unit>()
+
+        driveTwoPooledSchedules(releaseFirst) { isGroupSpent = true }
+
+        assertTrue(groupReservations.isReserved("group-1"))
+        assertEquals(0, groupReservations.inFlight("group-1"))
+
+        releaseFirst.complete(Unit)
+        advanceUntilIdle()
+    }
+
+    /**
+     * An embedded sibling cannot hold its group - it is live in a host view
+     * indefinitely - but it must still wait for whoever does, so a non-embedded
+     * sibling mid-display gets to record before it reads the tally.
+     */
+    @Test
+    public fun testEmbeddedPooledSiblingWaitsForInFlightExecution(): TestResult = runTest {
+        isGroupSpent = false
+        embeddedSchedules.add("second")
+        val releaseFirst = CompletableDeferred<Unit>()
+
+        val log = driveTwoPooledSchedules(releaseFirst) { isGroupSpent = true }
+
+        // Parked behind the holder despite reserving nothing itself.
+        assertFalse(log.contains("execute:second"))
+
+        releaseFirst.complete(Unit)
+        advanceUntilIdle()
+
+        // The holder spent the budget, so the embedded sibling is dropped too.
+        assertFalse(log.contains("execute:second"))
+    }
+
+    /**
+     * A schedule that holds its group must still notice a sibling that cannot:
+     * an embedded message mid-display has spent the budget without recording
+     * it, so the reserving sibling has nothing in the ledger to read until it
+     * waits the in-flight mark out.
+     */
+    @Test
+    public fun testReservingSiblingWaitsThenIsSkippedWhenInFlightSpends(): TestResult = runTest {
+        isGroupSpent = false
+        // The holder is the embedded one, so it registers in flight and releases
+        // the group instead of keeping it for its display.
+        embeddedSchedules.add("first")
+        val releaseFirst = CompletableDeferred<Unit>()
+
+        val log = driveTwoPooledSchedules(releaseFirst) { isGroupSpent = true }
+
+        assertTrue(log.contains("execute:first"))
+        // Parked waiting on the in-flight mark, not settled — the ledger still
+        // reads under the limit at this point.
+        assertFalse(log.contains("execute:second"))
+
+        releaseFirst.complete(Unit)
+        advanceUntilIdle()
+
+        // Woken once the mark cleared, and the limit it retried against is now
+        // spent, so it is skipped rather than executed.
+        assertFalse(log.contains("execute:second"))
+        assertEquals(
+            AutomationScheduleState.FINISHED,
+            requireNotNull(storedForTest["second"]).scheduleState
+        )
+    }
+
+    /**
+     * Waiting rather than being dropped up front is the whole point: an
+     * in-flight sibling can resolve without spending anything, and the waiter
+     * has to get an actual turn once it does — a fresh trigger cannot be the
+     * only way back in, since the schedule never lost its own eligibility.
+     */
+    @Test
+    public fun testReservingSiblingRunsWhenInFlightSiblingSpendsNothing(): TestResult = runTest {
+        isGroupSpent = false
+        embeddedSchedules.add("first")
+        val releaseFirst = CompletableDeferred<Unit>()
+
+        // The holder records nothing (no `isGroupSpent = true`), so the budget
+        // is still there once the sibling wakes.
+        val log = driveTwoPooledSchedules(releaseFirst) { }
+
+        assertFalse(log.contains("execute:second"))
+
+        releaseFirst.complete(Unit)
+        advanceUntilIdle()
+
+        assertTrue(log.contains("execute:second"))
+    }
+
+    /**
+     * The delay conditions are checked once in the drain, before the attempt is
+     * dispatched. Waiting on a group makes that gap unbounded, so they have to
+     * be re-checked — otherwise a schedule gated to a screen displays after the
+     * user has left it.
+     */
+    @Test
+    public fun testPooledSiblingWaitsForConditionsAfterWaitingOnGroup(): TestResult = runTest {
+        isGroupSpent = false
+        areConditionsMet = true
+        val releaseFirst = CompletableDeferred<Unit>()
+
+        val log = driveTwoPooledSchedules(releaseFirst) {
+            // The holder displayed for a while and the user moved on, so the
+            // conditions the sibling was dispatched under no longer hold.
+            areConditionsMet = false
+        }
+
+        releaseFirst.complete(Unit)
+        advanceUntilIdle()
+
+        // The budget is untouched, so only the conditions can hold it back.
+        assertFalse(log.contains("execute:second"))
+    }
+
+    /**
+     * A definition that changed while the sibling waited must send it back to be
+     * reprocessed, not finish it.
+     *
+     * The snapshot it waited with can name a group it has since left, so the
+     * budget must not be judged on it — the re-prepare evaluates the group the
+     * schedule is actually in now.
+     */
+    @Test
+    public fun testPooledSiblingIsReprocessedWhenDefinitionChangedWhileWaiting(): TestResult =
+        runTest {
+            isGroupSpent = false
+            val releaseFirst = CompletableDeferred<Unit>()
+
+            val log = driveTwoPooledSchedules(
+                firstIsHeld = releaseFirst,
+                onFirstRecordedRestoreSecond = { stored ->
+                    // Remote data moved the sibling to another group while it was
+                    // queued. The store now hands back the new definition, while
+                    // the waiting attempt still holds the old snapshot.
+                    stored["second"] = ledgerScheduleData(
+                        ledgerSchedule(sharedId = "group-2", identifier = "second"),
+                        AutomationScheduleState.PREPARED,
+                        triggerInfo = null
+                    )
+                }
+            ) {
+                isGroupSpent = true
+            }
+
+            releaseFirst.complete(Unit)
+            advanceUntilIdle()
+
+            // Prepared a second time rather than finished off the stale group.
+            assertEquals(2, log.count { it == "prepare:second" })
+        }
 
     /**
      * An unpooled schedule is unaffected: nothing but its own execution can add

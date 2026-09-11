@@ -117,6 +117,70 @@ public class LedgerGroupReservationsTest {
     }
 
     @Test
+    public fun testAwaitInFlightClearReturnsImmediatelyWhenNothingIsInFlight(): TestResult = runTest {
+        // Nothing ever marked "group-1" in flight, so there is nothing to wait
+        // for - this must not suspend forever.
+        reservations.awaitInFlightClear("group-1")
+    }
+
+    @Test
+    public fun testAwaitInFlightClearSuspendsUntilExitInFlight(): TestResult = runTest {
+        reservations.enterInFlight("group-1")
+
+        var cleared = false
+        val waiter = launch {
+            reservations.awaitInFlightClear("group-1")
+            cleared = true
+        }
+
+        testScheduler.runCurrent()
+        assertFalse(cleared)
+
+        reservations.exitInFlight("group-1")
+        waiter.join()
+
+        assertTrue(cleared)
+    }
+
+    @Test
+    public fun testAwaitInFlightClearWaitsOutMultipleMarks(): TestResult = runTest {
+        reservations.enterInFlight("group-1")
+        reservations.enterInFlight("group-1")
+
+        var cleared = false
+        val waiter = launch {
+            reservations.awaitInFlightClear("group-1")
+            cleared = true
+        }
+
+        reservations.exitInFlight("group-1")
+        testScheduler.runCurrent()
+        // One of two marks cleared, so the group is still in flight.
+        assertFalse(cleared)
+
+        reservations.exitInFlight("group-1")
+        waiter.join()
+
+        assertTrue(cleared)
+    }
+
+    /**
+     * An in-flight mark never blocks [withGroup]: marking is how a caller that
+     * cannot hold the group at all still excludes siblings, so it must not
+     * additionally contend for the mutex.
+     */
+    @Test
+    public fun testInFlightMarkDoesNotBlockWithGroup(): TestResult = runTest {
+        reservations.enterInFlight("group-1")
+
+        var ran = false
+        reservations.withGroup("group-1") { ran = true }
+
+        assertTrue(ran)
+        reservations.exitInFlight("group-1")
+    }
+
+    @Test
     public fun testIdleGroupIsForgotten(): TestResult = runTest {
         reservations.withGroup("group-1") { }
 

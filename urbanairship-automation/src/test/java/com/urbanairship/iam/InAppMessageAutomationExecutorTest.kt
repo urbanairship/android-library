@@ -324,6 +324,27 @@ public class InAppMessageAutomationExecutorTest {
         )
     }
 
+    /**
+     * A display resolved out of its queue without ever appearing spends no
+     * budget and runs none of the message's actions: both follow from having
+     * displayed, and it did not.
+     */
+    @Test
+    public fun testDroppedDisplayRecordsNothingAndRunsNoActions(): TestResult = runTest {
+        every { displayCoordinator.messageWillDisplay(any()) } just runs
+        every { displayCoordinator.messageFinishedDisplaying(any()) } just runs
+
+        coEvery { displayAdapter.display(any(), any()) } coAnswers { DisplayResult.DROPPED }
+        coEvery { assetManager.clearCache(any()) } just runs
+        coEvery { actionRunner.run(any(), any(), Action.Situation.AUTOMATION) } just runs
+
+        val result = execute()
+
+        assertEquals(ScheduleExecuteResult.CANCEL, result)
+        assertTrue(ledger.recorded.isEmpty())
+        verify(exactly = 0) { actionRunner.run(any(), any(), Action.Situation.AUTOMATION) }
+    }
+
     @Test
     public fun testExecuteCancel(): TestResult = runTest {
         every { displayCoordinator.messageWillDisplay(any()) } just runs
