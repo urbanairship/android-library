@@ -164,6 +164,7 @@ internal class InAppMessageAnalytics private constructor(
             context = LayoutEventContext.makeContext(
                 reportingContext = preparedScheduleInfo.reportingContext,
                 experimentResult = preparedScheduleInfo.experimentResult,
+                variantAudienceReportingContext = preparedScheduleInfo.variantAudienceResult?.reportingContext,
                 layoutContext = layoutContext,
                 displayContext = displayContext.value
             ),
@@ -181,6 +182,7 @@ internal class InAppMessageAnalytics private constructor(
             context = LayoutEventContext.makeContext(
                 reportingContext = preparedScheduleInfo.reportingContext,
                 experimentResult = preparedScheduleInfo.experimentResult,
+                variantAudienceReportingContext = preparedScheduleInfo.variantAudienceResult?.reportingContext,
                 layoutContext = state,
                 displayContext = displayContext.value
             )

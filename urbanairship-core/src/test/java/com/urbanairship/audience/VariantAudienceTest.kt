@@ -1,9 +1,12 @@
 package com.urbanairship.audience
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
+import com.urbanairship.json.jsonMapOf
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
+import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -15,10 +18,15 @@ public class VariantAudienceTest {
     // combination resolves to bucket 9908 of 16384 via farm hash.
     private fun variantAudience(
         audienceSubset: Pair<Int, Int>,
-        holdoutSubset: Pair<Int, Int>? = null
+        holdoutSubset: Pair<Int, Int>? = null,
+        reportingContext: JsonMap? = null
     ): VariantAudience {
         val holdoutJson = holdoutSubset?.let {
             """, "holdout_subset": { "min_hash_bucket": ${it.first}, "max_hash_bucket": ${it.second} }"""
+        } ?: ""
+
+        val reportingContextJson = reportingContext?.let {
+            """, "reporting_context": ${it.toJsonValue()}"""
         } ?: ""
 
         val json = """
@@ -31,6 +39,7 @@ public class VariantAudienceTest {
                 },
                 "audience_subset": { "min_hash_bucket": ${audienceSubset.first}, "max_hash_bucket": ${audienceSubset.second} }
                 $holdoutJson
+                $reportingContextJson
             }
         """.trimIndent()
 
@@ -76,6 +85,30 @@ public class VariantAudienceTest {
     public fun testResolveVariantMissWithoutHoldoutArm() {
         val variantAudience = variantAudience(audienceSubset = 0 to 0)
         assertEquals(VariantAudience.Outcome.VARIANT_MISS, variantAudience.resolve("", "contactId"))
+    }
+
+    @Test
+    public fun testReportingContext() {
+        val variantAudience = variantAudience(
+            audienceSubset = 9908 to 9908,
+            reportingContext = jsonMapOf("foo" to "bar")
+        )
+        assertEquals(jsonMapOf("foo" to "bar"), variantAudience.reportingContext)
+    }
+
+    @Test
+    public fun testReportingContextDefaultsToNull() {
+        assertNull(variantAudience(audienceSubset = 9908 to 9908).reportingContext)
+    }
+
+    @Test
+    public fun testReportingContextSurvivesEncoding() {
+        val variantAudience = variantAudience(
+            audienceSubset = 9908 to 9908,
+            reportingContext = jsonMapOf("foo" to "bar")
+        )
+        val encoded = VariantAudience.fromJson(variantAudience.toJsonValue().requireMap())
+        assertEquals(jsonMapOf("foo" to "bar"), encoded?.reportingContext)
     }
 
     @Test

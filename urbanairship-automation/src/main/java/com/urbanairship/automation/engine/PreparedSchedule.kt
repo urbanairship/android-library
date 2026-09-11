@@ -8,6 +8,7 @@ import com.urbanairship.automation.limits.FrequencyChecker
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.PreparedInAppMessageData
 import com.urbanairship.json.JsonException
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
@@ -119,11 +120,14 @@ public data class PreparedScheduleInfo(
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public data class VariantAudienceResult(
-    public val outcome: VariantAudience.Outcome
+    public val outcome: VariantAudience.Outcome,
+    /** The experiment's [VariantAudience.reportingContext], carried to the reporting events. */
+    public val reportingContext: JsonMap? = null
 ) : JsonSerializable {
 
     internal companion object {
         private const val OUTCOME = "outcome"
+        private const val REPORTING_CONTEXT = "reporting_context"
 
         @Throws(JsonException::class)
         fun fromJson(value: JsonValue): VariantAudienceResult {
@@ -131,11 +135,15 @@ public data class VariantAudienceResult(
             val rawOutcome = content.requireField<String>(OUTCOME)
             val outcome = VariantAudience.Outcome.from(rawOutcome)
                 ?: throw JsonException("Invalid variant audience outcome $rawOutcome")
-            return VariantAudienceResult(outcome)
+            return VariantAudienceResult(
+                outcome = outcome,
+                reportingContext = content[REPORTING_CONTEXT]?.map
+            )
         }
     }
 
     override fun toJsonValue(): JsonValue = jsonMapOf(
-        OUTCOME to outcome.json
+        OUTCOME to outcome.json,
+        REPORTING_CONTEXT to reportingContext
     ).toJsonValue()
 }

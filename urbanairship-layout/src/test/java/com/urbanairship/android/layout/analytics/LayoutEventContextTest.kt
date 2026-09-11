@@ -123,8 +123,49 @@ public class LayoutEventContextTest {
     }
 
     @Test
+    public fun testMakeAppendsVariantAudienceReportingContext() {
+        val experimentResult = ExperimentResult(
+            channelId = "some channel",
+            contactId = "some contact",
+            isMatching = true,
+            allEvaluatedExperimentsMetadata = listOf(jsonMapOf("some" to "reporting")),
+        )
+
+        val context = LayoutEventContext.makeContext(
+            reportingContext = null,
+            experimentResult = experimentResult,
+            variantAudienceReportingContext = jsonMapOf("variant" to "reporting"),
+            layoutContext = null,
+            displayContext = null
+        )
+
+        assertEquals(
+            listOf(jsonMapOf("some" to "reporting"), jsonMapOf("variant" to "reporting")),
+            context?.experimentReportingData
+        )
+    }
+
+    @Test
+    public fun testMakeWithOnlyVariantAudienceReportingContext() {
+        val context = LayoutEventContext.makeContext(
+            reportingContext = null,
+            experimentResult = null,
+            variantAudienceReportingContext = jsonMapOf("variant" to "reporting"),
+            layoutContext = null,
+            displayContext = null
+        )
+
+        assertEquals(listOf(jsonMapOf("variant" to "reporting")), context?.experimentReportingData)
+    }
+
+    @Test
     public fun testMakeEmpty() {
-        val context = LayoutEventContext.makeContext(null, null, null, null)
+        val context = LayoutEventContext.makeContext(
+            reportingContext = null,
+            experimentResult = null,
+            layoutContext = null,
+            displayContext = null
+        )
         assertNull(context)
     }
 }

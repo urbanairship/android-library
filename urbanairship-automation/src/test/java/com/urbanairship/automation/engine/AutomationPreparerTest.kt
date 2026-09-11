@@ -38,6 +38,7 @@ import com.urbanairship.iam.content.Banner
 import com.urbanairship.iam.content.Custom
 import com.urbanairship.iam.content.InAppMessageDisplayContent
 import com.urbanairship.iam.info.InAppMessageButtonLayoutType
+import com.urbanairship.json.JsonMap
 import com.urbanairship.json.JsonValue
 import com.urbanairship.json.jsonMapOf
 import java.time.Instant
@@ -1119,10 +1120,15 @@ public class AutomationPreparerTest {
     // combination resolves to bucket 9908 of 16384 via farm hash.
     private fun makeVariantAudience(
         audienceSubset: Pair<Int, Int>,
-        holdoutSubset: Pair<Int, Int>? = null
+        holdoutSubset: Pair<Int, Int>? = null,
+        reportingContext: JsonMap? = null
     ): VariantAudience {
         val holdoutJson = holdoutSubset?.let {
             """, "holdout_subset": { "min_hash_bucket": ${it.first}, "max_hash_bucket": ${it.second} }"""
+        } ?: ""
+
+        val reportingContextJson = reportingContext?.let {
+            """, "reporting_context": ${it.toJsonValue()}"""
         } ?: ""
 
         val json = """
@@ -1135,6 +1141,7 @@ public class AutomationPreparerTest {
                 },
                 "audience_subset": { "min_hash_bucket": ${audienceSubset.first}, "max_hash_bucket": ${audienceSubset.second} }
                 $holdoutJson
+                $reportingContextJson
             }
         """.trimIndent()
 
@@ -1214,6 +1221,39 @@ public class AutomationPreparerTest {
         }
     }
 
+    @Test
+    public fun testVariantAudienceCarriesReportingContext(): TestResult = runTest {
+        val schedule = makeSchedule(
+            variantAudience = makeVariantAudience(
+                audienceSubset = 9908 to 9908,
+                reportingContext = jsonMapOf("foo" to "bar")
+            )
+        )
+
+        coEvery { remoteDataAccess.requiredUpdate(eq(schedule)) } returns false
+        coEvery { remoteDataAccess.bestEffortRefresh(eq(schedule)) } returns true
+        coEvery { deviceInfoProvider.getStableContactInfo() } returns StableContactInfo("contactId", null)
+        coEvery { deviceInfoProvider.getChannelId() } returns ""
+
+        mockExperimentsManager()
+
+        coEvery { messagePreparer.prepare(any(), any()) } answers {
+            return@answers Result.success(DelegatePreparerResult.Prepared(preparedMessageData))
+        }
+
+        val result = preparer.prepare(schedule, triggerContext, triggerSessionId = UUID.randomUUID().toString())
+        if (result is SchedulePrepareResult.Prepared) {
+            assertEquals(
+                VariantAudienceResult(
+                    outcome = VariantAudience.Outcome.MATCHED,
+                    reportingContext = jsonMapOf("foo" to "bar")
+                ),
+                result.schedule.info.variantAudienceResult
+            )
+        } else {
+            fail()
+        }
+    }
 
     private fun mockExperimentsManager() {
         coEvery { experimentManager.evaluateExperiments(any(), any()) } returns Result.success(null)

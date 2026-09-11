@@ -361,7 +361,8 @@ internal class AutomationPreparer internal constructor(
             outcome = variantAudience.resolve(
                 channelId = deviceInfoProvider.getChannelId(),
                 contactId = deviceInfoProvider.getStableContactInfo().contactId
-            )
+            ),
+            reportingContext = variantAudience.reportingContext
         )
     }
 

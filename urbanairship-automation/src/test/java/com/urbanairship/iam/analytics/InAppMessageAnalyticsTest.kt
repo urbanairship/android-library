@@ -16,7 +16,9 @@ import com.urbanairship.android.layout.analytics.makeContext
 import com.urbanairship.android.layout.reporting.FormInfo
 import com.urbanairship.android.layout.reporting.LayoutData
 import com.urbanairship.android.layout.reporting.PagerData
+import com.urbanairship.audience.VariantAudience
 import com.urbanairship.automation.engine.PreparedScheduleInfo
+import com.urbanairship.automation.engine.VariantAudienceResult
 import com.urbanairship.experiment.ExperimentResult
 import com.urbanairship.iam.InAppMessage
 import com.urbanairship.iam.content.Custom
@@ -181,6 +183,29 @@ public class InAppMessageAnalyticsTest {
         assertEquals(event?.context, expectedContext)
         assertEquals(event?.renderedLocale, jsonMapOf("US" to "en-US").toJsonValue())
         assertEquals(event?.event?.eventType, EventType.IN_APP_DISPLAY)
+    }
+
+    @Test
+    public fun testDataAppendsVariantAudienceReportingContext(): TestResult = runTest {
+        val experimentContext = jsonMapOf("experiment" to "reporting")
+        val variantContext = jsonMapOf("variant" to "reporting")
+        val info = preparedInfo.copy(
+            experimentResult = ExperimentResult(
+                channelId = "some channel",
+                contactId = "some contact",
+                isMatching = false,
+                allEvaluatedExperimentsMetadata = listOf(experimentContext)
+            ),
+            variantAudienceResult = VariantAudienceResult(
+                outcome = VariantAudience.Outcome.MATCHED,
+                reportingContext = variantContext
+            )
+        )
+
+        makeAnalytics(source = InAppMessage.Source.LEGACY_PUSH, preparedScheduleInfo = info)
+            .recordEvent(TestInAppEvent(), layoutContext = null)
+
+        assertEquals(listOf(experimentContext, variantContext), event?.context?.experimentReportingData)
     }
 
     @Test
