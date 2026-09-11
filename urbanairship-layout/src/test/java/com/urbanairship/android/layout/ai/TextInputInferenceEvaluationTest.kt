@@ -2,6 +2,7 @@
 package com.urbanairship.android.layout.ai
 
 import com.urbanairship.ai.EvaluationContext
+import com.urbanairship.ai.Usage
 import com.urbanairship.json.AirshipJsonSchema
 import com.urbanairship.json.JsonValue
 import org.junit.Assert.assertEquals
@@ -27,9 +28,9 @@ public class TextInputInferenceEvaluationTest {
     public fun testUsageAndSubject() {
         val evaluation = evaluation("late delivery")
 
-        assertEquals(SceneTextInputInference.usage, evaluation.usage)
+        assertEquals(Usage.sceneTextInput, evaluation.usage)
         assertEquals(
-            SceneTextInputInference.Subject("late delivery", mapOf("tier" to "gold")),
+            SceneTextInputSubject("late delivery", mapOf("tier" to "gold")),
             evaluation.subject
         )
         assertEquals(schema, evaluation.schema)

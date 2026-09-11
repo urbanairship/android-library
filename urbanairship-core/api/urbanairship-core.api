@@ -1353,10 +1353,14 @@ public final class com/urbanairship/ai/SchemaValidationException : java/lang/Exc
 }
 
 public final class com/urbanairship/ai/Usage {
+	public static final field Companion Lcom/urbanairship/ai/Usage$Companion;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getRawValue ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class com/urbanairship/ai/Usage$Companion {
 }
 
 public final class com/urbanairship/analytics/AirshipEventData {

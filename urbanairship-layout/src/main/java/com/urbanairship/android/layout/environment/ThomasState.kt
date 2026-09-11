@@ -132,13 +132,17 @@ internal fun makeThomasState(
     val layout = layoutState
         ?: return MutableStateFlow(ThomasState(null, null, null, null, null, null)).asStateFlow()
 
-    return combineStates(
+    // Folded in over a second combine rather than a six-flow one: kotlinx only types `combine`
+    // up to five flows, and past that the vararg form makes every argument an unchecked cast.
+    val states = combineStates(
         flow1 = layout.changes,
         flow2 = formState?.changes ?: MutableStateFlow(null).asStateFlow(),
         flow3 = pagerState?.changes ?: MutableStateFlow(null).asStateFlow(),
         flow4 = videoState?.changes ?: MutableStateFlow(null).asStateFlow(),
-        flow5 = asyncView?.changes ?: MutableStateFlow(null).asStateFlow(),
-        flow6 = aiStatus,
-        transform = ::ThomasState
-    )
+        flow5 = asyncView?.changes ?: MutableStateFlow(null).asStateFlow()
+    ) { layoutState, form, pager, video, async ->
+        ThomasState(layoutState, form, pager, video, async, ai = null)
+    }
+
+    return combineStates(states, aiStatus) { state, ai -> state.copy(ai = ai) }
 }

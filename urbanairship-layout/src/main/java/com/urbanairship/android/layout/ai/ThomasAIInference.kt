@@ -89,7 +89,7 @@ internal class DefaultThomasAIInference(
     private val ai: InternalAirshipAi
 ) : ThomasAIInference {
 
-    private val model = ai.gatedModel(SceneTextInputInference.usage)
+    private val model = ai.gatedModel(Usage.sceneTextInput)
 
     override val isAvailable: Boolean
         get() = model?.availability == ModelAvailability.Available
@@ -133,12 +133,12 @@ internal class DefaultThomasAIInference(
  */
 internal class TextInputInferenceEvaluation(
     private val request: ThomasAIInferenceRequest
-) : Evaluation<JsonValue, SceneTextInputInference.Subject> {
+) : Evaluation<JsonValue, SceneTextInputSubject> {
 
-    override val usage: Usage<SceneTextInputInference.Subject> = SceneTextInputInference.usage
+    override val usage: Usage<SceneTextInputSubject> = Usage.sceneTextInput
 
-    override val subject: SceneTextInputInference.Subject =
-        SceneTextInputInference.Subject(text = request.text, hints = request.subjectHints)
+    override val subject: SceneTextInputSubject =
+        SceneTextInputSubject(text = request.text, hints = request.subjectHints)
 
     override val schema: AirshipJsonSchema = request.outputSchema
 
