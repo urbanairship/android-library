@@ -130,25 +130,55 @@ public class LabelIconPlacementTest {
 
     /**
      * The gap belongs between the icon and the text, so it sits on whichever side the text is:
-     * the start icon leads, the end icon trails, and RTL swaps which physical side that is.
+     * the start icon leads, the end icon trails, and an RTL paragraph swaps which physical side
+     * that is.
      */
     @Test
-    public fun testGapSidesInLtr() {
+    public fun testGapSidesForLtrText() {
         assertEquals(0, insetBounds(startIcon = true).left)
         assertTrue(insetBounds(endIcon = true).left > 0)
     }
 
     @Test
-    public fun testGapSidesInRtl() {
+    public fun testGapSidesForRtlText() {
+        assertTrue(insetBounds(startIcon = true, text = ARABIC).left > 0)
+        assertEquals(0, insetBounds(endIcon = true, text = ARABIC).left)
+    }
+
+    /**
+     * The text decides, not the device: Latin text on an Arabic device still lays out
+     * left-to-right, so flipping the gap for the locale would strand it outside the icon.
+     */
+    @Test
+    public fun testLtrTextKeepsLtrGapsOnAnRtlDevice() {
         airshipLocale = Locale.forLanguageTag("ar-EG")
 
-        assertTrue(insetBounds(startIcon = true).left > 0)
-        assertEquals(0, insetBounds(endIcon = true).left)
+        assertEquals(0, insetBounds(startIcon = true).left)
+        assertTrue(insetBounds(endIcon = true).left > 0)
+    }
+
+    @Test
+    public fun testRtlTextKeepsRtlGapsOnAnLtrDevice() {
+        assertTrue(insetBounds(startIcon = true, text = ARABIC).left > 0)
+        assertEquals(0, insetBounds(endIcon = true, text = ARABIC).left)
+    }
+
+    /** Text with no direction of its own falls back to the locale. */
+    @Test
+    public fun testDirectionlessTextFollowsTheLocale() {
+        assertEquals(0, insetBounds(startIcon = true, text = "12 34").left)
+
+        airshipLocale = Locale.forLanguageTag("ar-EG")
+        assertTrue(insetBounds(startIcon = true, text = "12 34").left > 0)
     }
 
     /** The child rect inside the icon's [InsetDrawable], which reveals which side the gap is on. */
-    private fun insetBounds(startIcon: Boolean = false, endIcon: Boolean = false): Rect {
-        val view = labelView(startIcon = startIcon, endIcon = endIcon)
+    private fun insetBounds(
+        startIcon: Boolean = false,
+        endIcon: Boolean = false,
+        text: String = LATIN
+    ): Rect {
+        val view = labelView(startIcon = startIcon, endIcon = endIcon, text = text)
         val icon = spans(view).single().drawable
         return (icon as InsetDrawable).drawable!!.bounds
     }
@@ -166,7 +196,11 @@ public class LabelIconPlacementTest {
             .sortedBy { text.getSpanStart(it) }
     }
 
-    private fun labelView(startIcon: Boolean = false, endIcon: Boolean = false): LabelView {
+    private fun labelView(
+        startIcon: Boolean = false,
+        endIcon: Boolean = false,
+        text: String = LATIN
+    ): LabelView {
         fun icon(key: String) = """
             , "$key": {
                 "type": "floating",
@@ -185,7 +219,7 @@ public class LabelIconPlacementTest {
                 """
                 {
                     "type": "label",
-                    "text": "See Recommendations",
+                    "text": "$text",
                     "text_appearance": {
                         "font_size": 16,
                         "alignment": "center",
@@ -204,5 +238,10 @@ public class LabelIconPlacementTest {
             mockk(relaxed = true),
             ItemProperties(size = null)
         ) as LabelView
+    }
+
+    private companion object {
+        const val LATIN = "See Recommendations"
+        const val ARABIC = "شاهد التوصيات"
     }
 }

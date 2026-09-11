@@ -28,6 +28,7 @@ import com.urbanairship.android.layout.model.LabelModel
 import com.urbanairship.android.layout.property.HorizontalPosition
 import com.urbanairship.android.layout.util.LayoutUtils
 import com.urbanairship.android.layout.util.ResourceUtils.spToPx
+import java.text.Bidi
 import com.urbanairship.android.layout.util.ifNotEmpty
 import com.urbanairship.android.layout.util.isLayoutRtl
 
@@ -252,8 +253,15 @@ internal class LabelView(
         // centred button label, say — strands the icon away from the words it belongs to and
         // makes the authored `space` between them meaningless. Inline, the icons travel with
         // whatever alignment applies and `space` means the same thing on both sides.
-        val startIcon = getSizedDrawable(resolvedState.iconStart, size, HorizontalPosition.START)
-        val endIcon = getSizedDrawable(resolvedState.iconEnd, size, HorizontalPosition.END)
+        // Keyed off the text, not the locale: a span sits where the paragraph puts it, and the
+        // two disagree whenever content and locale disagree — Latin text on an Arabic device
+        // renders left-to-right, and a gap flipped for the locale then lands outside the icon
+        // instead of between it and the words.
+        val isRtlText = text.isRtlParagraph { isLayoutRtl }
+        val startIcon =
+            getSizedDrawable(resolvedState.iconStart, size, HorizontalPosition.START, isRtlText)
+        val endIcon =
+            getSizedDrawable(resolvedState.iconEnd, size, HorizontalPosition.END, isRtlText)
 
         if (startIcon != null || endIcon != null) {
             val labelText = text
@@ -270,7 +278,8 @@ internal class LabelView(
     private fun getSizedDrawable(
         iconInfo: LabelInfo.LabelIcon?,
         size: Int,
-        position: HorizontalPosition
+        position: HorizontalPosition,
+        isRtlText: Boolean
     ): Drawable? {
         val resolvedIcon = iconInfo as? LabelInfo.LabelIcon.Floating ?: return null
 
@@ -280,12 +289,9 @@ internal class LabelView(
         val space = spToPx(context, resolvedIcon.space).toInt()
 
         // An InsetDrawable puts the gap between the icon and the text, so it goes on whichever
-        // side the text is: the start icon leads the text and the end icon trails it, and RTL
-        // swaps which physical side that is.
-        //
-        // `isLayoutRtl` rather than the view's `layoutDirection`: this runs on the first render,
-        // before the view is attached, and an unattached view has no resolved direction yet.
-        val gapOnLeft = (position == HorizontalPosition.END) != isLayoutRtl
+        // side the text is: the start icon leads the text and the end icon trails it, and an
+        // RTL paragraph swaps which physical side that is.
+        val gapOnLeft = (position == HorizontalPosition.END) != isRtlText
 
         val finalDrawable = InsetDrawable(
             drawable,
@@ -297,6 +303,25 @@ internal class LabelView(
         finalDrawable.setBounds(0, 0, size + space, size)
 
         return finalDrawable
+    }
+
+    /**
+     * Whether this text lays out right-to-left, by the same first-strong rule the platform
+     * applies to a `TextView` by default.
+     *
+     * The two `DIRECTION_DEFAULT_*` runs only disagree when there is no strong directional
+     * character to go on, which is exactly when first-strong defers to the layout direction —
+     * so that is the only case that consults [fallbackRtl].
+     *
+     * @param fallbackRtl The direction to use for text that says nothing about its own.
+     * @return Whether the paragraph is right-to-left.
+     */
+    private fun CharSequence.isRtlParagraph(fallbackRtl: () -> Boolean): Boolean {
+        val string = toString()
+        val assumingLtr = Bidi(string, Bidi.DIRECTION_DEFAULT_LEFT_TO_RIGHT).baseIsLeftToRight()
+        val assumingRtl = Bidi(string, Bidi.DIRECTION_DEFAULT_RIGHT_TO_LEFT).baseIsLeftToRight()
+
+        return if (assumingLtr == assumingRtl) !assumingLtr else fallbackRtl()
     }
 
     /**
