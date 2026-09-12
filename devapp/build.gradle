@@ -6,20 +6,23 @@ plugins {
     alias(libs.plugins.compose.compiler)
 }
 
-// Key for the sample OpenAIModel: local.properties (gitignored) wins, else the environment.
-// Empty means the devapp registers no AI model, so scenes take their non-AI path.
-def openAiApiKey = {
+// Keys for the sample models: local.properties (gitignored) wins, else the environment.
+// Both empty means the devapp registers no AI model, so scenes take their non-AI path.
+def readKey = { String property, String environment ->
     def local = rootProject.file('local.properties')
     if (local.exists()) {
         def properties = new Properties()
         local.withInputStream { properties.load(it) }
-        def key = properties.getProperty('openai.apiKey')
+        def key = properties.getProperty(property)
         if (key?.trim()) {
             return key.trim()
         }
     }
-    return System.getenv('OPENAI_API_KEY')?.trim() ?: ''
-}()
+    return System.getenv(environment)?.trim() ?: ''
+}
+
+def openAiApiKey = readKey('openai.apiKey', 'OPENAI_API_KEY')
+def geminiApiKey = readKey('gemini.apiKey', 'GEMINI_API_KEY')
 
 android {
     namespace = 'com.urbanairship.devapp'
@@ -36,6 +39,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField "String", "OPENAI_API_KEY", "\"${openAiApiKey}\""
+        buildConfigField "String", "GEMINI_API_KEY", "\"${geminiApiKey}\""
     }
 
     buildFeatures {
