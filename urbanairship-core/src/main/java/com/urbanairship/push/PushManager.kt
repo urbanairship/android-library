@@ -202,6 +202,10 @@ public open class PushManager @VisibleForTesting internal constructor(
         shared(context)
     )
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public override fun init() {
         super.init()
         airshipChannel.addChannelRegistrationPayloadExtender(channelExtender)
@@ -404,6 +408,10 @@ public open class PushManager @VisibleForTesting internal constructor(
     override val jobActions: List<String>
         get() = listOf(ACTION_UPDATE_PUSH_REGISTRATION, ACTION_DISPLAY_NOTIFICATION)
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         if (!privacyManager.isEnabled(PrivacyManager.Feature.PUSH)) {
             return JobResult.SUCCESS
@@ -1096,15 +1104,15 @@ public open class PushManager @VisibleForTesting internal constructor(
 
         private const val KEY_PREFIX: String = "com.urbanairship.push"
 
-        public val USER_NOTIFICATIONS_ENABLED_KEY: SyncPrefKey<Boolean> =
+        internal val USER_NOTIFICATIONS_ENABLED_KEY: SyncPrefKey<Boolean> =
             SyncPrefKey.boolean("$KEY_PREFIX.USER_NOTIFICATIONS_ENABLED")
-        public val PUSH_DELIVERY_TYPE: SyncPrefKey<String> =
+        internal val PUSH_DELIVERY_TYPE: SyncPrefKey<String> =
             SyncPrefKey.string("$KEY_PREFIX.PUSH_DELIVERY_TYPE")
-        public val PROVIDER_CLASS_KEY: SyncPrefKey<String> =
+        internal val PROVIDER_CLASS_KEY: SyncPrefKey<String> =
             SyncPrefKey.string("com.urbanairship.application.device.PUSH_PROVIDER")
-        public val PUSH_TOKEN_KEY: SyncPrefKey<String> =
+        internal val PUSH_TOKEN_KEY: SyncPrefKey<String> =
             SyncPrefKey.string("$KEY_PREFIX.REGISTRATION_TOKEN_KEY")
-        public val REQUEST_PERMISSION_KEY: SyncPrefKey<Boolean> =
+        internal val REQUEST_PERMISSION_KEY: SyncPrefKey<Boolean> =
             SyncPrefKey.boolean("$KEY_PREFIX.REQUEST_PERMISSION_KEY")
         private const val UA_NOTIFICATION_BUTTON_GROUP_PREFIX: String = "ua_"
         private val PUSH_TOKEN_REGISTRATION_TIMEOUT = 10.seconds

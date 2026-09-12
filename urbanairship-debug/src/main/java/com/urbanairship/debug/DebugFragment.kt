@@ -57,6 +57,8 @@ public class DebugFragment : Fragment() {
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         public const val ARG_IGNORE_BOTTOM_PADDING: String = "ignoreBottomPadding"
         public const val ARG_SHOW_NAV_ICON_ON_DEBUG_HOME_SCREEN: String = "showNavIconOnDebugHomeScreen"

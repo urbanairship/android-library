@@ -114,7 +114,10 @@ public class RateLimiter(
 
     /**
      * Limit status.
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public enum class LimitStatus {
 
         /**
@@ -130,7 +133,10 @@ public class RateLimiter(
 
     /**
      * Rate limit status.
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class Status @VisibleForTesting public constructor(
         /**
          * The status.

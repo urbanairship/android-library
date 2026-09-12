@@ -322,7 +322,9 @@ public object Airship {
      *
      * Access is thread-safe. This property will block until Airship is ready.
      * @throws IllegalStateException if `takeOff` has not been called.
+     * @hide
      */
+    @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     @JvmStatic
     public val runtimeConfig: AirshipRuntimeConfig
         get() = requireReadyInstance().runtimeConfig

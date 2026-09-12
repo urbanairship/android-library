@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 import kotlinx.parcelize.Parcelize
 
 /** `ViewModel` for [MessageView]. */
-public class MessageViewModel(
+public class MessageViewModel internal constructor(
     private val inbox: Inbox = Airship.messageCenter.inbox,
     /**
      * Supplied by [factory] from the component, not defaulted off the `Airship` singleton:
@@ -35,6 +35,8 @@ public class MessageViewModel(
     @get:RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public val ai: InternalAirshipAi? = null,
 ) : ViewModel() {
+
+    public constructor() : this(Airship.messageCenter.inbox)
 
 
     /**

@@ -41,7 +41,7 @@ import kotlinx.coroutines.runBlocking
  *
  * Default Registration Names: ^p, landing_page_action
  */
-public class LandingPageAction(
+public class LandingPageAction internal constructor(
     private val scheduler: suspend (AutomationSchedule) -> Unit,
     private val allowListChecker: (String) -> Boolean,
     private val scheduleExtender: ScheduleExtender? = null,

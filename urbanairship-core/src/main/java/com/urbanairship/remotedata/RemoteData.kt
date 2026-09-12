@@ -451,6 +451,8 @@ public class RemoteData @VisibleForTesting internal constructor(
         UALog.v { "Remote data refresh result: $source status: $refreshStatus" }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         // Datastore keys
@@ -509,10 +511,14 @@ public class RemoteData @VisibleForTesting internal constructor(
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public enum class Status {
         UP_TO_DATE, STALE, OUT_OF_DATE
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public enum class RefreshStatus {
         NONE, FAILED, SUCCESS
     }

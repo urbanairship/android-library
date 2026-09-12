@@ -40,6 +40,8 @@ public class AirshipRuntimeConfig internal constructor (
         configOptionsProvider, requestSession, RemoteConfigObserver(dataStore), platformProvider
     )
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public fun interface ConfigChangeListener {
         public fun onConfigUpdated()
     }

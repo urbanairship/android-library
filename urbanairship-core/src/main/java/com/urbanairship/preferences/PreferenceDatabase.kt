@@ -30,6 +30,8 @@ public abstract class PreferenceDatabase public constructor() : RoomDatabase() {
                 || context.getDatabasePath(openHelper.databaseName).exists()
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         private const val DATABASE_DIRECTORY_NAME = "com.urbanairship.databases"

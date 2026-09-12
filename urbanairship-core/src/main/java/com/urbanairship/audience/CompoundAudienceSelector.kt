@@ -65,6 +65,8 @@ public sealed class CompoundAudienceSelector: JsonSerializable {
         override fun toJsonValue(): JsonValue = JsonValue.wrap(jsonValue)
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         private const val TYPE = "type"
         private const val AUDIENCE = "audience"

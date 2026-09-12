@@ -287,6 +287,8 @@ public class Message @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public construc
         val viewState: ViewState?
     ): Parcelable, JsonSerializable {
 
+        /** @hide */
+        @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
         @Parcelize
         public data class ViewState(
             val restorationId: String,

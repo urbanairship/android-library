@@ -226,7 +226,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @param audience The audience.
          * @return The builder object.
          */
-        public fun setAudience(audience: AutomationAudience?): Builder = apply {
+        internal fun setAudience(audience: AutomationAudience?): Builder = apply {
             this.audience = audience
         }
 
@@ -235,7 +235,7 @@ public class AutomationSchedule @VisibleForTesting internal constructor(
          * @param audience The compoundAudience audience.
          * @return The builder object.
          */
-        public fun setCompoundAudience(audience: AutomationCompoundAudience?): Builder = apply {
+        internal fun setCompoundAudience(audience: AutomationCompoundAudience?): Builder = apply {
             this.compoundAudience = audience
         }
 

@@ -3,11 +3,6 @@ public final class com/urbanairship/debug/DebugActivity : androidx/appcompat/app
 	public fun <init> ()V
 }
 
-public final class com/urbanairship/debug/DebugFragment$Companion {
-	public final fun newInstance (ZZ)Lcom/urbanairship/debug/DebugFragment;
-	public static synthetic fun newInstance$default (Lcom/urbanairship/debug/DebugFragment$Companion;ZZILjava/lang/Object;)Lcom/urbanairship/debug/DebugFragment;
-}
-
 public final class com/urbanairship/debug/ui/appinfo/ComposableSingletons$AppInfoScreenKt {
 	public static final field INSTANCE Lcom/urbanairship/debug/ui/appinfo/ComposableSingletons$AppInfoScreenKt;
 	public fun <init> ()V

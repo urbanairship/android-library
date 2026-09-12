@@ -100,6 +100,8 @@ public class TagGroupsMutation private constructor(
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         private const val ADD_KEY = "add"

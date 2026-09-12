@@ -25,6 +25,8 @@ public class RetryingSQLiteOpenHelper public constructor(
     /** Lock to synchronize access to db open methods.  */
     private val lock = Any()
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class Factory public constructor(
         private val factoryDelegate: SupportSQLiteOpenHelper.Factory,
         private val allowDataLoss: Boolean

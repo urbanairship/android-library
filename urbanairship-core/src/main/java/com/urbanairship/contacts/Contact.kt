@@ -544,6 +544,10 @@ public class Contact internal constructor(
         get() = listOf(ACTION_UPDATE_CONTACT)
 
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         return if (ACTION_UPDATE_CONTACT == jobInfo.action) {
             val result = contactManager.performNextOperation()

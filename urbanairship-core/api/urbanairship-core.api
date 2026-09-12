@@ -21,7 +21,6 @@ public final class com/urbanairship/Airship {
 	public static final fun getPlatform ()Lcom/urbanairship/Platform;
 	public static final fun getPrivacyManager ()Lcom/urbanairship/PrivacyManager;
 	public static final fun getPush ()Lcom/urbanairship/push/PushManager;
-	public static final fun getRuntimeConfig ()Lcom/urbanairship/config/AirshipRuntimeConfig;
 	public final fun getStatus ()Lcom/urbanairship/AirshipStatus;
 	public final fun getStatusFlow ()Lkotlinx/coroutines/flow/StateFlow;
 	public static final fun getUrlAllowList ()Lcom/urbanairship/UrlAllowList;
@@ -401,11 +400,6 @@ public final class com/urbanairship/PrivacyManager$Feature : com/urbanairship/js
 }
 
 public final class com/urbanairship/PrivacyManager$Feature$Companion {
-}
-
-public final class com/urbanairship/PushProviders$Companion {
-	public final fun lazyLoader (Landroid/content/Context;Lcom/urbanairship/AirshipConfigOptions;)Lkotlin/jvm/functions/Function0;
-	public final fun load (Landroid/content/Context;Lcom/urbanairship/AirshipConfigOptions;)Lcom/urbanairship/PushProviders;
 }
 
 public abstract interface class com/urbanairship/ResultCallback {
@@ -1376,36 +1370,6 @@ public final class com/urbanairship/analytics/AirshipEventData {
 	public fun toString ()Ljava/lang/String;
 }
 
-public abstract class com/urbanairship/analytics/AirshipEventFeed$Event {
-}
-
-public final class com/urbanairship/analytics/AirshipEventFeed$Event$Analytics : com/urbanairship/analytics/AirshipEventFeed$Event {
-	public fun <init> (Lcom/urbanairship/analytics/EventType;Lcom/urbanairship/json/JsonValue;Ljava/lang/Double;)V
-	public synthetic fun <init> (Lcom/urbanairship/analytics/EventType;Lcom/urbanairship/json/JsonValue;Ljava/lang/Double;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Lcom/urbanairship/analytics/EventType;
-	public final fun component2 ()Lcom/urbanairship/json/JsonValue;
-	public final fun component3 ()Ljava/lang/Double;
-	public final fun copy (Lcom/urbanairship/analytics/EventType;Lcom/urbanairship/json/JsonValue;Ljava/lang/Double;)Lcom/urbanairship/analytics/AirshipEventFeed$Event$Analytics;
-	public static synthetic fun copy$default (Lcom/urbanairship/analytics/AirshipEventFeed$Event$Analytics;Lcom/urbanairship/analytics/EventType;Lcom/urbanairship/json/JsonValue;Ljava/lang/Double;ILjava/lang/Object;)Lcom/urbanairship/analytics/AirshipEventFeed$Event$Analytics;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getData ()Lcom/urbanairship/json/JsonValue;
-	public final fun getEventType ()Lcom/urbanairship/analytics/EventType;
-	public final fun getValue ()Ljava/lang/Double;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/analytics/AirshipEventFeed$Event$Screen : com/urbanairship/analytics/AirshipEventFeed$Event {
-	public fun <init> (Ljava/lang/String;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;)Lcom/urbanairship/analytics/AirshipEventFeed$Event$Screen;
-	public static synthetic fun copy$default (Lcom/urbanairship/analytics/AirshipEventFeed$Event$Screen;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/analytics/AirshipEventFeed$Event$Screen;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getScreen ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class com/urbanairship/analytics/Analytics : com/urbanairship/JobAwareAirshipComponent {
 	public static final field Companion Lcom/urbanairship/analytics/Analytics$Companion;
 	public final fun editAssociatedIdentifiers ()Lcom/urbanairship/analytics/AssociatedIdentifiers$Editor;
@@ -1417,11 +1381,9 @@ public final class com/urbanairship/analytics/Analytics : com/urbanairship/JobAw
 	public final fun getScreenState ()Lkotlinx/coroutines/flow/StateFlow;
 	public final fun getSessionId ()Ljava/lang/String;
 	public final fun isEnabled ()Z
-	public fun onPerformJob (Lcom/urbanairship/job/JobInfo;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun recordCustomEvent (Lcom/urbanairship/analytics/CustomEvent;)V
 	public final fun recordRegionEvent (Lcom/urbanairship/analytics/location/RegionEvent;)V
 	public final fun registerSDKExtension (Lcom/urbanairship/analytics/Extension;Ljava/lang/String;)V
-	public fun tearDown ()V
 	public final fun trackScreen (Ljava/lang/String;)V
 	public final fun uploadEvents ()V
 }
@@ -1571,9 +1533,6 @@ public abstract class com/urbanairship/analytics/Event {
 	public static final field TIME_ZONE_KEY Ljava/lang/String;
 	public static final field TYPE_KEY Ljava/lang/String;
 	public fun <init> ()V
-	public fun <init> (Lcom/urbanairship/util/Clock;)V
-	public fun <init> (Lcom/urbanairship/util/Clock;Ljava/time/Instant;)V
-	public synthetic fun <init> (Lcom/urbanairship/util/Clock;Ljava/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getEventId ()Ljava/lang/String;
 	public fun getPriority ()Lcom/urbanairship/analytics/Event$Priority;
 	public final fun getTime ()Ljava/lang/String;
@@ -2060,47 +2019,6 @@ public class com/urbanairship/app/SimpleApplicationListener : com/urbanairship/a
 	public fun onForeground (Ljava/time/Instant;)V
 }
 
-public final class com/urbanairship/audience/AirshipDeviceAudienceResult$Companion {
-	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/audience/AirshipDeviceAudienceResult;
-	public final fun getMatch ()Lcom/urbanairship/audience/AirshipDeviceAudienceResult;
-	public final fun getMiss ()Lcom/urbanairship/audience/AirshipDeviceAudienceResult;
-}
-
-public final class com/urbanairship/audience/AudienceSelector$Builder {
-	public final fun addLanguageTag (Ljava/lang/String;)Lcom/urbanairship/audience/AudienceSelector$Builder;
-	public final fun build ()Lcom/urbanairship/audience/AudienceSelector;
-	public final fun setDeviceTypes (Ljava/util/List;)Lcom/urbanairship/audience/AudienceSelector$Builder;
-	public final fun setLocationOptIn (Z)Lcom/urbanairship/audience/AudienceSelector$Builder;
-	public final fun setMissBehavior (Lcom/urbanairship/audience/AudienceSelector$MissBehavior;)Lcom/urbanairship/audience/AudienceSelector$Builder;
-	public final fun setNotificationsOptIn (Z)Lcom/urbanairship/audience/AudienceSelector$Builder;
-	public final fun setPermissionsPredicate (Lcom/urbanairship/json/JsonPredicate;)Lcom/urbanairship/audience/AudienceSelector$Builder;
-	public final fun setRequiresAnalytics (Z)Lcom/urbanairship/audience/AudienceSelector$Builder;
-	public final fun setTagSelector (Lcom/urbanairship/audience/DeviceTagSelector;)Lcom/urbanairship/audience/AudienceSelector$Builder;
-	public final fun setVersionMatcher (Lcom/urbanairship/Platform;Lcom/urbanairship/json/ValueMatcher;)Lcom/urbanairship/audience/AudienceSelector$Builder;
-	public final fun setVersionPredicate (Lcom/urbanairship/json/JsonPredicate;)Lcom/urbanairship/audience/AudienceSelector$Builder;
-}
-
-public final class com/urbanairship/audience/AudienceSelector$Companion {
-	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/audience/AudienceSelector;
-	public final fun newBuilder ()Lcom/urbanairship/audience/AudienceSelector$Builder;
-}
-
-public final class com/urbanairship/audience/AudienceSelector$MissBehavior : java/lang/Enum, com/urbanairship/json/JsonSerializable {
-	public static final field CANCEL Lcom/urbanairship/audience/AudienceSelector$MissBehavior;
-	public static final field PENALIZE Lcom/urbanairship/audience/AudienceSelector$MissBehavior;
-	public static final field SKIP Lcom/urbanairship/audience/AudienceSelector$MissBehavior;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public final fun getValue ()Ljava/lang/String;
-	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
-	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/audience/AudienceSelector$MissBehavior;
-	public static fun values ()[Lcom/urbanairship/audience/AudienceSelector$MissBehavior;
-}
-
-public final class com/urbanairship/audience/CompoundAudienceSelector$Companion {
-	public final fun combine (Lcom/urbanairship/audience/CompoundAudienceSelector;Lcom/urbanairship/audience/AudienceSelector;)Lcom/urbanairship/audience/CompoundAudienceSelector;
-	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/audience/CompoundAudienceSelector;
-}
-
 public class com/urbanairship/channel/AirshipChannel : com/urbanairship/JobAwareAirshipComponent {
 	public fun addChannelListener (Lcom/urbanairship/channel/AirshipChannelListener;)V
 	public fun editAttributes ()Lcom/urbanairship/channel/AttributeEditor;
@@ -2121,8 +2039,6 @@ public class com/urbanairship/channel/AirshipChannel : com/urbanairship/JobAware
 	public fun getSubscriptions ()Lkotlinx/coroutines/flow/Flow;
 	public fun getTags ()Ljava/util/Set;
 	public fun isChannelCreationDelayEnabled ()Z
-	public fun onAirshipReady ()V
-	public fun onPerformJob (Lcom/urbanairship/job/JobInfo;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun removeChannelListener (Lcom/urbanairship/channel/AirshipChannelListener;)V
 	public fun setChannelIdFlow (Lkotlinx/coroutines/flow/StateFlow;)V
 	public fun setChannelTagRegistrationEnabled (Z)V
@@ -2139,7 +2055,6 @@ public abstract interface class com/urbanairship/channel/AirshipChannelListener 
 
 public abstract class com/urbanairship/channel/AttributeEditor {
 	public static final field Companion Lcom/urbanairship/channel/AttributeEditor$Companion;
-	protected fun <init> (Lcom/urbanairship/util/Clock;)V
 	public final fun apply ()V
 	public final fun removeAttribute (Ljava/lang/String;)Lcom/urbanairship/channel/AttributeEditor;
 	public final fun removeAttribute (Ljava/lang/String;Ljava/lang/String;)Lcom/urbanairship/channel/AttributeEditor;
@@ -2172,71 +2087,6 @@ public final class com/urbanairship/channel/ChannelGenerationMethod$Restore : co
 	public fun <init> (Ljava/lang/String;)V
 }
 
-public final class com/urbanairship/channel/ChannelRegistrationPayload$Builder {
-	public fun <init> ()V
-	public fun <init> (Lcom/urbanairship/channel/ChannelRegistrationPayload;)V
-	public final fun build ()Lcom/urbanairship/channel/ChannelRegistrationPayload;
-	public final fun getAccengageDeviceId ()Ljava/lang/String;
-	public final fun getApiVersion ()Ljava/lang/Integer;
-	public final fun getAppVersion ()Ljava/lang/String;
-	public final fun getBackgroundEnabled ()Z
-	public final fun getCarrier ()Ljava/lang/String;
-	public final fun getContactId ()Ljava/lang/String;
-	public final fun getCountry ()Ljava/lang/String;
-	public final fun getDeliveryType ()Lcom/urbanairship/push/PushProvider$DeliveryType;
-	public final fun getDeviceModel ()Ljava/lang/String;
-	public final fun getDeviceType ()Lcom/urbanairship/channel/ChannelRegistrationPayload$DeviceType;
-	public final fun getLanguage ()Ljava/lang/String;
-	public final fun getLocationSettings ()Ljava/lang/Boolean;
-	public final fun getPermissions ()Ljava/util/Map;
-	public final fun getPushAddress ()Ljava/lang/String;
-	public final fun getSdkVersion ()Ljava/lang/String;
-	public final fun getSetTags ()Z
-	public final fun getTagChanges ()Lcom/urbanairship/json/JsonMap;
-	public final fun getTags ()Ljava/util/Set;
-	public final fun getTimezone ()Ljava/lang/String;
-	public final fun getUserId ()Ljava/lang/String;
-	public final fun isActive ()Z
-	public final fun setApiVersion (Ljava/lang/Integer;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setAppVersion (Ljava/lang/String;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setBackgroundEnabled (Z)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setContactId (Ljava/lang/String;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setCountry (Ljava/lang/String;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setDeliveryType (Lcom/urbanairship/push/PushProvider$DeliveryType;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setDeviceModel (Ljava/lang/String;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setDeviceType (Lcom/urbanairship/channel/ChannelRegistrationPayload$DeviceType;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setIsActive (Z)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setLanguage (Ljava/lang/String;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setLocationSettings (Ljava/lang/Boolean;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setOptIn (Z)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setPermissions (Ljava/util/Map;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setPushAddress (Ljava/lang/String;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setSdkVersion (Ljava/lang/String;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setTagChanges (Lcom/urbanairship/json/JsonMap;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setTags (ZLjava/util/Set;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setTimezone (Ljava/lang/String;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-	public final fun setUserId (Ljava/lang/String;)Lcom/urbanairship/channel/ChannelRegistrationPayload$Builder;
-}
-
-public final class com/urbanairship/channel/ChannelRegistrationPayload$DeviceType : java/lang/Enum, com/urbanairship/json/JsonSerializable {
-	public static final field AMAZON Lcom/urbanairship/channel/ChannelRegistrationPayload$DeviceType;
-	public static final field ANDROID Lcom/urbanairship/channel/ChannelRegistrationPayload$DeviceType;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
-	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/channel/ChannelRegistrationPayload$DeviceType;
-	public static fun values ()[Lcom/urbanairship/channel/ChannelRegistrationPayload$DeviceType;
-}
-
-public final class com/urbanairship/channel/LiveUpdateMutation$Remove : com/urbanairship/channel/LiveUpdateMutation {
-	public fun <init> (Ljava/lang/String;Ljava/time/Instant;Ljava/time/Instant;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/time/Instant;Ljava/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
-public final class com/urbanairship/channel/LiveUpdateMutation$Set : com/urbanairship/channel/LiveUpdateMutation {
-	public fun <init> (Ljava/lang/String;Ljava/time/Instant;Ljava/time/Instant;)V
-	public synthetic fun <init> (Ljava/lang/String;Ljava/time/Instant;Ljava/time/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-}
-
 public abstract class com/urbanairship/channel/SubscriptionListEditor {
 	public final fun apply ()V
 	public final fun subscribe (Ljava/lang/String;)Lcom/urbanairship/channel/SubscriptionListEditor;
@@ -2266,16 +2116,15 @@ public class com/urbanairship/channel/TagGroupsEditor {
 	public final fun setTags (Ljava/lang/String;Ljava/util/Set;)Lcom/urbanairship/channel/TagGroupsEditor;
 }
 
-public final class com/urbanairship/channel/TagGroupsMutation$Companion {
-	public final fun fromJsonList (Lcom/urbanairship/json/JsonList;)Ljava/util/List;
-	public final fun fromJsonValue (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/channel/TagGroupsMutation;
-	public final fun newAddTagsMutation (Ljava/lang/String;Ljava/util/Set;)Lcom/urbanairship/channel/TagGroupsMutation;
-	public final fun newRemoveTagsMutation (Ljava/lang/String;Ljava/util/Set;)Lcom/urbanairship/channel/TagGroupsMutation;
-	public final fun newSetTagsMutation (Ljava/lang/String;Ljava/util/Set;)Lcom/urbanairship/channel/TagGroupsMutation;
-}
-
-public abstract interface class com/urbanairship/config/AirshipRuntimeConfig$ConfigChangeListener {
-	public abstract fun onConfigUpdated ()V
+public final class com/urbanairship/contacts/ChannelType : java/lang/Enum, com/urbanairship/json/JsonSerializable {
+	public static final field EMAIL Lcom/urbanairship/contacts/ChannelType;
+	public static final field OPEN Lcom/urbanairship/contacts/ChannelType;
+	public static final field SMS Lcom/urbanairship/contacts/ChannelType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getJson ()Ljava/lang/String;
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/contacts/ChannelType;
+	public static fun values ()[Lcom/urbanairship/contacts/ChannelType;
 }
 
 public final class com/urbanairship/contacts/ConflictEvent {
@@ -2324,7 +2173,6 @@ public class com/urbanairship/contacts/Contact : com/urbanairship/JobAwareAirshi
 	public fun getSubscriptions ()Lkotlinx/coroutines/flow/Flow;
 	public fun identify (Ljava/lang/String;)V
 	public fun notifyRemoteLogin ()V
-	public fun onPerformJob (Lcom/urbanairship/job/JobInfo;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun registerEmail (Ljava/lang/String;Lcom/urbanairship/contacts/EmailRegistrationOptions;)V
 	public fun registerOpenChannel (Ljava/lang/String;Lcom/urbanairship/contacts/OpenChannelRegistrationOptions;)V
 	public fun registerSms (Ljava/lang/String;Lcom/urbanairship/contacts/SmsRegistrationOptions;)V
@@ -2504,14 +2352,6 @@ public abstract class com/urbanairship/contacts/ScopedSubscriptionListEditor {
 	public final fun unsubscribe (Ljava/util/Set;Lcom/urbanairship/contacts/Scope;)Lcom/urbanairship/contacts/ScopedSubscriptionListEditor;
 }
 
-public final class com/urbanairship/contacts/ScopedSubscriptionListMutation$Companion {
-	public final fun collapseMutations (Ljava/util/List;)Ljava/util/List;
-	public final fun fromJsonList (Lcom/urbanairship/json/JsonList;)Ljava/util/List;
-	public final fun fromJsonValue (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/contacts/ScopedSubscriptionListMutation;
-	public final fun newSubscribeMutation (Ljava/lang/String;Lcom/urbanairship/contacts/Scope;Ljava/time/Instant;)Lcom/urbanairship/contacts/ScopedSubscriptionListMutation;
-	public final fun newUnsubscribeMutation (Ljava/lang/String;Lcom/urbanairship/contacts/Scope;Ljava/time/Instant;)Lcom/urbanairship/contacts/ScopedSubscriptionListMutation;
-}
-
 public final class com/urbanairship/contacts/SmsRegistrationOptions : com/urbanairship/json/JsonSerializable {
 	public static final field Companion Lcom/urbanairship/contacts/SmsRegistrationOptions$Companion;
 	public fun equals (Ljava/lang/Object;)Z
@@ -2524,77 +2364,6 @@ public final class com/urbanairship/contacts/SmsRegistrationOptions : com/urbana
 
 public final class com/urbanairship/contacts/SmsRegistrationOptions$Companion {
 	public final fun options (Ljava/lang/String;)Lcom/urbanairship/contacts/SmsRegistrationOptions;
-}
-
-public final class com/urbanairship/db/RetryingSQLiteOpenHelper$Factory : androidx/sqlite/db/SupportSQLiteOpenHelper$Factory {
-	public fun <init> (Landroidx/sqlite/db/SupportSQLiteOpenHelper$Factory;Z)V
-	public fun create (Landroidx/sqlite/db/SupportSQLiteOpenHelper$Configuration;)Landroidx/sqlite/db/SupportSQLiteOpenHelper;
-}
-
-public final class com/urbanairship/deferred/DeferredResult$NotFound : com/urbanairship/deferred/DeferredResult {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/Integer;)V
-	public synthetic fun <init> (Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/Integer;
-	public final fun copy (Ljava/lang/Integer;)Lcom/urbanairship/deferred/DeferredResult$NotFound;
-	public static synthetic fun copy$default (Lcom/urbanairship/deferred/DeferredResult$NotFound;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/urbanairship/deferred/DeferredResult$NotFound;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getStatusCode ()Ljava/lang/Integer;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/deferred/DeferredResult$OutOfDate : com/urbanairship/deferred/DeferredResult {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/Integer;)V
-	public synthetic fun <init> (Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/Integer;
-	public final fun copy (Ljava/lang/Integer;)Lcom/urbanairship/deferred/DeferredResult$OutOfDate;
-	public static synthetic fun copy$default (Lcom/urbanairship/deferred/DeferredResult$OutOfDate;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/urbanairship/deferred/DeferredResult$OutOfDate;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getStatusCode ()Ljava/lang/Integer;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/deferred/DeferredResult$RetriableError : com/urbanairship/deferred/DeferredResult {
-	public synthetic fun <init> (Lkotlin/time/Duration;Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (Lkotlin/time/Duration;Ljava/lang/Integer;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1-FghU774 ()Lkotlin/time/Duration;
-	public final fun component2 ()Ljava/lang/Integer;
-	public final fun component3 ()Ljava/lang/String;
-	public final fun copy-k1IrOU0 (Lkotlin/time/Duration;Ljava/lang/Integer;Ljava/lang/String;)Lcom/urbanairship/deferred/DeferredResult$RetriableError;
-	public static synthetic fun copy-k1IrOU0$default (Lcom/urbanairship/deferred/DeferredResult$RetriableError;Lkotlin/time/Duration;Ljava/lang/Integer;Ljava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/deferred/DeferredResult$RetriableError;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getErrorDescription ()Ljava/lang/String;
-	public final fun getRetryAfter-FghU774 ()Lkotlin/time/Duration;
-	public final fun getStatusCode ()Ljava/lang/Integer;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/deferred/DeferredResult$Success : com/urbanairship/deferred/DeferredResult {
-	public fun <init> (Ljava/lang/Object;)V
-	public final fun component1 ()Ljava/lang/Object;
-	public final fun copy (Ljava/lang/Object;)Lcom/urbanairship/deferred/DeferredResult$Success;
-	public static synthetic fun copy$default (Lcom/urbanairship/deferred/DeferredResult$Success;Ljava/lang/Object;ILjava/lang/Object;)Lcom/urbanairship/deferred/DeferredResult$Success;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getResult ()Ljava/lang/Object;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/deferred/DeferredResult$TimedOut : com/urbanairship/deferred/DeferredResult {
-	public fun <init> ()V
-	public fun <init> (Ljava/lang/Integer;)V
-	public synthetic fun <init> (Ljava/lang/Integer;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()Ljava/lang/Integer;
-	public final fun copy (Ljava/lang/Integer;)Lcom/urbanairship/deferred/DeferredResult$TimedOut;
-	public static synthetic fun copy$default (Lcom/urbanairship/deferred/DeferredResult$TimedOut;Ljava/lang/Integer;ILjava/lang/Object;)Lcom/urbanairship/deferred/DeferredResult$TimedOut;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getStatusCode ()Ljava/lang/Integer;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/urbanairship/embedded/AirshipEmbeddedInfo {
@@ -2775,25 +2544,6 @@ public final class com/urbanairship/http/RequestBody$Json : com/urbanairship/htt
 	public fun toString ()Ljava/lang/String;
 }
 
-public abstract interface class com/urbanairship/images/ImageLoader$ImageLoadedCallback {
-	public abstract fun onImageLoaded (Z)V
-}
-
-public final class com/urbanairship/images/ImageRequestOptions$Builder {
-	public fun <init> (Ljava/lang/String;)V
-	public final fun build ()Lcom/urbanairship/images/ImageRequestOptions;
-	public final fun getCallback ()Lcom/urbanairship/images/ImageLoader$ImageLoadedCallback;
-	public final fun getImageSizeResolver ()Lcom/urbanairship/images/ImageSizeResolver;
-	public final fun getPlaceHolder ()I
-	public final fun setImageLoadedCallback (Lcom/urbanairship/images/ImageLoader$ImageLoadedCallback;)Lcom/urbanairship/images/ImageRequestOptions$Builder;
-	public final fun setImageSizeResolver (Lcom/urbanairship/images/ImageSizeResolver;)Lcom/urbanairship/images/ImageRequestOptions$Builder;
-	public final fun setPlaceHolder (I)Lcom/urbanairship/images/ImageRequestOptions$Builder;
-}
-
-public final class com/urbanairship/images/ImageRequestOptions$Companion {
-	public final fun newBuilder (Ljava/lang/String;)Lcom/urbanairship/images/ImageRequestOptions$Builder;
-}
-
 public abstract interface class com/urbanairship/images/ImageSizeResolver {
 	public abstract fun resolveHeight (Landroid/content/Context;Ljava/lang/Integer;)Ljava/lang/Integer;
 	public abstract fun resolveWidth (Landroid/content/Context;Ljava/lang/Integer;)Ljava/lang/Integer;
@@ -2814,6 +2564,10 @@ public final class com/urbanairship/inputvalidation/AirshipInputValidation$Overr
 	public static final field INSTANCE Lcom/urbanairship/inputvalidation/AirshipInputValidation$Override$UseDefault;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class com/urbanairship/inputvalidation/AirshipInputValidation$Request {
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -2888,67 +2642,8 @@ public abstract interface class com/urbanairship/inputvalidation/AirshipValidati
 	public abstract fun getOverrides (Lcom/urbanairship/inputvalidation/AirshipInputValidation$Request;)Lcom/urbanairship/PendingResult;
 }
 
-public final class com/urbanairship/javascript/JavaScriptEnvironment$Builder {
-	public fun <init> ()V
-	public final fun addGetter (Ljava/lang/String;J)Lcom/urbanairship/javascript/JavaScriptEnvironment$Builder;
-	public final fun addGetter (Ljava/lang/String;Lcom/urbanairship/json/JsonSerializable;)Lcom/urbanairship/javascript/JavaScriptEnvironment$Builder;
-	public final fun addGetter (Ljava/lang/String;Ljava/lang/String;)Lcom/urbanairship/javascript/JavaScriptEnvironment$Builder;
-	public final fun build ()Lcom/urbanairship/javascript/JavaScriptEnvironment;
-}
-
-public final class com/urbanairship/javascript/JavaScriptEnvironment$Companion {
-	public final fun newBuilder ()Lcom/urbanairship/javascript/JavaScriptEnvironment$Builder;
-}
-
 public abstract interface class com/urbanairship/javascript/JavaScriptExecutor {
 	public abstract fun executeJavaScript (Ljava/lang/String;)V
-}
-
-public abstract interface class com/urbanairship/javascript/NativeBridge$CommandDelegate {
-	public abstract fun onAirshipCommand (Ljava/lang/String;Landroid/net/Uri;)V
-	public abstract fun onClose ()V
-}
-
-public final class com/urbanairship/javascript/NativeBridge$Companion {
-}
-
-public final class com/urbanairship/job/JobDispatcher$Companion {
-	public final fun getRESCHEDULE_RETRY_DELAY-UwyO8pc ()J
-	public final fun setInstance (Lcom/urbanairship/job/JobDispatcher;)V
-	public final fun shared (Landroid/content/Context;)Lcom/urbanairship/job/JobDispatcher;
-}
-
-public final class com/urbanairship/job/JobInfo$Builder {
-	public fun <init> ()V
-	public final fun addRateLimit (Ljava/lang/String;)Lcom/urbanairship/job/JobInfo$Builder;
-	public final fun build ()Lcom/urbanairship/job/JobInfo;
-	public final fun getConflictStrategy ()Lcom/urbanairship/job/JobInfo$ConflictStrategy;
-	public final fun getExtras ()Lcom/urbanairship/json/JsonMap;
-	public final fun getInitialBackOff-UwyO8pc ()J
-	public final fun getMinDelay-UwyO8pc ()J
-	public final fun getRateLimitIds ()Ljava/util/Set;
-	public final fun getScope ()Ljava/lang/String;
-	public final fun isNetworkAccessRequired ()Z
-	public final fun setAction (Ljava/lang/String;)Lcom/urbanairship/job/JobInfo$Builder;
-	public final fun setConflictStrategy (Lcom/urbanairship/job/JobInfo$ConflictStrategy;)Lcom/urbanairship/job/JobInfo$Builder;
-	public final fun setExtras (Lcom/urbanairship/json/JsonMap;)Lcom/urbanairship/job/JobInfo$Builder;
-	public final fun setInitialBackOff-LRDsOJo (J)Lcom/urbanairship/job/JobInfo$Builder;
-	public final fun setMinDelay-LRDsOJo (J)Lcom/urbanairship/job/JobInfo$Builder;
-	public final fun setNetworkAccessRequired (Z)Lcom/urbanairship/job/JobInfo$Builder;
-	public final fun setScope (Ljava/lang/String;)Lcom/urbanairship/job/JobInfo$Builder;
-}
-
-public final class com/urbanairship/job/JobInfo$Companion {
-	public final fun newBuilder ()Lcom/urbanairship/job/JobInfo$Builder;
-}
-
-public final class com/urbanairship/job/JobInfo$ConflictStrategy : java/lang/Enum {
-	public static final field APPEND Lcom/urbanairship/job/JobInfo$ConflictStrategy;
-	public static final field KEEP Lcom/urbanairship/job/JobInfo$ConflictStrategy;
-	public static final field REPLACE Lcom/urbanairship/job/JobInfo$ConflictStrategy;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/job/JobInfo$ConflictStrategy;
-	public static fun values ()[Lcom/urbanairship/job/JobInfo$ConflictStrategy;
 }
 
 public final class com/urbanairship/job/JobResult : java/lang/Enum {
@@ -2958,27 +2653,6 @@ public final class com/urbanairship/job/JobResult : java/lang/Enum {
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/job/JobResult;
 	public static fun values ()[Lcom/urbanairship/job/JobResult;
-}
-
-public final class com/urbanairship/job/JobRunner$DefaultRunner : com/urbanairship/job/JobRunner {
-	public fun <init> ()V
-	public fun addJobHandler (Ljava/lang/String;Ljava/util/List;Lkotlin/jvm/functions/Function2;)V
-	public fun addWeakJobHandler (Ljava/lang/Object;Ljava/util/List;Lkotlin/jvm/functions/Function3;)V
-	public fun run (Lcom/urbanairship/job/JobInfo;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-}
-
-public final class com/urbanairship/job/RateLimiter$LimitStatus : java/lang/Enum {
-	public static final field OVER Lcom/urbanairship/job/RateLimiter$LimitStatus;
-	public static final field UNDER Lcom/urbanairship/job/RateLimiter$LimitStatus;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/job/RateLimiter$LimitStatus;
-	public static fun values ()[Lcom/urbanairship/job/RateLimiter$LimitStatus;
-}
-
-public final class com/urbanairship/job/RateLimiter$Status {
-	public synthetic fun <init> (Lcom/urbanairship/job/RateLimiter$LimitStatus;JLkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun getLimitStatus ()Lcom/urbanairship/job/RateLimiter$LimitStatus;
-	public final fun getNextAvailable-UwyO8pc ()J
 }
 
 public final class com/urbanairship/json/AirshipJsonSchema : com/urbanairship/json/JsonSerializable {
@@ -3395,23 +3069,9 @@ public abstract interface class com/urbanairship/locale/LocaleChangedListener {
 }
 
 public final class com/urbanairship/locale/LocaleManager {
-	public static final field Companion Lcom/urbanairship/locale/LocaleManager$Companion;
 	public final fun getLocale ()Ljava/util/Locale;
 	public final fun getLocaleUpdates ()Lkotlinx/coroutines/flow/Flow;
 	public final fun setLocaleOverride (Ljava/util/Locale;)V
-}
-
-public final class com/urbanairship/locale/LocaleManager$Companion {
-	public final fun getLOCALE_OVERRIDE_COUNTRY_KEY ()Lcom/urbanairship/preferences/SyncPrefKey;
-	public final fun getLOCALE_OVERRIDE_LANGUAGE_KEY ()Lcom/urbanairship/preferences/SyncPrefKey;
-	public final fun getLOCALE_OVERRIDE_VARIANT_KEY ()Lcom/urbanairship/preferences/SyncPrefKey;
-}
-
-public final class com/urbanairship/modules/Module$Companion {
-	public final fun multipleComponents (Ljava/util/Collection;Lcom/urbanairship/actions/ActionsManifest;)Lcom/urbanairship/modules/Module;
-	public static synthetic fun multipleComponents$default (Lcom/urbanairship/modules/Module$Companion;Ljava/util/Collection;Lcom/urbanairship/actions/ActionsManifest;ILjava/lang/Object;)Lcom/urbanairship/modules/Module;
-	public final fun singleComponent (Lcom/urbanairship/AirshipComponent;Lcom/urbanairship/actions/ActionsManifest;)Lcom/urbanairship/modules/Module;
-	public static synthetic fun singleComponent$default (Lcom/urbanairship/modules/Module$Companion;Lcom/urbanairship/AirshipComponent;Lcom/urbanairship/actions/ActionsManifest;ILjava/lang/Object;)Lcom/urbanairship/modules/Module;
 }
 
 public abstract interface class com/urbanairship/permission/OnPermissionStatusChangedListener {
@@ -3498,10 +3158,6 @@ public final class com/urbanairship/permission/PermissionStatus$Companion {
 	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/permission/PermissionStatus;
 }
 
-public final class com/urbanairship/permission/PermissionsActivity$Companion {
-	public final fun requestPermission (Landroid/content/Context;Ljava/lang/String;Landroidx/core/util/Consumer;)V
-}
-
 public final class com/urbanairship/permission/PermissionsManager {
 	public final fun addOnPermissionStatusChangedListener (Lcom/urbanairship/permission/OnPermissionStatusChangedListener;)V
 	public final synthetic fun checkPermissionStatus (Lcom/urbanairship/permission/Permission;Landroidx/core/util/Consumer;)V
@@ -3531,34 +3187,6 @@ public final class com/urbanairship/permission/SinglePermissionDelegate : com/ur
 	public fun <init> (Ljava/lang/String;)V
 	public fun checkPermissionStatus (Landroid/content/Context;Landroidx/core/util/Consumer;)V
 	public fun requestPermission (Landroid/content/Context;Landroidx/core/util/Consumer;)V
-}
-
-public final class com/urbanairship/preferences/AsyncPrefKey$Companion {
-	public final fun boolean (Ljava/lang/String;)Lcom/urbanairship/preferences/AsyncPrefKey;
-	public final fun custom (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lcom/urbanairship/preferences/AsyncPrefKey;
-	public final fun int (Ljava/lang/String;)Lcom/urbanairship/preferences/AsyncPrefKey;
-	public final fun json (Ljava/lang/String;)Lcom/urbanairship/preferences/AsyncPrefKey;
-	public final fun jsonSerializable (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/urbanairship/preferences/AsyncPrefKey;
-	public final fun long (Ljava/lang/String;)Lcom/urbanairship/preferences/AsyncPrefKey;
-	public final fun string (Ljava/lang/String;)Lcom/urbanairship/preferences/AsyncPrefKey;
-}
-
-public final class com/urbanairship/preferences/PreferenceDatabase$Companion {
-	public final fun createDatabase (Landroid/content/Context;Lcom/urbanairship/AirshipConfigOptions;)Lcom/urbanairship/preferences/PreferenceDatabase;
-	public final fun createInMemoryDatabase (Landroid/content/Context;)Lcom/urbanairship/preferences/PreferenceDatabase;
-}
-
-public final class com/urbanairship/preferences/PreferenceStore$Companion {
-}
-
-public final class com/urbanairship/preferences/SyncPrefKey$Companion {
-	public final fun boolean (Ljava/lang/String;)Lcom/urbanairship/preferences/SyncPrefKey;
-	public final fun custom (Ljava/lang/String;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;)Lcom/urbanairship/preferences/SyncPrefKey;
-	public final fun int (Ljava/lang/String;)Lcom/urbanairship/preferences/SyncPrefKey;
-	public final fun json (Ljava/lang/String;)Lcom/urbanairship/preferences/SyncPrefKey;
-	public final fun jsonSerializable (Ljava/lang/String;Lkotlin/jvm/functions/Function1;)Lcom/urbanairship/preferences/SyncPrefKey;
-	public final fun long (Ljava/lang/String;)Lcom/urbanairship/preferences/SyncPrefKey;
-	public final fun string (Ljava/lang/String;)Lcom/urbanairship/preferences/SyncPrefKey;
 }
 
 public abstract interface class com/urbanairship/push/InternalNotificationListener {
@@ -3599,9 +3227,6 @@ public abstract interface class com/urbanairship/push/NotificationListener {
 	public abstract fun onNotificationPosted (Lcom/urbanairship/push/NotificationInfo;)V
 }
 
-public final class com/urbanairship/push/NotificationProxyReceiver$Companion {
-}
-
 public abstract interface class com/urbanairship/push/PushListener {
 	public abstract fun onPushReceived (Lcom/urbanairship/push/PushMessage;Z)V
 }
@@ -3634,11 +3259,9 @@ public class com/urbanairship/push/PushManager : com/urbanairship/JobAwareAirshi
 	public final fun getPushProviderType ()Lcom/urbanairship/push/PushProviderType;
 	public final fun getPushToken ()Ljava/lang/String;
 	public final fun getUserNotificationsEnabled ()Z
-	public fun init ()V
 	public final fun isOptIn ()Z
 	public final fun isPushAvailable ()Z
 	public final fun isUniqueCanonicalId (Ljava/lang/String;)Z
-	public fun onPerformJob (Lcom/urbanairship/job/JobInfo;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun onTokenChanged (Ljava/lang/Class;Ljava/lang/String;)V
 	public final fun performPushRegistration (ZLkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun performPushRegistration$default (Lcom/urbanairship/push/PushManager;ZLkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
@@ -3656,11 +3279,6 @@ public class com/urbanairship/push/PushManager : com/urbanairship/JobAwareAirshi
 }
 
 public final class com/urbanairship/push/PushManager$Companion {
-	public final fun getPROVIDER_CLASS_KEY ()Lcom/urbanairship/preferences/SyncPrefKey;
-	public final fun getPUSH_DELIVERY_TYPE ()Lcom/urbanairship/preferences/SyncPrefKey;
-	public final fun getPUSH_TOKEN_KEY ()Lcom/urbanairship/preferences/SyncPrefKey;
-	public final fun getREQUEST_PERMISSION_KEY ()Lcom/urbanairship/preferences/SyncPrefKey;
-	public final fun getUSER_NOTIFICATIONS_ENABLED_KEY ()Lcom/urbanairship/preferences/SyncPrefKey;
 }
 
 public final class com/urbanairship/push/PushMessage : android/os/Parcelable, com/urbanairship/json/JsonSerializable {
@@ -4095,29 +3713,6 @@ public final class com/urbanairship/push/notifications/WearableNotificationExten
 public final class com/urbanairship/push/notifications/WearableNotificationExtender$Companion {
 }
 
-public final class com/urbanairship/remotedata/RemoteData$Companion {
-	public final fun getDEFAULT_FOREGROUND_POLLING_INTERVAL-UwyO8pc ()J
-	public final fun getDEFAULT_FOREGROUND_REFRESH_INTERVAL-UwyO8pc ()J
-}
-
-public final class com/urbanairship/remotedata/RemoteData$RefreshStatus : java/lang/Enum {
-	public static final field FAILED Lcom/urbanairship/remotedata/RemoteData$RefreshStatus;
-	public static final field NONE Lcom/urbanairship/remotedata/RemoteData$RefreshStatus;
-	public static final field SUCCESS Lcom/urbanairship/remotedata/RemoteData$RefreshStatus;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/remotedata/RemoteData$RefreshStatus;
-	public static fun values ()[Lcom/urbanairship/remotedata/RemoteData$RefreshStatus;
-}
-
-public final class com/urbanairship/remotedata/RemoteData$Status : java/lang/Enum {
-	public static final field OUT_OF_DATE Lcom/urbanairship/remotedata/RemoteData$Status;
-	public static final field STALE Lcom/urbanairship/remotedata/RemoteData$Status;
-	public static final field UP_TO_DATE Lcom/urbanairship/remotedata/RemoteData$Status;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/remotedata/RemoteData$Status;
-	public static fun values ()[Lcom/urbanairship/remotedata/RemoteData$Status;
-}
-
 public final class com/urbanairship/util/AccessibilityUtils {
 	public static final field INSTANCE Lcom/urbanairship/util/AccessibilityUtils;
 	public final fun setClickActionLabel (Landroid/view/View;I)V
@@ -4161,19 +3756,6 @@ public final class com/urbanairship/util/Attributes {
 	public static final field USERNAME Ljava/lang/String;
 	public static final field WORK_PHONE Ljava/lang/String;
 	public static final field ZIP_CODE Ljava/lang/String;
-}
-
-public final class com/urbanairship/util/Clock$Companion {
-	public final fun getDEFAULT_CLOCK ()Lcom/urbanairship/util/Clock;
-}
-
-public final class com/urbanairship/util/FileUtils$DownloadResult {
-	public final fun getStatusCode ()I
-	public final fun isSuccess ()Z
-}
-
-public final class com/urbanairship/util/Network$Companion {
-	public final fun shared ()Lcom/urbanairship/util/Network;
 }
 
 public final class com/urbanairship/util/NotificationIdGenerator {
@@ -4296,7 +3878,6 @@ public class com/urbanairship/webkit/AirshipWebView : android/webkit/WebView {
 
 public class com/urbanairship/webkit/AirshipWebViewClient : android/webkit/WebViewClient {
 	public fun <init> ()V
-	public fun <init> (Lcom/urbanairship/javascript/NativeBridge;)V
 	public final fun addAuthRequestCredentials (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
 	protected final fun isAllowed (Ljava/lang/String;)Z
 	public fun onClose (Landroid/webkit/WebView;)V

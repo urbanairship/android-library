@@ -12,6 +12,3 @@ public final class com/urbanairship/push/fcm/AirshipFirebaseMessagingService : c
 	public fun onNewToken (Ljava/lang/String;)V
 }
 
-public final class com/urbanairship/push/fcm/FcmPushProvider$Companion {
-}
-

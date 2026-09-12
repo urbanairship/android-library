@@ -17,7 +17,9 @@ import kotlin.time.Duration.Companion.days
 /**
  * Interface used for modifying attributes.
  */
-public abstract class AttributeEditor protected constructor(private val clock: Clock) {
+public abstract class AttributeEditor @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) protected constructor(
+    private val clock: Clock
+) {
 
     private val partialMutations: MutableList<PartialAttributeMutation> = mutableListOf()
 

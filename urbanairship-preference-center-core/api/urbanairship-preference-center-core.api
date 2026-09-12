@@ -19,7 +19,6 @@ public final class com/urbanairship/preferencecenter/PreferenceCenter : com/urba
 	public final fun getConfig (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getConfigPendingResult (Ljava/lang/String;)Lcom/urbanairship/PendingResult;
 	public final fun getOpenListener ()Lcom/urbanairship/preferencecenter/PreferenceCenter$OnOpenListener;
-	public fun onAirshipDeepLink (Landroid/net/Uri;)Z
 	public final fun open (Ljava/lang/String;)V
 	public final fun setOpenListener (Lcom/urbanairship/preferencecenter/PreferenceCenter$OnOpenListener;)V
 	public static final fun shared ()Lcom/urbanairship/preferencecenter/PreferenceCenter;

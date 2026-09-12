@@ -168,6 +168,10 @@ public constructor(
             ACTION_UPDATE_INBOX
         )
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         return inbox.performUpdate().fold(
             onSuccess = { if (it) JobResult.SUCCESS else JobResult.RETRY },
@@ -255,6 +259,10 @@ public constructor(
 
     }
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onAirshipDeepLink(uri: Uri): Boolean {
         if (DEEP_LINK_HOST == uri.encodedAuthority) {
             val paths = uri.pathSegments

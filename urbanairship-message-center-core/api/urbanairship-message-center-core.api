@@ -81,23 +81,6 @@ public final class com/urbanairship/messagecenter/Message : android/os/Parcelabl
 	public final fun writeToParcel (Landroid/os/Parcel;I)V
 }
 
-public final class com/urbanairship/messagecenter/Message$AssociatedData$ViewState : android/os/Parcelable, com/urbanairship/json/JsonSerializable {
-	public static final field CREATOR Landroid/os/Parcelable$Creator;
-	public fun <init> (Ljava/lang/String;Lcom/urbanairship/json/JsonValue;)V
-	public final fun component1 ()Ljava/lang/String;
-	public final fun component2 ()Lcom/urbanairship/json/JsonValue;
-	public final fun copy (Ljava/lang/String;Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/messagecenter/Message$AssociatedData$ViewState;
-	public static synthetic fun copy$default (Lcom/urbanairship/messagecenter/Message$AssociatedData$ViewState;Ljava/lang/String;Lcom/urbanairship/json/JsonValue;ILjava/lang/Object;)Lcom/urbanairship/messagecenter/Message$AssociatedData$ViewState;
-	public final fun describeContents ()I
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getRestorationId ()Ljava/lang/String;
-	public final fun getState ()Lcom/urbanairship/json/JsonValue;
-	public fun hashCode ()I
-	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
-	public fun toString ()Ljava/lang/String;
-	public final fun writeToParcel (Landroid/os/Parcel;I)V
-}
-
 public final class com/urbanairship/messagecenter/Message$Companion {
 	public final fun getSENT_DATE_COMPARATOR ()Ljava/util/Comparator;
 }
@@ -163,8 +146,6 @@ public final class com/urbanairship/messagecenter/MessageCenter : com/urbanairsh
 	public final fun getInbox ()Lcom/urbanairship/messagecenter/Inbox;
 	public final fun getPredicate ()Lcom/urbanairship/Predicate;
 	public final fun getUser ()Lcom/urbanairship/messagecenter/User;
-	public fun onAirshipDeepLink (Landroid/net/Uri;)Z
-	public fun onPerformJob (Lcom/urbanairship/job/JobInfo;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static final fun parseMessageId (Landroid/content/Intent;)Ljava/lang/String;
 	public final fun setOnShowMessageCenterListener (Lcom/urbanairship/messagecenter/MessageCenter$OnShowMessageCenterListener;)V
 	public final fun setPredicate (Lcom/urbanairship/Predicate;)V
@@ -328,8 +309,6 @@ public final class com/urbanairship/messagecenter/ui/view/MessageViewAction$Erro
 public final class com/urbanairship/messagecenter/ui/view/MessageViewModel : androidx/lifecycle/ViewModel {
 	public static final field Companion Lcom/urbanairship/messagecenter/ui/view/MessageViewModel$Companion;
 	public fun <init> ()V
-	public fun <init> (Lcom/urbanairship/messagecenter/Inbox;Lcom/urbanairship/ai/InternalAirshipAi;)V
-	public synthetic fun <init> (Lcom/urbanairship/messagecenter/Inbox;Lcom/urbanairship/ai/InternalAirshipAi;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun clearMessage ()V
 	public final fun deleteMessages ([Lcom/urbanairship/messagecenter/Message;)V
 	public static final fun factory ()Landroidx/lifecycle/ViewModelProvider$Factory;
@@ -439,8 +418,6 @@ public class com/urbanairship/messagecenter/ui/widget/MessageWebView : com/urban
 
 public class com/urbanairship/messagecenter/ui/widget/MessageWebViewClient : com/urbanairship/webkit/AirshipWebViewClient {
 	public fun <init> ()V
-	protected fun extendActionRequest (Lcom/urbanairship/actions/ActionRunRequest;Landroid/webkit/WebView;)Lcom/urbanairship/actions/ActionRunRequest;
-	protected fun extendJavascriptEnvironment (Lcom/urbanairship/javascript/JavaScriptEnvironment$Builder;Landroid/webkit/WebView;)Lcom/urbanairship/javascript/JavaScriptEnvironment$Builder;
 }
 
 public final class com/urbanairship/messagecenter/util/ContextExtensionsKt {

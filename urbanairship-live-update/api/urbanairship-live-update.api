@@ -55,7 +55,6 @@ public abstract interface class com/urbanairship/liveupdate/LiveUpdateHandler {
 
 public final class com/urbanairship/liveupdate/LiveUpdateManager : com/urbanairship/AirshipComponent {
 	public static final field Companion Lcom/urbanairship/liveupdate/LiveUpdateManager$Companion;
-	public fun <init> (Landroid/content/Context;Lcom/urbanairship/preferences/PreferenceStore;Lcom/urbanairship/config/AirshipRuntimeConfig;Lcom/urbanairship/PrivacyManager;Lcom/urbanairship/channel/AirshipChannel;Lcom/urbanairship/push/PushManager;)V
 	public final fun clearAll ()V
 	public final fun end (Ljava/lang/String;)V
 	public final fun end (Ljava/lang/String;Lcom/urbanairship/json/JsonMap;)V

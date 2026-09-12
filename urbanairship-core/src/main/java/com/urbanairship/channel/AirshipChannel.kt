@@ -209,6 +209,10 @@ public class AirshipChannel internal constructor(
         }
     }
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun onAirshipReady() {
         updateRegistration()
     }
@@ -241,6 +245,10 @@ public class AirshipChannel internal constructor(
     override val jobActions: List<String>
         get() = listOf(ACTION_UPDATE_CHANNEL)
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         if (!isRegistrationAllowed) {
             UALog.d { "Channel registration is currently disabled." }

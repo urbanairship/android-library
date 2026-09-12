@@ -17,6 +17,8 @@ import kotlin.time.Duration.Companion.seconds
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class JobInfo private constructor(builder: Builder) {
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public enum class ConflictStrategy(internal val rawValue: Int) {
         REPLACE(0), APPEND(1), KEEP(2);
 
@@ -125,7 +127,10 @@ public class JobInfo private constructor(builder: Builder) {
 
     /**
      * JobInfo builder.
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class Builder {
         internal var action: String = ""
         public var scope: String? = null
@@ -221,6 +226,8 @@ public class JobInfo private constructor(builder: Builder) {
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         /**
          * Creates a new job builder.

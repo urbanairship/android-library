@@ -43,6 +43,8 @@ internal constructor(
     private val isFeatureEnabled: Boolean
         get() = privacyManager.isEnabled(PrivacyManager.Feature.PUSH)
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public constructor(
         context: Context,
         dataStore: PreferenceStore,

@@ -96,8 +96,12 @@ public class ExecutionWindow(
 /** @hide */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public sealed class ExecutionWindowResult {
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data object Now: ExecutionWindowResult()
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class Retry(public val delay: Duration): ExecutionWindowResult() {
 
         override fun equals(other: Any?): Boolean {

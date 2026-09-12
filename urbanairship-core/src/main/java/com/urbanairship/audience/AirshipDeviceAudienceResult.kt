@@ -18,6 +18,8 @@ public data class AirshipDeviceAudienceResult(
 
     internal fun negate(): AirshipDeviceAudienceResult = AirshipDeviceAudienceResult(!isMatch, reportingMetadata)
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         public val match: AirshipDeviceAudienceResult = AirshipDeviceAudienceResult(true)
         public val miss: AirshipDeviceAudienceResult = AirshipDeviceAudienceResult(false)

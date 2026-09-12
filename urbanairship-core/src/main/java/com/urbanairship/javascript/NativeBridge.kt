@@ -42,6 +42,8 @@ public class NativeBridge @VisibleForTesting public constructor(
 
     private val callback = MutableStateFlow<ActionCompletionCallback?>(null)
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public interface CommandDelegate {
         public fun onClose()
         public fun onAirshipCommand(command: String, uri: Uri)
@@ -326,6 +328,8 @@ public class NativeBridge @VisibleForTesting public constructor(
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         /**

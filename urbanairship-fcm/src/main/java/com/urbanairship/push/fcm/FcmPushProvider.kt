@@ -77,6 +77,8 @@ public class FcmPushProvider public constructor() : PushProvider, AirshipVersion
         return "FCM Push Provider $airshipVersion"
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         @Throws(IllegalStateException::class)

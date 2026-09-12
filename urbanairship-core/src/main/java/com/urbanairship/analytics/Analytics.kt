@@ -223,6 +223,10 @@ public constructor(
         }
     }
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun tearDown() {
         activityMonitor.removeApplicationListener(listener)
         job.cancel()
@@ -231,6 +235,10 @@ public constructor(
     override val jobActions: List<String>
         get() = listOf(EventManager.ACTION_SEND)
 
+    /**
+     * @hide
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override suspend fun onPerformJob(jobInfo: JobInfo): JobResult {
         return when(jobInfo.action) {
             EventManager.ACTION_SEND -> {

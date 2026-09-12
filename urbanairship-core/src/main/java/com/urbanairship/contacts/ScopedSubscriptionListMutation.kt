@@ -67,6 +67,8 @@ public class ScopedSubscriptionListMutation internal constructor(
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         private const val KEY_ACTION = "action"

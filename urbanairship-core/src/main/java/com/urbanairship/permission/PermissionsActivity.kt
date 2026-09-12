@@ -151,6 +151,8 @@ public class PermissionsActivity public constructor(
         val resultReceiver: ResultReceiver
     )
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         private const val PERMISSION_EXTRA = "PERMISSION_EXTRA"

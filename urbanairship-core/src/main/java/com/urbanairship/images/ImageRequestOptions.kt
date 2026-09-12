@@ -36,7 +36,10 @@ public class ImageRequestOptions private constructor(builder: Builder) {
 
     /**
      * Image request option builder.
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class Builder(internal val url: String) {
 
         public var placeHolder: Int = 0
@@ -77,6 +80,8 @@ public class ImageRequestOptions private constructor(builder: Builder) {
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         /**

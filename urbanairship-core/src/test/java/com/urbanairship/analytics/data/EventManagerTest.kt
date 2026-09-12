@@ -114,6 +114,12 @@ public class EventManagerTest public constructor() : BaseTestCase() {
     /**
      * A request that wants to upload later than the pending upload keeps the pending one, and
      * asks for the time remaining on it rather than the longer delay.
+     *
+     * The clock is advanced once the first upload has been dispatched, which is partway through
+     * the scheduling block — so this only holds because that block reads the clock a single time
+     * and stores `now + delay` from it. Reading the clock again for the stored send time makes
+     * the advance land in the middle of the decision and the remaining delay come back as the
+     * full 10s.
      */
     @Test
     public fun testScheduleLaterThanPendingKeepsPending(): TestResult = runTest {

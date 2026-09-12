@@ -48,6 +48,8 @@ public class JavaScriptEnvironment private constructor(builder: Builder) {
         return sb.toString()
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class Builder {
 
         internal val getters = mutableListOf<String>()
@@ -72,6 +74,8 @@ public class JavaScriptEnvironment private constructor(builder: Builder) {
         }
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         public fun newBuilder(): Builder {
             return Builder()

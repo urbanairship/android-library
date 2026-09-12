@@ -27,6 +27,8 @@ public abstract class AutomationDatabase public constructor() : RoomDatabase() {
 
     public abstract val scheduleDao: AutomationDao
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         private val MIGRATION_1_2: Migration = object : Migration(1, 2) {

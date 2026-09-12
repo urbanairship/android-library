@@ -76,6 +76,11 @@ public class EventManager @VisibleForTesting internal constructor(
 
         scope.launch {
             scheduleLock.withLock {
+                // One reading of the clock for the whole decision. Reading it again before
+                // storing SCHEDULED_SEND_TIME would let time pass between the two, storing a
+                // send time further out than the delay actually dispatched, which inflates the
+                // remaining delay every later request computes from it.
+                val now = clock.now()
                 var nextDelay = delay
                 var conflictStrategy = JobInfo.ConflictStrategy.REPLACE
 
@@ -87,7 +92,7 @@ public class EventManager @VisibleForTesting internal constructor(
                     // pending was dropped in favor of the pending one — including a high
                     // priority event asking to upload immediately.
                     val currentDelay = maxOf(
-                        previousScheduledTime - clock.now(), Duration.ZERO
+                        previousScheduledTime - now, Duration.ZERO
                     )
 
                     if (currentDelay < nextDelay) {
@@ -108,7 +113,7 @@ public class EventManager @VisibleForTesting internal constructor(
 
                 jobDispatcher.dispatch(jobInfo)
 
-                preferenceStore.put(SCHEDULED_SEND_TIME, (clock.now() + nextDelay).toEpochMilli())
+                preferenceStore.put(SCHEDULED_SEND_TIME, (now + nextDelay).toEpochMilli())
                 isScheduled = true
             }
         }

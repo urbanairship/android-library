@@ -62,10 +62,7 @@ public class AirshipInputValidation private constructor(){
 
     /**
      * Class representing the types of requests to be validated (e.g., Email or SMS).
-     *
-     * @hide
-     * */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+     */
     public sealed class Request {
         public class ValidateEmail(public val email: Email): Request()
         public class ValidateSms(public val sms: Sms): Request()

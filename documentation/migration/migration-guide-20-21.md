@@ -5,7 +5,7 @@
 
 This guide outlines the changes required when migrating your app from SDK 20.x to SDK 21.x.
 
-## Breaking Changes
+## Breaking changes
 
 ### Minimum SDK is now 26 (Android 8.0)
 
@@ -67,14 +67,6 @@ Because `Duration` is a Kotlin value class and cannot be expressed from Java, ev
 | `AutomationSchedule.interval: ULong?` (seconds)            | `interval: Duration?`                      | `intervalSeconds: Long?` (read-only)                                                           |
 | `AutomationSchedule.Builder.setInterval(Long?)` (seconds)  | `setInterval(Duration?)`                   | `setIntervalSeconds(Long?)`                                                                    |
 
-#### No longer public
-
-These were public but are SDK plumbing, and are now `@RestrictTo(LIBRARY_GROUP)` rather than gaining `Duration` counterparts nothing would call:
-
-* `com.urbanairship.android.layout.BannerPresentation`
-* `com.urbanairship.android.layout.util.Timer`
-* `com.urbanairship.util.CachedList`
-
 ### Removed: `PushManager` extension functions
 
 The previously deprecated `PushManagerExtensions` file has been removed. Callers that explicitly referenced the extensions by name will need to update to use the replacement methods on directly on `PushManager`.
@@ -93,23 +85,42 @@ As a result of this change, the `copy()` methods on the following data classes a
 * `com.urbanairship.automation.AutomationSchedule.ScheduleData.Deferred`
 * `com.urbanairship.automation.compose.EmbeddedViewItem`
 
-### Internal APIs now marked `@RestrictTo`
+### `@RestrictTo` changes
 
-`AirshipLayout.layoutInfo` is now `@RestrictTo(LIBRARY_GROUP)` to better align with `LayoutInfo`, which was already restricted and not intended to be used by consumers of the SDK.
+#### Internal APIs now marked `@RestrictTo`
 
-## Other Changes
+These were public but are SDK plumbing, and are now `@RestrictTo(LIBRARY_GROUP)`:
 
-### The custom view API is no longer flagged as restricted
+* `com.urbanairship.android.layout.BannerPresentation`
+* `com.urbanairship.android.layout.util.Timer`
+* `com.urbanairship.util.CachedList`
 
-`com.urbanairship.android.layout` carried an overly restrictive package-level `@RestrictTo(LIBRARY_GROUP)` that applied to several APIs intended to be public:
+`AirshipLayout.layoutInfo` is likewise now restricted, aligning it with `LayoutInfo`.
 
-* `AirshipCustomViewManager.register` and `unregister`
-* `AirshipCustomViewHandler.onCreateView`
-* `AirshipCustomViewArguments`, along with its `properties`, `sizeInfo` and `sceneController` accessors
+`@RestrictTo` now also covers nested types and overrides of already-restricted APIs. None of that is reachable from app code except `MessageWebViewClient`, when overriding `extendActionRequest` or `extendJavascriptEnvironment`. These are now considered internal with no public replacement.
 
-Any `@Suppress("RestrictedApi")` or lint baseline entries your app added to work around this can be removed.
+Members that exposed internal types are no longer public:
 
-`SceneController.Companion.empty()` has also been made public. It builds a no-op controller, which makes it possible to construct `AirshipCustomViewArguments` in a Compose `@Preview` or a unit test:
+* `Airship.runtimeConfig`
+* Constructors for `LiveUpdateManager`, `AirshipWebViewClient(NativeBridge)`, `AttributeEditor` and `LandingPageAction`
+* `Event`'s `Clock` constructors — `Event()` is unchanged
+* `AutomationAudience`'s constructor, and `AutomationSchedule.Builder.setAudience` / `setCompoundAudience`
+* The `SyncPrefKey` constants on `LocaleManager` and `PushManager`
+
+Except `LandingPageAction`, reaching any of these required an internal type, so app code that compiled without suppressing `RestrictedApi` is unaffected.
+
+#### Public APIs no longer flagged as restricted:
+
+A few APIs that were intended to be public carried overly restrictive `@RestrictTo(LIBRARY_GROUP)` annotations:
+
+* `AirshipInputValidation.Request` and its nested types
+* `ChannelType`, which `Contact.associateChannel`, `ContactChannel.channelType` and `ConflictEvent.ChannelInfo` all expose
+* `InAppMessageColor`
+* Custom view APIs:
+  * `AirshipCustomViewManager.register` and `unregister`
+  * `AirshipCustomViewHandler.onCreateView`
+  * `AirshipCustomViewArguments`, along with its `properties`, `sizeInfo` and `sceneController` accessors
+* `SceneController.Companion.empty()` has also been made public. It builds a no-op controller, which can be used in Compose `@Preview`s or tests:
 
 ```kotlin
 AirshipCustomViewArguments(
@@ -120,6 +131,10 @@ AirshipCustomViewArguments(
 )
 ```
 
+Any `@Suppress("RestrictedApi")` or lint baseline entries your app added to work around the above previously being restricted can now be removed.
+
+If you have a use case that relies on any of the newly restricted APIs, please open a GitHub issue to discuss it with us.
+
 ## Deprecated APIs
 
 * `AirshipConfigOptions.backgroundReportingIntervalMS` — use `backgroundReportingIntervalMs`.
@@ -127,4 +142,30 @@ AirshipCustomViewArguments(
 
 ## Troubleshooting
 
-_To be documented as development proceeds._
+### Common issues
+
+**Build errors after migration**
+- Update `minSdk` to 26 and `compileSdk` to 36 in your `build.gradle`.
+- SDK 21 is built with Kotlin `2.2.20` and JDK 17 — make sure your project is on a compatible toolchain.
+- Check that all `com.urbanairship.android` dependencies use the same version (`21.0.0`), then `./gradlew clean` and rebuild.
+
+**Call requires API level 26**
+- The SDK now uses `java.time`, which requires API 26.
+- Raising `minSdk` to 26 is the only supported fix.
+
+**Type mismatch: `Long` or `Date` found, `Instant` required**
+- Convert with `Instant.ofEpochMilli(millis)` or `date.toInstant()`, and back with `instant.toEpochMilli()` or `Date.from(instant)`.
+
+**Unresolved reference: `pushNotificationStatusFlow` or `enableUserNotifications`**
+- `PushManagerExtensions` has been removed. Delete the `com.urbanairship.push` imports for both — they are now members on `PushManager` and resolve without an import.
+
+**Cannot access `copy()` on an Airship data class**
+- `copy()` now matches the visibility of its primary constructor, so `AutomationSchedule.ScheduleData.Deferred` and `EmbeddedViewItem` no longer expose it. Build a new instance through the public constructor or builder instead.
+
+### Getting help
+
+If you encounter issues not covered in this guide:
+- Check the [Airship Documentation](https://docs.airship.com/)
+- Review the [SDK API Reference](https://docs.airship.com/reference/libraries/android/)
+- Contact [Airship Support](https://support.airship.com/)
+- File an issue on [GitHub](https://github.com/urbanairship/android-library/issues)

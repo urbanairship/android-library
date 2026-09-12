@@ -142,7 +142,10 @@ public object FileUtils {
 
     /**
      * Result for downloading a file.
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class DownloadResult internal constructor(
         /**
          * If file downloaded successfully or not.

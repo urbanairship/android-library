@@ -35,6 +35,8 @@ public open class Clock public constructor() {
         return SystemClock.elapsedRealtime().milliseconds
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
         public val DEFAULT_CLOCK: Clock = Clock()
     }

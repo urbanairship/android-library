@@ -6,6 +6,7 @@ import android.util.AttributeSet
 import android.webkit.WebView
 import androidx.annotation.CallSuper
 import androidx.annotation.MainThread
+import androidx.annotation.RestrictTo
 import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.actions.ActionArguments
@@ -73,6 +74,8 @@ public open class MessageWebView @JvmOverloads constructor(
  */
 public open class MessageWebViewClient : AirshipWebViewClient() {
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun extendActionRequest(
         request: ActionRunRequest,
         webView: WebView
@@ -86,7 +89,9 @@ public open class MessageWebViewClient : AirshipWebViewClient() {
         return request
     }
 
+    /** @hide */
     @CallSuper
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     override fun extendJavascriptEnvironment(
         builder: JavaScriptEnvironment.Builder,
         webView: WebView

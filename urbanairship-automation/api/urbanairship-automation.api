@@ -9,8 +9,6 @@ public final class com/urbanairship/automation/AutomationAppState : java/lang/En
 
 public final class com/urbanairship/automation/AutomationAudience : com/urbanairship/json/JsonSerializable {
 	public static final field Companion Lcom/urbanairship/automation/AutomationAudience$Companion;
-	public fun <init> (Lcom/urbanairship/audience/AudienceSelector;Lcom/urbanairship/automation/AutomationAudience$MissBehavior;)V
-	public synthetic fun <init> (Lcom/urbanairship/audience/AudienceSelector;Lcom/urbanairship/automation/AutomationAudience$MissBehavior;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
@@ -80,8 +78,6 @@ public final class com/urbanairship/automation/AutomationSchedule : com/urbanair
 
 public final class com/urbanairship/automation/AutomationSchedule$Builder {
 	public final fun build ()Lcom/urbanairship/automation/AutomationSchedule;
-	public final fun setAudience (Lcom/urbanairship/automation/AutomationAudience;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
-	public final fun setCompoundAudience (Lcom/urbanairship/automation/AutomationCompoundAudience;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
 	public final fun setData (Lcom/urbanairship/automation/AutomationSchedule$ScheduleData;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
 	public final fun setDelay (Lcom/urbanairship/automation/AutomationDelay;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
 	public final fun setEditGracePeriodDays (Ljava/lang/Long;)Lcom/urbanairship/automation/AutomationSchedule$Builder;
@@ -216,21 +212,6 @@ public final class com/urbanairship/automation/EventAutomationTriggerType : java
 	public static fun values ()[Lcom/urbanairship/automation/EventAutomationTriggerType;
 }
 
-public final class com/urbanairship/automation/ExecutionWindowResult$Now : com/urbanairship/automation/ExecutionWindowResult {
-	public static final field INSTANCE Lcom/urbanairship/automation/ExecutionWindowResult$Now;
-	public fun equals (Ljava/lang/Object;)Z
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class com/urbanairship/automation/ExecutionWindowResult$Retry : com/urbanairship/automation/ExecutionWindowResult {
-	public synthetic fun <init> (JLkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getDelay-UwyO8pc ()J
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class com/urbanairship/automation/InAppAutomation {
 	public static final field Companion Lcom/urbanairship/automation/InAppAutomation$Companion;
 	public final fun cancelSchedule (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
@@ -263,15 +244,6 @@ public final class com/urbanairship/automation/InAppAutomationRemoteDataStatus :
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lcom/urbanairship/automation/InAppAutomationRemoteDataStatus;
 	public static fun values ()[Lcom/urbanairship/automation/InAppAutomationRemoteDataStatus;
-}
-
-public final class com/urbanairship/automation/storage/AutomationDatabase$Companion {
-	public final fun createDatabase (Landroid/content/Context;Lcom/urbanairship/config/AirshipRuntimeConfig;)Lcom/urbanairship/automation/storage/AutomationDatabase;
-	public final fun createInMemoryDatabase (Landroid/content/Context;)Lcom/urbanairship/automation/storage/AutomationDatabase;
-}
-
-public final class com/urbanairship/automation/storage/ScheduleState$Companion {
-	public final fun fromValue (I)Lcom/urbanairship/automation/storage/ScheduleState;
 }
 
 public final class com/urbanairship/embedded/AirshipEmbeddedObserver {
@@ -452,8 +424,6 @@ public final class com/urbanairship/iam/actions/LandingPageAction : com/urbanair
 	public fun <init> (F)V
 	public fun <init> (FLkotlin/jvm/functions/Function2;)V
 	public synthetic fun <init> (FLkotlin/jvm/functions/Function2;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;FLcom/urbanairship/util/Clock;)V
-	public synthetic fun <init> (Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function2;FLcom/urbanairship/util/Clock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun acceptsArguments (Lcom/urbanairship/actions/ActionArguments;)Z
 	public static final fun getDEFAULT_NAMES ()Ljava/util/Set;
 	public fun perform (Lcom/urbanairship/actions/ActionArguments;)Lcom/urbanairship/actions/ActionResult;
@@ -544,19 +514,6 @@ public final class com/urbanairship/iam/adapter/DisplayFinishedCallback : androi
 }
 
 public final class com/urbanairship/iam/adapter/DisplayFinishedCallback$Companion {
-}
-
-public final class com/urbanairship/iam/ai/InAppMessageSuppressionEvaluation$Output {
-	public fun <init> (ZLjava/lang/String;)V
-	public final fun component1 ()Z
-	public final fun component2 ()Ljava/lang/String;
-	public final fun copy (ZLjava/lang/String;)Lcom/urbanairship/iam/ai/InAppMessageSuppressionEvaluation$Output;
-	public static synthetic fun copy$default (Lcom/urbanairship/iam/ai/InAppMessageSuppressionEvaluation$Output;ZLjava/lang/String;ILjava/lang/Object;)Lcom/urbanairship/iam/ai/InAppMessageSuppressionEvaluation$Output;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getAllow ()Z
-	public final fun getReason ()Ljava/lang/String;
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/urbanairship/iam/ai/InAppMessageSuppressionKt {
@@ -932,6 +889,15 @@ public final class com/urbanairship/iam/info/InAppMessageButtonLayoutType : java
 
 public final class com/urbanairship/iam/info/InAppMessageButtonLayoutType$Companion {
 	public final fun fromJson (Lcom/urbanairship/json/JsonValue;)Lcom/urbanairship/iam/info/InAppMessageButtonLayoutType;
+}
+
+public final class com/urbanairship/iam/info/InAppMessageColor : com/urbanairship/json/JsonSerializable {
+	public fun <init> (I)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getColor ()I
+	public fun hashCode ()I
+	public fun toJsonValue ()Lcom/urbanairship/json/JsonValue;
+	public fun toString ()Ljava/lang/String;
 }
 
 public final class com/urbanairship/iam/info/InAppMessageMediaInfo : com/urbanairship/json/JsonSerializable {

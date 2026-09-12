@@ -27,6 +27,8 @@ public open class Module protected constructor(
     public val actionsManifest: ActionsManifest?
 ) {
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         /**

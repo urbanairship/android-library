@@ -35,7 +35,10 @@ public class InAppMessageSuppressionEvaluation public constructor(
      * @param allow Whether to show the message.
      * @param reason The model's stated reason. Never logged or reported — an app reaches it
      * through its own [com.urbanairship.ai.EvaluationObserver].
+     *
+     * @hide
      */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public data class Output public constructor(
         public val allow: Boolean,
         public val reason: String

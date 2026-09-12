@@ -3,16 +3,18 @@
 package com.urbanairship.iam.info
 
 import android.graphics.Color
-import androidx.annotation.RestrictTo
+import androidx.annotation.ColorInt
 import com.urbanairship.json.JsonException
 import com.urbanairship.json.JsonSerializable
 import com.urbanairship.json.JsonValue
 import com.urbanairship.util.ColorUtils
 
-/** @hide */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class InAppMessageColor internal constructor(
-    internal val color: Int
+/**
+ * A color used by in-app message content.
+ */
+public class InAppMessageColor(
+    /** The packed ARGB color value. */
+    @get:ColorInt public val color: Int
 ) : JsonSerializable {
 
     internal companion object {

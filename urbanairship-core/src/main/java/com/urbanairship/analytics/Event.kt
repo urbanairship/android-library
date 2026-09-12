@@ -15,10 +15,13 @@ import kotlin.time.Duration.Companion.milliseconds
 /**
  * This abstract class encapsulates analytics events.
  */
-public abstract class Event @JvmOverloads public constructor(
+public abstract class Event internal constructor(
     private val clock: Clock = Clock.DEFAULT_CLOCK,
     internal val timestamp: Instant = clock.now()
 ) {
+
+    public constructor() : this(Clock.DEFAULT_CLOCK)
+
 
     /**
      * Returns the UUID associated with the event.

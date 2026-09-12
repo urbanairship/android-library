@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.annotation.RestrictTo
+import androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP
 import androidx.core.os.ConfigurationCompat
 import com.urbanairship.AirshipDispatchers
 import com.urbanairship.preferences.PreferenceStore
@@ -24,7 +25,7 @@ import kotlinx.coroutines.launch
  * Locale manager.
  *
  */
-public class LocaleManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)  constructor(
+public class LocaleManager @RestrictTo(LIBRARY_GROUP)  constructor(
     context: Context,
     private val preferenceStore: PreferenceStore,
     dispatcher: CoroutineDispatcher = AirshipDispatchers.IO
@@ -55,7 +56,7 @@ public class LocaleManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)  construc
      * Called by [LocaleChangeReceiver] to notify the device's locale changed.
      * @hide
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @RestrictTo(LIBRARY_GROUP)
     internal fun onDeviceLocaleChanged() {
         synchronized(this) {
             val locale = ConfigurationCompat.getLocales(context.resources.configuration).get(0) ?: return
@@ -128,12 +129,12 @@ public class LocaleManager @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)  construc
             return result
         }
 
-    public companion object {
-        public val LOCALE_OVERRIDE_LANGUAGE_KEY: SyncPrefKey<String> =
+    internal companion object {
+        internal val LOCALE_OVERRIDE_LANGUAGE_KEY: SyncPrefKey<String> =
             SyncPrefKey.string("com.urbanairship.LOCALE_OVERRIDE_LANGUAGE")
-        public val LOCALE_OVERRIDE_COUNTRY_KEY: SyncPrefKey<String> =
+        internal val LOCALE_OVERRIDE_COUNTRY_KEY: SyncPrefKey<String> =
             SyncPrefKey.string("com.urbanairship.LOCALE_OVERRIDE_COUNTRY")
-        public val LOCALE_OVERRIDE_VARIANT_KEY: SyncPrefKey<String> =
+        internal val LOCALE_OVERRIDE_VARIANT_KEY: SyncPrefKey<String> =
             SyncPrefKey.string("com.urbanairship.LOCALE_OVERRIDE_VARIANT")
     }
 }

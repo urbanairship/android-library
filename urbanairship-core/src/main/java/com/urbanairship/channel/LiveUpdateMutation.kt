@@ -24,12 +24,16 @@ public sealed class LiveUpdateMutation(
     protected abstract val startTime: Instant
     protected abstract val actionTime: Instant
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class Set(
         override val name: String,
         override val startTime: Instant,
         override val actionTime: Instant = Clock.DEFAULT_CLOCK.now()
     ) : LiveUpdateMutation(ACTION_SET)
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public class Remove(
         override val name: String,
         override val startTime: Instant,

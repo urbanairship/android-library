@@ -132,6 +132,8 @@ public class PreferenceStore @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public 
         database.close()
     }
 
+    /** @hide */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public companion object {
 
         /**
