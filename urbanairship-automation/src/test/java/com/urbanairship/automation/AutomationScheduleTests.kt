@@ -442,6 +442,57 @@ public class AutomationScheduleTests {
         verify(json, expected)
     }
 
+    @Test
+    public fun testNewBuilderKeepsAiSuppression() {
+        // Builder is public API: editing a schedule through it must not quietly drop
+        // fields the editor never touched.
+        val schedule = AutomationSchedule(
+            identifier = "test_schedule",
+            data = AutomationSchedule.ScheduleData.Actions(jsonMapOf("foo" to "bar").toJsonValue()),
+            triggers = listOf(),
+            created = Instant.ofEpochMilli(1703073600000),
+            aiSuppression = AutomationAiSuppression(
+                condition = "the user rents trucks",
+                subjectHints = mapOf("surface" to "home"),
+                missBehavior = AutomationAudience.MissBehavior.CANCEL
+            )
+        )
+
+        assertEquals(schedule, schedule.newBuilder().build())
+        assertEquals(
+            schedule.aiSuppression,
+            schedule.newBuilder().setGroup("edited").build().aiSuppression
+        )
+    }
+
+    @Test
+    public fun testMalformedSubjectHintDropsTheHintNotTheSchedule() {
+        // A parse failure here costs the whole automation, because
+        // AutomationRemoteDataAccess and AutomationStore both map a throwing schedule to null.
+        // Hints are the softest part of the payload, so a bad one must not take the rest.
+        val json = """
+            {
+               "id": "test_schedule",
+               "triggers": [],
+               "type": "actions",
+               "actions": { "foo": "bar" },
+               "ai_suppression": {
+                   "condition": "the user rents trucks",
+                   "subject_hints": { "surface": "home", "count": 3 }
+               },
+               "created": "2023-12-20T12:00:00Z"
+           }
+        """.trimIndent()
+
+        val schedule = AutomationSchedule.fromJson(JsonValue.parseString(json))
+
+        assertEquals("test_schedule", schedule.identifier)
+        assertEquals(
+            mapOf("surface" to "home"),
+            schedule.aiSuppression?.subjectHints
+        )
+    }
+
     private fun verify(json: String, expected: AutomationSchedule) {
         val fromJson = AutomationSchedule.fromJson(JsonValue.parseString(json))
         assertEquals(fromJson, expected)
