@@ -32,6 +32,7 @@ import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.Effect
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State
 import com.urbanairship.preferencecenter.ui.PreferenceCenterViewModel.State.Content.ContactChannelState
 import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
+import kotlin.time.Duration.Companion.seconds
 import app.cash.turbine.test
 import com.google.common.truth.Truth.assertThat
 import io.mockk.Runs
@@ -60,6 +61,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestResult
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -1282,6 +1284,34 @@ public class PreferenceCenterViewModelTest {
             contact.contactChannelsFlow
         }
         confirmVerified(contact, channel)
+    }
+
+
+    @Test
+    public fun showsErrorWhenContactDataNeverArrives(): TestResult = runTest {
+        val config = spyk(CHANNEL_SUBSCRIPTION_CONFIG)
+        every { config.hasChannelSubscriptions } returns true
+        every { config.hasContactSubscriptions } returns true
+        every { config.hasContactManagement } returns true
+
+        // Contact never resolves, so the contact channels flow never emits.
+        val neverEmits = MutableSharedFlow<Result<List<ContactChannel>>>()
+
+        viewModel(
+            config = config,
+            mockContact = { every { contactChannelsFlow } returns neverEmits },
+            dispatcher = testDispatcher
+        ).run {
+            states.test {
+                handle(Action.Refresh)
+                assertThat(awaitItem()).isEqualTo(State.Loading)
+
+                advanceTimeBy(31.seconds)
+
+                assertThat(awaitItem()).isInstanceOf(State.Error::class.java)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
     }
 
     private fun TestScope.viewModel(

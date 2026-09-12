@@ -42,6 +42,8 @@ import com.urbanairship.preferencecenter.ui.item.ContactSubscriptionItem
 import com.urbanairship.preferencecenter.ui.item.PrefCenterItem
 import com.urbanairship.preferencecenter.ui.item.SectionBreakItem
 import com.urbanairship.preferencecenter.ui.item.SectionItem
+import com.urbanairship.preferencecenter.util.CONTACT_DATA_TIMEOUT
+import com.urbanairship.preferencecenter.util.airshipFailIfSlowToStart
 import com.urbanairship.preferencecenter.util.airshipScanConcat
 import com.urbanairship.preferencecenter.widget.ContactChannelDialogInputView
 import java.time.Instant
@@ -555,15 +557,24 @@ internal class PreferenceCenterViewModel(
         return subscriptionsResult.getOrNull() ?: emptySet()
     }
 
-    private fun getContactSubscriptions(): Flow<Result<Map<String, Set<Scope>>>> = contact.subscriptionListsFlow
+    private fun getContactSubscriptions(): Flow<Result<Map<String, Set<Scope>>>> =
+        contact.subscriptionListsFlow.airshipFailIfSlowToStart(
+            timeout = CONTACT_DATA_TIMEOUT,
+            message = "Timed out waiting for contact subscriptions."
+        )
 
     private fun getContactSubscriptionsAsMap(subscriptionsResult: Result<Map<String, Set<Scope>>>): Map<String, Set<Scope>> {
         return subscriptionsResult.getOrNull() ?: emptyMap()
     }
 
-    private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = contact.contactChannelsFlow.mapNotNull {
-        it.getOrThrow().toSet()
-    }
+    private fun getAssociatedChannels(): Flow<Set<ContactChannel>> = contact.contactChannelsFlow
+        .airshipFailIfSlowToStart(
+            timeout = CONTACT_DATA_TIMEOUT,
+            message = "Timed out waiting for contact channels."
+        )
+        .mapNotNull {
+            it.getOrThrow().toSet()
+        }
 
     @Parcelize
     internal sealed class State : Parcelable {

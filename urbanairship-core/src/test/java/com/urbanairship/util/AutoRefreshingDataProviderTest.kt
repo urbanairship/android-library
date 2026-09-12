@@ -180,6 +180,49 @@ class AutoRefreshingDataProviderTest {
         }
     }
 
+    @Test
+    fun testNoStaleReplayAfterResubscribe() = runTest(testDispatcher) {
+        provider.updates.test {
+            advanceUntilIdle()
+            assertEquals("initial-id", awaitItem().identifier)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // Sharing stops shortly after the last subscriber leaves, dropping the replay cache.
+        advanceUntilIdle()
+
+        ids.value = "id-2"
+
+        provider.updates.test {
+            advanceUntilIdle()
+
+            // Must not be handed the previous identifier's cached result.
+            assertEquals("id-2", awaitItem().identifier)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
+    @Test
+    fun testResubscribeReusesFetchCache() = runTest(testDispatcher) {
+        provider.updates.test {
+            advanceUntilIdle()
+            awaitItem()
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        advanceUntilIdle()
+        assertEquals(1, provider.fetchCount)
+
+        provider.updates.test {
+            advanceUntilIdle()
+            assertEquals("initial-id", awaitItem().identifier)
+            cancelAndIgnoreRemainingEvents()
+        }
+
+        // Dropping the replay cache must not cost an extra fetch.
+        assertEquals(1, provider.fetchCount)
+    }
+
     private class TestProvider(
         identifierUpdates: MutableStateFlow<String>,
         overrideUpdates: MutableStateFlow<String>,
