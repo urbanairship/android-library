@@ -63,7 +63,7 @@ public object Thomas {
         webViewClientFactory: Factory<AirshipWebViewClient>? = null,
         embeddedViewManager: AirshipEmbeddedViewManager,
         bannerViewManager: AirshipBannerViewManager,
-        ai: InternalAirshipAi? = null,
+        ai: InternalAirshipAi?,
     ): DisplayRequest {
         if (!isValid(payload)) {
             throw DisplayException("Payload is not valid: " + payload.presentation)

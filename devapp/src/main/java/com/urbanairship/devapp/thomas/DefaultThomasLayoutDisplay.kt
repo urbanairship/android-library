@@ -1,6 +1,7 @@
 package com.urbanairship.devapp.thomas
 
 import android.content.Context
+import com.urbanairship.Airship
 import com.urbanairship.UALog
 import com.urbanairship.actions.Action
 import com.urbanairship.actions.DefaultActionRunner
@@ -31,7 +32,11 @@ internal class DefaultThomasLayoutDisplay private constructor() {
             listener = thomasListener,
             actionRunner = actionRunner,
             embeddedViewManager = EmbeddedViewManager,
-            bannerViewManager = BannerViewManager
+            bannerViewManager = BannerViewManager,
+            // The viewer is a layout host like any other, so it has to supply the AI manager
+            // or a scene's `ai_inference` never runs. Safe to read here: a preview is only
+            // ever displayed from a tap, long after takeoff.
+            ai = if (Airship.isFlying) Airship.internalAi else null
         ).display(context)
     }
 
